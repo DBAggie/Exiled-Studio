@@ -15,6 +15,10 @@
         "$ref": "#/$defs/CrashRecord"
       }
     },
+    "data-feed": {
+      "description": "The data feed's answer (Phase 5, P-e).",
+      "$ref": "#/$defs/DataFeedStatus"
+    },
     "diagnostics": {
       "description": "The diagnostic package's preview (Phase 5, P-f).",
       "type": "array",
@@ -82,6 +86,10 @@
     "tree-sprites": {
       "description": "The loaded data's passive tree sprites, when its bundle has\nthem.",
       "$ref": "#/$defs/TreeSprites"
+    },
+    "updates": {
+      "description": "Application updates (Phase 5, P-d).",
+      "$ref": "#/$defs/UpdateStatus"
     }
   },
   "additionalProperties": false,
@@ -101,7 +109,9 @@
     "tree-preview",
     "tree-sprites",
     "crashes",
-    "diagnostics"
+    "diagnostics",
+    "updates",
+    "data-feed"
   ],
   "$defs": {
     "AffixKind": {
@@ -753,6 +763,57 @@
           "additionalProperties": false,
           "required": [
             "use-bundle"
+          ]
+        },
+        {
+          "description": "Accepts a quarantined bundle (Phase 5, P-e): the user saw its\nmanifest's SHA-256 and approved it. Refused when the bundle\nchanged since (`APP_QUARANTINED`).",
+          "type": "object",
+          "properties": {
+            "accept-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID ([`QuarantinedBundle`]).",
+                  "type": "string"
+                },
+                "manifest-sha256": {
+                  "description": "The manifest SHA-256 the user was shown.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "manifest-sha256"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "accept-bundle"
+          ]
+        },
+        {
+          "description": "Checks every file of an installed bundle against its manifest's\nhashes (the user's \"verify data\"; the start checks sizes only).\n`APP_BUNDLE_DAMAGED` when one differs.",
+          "type": "object",
+          "properties": {
+            "verify-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "verify-bundle"
           ]
         },
         {
@@ -2049,6 +2110,56 @@
         "status"
       ]
     },
+    "DataFeedStatus": {
+      "description": "The data feed's answer (Phase 5, P-e): the game data the project\npublishes, from a feed whose signature verified and whose sequence\nis not lower than one seen before.",
+      "type": "object",
+      "properties": {
+        "offers": {
+          "description": "The packs it lists, newest first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataOffer"
+          }
+        },
+        "sequence": {
+          "description": "The feed's sequence number.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "offers"
+      ]
+    },
+    "DataOffer": {
+      "description": "A pack the data feed lists.",
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Its download size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its bundle ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "installed": {
+          "description": "Whether a bundle with this ID is installed (loaded or not).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bytes",
+        "installed"
+      ]
+    },
     "DataStatus": {
       "description": "The game data.",
       "type": "object",
@@ -2097,6 +2208,11 @@
             "$ref": "#/$defs/InstalledBundle"
           }
         },
+        "loading": {
+          "description": "The game data is still loading at start (Phase 5, P7): the\nfirst screen comes before it. Its version, or why it did not\nload, follows in a later snapshot.",
+          "type": "boolean",
+          "default": false
+        },
         "notice": {
           "description": "Something to tell the user about the choice of data that is not\nan error: `APP_BUNDLE_FALLBACK` when the remembered bundle did\nnot load and the newest installed one was taken instead.",
           "anyOf": [
@@ -2114,6 +2230,14 @@
             "string",
             "null"
           ]
+        },
+        "quarantined": {
+          "description": "Installed bundles that do not load (Phase 5, P-e): unsigned or\nsigned by an unknown key until the user accepts them; for good\nwhen the signature fails, the key is revoked, or files are\ndamaged.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/QuarantinedBundle"
+          }
         },
         "tree-version": {
           "description": "The passive tree version the application gives the engine for\nthis bundle, if known; it names the game's patch (`3_29` is\npatch 3.29), which the UI shows (UX-14).",
@@ -2616,6 +2740,11 @@
       "description": "A bundle installed in the application's `bundles/` folder.",
       "type": "object",
       "properties": {
+        "accepted": {
+          "description": "Whether the user accepted it from quarantine (unsigned, or an\nunknown key).",
+          "type": "boolean",
+          "default": false
+        },
         "data-version": {
           "description": "Its data version.",
           "$ref": "#/$defs/DataVersionView"
@@ -2623,6 +2752,14 @@
         "id": {
           "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
           "type": "string"
+        },
+        "signed-by": {
+          "description": "The key that signed it, when a trusted one did (Phase 5, P-e).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "tree-version": {
           "description": "The passive tree version the application knows for it, if any:\nthe game's patch (`3_29` is patch 3.29; UX-14).",
@@ -3646,6 +3783,61 @@
           "type": "string",
           "const": "nothing"
         }
+      ]
+    },
+    "QuarantinedBundle": {
+      "description": "An installed bundle that does not load (Phase 5, P-e).",
+      "type": "object",
+      "properties": {
+        "acceptable": {
+          "description": "Whether the user may accept it ([`Command::AcceptBundle`]):\n`unsigned` and `unknown-key` only.",
+          "type": "boolean"
+        },
+        "bytes": {
+          "description": "Its size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "data-version": {
+          "description": "Its data version.",
+          "$ref": "#/$defs/DataVersionView"
+        },
+        "files": {
+          "description": "Its number of files.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "key-id": {
+          "description": "The signing key's ID, when signed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest-sha256": {
+          "description": "The SHA-256 of its manifest (`bundle.json`), shown to the user,\nwho accepts exactly it.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,\n`damaged`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data-version",
+        "reason",
+        "acceptable",
+        "manifest-sha256",
+        "files",
+        "bytes"
       ]
     },
     "RecentEntry": {
@@ -4711,6 +4903,125 @@
         "kept",
         "points",
         "ascendancy-points"
+      ]
+    },
+    "UpdateMode": {
+      "description": "How the application looks for its own updates (Phase 5, P-d). Every\ninstall waits for the user's approval in each mode.",
+      "oneOf": [
+        {
+          "description": "Checks once at start, and when the user asks (the default).",
+          "type": "string",
+          "const": "automatic-check"
+        },
+        {
+          "description": "Checks only when the user asks.",
+          "type": "string",
+          "const": "manual"
+        },
+        {
+          "description": "Never connects: no check, no download.",
+          "type": "string",
+          "const": "strict-offline"
+        }
+      ]
+    },
+    "UpdateOffer": {
+      "description": "A newer version the update feed offers (lower or equal versions are\nnever offered).",
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "When it was published (RFC 3339), if the feed says.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Its release notes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "Its release page.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Its version.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "url"
+      ]
+    },
+    "UpdateStatus": {
+      "description": "Application updates: the mode, this build, and the last check's\nanswer (Phase 5, P-d).",
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "description": "The package this build came from: `nsis`, `msi`, `app-image`,\n`deb`, or `plain` (the portable zip, or a development build).",
+          "type": "string"
+        },
+        "available": {
+          "description": "Whether this build can check at all (it carries an update key).",
+          "type": "boolean"
+        },
+        "checked": {
+          "description": "Whether a check has answered since the application started.",
+          "type": "boolean"
+        },
+        "checking": {
+          "description": "A check runs.",
+          "type": "boolean"
+        },
+        "current": {
+          "description": "The running version.",
+          "type": "string"
+        },
+        "error": {
+          "description": "Why the last check or install failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installs": {
+          "description": "Whether this package installs an update itself (`nsis`, `msi`,\n`app-image`); the others only link to the release.",
+          "type": "boolean"
+        },
+        "mode": {
+          "description": "The mode.",
+          "$ref": "#/$defs/UpdateMode"
+        },
+        "offer": {
+          "description": "The last check's newer version, if it found one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UpdateOffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "current",
+        "artifact",
+        "installs",
+        "available",
+        "checking",
+        "checked"
       ]
     },
     "VariantEra": {

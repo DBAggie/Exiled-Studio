@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "keys": [
+    {
+      "id": "ed25519:7a628db5136b36e0",
+      "public_key": "63dd2488012c423923b28fcbb81263d6e305e6803f28fac2b5ed14a049a6afae",
+      "purpose": "data",
+      "note": "data key 2026-1"
+    }
+  ],
+  "revoked": []
+}

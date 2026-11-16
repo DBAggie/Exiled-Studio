@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "keys": [
+    {
+      "id": "ed25519:6e846054cb5c7102",
+      "public_key": "ed0b305e7c0df925eddd3a210646ae7162432e3b157202003d68f58186c39266",
+      "purpose": "data",
+      "note": "The public test key (seed: SHA-256 of \"loom-test-data-key\"). Trusted only by debug and e2e builds."
+    }
+  ],
+  "revoked": []
+}

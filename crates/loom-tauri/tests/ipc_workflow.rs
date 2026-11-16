@@ -43,7 +43,7 @@ impl FilePicker for FakePicker {
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
             Pick::Diagnostics => "diagnostics.zip",
-            Pick::BundleFolder => return None,
+            Pick::BundleFolder | Pick::BundlePack => return None,
         };
         Some(self.0.join(file))
     }
@@ -79,6 +79,8 @@ fn shell(test: &str) -> Shell {
             data,
             bundle: Some(root().join("crates/loom-data/tests/fixtures/bundle-poe1")),
             keep_token: false,
+            shipped: None,
+            load_in_background: false,
         },
         move |_| Box::new(FakePicker(picks)),
     )
@@ -244,7 +246,13 @@ fn command_list_should_match_the_uis_and_every_command_should_be_registered() {
     let names: Vec<String> = serde_json::from_str(&std::fs::read_to_string(file).unwrap()).unwrap();
     assert_eq!(names, loom_tauri::COMMANDS.map(str::to_owned).to_vec());
     let s = shell("commands");
+    // No command may reach the network from a test (the update check and
+    // the data feed): strict offline refuses both before connecting.
+    s.ok("set_update_mode", json!({"mode": "strict-offline"}));
     for name in &names {
+        if name == "set_update_mode" {
+            continue;
+        }
         if let Err(e) = s.invoke(name, json!({})) {
             let text = e.to_string();
             assert!(!text.contains("not found"), "{name}: {text}");
@@ -252,6 +260,49 @@ fn command_list_should_match_the_uis_and_every_command_should_be_registered() {
     }
     let unknown = s.invoke("no_such_command", json!({})).unwrap_err();
     assert!(unknown.to_string().contains("not found"), "{unknown}");
+}
+
+#[test]
+fn capabilities_should_equal_the_committed_allow_list() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let allow: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("capability-allow-list.json")).unwrap(),
+    )
+    .unwrap();
+    let mut seen = Vec::new();
+    for entry in std::fs::read_dir(root.join("capabilities")).unwrap() {
+        let cap: Value =
+            serde_json::from_str(&std::fs::read_to_string(entry.unwrap().path()).unwrap()).unwrap();
+        let id = cap["identifier"].as_str().unwrap().to_owned();
+        let mut granted: Vec<String> = cap["permissions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| {
+                p.as_str()
+                    .or_else(|| p["identifier"].as_str())
+                    .unwrap()
+                    .to_owned()
+            })
+            .collect();
+        granted.sort();
+        let mut allowed: Vec<String> = allow[&id]
+            .as_array()
+            .unwrap_or_else(|| panic!("capability {id} is not in the allow-list"))
+            .iter()
+            .map(|p| p.as_str().unwrap().to_owned())
+            .collect();
+        allowed.sort();
+        assert_eq!(granted, allowed, "capability {id}");
+        seen.push(id);
+    }
+    let listed = allow
+        .as_object()
+        .unwrap()
+        .keys()
+        .filter(|k| !k.starts_with('$'))
+        .count();
+    assert_eq!(seen.len(), listed, "every allow-listed capability exists");
 }
 
 #[test]
@@ -264,7 +315,10 @@ fn capabilities_should_grant_no_dialog_or_file_system_permission() {
         for p in cap["permissions"].as_array().unwrap() {
             let id = p.as_str().or_else(|| p["identifier"].as_str()).unwrap();
             assert!(
-                !id.starts_with("dialog:") && !id.starts_with("fs:") && !id.starts_with("shell:"),
+                !id.starts_with("dialog:")
+                    && !id.starts_with("fs:")
+                    && !id.starts_with("shell:")
+                    && !id.starts_with("updater:"),
                 "{id}"
             );
         }

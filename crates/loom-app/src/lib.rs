@@ -19,12 +19,14 @@ pub mod diagnostics;
 mod edit;
 mod error;
 pub mod gems;
+pub mod install;
 pub mod items;
 pub mod loadout;
 pub mod logs;
 pub mod main_skill;
 mod session;
 pub mod tree;
+pub mod trust;
 mod view;
 
 pub use app::{App, Config, HostCommand, MAX_PENDING_REQUESTS, Sink};

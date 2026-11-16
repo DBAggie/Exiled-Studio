@@ -59,6 +59,81 @@ dto! {
         pub crashes: Vec<CrashRecord>,
         /// The diagnostic package's preview (Phase 5, P-f).
         pub diagnostics: Vec<DiagnosticFile>,
+        /// Application updates (Phase 5, P-d).
+        pub updates: UpdateStatus,
+        /// The data feed's answer (Phase 5, P-e).
+        pub data_feed: DataFeedStatus,
+    }
+
+    /// The data feed's answer (Phase 5, P-e): the game data the project
+    /// publishes, from a feed whose signature verified and whose sequence
+    /// is not lower than one seen before.
+    pub struct DataFeedStatus {
+        /// The feed's sequence number.
+        pub sequence: u64,
+        /// The packs it lists, newest first.
+        pub offers: Vec<DataOffer>,
+    }
+
+    /// A pack the data feed lists.
+    pub struct DataOffer {
+        /// Its bundle ID: `<game>/<steam build>-s<data schema>`.
+        pub id: String,
+        /// Its download size in bytes.
+        pub bytes: u64,
+        /// Whether a bundle with this ID is installed (loaded or not).
+        pub installed: bool,
+    }
+
+    /// How the application looks for its own updates (Phase 5, P-d). Every
+    /// install waits for the user's approval in each mode.
+    #[derive(Copy, Eq, Default)]
+    pub enum UpdateMode {
+        #[default]
+        /// Checks once at start, and when the user asks (the default).
+        AutomaticCheck,
+        /// Checks only when the user asks.
+        Manual,
+        /// Never connects: no check, no download.
+        StrictOffline,
+    }
+
+    /// Application updates: the mode, this build, and the last check's
+    /// answer (Phase 5, P-d).
+    pub struct UpdateStatus {
+        /// The mode.
+        pub mode: UpdateMode,
+        /// The running version.
+        pub current: String,
+        /// The package this build came from: `nsis`, `msi`, `app-image`,
+        /// `deb`, or `plain` (the portable zip, or a development build).
+        pub artifact: String,
+        /// Whether this package installs an update itself (`nsis`, `msi`,
+        /// `app-image`); the others only link to the release.
+        pub installs: bool,
+        /// Whether this build can check at all (it carries an update key).
+        pub available: bool,
+        /// A check runs.
+        pub checking: bool,
+        /// The last check's newer version, if it found one.
+        pub offer: Option<UpdateOffer>,
+        /// Whether a check has answered since the application started.
+        pub checked: bool,
+        /// Why the last check or install failed, if it did.
+        pub error: Option<ApiError>,
+    }
+
+    /// A newer version the update feed offers (lower or equal versions are
+    /// never offered).
+    pub struct UpdateOffer {
+        /// Its version.
+        pub version: String,
+        /// Its release notes.
+        pub notes: Option<String>,
+        /// When it was published (RFC 3339), if the feed says.
+        pub date: Option<String>,
+        /// Its release page.
+        pub url: String,
     }
 
     /// A panic the application recorded (ADR-014; Phase 5, P-f), redacted.
@@ -145,6 +220,40 @@ dto! {
         /// the loaded one (ADR-010: never switched silently; the UI offers
         /// it).
         pub pinned: Option<String>,
+        /// Installed bundles that do not load (Phase 5, P-e): unsigned or
+        /// signed by an unknown key until the user accepts them; for good
+        /// when the signature fails, the key is revoked, or files are
+        /// damaged.
+        #[serde(default)]
+        pub quarantined: Vec<QuarantinedBundle>,
+        /// The game data is still loading at start (Phase 5, P7): the
+        /// first screen comes before it. Its version, or why it did not
+        /// load, follows in a later snapshot.
+        #[serde(default)]
+        pub loading: bool,
+    }
+
+    /// An installed bundle that does not load (Phase 5, P-e).
+    pub struct QuarantinedBundle {
+        /// Its ID: `<game>/<steam build>-s<data schema>`.
+        pub id: String,
+        /// Its data version.
+        pub data_version: DataVersionView,
+        /// Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,
+        /// `damaged`.
+        pub reason: String,
+        /// Whether the user may accept it ([`Command::AcceptBundle`]):
+        /// `unsigned` and `unknown-key` only.
+        pub acceptable: bool,
+        /// The SHA-256 of its manifest (`bundle.json`), shown to the user,
+        /// who accepts exactly it.
+        pub manifest_sha256: String,
+        /// The signing key's ID, when signed.
+        pub key_id: Option<String>,
+        /// Its number of files.
+        pub files: u32,
+        /// Its size in bytes.
+        pub bytes: u64,
     }
 
     /// A bundle installed in the application's `bundles/` folder.
@@ -156,6 +265,13 @@ dto! {
         /// The passive tree version the application knows for it, if any:
         /// the game's patch (`3_29` is patch 3.29; UX-14).
         pub tree_version: Option<String>,
+        /// The key that signed it, when a trusted one did (Phase 5, P-e).
+        #[serde(default)]
+        pub signed_by: Option<String>,
+        /// Whether the user accepted it from quarantine (unsigned, or an
+        /// unknown key).
+        #[serde(default)]
+        pub accepted: bool,
     }
 
     /// A data version.
@@ -1313,6 +1429,23 @@ dto_enum! {
         /// choice.
         UseBundle {
             /// The bundle's ID ([`InstalledBundle`]).
+            id: String,
+        },
+        /// Accepts a quarantined bundle (Phase 5, P-e): the user saw its
+        /// manifest's SHA-256 and approved it. Refused when the bundle
+        /// changed since (`APP_QUARANTINED`).
+        AcceptBundle {
+            /// The bundle's ID ([`QuarantinedBundle`]).
+            id: String,
+            /// The manifest SHA-256 the user was shown.
+            #[serde(rename = "manifest-sha256")]
+            manifest_sha256: String,
+        },
+        /// Checks every file of an installed bundle against its manifest's
+        /// hashes (the user's "verify data"; the start checks sizes only).
+        /// `APP_BUNDLE_DAMAGED` when one differs.
+        VerifyBundle {
+            /// The bundle's ID.
             id: String,
         },
         /// Imports a PoB share code or XML text.

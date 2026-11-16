@@ -5,7 +5,8 @@
 //
 //   node e2e/workflow.mjs <app binary> <work dir>
 //
-// The work dir holds import.xml (the build the "open" dialog returns); the
+// The work dir holds import.xml (the build the "open" dialog returns) and
+// bundle.loombundle (the pack the "install game data" dialog returns); the
 // app saves saved.json and exports export.xml there (the e2e picker). The
 // caller starts tauri-driver on 127.0.0.1:4444 and sets LOOM_E2E_DIR,
 // LOOM_BUNDLE_DIR, and LOOM_DATA_DIR for the app.
@@ -174,6 +175,14 @@ try {
   if (!/<Spec [^>]*nodes="[^"]*\b10023\b/.test(xml)) {
     throw new Error('export.xml does not have the allocated notable')
   }
+
+  step('install game data from a signed pack (Phase 5, P4)')
+  // run.sh and run.ps1 pack the synthetic tree bundle signed with the
+  // public test key, which an e2e build trusts; the e2e picker returns it.
+  await click(button('About'), 'About')
+  await click(button('Install game data from a file…'), 'the install button')
+  await text('Game data installed.')
+  await text('Signed by the project')
 
   console.log('e2e workflow passed')
 } catch (e) {

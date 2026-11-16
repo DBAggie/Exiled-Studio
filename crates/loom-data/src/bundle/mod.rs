@@ -451,7 +451,7 @@ fn json<T: DeserializeOwned>(source: &dyn BundleSource, path: &str) -> Result<T,
 
 /// Whether `path` is a plain relative bundle path: `/`-separated segments,
 /// none empty, `.` or `..`, and no `\\` or `:` anywhere.
-fn plain_path(path: &str) -> bool {
+pub fn plain_path(path: &str) -> bool {
     !path.is_empty()
         && !path.contains(['\\', ':'])
         && path

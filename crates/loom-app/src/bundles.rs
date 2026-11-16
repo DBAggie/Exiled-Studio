@@ -1,12 +1,14 @@
 //! Game data found for the user (UX brief note 1, B-1; start page plan,
-//! PR B).
+//! PR B; Phase 5, P4).
 //!
-//! Phase 5's installer (P-e) puts signed bundles side by side in
-//! `<app data>/bundles/<game>/<steam build>-s<schema>/`. This module is the
-//! development-side part of that layout, without signing: it lists what is
-//! installed there (from each `bundle.json` manifest only; the full check
-//! runs at load), remembers the user's choice in `settings.json`, and keeps
-//! each loaded bundle so switching back does not load it again.
+//! Installed bundles live side by side in
+//! `<app data>/bundles/<game>/<steam build>-s<schema>/`
+//! ([`crate::install`] puts them there from a signed pack). This module
+//! lists them with their status (signature and file sizes, checked at every
+//! start), offers only those that load (signed by a trusted key, or
+//! accepted by the user), lists the quarantined rest, remembers the user's
+//! choice in `settings.json` (the pin; rollback is choosing an older one),
+//! and keeps each loaded bundle so switching back does not load it again.
 //!
 //! **Start order:** `LOOM_BUNDLE_DIR` (development); else the remembered
 //! choice (an installed bundle's ID, or a folder picked for development);
@@ -14,19 +16,20 @@
 //! remembered bundle that fails to load gives way to the newest installed
 //! one, and the snapshot says so (`APP_BUNDLE_FALLBACK`).
 //!
-//! Nothing here copies into `bundles/`: installing is P-e's (ADR-010: an
-//! unsigned pack is quarantined), so a folder the user picks stays where it
-//! is, labelled unsigned in the UI.
+//! A folder the user picks (or `LOOM_BUNDLE_DIR`) is loaded where it is,
+//! without a signature check, and labelled unsigned in the UI: development
+//! only.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use loom_data::bundle::{MANIFEST, Manifest};
+use loom_data::signature::TrustList;
 use loom_domain::DataVersion;
 
-use crate::data::GameData;
+use crate::data::{GameData, Integrity};
 use crate::error::{AppError, Code};
+use crate::install::{self, Found};
 
 /// The folder, under the application's data folder, that holds installed
 /// bundles.
@@ -36,16 +39,8 @@ pub const BUNDLES_DIR: &str = "bundles";
 /// choice of data.
 pub const SETTINGS_FILE: &str = "settings.json";
 
-/// A bundle installed under [`BUNDLES_DIR`].
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Installed {
-    /// `<game>/<steam build>-s<schema>`.
-    pub id: String,
-    /// Its folder.
-    pub dir: PathBuf,
-    /// Its data version, from the manifest.
-    pub version: DataVersion,
-}
+/// A bundle installed under [`BUNDLES_DIR`], with its status.
+pub type Installed = Found;
 
 /// The ID of a data version: `<game>/<steam build>-s<schema>` (`unknown`
 /// for a bundle without a Steam build).
@@ -61,51 +56,14 @@ pub fn bundle_id(version: &DataVersion) -> String {
     )
 }
 
-/// The data version a bundle folder's manifest names, if it reads.
-fn manifest_version(dir: &Path) -> Option<DataVersion> {
-    let bytes = std::fs::read(dir.join(MANIFEST)).ok()?;
-    let manifest: Manifest = serde_json::from_slice(&bytes).ok()?;
-    Some(DataVersion {
-        game: manifest.game()?,
-        schema_version: manifest.data_schema,
-        steam_build: manifest.source.steam_build,
-    })
-}
-
-/// The bundles installed under `<data_dir>/bundles/*/*/`, newest first
-/// (highest Steam build, then schema; then by ID). A folder whose manifest
-/// does not read is skipped; two folders with the same ID keep the first by
-/// path.
+/// The bundles installed under `<data_dir>/bundles/*/*/` that load
+/// (trusted or accepted), newest first ([`install::scan`]).
 #[must_use]
-pub fn installed(data_dir: &Path) -> Vec<Installed> {
-    let mut out: Vec<Installed> = Vec::new();
-    let Ok(games) = std::fs::read_dir(data_dir.join(BUNDLES_DIR)) else {
-        return out;
-    };
-    let mut dirs: Vec<PathBuf> = games
-        .flatten()
-        .filter(|g| g.file_type().is_ok_and(|t| t.is_dir()))
-        .filter_map(|g| std::fs::read_dir(g.path()).ok())
-        .flat_map(|d| d.flatten())
-        .filter(|b| b.file_type().is_ok_and(|t| t.is_dir()))
-        .map(|b| b.path())
-        .collect();
-    dirs.sort();
-    for dir in dirs {
-        let Some(version) = manifest_version(&dir) else {
-            continue;
-        };
-        let id = bundle_id(&version);
-        if out.iter().all(|i| i.id != id) {
-            out.push(Installed { id, dir, version });
-        }
-    }
-    out.sort_by(|a, b| {
-        (b.version.steam_build, b.version.schema_version)
-            .cmp(&(a.version.steam_build, a.version.schema_version))
-            .then_with(|| a.id.cmp(&b.id))
-    });
-    out
+pub fn installed(data_dir: &Path, trust: &TrustList) -> Vec<Installed> {
+    install::scan(data_dir, trust)
+        .into_iter()
+        .filter(|f| f.status.loads())
+        .collect()
 }
 
 /// What `settings.json` remembers.
@@ -122,6 +80,14 @@ pub struct Settings {
     /// The MCP server's last port (UX-26), tried first at its next start.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mcp_port: Option<u16>,
+    /// How the application looks for its own updates (Phase 5, P-d);
+    /// absent means the default, `automatic-check`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updates: Option<crate::api::UpdateMode>,
+    /// The highest data feed sequence seen (Phase 5, P-e): a feed with a
+    /// lower one is a replayed old feed, refused.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_feed_sequence: Option<u64>,
 }
 
 impl Settings {
@@ -170,27 +136,118 @@ fn cache_key(dir: &Path) -> PathBuf {
 #[derive(Debug)]
 pub struct Library {
     data_dir: PathBuf,
+    trust: TrustList,
     installed: Vec<Installed>,
+    quarantined: Vec<Found>,
     /// Loaded bundles by folder: [`GameData::load`] leaks its bundle, so
     /// each folder is loaded once per run.
     loaded: HashMap<PathBuf, Arc<GameData>>,
 }
 
 impl Library {
-    /// The library of `data_dir`, with its installed bundles listed.
+    /// The library of `data_dir`, with its installed bundles listed and
+    /// checked against `trust`.
     #[must_use]
-    pub fn new(data_dir: &Path) -> Self {
-        Self {
+    pub fn new(data_dir: &Path, trust: TrustList) -> Self {
+        let mut library = Self {
             data_dir: data_dir.to_owned(),
-            installed: installed(data_dir),
+            trust,
+            installed: Vec::new(),
+            quarantined: Vec::new(),
             loaded: HashMap::new(),
-        }
+        };
+        library.rescan();
+        library
     }
 
-    /// The installed bundles, newest first.
+    /// Lists the installed folders again.
+    pub fn rescan(&mut self) {
+        let (installed, quarantined) = install::scan(&self.data_dir, &self.trust)
+            .into_iter()
+            .partition(|f| f.status.loads());
+        self.installed = installed;
+        self.quarantined = quarantined;
+    }
+
+    /// The installed bundles that load, newest first.
     #[must_use]
     pub fn installed(&self) -> &[Installed] {
         &self.installed
+    }
+
+    /// The quarantined bundles, newest first.
+    #[must_use]
+    pub fn quarantined(&self) -> &[Found] {
+        &self.quarantined
+    }
+
+    /// Installs a pack ([`install::install_pack`]) and lists the folders
+    /// again.
+    ///
+    /// # Errors
+    /// Those of [`install::install_pack`].
+    pub fn install(&mut self, pack: &Path) -> Result<install::Installed, AppError> {
+        let result = install::install_pack(&self.data_dir, pack, &self.trust);
+        self.rescan();
+        result
+    }
+
+    /// Installs the packs the application ships in `dir` that are not
+    /// installed yet ([`install::install_shipped`]; a first start, or an
+    /// update that ships newer data), in name order. A pack that fails is
+    /// logged; the start goes on without it.
+    pub fn install_shipped(&mut self, dir: &Path) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        let mut packs: Vec<PathBuf> = entries
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|e| e == install::PACK_EXTENSION))
+            .collect();
+        packs.sort();
+        for pack in &packs {
+            match install::install_shipped(&self.data_dir, pack, &self.trust) {
+                Ok(i) => tracing::info!(id = %i.found.id, already = i.already, "shipped bundle"),
+                Err(e) => tracing::warn!(code = %e.code, "shipped bundle not installed"),
+            }
+        }
+        if !packs.is_empty() {
+            self.rescan();
+        }
+    }
+
+    /// Accepts a quarantined bundle the user approved with its manifest's
+    /// SHA-256 shown.
+    ///
+    /// # Errors
+    /// `APP_NO_BUNDLE`, and those of [`install::accept`].
+    pub fn accept(&mut self, id: &str, manifest_sha256: &str) -> Result<(), AppError> {
+        self.rescan();
+        let found = self
+            .quarantined
+            .iter()
+            .find(|f| f.id == id)
+            .ok_or_else(|| AppError::new(Code::NoBundle, format!("no quarantined bundle {id}")))?;
+        install::accept(found, manifest_sha256)?;
+        self.rescan();
+        Ok(())
+    }
+
+    /// Checks every file's hash of an installed bundle (the user's "verify
+    /// data"). A damaged one is quarantined from the next start (its sizes
+    /// may still match).
+    ///
+    /// # Errors
+    /// `APP_NO_BUNDLE`, `APP_BUNDLE_DAMAGED`.
+    pub fn verify(&self, id: &str) -> Result<(), AppError> {
+        let found = self
+            .installed
+            .iter()
+            .chain(&self.quarantined)
+            .find(|f| f.id == id)
+            .ok_or_else(|| AppError::new(Code::NoBundle, format!("no installed bundle {id}")))?;
+        install::verify_full(&found.dir)
     }
 
     fn settings_path(&self) -> PathBuf {
@@ -206,7 +263,15 @@ impl Library {
         if let Some(d) = self.loaded.get(&key) {
             return Ok(Arc::clone(d));
         }
-        let data = Arc::new(GameData::load(dir)?);
+        // An installed bundle's hashes were checked at install, and its
+        // sizes and signature by the scan; any other folder in full.
+        let installed = self.installed.iter().any(|i| cache_key(&i.dir) == key);
+        let integrity = if installed {
+            Integrity::Sizes
+        } else {
+            Integrity::Hashes
+        };
+        let data = Arc::new(GameData::load_checked(dir, integrity)?);
         self.loaded.insert(key, Arc::clone(&data));
         Ok(data)
     }
@@ -280,7 +345,13 @@ impl Library {
     pub fn use_id(&mut self, id: &str) -> Result<Arc<GameData>, AppError> {
         // A bundle installed since the start is found too.
         if self.installed.iter().all(|i| i.id != id) {
-            self.installed = installed(&self.data_dir);
+            self.rescan();
+        }
+        if self.quarantined.iter().any(|q| q.id == id) {
+            return Err(AppError::new(
+                Code::Quarantined,
+                format!("{id} is quarantined"),
+            ));
         }
         let data = self.use_id_quiet(id)?;
         Settings::update(&self.settings_path(), |s| {
@@ -312,6 +383,8 @@ impl Library {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use loom_data::bundle::MANIFEST;
+    use loom_data::signature::KeyPair;
     use loom_domain::Game;
 
     /// A fresh folder under the system's temp folder, removed on drop.
@@ -352,7 +425,19 @@ mod tests {
             "files": [],
             "signatures": []
         });
-        std::fs::write(dir.join(MANIFEST), m.to_string()).unwrap();
+        let bytes = m.to_string();
+        std::fs::write(dir.join(MANIFEST), &bytes).unwrap();
+        // Signed with the public test key, which `trust()` lists.
+        let sig = KeyPair::test_key().sign(bytes.as_bytes());
+        std::fs::write(
+            dir.join(loom_data::signature::SIGNATURE_FILE),
+            serde_json::to_vec(&sig).unwrap(),
+        )
+        .unwrap();
+    }
+
+    fn trust() -> TrustList {
+        crate::trust::trust_list(true).unwrap()
     }
 
     #[test]
@@ -367,7 +452,10 @@ mod tests {
         std::fs::write(root.join("poe1/broken").join(MANIFEST), "{").unwrap();
         // A duplicate ID under another folder name: the first by path stays.
         manifest(&root.join("poe1/zz-copy"), "poe1", 3, Some(100));
-        let list = installed(tmp.path());
+        // Unsigned: quarantined, not listed.
+        manifest(&root.join("poe1/300-s4"), "poe1", 4, Some(300));
+        std::fs::remove_file(root.join("poe1/300-s4/signature.json")).unwrap();
+        let list = installed(tmp.path(), &trust());
         let ids: Vec<&str> = list.iter().map(|i| i.id.as_str()).collect();
         assert_eq!(ids, ["poe1/200-s4", "poe1/200-s3", "poe1/100-s3"]);
         assert_eq!(list[2].dir, root.join("poe1/100-s3"));
@@ -377,7 +465,7 @@ mod tests {
     #[test]
     fn installed_should_be_empty_without_a_bundles_folder() {
         let tmp = tempdir("empty");
-        assert!(installed(tmp.path()).is_empty());
+        assert!(installed(tmp.path(), &trust()).is_empty());
     }
 
     #[test]
@@ -418,16 +506,28 @@ mod tests {
     #[test]
     fn start_should_take_nothing_when_nothing_is_there() {
         let tmp = tempdir("nothing");
-        let mut lib = Library::new(tmp.path());
+        let mut lib = Library::new(tmp.path(), trust());
         let (data, notice) = lib.start(None);
         assert!(data.is_none());
         assert!(notice.is_none());
     }
 
     #[test]
+    fn use_id_should_refuse_a_quarantined_bundle() {
+        let tmp = tempdir("quarantined");
+        let dir = tmp.path().join(BUNDLES_DIR).join("poe1/5-s4");
+        manifest(&dir, "poe1", 4, Some(5));
+        // Trusted by a debug build, not by the release trust list.
+        let mut lib = Library::new(tmp.path(), crate::trust::trust_list(false).unwrap());
+        assert!(lib.installed().is_empty());
+        assert_eq!(lib.quarantined().len(), 1);
+        assert_eq!(lib.use_id("poe1/5-s4").unwrap_err().code, "APP_QUARANTINED");
+    }
+
+    #[test]
     fn use_id_should_refuse_an_unknown_id() {
         let tmp = tempdir("unknown");
-        let mut lib = Library::new(tmp.path());
+        let mut lib = Library::new(tmp.path(), trust());
         let e = lib.use_id("poe1/1-s4").unwrap_err();
         assert_eq!(e.code, "APP_NO_BUNDLE");
         assert!(!tmp.path().join(SETTINGS_FILE).exists());

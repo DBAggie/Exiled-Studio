@@ -1,5 +1,7 @@
 # cargo-deny policy (Spike A, PR A1a).
-# CI runs `cargo deny --all-features --locked check licenses bans sources`.
+# CI runs `cargo deny --all-features --locked check licenses bans sources` (job `deny`) and
+# `cargo deny --all-features --locked check advisories` (job `advisories`, Phase 5, P6;
+# docs/phase-5/security.md): a RustSec advisory not ignored below fails CI.
 # Run locally: `cargo install --locked cargo-deny@0.20.2`, then the same command.
 #
 # The project is MIT. Dependencies must have an open-source license (OSI-approved; maintainer
@@ -7,6 +9,17 @@
 # permissive-only list of 2026-11-08). Strong copyleft (GPL, AGPL, LGPL) is not on the list:
 # ADR-005 keeps GPL-derived code out of the shipped app, so such a crate fails CI and needs
 # the maintainer. Anything outside the list gets a per-crate exception below with a reason.
+
+[advisories]
+# Vulnerabilities always fail. Unmaintained and unsound crates fail at any depth, yanked
+# versions too. Each ignore names the crate's path into the tree and why it stays.
+unmaintained = "all"
+unsound = "all"
+yanked = "deny"
+ignore = [
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error 1.0.4, unmaintained: a build-time proc macro of glib-macros, through Tauri's GTK3 bindings (gtk 0.18, muda) on Linux only. No runtime code; goes when Tauri moves off gtk-rs 0.18. Reviewed 2026-11-15." },
+    { id = "RUSTSEC-2024-0429", reason = "glib 0.18.5, unsound VariantStrIter iterators: reached through Tauri's GTK3 bindings on Linux only; our code never calls glib, and the advisory needs a caller iterating a Variant of strings. The fix (glib 0.20) needs Tauri off gtk-rs 0.18. Reviewed 2026-11-15." },
+]
 
 [licenses]
 allow = [

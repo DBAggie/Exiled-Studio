@@ -3,7 +3,7 @@
 //! Hand-written on `std::net` so no web stack enters the dependency tree.
 
 use std::io::{self, BufRead, BufReader, Read, Write};
-use std::net::TcpStream;
+use std::net::{Shutdown, TcpStream};
 use std::time::{Duration, Instant};
 
 /// The largest body read.
@@ -12,6 +12,8 @@ pub const MAX_BODY: usize = 1024 * 1024;
 const MAX_HEAD: usize = 16 * 1024;
 /// How long a client may take to send its whole request.
 pub const DEADLINE: Duration = Duration::from_secs(10);
+/// How long [`linger`] waits for the rest of a request that was not read.
+const LINGER: Duration = Duration::from_secs(1);
 
 /// A request.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -164,6 +166,28 @@ impl Head<'_> {
         }
         self.request.body = body;
         Ok(self.request)
+    }
+}
+
+/// Closes a connection whose request was answered without reading all of
+/// it (a refusal before the body, or a request that could not be read).
+/// Closing a socket with unread data resets the connection, and the reset
+/// can reach the client before it has read the response, which is then
+/// lost (seen on macOS). So the write side is shut first, and what the
+/// client still sends is read and dropped: at most [`MAX_BODY`] bytes,
+/// within [`LINGER`].
+pub fn linger(mut stream: &TcpStream) {
+    if stream.shutdown(Shutdown::Write).is_err() {
+        return;
+    }
+    let deadline = Instant::now() + LINGER;
+    let mut buf = [0u8; 8192];
+    let mut left = MAX_BODY;
+    while left > 0 && arm(stream, deadline).is_ok() {
+        match stream.read(&mut buf) {
+            Ok(0) | Err(_) => break,
+            Ok(n) => left = left.saturating_sub(n),
+        }
     }
 }
 

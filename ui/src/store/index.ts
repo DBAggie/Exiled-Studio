@@ -19,6 +19,8 @@ import {
   type RecentEntry,
   type RecoveryEntry,
   type Snapshot,
+  type UpdateMode,
+  type UpdateStatus,
 } from '../api/types'
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
@@ -148,11 +150,21 @@ interface ListsState {
   recent: RecentEntry[]
   recovery: RecoveryEntry[]
   mcp: McpStatus | null
+  /** Application updates (Phase 5, P-d); null before the shell answers. */
+  updates: UpdateStatus | null
+  /** The offered version the user put off with "Later". */
+  updateLater: string | null
 }
 
 const lists = createSlice({
   name: 'lists',
-  initialState: { recent: [], recovery: [], mcp: null } as ListsState,
+  initialState: {
+    recent: [],
+    recovery: [],
+    mcp: null,
+    updates: null,
+    updateLater: null,
+  } as ListsState,
   reducers: {
     recent(state, action: PayloadAction<RecentEntry[]>) {
       state.recent = action.payload
@@ -162,6 +174,12 @@ const lists = createSlice({
     },
     mcp(state, action: PayloadAction<McpStatus>) {
       state.mcp = action.payload
+    },
+    updates(state, action: PayloadAction<UpdateStatus>) {
+      state.updates = action.payload
+    },
+    updateLater(state, action: PayloadAction<string | null>) {
+      state.updateLater = action.payload
     },
   },
 })
@@ -355,6 +373,40 @@ export const setPermissions =
     dispatch(actions.mcp(await api.setPermissions(permissions)))
   }
 
+/** Sets how the application looks for updates. */
+export const setUpdateMode =
+  (mode: UpdateMode): Thunk =>
+  async (dispatch, _getState, api) => {
+    try {
+      dispatch(actions.updates(await api.setUpdateMode(mode)))
+    } catch (e) {
+      dispatch(actions.error(codeOf(e)))
+    }
+  }
+
+/** Checks for an update now. */
+export const checkUpdates = (): Thunk => async (dispatch, _getState, api) => {
+  try {
+    dispatch(actions.updates(await api.checkUpdates()))
+    dispatch(actions.updateLater(null))
+    dispatch(actions.error(null))
+  } catch (e) {
+    dispatch(actions.error(codeOf(e)))
+  }
+}
+
+/** Installs the offered update (the user approved it); the application
+ * restarts when it is done. */
+export const installUpdate = (): Thunk => async (dispatch, _getState, api) => {
+  try {
+    await api.installUpdate()
+  } catch (e) {
+    dispatch(actions.error(codeOf(e)))
+    const status = await api.updateStatus().catch(() => null)
+    if (status !== null) dispatch(actions.updates(status))
+  }
+}
+
 /** Follows the application's events (ADR-004): every event is followed by
  * a snapshot query, so a missed event cannot leave the UI behind. */
 export async function startSync(store: Store, api: LoomApi) {
@@ -385,11 +437,20 @@ export async function startSync(store: Store, api: LoomApi) {
       void store.dispatch(replaceBuild({ dropped: notice.kind }))
     }
   })
+  const stopUpdates = await api.onUpdates((status) => {
+    store.dispatch(actions.updates(status))
+  })
   await store.dispatch(refresh())
   await store.dispatch(refreshLists())
+  const updates = await api.updateStatus().catch(() => null)
+  if (updates !== null) store.dispatch(actions.updates(updates))
+  // The first screen has its data: a packaged smoke run quits here (Phase
+  // 5, P1); a failure only means the shell is older or absent.
+  setTimeout(() => void api.ready().catch(() => undefined), 0)
   await store.dispatch(loadPrefs())
   return () => {
     stop()
     stopDrop()
+    stopUpdates()
   }
 }
