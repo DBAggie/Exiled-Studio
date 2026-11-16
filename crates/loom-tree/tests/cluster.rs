@@ -39,7 +39,10 @@ fn tree() -> Tree {
         .join("../loom-data/tests/fixtures/bundle-poe1-tree");
     let mut source = MemorySource::new();
     read_dir(&dir, &dir, &mut source);
-    assert!(validate::validate(&source).is_valid(), "the bundle is valid");
+    assert!(
+        validate::validate(&source).is_valid(),
+        "the bundle is valid"
+    );
     let bundle = Bundle::load(&source).expect("the bundle loads");
     Tree::from_bundle(&bundle).expect("a passive tree")
 }
@@ -86,7 +89,10 @@ fn jewels() -> BTreeMap<u32, Jewel> {
 }
 
 fn ids(g: &cluster::Subgraph) -> Vec<(u32, Kind, u32)> {
-    g.nodes.iter().map(|n| (n.id, n.kind, n.orbit_index)).collect()
+    g.nodes
+        .iter()
+        .map(|n| (n.id, n.kind, n.orbit_index))
+        .collect()
 }
 
 #[test]
@@ -98,7 +104,10 @@ fn subgraphs_should_number_and_place_nodes_as_pob() {
     // Large: id 0x10000 + index 0 << 6, size 2 << 4 = 65568; start index 5,
     // the 12 places on the 16-slot orbit 3.
     let large = &g[0];
-    assert_eq!((large.socket, large.id, large.entrance), (5000, 65568, 65568));
+    assert_eq!(
+        (large.socket, large.id, large.entrance),
+        (5000, 65568, 65568)
+    );
     assert_eq!(
         ids(large),
         vec![
@@ -152,7 +161,12 @@ fn subgraphs_should_number_and_place_nodes_as_pob() {
             (65555, Kind::Normal, 8),
         ]
     );
-    assert!(medium.nodes.iter().all(|n| n.kind != Kind::Normal || n.effect == 25));
+    assert!(
+        medium
+            .nodes
+            .iter()
+            .all(|n| n.kind != Kind::Normal || n.effect == 25)
+    );
 
     // Small in 5003: no size bits; a ring of 6 on the 6-slot orbit 1, not
     // closed.

@@ -1076,7 +1076,11 @@ fn cluster_domain(b: &Bundle, c: &super::poe1::ClusterJewels, report: &mut Repor
         );
     }
     let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
-    for s in c.specials.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+    for s in c
+        .specials
+        .iter()
+        .filter(|s| !stats.contains(s.stat.as_str()))
+    {
         report.add(
             "BUNDLE_DANGLING_REF",
             format!("{CLUSTER_JEWELS}:specials:{}", s.node),
@@ -1091,10 +1095,18 @@ fn cluster_domain(b: &Bundle, c: &super::poe1::ClusterJewels, report: &mut Repor
             format!("base item {} does not exist", j.base),
         );
     }
-    duplicates(report, CLUSTER_JEWELS, c.jewels.iter().map(|j| j.base.as_str()));
+    duplicates(
+        report,
+        CLUSTER_JEWELS,
+        c.jewels.iter().map(|j| j.base.as_str()),
+    );
     let sockets: Vec<String> = c.slots.iter().map(|s| s.socket.to_string()).collect();
     duplicates(report, CLUSTER_JEWELS, sockets.iter().map(String::as_str));
-    duplicates(report, CLUSTER_JEWELS, c.specials.iter().map(|s| s.stat.as_str()));
+    duplicates(
+        report,
+        CLUSTER_JEWELS,
+        c.specials.iter().map(|s| s.stat.as_str()),
+    );
     for (at, detail) in findings {
         report.add("BUNDLE_VALUE_RANGE", at, detail);
     }

@@ -130,6 +130,10 @@ pub struct ClusterSpecial {
     /// The stat's row in `Stats`: a jewel's notables take their places in
     /// this order.
     pub order: i64,
+    /// Whether the passive is a keystone (a jewel adding it adds only it);
+    /// else a notable.
+    #[serde(default)]
+    pub keystone: bool,
 }
 
 /// A jewel slot that takes a cluster jewel (`PassiveJewelSlots` rows with
@@ -154,6 +158,9 @@ pub struct ClusterSlot {
     pub start_indices: Vec<u32>,
 }
 
+/// A row of [`CLUSTER_JEWELS`] out of range: where, and why.
+pub(super) type Finding = (String, &'static str);
+
 impl ClusterJewels {
     /// The base `base`'s layout, if it is a cluster jewel's.
     #[must_use]
@@ -175,7 +182,7 @@ impl ClusterJewels {
 
     /// The validator's checks: the passives the file names (each with
     /// where), and the rows whose values are out of range.
-    pub(super) fn domain(&self) -> (Vec<(String, i64)>, Vec<(String, &'static str)>) {
+    pub(super) fn domain(&self) -> (Vec<(String, i64)>, Vec<Finding>) {
         let sizes = u32::try_from(self.sizes.len()).unwrap_or(u32::MAX);
         let mut nodes = Vec::new();
         let mut bad = Vec::new();

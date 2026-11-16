@@ -517,6 +517,20 @@ pub struct CalcOptions {
 pub struct ResolvedPassives {
     /// Each allocated node's state.
     pub nodes: BTreeMap<NodeId, PassiveState>,
+    /// The nodes the socketed cluster jewels add (passive tree plan, T-i:
+    /// `loom_tree::poe1::cluster`), with their stats: a node listed here
+    /// takes these, not the passives table's.
+    pub cluster: BTreeMap<NodeId, ClusterPassive>,
+}
+
+/// A node a cluster jewel adds ([`ResolvedPassives::cluster`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ClusterPassive {
+    /// Its stats.
+    pub stats: Vec<StatAmount>,
+    /// Their increased effect, percent (a small passive's: the jewel's
+    /// "Added Small Passive Skills have #% increased Effect").
+    pub effect: i64,
 }
 
 impl ResolvedPassives {

@@ -158,8 +158,8 @@
   },
   {
    "path": "poe1/cluster_jewels.json",
-   "sha256": "f2396d9bb7557e63a9c6e1441b045b715d25ab86f63d7c14a8aaf2537931cf1d",
-   "size": 2165
+   "sha256": "a9011c3bd178f7bfccd891fc45ea59afe545b5268b3448e1aee1b8c678714668",
+   "size": 2186
   },
   {
    "path": "poe1/grafts.json",
@@ -203,8 +203,8 @@
   },
   {
    "path": "stat_descriptions/stat_descriptions.json",
-   "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
-   "size": 4380
+   "sha256": "f045d82d51ba3e6a22a96db54ac976069a1a89abf7e194b3895a3978779d9142",
+   "size": 7311
   },
   {
    "path": "trees/assets/test-sheet.png",

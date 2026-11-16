@@ -383,9 +383,36 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
     let resolved = &input.options.passives;
     for node in nodes {
         let state = resolved.state(*node);
+        // A node a socketed cluster jewel adds (passive tree plan, T-i):
+        // its stats are the jewel's, scaled by the jewel's increased
+        // effect as PoB scales the node's mods (`CalcSetup.lua` 135 to
+        // 141, `ScaleAddList`; `skill_modifiers::scale`).
+        if let Some(c) = resolved.cluster.get(node) {
+            let source = Source::Passive { node: *node };
+            match state {
+                PassiveState::Connected if c.effect == 0 => ingest.stats(&source, &lines(&c.stats)),
+                PassiveState::Connected => {
+                    #[expect(
+                        clippy::cast_precision_loss,
+                        reason = "an increase is a small integer, exact as f64"
+                    )]
+                    let scale = 1.0 + c.effect as f64 / 100.0;
+                    ingest.stats_scaled(&source, &lines(&c.stats), &|q, op, v| {
+                        super::skill_modifiers::scale(q, op, v, scale)
+                    });
+                }
+                _ => ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source,
+                    what: "unconnected-node",
+                }),
+            }
+            continue;
+        }
         // PoB numbers the nodes it generates from a socketed cluster jewel
         // with bit 16 set, above every tree node hash; their stats come
-        // from the jewel, not the passives table.
+        // from the jewel, not the passives table. Without the jewel's
+        // subgraph (no cluster data, or a jewel it cannot build) they stay
+        // a reason.
         if state == PassiveState::ClusterNode {
             ingest.reason(UnsupportedReason::UnmodelledPassive {
                 source: Source::Passive { node: *node },

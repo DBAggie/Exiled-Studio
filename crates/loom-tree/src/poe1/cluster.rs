@@ -253,8 +253,8 @@ fn build(
             .map(|t| (t.name.clone(), t.stats.clone()))
             .or_else(|| tree.node(n).map(|t| (t.name.clone(), t.stats.clone())))
     };
-    let node = |id, kind, (name, stats): (String, Vec<StatAmount>), orbit, orbit_index| {
-        ClusterNode {
+    let node =
+        |id, kind, (name, stats): (String, Vec<StatAmount>), orbit, orbit_index| ClusterNode {
             id,
             kind,
             name,
@@ -263,8 +263,7 @@ fn build(
             group,
             orbit,
             orbit_index,
-        }
-    };
+        };
 
     if let Some(k) = jewel.keystone {
         let Some(t) = template(k) else { return };
@@ -296,12 +295,7 @@ fn build(
     let small: (String, Vec<StatAmount>) = skill
         .and_then(|s| template(u32::try_from(s.node).ok()?))
         .unwrap_or_else(|| ("Nothingness".to_owned(), Vec::new()));
-    let sockets = i64::from(
-        jewel
-            .socket_override
-            .or(jewel.socket_count)
-            .unwrap_or(0),
-    );
+    let sockets = i64::from(jewel.socket_override.or(jewel.socket_count).unwrap_or(0));
     let notable_count = i64::try_from(notables.len()).unwrap_or(i64::MAX);
     let node_count = jewel.node_count.map_or_else(
         || sockets + notable_count + i64::from(jewel.nothingness.unwrap_or(0)),
@@ -346,8 +340,8 @@ fn build(
         if count > base.socket_indices.len() || count > order.len() {
             return;
         }
-        for i in 0..count {
-            if !add_socket(base.socket_indices[i], order[i], &mut places) {
+        for (&place, index) in base.socket_indices.iter().zip(order).take(count) {
+            if !add_socket(place, index, &mut places) {
                 return;
             }
         }
@@ -416,7 +410,13 @@ fn build(
     {
         let mut stats = small.1.clone();
         stats.extend(jewel.added.iter().cloned());
-        let mut n = node(node_id + p, Kind::Normal, (small.0.clone(), stats), orbit, p);
+        let mut n = node(
+            node_id + p,
+            Kind::Normal,
+            (small.0.clone(), stats),
+            orbit,
+            p,
+        );
         n.effect = jewel.effect;
         places.insert(p, n);
         small_ids.push(p);

@@ -130,6 +130,9 @@ pub struct Tree {
     /// What cluster jewels add, when the bundle has it
     /// (`poe1/cluster_jewels.json`; [`crate::poe1::cluster`]).
     pub cluster_jewels: Option<ClusterJewels>,
+    /// The cluster jewel bases' IDs by their display name (an item names
+    /// its base by name; [`ClusterJewels::jewels`] by ID).
+    pub cluster_bases: BTreeMap<String, String>,
     /// The passives off the graph, by number: the ones a cluster jewel's
     /// nodes copy (its small passives, notables, keystones, masteries).
     pub templates: BTreeMap<u32, Template>,
@@ -336,6 +339,7 @@ impl Tree {
                 .collect(),
             layout: layout.cloned(),
             cluster_jewels: None,
+            cluster_bases: BTreeMap::new(),
             templates: BTreeMap::new(),
         };
         tree.templates = p
@@ -408,6 +412,14 @@ impl Tree {
             .and_then(|p| p.jewel_radii.clone())
             .unwrap_or_default();
         tree.cluster_jewels = bundle.poe1.as_ref().and_then(|p| p.cluster_jewels.clone());
+        if let Some(c) = &tree.cluster_jewels {
+            tree.cluster_bases = bundle
+                .base_items
+                .iter()
+                .filter(|b| c.jewel(&b.id).is_some())
+                .map(|b| (b.name.clone(), b.id.clone()))
+                .collect();
+        }
         Some(tree)
     }
 

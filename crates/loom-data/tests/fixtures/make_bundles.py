@@ -810,6 +810,23 @@ def tree_bundle(files):
     out["data/base_items.json"] = list(files["data/base_items.json"])
     out["data/item_classes.json"] = sorted(set(files["data/item_classes.json"]) | {"TestJewel"})
     out["poe1/cluster_jewels.json"] = cluster_jewels(passives, out["data/stats.json"], out["data/base_items.json"])
+    # Made-up texts for the cluster jewel lines a test build's jewels carry
+    # (`loom-pipeline/tests/cluster.rs`), so the import resolves them.
+    default = dict(files["stat_descriptions/stat_descriptions.json"])
+    default["descriptions"] = list(default["descriptions"]) + [
+        description(101 + 2 * i, stat, text)
+        for i, (stat, text) in enumerate(
+            [
+                ("local_jewel_expansion_passive_node_count", "Adds {0:+d} Test Cluster Passive Skills"),
+                ("local_jewel_expansion_jewels_count", "{0:+d} Test Cluster Jewel Sockets"),
+                ("local_jewel_expansion_passive_node_index", "{0:+d} Test Cluster Skill Row"),
+                ("local_affliction_jewel_small_nodes_have_effect_+%", "{0:+d}% Test Cluster Small Effect"),
+                ("local_affliction_notable_test_a", "{0:+d} Test Cluster Notable A"),
+                ("local_affliction_notable_test_b", "{0:+d} Test Cluster Notable B"),
+            ]
+        )
+    ]
+    out["stat_descriptions/stat_descriptions.json"] = default
     out["data/passives.json"] = sorted(passives, key=lambda row: row["node"])
     return out
 
@@ -902,7 +919,7 @@ def cluster_jewels(passives, stats, bases):
         "specials": [
             {"node": 6011, "stat": "local_affliction_notable_test_b", "order": 20},
             {"node": 6010, "stat": "local_affliction_notable_test_a", "order": 10},
-            {"node": 6020, "stat": "local_jewel_expansion_keystone_test", "order": 30},
+            {"node": 6020, "stat": "local_jewel_expansion_keystone_test", "order": 30, "keystone": True},
         ],
         "slots": [
             {"socket": 5000, "size": 2, "index": 0, "proxy": 5005, "start_indices": [3, 5, 5]},

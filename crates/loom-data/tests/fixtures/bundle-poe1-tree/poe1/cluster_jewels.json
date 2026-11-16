@@ -168,6 +168,7 @@
    "stat": "local_affliction_notable_test_a"
   },
   {
+   "keystone": true,
    "node": 6020,
    "order": 30,
    "stat": "local_jewel_expansion_keystone_test"
