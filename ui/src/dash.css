@@ -141,7 +141,8 @@ button.icon.quiet:hover:not(:disabled) {
 
 .meter-row {
   display: grid;
-  grid-template-columns: minmax(5.5rem, 0.8fr) minmax(4rem, 1.4fr) auto;
+  /* The same columns on every row, so the bars share one scale. */
+  grid-template-columns: 7rem minmax(3rem, 1fr) 11rem;
   align-items: center;
 }
 
@@ -702,4 +703,9 @@ button.hint:hover:not(:disabled) {
   border-radius: 999px;
   color: var(--c-soft);
   font-size: 0.857rem;
+}
+
+/* A comparison's rows end in the change and the value: more room. */
+.compare-list .meter-row {
+  grid-template-columns: 7rem minmax(2rem, 1fr) 17rem;
 }

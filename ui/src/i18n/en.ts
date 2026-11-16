@@ -427,6 +427,9 @@ export const en = {
     'An estimate from the hit DPS: the same damage every second, nothing ramping up, the enemy as the configuration sets it.',
 
   'breakdown.crumbs': 'Breadcrumb',
+  'breakdown.noSteps':
+    'This stat has no steps to show: it is read directly from the build.',
+  'breakdown.trend': 'Over your changes',
   'breakdown.title': 'Why is {field} {value}?',
   'breakdown.titleNoValue': '{field}',
   'breakdown.factors': 'How it is built',

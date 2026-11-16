@@ -63,6 +63,53 @@ dto! {
         pub updates: UpdateStatus,
         /// The data feed's answer (Phase 5, P-e).
         pub data_feed: DataFeedStatus,
+        /// A what-if query.
+        pub what_if: WhatIfRequest,
+        /// A what-if query's answer.
+        pub what_if_series: WhatIfSeries,
+    }
+
+    /// A what-if query: the computed fields of the open build across its
+    /// stages or across one swept input, for a chart. Each point is
+    /// calculated on a copy of the build; the build, its history, and its
+    /// file never change. At most 41 points (`APP_WHAT_IF` for more, for a
+    /// range that is not one, and for a group, gem, or input the build
+    /// does not have).
+    pub struct WhatIfRequest {
+        /// What varies from point to point.
+        pub vary: WhatIfVary,
+    }
+
+    /// A what-if query's answer: its points, in the order of the stages
+    /// or of the swept value.
+    pub struct WhatIfSeries {
+        /// The points.
+        pub points: Vec<WhatIfPoint>,
+    }
+
+    /// One point of a what-if series: the build with one stage chosen or
+    /// one value set, calculated.
+    pub struct WhatIfPoint {
+        /// The stage's title, without colour codes and links (as
+        /// [`LoadoutView`]'s), or the swept value as text.
+        pub label: String,
+        /// The swept value; for stages, the stage's index from 0.
+        pub x: f64,
+        /// Whether this point is the build as it is now: the active stage,
+        /// or the value the build has.
+        pub current: bool,
+        /// Each slice field at this point.
+        pub fields: Vec<WhatIfField>,
+    }
+
+    /// One field at a what-if point.
+    pub struct WhatIfField {
+        /// The field's name.
+        pub field: String,
+        /// Its value, when computed and finite.
+        pub value: Option<f64>,
+        /// Its state.
+        pub state: String,
     }
 
     /// The data feed's answer (Phase 5, P-e): the game data the project
@@ -1362,6 +1409,48 @@ dto_enum! {
         Text(String),
     }
 
+    /// What a what-if query varies ([`WhatIfRequest`]).
+    pub enum WhatIfVary {
+        /// The build's stages (PoB's loadouts): one point for each, in
+        /// build order, as choosing the stage would calculate.
+        Stages,
+        /// A gem's level: one point for each level from `from` to `to`,
+        /// both included. The group and the gem are indexed as the
+        /// `edit-gem` command indexes them.
+        GemLevel {
+            /// The socket group's index in the active skill set.
+            group: u32,
+            /// The gem's index in the group.
+            gem: u32,
+            /// The first level, at least 1.
+            from: u32,
+            /// The last level.
+            to: u32,
+        },
+        /// The character's level: one point for `from` and each `step`
+        /// after it up to `to`.
+        CharacterLevel {
+            /// The first level, at least 1.
+            from: u32,
+            /// The last level, at most 100.
+            to: u32,
+            /// The distance between two points, at least 1.
+            step: u32,
+        },
+        /// A numeric config input of the active config set: `steps`
+        /// evenly spaced values from `from` to `to`, both included.
+        ConfigNumber {
+            /// The input's name.
+            name: String,
+            /// The first value.
+            from: f64,
+            /// The last value, above `from`.
+            to: f64,
+            /// How many points, at least 2.
+            steps: u32,
+        },
+    }
+
     /// What a config input does to the computed fields.
     pub enum InputEffect {
         /// The calculation applies it.
@@ -1806,6 +1895,65 @@ mod tests {
             })
         );
         assert_eq!(serde_json::to_string(&Command::Undo).unwrap(), r#""undo""#);
+    }
+
+    #[test]
+    fn what_if_should_read_and_write_its_wire_form() {
+        let request = WhatIfRequest {
+            vary: WhatIfVary::GemLevel {
+                group: 0,
+                gem: 1,
+                from: 1,
+                to: 20,
+            },
+        };
+        let json = r#"{"vary":{"gem-level":{"group":0,"gem":1,"from":1,"to":20}}}"#;
+        assert_eq!(serde_json::to_string(&request).unwrap(), json);
+        assert_eq!(
+            serde_json::from_str::<WhatIfRequest>(json).unwrap(),
+            request
+        );
+        assert_eq!(
+            serde_json::from_str::<WhatIfRequest>(r#"{"vary":"stages"}"#).unwrap(),
+            WhatIfRequest {
+                vary: WhatIfVary::Stages
+            }
+        );
+        assert_eq!(
+            serde_json::to_string(&WhatIfVary::CharacterLevel {
+                from: 1,
+                to: 100,
+                step: 5
+            })
+            .unwrap(),
+            r#"{"character-level":{"from":1,"to":100,"step":5}}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&WhatIfVary::ConfigNumber {
+                name: "enemyLevel".to_owned(),
+                from: 1.0,
+                to: 84.0,
+                steps: 2
+            })
+            .unwrap(),
+            r#"{"config-number":{"name":"enemyLevel","from":1.0,"to":84.0,"steps":2}}"#
+        );
+        let series = WhatIfSeries {
+            points: vec![WhatIfPoint {
+                label: "Endgame".to_owned(),
+                x: 1.0,
+                current: true,
+                fields: vec![WhatIfField {
+                    field: "life".to_owned(),
+                    value: None,
+                    state: "partial".to_owned(),
+                }],
+            }],
+        };
+        assert_eq!(
+            serde_json::to_string(&series).unwrap(),
+            r#"{"points":[{"label":"Endgame","x":1.0,"current":true,"fields":[{"field":"life","value":null,"state":"partial"}]}]}"#
+        );
     }
 
     #[test]

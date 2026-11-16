@@ -62,7 +62,15 @@ void startSync(store, api).then(async () => {
     await new Promise((done) => setTimeout(done, 50))
     await store.dispatch(refresh())
   }
-  store.dispatch(actions.go(screen as Screen))
+  // `screen=item&item=1` opens that item; `screen=breakdown&field=life`
+  // that stat's breakdown.
+  if (screen === 'item') {
+    store.dispatch(actions.editItem(Number(params.get('item') ?? 1)))
+  } else if (screen === 'breakdown') {
+    store.dispatch(actions.breakdown(params.get('field') ?? 'life'))
+  } else {
+    store.dispatch(actions.go(screen as Screen))
+  }
 })
 
 createRoot(root).render(

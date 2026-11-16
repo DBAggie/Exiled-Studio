@@ -90,6 +90,14 @@
     "updates": {
       "description": "Application updates (Phase 5, P-d).",
       "$ref": "#/$defs/UpdateStatus"
+    },
+    "what-if": {
+      "description": "A what-if query.",
+      "$ref": "#/$defs/WhatIfRequest"
+    },
+    "what-if-series": {
+      "description": "A what-if query's answer.",
+      "$ref": "#/$defs/WhatIfSeries"
     }
   },
   "additionalProperties": false,
@@ -111,7 +119,9 @@
     "crashes",
     "diagnostics",
     "updates",
-    "data-feed"
+    "data-feed",
+    "what-if",
+    "what-if-series"
   ],
   "$defs": {
     "AffixKind": {
@@ -5087,6 +5097,234 @@
         "text",
         "code",
         "in-use"
+      ]
+    },
+    "WhatIfField": {
+      "description": "One field at a what-if point.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The field's name.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Its state.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Its value, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "state"
+      ]
+    },
+    "WhatIfPoint": {
+      "description": "One point of a what-if series: the build with one stage chosen or\none value set, calculated.",
+      "type": "object",
+      "properties": {
+        "current": {
+          "description": "Whether this point is the build as it is now: the active stage,\nor the value the build has.",
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "Each slice field at this point.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WhatIfField"
+          }
+        },
+        "label": {
+          "description": "The stage's title, without colour codes and links (as\n[`LoadoutView`]'s), or the swept value as text.",
+          "type": "string"
+        },
+        "x": {
+          "description": "The swept value; for stages, the stage's index from 0.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "x",
+        "current",
+        "fields"
+      ]
+    },
+    "WhatIfRequest": {
+      "description": "A what-if query: the computed fields of the open build across its\nstages or across one swept input, for a chart. Each point is\ncalculated on a copy of the build; the build, its history, and its\nfile never change. At most 41 points (`APP_WHAT_IF` for more, for a\nrange that is not one, and for a group, gem, or input the build\ndoes not have).",
+      "type": "object",
+      "properties": {
+        "vary": {
+          "description": "What varies from point to point.",
+          "$ref": "#/$defs/WhatIfVary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "vary"
+      ]
+    },
+    "WhatIfSeries": {
+      "description": "A what-if query's answer: its points, in the order of the stages\nor of the swept value.",
+      "type": "object",
+      "properties": {
+        "points": {
+          "description": "The points.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WhatIfPoint"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "points"
+      ]
+    },
+    "WhatIfVary": {
+      "description": "What a what-if query varies ([`WhatIfRequest`]).",
+      "oneOf": [
+        {
+          "description": "The build's stages (PoB's loadouts): one point for each, in\nbuild order, as choosing the stage would calculate.",
+          "type": "string",
+          "const": "stages"
+        },
+        {
+          "description": "A gem's level: one point for each level from `from` to `to`,\nboth included. The group and the gem are indexed as the\n`edit-gem` command indexes them.",
+          "type": "object",
+          "properties": {
+            "gem-level": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first level, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "gem": {
+                  "description": "The gem's index in the group.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "group": {
+                  "description": "The socket group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last level.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem",
+                "from",
+                "to"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "gem-level"
+          ]
+        },
+        {
+          "description": "The character's level: one point for `from` and each `step`\nafter it up to `to`.",
+          "type": "object",
+          "properties": {
+            "character-level": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first level, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "step": {
+                  "description": "The distance between two points, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last level, at most 100.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to",
+                "step"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "character-level"
+          ]
+        },
+        {
+          "description": "A numeric config input of the active config set: `steps`\nevenly spaced values from `from` to `to`, both included.",
+          "type": "object",
+          "properties": {
+            "config-number": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first value.",
+                  "type": "number",
+                  "format": "double"
+                },
+                "name": {
+                  "description": "The input's name.",
+                  "type": "string"
+                },
+                "steps": {
+                  "description": "How many points, at least 2.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last value, above `from`.",
+                  "type": "number",
+                  "format": "double"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "from",
+                "to",
+                "steps"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "config-number"
+          ]
+        }
       ]
     }
   }

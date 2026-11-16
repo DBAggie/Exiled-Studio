@@ -522,15 +522,7 @@ impl Session {
             .unwrap_or_default();
         Ok(move |build: &mut Build| {
             if let Some(data) = &data {
-                let state = State {
-                    build: build.clone(),
-                    ends: ends.clone(),
-                };
-                if let Some(choice) =
-                    crate::main_skill::choose_after_switch(&state, data, &previous)
-                {
-                    crate::main_skill::apply(build, choice);
-                }
+                main_after_switch(build, &ends, data, &previous);
             }
         })
     }
@@ -568,24 +560,7 @@ impl Session {
         enabled: Option<bool>,
     ) -> Result<Option<u64>, AppError> {
         self.change_build(api::ChangeKind::SkillEdit, group, |build| {
-            let g = socket_group(build, group)?
-                .gems
-                .typed_mut()
-                .nth(gem as usize)
-                .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
-            if let Some(level) = level.filter(|l| *l != *g.level.value()) {
-                if level == 0 {
-                    return Err(AppError::new(Code::Skill, "a gem's level is at least 1"));
-                }
-                g.level.set(level);
-            }
-            if let Some(quality) = quality.filter(|q| *q != *g.quality.value()) {
-                g.quality.set(quality);
-            }
-            if let Some(enabled) = enabled {
-                g.enabled = enabled;
-            }
-            Ok(())
+            set_gem(build, group, gem, level, quality, enabled)
         })
     }
 
@@ -997,27 +972,7 @@ impl Session {
             api::ConfigValueView::Text(t) => ConfigValue::String(t.clone()),
         };
         self.change_build(api::ChangeKind::Config, 0, |build| {
-            let set = active_config_or_new(build);
-            if let Some(input) = set.inputs.typed_mut().find(|i| i.name == name) {
-                // The same number keeps its source text (an export writes
-                // it as read).
-                let same = match (&input.value, &value) {
-                    (ConfigValue::Number(a), ConfigValue::Number(b)) => a.value() == b.value(),
-                    (a, b) => a == b,
-                };
-                if !same {
-                    input.value = value;
-                }
-                input.kind = ConfigInputKind::Input;
-            } else {
-                set.inputs.push(ConfigInput {
-                    name: name.to_owned(),
-                    value,
-                    kind: ConfigInputKind::Input,
-                    lines: Vec::new(),
-                    attributes: Attributes::default(),
-                });
-            }
+            write_config_input(build, name, value);
             Ok(())
         })
     }
@@ -1489,6 +1444,85 @@ fn socket_group(build: &mut Build, group: u32) -> Result<&mut SocketGroup, AppEr
         .find(|s| Some(s.id) == active)
         .and_then(|s| s.groups.typed_mut().nth(group as usize))
         .ok_or_else(|| AppError::new(Code::Skill, format!("no socket group {group}")))
+}
+
+/// Changes gem `gem` of socket group `group` of the active skill set
+/// ([`Session::edit_gem`]; a what-if point writes a level the same way).
+///
+/// # Errors
+/// `APP_SKILL` when there is no such group or gem, or a level is 0.
+pub(crate) fn set_gem(
+    build: &mut Build,
+    group: u32,
+    gem: u32,
+    level: Option<u32>,
+    quality: Option<i32>,
+    enabled: Option<bool>,
+) -> Result<(), AppError> {
+    let g = socket_group(build, group)?
+        .gems
+        .typed_mut()
+        .nth(gem as usize)
+        .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
+    if let Some(level) = level.filter(|l| *l != *g.level.value()) {
+        if level == 0 {
+            return Err(AppError::new(Code::Skill, "a gem's level is at least 1"));
+        }
+        g.level.set(level);
+    }
+    if let Some(quality) = quality.filter(|q| *q != *g.quality.value()) {
+        g.quality.set(quality);
+    }
+    if let Some(enabled) = enabled {
+        g.enabled = enabled;
+    }
+    Ok(())
+}
+
+/// Sets the build's main skill after its active skill set changed
+/// ([`crate::main_skill::choose_after_switch`]); `previous` is the main
+/// skill before the switch ([`crate::main_skill::current_skills`]).
+pub(crate) fn main_after_switch(
+    build: &mut Build,
+    ends: &RangeEnds,
+    data: &GameData,
+    previous: &std::collections::BTreeSet<String>,
+) {
+    let state = State {
+        build: build.clone(),
+        ends: ends.clone(),
+    };
+    if let Some(choice) = crate::main_skill::choose_after_switch(&state, data, previous) {
+        crate::main_skill::apply(build, choice);
+    }
+}
+
+/// Writes input `name` of the active config set
+/// ([`Session::set_config_input`]; a what-if point writes a number the
+/// same way): a placeholder of that name becomes an input; a new input
+/// goes after the others. A build with no config set gets one (ID 1).
+pub(crate) fn write_config_input(build: &mut Build, name: &str, value: ConfigValue) {
+    let set = active_config_or_new(build);
+    if let Some(input) = set.inputs.typed_mut().find(|i| i.name == name) {
+        // The same number keeps its source text (an export writes it as
+        // read).
+        let same = match (&input.value, &value) {
+            (ConfigValue::Number(a), ConfigValue::Number(b)) => a.value() == b.value(),
+            (a, b) => a == b,
+        };
+        if !same {
+            input.value = value;
+        }
+        input.kind = ConfigInputKind::Input;
+    } else {
+        set.inputs.push(ConfigInput {
+            name: name.to_owned(),
+            value,
+            kind: ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Attributes::default(),
+        });
+    }
 }
 
 /// Whether the data can calculate the build.

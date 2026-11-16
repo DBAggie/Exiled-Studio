@@ -222,6 +222,13 @@ fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePr
     ctx.app.preview_tree(spec, node).map_err(dto)
 }
 
+/// A what-if query: the computed fields across the build's stages or one
+/// swept input (runs off the main thread; commits nothing).
+#[tauri::command(async)]
+fn what_if(ctx: State<'_, Ctx>, request: api::WhatIfRequest) -> Answer<api::WhatIfSeries> {
+    ctx.app.what_if(&request).map_err(dto)
+}
+
 /// Runs an API command.
 #[tauri::command(async)]
 fn execute(ctx: State<'_, Ctx>, command: api::Command) -> Answer<api::Outcome> {
@@ -563,7 +570,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 36] = [
+pub const COMMANDS: [&str; 37] = [
     "snapshot",
     "calc_document",
     "item",
@@ -588,6 +595,7 @@ pub const COMMANDS: [&str; 36] = [
     "tree_layout",
     "tree_sprites",
     "preview_tree",
+    "what_if",
     "crashes",
     "dismiss_crash",
     "diagnostics",
@@ -661,6 +669,7 @@ pub fn build<R: Runtime>(
             tree_layout,
             tree_sprites,
             preview_tree,
+            what_if,
             crashes,
             dismiss_crash,
             diagnostics,

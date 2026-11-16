@@ -44,6 +44,9 @@ import type {
   TreeSprites,
   TreeView,
   WarningView,
+  WhatIfPoint,
+  WhatIfRequest,
+  WhatIfSeries,
 } from '../generated/app-api.v1'
 import type {
   CalcResultDocumentV1,
@@ -95,41 +98,11 @@ export type {
   UpdateOffer,
   UpdateStatus,
   WarningView,
+  WhatIfPoint,
+  WhatIfRequest,
+  WhatIfSeries,
   QuarantinedBundle,
   DataFeedStatus,
-}
-
-/** The what-if query (app API v1, additive): the calculated fields at each
- * stage of the build, or with one input swept over a range. It never
- * changes the build. */
-export interface WhatIfRequest {
-  vary:
-    | 'stages'
-    | { 'gem-level': { group: number; gem: number; from: number; to: number } }
-    | { 'character-level': { from: number; to: number; step: number } }
-    | {
-        'config-number': {
-          name: string
-          from: number
-          to: number
-          steps: number
-        }
-      }
-}
-
-/** One point of a what-if series: the fields with the input at `x`. */
-export interface WhatIfPoint {
-  /** The stage's title, or the swept value as text. */
-  label: string
-  /** The swept value; for stages, the index from 0. */
-  x: number
-  /** Whether this point is the build as it is now. */
-  current: boolean
-  fields: { field: string; value?: number | null; state: string }[]
-}
-
-export interface WhatIfSeries {
-  points: WhatIfPoint[]
 }
 
 export type Command = ApplicationAPIV1['command']

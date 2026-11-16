@@ -156,6 +156,11 @@ connections (count) on some screens.
 10. **Equipment summary** no longer shows passive points or skill groups (not relevant there). It
     shows **attributes versus item requirements** and flags any item whose requirement isn't met.
 11. **Terminology:** "held lines" became **Warning / Warnings** everywhere in the UI.
+12. **Dashboards, widened (UX audit, 2026-11-15; changes decision 6).** The owner asked for flexibility,
+    charts, comparison, and detail on request. Up to **8** dashboards per user; a six-column grid
+    where a component is a third, a half, two thirds, or the full width (so up to three side by
+    side); charts and a comparison with pinned numbers among the components; lists short by default
+    with the rest one click away. See `ux-audit.md`.
 
 ---
 

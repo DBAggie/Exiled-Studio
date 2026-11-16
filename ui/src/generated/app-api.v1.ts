@@ -603,6 +603,8 @@ export interface ApplicationAPIV1 {
   'tree-preview': TreePreview1
   'tree-sprites': TreeSprites
   updates: UpdateStatus
+  'what-if': WhatIfRequest
+  'what-if-series': WhatIfSeries
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -2645,4 +2647,120 @@ export interface UpdateOffer {
    * Its version.
    */
   version: string
+}
+/**
+ * A what-if query.
+ */
+export interface WhatIfRequest {
+  /**
+   * What varies from point to point.
+   */
+  vary:
+    | 'stages'
+    | {
+        'gem-level': {
+          /**
+           * The first level, at least 1.
+           */
+          from: number
+          /**
+           * The gem's index in the group.
+           */
+          gem: number
+          /**
+           * The socket group's index in the active skill set.
+           */
+          group: number
+          /**
+           * The last level.
+           */
+          to: number
+        }
+      }
+    | {
+        'character-level': {
+          /**
+           * The first level, at least 1.
+           */
+          from: number
+          /**
+           * The distance between two points, at least 1.
+           */
+          step: number
+          /**
+           * The last level, at most 100.
+           */
+          to: number
+        }
+      }
+    | {
+        'config-number': {
+          /**
+           * The first value.
+           */
+          from: number
+          /**
+           * The input's name.
+           */
+          name: string
+          /**
+           * How many points, at least 2.
+           */
+          steps: number
+          /**
+           * The last value, above `from`.
+           */
+          to: number
+        }
+      }
+}
+/**
+ * A what-if query's answer.
+ */
+export interface WhatIfSeries {
+  /**
+   * The points.
+   */
+  points: WhatIfPoint[]
+}
+/**
+ * One point of a what-if series: the build with one stage chosen or
+ * one value set, calculated.
+ */
+export interface WhatIfPoint {
+  /**
+   * Whether this point is the build as it is now: the active stage,
+   * or the value the build has.
+   */
+  current: boolean
+  /**
+   * Each slice field at this point.
+   */
+  fields: WhatIfField[]
+  /**
+   * The stage's title, without colour codes and links (as
+   * [`LoadoutView`]'s), or the swept value as text.
+   */
+  label: string
+  /**
+   * The swept value; for stages, the stage's index from 0.
+   */
+  x: number
+}
+/**
+ * One field at a what-if point.
+ */
+export interface WhatIfField {
+  /**
+   * The field's name.
+   */
+  field: string
+  /**
+   * Its state.
+   */
+  state: string
+  /**
+   * Its value, when computed and finite.
+   */
+  value?: number | null
 }

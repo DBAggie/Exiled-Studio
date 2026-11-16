@@ -73,6 +73,10 @@ pub enum Code {
     Quarantined,
     /// An installed bundle's files are not its manifest's.
     BundleDamaged,
+    /// A what-if query was refused: too many points, a range that is not
+    /// one, or a group, gem, or numeric config input the build does not
+    /// have.
+    WhatIf,
 }
 
 impl Code {
@@ -109,6 +113,7 @@ impl Code {
             Self::PackExists => "APP_PACK_EXISTS",
             Self::Quarantined => "APP_QUARANTINED",
             Self::BundleDamaged => "APP_BUNDLE_DAMAGED",
+            Self::WhatIf => "APP_WHAT_IF",
         }
     }
 }

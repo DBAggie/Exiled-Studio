@@ -579,6 +579,25 @@ impl App {
         session::preview(&state, &data, edit, before, &cancel).map(|p| (p, generation))
     }
 
+    /// A what-if query ([`crate::what_if`]): the computed fields across the
+    /// build's stages or one swept input, calculated on the caller's
+    /// thread with the latest snapshot (never on the writer, as
+    /// [`App::preview`]) and abandoned when the build changes meanwhile.
+    /// Nothing is committed.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_GAME_MISMATCH`,
+    /// `APP_DATA_VERSION`, `APP_WHAT_IF`, the calculation's codes.
+    pub fn what_if(&self, request: &api::WhatIfRequest) -> Result<api::WhatIfSeries, AppError> {
+        let (state, data, version) =
+            self.read(|p| (p.state.clone(), p.data.clone(), p.snapshot.version));
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
+        crate::what_if::what_if(&state, &data, request, &cancel)
+    }
+
     /// The loaded data's passive tree layout (static while the data is
     /// loaded; the UI caches it by the data version).
     ///

@@ -523,7 +523,7 @@ export function ComparePanel({
       {rows.length === 0 ? (
         <p className="muted small-text">{t('compare.same')}</p>
       ) : (
-        <ul className="stat-list">
+        <ul className="stat-list compare-list">
           {rows.slice(0, 8).map(({ f, now, before, share }) => (
             <StatLine
               key={f.field}
@@ -812,8 +812,16 @@ function curveRequest(
   input: string | undefined,
 ): { request: WhatIfRequest; axis: string } | null {
   if (vary === 'character-level') {
+    // The levels around the character's own (one point a level, so the
+    // build's own level is on the curve), within the query's 41 points.
+    const level = build.level ?? 1
+    const from = Math.max(1, Math.min(level - 20, 60))
     return {
-      request: { vary: { 'character-level': { from: 1, to: 100, step: 3 } } },
+      request: {
+        vary: {
+          'character-level': { from, to: Math.min(100, from + 40), step: 1 },
+        },
+      },
       axis: t('curve.axis.character-level'),
     }
   }

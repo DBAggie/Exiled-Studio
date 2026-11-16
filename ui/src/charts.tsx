@@ -134,8 +134,9 @@ export function LineChart({
   const ticks = niceTicks(Math.min(...values), Math.max(...values), 3)
   const low = ticks[0]!
   const high = ticks[ticks.length - 1]!
-  const left = 8
-  const right = 8
+  // A gutter on the left holds the axis values, clear of the plot.
+  const left = 44
+  const right = 10
   const top = 10
   const bottom = 22
   const plotW = Math.max(40, width - left - right)
@@ -220,7 +221,12 @@ export function LineChart({
               y2={y(v)}
               className="chart-grid"
             />
-            <text x={left} y={y(v) - 3} className="chart-tick">
+            <text
+              x={left - 8}
+              y={y(v) + 4}
+              textAnchor="end"
+              className="chart-tick"
+            >
               {compactNumber(v)}
             </text>
           </g>
@@ -235,9 +241,8 @@ export function LineChart({
               className="chart-target"
             />
             <text
-              x={left + plotW}
-              y={y(target.y) - 4}
-              textAnchor="end"
+              x={left + 4}
+              y={y(target.y) - 5}
               className="chart-tick chart-target-label"
             >
               {target.label}
