@@ -32,7 +32,7 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [x] P6 Security: advisories and ignores, secret scan, fuzz and properties, capability check, `docs/phase-5/security.md`
 - [x] P7 Performance: `tools/bench`, baselines, instruction-count CI check, `docs/phase-5/performance.md`
 - [x] P8 Reports, handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README (notice, install, privacy), task docs (P1 to P8: the Phase 5 sprint below, PR #118)
-- [ ] `code-architecture-reviewer` before marking the PR ready
+- [x] `code-architecture-reviewer` before marking the PR ready (run before #134; findings fixed or answered in its body)
 
 ## Phase 5 sprint (maintainer 2026-11-15: "perform all open p5 steps in this next sprint"; branch `feat/p5-release`)
 One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this order. Tick each when its commit is pushed; the handoff's Current state names the last one.
