@@ -85,6 +85,19 @@ The maintainer named the first release 0.9 (2026-11-16). One state of `dev` goes
 | Version | Release commit on `dev` | Branch | Tag |
 |---|---|---|---|
 | `0.9.0-1` | PR #119 (keys, shipped data, version) | `experimental` | `v0.9.0-1`, a pre-release |
-| `0.9.0` | the next PR (version only) | `main` | `v0.9.0`, a release |
+| `0.9.0` | PR #121 (version only), merged after `experimental`'s PR #120 | `main` | `v0.9.0`, a release |
 
-- **Merging `dev` into a protected branch.** Both allow only squash merges with a linear history. So a squash commit on `experimental` or `main` is not an ancestor of `dev`, and the next merge's base stays where the branch was made. Later merges may then conflict where `dev` changed lines the earlier squash had also changed. If that happens, resolve it in the PR from `dev` by taking `dev`'s side: the target branch only ever holds states of `dev`.
+Both are published (2026-11-16): `v0.9.0-1` on `experimental` at `050f327` (release run 43822600359), `v0.9.0` on `main` at `5eb5139` (#132; release run 43866901437). The download page shows both channels, and both update feeds are served.
+
+- **`dev` must never be deleted.** The repository deletes a PR's head branch when it merges, so merging #120 (`dev` into `experimental`) deleted `dev` (2026-11-16; restored at once at `b89587b`, nothing lost; #121 had been retargeted to `experimental` and was moved back). The ruleset "dev: never deleted" now blocks it.
+- **The first `v0.9.0-1` run failed** at its last bundling step: `tauri build` reads the updater public key from the configuration, which is empty in `tauri.conf.json`. `tools/package/updater-key.sh` now writes `release/updater.pub` into the run's copy of `tauri.updater.conf.json`. The fix went to `experimental` by its own PR (a merge of `dev` would have brought version `0.9.0`) and to `dev` by another; `v0.9.0-1`, never published, was moved to the fixed commit.
+- **The first `v0.9.0-1` and `v0.9.0` runs failed at the MSI install check.** Tauri's MSI template looks for an earlier install folder under the NSIS setup's registry key (`HKCU\Software\<manufacturer>\<product>`) before it uses Program Files. The release workflow runs the NSIS setup first, so the MSI installed into the per-user folder. `tools/package/install-windows.ps1` now accepts either folder and prints the MSI log's lines when it finds neither (#130 into `experimental`, #131 into `dev`, #132 `dev` into `main`). Both tags were moved to the fixed commits before publishing.
+- **Merging `dev` into a protected branch.** Both allow only squash merges with a linear history. So a squash commit on `experimental` or `main` is not an ancestor of `dev`, and the next merge's base stays where the branch was made. Later merges may then conflict where `dev` changed lines the earlier squash had also changed. If that happens, resolve it in the PR from `dev` by taking `dev`'s side: the target branch only ever holds states of `dev`. Better, after each squash into `experimental` or `main`, record it on `dev` with a merge that keeps `dev`'s tree, pushed straight to `dev` (unprotected):
+
+  ```
+  git checkout dev && git pull --ff-only && git fetch origin
+  git merge -s ours origin/main -m "Record main (<PR>) as merged into dev"   # or origin/experimental
+  git push origin dev
+  ```
+
+  Check first that the branch's tree differs from `dev`'s only by the release commit (`git diff origin/main dev`). Done after 0.9 for both branches (`78ee81c`, `825b6ef`, `1424565`), so the next PRs from `dev` merge cleanly.

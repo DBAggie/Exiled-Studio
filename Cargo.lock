@@ -2033,9 +2033,10 @@ checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 
 [[package]]
 name = "loom-app"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "crc32fast",
+ "loom-bundles",
  "loom-calc",
  "loom-data",
  "loom-domain",
@@ -2056,7 +2057,7 @@ dependencies = [
 
 [[package]]
 name = "loom-bench"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-app",
  "loom-calc",
@@ -2068,8 +2069,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-bundles"
+version = "0.9.0"
+dependencies = [
+ "loom-data",
+ "loom-domain",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "loom-calc"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "libm",
  "loom-data",
@@ -2079,7 +2092,7 @@ dependencies = [
 
 [[package]]
 name = "loom-data"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "ed25519-dalek",
  "loom-domain",
@@ -2092,11 +2105,11 @@ dependencies = [
 
 [[package]]
 name = "loom-domain"
-version = "0.9.0-1"
+version = "0.9.0"
 
 [[package]]
 name = "loom-extractor"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-data",
  "serde",
@@ -2107,7 +2120,7 @@ dependencies = [
 
 [[package]]
 name = "loom-integrations"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "getrandom 0.4.3",
  "keyring",
@@ -2122,8 +2135,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-knowledge-mcp"
+version = "0.9.0"
+dependencies = [
+ "loom-bundles",
+ "loom-data",
+ "loom-domain",
+ "loom-parser",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "loom-parity-cli"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-calc",
  "loom-data",
@@ -2140,7 +2166,7 @@ dependencies = [
 
 [[package]]
 name = "loom-parser"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-data",
  "loom-domain",
@@ -2149,7 +2175,7 @@ dependencies = [
 
 [[package]]
 name = "loom-persistence"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-domain",
  "loom-serialization",
@@ -2160,7 +2186,7 @@ dependencies = [
 
 [[package]]
 name = "loom-pipeline"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-calc",
  "loom-data",
@@ -2173,7 +2199,7 @@ dependencies = [
 
 [[package]]
 name = "loom-release"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "getrandom 0.4.3",
  "loom-app",
@@ -2187,7 +2213,7 @@ dependencies = [
 
 [[package]]
 name = "loom-schema-gen"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "boon",
  "loom-domain",
@@ -2198,7 +2224,7 @@ dependencies = [
 
 [[package]]
 name = "loom-serialization"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-calc",
  "loom-domain",
@@ -2213,7 +2239,7 @@ dependencies = [
 
 [[package]]
 name = "loom-tauri"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-app",
  "loom-data",
@@ -2231,7 +2257,7 @@ dependencies = [
 
 [[package]]
 name = "loom-tree"
-version = "0.9.0-1"
+version = "0.9.0"
 dependencies = [
  "loom-data",
  "serde",

@@ -59,4 +59,13 @@ else
   rm -rf "$dir"
   echo "update key: $(key_id release/updater.pub) (throwaway; this run's builds only)"
 fi
+# `tauri build` with createUpdaterArtifacts reads the public key from the
+# configuration when it signs (tauri.conf.json leaves it empty: the
+# application takes release/updater.pub at run time, updates.rs), so the
+# run's copy of tauri.updater.conf.json gets it (never committed). Without
+# it the bundler fails with "Missing comment in public key" (first seen in
+# the v0.9.0-1 run).
+conf=crates/loom-tauri/tauri.updater.conf.json
+jq --arg key "$(tr -d '\r\n' < release/updater.pub)" '.plugins.updater.pubkey = $key' "$conf" > "$keys/updater.conf.json"
+mv "$keys/updater.conf.json" "$conf"
 echo "LOOM_KEYS_DIR=$keys" >> "${GITHUB_ENV:-/dev/null}"

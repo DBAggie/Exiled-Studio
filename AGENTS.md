@@ -20,6 +20,7 @@ crates/
   loom-serialization  core   versioned DTOs (build, calc result, app API), migrations, legacy XML adapters
   loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
   loom-tree           core   the passive tree: graph, kinds, positions, allocation rules, tree URL (the editor)
+  loom-bundles        host   installed bundles, read only: directory source, trust lists, status and scan, full check (ADR-018)
   loom-persistence    host   files, recovery snapshots, recent list (SQLite indexes later)
   loom-app            host   command/query/event API, single-writer build task, background calculation, local logs, crash records, diagnostic package (docs/phase-5/logs.md)
   loom-integrations   host   network adapters, the local MCP server (loopback)
@@ -30,6 +31,7 @@ tools/
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
   tree                not a crate: GGG's passive tree export, pinned (manifest.json) and fetched into local/tree-export/ by acquire.{ps1,sh} (ADR-005 Amendment 2)
+  knowledge-mcp       loom-knowledge-mcp: the knowledge MCP server over stdio, read-only, no network; shipped (ADR-018)
   release             loom-release: data keys, signatures, signed bundle packs, the data feed (docs/release/signing.md)
   bench               loom-bench: the core paths' instruction counts (CI) and wall clock (docs/phase-5/performance.md)
   package             not a crate: installers, portable zip, smoke runs, release workflow scripts, the release channel (docs/phase-5/packaging.md, docs/release/channels.md)
@@ -37,7 +39,7 @@ tools/
 fuzz/                 cargo-fuzz targets of the hostile-input readers; its own workspace (docs/phase-5/security.md)
 release/              trust lists and public keys compiled into the app; bundle.json names the shipped bundle (the maintainer's)
 site/                 the download page on GitHub Pages: template and style (pages.yml publishes it; docs/release/channels.md)
-schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract (rewritten by its test, below)
+schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract, and knowledge-mcp-tools.v1.json, the knowledge MCP's (each rewritten by its test, below)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -49,8 +51,9 @@ Dependencies flow one way, with no cycles:
 - `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
 - `loom-parser`, `loom-calc`, `loom-serialization`, `loom-tree` <- `loom-pipeline` (Phase 4 plan, decision 0; the resolved passive set, passive tree plan T-e)
 - `loom-data` <- `loom-tree` (passive tree plan, T-e; `loom-calc` does not depend on it: `loom-pipeline` resolves the spec with it and hands the engine the result)
+- `loom-domain`, `loom-data` <- `loom-bundles` (host, read only; ADR-018)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
-- `tools/*` depend on core crates only, except `loom-release` and `loom-bench`, which use `loom-app`'s pack writing and `tree::rules_spec` (tools, never shipped).
+- `tools/*` depend on core crates only, except `loom-release` and `loom-bench`, which use `loom-app`'s pack writing and `tree::rules_spec` (tools, never shipped), and `loom-knowledge-mcp`, which ships and so uses `loom-bundles` instead of `loom-app` (ADR-018).
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
 **Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline, loom-tree) must:
@@ -231,6 +234,11 @@ cargo run -p loom-tauri
 
 # MCP tool contract (Phase 4): a change to the tool list is a reviewed diff of schemas/mcp-tools.v1.json:
 LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
+# Knowledge MCP contract (ADR-018), the same way: schemas/knowledge-mcp-tools.v1.json:
+LOOM_WRITE_KNOWLEDGE_CONTRACT=1 cargo test -p loom-knowledge-mcp --test contract
+# The knowledge MCP server over stdio (ADR-018): the newest trusted installed bundle of the game (--data-dir, default
+# the app's data folder), or a bundle folder served unsigned (--bundle), with the knowledge repo's economy snapshots:
+cargo run --release -p loom-knowledge-mcp -- --game poe1 --bundle <bundle-dir> --snapshots <knowledge repo>/plugins/poe1-expert/skills/poe1-economy/snapshots
 # The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
 # msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
 cargo build -p loom-tauri --features e2e,tauri/custom-protocol
