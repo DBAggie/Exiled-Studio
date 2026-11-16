@@ -2,7 +2,8 @@
 # plain release executable: "Exiled Studio.exe", the `portable` marker that
 # keeps the data in `data\` beside it, the license with GGG's notice, and
 # the shipped game data packs in `bundles\` when the release workflow made
-# them (crates/loom-tauri/shipped/, P4).
+# them (crates/loom-tauri/shipped/, P4), and the knowledge MCP server
+# (ADR-018) when it was built beside the executable.
 #
 #   portable.ps1 <loom-tauri.exe> <out dir> [<version>]
 #
@@ -27,6 +28,10 @@ try {
     Copy-Item $Exe (Join-Path $stage "$product.exe")
     Set-Content -Path (Join-Path $stage 'portable') -Value "$product keeps its data in the data folder beside it while this file is here." -Encoding ascii
     Copy-Item (Join-Path $root 'crates/loom-tauri/installer/LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
+    # The knowledge MCP server (ADR-018) when built beside the app: beside
+    # the `portable` marker it serves the bundles in `data\`.
+    $knowledge = Join-Path (Split-Path -Parent $Exe) 'exiled-studio-knowledge-mcp.exe'
+    if (Test-Path $knowledge) { Copy-Item $knowledge (Join-Path $stage 'exiled-studio-knowledge-mcp.exe') }
     $shipped = Get-ChildItem -ErrorAction SilentlyContinue (Join-Path $root 'crates/loom-tauri/shipped/*.loombundle')
     if ($shipped) {
         New-Item -ItemType Directory -Force (Join-Path $stage 'bundles') | Out-Null
