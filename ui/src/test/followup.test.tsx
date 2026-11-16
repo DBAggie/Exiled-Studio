@@ -1,5 +1,6 @@
 // The UX audit's follow-up (docs/ui/ux-audit.md, "Follow-up"): dashboards
-// a build keeps for itself, snapshots kept by name in the build, the
+// a build keeps for itself (layout only, a typed section of the build),
+// snapshots kept by name on this computer (never in the build), the
 // comparison with another build file, dragging components, a stage
 // compared with another on the tree and the equipment pages, and the
 // Skills page as a table.
@@ -8,7 +9,8 @@ import { describe, expect, it } from 'vitest'
 
 import { dropTarget, dropped } from '../dashboards'
 import { nodeDiff, slotDiff } from '../stageDiff'
-import { readWorkspace, writeWorkspace } from '../workspace'
+import { readBuildDashboards, writeBuildDashboards } from '../buildDashboards'
+import { keptKey, readKept, readKeptList, writeKept } from '../kept'
 import { expectAccessible, renderApp } from './render'
 
 async function openDashboard(demo = true) {
@@ -25,58 +27,89 @@ async function openDashboard(demo = true) {
   return view
 }
 
-/** The workspace document the build holds now. */
+/** The dashboards the build holds now. */
 async function stored(api: { snapshot(): Promise<unknown> }) {
   const snapshot = (await api.snapshot()) as {
-    build: { workspace?: string | null } | null
+    build: { dashboards?: unknown } | null
   }
-  return readWorkspace(snapshot.build?.workspace)
+  return readBuildDashboards(snapshot.build?.dashboards)
 }
 
-describe('the build workspace document', () => {
-  it('reads nothing, junk, and another version as the empty workspace', () => {
-    const empty = { version: 1, snapshots: [] }
-    expect(readWorkspace(null)).toEqual(empty)
-    expect(readWorkspace('not json')).toEqual(empty)
-    expect(readWorkspace('{"version":2,"snapshots":[]}')).toEqual(empty)
-    // The empty workspace is not stored at all.
-    expect(writeWorkspace(readWorkspace(null))).toBeNull()
+describe("the build's dashboards section", () => {
+  it('reads none, junk, and an empty set as no dashboards', () => {
+    expect(readBuildDashboards(null)).toBeUndefined()
+    expect(readBuildDashboards('text')).toBeUndefined()
+    expect(readBuildDashboards({ active: 'a', list: [] })).toBeUndefined()
   })
 
-  it('keeps what it knows and drops what it does not', () => {
-    const text = JSON.stringify({
-      version: 1,
-      snapshots: [
-        { id: 's1', name: 'Before', fields: { life: 100, mana: null } },
-        { id: 's2', name: 'Bad', fields: { life: 'many' } },
+  it('keeps what it knows, drops what it does not, and writes layout only', () => {
+    const own = readBuildDashboards({
+      active: 'gone',
+      list: [
+        {
+          id: 'a',
+          name: 'Mine',
+          components: [
+            { id: 'c1', kind: 'offence', width: 'half' },
+            { id: 'c2', kind: 'hologram', width: 'half' },
+            { id: 'c3', kind: 'timeline', width: 'half', target: 1234.6 },
+            { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+          ],
+        },
       ],
-      dashboards: {
-        active: 'gone',
-        list: [
-          {
-            id: 'a',
-            name: 'Mine',
-            components: [
-              { id: 'c1', kind: 'offence', width: 'half' },
-              { id: 'c2', kind: 'hologram', width: 'half' },
-            ],
-          },
-        ],
-      },
     })
-    const w = readWorkspace(text)
-    expect(w.snapshots.map((s) => s.name)).toEqual(['Before'])
-    expect(w.dashboards?.active).toBe('a')
-    expect(w.dashboards?.list[0]?.components.map((c) => c.kind)).toEqual([
+    expect(own?.active).toBe('a')
+    expect(own?.list[0]?.components.map((c) => c.kind)).toEqual([
       'offence',
+      'timeline',
+      'stat',
     ])
-    expect(readWorkspace(writeWorkspace(w))).toEqual(w)
+    const written = writeBuildDashboards(own!)
+    // Only what a kind uses, a whole number for a target, and no number
+    // of the build.
+    expect(written.list[0]!.components).toEqual([
+      { id: 'c1', kind: 'offence', width: 'half' },
+      { id: 'c3', kind: 'timeline', width: 'half', target: 1235 },
+      { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+    ])
+    expect(readBuildDashboards(written)?.list[0]?.name).toBe('Mine')
   })
 })
 
-describe('snapshots kept in the build', () => {
+describe('snapshots kept on this computer', () => {
+  it('keeps them under the build file, the most recent builds only', () => {
+    window.localStorage.clear()
+    expect(keptKey({ path: 'a.json', origin: 'a.xml' })).toBe('a.json')
+    expect(keptKey({ path: null, origin: 'a.xml' })).toBe('a.xml')
+    expect(keptKey({})).toBeNull()
+    const one = [
+      { id: 's1', name: 'Before', fields: { life: 100, mana: null } },
+    ]
+    writeKept('a.json', one)
+    expect(readKept('a.json')).toEqual(one)
+    expect(readKept('b.json')).toEqual([])
+    for (let i = 0; i < 20; i += 1) writeKept(`other${i}.json`, one)
+    expect(readKept('a.json')).toEqual([])
+    writeKept('other0.json', [])
+    expect(readKept('other0.json')).toEqual([])
+    // What is not a snapshot is dropped; junk in storage is nothing kept.
+    expect(
+      readKeptList([
+        ...one,
+        { id: 's2', name: 'Bad', fields: { life: 'many' } },
+      ]),
+    ).toEqual(one)
+    window.localStorage.setItem('loom.kept.v1', 'not json')
+    expect(readKept('other1.json')).toEqual([])
+    window.localStorage.clear()
+  })
+})
+
+describe('snapshots of the numbers', () => {
   it('keeps the numbers by name, compares with them, and deletes them', async () => {
+    window.localStorage.clear()
     const { user, api } = await openDashboard()
+    const version = (await api.snapshot()).version
     await user.click(screen.getByRole('button', { name: /^Snapshots/ }))
     expect(screen.getByText('None kept yet.')).toBeTruthy()
     await user.type(screen.getByLabelText('Snapshot name'), 'Leveling gear')
@@ -84,13 +117,13 @@ describe('snapshots kept in the build', () => {
       screen.getByRole('button', { name: 'Keep current numbers' }),
     )
     await screen.findByRole('button', { name: 'Compare with Leveling gear' })
-    // It is in the build (an undoable change), not only on screen.
-    expect((await stored(api)).snapshots.map((s) => s.name)).toEqual([
-      'Leveling gear',
-    ])
-    expect(
-      api.executed.some((c) => typeof c === 'object' && 'set-workspace' in c),
-    ).toBe(true)
+    // It is kept on this computer under the build's file, and is no
+    // change to the build.
+    const key = keptKey(await api.snapshot())
+    expect(key).not.toBeNull()
+    expect(readKept(key!).map((s) => s.name)).toEqual(['Leveling gear'])
+    expect((await api.snapshot()).version).toBe(version)
+    expect(JSON.stringify(await api.snapshot())).not.toContain('Leveling gear')
     await user.click(
       screen.getByRole('button', { name: 'Compare with Leveling gear' }),
     )
@@ -110,7 +143,7 @@ describe('snapshots kept in the build', () => {
     await user.click(
       screen.getByRole('button', { name: 'Delete snapshot Leveling gear' }),
     )
-    await waitFor(async () => expect((await stored(api)).snapshots).toEqual([]))
+    await waitFor(() => expect(readKept(key!)).toEqual([]))
     expect(screen.queryByRole('group', { name: 'Comparison' })).toBeNull()
     await expectAccessible()
   })
@@ -147,7 +180,7 @@ describe('dashboards a build keeps for itself', () => {
     ).toBe('true')
     await user.click(within(scope).getByRole('button', { name: 'This build' }))
     await waitFor(async () =>
-      expect((await stored(api)).dashboards?.list.map((d) => d.name)).toEqual([
+      expect((await stored(api))?.list.map((d) => d.name)).toEqual([
         'Overview',
         'Defence',
         'Trends',
@@ -159,7 +192,7 @@ describe('dashboards a build keeps for itself', () => {
     await user.clear(name)
     await user.type(name, 'Boss check{Enter}')
     await waitFor(async () =>
-      expect((await stored(api)).dashboards?.list[0]?.name).toBe('Boss check'),
+      expect((await stored(api))?.list[0]?.name).toBe('Boss check'),
     )
     expect(api.prefs).toBe(prefsBefore)
     // Changing the tab shown is not a change to the build.
@@ -174,9 +207,7 @@ describe('dashboards a build keeps for itself', () => {
     expect((await api.snapshot()).version).toBe(version)
     // Back to the user's: the build no longer keeps a set.
     await user.click(within(scope).getByRole('button', { name: 'Every build' }))
-    await waitFor(async () =>
-      expect((await stored(api)).dashboards).toBeUndefined(),
-    )
+    await waitFor(async () => expect(await stored(api)).toBeUndefined())
     expect(
       within(screen.getByRole('group', { name: 'Dashboards' })).getByRole(
         'button',

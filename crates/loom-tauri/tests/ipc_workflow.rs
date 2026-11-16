@@ -374,7 +374,7 @@ fn a_dropped_file_should_be_kept_on_the_rust_side_and_opened_by_kind() {
 }
 
 #[test]
-fn the_workspace_and_the_comparison_queries_should_run_through_the_commands() {
+fn the_dashboards_and_the_comparison_queries_should_run_through_the_commands() {
     let s = shell("compare");
     // No file picked: the user cancelled.
     assert_eq!(s.ok("compare_file", json!({})), Value::Null);
@@ -395,25 +395,38 @@ fn the_workspace_and_the_comparison_queries_should_run_through_the_commands() {
     let own = life(&document["result"]["fields"]);
     assert!(own.is_number(), "{own}");
 
-    // The build's workspace document: one undoable change, in the view.
-    let text = r#"{"dashboards":[{"name":"Overview"}]}"#;
-    let set = s.execute(json!({"set-workspace": {"document": text}}));
+    // The build's dashboards: one undoable change, in the view as sent.
+    let dashboards = json!({"active": "overview", "list": [{"id": "overview", "name": "Overview", "components": [
+        {"id": "c1", "kind": "stat", "width": "third", "field": "hit-dps"},
+        {"id": "c2", "kind": "progression", "width": "full", "fields": ["life", "hit-dps"]},
+        {"id": "c3", "kind": "timeline", "width": "half", "target": 5_000_000},
+    ]}]});
+    let set = s.execute(json!({"set-dashboards": {"dashboards": dashboards}}));
     let version = set["done"]["version"].as_u64().unwrap();
     let snap = s.ok("snapshot", json!({}));
-    assert_eq!(snap["build"]["workspace"], json!(text));
-    assert_eq!(snap["history"]["undo"]["kind"], "workspace");
+    assert_eq!(snap["build"]["dashboards"], dashboards);
     assert_eq!(
-        s.execute(json!({"set-workspace": {"document": text}})),
+        snap["history"]["undo"],
+        json!({"kind": "dashboards", "item": 0, "request": null})
+    );
+    assert_eq!(
+        s.execute(json!({"set-dashboards": {"dashboards": dashboards}})),
         json!("nothing")
     );
-    let big = "a".repeat(262_145);
+    // Refused, and nothing changed: an active dashboard that is not there.
+    let mut wrong = dashboards.clone();
+    wrong["active"] = json!("gone");
     let err = s
         .invoke(
             "execute",
-            json!({"command": {"set-workspace": {"document": big}}}),
+            json!({"command": {"set-dashboards": {"dashboards": wrong}}}),
         )
         .unwrap_err();
-    assert_eq!(err["code"], "APP_WORKSPACE");
+    assert_eq!(err["code"], "APP_DASHBOARDS");
+    assert_eq!(
+        s.ok("snapshot", json!({}))["build"]["dashboards"],
+        dashboards
+    );
 
     // Another build file, a PoB build then a build document, calculated
     // without opening it: the open build stays as it is.

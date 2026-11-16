@@ -25,7 +25,8 @@ import {
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
 import { historyText } from '../util'
-import { type Workspace, writeWorkspace } from '../workspace'
+import { type BuildDashboards, writeBuildDashboards } from '../buildDashboards'
+import { type Kept, keptKey, readKept, writeKept } from '../kept'
 import { importFlow, importActions } from './importFlow'
 
 export type Screen =
@@ -93,6 +94,9 @@ interface UiState {
   /** The build's own dashboard shown (a build that keeps its own set);
    * for the session, so that changing tabs is not a change to the build. */
   dashActive: string | null
+  /** The open build's kept snapshots of its numbers, oldest first
+   * (`../kept`: this computer's, never in the build file). */
+  kept: Kept[]
   /** The stage the tree and the equipment are compared with, by its
    * spec. */
   compareStage: number | null
@@ -150,6 +154,7 @@ const ui = createSlice({
     prefs: defaultPrefs(),
     baseline: null,
     dashActive: null,
+    kept: [],
     compareStage: null,
     trail: [],
   } as UiState,
@@ -192,6 +197,9 @@ const ui = createSlice({
     },
     dashActive(state, action: PayloadAction<string | null>) {
       state.dashActive = action.payload
+    },
+    kept(state, action: PayloadAction<Kept[]>) {
+      state.kept = action.payload
     },
     compareStage(state, action: PayloadAction<number | null>) {
       state.compareStage = action.payload
@@ -311,6 +319,15 @@ export const refresh = (): Thunk => async (dispatch, getState, api) => {
   ) {
     dispatch(actions.forgetNumbers())
   }
+  // The kept snapshots are this computer's, under the build's file: read
+  // for a build just opened; carried along when the build is saved under
+  // a new name.
+  const key = keptKey(snapshot)
+  if (replaced || key !== keptKey(before)) {
+    const kept = getState().ui.kept
+    if (!replaced && key !== null && kept.length > 0) writeKept(key, kept)
+    else dispatch(actions.kept(key === null ? [] : readKept(key)))
+  }
   const held = getState().session.calc
   if (held === null || held[0] !== snapshot.calc.version) {
     const calc = await api.calcDocument()
@@ -321,15 +338,15 @@ export const refresh = (): Thunk => async (dispatch, getState, api) => {
         calc,
         undo == null ? t('trail.opened') : historyText(undo, snapshot.build),
       )
-      // A change to the build's dashboards or kept snapshots (done or
-      // undone) moves no number: it is not a step of the trail.
+      // A change to the build's own dashboards (done or undone) moves no
+      // number: it is not a step of the trail.
       const last = getState().ui.trail.at(-1)
-      const workspace =
-        (undo?.kind === 'workspace' ||
-          snapshot.history.redo?.kind === 'workspace') &&
+      const layout =
+        (undo?.kind === 'dashboards' ||
+          snapshot.history.redo?.kind === 'dashboards') &&
         last !== undefined &&
         JSON.stringify(last.fields) === JSON.stringify(mark.fields)
-      if (!workspace) dispatch(actions.tracked(mark))
+      if (!layout) dispatch(actions.tracked(mark))
     }
   }
 }
@@ -362,12 +379,29 @@ export const setPrefs =
     }
   }
 
-/** Stores the build's workspace (its own dashboards, its kept
- * snapshots) in the build: one undoable change. */
-export const setWorkspace =
-  (workspace: Workspace): Thunk<Outcome | null> =>
+/** Stores the build's own dashboards in the build (`null`: it keeps
+ * none and shows the user's): one undoable change. */
+export const setBuildDashboards =
+  (own: BuildDashboards | null): Thunk<Outcome | null> =>
   (dispatch) =>
-    dispatch(run({ 'set-workspace': { document: writeWorkspace(workspace) } }))
+    dispatch(
+      run({
+        'set-dashboards': {
+          dashboards: own === null ? null : writeBuildDashboards(own),
+        },
+      }),
+    )
+
+/** Changes the open build's kept snapshots and keeps them on this
+ * computer under the build's file (for the session, with no file). */
+export const setKept =
+  (list: Kept[]): Thunk =>
+  (dispatch, getState) => {
+    dispatch(actions.kept(list))
+    const key = keptKey(getState().session.snapshot)
+    if (key !== null) writeKept(key, list)
+    return Promise.resolve()
+  }
 
 /** Runs a call; on failure shows its code and returns null. */
 export const attempt =

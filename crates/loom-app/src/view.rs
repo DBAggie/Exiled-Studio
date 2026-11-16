@@ -7,8 +7,8 @@ use loom_calc::CalcResult;
 use loom_calc::poe1::collect::{InputUse, ItemPlace};
 use loom_data::bundle::Bundle;
 use loom_domain::{
-    Build, ConfigInputKind, ConfigValue, DataVersion, Item, ItemId, ItemLine, League, LineKind,
-    LineResolution, QuarantineReason, Resolved, StatValue, UnresolvedReason,
+    Build, ConfigInputKind, ConfigValue, Dashboards, DataVersion, Item, ItemId, ItemLine, League,
+    LineKind, LineResolution, QuarantineReason, Resolved, StatValue, UnresolvedReason,
 };
 use loom_parser::import::{BundleData, ItemData as _};
 use loom_serialization::dto::app::v1 as api;
@@ -965,7 +965,36 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
             Some(League::Challenge) | None => api::League::Challenge,
         },
         tree: None,
-        workspace: build.workspace.clone(),
+        dashboards: build.dashboards.as_ref().map(dashboards_view),
+    }
+}
+
+/// The build's dashboards as the API shows them.
+fn dashboards_view(dashboards: &Dashboards) -> api::Dashboards {
+    api::Dashboards {
+        active: dashboards.active.clone(),
+        list: dashboards
+            .list
+            .iter()
+            .map(|d| api::Dashboard {
+                id: d.id.clone(),
+                name: d.name.clone(),
+                components: d
+                    .components
+                    .iter()
+                    .map(|c| api::DashboardComponent {
+                        id: c.id.clone(),
+                        kind: c.kind.clone(),
+                        width: c.width.clone(),
+                        field: c.field.clone(),
+                        fields: c.fields.clone(),
+                        vary: c.vary.clone(),
+                        input: c.input.clone(),
+                        target: c.target,
+                    })
+                    .collect(),
+            })
+            .collect(),
     }
 }
 

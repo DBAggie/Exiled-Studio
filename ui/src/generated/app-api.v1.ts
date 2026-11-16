@@ -376,11 +376,11 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
-        'set-workspace': {
+        'set-dashboards': {
           /**
-           * The document; absent or null to clear it.
+           * The dashboards; absent or null to clear them.
            */
-          document?: string | null
+          dashboards?: Dashboards | null
         }
       }
     | {
@@ -687,6 +687,80 @@ export interface ExpectedLine {
    * Its text.
    */
   text: string
+}
+/**
+ * A build's dashboards and which one is shown.
+ */
+export interface Dashboards {
+  /**
+   * The ID of the dashboard shown: one of `list`.
+   */
+  active: string
+  /**
+   * The dashboards, in order: 1 to 8.
+   */
+  list: Dashboard[]
+}
+/**
+ * One dashboard: a named list of components.
+ */
+export interface Dashboard {
+  /**
+   * The components, in order: at most 24.
+   */
+  components: DashboardComponent[]
+  /**
+   * The dashboard's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The name its author gave it: 1 to 40 characters.
+   */
+  name: string
+}
+/**
+ * One component of a dashboard: what it shows, never the numbers.
+ * Every text here is 1 to 64 characters.
+ */
+export interface DashboardComponent {
+  /**
+   * The calc result field a stat, history, or curve component
+   * shows.
+   */
+  field?: string | null
+  /**
+   * The calc result fields a progression component charts: at most
+   * 6.
+   */
+  fields?: string[]
+  /**
+   * The component's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The config input a scaling curve varies.
+   */
+  input?: string | null
+  /**
+   * The component's kind (`stat`, `progression`, `timeline`, ...):
+   * open text, so the UI adds kinds without a schema change and an
+   * older application still opens the build.
+   */
+  kind: string
+  /**
+   * The life a fight timeline deals damage to.
+   */
+  target?: number | null
+  /**
+   * What a scaling curve varies (`gem-level`, `character-level`,
+   * `config-number`): open text, as `kind`.
+   */
+  vary?: string | null
+  /**
+   * The component's width (`third`, `half`, `full`, ...): open
+   * text, as `kind`.
+   */
+  width: string
 }
 /**
  * A panic the application recorded (ADR-014; Phase 5, P-f), redacted.
@@ -1574,6 +1648,13 @@ export interface BuildView {
    */
   'config-sets': SetView[]
   /**
+   * The build's dashboards, if it has any: the layout its author
+   * chose to show it with (which components, which fields), never
+   * calculated numbers; kept in the build file
+   * (`set-dashboards`).
+   */
+  dashboards?: Dashboards | null
+  /**
    * The data version the build is pinned to.
    */
   'data-version'?: DataVersionView | null
@@ -1653,13 +1734,6 @@ export interface BuildView {
    * Lines with warnings: kept, shown, not calculated (ADR-015).
    */
   warnings: WarningView[]
-  /**
-   * The UI's document for this build (its dashboards and kept
-   * snapshots of the numbers), if it has one: opaque text the
-   * application keeps in the build file and never reads
-   * (`set-workspace`).
-   */
-  workspace?: string | null
 }
 /**
  * The active config set: its inputs and custom modifier blocks.
@@ -2445,7 +2519,7 @@ export interface HistoryEntry {
     | 'tree-specs'
     | 'tree-request-applied'
     | 'item-added'
-    | 'workspace'
+    | 'dashboards'
   /**
    * The change request it applied, when an MCP client asked for it.
    */

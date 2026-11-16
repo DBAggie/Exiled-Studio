@@ -100,11 +100,11 @@ dto! {
         /// accepted 2026-11-14).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub league: Option<League>,
-        /// The UI's document for this build (dashboards, kept snapshots
-        /// of the numbers), if it has one: opaque text (additive, accepted
-        /// 2026-11-16).
+        /// The build's dashboards, if it has any: the layout its author
+        /// chose to show it with, never calculated numbers (additive,
+        /// accepted 2026-11-16).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub workspace: Option<String>,
+        pub dashboards: Option<Dashboards>,
         /// The character.
         pub character: Character,
         /// Passive specs.
@@ -126,6 +126,54 @@ dto! {
         /// Untyped content after the build's container.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub epilog: Vec<OpaqueNode>,
+    }
+
+    /// A build's dashboards and which one is shown.
+    pub struct Dashboards {
+        /// The ID of the dashboard shown.
+        pub active: String,
+        /// The dashboards, in order.
+        pub list: Vec<Dashboard>,
+    }
+
+    /// One dashboard: a named list of components.
+    pub struct Dashboard {
+        /// The dashboard's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The name its author gave it.
+        pub name: String,
+        /// The components, in order.
+        pub components: Vec<DashboardComponent>,
+    }
+
+    /// One component of a dashboard: what it shows, never the numbers.
+    pub struct DashboardComponent {
+        /// The component's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The component's kind (`stat`, `progression`, `timeline`, ...):
+        /// open text, so the UI adds kinds without a schema change and an
+        /// older application still opens the document.
+        pub kind: String,
+        /// The component's width (`third`, `half`, `full`, ...): open
+        /// text, as `kind`.
+        pub width: String,
+        /// The calc result field a stat, history, or curve component
+        /// shows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub field: Option<String>,
+        /// The calc result fields a progression component charts.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub fields: Vec<String>,
+        /// What a scaling curve varies (`gem-level`, `character-level`,
+        /// `config-number`): open text, as `kind`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub vary: Option<String>,
+        /// The config input a scaling curve varies.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub input: Option<String>,
+        /// The life a fight timeline deals damage to.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub target: Option<u64>,
     }
 
     /// Where a typed section sits among untyped ones.

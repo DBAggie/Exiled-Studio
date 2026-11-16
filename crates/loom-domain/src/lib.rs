@@ -16,6 +16,7 @@
 
 mod build;
 mod config;
+mod dashboard;
 mod error;
 mod game;
 mod id;
@@ -39,6 +40,7 @@ pub use config::{
     Config, ConfigInput, ConfigInputKind, ConfigLayout, ConfigSet, ConfigValue,
     CustomModifierBlock, CustomModifierLine,
 };
+pub use dashboard::{Dashboard, DashboardComponent, Dashboards};
 pub use error::DomainError;
 pub use game::{DataVersion, Game, GameSpecific, Poe2Choices};
 pub use id::{

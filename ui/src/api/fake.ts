@@ -670,8 +670,8 @@ interface State {
   /** The active config set's inputs and blocks. */
   config: ConfigView
   league: 'challenge' | 'standard'
-  /** The UI's workspace document for the build, as stored. */
-  workspace?: string | null
+  /** The build's own dashboards, as stored. */
+  dashboards?: NonNullable<NonNullable<Snapshot['build']>['dashboards']> | null
   secondWeaponSet: boolean
   /** The active passive spec's tree. */
   tree: fakeTree.FakeSpec
@@ -752,6 +752,8 @@ export class FakeApi implements LoomApi {
   private made = new WeakMap<State, HistoryEntry>()
   private dirty = false
   private path: string | null = null
+  /** The file the build was imported from. */
+  private origin: string | null = null
   private calc: [number, CalcResultDocumentV1] | null = null
   private calcState: Snapshot['calc'] = {
     state: 'idle',
@@ -1003,7 +1005,7 @@ export class FakeApi implements LoomApi {
                   : null,
               config: this.current?.config ?? null,
               league: this.current?.league ?? 'challenge',
-              workspace: this.current?.workspace ?? null,
+              dashboards: this.current?.dashboards ?? null,
               'second-weapon-set': this.current?.secondWeaponSet ?? false,
             },
       calc: this.calcState,
@@ -1018,7 +1020,7 @@ export class FakeApi implements LoomApi {
       },
       dirty: this.dirty,
       path: this.path,
-      origin: null,
+      origin: this.origin,
       data: {
         bundle: this.options.data === true ? '/data/bundle' : null,
         'data-version':
@@ -1205,6 +1207,7 @@ export class FakeApi implements LoomApi {
           this.undoStack = []
           this.redoStack = []
           this.path = null
+          this.origin = null
           this.dirty = false
           this.changed(null)
           return this.done()
@@ -1245,6 +1248,7 @@ export class FakeApi implements LoomApi {
       this.undoStack = []
       this.redoStack = []
       this.path = null
+      this.origin = null
       this.dirty = false
       this.changed({ ...fresh(), items: [], skills: {} })
       return this.done()
@@ -1447,16 +1451,29 @@ export class FakeApi implements LoomApi {
         { kind: 'weapon-set', item: 1 },
       )
     }
-    if ('set-workspace' in command) {
+    if ('set-dashboards' in command) {
       if (this.current === null) this.fail('APP_NO_BUILD')
-      const document = command['set-workspace'].document ?? null
-      if (document !== null && document.length > 262144) {
-        this.fail('APP_WORKSPACE')
+      const dashboards = command['set-dashboards'].dashboards ?? null
+      // The application's limits, in short: a set has one to eight
+      // dashboards, each named, and shows one of them.
+      if (
+        dashboards !== null &&
+        (dashboards.list.length === 0 ||
+          dashboards.list.length > 8 ||
+          dashboards.list.some((d) => d.name === '' || d.name.length > 40) ||
+          !dashboards.list.some((d) => d.id === dashboards.active))
+      ) {
+        this.fail('APP_DASHBOARDS')
       }
-      if (document === (this.current.workspace ?? null)) return 'nothing'
+      if (
+        JSON.stringify(dashboards) ===
+        JSON.stringify(this.current.dashboards ?? null)
+      ) {
+        return 'nothing'
+      }
       return this.commit(
-        { ...this.current, workspace: document },
-        { kind: 'workspace', item: 0 },
+        { ...this.current, dashboards },
+        { kind: 'dashboards', item: 0 },
       )
     }
     if ('set-league' in command) {
@@ -1541,6 +1558,7 @@ export class FakeApi implements LoomApi {
         this.fail('APP_NOT_FOUND')
       }
       this.path = 'recent.json'
+      this.origin = null
       this.dirty = false
       this.changed(this.fresh())
       return this.done()
@@ -1803,6 +1821,7 @@ export class FakeApi implements LoomApi {
     this.undoStack = []
     this.redoStack = []
     this.path = null
+    this.origin = 'build.xml'
     this.dirty = true
     this.changed(this.fresh())
     return this.done()

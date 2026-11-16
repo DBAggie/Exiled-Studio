@@ -61,7 +61,7 @@ export const en = {
   'history.skill-edit': 'skill gem change',
   'history.config': 'configuration change',
   'history.league': 'league change',
-  'history.workspace': 'change to this build’s dashboards or snapshots',
+  'history.dashboards': 'change to this build’s dashboards',
   'history.weapon-set': 'weapon swap',
   'history.tree': 'passive tree change',
   'history.tree-specs': 'passive tree list change',
@@ -282,7 +282,7 @@ export const en = {
   'dashboard.scope.user': 'Every build',
   'dashboard.scope.build': 'This build',
   'dashboard.scopeHelp':
-    'Every build: your own dashboards, the same in each build. This build: a set kept in this build’s file, starting as a copy of yours.',
+    'Every build: your own dashboards, the same in each build. This build: a set kept in this build’s file, starting as a copy of yours, so the build looks the same to anyone who opens the file. Only the layout is kept; the numbers are always calculated.',
   'dashboard.scopeBadge': 'This build’s',
   'dashboard.scopeDefault': 'Use for every build',
   'dashboard.moveUp': 'Move up',
@@ -389,7 +389,7 @@ export const en = {
 
   'snapshots.title': 'Snapshots',
   'snapshots.help':
-    'The numbers as they were, kept by name in the build file. Choose one to compare the build with it.',
+    'The numbers as they were, kept by name on this computer (not in the build file). Choose one to compare the build with it.',
   'snapshots.none': 'None kept yet.',
   'snapshots.name': 'Snapshot name',
   'snapshots.namePlaceholder': 'Name, such as Before the new helmet',
@@ -1153,8 +1153,8 @@ export const en = {
   'error.APP_LOADOUT': 'This build has no such stage.',
   'error.APP_TREE': 'That tree change is not possible.',
   'error.APP_WHAT_IF': 'That comparison cannot be calculated for this build.',
-  'error.APP_WORKSPACE':
-    'This build’s dashboards and snapshots are too large to keep. Delete a snapshot or a dashboard.',
+  'error.APP_DASHBOARDS':
+    'This build’s dashboards could not be kept: a set has one to eight dashboards, each with a name and at most 24 components.',
   'error.UPDATE_OFFLINE':
     'Strict offline is on, so Exiled Studio does not connect. Change it under About, Updates.',
   'error.UPDATE_UNAVAILABLE':
