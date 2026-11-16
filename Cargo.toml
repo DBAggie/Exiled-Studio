@@ -23,6 +23,7 @@ loom-app = { path = "crates/loom-app" }
 loom-integrations = { path = "crates/loom-integrations" }
 loom-pipeline = { path = "crates/loom-pipeline" }
 loom-tree = { path = "crates/loom-tree" }
+loom-bundles = { path = "crates/loom-bundles" }
 
 # Third-party crates shared across the workspace.
 sha2 = "0.10"

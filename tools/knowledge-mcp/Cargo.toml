@@ -1,0 +1,25 @@
+[package]
+name = "loom-knowledge-mcp"
+description = "The knowledge MCP server: read-only game data and economy snapshots for Claude sessions over stdio (ADR-018)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "exiled-studio-knowledge-mcp"
+path = "src/main.rs"
+
+[dependencies]
+loom-domain.workspace = true
+loom-data.workspace = true
+loom-parser.workspace = true
+loom-bundles.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

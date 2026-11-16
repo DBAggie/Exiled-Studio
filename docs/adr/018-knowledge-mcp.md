@@ -1,6 +1,6 @@
 # ADR-018: Knowledge MCP Server (Read-Only Game Data for Claude Sessions)
 
-- Status: Proposed (2026-11-15; waits for the maintainer, who accepts it by merging the PR that adds it)
+- Status: Accepted (proposed 2026-11-15; accepted by the maintainer 2026-11-16 with its five defaults, "Not decided here"; implemented in the same PR, #123)
 - Date: 2026-11-15
 
 ## Context
@@ -47,7 +47,7 @@ Every response carries `game`, `patch`, `steam_build` (`null` when the manifest 
 ### Crate boundaries
 This tool ships, so the `AGENTS.md` exception for `loom-release` and `loom-bench` ("tools, never shipped") does not cover it, and depending on `loom-app` would pull calc, persistence, tree, zip, and tracing into its binary. Instead:
 - `loom-knowledge-mcp` depends on `loom-data` (`bundle`, `signature`), `loom-domain`, `loom-parser`, and one new small host crate.
-- **Before the tool is built**, a separate PR moves the host-side bundle scan (`install::status_of` and `scan`, `Status`, `trust::trust_list`) out of `loom-app` into that host crate (non-core: it reads files), which `loom-app` then uses too, so the trust rule cannot drift between the two.
+- **Before the tool is built**, a separate PR (done in the same PR, #123, at the maintainer's request 2026-11-16) moves the host-side bundle scan (`install::status_of` and `scan`, `Status`, `trust::trust_list`) out of `loom-app` into that host crate (non-core: it reads files), which `loom-app` then uses too, so the trust rule cannot drift between the two.
 - It does not depend on `loom-integrations`: the stdio JSON-RPC framing is small and lives in the tool, sharing only the MCP protocol version string.
 
 ### Scope against ADR-010 and ADR-017
@@ -66,9 +66,20 @@ Built and signed with the application's release (ADR-010), shipped as a separate
 - Snapshot data is only as fresh as the last reviewed refresh PR in the knowledge repo; the tool reports `as_of` and never fetches.
 - PoE2: the same tool serves a PoE2 bundle once one is installed; the knowledge pack's PoE2 plugin waits for PoE2 1.0 (plan D2).
 
-## Not decided here (defaults taken, for the maintainer to confirm)
+## Implementation (PR #123, 2026-11-16)
+- **`crates/loom-bundles`** (host, read-only): `DirSource`, the trust lists and manifest check (`trust_list`, `verify_manifest`, moved from `loom_app::trust`), the bundle status and scan (`Status`, `Found`, `status_of`, `scan`, `bundle_id`, moved from `loom_app::install`), and `verify_full`. `loom-app` re-exports them; its own `scan` first sweeps stale staging folders (a write), then calls the read-only one.
+- **`tools/knowledge-mcp`** (`loom-knowledge-mcp`, binary `exiled-studio-knowledge-mcp`): `knowledge` (open the newest `Trusted` bundle of the game, or `--bundle` unsigned; every file hashed on load), `patches` (`patches.json`), `snapshots` (32 MiB per file, 400 files, header check; skipped files reported), `lookup` (the eight tools), `tools` (the contract), `rpc` (JSON-RPC 2.0 over stdio, 1 MiB lines, the app MCP's error codes).
+- **Contract:** `schemas/knowledge-mcp-tools.v1.json`, compared by `tests/contract.rs` (rewritten with `LOOM_WRITE_KNOWLEDGE_CONTRACT=1`).
+- **`get_unique`** returns the flavour text and `mods: null`: the client data does not list a unique's mods (the tool says so instead of guessing).
+- **Release:** the `release` workflow builds the binary on Windows and Linux, ships it as its own asset of the draft release (`exiled-studio-knowledge-mcp_<version>_x64.exe`, `..._amd64`) and in the portable zip beside the app, where the `portable` marker makes it serve the zip's `data\` folder. The NSIS, MSI, AppImage, and .deb installers do not carry it yet (handoff, Next action). "Signed" for this asset means it is built by the same reviewed `release` run and published with the draft release the maintainer reviews; it has no signature file of its own, and the Linux asset needs `chmod +x` after download.
+- **Data folder:** without `--data-dir` it takes `LOOM_DATA_DIR`, else the portable `data\` beside it, else the stable app's data folder for this user, or the experimental app's (`io.github.dbaggie.exiledstudio.experimental`) when only that one has installed bundles.
+- **Untrusted snapshots:** besides the per-file caps, at most 128 MiB over all files (newest first); a price answer carries only listed row fields (name, base type, variant, links, levels, values, listing count), strings cut to 200 characters, at most 100 matches.
+- **Patch:** a loaded bundle whose Steam build is not in `patches.json` makes `get_price` refuse (`KNOWLEDGE_PATCH_UNKNOWN`), as "Patch label" says; with no bundle loaded, prices answer with a warning that the patch was not checked.
+- **Input:** stdin lines are read at most 1 MiB at a time (a longer one is answered with a parse error and skipped), and invalid UTF-8 is a parse error, not the end of the server. The schemas' limits are enforced as -32602.
+
+## Defaults (accepted by the maintainer 2026-11-16 with the ADR)
 1. **Bundles the user accepted in the app** are not served here (only `Status::Trusted`). Alternative: serve `Status::Accepted` too, labelled as such.
 2. **The patch table** lives in the tool. Alternative: a `patch` field added to the bundle manifest (a data schema change, ADR-005).
 3. **Distribution** as a release asset beside the app. Alternative: users build it with `cargo install --path tools/knowledge-mcp`.
 4. **`get_price` input**: item name plus optional variant and links, as poe.ninja's overview rows have them.
-5. **The host crate** for the bundle scan (name and exact contents) is settled in its own PR. Alternative: do not ship the tool (`cargo install` only, option 3), so the existing "tools, never shipped" exception applies and it may use `loom-app` directly.
+5. **The host crate** for the bundle scan (name and exact contents) is settled in its own PR (it became `loom-bundles`, in PR #123 itself). Alternative: do not ship the tool (`cargo install` only, option 3), so the existing "tools, never shipped" exception applies and it may use `loom-app` directly.
