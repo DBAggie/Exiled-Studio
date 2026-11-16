@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 8;
+pub const FORMAT: u32 = 9;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -57,8 +57,61 @@ pub struct Export {
     /// `data.flavourText`, in PoB's order (format 8, B-2).
     #[serde(deserialize_with = "list")]
     pub flavour_text: Vec<FlavourEntry>,
+    /// `data.clusterJewels` (format 9, passive tree plan T-i).
+    pub cluster_jewels: ClusterJewels,
     /// The tree.
     pub tree: Tree,
+}
+
+/// `data.clusterJewels` (`src/Data/ClusterJewels.lua`).
+#[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterJewels {
+    /// Each jewel, by its base's name.
+    pub jewels: BTreeMap<String, ClusterJewel>,
+    /// `notableSortOrder`: each notable's stat row (1-based), by name.
+    pub notable_sort_order: BTreeMap<String, i64>,
+    /// The keystones' names.
+    #[serde(deserialize_with = "list")]
+    pub keystones: Vec<String>,
+    /// `orbitOffsets`: each proxy's start indices, by size.
+    pub orbit_offsets: BTreeMap<String, Vec<i64>>,
+}
+
+/// A jewel of `data.clusterJewels.jewels`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterJewel {
+    /// `sizeIndex`.
+    pub size_index: u32,
+    /// `minNodes`.
+    pub min_nodes: u32,
+    /// `maxNodes`.
+    pub max_nodes: u32,
+    /// `smallIndicies`.
+    #[serde(deserialize_with = "list")]
+    pub small: Vec<u32>,
+    /// `notableIndicies`.
+    #[serde(deserialize_with = "list")]
+    pub notable: Vec<u32>,
+    /// `socketIndicies`.
+    #[serde(deserialize_with = "list")]
+    pub socket: Vec<u32>,
+    /// `totalIndicies`.
+    pub total: u32,
+    /// Its small passives, by passive ID.
+    #[serde(default)]
+    pub skills: BTreeMap<String, ClusterJewelSkill>,
+}
+
+/// A small passive of a [`ClusterJewel`].
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterJewelSkill {
+    /// Its name (" (Legacy)" added for a tag PoB marks old).
+    pub name: String,
+    /// Its tag.
+    pub tag: String,
 }
 
 /// An entry of `data.flavourText`.

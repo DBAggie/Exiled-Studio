@@ -36,13 +36,46 @@ Gate item 1 asked for every node within 0.01. This record meets that for the mai
 
 **Read-back** (`records/readback-*.json`): three community builds on 3_29 were edited through the application's commands by `crates/loom-app/tests/tree_workflow.rs` (`edited_builds_should_be_exported_for_pob_to_read_back`). The edits allocate the two nearest keystones, choose a mastery effect, remove the first keystone's path, switch to another ascendancy, allocate its nearest notable, and move a socketed jewel (not a cluster jewel) to an allocated empty socket (`SocketJewel`) where the build has one. The builds were then exported, and PoB read every spec with the same nodes, mastery effects, jewels, class, and ascendancy as loom, plus the build's class and ascendancy names: ice-nova 4 of 4 specs, Facebreaker 11 of 11, Animate Guardian 1 of 1. Facebreaker Luminary has 11 specs with cluster jewels, a bloodline, and a timeless jewel; loading it needs the inflate shim.
 
+## Older versions (T4 and T8, 2026-11-16)
+
+The tree packs 3_25 to 3_28 ([tree-packs.md](tree-packs.md)) were compared with PoB's tree of the same version, using `TREES="3_25 3_26 3_27 3_28" tools/tree/parity.sh <bundle>`. PoB's `pob_tree.lua` takes `tree=<version>` in both modes, and loom compares against the bundle's pack of that version. The bundle is the real one with all four packs (manifest `4814e3ac…`). The requests use the same seed, 20261115, with 2,000 per version. No record has a difference.
+
+| Version | Nodes | Within 0.01 | PoB removes | Allocations (unique / tied / unreachable) | Deallocations | Points |
+|---|---|---|---|---|---|---|
+| 3_25 | 2,735 | 2,735 | 0 | 1,374 (798 / 387 / 189) | 530 | 2,000 |
+| 3_26 | 2,752 | 2,752 | 0 | 1,365 (798 / 384 / 183) | 542 | 2,000 |
+| 3_27 | 2,880 | 2,836 | 44 | 1,373 (769 / 409 / 195) | 540 | 2,000 |
+| 3_28 | 2,935 | 2,891 | 44 | 1,373 (775 / 417 / 181) | 515 | 2,000 |
+
+Every allocation, deallocation, and point count is equal. Links and the class and ascendancy starts are equal, with one exception, which the layout record accounts for rather than counting it as a difference:
+
+- **3_25's mastery 49391** (Attack Mastery) has a link to 20953 in PoB's own `TreeData/3_25/tree.lua` that GGG's export does not have, at either 3.25 tag (3.25.0 and 3.25.3d). A mastery is never on a path, so no allocation can differ, and 3_25's allocation record agrees. The record lists such links under `pob_only_mastery_links`. A link difference that does not touch a mastery is still a difference.
+
+Before 3_27, PoB's tree has no legacy alternate ascendancy to remove. From 3_27, PoB removes the same 44 nodes as on 3_29.
+
+**Conversion** (`records/convert-<version>.json` and `convert-public-<version>.json`, gate item 2's "version-conversion drops"). `tree-parity convert` takes specs made on an older pack and converts them with `loom_tree::poe1::convert`, the function the app's `convert-tree-version` uses. PoB's side imports the same node lists on its latest tree, 3_29, through `ImportFromNodeList`, the step its `ConvertToVersion` takes (`RestoreUndoState`). The two specs after conversion are compared node for node.
+
+| Specs | 3_25 | 3_26 | 3_27 | 3_28 |
+|---|---|---|---|---|
+| Seeded requests (2,000 each), equal to PoB | 2,000 | 2,000 | 2,000 | 2,000 |
+| … of which lose nodes | 11 (19 nodes) | 4 (8) | 5 (9) | 0 |
+| The public builds' own specs, equal to PoB | none saved | none saved | 7 of 7 | 58 of 58 |
+| … of which lose nodes | | | 7 (49 nodes) | 49 (404 nodes) |
+
+The seeded specs are small (at most five allocations), so few lose nodes. The public builds' specs are full trees: `tools/tree/spec_requests.py` takes every spec saved on an older version from the community fixtures. Their dropped nodes are all masteries, because a request carries no mastery choices and PoB allocates no mastery without one; no regular passive of theirs is gone on 3_29. A request carries no jewels either, so the nested cluster sockets are left out on both sides, as PoB's spec leaves them out without their jewels.
+
+Two rules came from this comparison:
+- A converted mastery stays only with a chosen effect the new tree gives it. PoB's import skips a mastery with no selection (`PassiveSpec.lua` 282 to 283), and `BuildAllDependsAndPaths` drops one whose effect its tree does not know (1393 to 1420). The records check only the first half, because the requests carry no mastery choices. The other two cases, a known effect kept and an unknown one dropped, follow PoB's code and are tested on the synthetic tree (`conversion_should_keep_only_what_the_tree_gives`), not against the oracle.
+- `pob_tree.lua alloc` now clears the spec before each request. PoB's `ResetNodes` keeps every ascendancy start allocated, so a bloodline start from one public build carried into the next request. The seeded records are unaffected: their requests never allocate a bloodline, and `SelectClass` and `SelectAscendClass` replace class and ascendancy starts.
+
 ## What the comparison found
 
 The first allocation run showed that loom allocated cluster jewels' position proxies and nested sockets, which PoB's spec leaves out (`PassiveSpec:Init`: proxies, proxy groups, sockets with a parent). `loom_tree::Node::cluster_area` now marks them: the nested expansion sockets, the groups holding one, and stat-less non-socket nodes linked to one. This gives exactly PoB's 78 nodes on 3_29. They are not modelled, not drawn, and kept in a spec. Allocating a cluster jewel's nodes is T3.
 
 ## Not covered
 
-- Masteries in `alloc`: the requests carry none, so mastery choice is checked only by the read-back.
+- Masteries in `alloc` and `convert`: the requests carry none, so mastery choice is checked only by the read-back, and conversion's mastery rule only for masteries without a choice.
 - Radius jewels (Intuitive Leap and the like, T-f): modelled ([editor.md](editor.md)), but not in `alloc`'s requests. PoB's read-back of the Essence Drain build keeps the three nodes its jewel holds, as loom's rule does with the game's radii times the tree scale (equal to PoB's). The data-parity table `jewel_radii` checks the scaled radii: 15 values, 0 differences ([editor.md](editor.md), "The real radii").
-- Other tree versions (T4) and cluster subgraphs (T3).
-- CI cannot re-run the records, because their inputs are local. `tree_parity`'s test `the_committed_tree_records_should_match_and_add_up` checks that each committed record has no differences, that its counts account for every node, request, and spec, and that its hashes are SHA-256.
+- Cluster subgraphs in `alloc`'s requests. T3's subgraphs are checked by the tests and the `cluster_jewels` data-parity table in [cluster-jewels.md](cluster-jewels.md), "Checks". The corpus builds with cluster jewels through `calc-parity` are maintainer-run.
+- Versions before 3_25, which have no pack.
+- CI cannot re-run the records, because their inputs are local. `tree_parity`'s test `the_committed_tree_records_should_match_and_add_up` checks each committed record: the 3_29 ones and the `layout-<version>` and `alloc-<version>` ones alike. Each must have no differences, its counts must account for every node, request, and spec, and its hashes must be SHA-256.

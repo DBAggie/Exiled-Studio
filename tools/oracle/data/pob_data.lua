@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 8
+local FORMAT = 9
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -439,6 +439,47 @@ for i, entry in ipairs(data.flavourText or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- Cluster jewels (format 9, passive tree plan T-i): data.clusterJewels
+-- (src/Data/ClusterJewels.lua, written by src/Export/Scripts/cluster.lua):
+-- each jewel by its base's name with its layout and its small passives'
+-- tags (by passive ID), the notables' sort order (by name), the keystones'
+-- names, and each proxy's start indices by size.
+---------------------------------------------------------------------------
+local clusterData = data.clusterJewels or {}
+local clusterJewels = {
+	jewels = {},
+	notable_sort_order = copyMap(clusterData.notableSortOrder),
+	keystones = list(clusterData.keystones),
+	orbit_offsets = {},
+}
+for name, jewel in pairs(clusterData.jewels or {}) do
+	local skills = {}
+	for id, skill in pairs(jewel.skills or {}) do
+		skills[id] = { name = skill.name, tag = skill.tag }
+	end
+	clusterJewels.jewels[name] = {
+		size_index = jewel.sizeIndex,
+		min_nodes = jewel.minNodes,
+		max_nodes = jewel.maxNodes,
+		small = list(jewel.smallIndicies),
+		notable = list(jewel.notableIndicies),
+		socket = list(jewel.socketIndicies),
+		total = jewel.totalIndicies,
+		skills = skills,
+	}
+end
+for proxy, offsets in pairs(clusterData.orbitOffsets or {}) do
+	local starts = {}
+	for size = 0, 2 do
+		if offsets[size] == nil then
+			break
+		end
+		starts[size + 1] = offsets[size]
+	end
+	clusterJewels.orbit_offsets[tostring(proxy)] = starts
+end
+
+---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
 local document = {
@@ -459,6 +500,7 @@ local document = {
 	pantheons = pantheons,
 	jewel_radii = list(jewelRadii),
 	flavour_text = list(flavourText),
+	cluster_jewels = clusterJewels,
 	tree = { classes = classes, nodes = nodes },
 }
 

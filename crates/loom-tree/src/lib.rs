@@ -19,4 +19,4 @@
 pub mod graph;
 pub mod poe1;
 
-pub use graph::{AscendancyClass, Class, Group, Kind, Node, Tree};
+pub use graph::{AscendancyClass, Class, Group, Kind, Node, Template, Tree};

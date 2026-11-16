@@ -57,10 +57,15 @@ fn run_with(
         .map(|bytes| OverlayData::read(bytes, &bundle, &manifest_sha256))
         .transpose()?;
     let tree = loom_tree::Tree::from_bundle(&bundle);
+    let trees = tree
+        .as_ref()
+        .map(|t| loom_pipeline::pack_trees(&bundle, t))
+        .unwrap_or_default();
     let request = Request {
         bundle: &bundle,
         resolver: &resolver,
         tree: tree.as_ref(),
+        trees: &trees,
         data: &data,
         bundle_record: BundleRecord {
             game: game.to_owned(),

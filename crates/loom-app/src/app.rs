@@ -1515,6 +1515,10 @@ impl Writer {
                 .session
                 .socket_jewel(spec, node, item)?
                 .map_or(api::Outcome::Nothing, done)),
+            api::Command::ConvertTreeVersion { spec } => Ok(self
+                .session
+                .convert_tree_version(spec)?
+                .map_or(api::Outcome::Nothing, done)),
             api::Command::NewSpec { title, copy } => Ok(self
                 .session
                 .new_spec(&title, copy)?

@@ -279,6 +279,11 @@ impl Session {
         let data = self.need_data()?;
         let mut build = loom_pipeline::read_pob(text)?;
         let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+        // A spec PoB numbered before its cluster hash fix takes the
+        // current numbers, as PoB loads it (passive tree plan, T-i).
+        if let Some(tree) = &data.tree {
+            loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
+        }
         let mut state = State { build, ends };
         // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
         crate::main_skill::set_default(&mut state, &data);
@@ -890,6 +895,20 @@ impl Session {
         })
     }
 
+    /// Converts spec `spec` to the loaded data's tree version
+    /// (`crate::tree::convert_spec`; passive tree plan, T5b), as one
+    /// undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn convert_tree_version(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let version = self.data.as_ref().and_then(|d| d.tree_version.clone());
+        self.change_build(api::ChangeKind::TreeSpecs, spec, |build| {
+            crate::tree::convert_spec(build, spec, &tree, version.as_ref()).map(|_| ())
+        })
+    }
+
     /// Adds a passive spec (`crate::tree::new_spec`), as one undoable
     /// change.
     ///
@@ -1331,7 +1350,12 @@ impl Session {
                 let mut v =
                     view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle));
                 v.tree = self.data.as_ref().and_then(|d| {
-                    crate::tree::view(&s.build, d.tree.as_ref()?, d.tree_version.as_ref())
+                    crate::tree::view(
+                        &s.build,
+                        d.tree.as_ref()?,
+                        d.tree_version.as_ref(),
+                        Some(d.bundle),
+                    )
                 });
                 v
             }),
@@ -1529,13 +1553,13 @@ pub fn calculate(
     data: &GameData,
     cancel: &dyn Fn() -> bool,
 ) -> Result<CalcResult, AppError> {
-    let options = loom_pipeline::options(
+    let (tree, version) = loom_pipeline::pick_tree(
         &state.build,
-        data.data,
-        &state.ends,
-        data.tree_version.clone(),
         data.tree.as_deref(),
+        data.tree_version.clone(),
+        &data.trees,
     );
+    let options = loom_pipeline::options(&state.build, data.data, &state.ends, version, tree);
     Ok(loom_pipeline::calculate(
         &state.build,
         data.bundle,

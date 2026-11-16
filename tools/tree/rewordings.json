@@ -1,0 +1,128 @@
+{
+  "format": 1,
+  "about": "Reviewed rewordings for tree packs (docs/tree/tree-packs.md, \"Rewordings\"). tree-pack learns a pair from GGG's own data: a node or mastery effect in both the older export and the bundle whose lines differ in one line each way with the same numbers. A learned pair is applied only when it is accepted here; a rejected or unlisted one leaves its lines unread. Same numbers do not prove the same stat: GGG changes a node's mechanic and keeps its values, so only changes of wording alone are accepted. Templates write each number as #.",
+  "accepted": [
+    {
+      "old": "#% increased Global Accuracy Rating",
+      "current": "#% increased Accuracy Rating",
+      "why": "\"Global\" dropped from the wording; the same nodes, values, and names."
+    },
+    {
+      "old": "#% increased Global Accuracy Rating while you have at least # nearby Ally",
+      "current": "#% increased Accuracy Rating while you have at least # nearby Ally",
+      "why": "\"Global\" dropped, as above."
+    },
+    {
+      "old": "#% increased Global Critical Strike Chance while wielding a Staff",
+      "current": "#% increased Critical Strike Chance while wielding a Staff",
+      "why": "\"Global\" dropped, as above."
+    },
+    {
+      "old": "#% increased Global Defences",
+      "current": "#% increased Defences",
+      "why": "\"Global\" dropped, as above."
+    },
+    {
+      "old": "#% increased effect of Offerings",
+      "current": "Your Offerings have #% increased Effect",
+      "why": "Word order and capitals only."
+    },
+    {
+      "old": "You gain Added Lighting Damage instead of Added Damage of other types if Intelligence exceeds both other Attributes",
+      "current": "You gain Added Lightning Damage instead of Added Damage of other types if Intelligence exceeds both other Attributes",
+      "why": "A typo fixed."
+    },
+    {
+      "old": "Gain a random shrine buff every # seconds",
+      "current": "Gain a random Shrine buff every # seconds",
+      "why": "A capital only."
+    },
+    {
+      "old": "Banner Buffs Linger on you for # seconds after you leave the Area",
+      "current": "Your Banner Buffs Linger on you for # seconds after you leave the Area",
+      "why": "\"Your\" added; the banners were always the player's."
+    },
+    {
+      "old": "Arcane Surge grants #% more Spell Damage to you",
+      "current": "Arcane Surge also grants #% more Spell Damage to you",
+      "why": "\"also\" added."
+    },
+    {
+      "old": "each Herald affecting you, up to #%",
+      "current": "each Herald affecting you, up to a maximum of #%",
+      "why": "\"a maximum of\" added; the cap is the same."
+    },
+    {
+      "old": "Skills that would Summon a Totem have #% chance to Summon two Totems instead",
+      "current": "Skills that Summon a Totem have #% chance to Summon two Totems instead of one",
+      "why": "Wording only; the chance and its outcome are the same."
+    }
+  ],
+  "rejected": [
+    {
+      "old": "#% increased Damage over Time",
+      "current": "#% increased Spell Damage",
+      "why": "Another stat: the node's mechanic changed."
+    },
+    {
+      "old": "#% increased Stealth while Elusive",
+      "current": "#% increased Effect of your Marks while Elusive",
+      "why": "Another stat."
+    },
+    {
+      "old": "Elemental Ailments are inflicted on you instead of Linked targets",
+      "current": "Enemies in your Link Beams cannot apply Elemental Ailments",
+      "why": "Another mechanic."
+    },
+    {
+      "old": "Damage from your Critical Strikes cannot be Reflected",
+      "current": "Damage cannot be Reflected",
+      "why": "A wider scope: all damage, not critical strikes only."
+    },
+    {
+      "old": "Every # seconds, remove Curses and Elemental Ailments from you",
+      "current": "Every # seconds, remove Curses and Ailments from you",
+      "why": "A wider scope: every ailment, not elemental ones only."
+    },
+    {
+      "old": "Determination has #% increased Aura Effect while you have no Endurance Charges",
+      "current": "Determination has #% increased Aura Effect while at Minimum Endurance Charges",
+      "why": "Another condition: the minimum can be above zero."
+    },
+    {
+      "old": "Discipline has #% increased Aura Effect while you have no Power Charges",
+      "current": "Discipline has #% increased Aura Effect while at Minimum Power Charges",
+      "why": "Another condition, as above."
+    },
+    {
+      "old": "Grace has #% increased Aura Effect while you have no Frenzy Charges",
+      "current": "Grace has #% increased Aura Effect while at Minimum Frenzy Charges",
+      "why": "Another condition, as above."
+    },
+    {
+      "old": "All Damage can Ignite",
+      "current": "All Damage with Hits can Ignite",
+      "why": "A narrower scope (hits only); may be another stat."
+    },
+    {
+      "old": "All Damage can Shock",
+      "current": "All Damage with Hits can Shock",
+      "why": "As above."
+    },
+    {
+      "old": "#% of Leech is Instant per Equipped Claw",
+      "current": "#% of Life Leech is Instant per Equipped Claw",
+      "why": "A narrower scope: life leech only, not every leech."
+    },
+    {
+      "old": "#% reduced Mana Cost of Curse Skills",
+      "current": "#% increased Mana Cost Efficiency of Curse Skills",
+      "why": "Another stat: cost efficiency is not cost."
+    },
+    {
+      "old": "#% increased Maximum Energy Shield if both Equipped Rings have an Explicit Evasion Modifier",
+      "current": "#% increased Maximum Energy Shield if both Equipped Left and Right Rings have an Explicit Evasion Modifier",
+      "why": "The condition names its rings since a third ring slot; whether the stat is the same is not shown."
+    }
+  ]
+}

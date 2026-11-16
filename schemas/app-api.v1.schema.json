@@ -734,6 +734,26 @@
         "status"
       ]
     },
+    "ClusterSize": {
+      "description": "A cluster jewel's size.",
+      "oneOf": [
+        {
+          "description": "Small.",
+          "type": "string",
+          "const": "small"
+        },
+        {
+          "description": "Medium.",
+          "type": "string",
+          "const": "medium"
+        },
+        {
+          "description": "Large.",
+          "type": "string",
+          "const": "large"
+        }
+      ]
+    },
     "Command": {
       "description": "A command (ADR-004): an intent the application runs in order.",
       "oneOf": [
@@ -1603,7 +1623,7 @@
           ]
         },
         {
-          "description": "Sockets a jewel of the build in an allocated jewel socket of a\nspec, or empties the socket (`item` absent). Cluster jewels\nare refused for now.",
+          "description": "Sockets a jewel of the build in an allocated jewel socket of a\nspec, or empties the socket (`item` absent). A cluster jewel\ngoes only in a cluster socket that takes its size; the nodes\nof a jewel taken out are deallocated.",
           "type": "object",
           "properties": {
             "socket-jewel": {
@@ -1642,6 +1662,31 @@
           "additionalProperties": false,
           "required": [
             "socket-jewel"
+          ]
+        },
+        {
+          "description": "Converts a spec of an older tree version to the loaded data's\n(passive tree plan, T5b; PoB's `ConvertToVersion`): a copy on\nthe data's version is added after it and becomes active, with\nthe nodes the version lacks or that no longer connect\ndeallocated. The old spec stays.",
+          "type": "object",
+          "properties": {
+            "convert-tree-version": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "convert-tree-version"
           ]
         },
         {
@@ -4357,6 +4402,51 @@
         "ascendancies"
       ]
     },
+    "TreeClusterSocket": {
+      "description": "A cluster jewel socket of a spec's tree.",
+      "type": "object",
+      "properties": {
+        "node": {
+          "description": "The socket node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "size": {
+          "description": "The largest cluster jewel it takes: `small`, `medium`, or\n`large` (any jewel takes a socket too).",
+          "$ref": "#/$defs/ClusterSize"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "size"
+      ]
+    },
+    "TreeConversion": {
+      "description": "A spec's conversion to the loaded data's tree version.",
+      "type": "object",
+      "properties": {
+        "dropped": {
+          "description": "The allocated nodes the conversion deallocates (the version\nlacks them, or they no longer connect), ascending.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "version": {
+          "description": "The version it converts to.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "dropped"
+      ]
+    },
     "TreeJewel": {
       "description": "A jewel in a tree socket.",
       "type": "object",
@@ -4838,6 +4928,34 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "cluster-nodes": {
+          "description": "The nodes the spec's socketed cluster jewels add, placed, and\nthe nested sockets they change (passive tree plan, T5b): drawn\nover the layout's node of the same ID, ascending.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeNodeView"
+          }
+        },
+        "cluster-sockets": {
+          "description": "The cluster jewel sockets the spec's tree has (the layout's and\nthe added ones), with the largest cluster jewel each takes.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeClusterSocket"
+          }
+        },
+        "convert": {
+          "description": "What converting the spec to the loaded data's tree version\nwould do, when it is locked for its version\n(`convert-tree-version`, T5b): the preview the screen confirms.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreeConversion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "jewels": {
           "description": "The jewels socketed in the spec's sockets.",

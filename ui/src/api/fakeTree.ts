@@ -12,6 +12,8 @@ export interface FakeSpec {
   masteries: { node: number; effect: number }[]
   /** The jewels in the spec's sockets. */
   jewels: { node: number; item: number }[]
+  /** The tree version it was converted to (`convert-tree-version`). */
+  version?: string
 }
 
 const node = (

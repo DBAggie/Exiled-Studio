@@ -1786,11 +1786,33 @@ pub const NO_EFFECT_DEPENDS_ON_INPUTS: &[(&str, &str)] = &[
     ("playerCursedWithWarlordsMark", "curse_effect_on_self_+%"),
 ];
 
+/// Stat ID prefixes with no effect of their own, with why: a cluster
+/// jewel's lines (passive tree plan, T-i). They say what nodes the jewel
+/// adds and what those nodes grant; they act only through the nodes
+/// (`loom_tree::poe1::cluster`, `ResolvedPassives::cluster`), whose stats
+/// the engine ingests when allocated and connected. A node the engine
+/// cannot build stays a reason on the node.
+pub const NO_EFFECT_PREFIXES: &[(&str, &str)] = &[
+    (
+        "local_affliction_jewel_",
+        "cluster jewel: acts through its nodes",
+    ),
+    ("local_affliction_notable_", "cluster jewel: adds a notable"),
+    ("local_jewel_expansion_", "cluster jewel: adds nodes"),
+    (
+        "local_unique_jewel_grants_x_empty_passives",
+        "cluster jewel: adds nodes that grant nothing",
+    ),
+];
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if NO_EFFECT
             .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .is_ok()
+            || NO_EFFECT_PREFIXES
+                .iter()
+                .any(|(p, _)| stat.as_str().starts_with(p))
         {
             return StatMap::NoEffect;
         }

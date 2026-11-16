@@ -41,8 +41,11 @@ import {
 import {
   type LoadedSprites,
   type SpriteRect,
+  clusterSize,
+  fits,
   useTreeLayout,
   useTreeSprites,
+  withClusterNodes,
 } from './treeLayout'
 
 /** A node's drawn radius by kind, in tree units. */
@@ -613,9 +616,10 @@ function NodeCard({
         </ul>
       )}
       {flavour != null && <Flavour text={flavour} />}
-      {node.kind === 'jewel-socket' && allocated && (
-        <p className="small-text">{jewelName ?? t('tree.emptySocket')}</p>
-      )}
+      {(node.kind === 'jewel-socket' || node.kind === 'cluster-socket') &&
+        allocated && (
+          <p className="small-text">{jewelName ?? t('tree.emptySocket')}</p>
+        )}
       {node.kind === 'mastery' && (
         <ul className="tree-lines">
           {(effect?.lines ?? [t('tree.chooseEffect')]).map((l, i) => (
@@ -752,11 +756,15 @@ function JewelPicker({
 }) {
   const dispatch = useAppDispatch()
   const items = useAppSelector((s) => s.session.snapshot?.build?.items ?? [])
-  const jewels = items.filter(
-    (i) =>
-      JEWEL_CLASSES.includes(i['item-class'] ?? '') &&
-      !(i.base ?? '').includes('Cluster Jewel'),
-  )
+  // A cluster jewel goes only in a cluster socket that takes its size;
+  // any other jewel in any socket (T5b).
+  const takes =
+    tree['cluster-sockets']?.find((c) => c.node === node?.id)?.size ?? null
+  const jewels = items.filter((i) => {
+    const size = clusterSize(i.base ?? '')
+    if (size !== null) return takes !== null && fits(size, takes)
+    return JEWEL_CLASSES.includes(i['item-class'] ?? '')
+  })
   const socketed = tree.jewels?.find((j) => j.node === node?.id)?.item ?? null
   const socket = (item: number | null) => {
     if (node === null) return
@@ -931,7 +939,9 @@ function TreeList({
                   <button type="button" onClick={() => onActivate(n)}>
                     {n.kind === 'mastery'
                       ? t('tree.chooseEffectFor', { node: n.name })
-                      : on && n.kind === 'jewel-socket'
+                      : on &&
+                          (n.kind === 'jewel-socket' ||
+                            n.kind === 'cluster-socket')
                         ? t('tree.chooseJewelFor', { node: n.name })
                         : on
                           ? t('tree.deallocate', { node: n.name })
@@ -950,7 +960,9 @@ function TreeList({
 export function Tree() {
   const dispatch = useAppDispatch()
   const tree = useAppSelector((s) => s.session.snapshot?.build?.tree ?? null)
-  const layout = useTreeLayout()
+  // The data's layout with the spec's cluster jewel nodes (T5b).
+  const loaded = useTreeLayout()
+  const layout = useMemo(() => withClusterNodes(loaded, tree), [loaded, tree])
   const sprites = useTreeSprites()
   // The attribute totals the tree's allocations give (B-2 item evidence,
   // E11: the tree screenshots show them by the points).
@@ -973,6 +985,7 @@ export function Tree() {
     | { kind: 'class'; class: number }
     | { kind: 'reset' }
     | { kind: 'delete' }
+    | { kind: 'convert'; version: string; dropped: number }
     | null
   >(null)
   const [specForm, setSpecForm] = useState<{
@@ -1058,7 +1071,10 @@ export function Tree() {
       setMastery(n)
       return
     }
-    if (n.kind === 'jewel-socket' && tree.nodes.includes(n.id)) {
+    if (
+      (n.kind === 'jewel-socket' || n.kind === 'cluster-socket') &&
+      tree.nodes.includes(n.id)
+    ) {
       setSocket(n)
       return
     }
@@ -1276,7 +1292,12 @@ export function Tree() {
               ? t('tree.resetAsk')
               : confirm.kind === 'delete'
                 ? t('tree.specDeleteAsk', { name: specTitle })
-                : t('tree.classAsk')}
+                : confirm.kind === 'convert'
+                  ? t('tree.convertAsk', {
+                      version: confirm.version,
+                      n: confirm.dropped,
+                    })
+                  : t('tree.classAsk')}
           </p>
           <div className="row">
             <button
@@ -1288,12 +1309,14 @@ export function Tree() {
                     ? { 'reset-tree': { spec: tree.spec } }
                     : confirm.kind === 'delete'
                       ? { 'delete-spec': { spec: tree.spec } }
-                      : {
-                          'select-class': {
-                            spec: tree.spec,
-                            class: confirm.class,
-                          },
-                        }
+                      : confirm.kind === 'convert'
+                        ? { 'convert-tree-version': { spec: tree.spec } }
+                        : {
+                            'select-class': {
+                              spec: tree.spec,
+                              class: confirm.class,
+                            },
+                          }
                 setConfirm(null)
                 void dispatch(run(command))
               }}
@@ -1302,7 +1325,9 @@ export function Tree() {
                 ? t('tree.reset')
                 : confirm.kind === 'delete'
                   ? t('tree.specDelete')
-                  : t('tree.changeClass')}
+                  : confirm.kind === 'convert'
+                    ? t('tree.convert', { version: confirm.version })
+                    : t('tree.changeClass')}
             </button>
             <button type="button" onClick={() => setConfirm(null)}>
               {t('tree.cancel')}
@@ -1311,9 +1336,24 @@ export function Tree() {
         </div>
       )}
       {locked !== null && (
-        <p className="panel" role="status">
-          {t('tree.locked', { why: locked })}
-        </p>
+        <div className="panel row" role="status">
+          <p>{t('tree.locked', { why: locked })}</p>
+          {tree.convert != null && (
+            <button
+              type="button"
+              onClick={() =>
+                tree.convert != null &&
+                setConfirm({
+                  kind: 'convert',
+                  version: tree.convert.version,
+                  dropped: tree.convert.dropped.length,
+                })
+              }
+            >
+              {t('tree.convert', { version: tree.convert.version })}
+            </button>
+          )}
+        </div>
       )}
       {tree.kept.length > 0 && (
         <p className="muted small-text">
