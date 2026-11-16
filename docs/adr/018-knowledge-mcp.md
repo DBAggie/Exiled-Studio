@@ -54,7 +54,7 @@ This tool ships, so the `AGENTS.md` exception for `loom-release` and `loom-bench
 This is a host tool, not an addon. It never talks to the app, so ADR-010's addon API and ADR-017's rules for the app's MCP server do not apply to it.
 
 ### Patch label
-Bundles name their Steam build, not a patch number. The tool maps a Steam build to a patch through a reviewed table in the tool (`patches.json`, one row per extracted build, set by the maintainer at each data run; the handoff's data-run checklist gains that row so the table does not go stale). A bundle whose build is not in the table reports `patch: "unknown"`, and `get_price` then refuses.
+Bundles name their Steam build, not a patch number. The tool maps a Steam build to a patch through a reviewed table in the tool (`patches.json`, one row per extracted build, set by the maintainer at each data run; the handoff's data-run checklist gains that row so the table does not go stale). First row (maintainer, 2026-11-16): Steam build 26530219 is patch 3.30.0 (Covens of Umbra). A bundle whose build is not in the table reports `patch: "unknown"`, and `get_price` then refuses.
 
 ### Distribution
 Built and signed with the application's release (ADR-010), shipped as a separate release asset and beside the installed app. The knowledge plugin's `.mcp.json` runs `${EXILED_STUDIO_KNOWLEDGE_MCP:-exiled-studio-knowledge-mcp}`, so a developer can point it at `target/release/`.
