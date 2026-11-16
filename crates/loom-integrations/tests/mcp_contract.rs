@@ -552,6 +552,28 @@ Content-Length: 1000
 }
 
 #[test]
+fn a_refused_request_with_a_body_should_still_get_its_answer() {
+    let f = fixture("linger");
+    let addr = f.server.addr();
+    // A body the server never reads (refused from the head): closing with
+    // it unread would reset the connection, and the reset can drop the
+    // answer before the client reads it (seen on macOS CI).
+    let body = vec![b'x'; 256 * 1024];
+    let head = format!(
+        "POST /mcp HTTP/1.1
+Host: 127.0.0.1:{}
+Content-Length: {}
+
+",
+        addr.port(),
+        body.len()
+    );
+    for _ in 0..10 {
+        assert_eq!(send(addr, &head, &body).0, 401);
+    }
+}
+
+#[test]
 fn server_should_take_its_preferred_port_when_free_and_another_when_taken() {
     let mut f = fixture("port");
     let port = f.server.addr().port();
