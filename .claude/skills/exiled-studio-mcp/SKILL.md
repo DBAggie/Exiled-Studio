@@ -9,7 +9,7 @@ description: >
 
 # Exiled Studio MCP (dev layer)
 
-The knowledge pack's dev layer (plan `KNOWLEDGE-PACK-PLAN.md`, D5.2). It versions with the code: when a tool or rule here changes, change this file in the same PR.
+The knowledge pack's dev layer (plan `docs/plan/KNOWLEDGE-PACK-PLAN.md`, D5.2). It versions with the code: when a tool or rule here changes, change this file in the same PR.
 
 ## The two servers
 | Server | Where | Transport | Status |

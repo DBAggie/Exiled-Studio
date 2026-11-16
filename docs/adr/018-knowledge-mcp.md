@@ -4,7 +4,7 @@
 - Date: 2026-11-15
 
 ## Context
-The knowledge pack (`DBAggie/exiled-studio-knowledge`, plan `KNOWLEDGE-PACK-PLAN.md` agreed 2026-11-15, decision D6a) makes Claude sessions Path of Exile experts. Its rule for game data (layer 1: gems, mods, uniques, bases, passives) is **tool lookups only, never recall from memory**. The app MCP (ADR-017) cannot serve that:
+The knowledge pack (`DBAggie/exiled-studio-knowledge`, plan `docs/plan/KNOWLEDGE-PACK-PLAN.md` agreed 2026-11-15, decision D6a) makes Claude sessions Path of Exile experts. Its rule for game data (layer 1: gems, mods, uniques, bases, passives) is **tool lookups only, never recall from memory**. The app MCP (ADR-017) cannot serve that:
 - it runs inside the desktop app, only while the user has started it, and answers about the open build;
 - it has no lookup of the game data itself (no search over mods, gems, uniques, bases, or passives);
 - it has no economy snapshots.
