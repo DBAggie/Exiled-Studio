@@ -1,6 +1,6 @@
 # The free redesign (2026-11-15)
 
-The maintainer asked for two versions of the UX audit's result: the design language refined (`ux-audit.md`, branch `feat/ux-audit`, PR #128) and a free redesign. This is the second: branch `feat/ux-audit-redesign`, stacked on the first, so it has every layout and component change of the audit and differs only in how the app looks. Pick one, or take parts: the redesign is a token change, one stylesheet, and one control.
+The maintainer asked for two versions of the UX audit's result: the design language refined (`ux-audit.md`, branch `feat/ux-audit`, PR #128) and a free redesign. This is the second: branch `feat/ux-audit-redesign`, PR #129 (draft), stacked on the first, so it has every layout and component change of the audit and differs only in how the app looks. Pick one, or take parts: the redesign is a token change, one stylesheet, and one control.
 
 ## The direction: numbers first
 The brief's look (amber on warm dark, Space Grotesk headings) reads as a game companion. The redesign reads as an instrument: the frame recedes and the numbers carry the page.
