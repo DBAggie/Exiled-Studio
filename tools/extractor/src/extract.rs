@@ -161,10 +161,16 @@ pub const CHOICE_TABLES_POE1: [&str; 1] = ["PantheonPanelLayout"];
 /// PoE1 passive tree tables the editor and the calc read (passive tree
 /// plan, T-f and T-i): the jewel radii (`PassiveJewelRadii`: which nodes a
 /// radius jewel reaches) and the jewel slots (`PassiveJewelSlots`: each
-/// cluster jewel socket's size, index, parent, and proxy). Nothing
-/// references them, so they are roots. PoE1 only until PoE2's install is
-/// checked for the files (a root without a file fails the run).
-pub const TREE_TABLES_POE1: [&str; 2] = ["PassiveJewelRadii", "PassiveJewelSlots"];
+/// cluster jewel socket's size, index, parent, and proxy), and the
+/// cluster jewels' notables and keystones
+/// (`PassiveTreeExpansionSpecialSkills`: each with the stat that adds it).
+/// Nothing references them, so they are roots. PoE1 only until PoE2's
+/// install is checked for the files (a root without a file fails the run).
+pub const TREE_TABLES_POE1: [&str; 3] = [
+    "PassiveJewelRadii",
+    "PassiveJewelSlots",
+    "PassiveTreeExpansionSpecialSkills",
+];
 
 /// PoE1 tables for unique flavour text (B-2's item card; `docs/ui/b2-data/
 /// card-data.md`, Q-B2-1): the unique stash layout (each unique's name,

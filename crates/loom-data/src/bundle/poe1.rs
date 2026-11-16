@@ -25,6 +25,11 @@
 //! - `poe1/socket_caps.json`: how many sockets each base can roll by item
 //!   level (the item type files' `Sockets` component, `socket_info`, the
 //!   nearest file of the base's chain that sets it; B-2 item evidence).
+//! - `poe1/cluster_jewels.json`: what a socketed cluster jewel adds to the
+//!   tree (passive tree plan, T-i): the jewel sizes, each cluster jewel
+//!   base's node layout, the small passives a jewel can grant, the notables
+//!   and keystones it can add, and the tree's cluster sockets
+//!   ([`ClusterJewels`]).
 
 use serde::{Deserialize, Serialize};
 
@@ -46,6 +51,206 @@ pub const UNIQUE_FLAVOUR: &str = "poe1/unique_flavour.json";
 pub const SOCKET_CAPS: &str = "poe1/socket_caps.json";
 /// The passive tree's flavour texts.
 pub const TREE_FLAVOUR: &str = "poe1/tree_flavour.json";
+/// Cluster jewels.
+pub const CLUSTER_JEWELS: &str = "poe1/cluster_jewels.json";
+
+/// What a socketed cluster jewel adds to the tree (module docs), from the
+/// game's `PassiveTreeExpansionJewelSizes`, `PassiveTreeExpansionJewels`,
+/// `PassiveTreeExpansionSkills`, `PassiveTreeExpansionSpecialSkills`, and
+/// `PassiveJewelSlots`, each in its table's order. Node numbers are
+/// `PassiveSkillGraphId`s, as the passives table's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterJewels {
+    /// The sizes' names (`PassiveTreeExpansionJewelSizes.Name`): a size is
+    /// its row's index (0 small, 1 medium, 2 large in the game).
+    pub sizes: Vec<String>,
+    /// Each cluster jewel base's node layout.
+    pub jewels: Vec<ClusterJewelBase>,
+    /// The small passives a jewel can grant: a jewel names one by its row's
+    /// index (`local_jewel_expansion_passive_node_index`).
+    pub skills: Vec<ClusterSkill>,
+    /// The notables and keystones a jewel can add, each with the stat that
+    /// adds it.
+    pub specials: Vec<ClusterSpecial>,
+    /// The tree's jewel slots that take a cluster jewel.
+    pub slots: Vec<ClusterSlot>,
+    /// What each "Added Small Passive Skills also grant: ..." stat grants
+    /// each small passive (`local_affliction_jewel_small_nodes_grant_*`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub grants: Vec<ClusterGrant>,
+}
+
+/// An "Added Small Passive Skills also grant: ..." stat and the stat it
+/// grants each small passive, at the same value: paired by the bundle
+/// step from the two stats' descriptions (the granted line's text after
+/// "also grant: "), or from its short list of pairs the texts word apart.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterGrant {
+    /// The jewel's stat.
+    pub stat: String,
+    /// The stat each small passive gains.
+    pub granted: String,
+}
+
+/// A cluster jewel base's node layout (`PassiveTreeExpansionJewels`): the
+/// orbit indices its sockets, notables, and small passives take, in the
+/// order they are filled.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterJewelBase {
+    /// The base item's ID.
+    pub base: String,
+    /// Its size ([`ClusterJewels::sizes`]).
+    pub size: u32,
+    /// The fewest passives it adds.
+    pub min_nodes: u32,
+    /// The most passives it adds.
+    pub max_nodes: u32,
+    /// The indices small passives take.
+    pub small_indices: Vec<u32>,
+    /// The indices notables take.
+    pub notable_indices: Vec<u32>,
+    /// The indices jewel sockets take.
+    pub socket_indices: Vec<u32>,
+    /// The indices around its ring.
+    pub total_indices: u32,
+}
+
+/// A small passive a cluster jewel can grant
+/// (`PassiveTreeExpansionSkills`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterSkill {
+    /// The passive whose name and stats each small passive takes.
+    pub node: i64,
+    /// The mastery passive drawn in the jewel's middle, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mastery: Option<i64>,
+    /// Its tag's ID (`Tags.Id`).
+    pub tag: String,
+    /// The jewel size it is for ([`ClusterJewels::sizes`]).
+    pub size: u32,
+}
+
+/// A notable or keystone a cluster jewel can add
+/// (`PassiveTreeExpansionSpecialSkills`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterSpecial {
+    /// The passive it adds.
+    pub node: i64,
+    /// The jewel stat that adds it (`local_affliction_notable_...`,
+    /// `local_jewel_expansion_keystone_...`).
+    pub stat: String,
+    /// The stat's row in `Stats`: a jewel's notables take their places in
+    /// this order.
+    pub order: i64,
+    /// Whether the passive is a keystone (a jewel adding it adds only it);
+    /// else a notable.
+    #[serde(default)]
+    pub keystone: bool,
+}
+
+/// A jewel slot that takes a cluster jewel (`PassiveJewelSlots` rows with
+/// a size).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterSlot {
+    /// The socket passive.
+    pub socket: i64,
+    /// The largest jewel it takes ([`ClusterJewels::sizes`]).
+    pub size: u32,
+    /// Its index among the sockets of a cluster (`ClusterIndex`).
+    pub index: i64,
+    /// The socket whose jewel's cluster holds it, for a nested socket
+    /// (`ReplacesSlot`'s socket).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<i64>,
+    /// The position proxy: the passive whose group places the jewel's
+    /// cluster.
+    pub proxy: i64,
+    /// The orbit index each jewel size's cluster starts at, by size.
+    pub start_indices: Vec<u32>,
+}
+
+/// A row of [`CLUSTER_JEWELS`] out of range: where, and why.
+pub(super) type Finding = (String, &'static str);
+
+impl ClusterJewels {
+    /// The base `base`'s layout, if it is a cluster jewel's.
+    #[must_use]
+    pub fn jewel(&self, base: &str) -> Option<&ClusterJewelBase> {
+        self.jewels.iter().find(|j| j.base == base)
+    }
+
+    /// The slot of socket `socket`, if it takes a cluster jewel.
+    #[must_use]
+    pub fn slot(&self, socket: i64) -> Option<&ClusterSlot> {
+        self.slots.iter().find(|s| s.socket == socket)
+    }
+
+    /// The stat a small passive gains from the jewel stat `stat`, if any.
+    #[must_use]
+    pub fn grant(&self, stat: &str) -> Option<&str> {
+        self.grants
+            .iter()
+            .find(|g| g.stat == stat)
+            .map(|g| g.granted.as_str())
+    }
+
+    /// The special that stat `stat` adds, if any.
+    #[must_use]
+    pub fn special(&self, stat: &str) -> Option<&ClusterSpecial> {
+        self.specials.iter().find(|s| s.stat == stat)
+    }
+
+    /// The validator's checks: the passives the file names (each with
+    /// where), and the rows whose values are out of range.
+    pub(super) fn domain(&self) -> (Vec<(String, i64)>, Vec<Finding>) {
+        let sizes = u32::try_from(self.sizes.len()).unwrap_or(u32::MAX);
+        let mut nodes = Vec::new();
+        let mut bad = Vec::new();
+        for (i, j) in self.jewels.iter().enumerate() {
+            let at = format!("{CLUSTER_JEWELS}:jewels:{i}");
+            let fits = |v: &[u32]| v.iter().all(|x| *x < j.total_indices);
+            if j.size >= sizes
+                || j.min_nodes > j.max_nodes
+                || j.total_indices == 0
+                || !fits(&j.small_indices)
+                || !fits(&j.notable_indices)
+                || !fits(&j.socket_indices)
+            {
+                bad.push((
+                    at,
+                    "a size the file lacks, more fewest nodes than most, or an index off the ring",
+                ));
+            }
+        }
+        for (i, s) in self.skills.iter().enumerate() {
+            let at = format!("{CLUSTER_JEWELS}:skills:{i}");
+            nodes.push((at.clone(), s.node));
+            nodes.extend(s.mastery.map(|m| (at.clone(), m)));
+            if s.size >= sizes {
+                bad.push((at, "a size the file lacks"));
+            }
+        }
+        for (i, s) in self.specials.iter().enumerate() {
+            nodes.push((format!("{CLUSTER_JEWELS}:specials:{i}"), s.node));
+        }
+        for s in &self.slots {
+            let at = format!("{CLUSTER_JEWELS}:slots:{}", s.socket);
+            nodes.push((at.clone(), s.socket));
+            nodes.push((at.clone(), s.proxy));
+            nodes.extend(s.parent.map(|p| (at.clone(), p)));
+            if s.size >= sizes || s.start_indices.is_empty() {
+                bad.push((at, "a size the file lacks, or no start index"));
+            }
+        }
+        (nodes, bad)
+    }
+}
 
 /// The passive tree's flavour texts (module docs), each as the game stores
 /// it with its line breaks as `\n`.
@@ -227,6 +432,8 @@ pub struct Poe1Section {
     pub socket_caps: Option<Vec<SocketCaps>>,
     /// The passive tree's flavour texts (`None` when the file is absent).
     pub tree_flavour: Option<TreeFlavour>,
+    /// Cluster jewels (`None` when the file is absent).
+    pub cluster_jewels: Option<ClusterJewels>,
 }
 
 impl Poe1Section {
@@ -429,6 +636,11 @@ impl Poe1Section {
             },
             tree_flavour: if listed(TREE_FLAVOUR) {
                 Some(json(source, TREE_FLAVOUR)?)
+            } else {
+                None
+            },
+            cluster_jewels: if listed(CLUSTER_JEWELS) {
+                Some(json(source, CLUSTER_JEWELS)?)
             } else {
                 None
             },

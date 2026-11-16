@@ -28,7 +28,8 @@ Unchanged on purpose: the game-style item tooltip and inventory (the maintainer'
 
 ## Evidence
 - Contrast: every pair in `theme/pairs.ts` holds with the new values (`theme.test.ts`: text 4.5:1, marks and focus 3:1).
-- `pnpm test` (94), `typecheck`, `lint`, `format:check`.
+- `pnpm test` (94; 98 with `dev`'s #134 merged in), `typecheck`, `lint`, `format:check`.
+- CI on PR #129 (2026-11-16, at `5c9e4ed`): every required job passed, among them `e2e (ubuntu-24.04)`, which drives the real shell with the stage stepper; `e2e (windows-latest)` fails before the app starts, as on `dev`.
 - Screenshots (sample data, 1440 wide): [dashboard](ux-redesign/redesign-dashboard.png), [defence](ux-redesign/redesign-defence.png), [trends](ux-redesign/redesign-trends.png), [equipment](ux-redesign/redesign-equipment.png), [skills](ux-redesign/redesign-skills.png), [passive tree](ux-redesign/redesign-tree.png), [configuration](ux-redesign/redesign-config.png). Compare with `ux-audit/after-*.png`.
 
 ## Not done

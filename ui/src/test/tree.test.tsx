@@ -168,6 +168,39 @@ describe('passive tree', () => {
     await expectAccessible()
   })
 
+  it('converts a tree of an older version after asking', async () => {
+    const { user, api } = await openTree({
+      treeLocked:
+        "the spec is for tree version 3_25, the loaded data's is 3_29",
+      treeConvert: { version: '3_29', dropped: [11] },
+    })
+    await user.click(screen.getByRole('button', { name: 'Convert to 3_29' }))
+    const ask = await screen.findByRole('alertdialog')
+    expect(ask.textContent).toContain('1 allocated nodes')
+    await expectAccessible(ask)
+    await user.click(
+      within(ask).getByRole('button', { name: 'Convert to 3_29' }),
+    )
+    await waitFor(() =>
+      expect(api.executed).toContainEqual({
+        'convert-tree-version': { spec: 1 },
+      }),
+    )
+    // Converted: edited, nothing left to convert.
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/^This passive tree is shown, not edited/),
+      ).toBeNull(),
+    )
+    expect(screen.queryByRole('button', { name: 'Convert to 3_29' })).toBeNull()
+    expect(screen.getByLabelText<HTMLSelectElement>('Class').disabled).toBe(
+      false,
+    )
+    // One undoable change.
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    await screen.findByRole('button', { name: 'Convert to 3_29' })
+  })
+
   it('adds, renames, and deletes passive trees', async () => {
     const { user, api } = await openTree()
     const bar = screen.getByRole('group', { name: 'Passive trees' })

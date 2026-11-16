@@ -117,12 +117,12 @@ fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
         spec.nodes
             .value()
             .iter()
-            .any(|n| has(input.data.passive_stats(n.0)))
+            .any(|n| has(collect::node_stats(input, n.0)))
             || spec
                 .mastery_effects
                 .value()
                 .iter()
-                .any(|m| has(input.data.mastery_effect_stats(m.effect)))
+                .any(|m| has(collect::effect_stats(input, m.effect)))
     })
 }
 

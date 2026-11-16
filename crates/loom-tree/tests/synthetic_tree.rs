@@ -105,6 +105,39 @@ fn allocation_should_cross_the_tree_and_take_a_mastery() {
 }
 
 #[test]
+fn conversion_should_keep_only_what_the_tree_gives() {
+    let t = tree();
+    let a = poe1::allocate(&t, &brute(&[]), 10023).expect("reachable");
+    let m = poe1::set_mastery(&t, &a.spec, 10029, 4243).expect("a connected group");
+    // A spec the tree has whole converts to itself, its mastery kept.
+    assert_eq!(poe1::convert(&t, &m), m);
+    // A mastery whose effect the tree does not know goes, node and choice.
+    let mut unknown = m.clone();
+    unknown.masteries.insert(10029, 9999);
+    let c = poe1::convert(&t, &unknown);
+    assert!(!c.nodes.contains(&10029) && c.masteries.is_empty());
+    // So does a mastery with no choice.
+    let mut bare = m.clone();
+    bare.masteries.clear();
+    let c = poe1::convert(&t, &bare);
+    assert!(!c.nodes.contains(&10029));
+    assert_eq!(c.nodes.len(), m.nodes.len() - 1);
+    // A node the tree lacks goes, and so does what only it connected.
+    let mut gone = m.clone();
+    gone.nodes.insert(999_999);
+    gone.nodes.remove(&a.path[0]);
+    let c = poe1::convert(&t, &gone);
+    assert!(!c.nodes.contains(&999_999) && !c.nodes.contains(&10023));
+    assert!(c.nodes.contains(&1000));
+    // An ascendancy the class lacks is cleared, its start with it.
+    let mut other = m.clone();
+    other.ascendancy = 99;
+    let c = poe1::convert(&t, &other);
+    assert_eq!(c.ascendancy, 0);
+    assert!(!c.nodes.contains(&3000));
+}
+
+#[test]
 fn a_radius_jewel_should_allocate_a_node_near_its_socket_alone() {
     let t = tree();
     let to_socket = poe1::allocate(&t, &brute(&[]), 11028).expect("the socket");
@@ -131,4 +164,43 @@ fn a_radius_jewel_should_allocate_a_node_near_its_socket_alone() {
             outer: 1680
         })
     );
+}
+
+proptest::proptest! {
+    #![proptest_config(proptest::prelude::ProptestConfig::with_cases(256))]
+
+    /// Review B3, plan T-g and gate item 4: no edit but a reset removes a
+    /// node the editor keeps (one the tree lacks, or a cluster area node
+    /// it does not model), whatever edits come before it.
+    #[test]
+    fn no_edit_should_remove_a_kept_node(
+        edits in proptest::collection::vec((0_u8..5, proptest::prelude::any::<proptest::sample::Index>()), 1..24)
+    ) {
+        let t = tree();
+        let ids: Vec<u32> = t.nodes.keys().copied().collect();
+        let effects: Vec<u32> = t.mastery_effects.values().flatten().copied().collect();
+        // Kept: two nodes no tree has, and the unmodelled cluster area.
+        let kept: Vec<u32> = [900_001, 900_002]
+            .into_iter()
+            .chain(t.nodes.values().filter(|n| !n.modelled).map(|n| n.id))
+            .collect();
+        proptest::prop_assert!(kept.len() > 2);
+        let mut spec = brute(&kept);
+        for (op, at) in edits {
+            let node = *at.get(&ids);
+            let next = match op {
+                0 => poe1::allocate(&t, &spec, node).map(|a| a.spec),
+                1 => poe1::deallocate(&t, &spec, node).map(|r| r.spec),
+                2 => poe1::set_mastery(&t, &spec, node, *at.get(&effects)),
+                3 => poe1::select_ascendancy(&t, &spec, node % 3).map(|r| r.spec),
+                _ => poe1::select_class(&t, &spec, 1 + node % 2).map(|r| r.spec),
+            };
+            if let Ok(next) = next {
+                spec = next;
+            }
+            for k in &kept {
+                proptest::prop_assert!(spec.nodes.contains(k), "{k} removed by edit {op} on {node}");
+            }
+        }
+    }
 }

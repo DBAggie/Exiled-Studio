@@ -3,9 +3,49 @@
 // and its sprites (`tree_sprites`), when the bundle has them.
 import { useEffect, useState } from 'react'
 
-import type { TreeLayout, TreeSprites } from '../api/types'
+import type { TreeLayout, TreeSprites, TreeView } from '../api/types'
 import { query } from '../store'
 import { useAppDispatch, useAppSelector } from '../util'
+
+/** `layout` with the active spec's cluster jewel nodes (`tree`'s
+ * `cluster-nodes`, passive tree plan T5b): each replaces the layout's node
+ * of its ID or is added, so the screen draws, finds, and edits them as any
+ * other. The layout itself when there are none. */
+export function withClusterNodes(
+  layout: TreeLayout | 'none' | null,
+  tree: TreeView | null,
+): TreeLayout | 'none' | null {
+  const added = tree?.['cluster-nodes'] ?? []
+  if (layout === null || layout === 'none' || added.length === 0) return layout
+  const byId = new Map(layout.nodes.map((n) => [n.id, n]))
+  for (const n of added) byId.set(n.id, n)
+  return {
+    ...layout,
+    nodes: [...byId.values()].sort((a, b) => a.id - b.id),
+  }
+}
+
+/** The size of a cluster jewel base (`Large Cluster Jewel`), if it is
+ * one: the base's first word, as the game names them. */
+export function clusterSize(base: string): 'small' | 'medium' | 'large' | null {
+  if (!base.includes('Cluster Jewel')) return null
+  const first = base.split(' ')[0]
+  return first === 'Small'
+    ? 'small'
+    : first === 'Medium'
+      ? 'medium'
+      : first === 'Large'
+        ? 'large'
+        : null
+}
+
+const SIZES = ['small', 'medium', 'large']
+
+/** Whether a cluster jewel of `size` fits a socket taking `takes` (PoB's
+ * `IsItemValidForSlot`: its size or smaller). */
+export function fits(size: string, takes: string): boolean {
+  return SIZES.indexOf(size) <= SIZES.indexOf(takes)
+}
 
 /** The layout, kept while the same data is loaded. */
 let cached: { key: string; layout: TreeLayout } | null = null

@@ -1,0 +1,220 @@
+{
+  "contract_version": 1,
+  "protocol_version": "2025-06-18",
+  "server": "exiled-studio-knowledge",
+  "tools": [
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "The game, the loaded bundle's provenance (or why none is loaded), the stat-description scopes, and every economy snapshot (league, poe.ninja league ID, as_of, patch, verification, status) with the files skipped and why. Call first. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_snapshot_info",
+      "title": "What data is loaded"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Mod rows matching every filter given: `text` in the mod ID, affix name, or game text; part of a `stat` ID; a spawn or implicit `tag`; `domain`; `generation`. Each mod: ID, affix name, level, domain, generation, stats with ranges (stat IDs, ADR-015), the game text, spawn tags. At most `limit` (default 25, at most 100), with the total. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "type": "integer"
+          },
+          "generation": {
+            "type": "integer"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "stat": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "tag": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "text": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "search_mods",
+      "title": "Search mods"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "A skill or support gem by name: tags, attribute split, its granted effect (support or not, cast time, skill types, quality stats) and, per level asked (`levels`, default [1, 20]; [] for all), costs, cooldown, reservation, and stat-set values (stat IDs). Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "levels": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "maxItems": 40,
+            "type": "array"
+          },
+          "name": {
+            "description": "The gem's name, any case.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "get_gem",
+      "title": "Get a gem"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "A unique item by name: its ID and flavour text. The game's client data does not list a unique's mods, so `mods` is null; read the item's own lines instead. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "The unique's name, any case.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "get_unique",
+      "title": "Get a unique"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Every base item row with the name: class, tags, drop and required level, attribute requirements, implicits (stat IDs and game text), weapon, armour, or shield properties, and socket caps by item level. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "The base's name (or ID), any case.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "get_base",
+      "title": "Get an item base"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Passive nodes by `name` (every node with it) or by `node` ID, one of the two: kind (small, notable, keystone, mastery, jewel socket, ascendancy start), ascendancy, stats (stat IDs) and game text, a mastery's effects, flavour text. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "node": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "get_passive",
+      "title": "Get a passive"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Item, passive, or gem text to (stat ID, value) through the stat descriptions (Spike B's resolver): each line or multi-line template, its outcome (resolved, ambiguous, unresolved, with the reason), every candidate's stats, and shadowed matches. Unresolved text is returned as unresolved, never dropped (ADR-015). `scope`: item (default), passive, gem, or a stat-description file name. Every result carries `provenance`: game, patch, Steam build, the bundle's manifest SHA-256 and index SHA-256, and whether it is signed by a trusted key. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "name": "resolve_stat",
+      "title": "Resolve text to stat IDs"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "An item's or currency's price from the newest economy snapshot of the league (`league`: name or poe.ninja ID; default the newest current league), optionally narrowed by `variant` and `links`: chaos and divine values, volume or listings, with the snapshot's league, as_of, fetched time, patch, verification, and `signed: false`. Refuses another game's snapshots, never falls back to another league, and refuses when the loaded bundle's patch is unknown (not in the patch table); a patch mismatch is a warning. Only listed fields of a snapshot row are returned. State `as_of` and the league when quoting a price. Read-only; no network.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "league": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "links": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "variant": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "get_price",
+      "title": "Get a price"
+    }
+  ]
+}

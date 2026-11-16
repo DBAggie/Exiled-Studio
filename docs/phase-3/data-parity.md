@@ -97,6 +97,16 @@ The card shows a unique's flavour text (`docs/ui/b2-data/card-data.md`, Q-B2-1).
 
 **B-2 item evidence data run** (same build and export, 2026-11-15, twice byte-identical; `docs/ui/b2-data/item-evidence.md`, "Main workstation data run"): one more difference, `The Light of Meaning|UniqueJewel181` (`row`), rule `flavour-game-copy-over-shared-art` (`pob-derivation`, count 1). The Light of Meaning shares its art with That Which Was Taken, so PoB's export gives it that art's text; the maintainer's in-game copy shows `FlavourText` row `UniqueJewel183_`, which the bundle now pairs with it (`poe1::FLAVOUR_PAIRS`). Its `UniqueJewel183` row is bundle-only. Totals: 614 differences (pob-derivation 241), `uncategorized` 0, 0 failed rules, 371 overlay rows. Summary: `docs/ui/b2-data/data-parity-poe1-26530219-evidence.json`.
 
+## T3: table `cluster_jewels` (cluster jewels, export format 9)
+The passive tree's cluster jewels (`docs/tree/cluster-jewels.md`) come from the game's expansion tables, which PoB exports the same way (`src/Export/Scripts/cluster.lua`). The export (format 9) adds `cluster_jewels`: `data.clusterJewels` with each jewel by base name, the notables' sort order, the keystones, and the proxies' start indices. `cluster_jewels` (`data_parity::cluster`) compares, keyed as written:
+- `jewel|<base name>`: the layout;
+- `skill|<base name>|<passive ID>`: the tag and name (PoB adds " (Legacy)" to a retired tag's);
+- `notable|<name>`: the order, PoB's 1-based stat row;
+- `keystone|<name>`;
+- `proxy|<node>`: the start indices.
+
+A PoB row the bundle lacks is a difference. A bundle without the file (an extract made before T3) has PoB's rows only. Run on PoB's side here: 9 jewels, 300 notables, 8 keystones. The run against a bundle with the table is maintainer-run.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

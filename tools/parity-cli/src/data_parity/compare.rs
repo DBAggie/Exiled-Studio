@@ -407,6 +407,7 @@ pub fn compare(
     compare_pantheons(&mut out, bundle, export)?;
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
+    super::cluster::compare_cluster_jewels(&mut out, bundle, export);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()

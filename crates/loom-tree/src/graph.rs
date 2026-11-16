@@ -4,8 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{PassiveTables, StatAmount};
-use loom_data::bundle::poe1::JewelRadius;
+use loom_data::bundle::poe1::{ClusterJewels, JewelRadius};
 use loom_data::bundle::tree_layout::TreeLayout;
+use loom_data::bundle::tree_packs::TreePack;
 
 /// What a node is, for drawing and for the rules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -122,6 +123,40 @@ pub struct Tree {
     pub orbit_radii: Vec<f64>,
     /// The jewel radii, when the bundle has them (`poe1/jewel_radii.json`).
     pub jewel_radii: Vec<JewelRadius>,
+    /// The slots on each orbit (the passive graph's `orbit_slots`).
+    pub orbit_slots: Vec<u32>,
+    /// The layout constants, when the bundle has them and they fit the
+    /// orbits: they place nodes a cluster jewel adds.
+    pub layout: Option<TreeLayout>,
+    /// What cluster jewels add, when the bundle has it
+    /// (`poe1/cluster_jewels.json`; [`crate::poe1::cluster`]).
+    pub cluster_jewels: Option<ClusterJewels>,
+    /// The cluster jewel bases' IDs by their display name (an item names
+    /// its base by name; [`ClusterJewels::jewels`] by ID).
+    pub cluster_bases: BTreeMap<String, String>,
+    /// The passives off the graph, by number: the ones a cluster jewel's
+    /// nodes copy (its small passives, notables, keystones, masteries).
+    pub templates: BTreeMap<u32, Template>,
+    /// Each mastery effect's stats, by hash.
+    pub effect_stats: BTreeMap<u32, Vec<StatAmount>>,
+    /// The tree version of a tree built from a pack ([`Tree::from_pack`]);
+    /// `None` for the bundle's own tree.
+    pub version: Option<String>,
+    /// A pack's lines that did not read as stats, by node number
+    /// ([`loom_data::bundle::tree_packs::TreePack::unresolved`]).
+    pub unresolved: BTreeMap<u32, Vec<String>>,
+    /// The same for mastery effects, by hash.
+    pub effect_unresolved: BTreeMap<u32, Vec<String>>,
+}
+
+/// A passive off the graph that a cluster jewel's nodes copy
+/// ([`Tree::templates`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Template {
+    /// Its name.
+    pub name: String,
+    /// Its stats.
+    pub stats: Vec<StatAmount>,
 }
 
 fn kind_of(p: &loom_data::bundle::passives::Passive, socket_outer: bool) -> Kind {
@@ -307,7 +342,41 @@ impl Tree {
             mastery_effects,
             orbit_radii: layout.map(|l| l.orbit_radii.clone()).unwrap_or_default(),
             jewel_radii: Vec::new(),
+            orbit_slots: p
+                .tree
+                .orbit_slots
+                .iter()
+                .map(|n| u32::try_from(*n).unwrap_or(0))
+                .collect(),
+            layout: layout.cloned(),
+            cluster_jewels: None,
+            cluster_bases: BTreeMap::new(),
+            templates: BTreeMap::new(),
+            effect_stats: p
+                .mastery_effects
+                .iter()
+                .filter_map(|m| Some((u32::try_from(m.hash).ok()?, m.stats.clone())))
+                .collect(),
+            version: None,
+            unresolved: BTreeMap::new(),
+            effect_unresolved: BTreeMap::new(),
         };
+        tree.templates = p
+            .passives
+            .iter()
+            .filter_map(|x| {
+                let id = u32::try_from(x.node).ok()?;
+                (!tree.nodes.contains_key(&id)).then(|| {
+                    (
+                        id,
+                        Template {
+                            name: x.name.clone(),
+                            stats: x.stats.clone(),
+                        },
+                    )
+                })
+            })
+            .collect();
         tree.mark_modelled();
         tree
     }
@@ -352,7 +421,7 @@ impl Tree {
     }
 
     /// The tree of `bundle`: its passive tables placed by its layout, with
-    /// its jewel radii; `None` without passive tables.
+    /// its jewel radii and cluster jewels; `None` without passive tables.
     #[must_use]
     pub fn from_bundle(bundle: &Bundle) -> Option<Self> {
         let mut tree = Self::from_tables(bundle.passives.as_ref()?, bundle.tree_layout.as_ref());
@@ -361,6 +430,54 @@ impl Tree {
             .as_ref()
             .and_then(|p| p.jewel_radii.clone())
             .unwrap_or_default();
+        tree.cluster_jewels = bundle.poe1.as_ref().and_then(|p| p.cluster_jewels.clone());
+        if let Some(c) = &tree.cluster_jewels {
+            tree.cluster_bases = bundle
+                .base_items
+                .iter()
+                .filter(|b| c.jewel(&b.id).is_some())
+                .map(|b| (b.name.clone(), b.id.clone()))
+                .collect();
+        }
+        Some(tree)
+    }
+
+    /// The tree of `pack`, an older version the bundle carries
+    /// ([`loom_data::bundle::tree_packs`]): the pack's passives, graph, and
+    /// masteries with the bundle's classes, ascendancies, layout, jewel
+    /// radii, and cluster jewels (taken from `base`, the bundle's own tree,
+    /// built once by the caller), its version set, and the lines the pack
+    /// could not read kept by node; `None` without passive tables. The
+    /// loader's checks (`BUNDLE_VALUE_RANGE`, `BUNDLE_DANGLING_REF`) make
+    /// every unread line's node or effect a u32 of the pack.
+    #[must_use]
+    pub fn from_pack(bundle: &Bundle, base: &Self, pack: &TreePack) -> Option<Self> {
+        let own = bundle.passives.as_ref()?;
+        let tables = PassiveTables {
+            characters: own.characters.clone(),
+            ascendancies: own.ascendancies.clone(),
+            object_templates: own.object_templates.clone(),
+            passives: pack.passives.clone(),
+            mastery_groups: pack.mastery_groups.clone(),
+            mastery_effects: pack.mastery_effects.clone(),
+            tree: pack.tree.clone(),
+        };
+        let mut tree = Self::from_tables(&tables, bundle.tree_layout.as_ref());
+        tree.jewel_radii.clone_from(&base.jewel_radii);
+        tree.cluster_jewels.clone_from(&base.cluster_jewels);
+        tree.cluster_bases.clone_from(&base.cluster_bases);
+        tree.version = Some(pack.version.clone());
+        for line in &pack.unresolved {
+            let Ok(n) = u32::try_from(line.node) else {
+                continue;
+            };
+            let to = if line.mastery_effect {
+                &mut tree.effect_unresolved
+            } else {
+                &mut tree.unresolved
+            };
+            to.entry(n).or_default().push(line.text.clone());
+        }
         Some(tree)
     }
 

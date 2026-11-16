@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 8,
+        "format": 9,
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -140,6 +140,7 @@ fn equal_export() -> Value {
             {"id": "TestUnique4", "name": "Test Same", "text": ["One text."]},
             {"id": "TestUnique5", "name": "Test Same", "text": ["One text."]}
         ],
+        "cluster_jewels": {"jewels": {}, "notable_sort_order": {}, "keystones": {}, "orbit_offsets": {}},
         "tree": {
             "classes": [
                 {"name": "Test Brute", "base_str": 32, "base_dex": 14, "base_int": 14, "ascendancies": ["TestChampion"]},
@@ -194,8 +195,17 @@ fn equal_export_should_have_no_difference() {
     // Every table compared something; bundle rows PoB lacks are counted.
     for table in super::TABLES {
         // `gem_effects` checks the engine's tables against skills the synthetic
-        // bundle does not have (its own tests, `gem_effects.rs`).
-        if !["character_constants", "monster_constants", "gem_effects"].contains(&table) {
+        // bundle does not have (its own tests, `gem_effects.rs`); the plain
+        // bundle has no cluster jewels (the tree bundle's are checked in
+        // `cluster_jewels_should_match_pobs_reading`).
+        if ![
+            "character_constants",
+            "monster_constants",
+            "gem_effects",
+            "cluster_jewels",
+        ]
+        .contains(&table)
+        {
             assert!(comparison.tables[table].compared > 0, "{table}");
         }
     }
@@ -1106,5 +1116,90 @@ fn pantheons_should_compare_gods_souls_lines_and_values() {
             .bundle_only
             .iter()
             .any(|b| b.table == "pantheons" && b.key == "TestMinorGod")
+    );
+}
+
+/// PoB's `data.clusterJewels` as its exporter would write the tree
+/// bundle's made-up tables (`make_bundles.py`, `cluster_jewels`).
+fn cluster_export() -> Value {
+    let skills = |id: &str, name: &str, tag: &str| json!({id: {"name": name, "tag": tag}});
+    json!({
+        "jewels": {
+            "Small Test Cluster Jewel": {
+                "size_index": 0, "min_nodes": 2, "max_nodes": 3, "small": [0, 4, 2],
+                "notable": [4], "socket": [4], "total": 6,
+                "skills": skills("t6000", "Test Small Fire", "test_cluster_fire")
+            },
+            "Medium Test Cluster Jewel": {
+                "size_index": 1, "min_nodes": 4, "max_nodes": 6, "small": [0, 6, 8, 4, 10, 2],
+                "notable": [6, 10, 2, 0], "socket": [6], "total": 12,
+                "skills": skills("t6001", "Test Small Cold", "test_cluster_cold")
+            },
+            "Large Test Cluster Jewel": {
+                "size_index": 2, "min_nodes": 8, "max_nodes": 12,
+                "small": [0, 4, 6, 8, 10, 2, 7, 5, 9, 3, 11, 1],
+                "notable": [6, 4, 8, 10, 2], "socket": [4, 8, 6], "total": 12,
+                "skills": skills("t6002", "Test Small Lightning", "test_cluster_lightning")
+            }
+        },
+        "notable_sort_order": {"Test Cluster Notable A": 11, "Test Cluster Notable B": 21},
+        "keystones": ["Test Cluster Keystone"],
+        "orbit_offsets": {
+            "5005": [3, 5, 5], "5002": [2, 3], "5009": [1, 1], "5010": [0, 11], "5004": [1]
+        }
+    })
+}
+
+fn cluster_differences(cluster: Value) -> Vec<Difference> {
+    let mut export = equal_export();
+    export["cluster_jewels"] = cluster;
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let mut out = compare::Comparison::default();
+    super::cluster::compare_cluster_jewels(&mut out, &bundle("bundle-poe1-tree"), &export);
+    assert!(out.tables["cluster_jewels"].compared > 0);
+    out.differences
+}
+
+#[test]
+fn cluster_jewels_should_match_pobs_reading() {
+    assert_eq!(cluster_differences(cluster_export()), []);
+    let cases: [(&str, Value, (&str, &str, &str)); 4] = [
+        (
+            "/jewels/Large Test Cluster Jewel/socket/1",
+            json!(6),
+            ("cluster_jewels", "jewel|Large Test Cluster Jewel", "socket"),
+        ),
+        (
+            "/jewels/Small Test Cluster Jewel/skills/t6000/tag",
+            json!("other"),
+            (
+                "cluster_jewels",
+                "skill|Small Test Cluster Jewel|t6000",
+                "tag",
+            ),
+        ),
+        (
+            "/notable_sort_order/Test Cluster Notable A",
+            json!(30),
+            ("cluster_jewels", "notable|Test Cluster Notable A", "order"),
+        ),
+        (
+            "/orbit_offsets/5002/1",
+            json!(4),
+            ("cluster_jewels", "proxy|5002", "start"),
+        ),
+    ];
+    for (pointer, value, want) in cases {
+        let mut c = cluster_export();
+        *c.pointer_mut(pointer).unwrap() = value;
+        let found = cluster_differences(c);
+        assert_eq!(fields(&found), [want], "{pointer}");
+    }
+    // A keystone PoB lists and the bundle lacks.
+    let mut c = cluster_export();
+    c["keystones"] = json!(["Test Cluster Keystone", "Other"]);
+    assert_eq!(
+        fields(&cluster_differences(c)),
+        [("cluster_jewels", "keystone|Other", "row")]
     );
 }

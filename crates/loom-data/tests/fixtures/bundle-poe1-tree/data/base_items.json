@@ -68,5 +68,35 @@
   "tags": [
    "shield"
   ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Items/ClusterSmall",
+  "implicits": [],
+  "item_class": "TestJewel",
+  "name": "Small Test Cluster Jewel",
+  "tags": [
+   "jewel"
+  ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Items/ClusterMedium",
+  "implicits": [],
+  "item_class": "TestJewel",
+  "name": "Medium Test Cluster Jewel",
+  "tags": [
+   "jewel"
+  ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Items/ClusterLarge",
+  "implicits": [],
+  "item_class": "TestJewel",
+  "name": "Large Test Cluster Jewel",
+  "tags": [
+   "jewel"
+  ]
  }
 ]

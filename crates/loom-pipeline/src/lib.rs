@@ -23,16 +23,19 @@
 use std::collections::BTreeMap;
 
 use loom_calc::{
-    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, PassiveState, ResolvedPassives,
+    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, ClusterPassive, PackNode, PackStats,
+    PassiveState, ResolvedPassives,
 };
+use loom_data::bundle::passives::StatAmount;
 use loom_domain::{
-    Build, ItemBody, ItemId, LineKind, LineResolution, PassiveSpec, Resolved, StatValue,
+    Build, ItemBody, ItemId, LineKind, LineResolution, NodeId, PassiveSpec, Resolved, StatValue,
     TreeVersion,
 };
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
 use loom_serialization::dto::calc::v1 as calc_dto;
 use loom_serialization::legacy::{pob_item, pob_xml, share_code};
 use loom_tree::Tree;
+use loom_tree::poe1::cluster::{self, Jewel};
 use loom_tree::poe1::radius::{Centre, Leap};
 
 pub use loom_parser::import::{BuildRangeEnds as RangeEnds, LineRangeEnds};
@@ -336,39 +339,182 @@ pub fn leaps(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Vec<Leap> {
 // The tree and the engine name cluster jewel nodes by the same bit.
 const _: () = assert!(loom_tree::poe1::CLUSTER_NODE_BIT == PassiveState::CLUSTER_NODE_BIT);
 
+/// "Adds # Passive Skills".
+const CLUSTER_NODE_COUNT: &str = "local_jewel_expansion_passive_node_count";
+/// "# Added Passive Skills are Jewel Sockets".
+const CLUSTER_SOCKETS: &str = "local_jewel_expansion_jewels_count";
+/// "Adds # Jewel Socket Passive Skills".
+const CLUSTER_SOCKETS_OVERRIDE: &str = "local_jewel_expansion_jewels_count_override";
+/// "Added Small Passive Skills grant: ...": the skill's row.
+const CLUSTER_SKILL: &str = "local_jewel_expansion_passive_node_index";
+/// "Adds # Small Passive Skills which grant nothing".
+const CLUSTER_NOTHINGNESS: &str = "local_unique_jewel_grants_x_empty_passives";
+/// "Added Small Passive Skills grant Nothing".
+const CLUSTER_SMALLS_NOTHING: &str = "local_affliction_jewel_display_small_nodes_grant_nothing";
+/// "Added Small Passive Skills have #% increased Effect".
+const CLUSTER_EFFECT: &str = "local_affliction_jewel_small_nodes_have_effect_+%";
+/// "Added Small Passive Skills also grant: ...": each such stat's prefix.
+const CLUSTER_ALSO_GRANT: &str = "local_affliction_jewel_small_nodes_grant_";
+
+/// The cluster jewels socketed in `spec` (passive tree plan, T-i), read
+/// from their selected lines' stats (ADR-015), by socket: a jewel whose
+/// base is a cluster jewel base in the tree's data. An "also grant" line
+/// gives each small passive the stat the data pairs with it
+/// ([`loom_data::bundle::poe1::ClusterJewels::grant`]). A jewel with a
+/// line that did not resolve, or an "also grant" stat the data does not
+/// pair, is left out: its nodes then stay a reason (`cluster-jewel-node`),
+/// never a guess.
+#[must_use]
+pub fn cluster_jewels(build: &Build, spec: &PassiveSpec, tree: &Tree) -> BTreeMap<u32, Jewel> {
+    let mut out = BTreeMap::new();
+    let Some(data) = &tree.cluster_jewels else {
+        return out;
+    };
+    for socket in spec.jewel_sockets.typed() {
+        let Some(item) = socket
+            .item
+            .and_then(|id| build.items.items().find(|i| i.id == id))
+        else {
+            continue;
+        };
+        let names = tree.cluster_bases.keys().map(String::as_str);
+        let Some(base) =
+            pob_item::item_base(&item.body, names)
+                .ok()
+                .and_then(|(name, fallback)| {
+                    tree.cluster_bases
+                        .get(&name)
+                        .or_else(|| fallback.and_then(|f| tree.cluster_bases.get(&f)))
+                })
+        else {
+            continue;
+        };
+        if let Some(jewel) = cluster_jewel(item, base, data)
+            && jewel.valid(data)
+        {
+            out.insert(socket.node.0, jewel);
+        }
+    }
+    out
+}
+
+/// One cluster jewel's lines as a [`Jewel`] ([`cluster_jewels`]); `None`
+/// for a line it cannot read.
+fn cluster_jewel(
+    item: &loom_domain::Item,
+    base: &str,
+    data: &loom_data::bundle::poe1::ClusterJewels,
+) -> Option<Jewel> {
+    let mut jewel = Jewel {
+        base: base.to_owned(),
+        ..Jewel::default()
+    };
+    for line in &item.body.lines {
+        let LineKind::Modifier(m) = &line.kind else {
+            continue;
+        };
+        if !m.selected {
+            continue;
+        }
+        let LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            return None;
+        };
+        for s in stats {
+            let one = settled(&s.value).first().copied();
+            let count = one.and_then(|v| u32::try_from(v).ok());
+            match s.stat.as_str() {
+                CLUSTER_NODE_COUNT => jewel.node_count = count,
+                CLUSTER_SOCKETS => jewel.socket_count = count,
+                CLUSTER_SOCKETS_OVERRIDE => jewel.socket_override = count,
+                CLUSTER_NOTHINGNESS => jewel.nothingness = count,
+                CLUSTER_SKILL => jewel.skill = one.and_then(|v| usize::try_from(v).ok()),
+                CLUSTER_SMALLS_NOTHING => jewel.smalls_nothing = true,
+                CLUSTER_EFFECT => jewel.effect = one.unwrap_or(0),
+                other if other.starts_with(CLUSTER_ALSO_GRANT) => {
+                    // The granted stat at the line's value; a stat the
+                    // data does not pair, or a value the line does not
+                    // settle, leaves the jewel unbuilt.
+                    let granted = data.grant(other)?;
+                    jewel.added.push(StatAmount {
+                        stat: granted.to_owned(),
+                        value: one?,
+                    });
+                }
+                other => match data.special(other) {
+                    Some(sp) if sp.keystone => jewel.keystone = u32::try_from(sp.node).ok(),
+                    Some(sp) => jewel.notables.extend(u32::try_from(sp.node).ok()),
+                    None => {}
+                },
+            }
+        }
+    }
+    Some(jewel)
+}
+
 /// The active spec's allocated nodes resolved against `tree` (passive
 /// tree plan, T-e): connected to an allocated start
 /// ([`loom_tree::poe1::connected_to_start`]) or held by a radius jewel
 /// ([`leaps`], [`loom_tree::poe1::radius::held`]), a cluster jewel's
-/// socket or node, or not connected. Without a tree, empty: the engine
-/// then counts every node as not connected, each with the visible
-/// `unconnected-node` reason (a bundle without passive tables has no
-/// node's stats either; the app and `calc-run` pass the bundle's tree
-/// whenever it has one).
+/// socket or node, or not connected. The socketed cluster jewels
+/// ([`cluster_jewels`]) first add their nodes to the tree
+/// ([`loom_tree::poe1::cluster::expand`], T-i): an allocated node one
+/// adds resolves as any other, with its stats in
+/// [`ResolvedPassives::cluster`]; one no jewel adds stays a cluster jewel
+/// node (a reason). Without a tree, empty: the engine then counts every
+/// node as not connected, each with the visible `unconnected-node` reason
+/// (a bundle without passive tables has no node's stats either; the app
+/// and `calc-run` pass the bundle's tree whenever it has one).
 #[must_use]
 pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives {
     let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {
         return ResolvedPassives::default();
     };
-    let nodes = spec.nodes.value();
-    let mut connected = loom_tree::poe1::connected_to_start(tree, nodes.iter().map(|n| &n.0));
-    let allocated: std::collections::BTreeSet<u32> = nodes
+    let pack = tree.version.is_some().then(|| pack_stats(tree));
+    let legacy = spec.cluster_hash_format() < 2;
+    let subgraphs = cluster::subgraphs_for(tree, &cluster_jewels(build, spec, tree), legacy);
+    let expanded;
+    let tree = if subgraphs.is_empty() {
+        tree
+    } else {
+        expanded = cluster::expand(tree, &subgraphs);
+        &expanded
+    };
+    let in_subgraph: BTreeMap<u32, &cluster::ClusterNode> = subgraphs
         .iter()
-        .map(|n| n.0)
+        .flat_map(|g| &g.nodes)
+        .map(|n| (n.id, n))
+        .collect();
+    // A legacy spec's numbers as PoB renumbers them (T-i); the states are
+    // given under the spec's own numbers.
+    let map = cluster::legacy_map(&subgraphs);
+    let now = |n: NodeId| cluster::remapped(tree, &map, n.0);
+    let nodes = spec.nodes.value();
+    let current: Vec<u32> = nodes.iter().map(|n| now(*n)).collect();
+    let mut connected = loom_tree::poe1::connected_to_start(tree, current.iter());
+    let allocated: std::collections::BTreeSet<u32> = current
+        .iter()
+        .copied()
         .filter(|n| n & loom_tree::poe1::CLUSTER_NODE_BIT == 0)
         .collect();
     let held =
         loom_tree::poe1::radius::held(tree, &leaps(build, spec, tree), &allocated, &connected);
     connected.extend(held);
+    let is_cluster = |n: u32| n & loom_tree::poe1::CLUSTER_NODE_BIT != 0;
     ResolvedPassives {
         nodes: nodes
             .iter()
             .map(|n| {
-                let state = if n.0 & loom_tree::poe1::CLUSTER_NODE_BIT != 0 {
+                let c = now(*n);
+                let state = if is_cluster(c) && !in_subgraph.contains_key(&c) {
                     PassiveState::ClusterNode
-                } else if connected.contains(&n.0) {
+                } else if connected.contains(&c) {
                     PassiveState::Connected
-                } else if tree.node(n.0).is_some_and(|x| x.expansion) {
+                } else if tree.node(c).is_some_and(|x| x.expansion) && !in_subgraph.contains_key(&c)
+                {
                     PassiveState::ClusterSocket
                 } else {
                     PassiveState::Unconnected
@@ -376,7 +522,151 @@ pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives 
                 (*n, state)
             })
             .collect(),
+        cluster: nodes
+            .iter()
+            .filter(|n| is_cluster(now(**n)))
+            .filter_map(|n| {
+                let c = in_subgraph.get(&now(*n))?;
+                Some((
+                    *n,
+                    ClusterPassive {
+                        stats: c.stats.clone(),
+                        effect: c.effect,
+                    },
+                ))
+            })
+            .collect(),
+        pack,
     }
+}
+
+/// A pack tree's stats for the engine ([`ResolvedPassives::pack`]; passive
+/// tree plan, T4): every node's and mastery effect's, with the lines the
+/// pack could not read.
+fn pack_stats(tree: &Tree) -> PackStats {
+    let node = |stats: &[StatAmount],
+                kind: loom_calc::input::PassiveKind,
+                unresolved: Option<&Vec<String>>| PackNode {
+        stats: stats.to_vec(),
+        kind,
+        unresolved: unresolved.cloned().unwrap_or_default(),
+    };
+    PackStats {
+        passives: tree
+            .nodes
+            .iter()
+            .map(|(n, x)| {
+                let kind = loom_calc::input::PassiveKind {
+                    notable: x.kind == loom_tree::Kind::Notable,
+                    ascendancy: x.ascendancy.is_some(),
+                };
+                (NodeId(*n), node(&x.stats, kind, tree.unresolved.get(n)))
+            })
+            .collect(),
+        mastery_effects: tree
+            .effect_stats
+            .iter()
+            .map(|(e, stats)| {
+                let unresolved = tree.effect_unresolved.get(e);
+                (
+                    *e,
+                    node(stats, loom_calc::input::PassiveKind::default(), unresolved),
+                )
+            })
+            .collect(),
+    }
+}
+
+/// The bundle's older tree versions ([`loom_data::bundle::tree_packs`]),
+/// each built as a tree ([`Tree::from_pack`]) on `base`, the bundle's own
+/// tree, by version.
+#[must_use]
+pub fn pack_trees(bundle: &loom_data::bundle::Bundle, base: &Tree) -> BTreeMap<String, Tree> {
+    bundle
+        .tree_packs
+        .iter()
+        .filter_map(|(v, pack)| Some((v.clone(), Tree::from_pack(bundle, base, pack)?)))
+        .collect()
+}
+
+/// The tree to calculate `build` on and its version (passive tree plan,
+/// T4): the data's own (`own`, of `version`), unless the active spec names
+/// another version the bundle carries as a pack (`packs`, [`pack_trees`]),
+/// then that one, so the spec reads the stats of its own tree as PoB does.
+/// A spec of a version with no pack keeps the data's tree, and the
+/// engine's version check gives its reason.
+#[must_use]
+pub fn pick_tree<'a>(
+    build: &Build,
+    own: Option<&'a Tree>,
+    version: Option<TreeVersion>,
+    packs: &'a BTreeMap<String, Tree>,
+) -> (Option<&'a Tree>, Option<TreeVersion>) {
+    let named = loom_calc::poe1::collect::active_spec(build).and_then(|s| s.tree_version.as_ref());
+    match named {
+        Some(v) if Some(v) != version.as_ref() => match packs.get(v.as_str()) {
+            Some(tree) => (Some(tree), Some(v.clone())),
+            None => (own, version),
+        },
+        _ => (own, version),
+    }
+}
+
+/// Renumbers each spec of `build` numbered as PoB numbered cluster nodes
+/// before its hash fix (`clusterHashFormatVersion` 1; passive tree plan,
+/// T-i) as PoB does when it loads one (`PassiveSpec.lua` 1651 to 1720):
+/// its allocated nodes and its jewel sockets take their current numbers
+/// ([`loom_tree::poe1::cluster::remapped`]) and the spec is marked 2, in
+/// one change (ADR-009). A tree without cluster jewel data renumbers
+/// nothing, and a spec of another tree version than `version` (when both
+/// are known) is left as it is: PoB then renumbers it when it reads the
+/// export. Returns whether a spec changed.
+pub fn migrate_cluster_hashes(
+    build: &mut Build,
+    tree: &Tree,
+    version: Option<&TreeVersion>,
+) -> bool {
+    if tree.cluster_jewels.is_none() {
+        return false;
+    }
+    let mut plans = Vec::new();
+    for (k, spec) in build.passives.specs.typed().enumerate() {
+        let other_version = matches!(
+            (spec.tree_version.as_ref(), version),
+            (Some(a), Some(b)) if a != b
+        );
+        if spec.cluster_hash_format() >= 2 || other_version {
+            continue;
+        }
+        let subgraphs = cluster::subgraphs_for(tree, &cluster_jewels(build, spec, tree), true);
+        let expanded = cluster::expand(tree, &subgraphs);
+        let map = cluster::legacy_map(&subgraphs);
+        let now = |n: NodeId| NodeId(cluster::remapped(&expanded, &map, n.0));
+        let mut seen = std::collections::BTreeSet::new();
+        let nodes: Vec<NodeId> = spec
+            .nodes
+            .value()
+            .iter()
+            .map(|n| now(*n))
+            .filter(|n| seen.insert(*n))
+            .collect();
+        let sockets: Vec<NodeId> = spec.jewel_sockets.typed().map(|j| now(j.node)).collect();
+        plans.push((k, nodes, sockets));
+    }
+    let changed = !plans.is_empty();
+    for (k, nodes, sockets) in plans {
+        let Some(spec) = build.passives.specs.typed_mut().nth(k) else {
+            continue;
+        };
+        if nodes != *spec.nodes.value() {
+            spec.nodes.set(nodes);
+        }
+        for (j, node) in spec.jewel_sockets.typed_mut().zip(sockets) {
+            j.node = node;
+        }
+        spec.set_cluster_hash_format(2);
+    }
+    changed
 }
 
 /// The engine's options for `build`: each item's base name and PoB's line

@@ -75,6 +75,14 @@ impl ModStore {
         &self.effects
     }
 
+    /// Replaces the value of each effect from the `start`-th on with
+    /// `scaled(quantity, op, value)`.
+    pub fn rescale_from(&mut self, start: usize, scaled: &dyn Fn(Quantity, Op, f64) -> f64) {
+        for e in self.effects.iter_mut().skip(start) {
+            e.value = scaled(e.quantity, e.op, e.value);
+        }
+    }
+
     /// The number of effects.
     #[must_use]
     pub fn len(&self) -> usize {
