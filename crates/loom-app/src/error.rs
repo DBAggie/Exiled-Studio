@@ -77,6 +77,9 @@ pub enum Code {
     /// one, or a group, gem, or numeric config input the build does not
     /// have.
     WhatIf,
+    /// The UI's document for a build is too large to keep
+    /// ([`crate::MAX_WORKSPACE`]).
+    Workspace,
 }
 
 impl Code {
@@ -114,6 +117,7 @@ impl Code {
             Self::Quarantined => "APP_QUARANTINED",
             Self::BundleDamaged => "APP_BUNDLE_DAMAGED",
             Self::WhatIf => "APP_WHAT_IF",
+            Self::Workspace => "APP_WORKSPACE",
         }
     }
 }

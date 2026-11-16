@@ -603,6 +603,35 @@ fn empty_builds_should_round_trip_through_json() {
     round_trip(&Build::new(Game::Poe2));
 }
 
+/// The planner's settings PoB's format has no place for (the league, the
+/// UI's workspace document) are additive: written when set, left out when
+/// not, so a document from before them still reads.
+#[test]
+fn planner_settings_should_round_trip_and_be_left_out_when_absent() {
+    let plain = round_trip(&poe1_build());
+    assert!(!plain.contains("\"league\""), "{plain}");
+    assert!(!plain.contains("\"workspace\""), "{plain}");
+    let old = from_json(&plain).unwrap();
+    assert_eq!(old.league, None);
+    assert_eq!(old.workspace, None);
+
+    let mut b = poe1_build();
+    b.league = Some(loom_domain::League::Standard);
+    // Opaque text: kept byte for byte, JSON or not.
+    let document = "{\"dashboards\":[{\"name\":\"Überblick\"}],\"snapshots\":[]}\n not json";
+    b.workspace = Some(document.to_owned());
+    let json = round_trip(&b);
+    assert!(json.contains("\"league\": \"standard\""), "{json}");
+    assert!(json.contains("\"workspace\": \"{"), "{json}");
+    let back = from_json(&json).unwrap();
+    assert_eq!(back.workspace.as_deref(), Some(document));
+
+    // An empty document is a document, not an absent one.
+    b.workspace = Some(String::new());
+    let json = round_trip(&b);
+    assert!(json.contains("\"workspace\": \"\""), "{json}");
+}
+
 /// The bytes are fixed: the committed files are what every platform
 /// writes. Regenerate with the ignored `write_golden_files` test after a
 /// deliberate change.

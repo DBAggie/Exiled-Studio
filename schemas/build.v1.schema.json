@@ -169,6 +169,13 @@
         "skills": {
           "description": "Skills.",
           "$ref": "#/$defs/Skills"
+        },
+        "workspace": {
+          "description": "The UI's document for this build (dashboards, kept snapshots\nof the numbers), if it has one: opaque text (additive, accepted\n2026-11-16).",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false,

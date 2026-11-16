@@ -236,7 +236,11 @@ pub fn call(app: &App, client: &str, name: &str, args: &Value) -> Result<Value, 
     match name {
         "get_build" => {
             let snap = app.snapshot();
-            let build = snap.build.ok_or_else(no_build)?;
+            let mut build = snap.build.ok_or_else(no_build)?;
+            // The UI's own document for the build (dashboards, kept
+            // snapshots; up to 256 KiB) is not part of what a client
+            // reads here.
+            build.workspace = None;
             Ok(
                 json!({"version": snap.version, "build": to_value(&build), "calc": to_value(&snap.calc)}),
             )

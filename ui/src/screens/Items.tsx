@@ -28,6 +28,7 @@ import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
 import { fieldLabel, t, tDynamic } from '../i18n'
 import { actions, attempt, query, run } from '../store'
 import { Inventory } from './Inventory'
+import { EquipmentDiff, StageCompareSelect } from './StageDiff'
 import {
   cleanTitle,
   itemName,
@@ -192,6 +193,7 @@ export function Items() {
       <div className="page-head">
         <ScreenHeading>{t('items.title')}</ScreenHeading>
         <span className="spacer" />
+        <StageCompareSelect build={build} />
         <LeaguePicker league={build.league} />
         {sets.length > 1 && <ItemSetPicker sets={sets} />}
       </div>
@@ -200,6 +202,7 @@ export function Items() {
       <div className="equip-layout">
         <Inventory />
         <div className="equip-side">
+          <EquipmentDiff build={build} />
           <PasteItem />
           {items.length === 0 ? (
             <p>{t('items.none')}</p>

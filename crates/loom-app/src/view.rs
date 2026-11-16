@@ -39,6 +39,62 @@ fn slot_of(build: &Build, id: ItemId) -> Option<String> {
         .map(|s| s.slot.as_str().to_owned())
 }
 
+/// The tree and equipment of the stage of passive spec `spec`
+/// ([`api::StageView`]): what the build's view shows with the stage
+/// chosen. The stage is applied to a copy of the build as `use-loadout`
+/// applies it, and the copy is read by the code the build's view reads
+/// with (`crate::tree::view` for the nodes, each item's slot as
+/// [`api::ItemSummary::slot`]), so the two cannot disagree. Without a
+/// passive tree in the data the nodes are the spec's own, ascending.
+/// Nothing is calculated and the build is not changed.
+///
+/// # Errors
+/// `APP_LOADOUT` when the build has no stage `spec`.
+pub fn stage_view(
+    build: &Build,
+    spec: u32,
+    data: Option<&crate::GameData>,
+) -> Result<api::StageView, crate::AppError> {
+    let stage = crate::session::stage(build, spec)?;
+    let mut staged = build.clone();
+    loadout::apply(&mut staged, &stage);
+    let nodes = data
+        .and_then(|d| {
+            crate::tree::view(
+                &staged,
+                d.tree.as_ref()?,
+                d.tree_version.as_ref(),
+                Some(d.bundle),
+            )
+        })
+        .map_or_else(
+            || {
+                let mut nodes: Vec<u32> = loom_calc::poe1::collect::active_spec(&staged)
+                    .map(|s| s.nodes.value().iter().map(|n| n.0).collect())
+                    .unwrap_or_default();
+                nodes.sort_unstable();
+                nodes.dedup();
+                nodes
+            },
+            |t| t.nodes,
+        );
+    Ok(api::StageView {
+        spec: stage.spec.0,
+        title: stage.title,
+        nodes,
+        slots: staged
+            .items
+            .items()
+            .filter_map(|i| {
+                Some(api::StageSlot {
+                    slot: slot_of(&staged, i.id)?,
+                    item: i.id.0,
+                })
+            })
+            .collect(),
+    })
+}
+
 /// An item's sockets as linked groups (`R-R-G B` → `RRG`, `B`), from
 /// its `Sockets` line; empty without one.
 fn socket_groups(item: &Item) -> Vec<String> {
@@ -909,6 +965,7 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
             Some(League::Challenge) | None => api::League::Challenge,
         },
         tree: None,
+        workspace: build.workspace.clone(),
     }
 }
 

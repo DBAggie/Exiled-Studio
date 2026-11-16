@@ -182,6 +182,18 @@ fn plan(build: &Build, request: &api::WhatIfRequest) -> Result<Vec<Planned>, App
     }
 }
 
+/// A calc result's fields as a point gives them.
+pub(crate) fn point_fields(result: &loom_calc::CalcResult) -> Vec<api::WhatIfField> {
+    view::fields(result)
+        .into_iter()
+        .map(|(field, value, state)| api::WhatIfField {
+            field,
+            value,
+            state,
+        })
+        .collect()
+}
+
 /// The calculation's own cancel error when `cancel` says so (the engine
 /// polls first, so nothing is calculated).
 fn poll(state: &State, data: &GameData, cancel: &dyn Fn() -> bool) -> Result<(), AppError> {
@@ -264,14 +276,7 @@ pub fn what_if(
             label: p.label,
             x: p.x,
             current,
-            fields: view::fields(&result)
-                .into_iter()
-                .map(|(field, value, state)| api::WhatIfField {
-                    field,
-                    value,
-                    state,
-                })
-                .collect(),
+            fields: point_fields(&result),
         });
     }
     Ok(api::WhatIfSeries { points })

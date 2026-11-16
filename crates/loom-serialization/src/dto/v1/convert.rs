@@ -223,6 +223,7 @@ pub(super) fn build_to(b: &d::Build) -> Build {
             d::League::Challenge => League::Challenge,
             d::League::Standard => League::Standard,
         }),
+        workspace: b.workspace.clone(),
         character: Character {
             class: c.class.as_ref().map(|i| i.as_str().to_owned()),
             ascendancy: c.ascendancy.as_ref().map(|i| i.as_str().to_owned()),
@@ -259,6 +260,7 @@ pub(super) fn build_from(b: Build) -> Result<d::Build, DtoError> {
         League::Challenge => d::League::Challenge,
         League::Standard => d::League::Standard,
     });
+    out.workspace = b.workspace;
     let c = b.character;
     out.character = d::Character {
         class: c.class.map(d::ClassId::new),

@@ -107,6 +107,7 @@ export type TreeChange =
  * sent.
  */
 export interface ApplicationAPIV1 {
+  'build-fields': BuildFields
   /**
    * A command.
    */
@@ -375,6 +376,14 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
+        'set-workspace': {
+          /**
+           * The document; absent or null to clear it.
+           */
+          document?: string | null
+        }
+      }
+    | {
         'allocate-node': {
           /**
            * The node.
@@ -607,12 +616,43 @@ export interface ApplicationAPIV1 {
    */
   recovery: RecoveryEntry[]
   snapshot: Snapshot
+  'stage-view': StageView
   'tree-layout': TreeLayout
   'tree-preview': TreePreview1
   'tree-sprites': TreeSprites
   updates: UpdateStatus
   'what-if': WhatIfRequest
   'what-if-series': WhatIfSeries
+}
+/**
+ * The numbers of another build file (the `compare_file` query).
+ */
+export interface BuildFields {
+  /**
+   * Each slice field, as a what-if point gives them.
+   */
+  fields: WhatIfField[]
+  /**
+   * The file's name without its extension.
+   */
+  name: string
+}
+/**
+ * One field at a what-if point.
+ */
+export interface WhatIfField {
+  /**
+   * The field's name.
+   */
+  field: string
+  /**
+   * Its state.
+   */
+  state: string
+  /**
+   * Its value, when computed and finite.
+   */
+  value?: number | null
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -1613,6 +1653,13 @@ export interface BuildView {
    * Lines with warnings: kept, shown, not calculated (ADR-015).
    */
   warnings: WarningView[]
+  /**
+   * The UI's document for this build (its dashboards and kept
+   * snapshots of the numbers), if it has one: opaque text the
+   * application keeps in the build file and never reads
+   * (`set-workspace`).
+   */
+  workspace?: string | null
 }
 /**
  * The active config set: its inputs and custom modifier blocks.
@@ -2398,10 +2445,48 @@ export interface HistoryEntry {
     | 'tree-specs'
     | 'tree-request-applied'
     | 'item-added'
+    | 'workspace'
   /**
    * The change request it applied, when an MCP client asked for it.
    */
   request?: number | null
+}
+/**
+ * A stage's tree and equipment (the `stage_view` query).
+ */
+export interface StageView {
+  /**
+   * The spec's allocated nodes, ascending: the IDs
+   * [`TreeView::nodes`] gives when the stage is the active one.
+   */
+  nodes: number[]
+  /**
+   * The items in the slots of the stage's item set (the linked one,
+   * else the one the build keeps when the stage is chosen), in
+   * build order.
+   */
+  slots: StageSlot[]
+  /**
+   * The passive spec's ID (the stage's key, as [`LoadoutView`]'s).
+   */
+  spec: number
+  /**
+   * The title, without colour codes and links.
+   */
+  title: string
+}
+/**
+ * An item in a slot of a stage's item set.
+ */
+export interface StageSlot {
+  /**
+   * The item's ID ([`ItemSummary::id`]).
+   */
+  item: number
+  /**
+   * The slot, as [`ItemSummary::slot`] names it.
+   */
+  slot: string
 }
 /**
  * The loaded data's passive tree.
@@ -2799,21 +2884,4 @@ export interface WhatIfPoint {
    * The swept value; for stages, the stage's index from 0.
    */
   x: number
-}
-/**
- * One field at a what-if point.
- */
-export interface WhatIfField {
-  /**
-   * The field's name.
-   */
-  field: string
-  /**
-   * Its state.
-   */
-  state: string
-  /**
-   * Its value, when computed and finite.
-   */
-  value?: number | null
 }

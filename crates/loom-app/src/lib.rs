@@ -13,6 +13,7 @@
 mod app;
 pub mod bundles;
 mod card_values;
+pub mod compare;
 pub mod crash;
 mod data;
 pub mod diagnostics;
@@ -31,12 +32,14 @@ mod view;
 pub mod what_if;
 
 pub use app::{App, Config, HostCommand, MAX_PENDING_REQUESTS, Sink};
+pub use compare::fields_of_file;
 pub use data::{GameData, TREE_VERSIONS, tree_version};
 pub use error::{AppError, Code};
 pub use session::{
-    GroupPlace, HISTORY_LIMIT, Session, State, calculate, check_data, preview, preview_tree,
+    GroupPlace, HISTORY_LIMIT, MAX_WORKSPACE, Session, State, calculate, check_data, preview,
+    preview_tree,
 };
-pub use view::{build_view, item_view};
+pub use view::{build_view, item_view, stage_view};
 pub use what_if::what_if;
 
 pub use loom_serialization::dto::app::v1 as api;

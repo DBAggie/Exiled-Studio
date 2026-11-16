@@ -5,7 +5,7 @@
 // `supports`). Level, quality, on or off, and the main skill are edited
 // here; every change is one undoable command. Gems are marked by their
 // colour, never with game art (ADR-000).
-import { useId, useState, type ReactNode } from 'react'
+import { Fragment, useId, useState, type ReactNode } from 'react'
 
 import type {
   GemView,
@@ -15,7 +15,7 @@ import type {
 } from '../api/types'
 import { Badge, Hint, Icon, ScreenHeading, Sockets } from '../components'
 import { t } from '../i18n'
-import { actions, run } from '../store'
+import { actions, run, setPrefs } from '../store'
 import { cleanTitle, itemName, useAppDispatch, useAppSelector } from '../util'
 
 import { GemPicker } from './GemPicker'
@@ -563,9 +563,151 @@ function TextField({
   )
 }
 
+/** The socket groups as a table, a row each (the brief's screen 10, D;
+ * UX audit follow-up): what a build with many groups needs to be read at
+ * a glance. A row opens to the group's full editor under it. */
+function SkillTable({
+  groups,
+  inSlot,
+}: {
+  groups: SkillGroupView[]
+  inSlot: (slot: string | null) => ItemSummary | undefined
+}) {
+  const dispatch = useAppDispatch()
+  const [open, setOpen] = useState<number | null>(null)
+  const names = (gems: GemView[]) =>
+    gems.map((g, i) => (
+      <span key={i} className={`gem-chip${g.enabled ? '' : ' muted'}`}>
+        <span
+          className={`gem-mark gem-${g.colour ?? 'unknown'}${g.support === true ? ' support' : ''}`}
+          aria-hidden="true"
+        />
+        {g.main ? <strong>{g.name ?? '?'}</strong> : (g.name ?? '?')}{' '}
+        <span className="muted">{g.level}</span>
+      </span>
+    ))
+  return (
+    <div className="panel table-scroll">
+      <table className="data-table skill-table">
+        <caption className="visually-hidden">
+          {t('skills.table.caption')}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{t('skills.table.group')}</th>
+            <th scope="col">{t('skills.table.skills')}</th>
+            <th scope="col">{t('skills.table.supports')}</th>
+            <th scope="col">{t('skills.colOn')}</th>
+            <th scope="col">
+              <span className="visually-hidden">{t('skills.view')}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map((group, index) => {
+            const title =
+              group.label != null && group.label !== ''
+                ? group.label
+                : t('skills.groupN', { n: index + 1 })
+            const actives = group.gems.filter((g) => g.support !== true)
+            const supports = group.gems.filter((g) => g.support === true)
+            const shown = open === index
+            return (
+              <Fragment key={index}>
+                <tr
+                  className={`${group.enabled ? '' : 'disabled'}${group.main ? ' main' : ''}`}
+                >
+                  <th scope="row">
+                    <span className="skill-table-title">{title}</span>
+                    <span className="muted small-text">
+                      {group.slot ?? t('skills.other')}
+                    </span>
+                    {group.main && (
+                      <Badge tone="info">{t('skills.table.mainMark')}</Badge>
+                    )}
+                  </th>
+                  <td>
+                    <span className="gem-chips">
+                      {actives.length === 0 ? (
+                        <span className="muted">{t('skills.empty')}</span>
+                      ) : (
+                        names(actives)
+                      )}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="gem-chips">
+                      {supports.length === 0 ? (
+                        <span className="muted">
+                          {t('skills.table.noSupports')}
+                        </span>
+                      ) : (
+                        names(supports)
+                      )}
+                    </span>
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={t('skills.groupEnabledOf', { group: title })}
+                      checked={group.enabled}
+                      onChange={(e) =>
+                        void dispatch(
+                          run({
+                            'edit-socket-group': {
+                              group: index,
+                              enabled: e.target.checked,
+                            },
+                          }),
+                        )
+                      }
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="icon quiet"
+                      aria-expanded={shown}
+                      aria-label={t(
+                        shown ? 'skills.table.close' : 'skills.table.open',
+                        { name: title },
+                      )}
+                      title={t(
+                        shown ? 'skills.table.close' : 'skills.table.open',
+                        { name: title },
+                      )}
+                      onClick={() => setOpen(shown ? null : index)}
+                    >
+                      <Icon name={shown ? 'close' : 'sliders'} size={16} />
+                    </button>
+                  </td>
+                </tr>
+                {shown && (
+                  <tr className="skill-table-editor">
+                    <td colSpan={5}>
+                      <GroupBlock
+                        group={group}
+                        index={index}
+                        item={inSlot(group.slot ?? null)}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function Skills() {
+  const dispatch = useAppDispatch()
   const build = useAppSelector((s) => s.session.snapshot?.build)
+  const prefs = useAppSelector((s) => s.ui.prefs)
   if (build == null) return null
+  const table = prefs.skillsTable === true
   const groups = build['skill-groups']
   const sets = build['skill-sets']
   const inSlot = (slot: string | null) =>
@@ -578,10 +720,29 @@ export function Skills() {
         <ScreenHeading>{t('skills.title')}</ScreenHeading>
         <Hint>{t('skills.help')}</Hint>
         <span className="spacer" />
+        <div className="segmented" role="group" aria-label={t('skills.view')}>
+          {([false, true] as const).map((on) => (
+            <button
+              type="button"
+              key={String(on)}
+              aria-pressed={table === on}
+              onClick={() => {
+                const { skillsTable: _, ...rest } = prefs
+                void dispatch(
+                  setPrefs(on ? { ...rest, skillsTable: true } : rest),
+                )
+              }}
+            >
+              {t(on ? 'skills.view.table' : 'skills.view.cards')}
+            </button>
+          ))}
+        </div>
         {sets.length > 1 && <SkillSetPicker sets={sets} />}
       </div>
       {groups.length === 0 && <p>{t('skills.none')}</p>}
-      {
+      {table && groups.length > 0 ? (
+        <SkillTable groups={groups} inSlot={inSlot} />
+      ) : (
         <div className="skill-grid">
           {bySlot(
             groups,
@@ -597,7 +758,7 @@ export function Skills() {
             />
           ))}
         </div>
-      }
+      )}
     </>
   )
 }

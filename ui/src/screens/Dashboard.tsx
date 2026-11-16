@@ -6,11 +6,12 @@
 // label, value, and badge on one line; it opens the stat's breakdown.
 // A dashboard is short by default: lists show their first rows, charts
 // their plot, and the rest is one click away.
-import { useState } from 'react'
+import { Popover } from 'radix-ui'
+import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
 import { Delta, Sparkline } from '../charts'
-import { Badge, FieldBadge, Icon, ScreenHeading } from '../components'
+import { Badge, FieldBadge, Hint, Icon, ScreenHeading } from '../components'
 import {
   CATALOG,
   CATEGORIES,
@@ -22,11 +23,20 @@ import {
   MAX_DASHBOARDS,
   WIDTHS,
   type Width,
+  dropTarget,
+  dropped,
   moved,
   newId,
 } from '../dashboards'
 import { OFFENCE, fieldLabel, t } from '../i18n'
-import { type Mark, actions, markOf, setPrefs } from '../store'
+import {
+  type Mark,
+  actions,
+  attempt,
+  markOf,
+  setPrefs,
+  setWorkspace,
+} from '../store'
 import {
   AllStatsPanel,
   AttributesPanel,
@@ -50,6 +60,7 @@ import {
   useAppSelector,
   useDataName,
 } from '../util'
+import { MAX_NAME, MAX_SNAPSHOTS, markOfKept, useWorkspace } from '../workspace'
 
 function why(f: FieldResult): string | null {
   if (f.state === 'unsupported' && f.reason != null) {
@@ -458,17 +469,28 @@ function componentName(c: DashComponent): string {
     : t(`dashboard.kind.${c.kind}`)
 }
 
+/** A drag of a component by its handle. */
+interface DragHandlers {
+  down: (e: PointerEvent<HTMLButtonElement>, id: string) => void
+  move: (e: PointerEvent<HTMLButtonElement>) => void
+  up: () => void
+  cancel: () => void
+  key: (e: KeyboardEvent<HTMLButtonElement>, index: number) => void
+}
+
 /** A component's controls while customizing: move, resize, remove. */
 function ComponentTools({
   c,
   index,
   count,
   onChange,
+  drag,
 }: {
   c: DashComponent
   index: number
   count: number
   onChange: (f: (list: DashComponent[]) => DashComponent[]) => void
+  drag: DragHandlers
 }) {
   const name = componentName(c)
   return (
@@ -477,6 +499,22 @@ function ComponentTools({
       role="group"
       aria-label={t('dashboard.tools', { name })}
     >
+      {/* Dragged with the pointer; the arrow keys move it too. The shell
+          turns off the browser's own drag and drop, so this is pointer
+          events (UX audit follow-up). */}
+      <button
+        type="button"
+        className="icon quiet drag-handle"
+        aria-label={t('dashboard.drag', { name })}
+        title={t('dashboard.dragHelp')}
+        onPointerDown={(e) => drag.down(e, c.id)}
+        onPointerMove={drag.move}
+        onPointerUp={drag.up}
+        onPointerCancel={drag.cancel}
+        onKeyDown={(e) => drag.key(e, index)}
+      >
+        <Icon name="grip" size={16} />
+      </button>
       <strong className="small-text">{name}</strong>
       <span className="spacer" />
       <button
@@ -643,8 +681,187 @@ function Library({
   )
 }
 
+/** A text field that changes its value when left or on Enter, not on
+ * every key (a change to a build's own dashboards is a change to the
+ * build). */
+function CommitField({
+  id,
+  value,
+  onCommit,
+}: {
+  id: string
+  value: string
+  onCommit: (value: string) => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const commit = () => {
+    if (draft !== null && draft !== value) onCommit(draft)
+    setDraft(null)
+  }
+  return (
+    <input
+      id={id}
+      value={draft ?? value}
+      maxLength={40}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit()
+        if (e.key === 'Escape') setDraft(null)
+      }}
+    />
+  )
+}
+
+/** The snapshots kept in the build, by name: keep the numbers as they
+ * are, compare against a kept one, or against another build file. */
+function Snapshots() {
+  const dispatch = useAppDispatch()
+  const calc = useAppSelector((s) => s.session.calc)
+  const baseline = useAppSelector((s) => s.ui.baseline)
+  const workspace = useWorkspace()
+  const [name, setName] = useState('')
+  const kept = workspace.snapshots
+  const full = kept.length >= MAX_SNAPSHOTS
+  const keep = () => {
+    const title = name.trim()
+    if (calc === null || title === '' || full) return
+    const mark = markOf(calc, title)
+    void dispatch(
+      setWorkspace({
+        ...workspace,
+        snapshots: [
+          ...kept,
+          {
+            id: newId(
+              's',
+              kept.map((k) => k.id),
+            ),
+            name: title,
+            fields: mark.fields,
+          },
+        ],
+      }),
+    )
+    setName('')
+  }
+  const compareFile = async () => {
+    const other = await dispatch(attempt((api) => api.compareFile()))
+    if (other == null) return
+    dispatch(
+      actions.baseline({
+        version: -1,
+        label: other.name === '' ? t('snapshots.otherBuild') : other.name,
+        fields: Object.fromEntries(
+          other.fields.map((f) => [f.field, f.value ?? null]),
+        ),
+      }),
+    )
+  }
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button type="button" title={t('snapshots.help')}>
+          <Icon name="camera" size={16} />
+          {t('snapshots.title')}
+          {kept.length > 0 && <Badge tone="neutral">{kept.length}</Badge>}
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className="popover-content snapshots"
+          align="end"
+          sideOffset={6}
+          collisionPadding={8}
+        >
+          <div className="panel-head">
+            <h2 className="small-text">{t('snapshots.title')}</h2>
+            <Hint>{t('snapshots.help')}</Hint>
+          </div>
+          {kept.length === 0 ? (
+            <p className="muted small-text">{t('snapshots.none')}</p>
+          ) : (
+            <ul className="snapshot-list">
+              {kept.map((k) => {
+                const on = baseline?.version === -1 && baseline.label === k.name
+                return (
+                  <li key={k.id}>
+                    <button
+                      type="button"
+                      className="snapshot-name"
+                      aria-pressed={on}
+                      aria-label={t('snapshots.compare', { name: k.name })}
+                      onClick={() =>
+                        dispatch(actions.baseline(on ? null : markOfKept(k)))
+                      }
+                    >
+                      {k.name}
+                    </button>
+                    <button
+                      type="button"
+                      className="icon quiet"
+                      aria-label={t('snapshots.delete', { name: k.name })}
+                      title={t('snapshots.delete', { name: k.name })}
+                      onClick={() => {
+                        if (on) dispatch(actions.baseline(null))
+                        void dispatch(
+                          setWorkspace({
+                            ...workspace,
+                            snapshots: kept.filter((x) => x.id !== k.id),
+                          }),
+                        )
+                      }}
+                    >
+                      <Icon name="close" size={16} />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <form
+            className="snapshot-keep"
+            onSubmit={(e) => {
+              e.preventDefault()
+              keep()
+            }}
+          >
+            <input
+              value={name}
+              maxLength={MAX_NAME}
+              placeholder={t('snapshots.namePlaceholder')}
+              aria-label={t('snapshots.name')}
+              disabled={full}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={calc === null || full || name.trim() === ''}
+            >
+              {t('snapshots.keep')}
+            </button>
+          </form>
+          {full && (
+            <p className="muted small-text">
+              {t('snapshots.full', { n: MAX_SNAPSHOTS })}
+            </p>
+          )}
+          <button
+            type="button"
+            className="link"
+            onClick={() => void compareFile()}
+          >
+            {t('snapshots.file')}
+          </button>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
 /** Pins the numbers as they are, to compare what comes after against
- * (UX audit D-03); with numbers pinned, says against what and lets go. */
+ * (UX audit D-03); with numbers compared, says against what and lets go.
+ * Beside it, the snapshots kept in the build. */
 function BaselineControl() {
   const dispatch = useAppDispatch()
   const calc = useAppSelector((s) => s.session.calc)
@@ -656,31 +873,40 @@ function BaselineControl() {
   }
   if (baseline === null) {
     return (
-      <button
-        type="button"
-        disabled={calc === null}
-        title={t('compare.pinHelp')}
-        onClick={pin}
-      >
-        <Icon name="pin" size={16} />
-        {t('compare.pin')}
-      </button>
+      <>
+        <button
+          type="button"
+          disabled={calc === null}
+          title={t('compare.pinHelp')}
+          onClick={pin}
+        >
+          <Icon name="pin" size={16} />
+          {t('compare.pin')}
+        </button>
+        <Snapshots />
+      </>
     )
   }
   return (
-    <span
-      className="baseline-control"
-      role="group"
-      aria-label={t('compare.label')}
-    >
-      <Badge tone="info">{t('compare.on')}</Badge>
-      <button type="button" title={t('compare.pinHelp')} onClick={pin}>
-        {t('compare.repin')}
-      </button>
-      <button type="button" onClick={() => dispatch(actions.baseline(null))}>
-        {t('compare.clear')}
-      </button>
-    </span>
+    <>
+      <span
+        className="baseline-control"
+        role="group"
+        aria-label={t('compare.label')}
+      >
+        <Badge tone="info">{t('compare.on')}</Badge>
+        <span className="muted small-text baseline-with">
+          {t('compare.with', { label: baseline.label })}
+        </span>
+        <button type="button" title={t('compare.pinHelp')} onClick={pin}>
+          {t('compare.repin')}
+        </button>
+        <button type="button" onClick={() => dispatch(actions.baseline(null))}>
+          {t('compare.clear')}
+        </button>
+      </span>
+      <Snapshots />
+    </>
   )
 }
 
@@ -690,7 +916,14 @@ export function Dashboard() {
   const calc = useAppSelector((s) => s.session.calc)
   const prefs = useAppSelector((s) => s.ui.prefs)
   const baseline = useAppSelector((s) => s.ui.baseline)
+  const shown = useAppSelector((s) => s.ui.dashActive)
+  const workspace = useWorkspace()
   const [editing, setEditing] = useState(false)
+  const [drag, setDrag] = useState<{
+    id: string
+    target: { id: string; after: boolean } | null
+  } | null>(null)
+  const grid = useRef<HTMLDivElement>(null)
   const build = snapshot?.build
   const dataLabel = useDataName(build?.['data-version'])
   if (build === null || build === undefined) {
@@ -698,18 +931,102 @@ export function Dashboard() {
   }
   const fields = calc?.[1].result.fields ?? []
   const version = build['data-version']
-  const dash =
-    prefs.dashboards.find((d) => d.id === prefs.active) ?? prefs.dashboards[0]!
-  const save = (dashboards: DashboardDef[], active = prefs.active) =>
-    void dispatch(setPrefs({ ...prefs, dashboards, active }))
+  // The build's own dashboards when it keeps a set, else the user's.
+  const own = workspace.dashboards
+  const list = own?.list ?? prefs.dashboards
+  const activeId = own === undefined ? prefs.active : (shown ?? own.active)
+  const dash = list.find((d) => d.id === activeId) ?? list[0]!
+  const save = (dashboards: DashboardDef[], active = dash.id) => {
+    if (own === undefined) {
+      void dispatch(setPrefs({ ...prefs, dashboards, active }))
+      return
+    }
+    // Which of a build's dashboards is shown is not a change to the
+    // build; what they hold is.
+    dispatch(actions.dashActive(active))
+    if (dashboards !== list) {
+      void dispatch(
+        setWorkspace({
+          ...workspace,
+          dashboards: { list: dashboards, active },
+        }),
+      )
+    }
+  }
   const change = (f: (list: DashComponent[]) => DashComponent[]) =>
     save(
-      prefs.dashboards.map((d) =>
+      list.map((d) =>
         d.id === dash.id ? { ...d, components: f(d.components) } : d,
       ),
     )
   const ids = () =>
-    prefs.dashboards.flatMap((d) => [d.id, ...d.components.map((c) => c.id)])
+    list.flatMap((d) => [d.id, ...d.components.map((c) => c.id)])
+  const forBuild = (on: boolean) => {
+    if (on === (own !== undefined)) return
+    dispatch(actions.dashActive(null))
+    if (on) {
+      void dispatch(
+        setWorkspace({
+          ...workspace,
+          dashboards: { list: prefs.dashboards, active: dash.id },
+        }),
+      )
+    } else {
+      void dispatch(
+        setWorkspace({ version: 1, snapshots: workspace.snapshots }),
+      )
+    }
+  }
+  const handlers: DragHandlers = {
+    down(e, id) {
+      if (e.button !== 0) return
+      e.preventDefault()
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+      setDrag({ id, target: null })
+    },
+    move(e) {
+      if (drag === null || grid.current === null) return
+      const cells = [
+        ...grid.current.querySelectorAll<HTMLElement>('[data-cell]'),
+      ].map((el) => {
+        const r = el.getBoundingClientRect()
+        return {
+          id: el.dataset.cell ?? '',
+          left: r.left,
+          top: r.top,
+          right: r.right,
+          bottom: r.bottom,
+        }
+      })
+      const target = dropTarget(cells, e.clientX, e.clientY)
+      setDrag({
+        id: drag.id,
+        target: target !== null && target.id !== drag.id ? target : null,
+      })
+    },
+    up() {
+      if (drag?.target != null) {
+        const { id, target } = drag
+        change((l) => dropped(l, id, target.id, target.after))
+      }
+      setDrag(null)
+    },
+    cancel() {
+      setDrag(null)
+    },
+    key(e, index) {
+      if (e.key === 'Escape') setDrag(null)
+      const by =
+        e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? -1
+          : e.key === 'ArrowRight' || e.key === 'ArrowDown'
+            ? 1
+            : 0
+      if (by === 0) return
+      e.preventDefault()
+      change((l) => moved(l, index, by))
+    },
+  }
   const character = [
     build.class != null && build.level != null
       ? t('dashboard.character', {
@@ -741,17 +1058,17 @@ export function Dashboard() {
           role="group"
           aria-label={t('dashboard.dashboards')}
         >
-          {prefs.dashboards.map((d) => (
+          {list.map((d) => (
             <button
               type="button"
               key={d.id}
               aria-pressed={d.id === dash.id}
-              onClick={() => save(prefs.dashboards, d.id)}
+              onClick={() => save(list, d.id)}
             >
               {d.name}
             </button>
           ))}
-          {prefs.dashboards.length < MAX_DASHBOARDS && (
+          {list.length < MAX_DASHBOARDS && (
             <button
               type="button"
               className="icon"
@@ -761,12 +1078,10 @@ export function Dashboard() {
                 const id = newId('dash', ids())
                 save(
                   [
-                    ...prefs.dashboards,
+                    ...list,
                     {
                       id,
-                      name: t('dashboard.newName', {
-                        n: prefs.dashboards.length + 1,
-                      }),
+                      name: t('dashboard.newName', { n: list.length + 1 }),
                       components: [],
                     },
                   ],
@@ -777,6 +1092,9 @@ export function Dashboard() {
             >
               <Icon name="plus" size={16} />
             </button>
+          )}
+          {own !== undefined && (
+            <Badge tone="neutral">{t('dashboard.scopeBadge')}</Badge>
           )}
         </div>
         <span className="spacer" />
@@ -792,27 +1110,56 @@ export function Dashboard() {
       {editing && (
         <div className="dash-edit-head">
           <label htmlFor="dash-name">{t('dashboard.name')}</label>{' '}
-          <input
+          <CommitField
             id="dash-name"
+            key={dash.id}
             value={dash.name}
-            maxLength={40}
-            onChange={(e) =>
-              save(
-                prefs.dashboards.map((d) =>
-                  d.id === dash.id ? { ...d, name: e.target.value } : d,
-                ),
-              )
+            onCommit={(name) =>
+              save(list.map((d) => (d.id === dash.id ? { ...d, name } : d)))
             }
           />{' '}
-          {prefs.dashboards.length > 1 && (
+          {list.length > 1 && (
             <button
               type="button"
               onClick={() => {
-                const rest = prefs.dashboards.filter((d) => d.id !== dash.id)
+                const rest = list.filter((d) => d.id !== dash.id)
                 save(rest, rest[0]!.id)
               }}
             >
               {t('dashboard.deleteDashboard')}
+            </button>
+          )}
+          <span className="spacer" />
+          <span className="small-text muted" id="dash-scope">
+            {t('dashboard.scope')}
+          </span>
+          <div className="segmented" role="group" aria-labelledby="dash-scope">
+            <button
+              type="button"
+              aria-pressed={own === undefined}
+              onClick={() => forBuild(false)}
+            >
+              {t('dashboard.scope.user')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={own !== undefined}
+              onClick={() => forBuild(true)}
+            >
+              {t('dashboard.scope.build')}
+            </button>
+          </div>
+          <Hint>{t('dashboard.scopeHelp')}</Hint>
+          {own !== undefined && (
+            <button
+              type="button"
+              onClick={() =>
+                void dispatch(
+                  setPrefs({ ...prefs, dashboards: list, active: dash.id }),
+                )
+              }
+            >
+              {t('dashboard.scopeDefault')}
             </button>
           )}
         </div>
@@ -823,15 +1170,28 @@ export function Dashboard() {
       )}
       {/* One grid keyed by component: moving one keeps its elements (and
           the keyboard focus). */}
-      <div className="dash-grid">
+      <div className="dash-grid" ref={grid}>
         {dash.components.map((c, index) => (
-          <div key={c.id} className={`dash-cell dash-${c.width}`}>
+          <div
+            key={c.id}
+            data-cell={c.id}
+            className={`dash-cell dash-${c.width}${
+              drag?.id === c.id ? ' dragging' : ''
+            }${
+              drag?.target?.id === c.id
+                ? drag.target.after
+                  ? ' drop-after'
+                  : ' drop-before'
+                : ''
+            }`}
+          >
             {editing && (
               <ComponentTools
                 c={c}
                 index={index}
                 count={dash.components.length}
                 onChange={change}
+                drag={handlers}
               />
             )}
             <Component

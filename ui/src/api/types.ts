@@ -3,6 +3,7 @@
 import type {
   ApiError,
   ApplicationAPIV1,
+  BuildFields,
   BuildView,
   CalcStatus,
   ChangeRequest,
@@ -36,6 +37,7 @@ import type {
   SetView,
   SkillGroupView,
   Snapshot,
+  StageView,
   TreeClassView,
   TreeLayout,
   TreeNodeView,
@@ -56,6 +58,7 @@ import type {
 
 export type {
   ApiError,
+  BuildFields,
   BuildView,
   CalcResultDocumentV1,
   CalcStatus,
@@ -88,6 +91,7 @@ export type {
   SetView,
   SkillGroupView,
   Snapshot,
+  StageView,
   TreeClassView,
   TreeLayout,
   TreeNodeView,
@@ -180,6 +184,14 @@ export interface LoomApi {
   /** The calculated fields at each stage, or with one input swept; never
    * a change to the build (`APP_WHAT_IF` for a range it refuses). */
   whatIf(request: WhatIfRequest): Promise<WhatIfSeries>
+  /** The calculated fields of a build file the user picks (a saved
+   * build or PoB XML), to compare with; the open build is untouched.
+   * `null` when the user cancels. */
+  compareFile(): Promise<BuildFields | null>
+  /** Another stage's allocated nodes and equipped items, to compare
+   * with the active one; never a change (`APP_LOADOUT` for no such
+   * stage). */
+  stageView(spec: number): Promise<StageView>
   /** The UI's own preferences document (the user's dashboards), `null`
    * before one is saved. */
   uiPrefs(): Promise<string | null>

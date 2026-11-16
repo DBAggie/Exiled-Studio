@@ -170,9 +170,7 @@ describe('comparison and time on the dashboard (section D)', () => {
     await user.click(
       within(compare).getByRole('button', { name: 'Pin to compare' }),
     )
-    expect(
-      within(compare).getByText('Nothing has changed since you pinned.'),
-    ).toBeTruthy()
+    expect(within(compare).getByText('Nothing differs.')).toBeTruthy()
     // The stage changes every number: the comparison lists them, each
     // with its direction in words (never colour alone).
     await user.selectOptions(screen.getByLabelText('Stage'), '2')

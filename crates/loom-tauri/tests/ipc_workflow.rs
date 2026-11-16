@@ -39,6 +39,15 @@ struct FakePicker(PathBuf);
 impl FilePicker for FakePicker {
     fn pick(&self, what: Pick, _name: &str) -> Option<PathBuf> {
         let file = match what {
+            // The build to compare with is the file a test put there:
+            // `compare.json`, else `compare.xml`; with neither, the user
+            // cancelled.
+            Pick::CompareBuild => {
+                return ["compare.json", "compare.xml"]
+                    .iter()
+                    .map(|f| self.0.join(f))
+                    .find(|p| p.exists());
+            }
             Pick::OpenPob => "import.xml",
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
@@ -362,6 +371,77 @@ fn a_dropped_file_should_be_kept_on_the_rust_side_and_opened_by_kind() {
     assert_eq!(snap["build"]["name"], "import");
     // Taken once.
     assert_eq!(s.ok("open_dropped", json!({})), json!("nothing"));
+}
+
+#[test]
+fn the_workspace_and_the_comparison_queries_should_run_through_the_commands() {
+    let s = shell("compare");
+    // No file picked: the user cancelled.
+    assert_eq!(s.ok("compare_file", json!({})), Value::Null);
+    let err = s.invoke("stage_view", json!({"spec": 1})).unwrap_err();
+    assert_eq!(err["code"], "APP_NO_BUILD");
+
+    let imported = s.ok("import_file", json!({}));
+    let document: Value = serde_json::from_str(&s.calculated(&imported)).unwrap();
+    let life = |fields: &Value| {
+        fields
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|f| f["field"] == "life")
+            .unwrap()["value"]
+            .clone()
+    };
+    let own = life(&document["result"]["fields"]);
+    assert!(own.is_number(), "{own}");
+
+    // The build's workspace document: one undoable change, in the view.
+    let text = r#"{"dashboards":[{"name":"Overview"}]}"#;
+    let set = s.execute(json!({"set-workspace": {"document": text}}));
+    let version = set["done"]["version"].as_u64().unwrap();
+    let snap = s.ok("snapshot", json!({}));
+    assert_eq!(snap["build"]["workspace"], json!(text));
+    assert_eq!(snap["history"]["undo"]["kind"], "workspace");
+    assert_eq!(
+        s.execute(json!({"set-workspace": {"document": text}})),
+        json!("nothing")
+    );
+    let big = "a".repeat(262_145);
+    let err = s
+        .invoke(
+            "execute",
+            json!({"command": {"set-workspace": {"document": big}}}),
+        )
+        .unwrap_err();
+    assert_eq!(err["code"], "APP_WORKSPACE");
+
+    // Another build file, a PoB build then a build document, calculated
+    // without opening it: the open build stays as it is.
+    std::fs::copy(s.dir.join("import.xml"), s.dir.join("compare.xml")).unwrap();
+    let pob = s.ok("compare_file", json!({}));
+    assert_eq!(pob["name"], "compare");
+    assert_eq!(life(&pob["fields"]), own);
+    s.ok("save_as", json!({}));
+    std::fs::copy(s.dir.join("saved.json"), s.dir.join("compare.json")).unwrap();
+    let saved = s.ok("compare_file", json!({}));
+    assert_eq!(saved["name"], "compare");
+    assert_eq!(saved["fields"], pob["fields"]);
+    std::fs::write(s.dir.join("compare.json"), "{}").unwrap();
+    let err = s.invoke("compare_file", json!({})).unwrap_err();
+    assert!(err["code"].is_string(), "{err}");
+    let snap = s.ok("snapshot", json!({}));
+    assert_eq!(snap["version"], version);
+    assert_eq!(snap["build"]["name"], "saved");
+
+    // A stage's tree and equipment, read without choosing it.
+    let stage = s.ok("stage_view", json!({"spec": 1}));
+    assert_eq!(stage["spec"], 1);
+    assert_eq!(stage["title"], "Tree 1");
+    assert_eq!(stage["nodes"], json!([]));
+    assert_eq!(stage["slots"], json!([{"slot": "Ring 1", "item": 1}]));
+    let err = s.invoke("stage_view", json!({"spec": 9})).unwrap_err();
+    assert_eq!(err["code"], "APP_LOADOUT");
+    assert_eq!(s.ok("snapshot", json!({}))["version"], version);
 }
 
 #[test]

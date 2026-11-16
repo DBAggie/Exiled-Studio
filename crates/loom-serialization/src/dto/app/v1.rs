@@ -67,6 +67,47 @@ dto! {
         pub what_if: WhatIfRequest,
         /// A what-if query's answer.
         pub what_if_series: WhatIfSeries,
+        /// The numbers of another build file (the `compare_file` query).
+        pub build_fields: BuildFields,
+        /// A stage's tree and equipment (the `stage_view` query).
+        pub stage_view: StageView,
+    }
+
+    /// The computed fields of a build file calculated without opening it,
+    /// to compare the open build with: a saved build document or a PoB
+    /// XML file, read and calculated with the loaded data. The open build,
+    /// its history, and the recent list never change.
+    pub struct BuildFields {
+        /// The file's name without its extension.
+        pub name: String,
+        /// Each slice field, as a what-if point gives them.
+        pub fields: Vec<WhatIfField>,
+    }
+
+    /// One stage's passive tree and equipment, as the build would show
+    /// them with that stage chosen (`use-loadout`), read without choosing
+    /// it: for a visual difference of two stages. `APP_LOADOUT` when the
+    /// build has no such stage.
+    pub struct StageView {
+        /// The passive spec's ID (the stage's key, as [`LoadoutView`]'s).
+        pub spec: u32,
+        /// The title, without colour codes and links.
+        pub title: String,
+        /// The spec's allocated nodes, ascending: the IDs
+        /// [`TreeView::nodes`] gives when the stage is the active one.
+        pub nodes: Vec<u32>,
+        /// The items in the slots of the stage's item set (the linked one,
+        /// else the one the build keeps when the stage is chosen), in
+        /// build order.
+        pub slots: Vec<StageSlot>,
+    }
+
+    /// An item in a slot of a stage's item set.
+    pub struct StageSlot {
+        /// The slot, as [`ItemSummary::slot`] names it.
+        pub slot: String,
+        /// The item's ID ([`ItemSummary::id`]).
+        pub item: u32,
     }
 
     /// A what-if query: the computed fields of the open build across its
@@ -392,6 +433,12 @@ dto! {
         /// loaded data has a passive tree (passive tree plan, T5a).
         #[serde(default)]
         pub tree: Option<TreeView>,
+        /// The UI's document for this build (its dashboards and kept
+        /// snapshots of the numbers), if it has one: opaque text the
+        /// application keeps in the build file and never reads
+        /// (`set-workspace`).
+        #[serde(default)]
+        pub workspace: Option<String>,
     }
 
     /// The active passive spec as the tree editor sees it.
@@ -1410,6 +1457,9 @@ dto_enum! {
         TreeRequestApplied,
         /// An item added (and perhaps put in a slot).
         ItemAdded,
+        /// The UI's document for the build changed (a dashboard, a kept
+        /// snapshot).
+        Workspace,
     }
 
     /// The league a build is planned for.
@@ -1723,6 +1773,14 @@ dto_enum! {
             /// The league.
             league: League,
         },
+        /// Sets the UI's document for the build ([`BuildView::workspace`]),
+        /// as one undoable change; the same document again changes
+        /// nothing. `APP_WORKSPACE` for a document over 262,144 bytes.
+        SetWorkspace {
+            /// The document; absent or null to clear it.
+            #[serde(default)]
+            document: Option<String>,
+        },
         /// Allocates a node of a passive spec and the path to it (the
         /// path is the application's, never sent), as one undoable
         /// change.
@@ -2006,6 +2064,62 @@ mod tests {
             serde_json::to_string(&series).unwrap(),
             r#"{"points":[{"label":"Endgame","x":1.0,"current":true,"fields":[{"field":"life","value":null,"state":"partial"}]}]}"#
         );
+    }
+
+    #[test]
+    fn workspace_and_comparison_types_should_read_and_write_their_wire_form() {
+        let set = Command::SetWorkspace {
+            document: Some("{\"dashboards\":[]}".to_owned()),
+        };
+        let json = r#"{"set-workspace":{"document":"{\"dashboards\":[]}"}}"#;
+        assert_eq!(serde_json::to_string(&set).unwrap(), json);
+        assert_eq!(serde_json::from_str::<Command>(json).unwrap(), set);
+        let clear = Command::SetWorkspace { document: None };
+        assert_eq!(
+            serde_json::to_string(&clear).unwrap(),
+            r#"{"set-workspace":{"document":null}}"#
+        );
+        for json in [
+            r#"{"set-workspace":{"document":null}}"#,
+            r#"{"set-workspace":{}}"#,
+        ] {
+            assert_eq!(serde_json::from_str::<Command>(json).unwrap(), clear);
+        }
+        assert_eq!(
+            serde_json::to_string(&HistoryEntry {
+                kind: ChangeKind::Workspace,
+                item: 0,
+                request: None,
+            })
+            .unwrap(),
+            r#"{"kind":"workspace","item":0,"request":null}"#
+        );
+
+        let fields = BuildFields {
+            name: "other".to_owned(),
+            fields: vec![WhatIfField {
+                field: "life".to_owned(),
+                value: Some(60.0),
+                state: "complete".to_owned(),
+            }],
+        };
+        let json =
+            r#"{"name":"other","fields":[{"field":"life","value":60.0,"state":"complete"}]}"#;
+        assert_eq!(serde_json::to_string(&fields).unwrap(), json);
+        assert_eq!(serde_json::from_str::<BuildFields>(json).unwrap(), fields);
+
+        let stage = StageView {
+            spec: 2,
+            title: "Endgame".to_owned(),
+            nodes: vec![3, 58833],
+            slots: vec![StageSlot {
+                slot: "Ring 1".to_owned(),
+                item: 1,
+            }],
+        };
+        let json = r#"{"spec":2,"title":"Endgame","nodes":[3,58833],"slots":[{"slot":"Ring 1","item":1}]}"#;
+        assert_eq!(serde_json::to_string(&stage).unwrap(), json);
+        assert_eq!(serde_json::from_str::<StageView>(json).unwrap(), stage);
     }
 
     #[test]

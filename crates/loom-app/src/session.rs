@@ -56,6 +56,10 @@ pub struct UndoStep {
 /// How many changes undo keeps.
 pub const HISTORY_LIMIT: usize = 100;
 
+/// The largest document of the UI's a build keeps
+/// ([`Session::set_workspace`]), in bytes.
+pub const MAX_WORKSPACE: usize = 262_144;
+
 /// The application core.
 #[derive(Debug)]
 pub struct Session {
@@ -103,7 +107,8 @@ pub(crate) const NEW_BUILD: &str = r#"<PathOfBuilding>
 </PathOfBuilding>
 "#;
 
-fn stem(path: &Path) -> String {
+/// A file's name without its extension (a build's display name).
+pub(crate) fn stem(path: &Path) -> String {
     path.file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default()
@@ -277,16 +282,7 @@ impl Session {
     /// `APP_NO_DATA`, the import adapter's and the resolver's codes.
     pub fn import_text(&mut self, text: &str, origin: Option<PathBuf>) -> Result<u64, AppError> {
         let data = self.need_data()?;
-        let mut build = loom_pipeline::read_pob(text)?;
-        let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
-        // A spec PoB numbered before its cluster hash fix takes the
-        // current numbers, as PoB loads it (passive tree plan, T-i).
-        if let Some(tree) = &data.tree {
-            loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
-        }
-        let mut state = State { build, ends };
-        // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
-        crate::main_skill::set_default(&mut state, &data);
+        let state = import_state(text, &data)?;
         self.notices.clear();
         self.replace(state, None, origin, true);
         Ok(self.version)
@@ -347,22 +343,9 @@ impl Session {
         dirty: bool,
     ) -> u64 {
         self.notices.clear();
-        let mut ends = RangeEnds::new();
-        if let Some(data) = &self.data
-            && build.game() == data.version.game
-            && build.data.as_ref() == Some(&data.version)
-        {
-            match loom_pipeline::reresolve(data.resolver, data.data, &build) {
-                Ok(Reresolved::Same(e)) => ends = e,
-                Ok(Reresolved::Changed) => self.notices.push(AppError::new(
-                    Code::ResolutionChanged,
-                    "the stored resolutions differ from this bundle's; they stand",
-                )),
-                // The checks above match the resolver's own.
-                Err(e) => self.notices.push(e.into()),
-            }
-        }
-        self.replace(State { build, ends }, path, origin, dirty);
+        let (state, notice) = opened_state(build, self.data.as_deref());
+        self.notices.extend(notice);
+        self.replace(state, path, origin, dirty);
         self.version
     }
 
@@ -500,10 +483,7 @@ impl Session {
     pub fn use_loadout(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
         let main = self.main_skill_default()?;
         self.change_build(api::ChangeKind::Loadout, spec, |build| {
-            let l = loadout::loadouts(build)
-                .into_iter()
-                .find(|l| l.spec.0 == spec)
-                .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))?;
+            let l = stage(build, spec)?;
             let before = build.skills.active;
             loadout::apply(build, &l);
             if build.skills.active != before {
@@ -944,6 +924,31 @@ impl Session {
         })
     }
 
+    /// Sets the UI's document for the build (its dashboards and kept
+    /// snapshots; opaque here), or clears it, as one undoable change. The
+    /// same document again changes nothing.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`; `APP_WORKSPACE` for a document over
+    /// [`MAX_WORKSPACE`] bytes.
+    pub fn set_workspace(&mut self, document: Option<String>) -> Result<Option<u64>, AppError> {
+        if let Some(d) = &document
+            && d.len() > MAX_WORKSPACE
+        {
+            return Err(AppError::new(
+                Code::Workspace,
+                format!(
+                    "a workspace document of {} bytes; at most {MAX_WORKSPACE}",
+                    d.len()
+                ),
+            ));
+        }
+        self.change_build(api::ChangeKind::Workspace, 0, |build| {
+            build.workspace = document;
+            Ok(())
+        })
+    }
+
     /// Makes config set `id` the active one.
     ///
     /// # Errors
@@ -1137,11 +1142,7 @@ impl Session {
     /// The range ends of a build resolved again with the loaded data, when
     /// the data is the build's and it resolves the same.
     fn ends_of(&self, build: &Build) -> Option<RangeEnds> {
-        let data = self.data.as_ref()?;
-        if build.game() != data.version.game || build.data.as_ref() != Some(&data.version) {
-            return None;
-        }
-        match loom_pipeline::reresolve(data.resolver, data.data, build) {
+        match reresolved(build, self.data.as_deref()?)? {
             Ok(Reresolved::Same(e)) => Some(e),
             _ => None,
         }
@@ -1445,6 +1446,67 @@ fn set_main_gem(g: &mut SocketGroup, bundle: &loom_data::bundle::Bundle, main: O
     {
         m.set(value);
     }
+}
+
+/// The build's stage (PoB's loadout) of passive spec `spec`.
+///
+/// # Errors
+/// `APP_LOADOUT` when no spec has ID `spec`.
+pub(crate) fn stage(build: &Build, spec: u32) -> Result<loadout::Loadout, AppError> {
+    loadout::loadouts(build)
+        .into_iter()
+        .find(|l| l.spec.0 == spec)
+        .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))
+}
+
+/// A PoB share code or XML text read and resolved with the data, as an
+/// import makes it ([`Session::import_text`]; a file compared without
+/// opening it is read the same way).
+///
+/// # Errors
+/// The import adapter's and the resolver's codes.
+pub(crate) fn import_state(text: &str, data: &GameData) -> Result<State, AppError> {
+    let mut build = loom_pipeline::read_pob(text)?;
+    let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+    // A spec PoB numbered before its cluster hash fix takes the
+    // current numbers, as PoB loads it (passive tree plan, T-i).
+    if let Some(tree) = &data.tree {
+        loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
+    }
+    let mut state = State { build, ends };
+    // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
+    crate::main_skill::set_default(&mut state, data);
+    Ok(state)
+}
+
+/// A build resolved again with the data, when the data is the build's
+/// (its game and data version); `None` when it is not.
+fn reresolved(build: &Build, data: &GameData) -> Option<Result<Reresolved, loom_pipeline::Error>> {
+    (build.game() == data.version.game && build.data.as_ref() == Some(&data.version))
+        .then(|| loom_pipeline::reresolve(data.resolver, data.data, build))
+}
+
+/// The state of a build read with its resolutions (a saved document, a
+/// recovery snapshot), as [`Session::open_build`] opens it: with data of
+/// the build's version, a clone is resolved again to recover the range
+/// ends; when it resolves differently the stored resolutions stand, and
+/// the notice says so.
+pub(crate) fn opened_state(build: Build, data: Option<&GameData>) -> (State, Option<AppError>) {
+    let mut ends = RangeEnds::new();
+    let mut notice = None;
+    match data.and_then(|d| reresolved(&build, d)) {
+        Some(Ok(Reresolved::Same(e))) => ends = e,
+        Some(Ok(Reresolved::Changed)) => {
+            notice = Some(AppError::new(
+                Code::ResolutionChanged,
+                "the stored resolutions differ from this bundle's; they stand",
+            ));
+        }
+        // The checks match the resolver's own.
+        Some(Err(e)) => notice = Some(e.into()),
+        None => {}
+    }
+    (State { build, ends }, notice)
 }
 
 /// Socket group `group` of the active skill set.
