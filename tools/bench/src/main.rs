@@ -268,3 +268,22 @@ fn measured_allocate(loaded: &Loaded) -> Result<(), String> {
     black_box(allocation);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SCENARIOS;
+
+    /// CI counts the scenarios `count.sh` names; one left out of it is
+    /// never counted, so it could never fail.
+    #[test]
+    fn count_sh_should_count_every_scenario_in_order() {
+        let script = include_str!("../count.sh");
+        let line = script
+            .lines()
+            .find_map(|l| l.strip_prefix("for scenario in "))
+            .and_then(|l| l.strip_suffix("; do"))
+            .expect("count.sh has the scenario loop");
+        let listed: Vec<&str> = line.split_whitespace().collect();
+        assert_eq!(listed, SCENARIOS);
+    }
+}

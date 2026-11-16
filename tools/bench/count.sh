@@ -18,7 +18,7 @@ cargo build --release --locked -p loom-bench
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
 : > "$out/counts"
-for scenario in validate load import calculate allocate; do
+for scenario in validate load start import calculate allocate; do
   valgrind --tool=callgrind --toggle-collect='*measured_*' \
     --callgrind-out-file="$out/$scenario.out" \
     target/release/loom-bench run "$scenario" > /dev/null 2> "$out/$scenario.log" \
