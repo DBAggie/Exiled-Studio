@@ -29,7 +29,7 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
   - a stable version (`1.2.0`) is tagged on `main`;
   - an experimental one carries a numeric pre-release (`1.2.0-3`, which the MSI takes as `1.2.0.3`) and is tagged on `experimental`.
   - `tools/package/channel.sh` refuses any other tag, a tag that differs from the workspace version, and a tag on the wrong branch.
-- **The version moves only in a release commit:** one commit on `dev` that changes `Cargo.toml`, `Cargo.lock`, and `ui/package.json` together, merged to `experimental` or `main` and tagged there. Before the first release it was `0.0.0`, which no release carries.
+- **The version moves only in a release commit:** one commit on `dev` that changes `Cargo.toml`, `Cargo.lock`, `fuzz/Cargo.lock` (the fuzz workspace's, which CI builds with `--locked`), and `ui/package.json` together, merged to `experimental` or `main` and tagged there. Before the first release it was `0.0.0`, which no release carries.
 - **Downgrades:** the updater refuses a version lower than or equal to the running one (P3).
 
 ## Smoke run
