@@ -25,6 +25,7 @@ import {
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
 import { historyText } from '../util'
+import { type Workspace, writeWorkspace } from '../workspace'
 import { importFlow, importActions } from './importFlow'
 
 export type Screen =
@@ -86,9 +87,15 @@ interface UiState {
   confirm: Replace | null
   /** The user's dashboards (B-5). */
   prefs: Prefs
-  /** The numbers the user pinned to compare against (UX audit D-03);
-   * kept for the session, never in a build. */
+  /** The numbers compared against (UX audit D-03): the ones pinned this
+   * session, a snapshot kept in the build, or another build file's. */
   baseline: Mark | null
+  /** The build's own dashboard shown (a build that keeps its own set);
+   * for the session, so that changing tabs is not a change to the build. */
+  dashActive: string | null
+  /** The stage the tree and the equipment are compared with, by its
+   * spec. */
+  compareStage: number | null
   /** The numbers after each change this session, oldest first: what the
    * history charts draw. */
   trail: Mark[]
@@ -142,6 +149,8 @@ const ui = createSlice({
     confirm: null,
     prefs: defaultPrefs(),
     baseline: null,
+    dashActive: null,
+    compareStage: null,
     trail: [],
   } as UiState,
   reducers: {
@@ -181,6 +190,12 @@ const ui = createSlice({
     baseline(state, action: PayloadAction<Mark | null>) {
       state.baseline = action.payload
     },
+    dashActive(state, action: PayloadAction<string | null>) {
+      state.dashActive = action.payload
+    },
+    compareStage(state, action: PayloadAction<number | null>) {
+      state.compareStage = action.payload
+    },
     /** A new calculation's numbers join the trail (once per version). */
     tracked(state, action: PayloadAction<Mark>) {
       const last = state.trail[state.trail.length - 1]
@@ -194,6 +209,8 @@ const ui = createSlice({
     forgetNumbers(state) {
       state.baseline = null
       state.trail = []
+      state.dashActive = null
+      state.compareStage = null
     },
   },
 })
@@ -285,7 +302,13 @@ export const refresh = (): Thunk => async (dispatch, getState, api) => {
       snapshot.history['can-redo'] !== true &&
       snapshot.version !== before.version)
   const ui = getState().ui
-  if (replaced && (ui.trail.length > 0 || ui.baseline !== null)) {
+  if (
+    replaced &&
+    (ui.trail.length > 0 ||
+      ui.baseline !== null ||
+      ui.dashActive !== null ||
+      ui.compareStage !== null)
+  ) {
     dispatch(actions.forgetNumbers())
   }
   const held = getState().session.calc
@@ -294,16 +317,19 @@ export const refresh = (): Thunk => async (dispatch, getState, api) => {
     dispatch(actions.calc(calc))
     if (calc !== null && snapshot.build != null) {
       const undo = snapshot.history.undo
-      dispatch(
-        actions.tracked(
-          markOf(
-            calc,
-            undo == null
-              ? t('trail.opened')
-              : historyText(undo, snapshot.build),
-          ),
-        ),
+      const mark = markOf(
+        calc,
+        undo == null ? t('trail.opened') : historyText(undo, snapshot.build),
       )
+      // A change to the build's dashboards or kept snapshots (done or
+      // undone) moves no number: it is not a step of the trail.
+      const last = getState().ui.trail.at(-1)
+      const workspace =
+        (undo?.kind === 'workspace' ||
+          snapshot.history.redo?.kind === 'workspace') &&
+        last !== undefined &&
+        JSON.stringify(last.fields) === JSON.stringify(mark.fields)
+      if (!workspace) dispatch(actions.tracked(mark))
     }
   }
 }
@@ -335,6 +361,13 @@ export const setPrefs =
       dispatch(actions.error(codeOf(e)))
     }
   }
+
+/** Stores the build's workspace (its own dashboards, its kept
+ * snapshots) in the build: one undoable change. */
+export const setWorkspace =
+  (workspace: Workspace): Thunk<Outcome | null> =>
+  (dispatch) =>
+    dispatch(run({ 'set-workspace': { document: writeWorkspace(workspace) } }))
 
 /** Runs a call; on failure shows its code and returns null. */
 export const attempt =

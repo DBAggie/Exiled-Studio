@@ -100,6 +100,11 @@ dto! {
         /// accepted 2026-11-14).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub league: Option<League>,
+        /// The UI's document for this build (dashboards, kept snapshots
+        /// of the numbers), if it has one: opaque text (additive, accepted
+        /// 2026-11-16).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub workspace: Option<String>,
         /// The character.
         pub character: Character,
         /// Passive specs.

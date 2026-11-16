@@ -63,6 +63,15 @@ void startSync(store, api).then(async () => {
     await new Promise((done) => setTimeout(done, 50))
     await store.dispatch(refresh())
   }
+  // `&vs=2` compares the tree and the equipment with that stage; `&table`
+  // shows the Skills page as a table.
+  const vs = params.get('vs')
+  if (vs !== null) store.dispatch(actions.compareStage(Number(vs)))
+  if (params.has('table')) {
+    store.dispatch(
+      actions.prefs({ ...store.getState().ui.prefs, skillsTable: true }),
+    )
+  }
   // `screen=item&item=1` opens that item; `screen=breakdown&field=life`
   // that stat's breakdown.
   if (screen === 'item') {

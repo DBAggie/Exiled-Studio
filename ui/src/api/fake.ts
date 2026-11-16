@@ -4,6 +4,7 @@
 // edits, warnings, change requests. Numbers are sample data.
 import {
   ApiFailure,
+  type BuildFields,
   type ApiEvent,
   type CalcResultDocumentV1,
   type ChangeRequest,
@@ -37,6 +38,7 @@ import {
   type DiagnosticFile,
   type TreeChange,
   type TreePreview,
+  type StageView,
   type WhatIfRequest,
   type WhatIfSeries,
 } from './types'
@@ -69,6 +71,8 @@ export interface FakeOptions {
   feed?: DataFeedStatus
   /** The Steam build the build was made with (its pinned data). */
   pinned?: number
+  /** The file picker of `compareFile` is cancelled. */
+  cancelPick?: boolean
   /** Why the passive tree cannot be edited (its version or class). */
   treeLocked?: string
   /** What converting the locked tree would do (T5b): offered with
@@ -666,6 +670,8 @@ interface State {
   /** The active config set's inputs and blocks. */
   config: ConfigView
   league: 'challenge' | 'standard'
+  /** The UI's workspace document for the build, as stored. */
+  workspace?: string | null
   secondWeaponSet: boolean
   /** The active passive spec's tree. */
   tree: fakeTree.FakeSpec
@@ -997,6 +1003,7 @@ export class FakeApi implements LoomApi {
                   : null,
               config: this.current?.config ?? null,
               league: this.current?.league ?? 'challenge',
+              workspace: this.current?.workspace ?? null,
               'second-weapon-set': this.current?.secondWeaponSet ?? false,
             },
       calc: this.calcState,
@@ -1438,6 +1445,18 @@ export class FakeApi implements LoomApi {
       return this.commit(
         { ...this.current, secondWeaponSet: second },
         { kind: 'weapon-set', item: 1 },
+      )
+    }
+    if ('set-workspace' in command) {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const document = command['set-workspace'].document ?? null
+      if (document !== null && document.length > 262144) {
+        this.fail('APP_WORKSPACE')
+      }
+      if (document === (this.current.workspace ?? null)) return 'nothing'
+      return this.commit(
+        { ...this.current, workspace: document },
+        { kind: 'workspace', item: 0 },
       )
     }
     if ('set-league' in command) {
@@ -2072,6 +2091,51 @@ export class FakeApi implements LoomApi {
           ? enemy.value.number
           : 83,
     }
+  }
+
+  /** Another build file's numbers (the sample's, with a stronger
+   * character); `null` when the fake's picker is told to cancel. */
+  compareFile(): Promise<BuildFields | null> {
+    if (this.options.data !== true) this.fail('APP_NO_DATA')
+    if (this.options.cancelPick === true) return Promise.resolve(null)
+    const base: DemoInput =
+      this.current === null
+        ? { life: 50, stage: 0, gemLevel: 20, level: 90, enemyLevel: 83 }
+        : this.demoInput(this.current)
+    return Promise.resolve({
+      name: 'Other build',
+      fields: demoValues({
+        ...base,
+        level: Math.min(100, base.level + 5),
+        gemLevel: base.gemLevel + 1,
+      }).map(([field, value]) => ({ field, value, state: 'complete' })),
+    })
+  }
+
+  /** A stage's tree and equipment: the active stage's as they are;
+   * another stage's item set, and the tree with the fixed difference
+   * the sample build has between its stages. */
+  stageView(spec: number): Promise<StageView> {
+    const state = this.current
+    if (state === null) this.fail('APP_NO_BUILD')
+    const stage = state.stages.find((s) => s.spec === spec)
+    if (stage === undefined) this.fail('APP_LOADOUT')
+    const active = spec === state.spec
+    const placed = active ? (state.placed ?? {}) : {}
+    const slots = {
+      ...(SETS.find((s) => s.id === (active ? state.set : stage.set))?.slots ??
+        {}),
+      ...placed,
+    }
+    const nodes = active
+      ? state.tree.nodes
+      : [...new Set([...state.tree.nodes.filter((n) => n !== 20), 10, 11, 12])]
+    return Promise.resolve({
+      spec,
+      title: stage.title,
+      nodes: [...nodes].sort((a, b) => a - b),
+      slots: Object.entries(slots).map(([slot, item]) => ({ slot, item })),
+    })
   }
 
   /** The what-if query over the sample numbers: the fields at each stage,

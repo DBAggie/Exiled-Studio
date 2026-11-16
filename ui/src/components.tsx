@@ -144,6 +144,8 @@ type IconName =
   | 'arrow-left'
   | 'arrow-right'
   | 'pin'
+  | 'grip'
+  | 'camera'
   | 'info'
   | 'rail'
   | 'nav-dashboard'
@@ -171,6 +173,22 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M9 4h6l-1 6 3 3H7l3-3z" />
       <path d="M12 13v7" />
+    </>
+  ),
+  grip: (
+    <>
+      <circle cx="9" cy="6" r="1" />
+      <circle cx="15" cy="6" r="1" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="9" cy="18" r="1" />
+      <circle cx="15" cy="18" r="1" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+      <circle cx="12" cy="13" r="3.5" />
     </>
   ),
   info: (

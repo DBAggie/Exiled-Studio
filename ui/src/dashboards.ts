@@ -2,7 +2,8 @@
 // screens 3 and 9; UX audit 2026-11-15, section D): up to eight, each a
 // list of components on a six-column grid, each a third, a half, two
 // thirds, or the full width. Kept in the UI's preferences document
-// (`ui_prefs`, beside the application's settings), never in a build.
+// (`ui_prefs`, beside the application's settings); a build may keep its
+// own set in its workspace document (`../workspace`).
 // An application older than a kind or a width drops that component when
 // it reads the document (a preference, never an error).
 
@@ -99,6 +100,8 @@ export interface Prefs {
   active: string
   /** The side menu as a narrow rail of icons. */
   rail?: boolean
+  /** The Skills page as a table, a row a socket group. */
+  skillsTable?: boolean
 }
 
 /** Enough for any build's views; the tabs still fit one row. */
@@ -205,39 +208,48 @@ function isComponent(x: unknown): x is DashComponent {
   )
 }
 
+/** The dashboards in `list` that this version reads (the others, and
+ * components of a kind or width it does not know, are dropped). */
+export function readDashboards(list: unknown): DashboardDef[] {
+  return (Array.isArray(list) ? (list as unknown[]) : [])
+    .filter(
+      (d): d is Record<string, unknown> =>
+        typeof d === 'object' &&
+        d !== null &&
+        typeof (d as Record<string, unknown>).id === 'string' &&
+        typeof (d as Record<string, unknown>).name === 'string' &&
+        Array.isArray((d as Record<string, unknown>).components),
+    )
+    .slice(0, MAX_DASHBOARDS)
+    .map((d) => ({
+      id: d.id as string,
+      name: d.name as string,
+      components: (d.components as unknown[])
+        .filter(isComponent)
+        .slice(0, MAX_COMPONENTS),
+    }))
+}
+
 /** The preferences in `text`, or the defaults when it is missing or not a
  * document this version reads (a preference, never an error). */
 export function readPrefs(text: string | null): Prefs {
   if (text === null) return defaultPrefs()
   try {
     const raw = JSON.parse(text) as Record<string, unknown>
-    const list = (raw.dashboards as unknown[] | undefined) ?? []
-    const dashboards: DashboardDef[] = list
-      .filter(
-        (d): d is Record<string, unknown> =>
-          typeof d === 'object' &&
-          d !== null &&
-          typeof (d as Record<string, unknown>).id === 'string' &&
-          typeof (d as Record<string, unknown>).name === 'string' &&
-          Array.isArray((d as Record<string, unknown>).components),
-      )
-      .slice(0, MAX_DASHBOARDS)
-      .map((d) => ({
-        id: d.id as string,
-        name: d.name as string,
-        components: (d.components as unknown[])
-          .filter(isComponent)
-          .slice(0, MAX_COMPONENTS),
-      }))
+    const dashboards = readDashboards(raw.dashboards)
     if (raw.version !== 1 || dashboards.length === 0) return defaultPrefs()
     const active =
       typeof raw.active === 'string' &&
       dashboards.some((d) => d.id === raw.active)
         ? raw.active
         : dashboards[0]!.id
-    return raw.rail === true
-      ? { version: 1, dashboards, active, rail: true }
-      : { version: 1, dashboards, active }
+    return {
+      version: 1,
+      dashboards,
+      active,
+      ...(raw.rail === true ? { rail: true } : {}),
+      ...(raw.skillsTable === true ? { skillsTable: true } : {}),
+    }
   } catch {
     return defaultPrefs()
   }
@@ -256,4 +268,46 @@ export function moved<T>(list: T[], from: number, by: number): T[] {
 /** The next width up, wrapping to the smallest (the resize control). */
 export function nextWidth(w: Width): Width {
   return WIDTHS[(WIDTHS.indexOf(w) + 1) % WIDTHS.length]!
+}
+
+/** `list` with the item `id` taken out and put before or after the item
+ * `target` (a drag's drop); `list` itself when that changes nothing. */
+export function dropped<T extends { id: string }>(
+  list: T[],
+  id: string,
+  target: string,
+  after: boolean,
+): T[] {
+  const item = list.find((x) => x.id === id)
+  if (item === undefined || id === target) return list
+  const rest = list.filter((x) => x.id !== id)
+  const at = rest.findIndex((x) => x.id === target)
+  if (at < 0) return list
+  rest.splice(after ? at + 1 : at, 0, item)
+  return rest.every((x, i) => x === list[i]) ? list : rest
+}
+
+/** A cell's place on screen, for a drag. */
+export interface CellRect {
+  id: string
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/** Where a drag at (`x`, `y`) would drop: the cell under the pointer (the
+ * nearest in its row when the pointer is in a gap) and the side of its
+ * middle the pointer is on; `null` outside every row. */
+export function dropTarget(
+  cells: CellRect[],
+  x: number,
+  y: number,
+): { id: string; after: boolean } | null {
+  const row = cells.filter((c) => y >= c.top && y <= c.bottom)
+  if (row.length === 0) return null
+  const distance = (c: CellRect) =>
+    x < c.left ? c.left - x : x > c.right ? x - c.right : 0
+  const cell = row.reduce((a, b) => (distance(b) < distance(a) ? b : a))
+  return { id: cell.id, after: x > (cell.left + cell.right) / 2 }
 }

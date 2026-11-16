@@ -118,6 +118,9 @@ pub enum Pick {
     Diagnostics,
     /// A data bundle pack to install (`.loombundle`; Phase 5, P-e).
     BundlePack,
+    /// A build to compare the open one with: a build document (`.json`)
+    /// or a PoB build (`.xml`). It is read, never opened.
+    CompareBuild,
 }
 
 /// Opens the file dialogs. `None` when the user cancelled.
@@ -227,6 +230,24 @@ fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePr
 #[tauri::command(async)]
 fn what_if(ctx: State<'_, Ctx>, request: api::WhatIfRequest) -> Answer<api::WhatIfSeries> {
     ctx.app.what_if(&request).map_err(dto)
+}
+
+/// The computed fields of a build file the user picks, to compare the
+/// open build with (a build document or a PoB XML file; runs off the main
+/// thread; opens nothing). `null` when the user cancelled.
+#[tauri::command(async)]
+fn compare_file(ctx: State<'_, Ctx>) -> Answer<Option<api::BuildFields>> {
+    ctx.picker
+        .pick(Pick::CompareBuild, "")
+        .map(|path| ctx.app.fields_of_file(&path).map_err(dto))
+        .transpose()
+}
+
+/// The tree and equipment of the open build's stage of passive spec
+/// `spec`, read without choosing it.
+#[tauri::command]
+fn stage_view(ctx: State<'_, Ctx>, spec: u32) -> Answer<api::StageView> {
+    ctx.app.stage_view(spec).map_err(dto)
 }
 
 /// Runs an API command.
@@ -570,7 +591,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 37] = [
+pub const COMMANDS: [&str; 39] = [
     "snapshot",
     "calc_document",
     "item",
@@ -596,6 +617,8 @@ pub const COMMANDS: [&str; 37] = [
     "tree_sprites",
     "preview_tree",
     "what_if",
+    "compare_file",
+    "stage_view",
     "crashes",
     "dismiss_crash",
     "diagnostics",
@@ -670,6 +693,8 @@ pub fn build<R: Runtime>(
             tree_sprites,
             preview_tree,
             what_if,
+            compare_file,
+            stage_view,
             crashes,
             dismiss_crash,
             diagnostics,
@@ -779,6 +804,11 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
             Pick::BundlePack => dialog
                 .add_filter("Exiled Studio game data", &["loombundle"])
                 .blocking_pick_file(),
+            Pick::CompareBuild => dialog
+                .add_filter("Builds", &["json", "xml"])
+                .add_filter("Exiled Studio build", &["json"])
+                .add_filter("Path of Building build", &["xml"])
+                .blocking_pick_file(),
         };
         path.and_then(|p| p.into_path().ok())
     }
@@ -793,7 +823,9 @@ struct E2ePicker(PathBuf);
 impl FilePicker for E2ePicker {
     fn pick(&self, what: Pick, _name: &str) -> Option<PathBuf> {
         let file = match what {
-            Pick::OpenPob => "import.xml",
+            // A comparison reads the build the run imports: it is there
+            // from the start, a saved document only after a save.
+            Pick::OpenPob | Pick::CompareBuild => "import.xml",
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
             Pick::Diagnostics => "diagnostics.zip",

@@ -346,6 +346,12 @@ export interface Build {
    */
   prolog?: OpaqueNode[]
   skills: Skills
+  /**
+   * The UI's document for this build (dashboards, kept snapshots
+   * of the numbers), if it has one: opaque text (additive, accepted
+   * 2026-11-16).
+   */
+  workspace?: string | null
 }
 /**
  * One untyped attribute.

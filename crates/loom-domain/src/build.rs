@@ -66,6 +66,11 @@ pub struct Build {
     /// item versions can be had (a planner's setting; PoB's format has no
     /// place for it).
     pub league: Option<League>,
+    /// The UI's document for this build (its dashboards and kept
+    /// snapshots of the numbers), if it has one: opaque text here, as the
+    /// UI's preferences document is to the application (a planner's
+    /// setting; PoB's format has no place for it).
+    pub workspace: Option<String>,
     /// The character.
     pub character: Character,
     /// Passive specs.
@@ -108,6 +113,7 @@ impl Build {
             game_specific: GameSpecific::empty(game),
             data: None,
             league: None,
+            workspace: None,
             character: Character::default(),
             passives: Passives::default(),
             skills: Skills::default(),
