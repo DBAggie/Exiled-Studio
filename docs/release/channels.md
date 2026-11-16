@@ -84,7 +84,7 @@ The maintainer named the first release 0.9 (2026-11-16). One state of `dev` goes
 
 | Version | Release commit on `dev` | Branch | Tag |
 |---|---|---|---|
-| `0.9.0-1` | this PR (keys, shipped data, version) | `experimental` | `v0.9.0-1`, a pre-release |
+| `0.9.0-1` | PR #119 (keys, shipped data, version) | `experimental` | `v0.9.0-1`, a pre-release |
 | `0.9.0` | the next PR (version only) | `main` | `v0.9.0`, a release |
 
 - **Merging `dev` into a protected branch.** Both allow only squash merges with a linear history. So a squash commit on `experimental` or `main` is not an ancestor of `dev`, and the next merge's base stays where the branch was made. Later merges may then conflict where `dev` changed lines the earlier squash had also changed. If that happens, resolve it in the PR from `dev` by taking `dev`'s side: the target branch only ever holds states of `dev`.
