@@ -2,7 +2,7 @@
 
 A whole-app audit of the interface at `dev` `b89587b` (the state released as 0.9.0-1), asked for by the maintainer on 2026-11-15, with the fixes made on the same branch. It follows the walkthrough of 2026-11-14 (`ux-walkthrough.md`), which fixed what loses work or misleads; this audit is about how the app looks and reads, and what the dashboards can show.
 
-- **Refined version** (this document): branch `feat/ux-audit`, base `dev`. The design language of `UI-DESIGN-BRIEF.md` is kept; layout, density, and components change.
+- **Refined version** (this document): branch `feat/ux-audit`, base `dev`, PR #128 (draft). The design language of `UI-DESIGN-BRIEF.md` is kept; layout, density, and components change.
 - **Free redesign** (the maintainer asked for both): branch `feat/ux-audit-redesign`, stacked on this one; see `ux-redesign.md` there.
 
 ## What the maintainer asked for
