@@ -5,7 +5,7 @@ members = ["crates/*", "tools/*"]
 exclude = ["tools/oracle", "tools/tree", "tools/package", "tools/site", "fuzz"]
 
 [workspace.package]
-version = "0.9.0-1"
+version = "0.9.0"
 edition = "2024"
 rust-version = "1.99"
 license = "MIT"
