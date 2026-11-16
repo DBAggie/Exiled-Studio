@@ -30,10 +30,9 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use loom_data::bundle::{MANIFEST, Manifest};
-use loom_data::pack::{self, Entry, PackError, Trust};
-use loom_data::signature::{SIGNATURE_FILE, SignatureError, TrustList, hex};
-use loom_domain::DataVersion;
+use loom_data::bundle::MANIFEST;
+use loom_data::pack::{self, Entry, PackError};
+use loom_data::signature::{SIGNATURE_FILE, TrustList, hex};
 use sha2::{Digest, Sha256};
 
 use crate::bundles::{BUNDLES_DIR, bundle_id};
@@ -41,206 +40,23 @@ use crate::error::{AppError, Code};
 
 pub use loom_data::pack::PACK_EXTENSION;
 
-/// The file in a bundle folder that records the user's acceptance of a
-/// quarantined bundle: the manifest SHA-256 they accepted.
-pub const ACCEPTED_FILE: &str = "accepted.json";
+pub use loom_bundles::{ACCEPTED_FILE, Found, Quarantine, Status, status_of};
+use loom_bundles::{AcceptedRecord, read_capped, version_of};
 
-/// Why an installed bundle does not load.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Quarantine {
-    /// No signature (the user may accept it).
-    Unsigned,
-    /// Signed by a key this build does not know (the user may accept it).
-    UnknownKey,
-    /// The signature does not verify: changed after signing.
-    BadSignature,
-    /// Signed by a revoked key.
-    Revoked,
-    /// A file is missing or not its manifest size (or hash, when checked).
-    Damaged,
-}
-
-impl Quarantine {
-    /// Its name in the API (`unsigned`, `unknown-key`, ...).
-    #[must_use]
-    pub const fn name(self) -> &'static str {
-        match self {
-            Self::Unsigned => "unsigned",
-            Self::UnknownKey => "unknown-key",
-            Self::BadSignature => "bad-signature",
-            Self::Revoked => "revoked",
-            Self::Damaged => "damaged",
-        }
-    }
-
-    /// Whether the user may accept a bundle quarantined for this reason.
-    #[must_use]
-    pub const fn acceptable(self) -> bool {
-        matches!(self, Self::Unsigned | Self::UnknownKey)
-    }
-}
-
-/// Whether an installed bundle loads.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Status {
-    /// Signed by a trusted key.
-    Trusted {
-        /// The key's ID.
-        key_id: String,
-    },
-    /// Quarantined, then accepted by the user.
-    Accepted(Quarantine),
-    /// Not loaded.
-    Quarantined(Quarantine),
-}
-
-impl Status {
-    /// Whether it loads.
-    #[must_use]
-    pub fn loads(&self) -> bool {
-        !matches!(self, Self::Quarantined(_))
-    }
-}
-
-/// An installed bundle folder.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Found {
-    /// `<game>/<steam build>-s<schema>`.
-    pub id: String,
-    /// Its folder.
-    pub dir: PathBuf,
-    /// Its data version.
-    pub version: DataVersion,
-    /// Whether it loads, and why not.
-    pub status: Status,
-    /// The SHA-256 of its `bundle.json`, lowercase hex (shown when the
-    /// user is asked to accept it).
-    pub manifest_sha256: String,
-    /// The signing key's ID, when signed.
-    pub key_id: Option<String>,
-    /// Its files and their total size.
-    pub files: usize,
-    /// Bytes.
-    pub bytes: u64,
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    hex(&Sha256::digest(bytes))
-}
-
-/// Reads at most `cap` bytes of a file; more is an error.
-fn read_capped(path: &Path, cap: u64) -> std::io::Result<Vec<u8>> {
-    let mut out = Vec::new();
-    File::open(path)?
-        .take(cap.saturating_add(1))
-        .read_to_end(&mut out)?;
-    if out.len() as u64 > cap {
-        return Err(std::io::Error::other("too large"));
-    }
-    Ok(out)
-}
-
-fn version_of(manifest: &Manifest) -> Option<DataVersion> {
-    Some(DataVersion {
-        game: manifest.game()?,
-        schema_version: manifest.data_schema,
-        steam_build: manifest.source.steam_build,
-    })
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-struct Accepted {
-    manifest_sha256: String,
-}
-
-/// The status of one bundle folder, if it is one (its manifest reads).
-#[must_use]
-pub fn status_of(dir: &Path, trust: &TrustList) -> Option<Found> {
-    let manifest_bytes = read_capped(&dir.join(MANIFEST), pack::MAX_SMALL_FILE).ok()?;
-    let manifest = pack::manifest(&manifest_bytes).ok()?;
-    let version = version_of(&manifest)?;
-    let signature = read_capped(&dir.join(SIGNATURE_FILE), pack::MAX_SMALL_FILE).ok();
-    let manifest_sha256 = sha256_hex(&manifest_bytes);
-    let (mut quarantine, key_id) =
-        match pack::trust_of(&manifest_bytes, signature.as_deref(), trust) {
-            Ok(Trust::Trusted { key_id }) => (None, Some(key_id)),
-            Ok(Trust::UnknownKey { key_id }) => (Some(Quarantine::UnknownKey), Some(key_id)),
-            Ok(Trust::Unsigned) => (Some(Quarantine::Unsigned), None),
-            Err(SignatureError::Revoked(key_id)) => (Some(Quarantine::Revoked), Some(key_id)),
-            Err(_) => (Some(Quarantine::BadSignature), None),
-        };
-    let sizes_ok = manifest.files.iter().all(|f| {
-        std::fs::symlink_metadata(dir.join(&f.path))
-            .is_ok_and(|m| m.file_type().is_file() && m.len() == f.size)
-    });
-    if !sizes_ok {
-        quarantine = Some(Quarantine::Damaged);
-    }
-    let status = match quarantine {
-        None => Status::Trusted {
-            key_id: key_id.clone().unwrap_or_default(),
-        },
-        Some(q) => {
-            let accepted = q.acceptable()
-                && read_capped(&dir.join(ACCEPTED_FILE), 4096)
-                    .ok()
-                    .and_then(|b| serde_json::from_slice::<Accepted>(&b).ok())
-                    .is_some_and(|a| a.manifest_sha256 == manifest_sha256);
-            if accepted {
-                Status::Accepted(q)
-            } else {
-                Status::Quarantined(q)
-            }
-        }
-    };
-    Some(Found {
-        id: bundle_id(&version),
-        dir: dir.to_owned(),
-        version,
-        status,
-        manifest_sha256,
-        key_id,
-        files: manifest.files.len(),
-        bytes: manifest.files.iter().map(|f| f.size).sum(),
-    })
-}
-
-/// Every bundle folder under `<data_dir>/bundles/*/*/` (temporary folders,
-/// whose names start with `.`, skipped), with its status; newest first
-/// (highest Steam build, then schema, then ID). Two folders with the same
-/// ID keep the first by path.
+/// Every installed bundle folder with its status, newest first
+/// ([`loom_bundles::scan`]), after removing the temporary folders another
+/// process left in each game's bundles folder (a crash mid-install).
 #[must_use]
 pub fn scan(data_dir: &Path, trust: &TrustList) -> Vec<Found> {
-    let mut out: Vec<Found> = Vec::new();
-    let Ok(games) = std::fs::read_dir(data_dir.join(BUNDLES_DIR)) else {
-        return out;
-    };
-    let hidden = |e: &std::fs::DirEntry| e.file_name().to_string_lossy().starts_with('.');
-    let mut dirs: Vec<PathBuf> = games
-        .flatten()
-        .filter(|g| !hidden(g) && g.file_type().is_ok_and(|t| t.is_dir()))
-        .filter_map(|g| std::fs::read_dir(g.path()).ok())
-        .flat_map(|d| d.flatten())
-        .filter(|b| !hidden(b) && b.file_type().is_ok_and(|t| t.is_dir()))
-        .map(|b| b.path())
-        .collect();
-    dirs.sort();
-    for game in dirs.iter().filter_map(|d| d.parent()) {
-        sweep_stale(game);
-    }
-    for dir in dirs {
-        if let Some(found) = status_of(&dir, trust)
-            && out.iter().all(|f| f.id != found.id)
-        {
-            out.push(found);
+    if let Ok(games) = std::fs::read_dir(data_dir.join(BUNDLES_DIR)) {
+        for game in games.flatten() {
+            let hidden = game.file_name().to_string_lossy().starts_with('.');
+            if !hidden && game.file_type().is_ok_and(|t| t.is_dir()) {
+                sweep_stale(&game.path());
+            }
         }
     }
-    out.sort_by(|a, b| {
-        (b.version.steam_build, b.version.schema_version)
-            .cmp(&(a.version.steam_build, a.version.schema_version))
-            .then_with(|| a.id.cmp(&b.id))
-    });
-    out
+    loom_bundles::scan(data_dir, trust)
 }
 
 fn pack_error(e: &PackError) -> AppError {
@@ -534,26 +350,17 @@ pub fn install_from<R: Read + std::io::Seek>(
 /// data" action; the start checks sizes only).
 ///
 /// # Errors
-/// `APP_BUNDLE_DAMAGED` naming the first file that does not match.
+/// `APP_BUNDLE_DAMAGED` naming the first file that does not match;
+/// `APP_READ` and the `PACK_*` codes when the manifest does not read.
 pub fn verify_full(dir: &Path) -> Result<(), AppError> {
-    let manifest_bytes =
-        read_capped(&dir.join(MANIFEST), pack::MAX_SMALL_FILE).map_err(|e| io(dir, &e))?;
-    let manifest = pack::manifest(&manifest_bytes).map_err(|e| pack_error(&e))?;
-    for f in &manifest.files {
-        let path = dir.join(&f.path);
-        let ok = File::open(&path).is_ok_and(|mut file| {
-            let mut hasher = Sha256::new();
-            std::io::copy(&mut file, &mut hasher).is_ok_and(|n| n == f.size)
-                && hex(&hasher.finalize()) == f.sha256
-        });
-        if !ok {
-            return Err(AppError::new(
-                Code::BundleDamaged,
-                format!("{}: does not match the manifest", f.path),
-            ));
-        }
-    }
-    Ok(())
+    loom_bundles::verify_full(dir).map_err(|e| match e {
+        loom_bundles::VerifyError::Read { path, source } => io(&path, &source),
+        loom_bundles::VerifyError::Manifest(e) => pack_error(&e),
+        loom_bundles::VerifyError::Damaged(path) => AppError::new(
+            Code::BundleDamaged,
+            format!("{path}: does not match the manifest"),
+        ),
+    })
 }
 
 /// Accepts a quarantined bundle: the user saw `manifest_sha256` and
@@ -578,7 +385,7 @@ pub fn accept(found: &Found, manifest_sha256: &str) -> Result<(), AppError> {
             format!("{}: the bundle changed since it was shown", found.id),
         ));
     }
-    let text = serde_json::to_vec_pretty(&Accepted {
+    let text = serde_json::to_vec_pretty(&AcceptedRecord {
         manifest_sha256: manifest_sha256.to_owned(),
     })
     .unwrap_or_default();

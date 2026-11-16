@@ -31,9 +31,7 @@ use crate::data::{GameData, Integrity};
 use crate::error::{AppError, Code};
 use crate::install::{self, Found};
 
-/// The folder, under the application's data folder, that holds installed
-/// bundles.
-pub const BUNDLES_DIR: &str = "bundles";
+pub use loom_bundles::{BUNDLES_DIR, bundle_id};
 
 /// The file, under the application's data folder, that remembers the
 /// choice of data.
@@ -41,20 +39,6 @@ pub const SETTINGS_FILE: &str = "settings.json";
 
 /// A bundle installed under [`BUNDLES_DIR`], with its status.
 pub type Installed = Found;
-
-/// The ID of a data version: `<game>/<steam build>-s<schema>` (`unknown`
-/// for a bundle without a Steam build).
-#[must_use]
-pub fn bundle_id(version: &DataVersion) -> String {
-    let build = version
-        .steam_build
-        .map_or_else(|| "unknown".to_owned(), |b| b.to_string());
-    format!(
-        "{}/{build}-s{}",
-        version.game.name(),
-        version.schema_version
-    )
-}
 
 /// The bundles installed under `<data_dir>/bundles/*/*/` that load
 /// (trusted or accepted), newest first ([`install::scan`]).
