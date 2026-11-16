@@ -299,9 +299,14 @@ describe('UX High fixes', () => {
 
   it('switches the whole stage from the header', async () => {
     const { user, api } = await importBuild()
-    const stage = screen.getByLabelText('Stage') as HTMLSelectElement
-    expect(stage.selectedOptions[0]?.text).toBe('Leveling')
-    await user.selectOptions(stage, 'Endgame')
+    // A few stages are a stepper in the header: one press each.
+    const stage = screen.getByRole('group', { name: 'Stage' })
+    expect(
+      within(stage)
+        .getByRole('button', { name: 'Leveling' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    await user.click(within(stage).getByRole('button', { name: 'Endgame' }))
     expect(api.executed).toContainEqual({ 'use-loadout': { spec: 2 } })
     // Items and skills follow the stage.
     await user.click(screen.getByRole('button', { name: 'Equipment' }))

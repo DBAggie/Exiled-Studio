@@ -175,7 +175,11 @@ describe('comparison and time on the dashboard (section D)', () => {
     ).toBeTruthy()
     // The stage changes every number: the comparison lists them, each
     // with its direction in words (never colour alone).
-    await user.selectOptions(screen.getByLabelText('Stage'), '2')
+    await user.click(
+      within(screen.getByRole('group', { name: 'Stage' })).getByRole('button', {
+        name: 'Endgame',
+      }),
+    )
     await waitFor(() =>
       expect(
         within(screen.getByRole('region', { name: 'Compare' })).getByRole(

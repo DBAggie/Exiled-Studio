@@ -2,7 +2,14 @@
 // screen. Screens read projections from the store; every change is a
 // command to the application.
 import { Dialog, DropdownMenu } from 'radix-ui'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import type { DataVersionView, LoadoutView } from './api/types'
 import {
@@ -177,6 +184,9 @@ function ExportMenu() {
   )
 }
 
+/** The most stages the header shows as a stepper. */
+const MAX_STEPS = 5
+
 /** The build's stage (PoB's loadout): one choice sets the passive tree,
  * the item set, the skill set, and the configuration together. */
 function StagePicker({ loadouts }: { loadouts: LoadoutView[] }) {
@@ -187,6 +197,35 @@ function StagePicker({ loadouts }: { loadouts: LoadoutView[] }) {
     (s) => s.session.snapshot?.build?.specs.find((x) => x.active)?.id,
   )
   const near = loadouts.find((l) => l.spec === spec)
+  // A few stages are a stepper (the redesign): the build's progression
+  // in order, one press each. More than fit, or sets that are mixed, keep
+  // the list.
+  if (active !== undefined && loadouts.length <= MAX_STEPS) {
+    return (
+      <span className="stage-steps" role="group" aria-label={t('header.stage')}>
+        {loadouts.map((l, i) => (
+          <Fragment key={l.spec}>
+            {i > 0 && (
+              <span className="stage-arrow" aria-hidden="true">
+                ›
+              </span>
+            )}
+            <button
+              type="button"
+              aria-pressed={l.active}
+              onClick={() => {
+                if (!l.active) {
+                  void dispatch(run({ 'use-loadout': { spec: l.spec } }))
+                }
+              }}
+            >
+              {l.title}
+            </button>
+          </Fragment>
+        ))}
+      </span>
+    )
+  }
   return (
     <span className="stage-picker">
       <label htmlFor={id}>{t('header.stage')}</label>

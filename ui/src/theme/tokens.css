@@ -1,32 +1,33 @@
-/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2, and the mockups in
-   docs/ui/exiled-studio-ui-draft-v1.zip). Every colour the UI uses is a
+/* Design tokens. The free redesign (docs/ui/ux-redesign.md): neutral
+   near-black surfaces, a violet accent, one type family. The brief's
+   values (docs/ui/UI-DESIGN-BRIEF.md, section 2) are the refined version's. Every colour the UI uses is a
    token here; theme/pairs.ts lists each foreground and background pair the
    CSS combines, and a test checks their contrast (WCAG 2.2 AA) and that no
    other CSS file writes a colour. */
 :root {
   /* Surfaces, darkest first. */
-  --c-bg: #101215;
-  --c-input: #0f1114;
-  --c-nav: #13161a;
-  --c-header: #14171b;
-  --c-panel: #181b20;
-  --c-raised: #20242b;
-  --c-hover: #22272f;
-  --c-selected: #2c323b;
+  --c-bg: #0b0c0f;
+  --c-input: #08090b;
+  --c-nav: #0b0c0f;
+  --c-header: #0e1014;
+  --c-panel: #121419;
+  --c-raised: #1a1d24;
+  --c-hover: #1d2129;
+  --c-selected: #272c36;
 
   /* Lines. */
-  --c-row: #23272e;
-  --c-border: #2a2f37;
-  --c-border-control: #3a414c;
+  --c-row: #1b1e25;
+  --c-border: #22262e;
+  --c-border-control: #343a45;
   --c-border-strong: #6b7380;
 
   /* Text. */
-  --c-text: #e9e6df;
-  --c-soft: #c9ced6;
+  --c-text: #eceef2;
+  --c-soft: #c8cdd6;
   --c-muted: #a3a9b3;
-  --c-link: #f0b45a;
-  --c-accent: #e8a33d;
-  --c-on-accent: #1a1206;
+  --c-link: #c3b5ff;
+  --c-accent: #a995ff;
+  --c-on-accent: #14102b;
   --c-focus: #8dc1f2;
 
   /* States (text). */
@@ -104,9 +105,9 @@
   /* The passive tree canvas (our own shapes; never game art, ADR-000). */
   --c-tree-bg: #0c0e11;
   --c-tree-link: #3a414c;
-  --c-tree-link-on: #c98a2e;
+  --c-tree-link-on: #8a78e0;
   --c-tree-node: #59616e;
-  --c-tree-node-on: #e8a33d;
+  --c-tree-node-on: #a995ff;
   --c-tree-path: #8dc1f2;
   --c-tree-removed: #f08a7a;
   --c-tree-match: #f2d97a;
@@ -123,19 +124,22 @@
   --c-chart-shield: #8fc7d6;
   --c-chart-good: #3fae6a;
   --c-chart-bad: #e0665a;
-  --c-chart-grid: #2a2f37;
+  --c-chart-grid: #22262e;
   --c-chart-axis: #6b7380;
   --c-scrim: rgb(8 9 11 / 0.6);
 
   /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
   --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
-  --font-heading:
+  /* The redesign sets headings and numbers in Inter too (one family, by
+     weight and size); Space Grotesk stays for the brand mark. */
+  --font-heading: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-brand:
     'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', system-ui,
     sans-serif;
   --font-mono:
     'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Mono',
     monospace;
 
-  --radius: 8px;
-  --radius-panel: 10px;
+  --radius: 10px;
+  --radius-panel: 14px;
 }
