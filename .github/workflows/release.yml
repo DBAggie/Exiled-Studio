@@ -23,6 +23,11 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
 
+# Secrets: each key step gets its secret alone and writes it to a file in
+# RUNNER_TEMP (tools/package/data-key.sh, updater-key.sh), never to the
+# job's environment; the data key is deleted once the shipped pack is
+# signed, and the update key reaches only the `tauri build` commands
+# (with-updater-key.sh). The draft job's feed step gets the data key alone.
 # Third-party actions are pinned to commit SHAs (tag in the trailing comment).
 jobs:
   windows:
@@ -71,10 +76,10 @@ jobs:
           ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
       - name: NSIS setup (WebView2 offline installer inside)
         shell: bash
-        run: ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
       - name: MSI
         shell: bash
-        run: ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
       - name: Collect
         shell: bash
         run: |
@@ -143,7 +148,7 @@ jobs:
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+          bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
           mkdir -p out/release
           cp target/release/bundle/appimage/*.AppImage* target/release/bundle/deb/*.deb out/release/
       - name: AppImage, started

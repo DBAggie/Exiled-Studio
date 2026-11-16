@@ -67,3 +67,15 @@ Last Updated: 2026-11-14
 - B4 CI has no real bundle: synthetic tree fixture bundle T1a; each gate item marked CI or MR.
 - M1 cluster tables, socket expansion data, hash formats 1 and 2, driving stat IDs: T-i. M2 PoE1-only rules in `poe1` modules and the `poe1/` bundle section: T-e, T-i. M3 calc stays independent of `loom-tree`, pipeline resolves passives, `TreeData` trait for the overlay: T-e. M4 order: T5a/T5b, layout parity in T1, P5 and P1 early. M5 typed class and ascendancy per spec, `<URL>` regeneration: T-h. M6 installers installed, launched, uninstalled in a recorded release run; `e2e` feature absent: P-a. M7 per-artifact update behaviour, app key rotation, version policy: P-a, P-c, P-d. M8 release environment: P-b. M9 data schema 4 and compatibility rule: D-a. M10 shipped bundle source: P-e. M11 hostile-input unpacking, signed feed with sequence, verification in `loom-data`: P-c, P-e. M12 advisory ignores, `native-tls`: P-d, P-g. M13 budgets fixed now, instruction-count CI check: P-h. M14 cut line, draft PR after T0, Phase 5 steps early: Summary, step order.
 - Minor: ascendancy offset citation fixed (T-b); edges compared (gate 1); radius rule and source (T-f); CLAUDE.md hard rule cited (T-a); AGENTS.md exception widened (T-d); privacy note on update checks (P-d); ACTION-PLAN line "each with its own plan PR" (T0); `signatures` field (P-e); verification cost at load (P-e); WebView2 offline installer (P-a); oracle script protocol 5 and seed (T8); blocker defined (P-g).
+
+## Phase 5 sprint notes (2026-11-15, branch `feat/p5-release`)
+- **Environment quirks found:**
+  - libFuzzer does not link on Windows MSVC (`__start___sancov_cntrs` unresolved), and this workstation has no WSL or Docker, so fuzzing runs only in `fuzz.yml` on Linux.
+  - Windows PowerShell 5.1 treats a native tool's stderr as an error under `ErrorActionPreference=Stop`, so `loom-release pack` prints to stdout.
+  - reqwest's blocking client panics on Tauri's async runtime; the feed commands use `spawn_blocking`.
+- **Decisions taken in the sprint, open to the maintainer:**
+  - The data feed shares the update mode; strict offline refuses both.
+  - The start checks installed bundles' signatures and sizes, but the loaded bundle still goes through the full validator (`performance.md`, exception 1).
+  - The CI instruction-count baseline is CI's own first run.
+  - Two advisory ignores, both on Tauri's Linux GTK3 path.
+- **Left for the maintainer:** `docs/phase-5/phase-5-report.md`, "For the maintainer".

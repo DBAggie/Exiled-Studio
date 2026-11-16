@@ -24,15 +24,33 @@ use tauri::{AppHandle, Manager, Runtime};
 
 use crate::{Answer, Ctx, TEST_KEYS, updates};
 
-/// The last verified feed, for downloads.
+/// The last verified feed, for downloads, and the packs downloading now.
 #[derive(Default)]
-pub struct DataFeed(Mutex<Option<Feed>>);
+pub struct DataFeed {
+    feed: Mutex<Option<Feed>>,
+    downloading: Mutex<std::collections::BTreeSet<String>>,
+}
 
 impl DataFeed {
     fn lock(&self) -> std::sync::MutexGuard<'_, Option<Feed>> {
-        self.0
+        self.feed
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    fn downloading(&self) -> std::sync::MutexGuard<'_, std::collections::BTreeSet<String>> {
+        self.downloading
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
+/// Marks a pack as downloading until dropped.
+struct Downloading<'f>(&'f DataFeed, String);
+
+impl Drop for Downloading<'_> {
+    fn drop(&mut self) {
+        self.0.downloading().remove(&self.1);
     }
 }
 
@@ -135,6 +153,14 @@ fn download<R: Runtime>(handle: &AppHandle<R>, id: &str) -> Answer<api::Outcome>
         .as_ref()
         .and_then(|f| f.bundles.iter().find(|b| b.id == id).cloned())
         .ok_or_else(|| api::ApiError::new("APP_NOT_FOUND", format!("{id} is not in the feed")))?;
+    // One download of a pack at a time: they would share the file.
+    if !last.downloading().insert(bundle.id.clone()) {
+        return Err(api::ApiError::new(
+            "FEED_BUSY",
+            format!("{id} is already downloading"),
+        ));
+    }
+    let _downloading = Downloading(&last, bundle.id.clone());
     let dir = ctx
         .settings
         .parent()

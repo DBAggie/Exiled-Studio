@@ -159,9 +159,24 @@ impl PackError {
     }
 }
 
-/// Parses a manifest and checks its file list: plain, unique paths, none
-/// named like the pack's own files, at most [`MAX_FILES`], at most
-/// [`MAX_UNPACKED`] bytes in all.
+/// Whether a path names the same file on every file system the
+/// application runs on: no segment ending in `.` or a space (Windows drops
+/// them), and no Windows device name (`con`, `nul`, `com1`, ..., with or
+/// without an extension).
+fn portable(path: &str) -> bool {
+    path.split('/').all(|seg| {
+        let stem = seg.split('.').next().unwrap_or(seg).to_ascii_lowercase();
+        let device = matches!(stem.as_str(), "con" | "prn" | "aux" | "nul")
+            || ((stem.starts_with("com") || stem.starts_with("lpt"))
+                && stem.len() == 4
+                && stem.ends_with(|c: char| c.is_ascii_digit()));
+        !seg.ends_with(['.', ' ']) && !device
+    })
+}
+
+/// Parses a manifest and checks its file list: plain, portable paths,
+/// unique even ignoring case, none named like the pack's own files in any
+/// case, at most [`MAX_FILES`], at most [`MAX_UNPACKED`] bytes in all.
 ///
 /// # Errors
 /// [`PackError::Manifest`], [`PackError::TooLarge`].
@@ -183,13 +198,19 @@ pub fn manifest(bytes: &[u8]) -> Result<Manifest, PackError> {
     let mut seen = BTreeSet::new();
     let mut total: u64 = 0;
     for f in &manifest.files {
-        if !plain_path(&f.path) || f.path == MANIFEST || f.path == signature::SIGNATURE_FILE {
+        let folded = f.path.to_ascii_lowercase();
+        if !plain_path(&f.path)
+            || !portable(&f.path)
+            || folded == MANIFEST
+            || SIDE_FILES.contains(&folded.as_str())
+        {
             return Err(PackError::Manifest(format!(
                 "{}: not a plain file path",
                 f.path
             )));
         }
-        if !seen.insert(f.path.as_str()) {
+        // Case-insensitive file systems (Windows, macOS) would merge them.
+        if !seen.insert(folded) {
             return Err(PackError::Manifest(format!("{}: listed twice", f.path)));
         }
         total = total.saturating_add(f.size);
@@ -340,7 +361,7 @@ pub fn verify_feed(
             && b.sha256
                 .bytes()
                 .all(|c| matches!(c, b'0'..=b'9' | b'a'..=b'f'));
-        if !hex || !b.url.starts_with("https://") || b.size == 0 {
+        if !hex || !b.url.starts_with("https://") || b.size == 0 || b.size > MAX_UNPACKED {
             return Err(FeedError::Malformed(format!("bundle {}", b.id)));
         }
     }
@@ -404,6 +425,30 @@ mod tests {
             .filter(|e| e.name != "signature.json")
             .collect();
         assert_eq!(listing_error(&unsigned), None);
+    }
+
+    #[test]
+    fn names_that_alias_on_some_file_system_are_refused() {
+        for files in [
+            vec![("Signature.JSON", 1)],
+            vec![("ACCEPTED.json", 1)],
+            vec![("Bundle.json", 1)],
+            vec![("data/a.json.", 1)],
+            vec![("data/a.json ", 1)],
+            vec![("data/con.json", 1)],
+            vec![("lpt1/a.json", 1)],
+            vec![("data/a.json", 1), ("Data/A.json", 1)],
+        ] {
+            assert!(manifest(&manifest_json(&files)).is_err(), "{files:?}");
+        }
+        // Names that only look like those pass.
+        assert!(
+            manifest(&manifest_json(&[
+                ("data/console.json", 1),
+                ("com10/a.json", 1)
+            ]))
+            .is_ok()
+        );
     }
 
     #[test]

@@ -20,6 +20,7 @@ The plan's step P4 and decision P-e (`dev/active/passive-tree-and-phase-5/`): ga
 2. **The manifest.** `loom_data::pack::manifest` requires:
    - a known game;
    - plain, unique paths, none named `bundle.json` or `signature.json`;
+   - paths portable to every file system the application runs on: unique ignoring case, no side file's name in any case, no segment ending in `.` or a space, no Windows device name (`con`, `nul`, `com1`, ...);
    - at most 10,000 files and 1 GiB in all.
 3. **The listing, before anything is extracted** (`check_listing`). Every entry must be:
    - a regular file: not a folder, not a link (`PACK_PATH`);
@@ -32,8 +33,13 @@ The plan's step P4 and decision P-e (`dev/active/passive-tree-and-phase-5/`): ga
    - Size and SHA-256 are checked as the file is written (`PACK_CONTENT`).
    - Any failure removes the temporary folder.
 5. **One rename** to `bundles/<game>/<steam build>-s<schema>/`.
-   - An ID installed with the same manifest: nothing is extracted, only the signature is rewritten (a re-signed pack).
-   - An ID installed with another manifest: refused (`APP_PACK_EXISTS`).
+   - **The same manifest, its files intact** (full hashes): nothing is extracted. The signature is rewritten only when it is not weaker: a trusted pack's always, and an untrusted pack's only over an untrusted one.
+   - **The same manifest, its files damaged:** extracted again, a repair. A trusted signature already there stays unless the pack's is trusted too.
+   - **Another manifest:** replaced only by a pack signed by a trusted key. That covers a corrected rebuild of the same game build and schema, and an official pack over a user's unsigned one.
+     - The new folder is extracted first; then the old one is moved aside (`.outgoing-*`), the new one moved in, and the old one removed.
+     - If the new one cannot move in, the old one goes back.
+     - An untrusted pack is refused (`APP_PACK_EXISTS`).
+   - **Leftovers.** Temporary folders another process left (`.incoming-*`, `.outgoing-*`, after a crash or kill) are removed at the next install and at the start's scan.
 
 ## At every start, and on request
 - **At start** (`loom_app::install::scan`), every installed folder's signature is checked against the trust list compiled into the build, and its files' sizes against the manifest.
@@ -64,11 +70,14 @@ Debug and `e2e` builds trust the public test key (`loom_tauri::TEST_KEYS`, `loom
 - **Checking** (About, Game data, **Check for new game data**; command `check_data_feed`):
   - the feed and its signature are fetched, capped (`loom_integrations::data_feed`, HTTPS with `native-tls`);
   - `loom_data::pack::verify_feed` requires a trusted key: a feed is never quarantined (`FEED_SIGNATURE`);
-  - it also requires format 1, HTTPS URLs, and hex hashes (`FEED_MALFORMED`);
+  - it also requires format 1, HTTPS URLs, hex hashes, and sizes from 1 byte to 1 GiB (`FEED_MALFORMED`);
   - **a sequence not lower than the highest seen** (`FEED_ROLLBACK`); the highest is kept in `settings.json` (`data-feed-sequence`).
 - **Downloading** (**Download and install**; `download_data`):
   - only a pack the last verified feed lists;
   - capped at its size, its size and SHA-256 checked against the feed, a failed download removed;
+  - HTTPS only, redirects included;
+  - a time limit that grows with the size: two minutes plus a second per 64 KiB. A whole-request limit would fail a large pack on a slow link, and the blocking client has no per-read timeout;
+  - one download of a pack at a time (`FEED_BUSY`);
   - then installed like a pack from a file, with its own signature and every check above.
 - **Strict offline** refuses both before any connection (`UPDATE_OFFLINE`); the update mode governs both kinds of network use.
 - **Published by** the `release` workflow's draft job (`tools/package/data-feed.sh`), listing the shipped pack. The sequence is the workflow's run number, which only grows.
@@ -104,5 +113,6 @@ At start the application installs each shipped pack not installed yet (`loom_tau
 | e2e (`ui/e2e/workflow.mjs`) | the real application installs a test-signed pack of the synthetic tree bundle from the picker and shows it signed. Run on this workstation 2026-11-15 (`run.ps1`): passed |
 
 ## Not done here
+- **No feed expiry.** A frozen feed carrying the highest sequence seen is accepted for as long as it is served. A signed `expires` field, and a context prefix in the signed bytes so manifest and feed signatures cannot be confused, wait for the next feed format.
 - **The real data feed and shipped bundle** wait for the maintainer's `release/bundle.json`, data key, and a tagged release.
 - **Removing an installed bundle from the UI** is not offered. Folders can be deleted by hand while the application is closed.

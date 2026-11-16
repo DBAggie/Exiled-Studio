@@ -8,13 +8,17 @@
 #     "sha256": "<the zip's SHA-256>" }
 #
 # This script downloads the zip, checks its hash, unpacks it, runs
-# bundle-check, and packs it signed with LOOM_DATA_KEY into
+# bundle-check, and packs it signed with the data key
+# ($LOOM_KEYS_DIR/data.secret, tools/package/data-key.sh; deleted here
+# whatever happens, since no later build step needs it) into
 # crates/loom-tauri/shipped/, which tauri.shipped.conf.json puts in the
 # installers' resources (bundles/). It exports SHIPPED_CONFIG for the build
 # steps. Without release/bundle.json nothing is shipped; a tag's run then
 # fails (a release ships its data).
 set -euo pipefail
 out="${GITHUB_ENV:-/dev/null}"
+secret="${LOOM_KEYS_DIR:?run tools/package/data-key.sh first}/data.secret"
+trap 'rm -f "$secret"' EXIT
 if [ ! -f release/bundle.json ]; then
   case "${GITHUB_REF:-}" in
     refs/tags/*) echo "a tagged release needs release/bundle.json (the shipped game data)" >&2; exit 1 ;;
@@ -35,7 +39,7 @@ python3 -m zipfile -e "$work/bundle.zip" "$work/src" 2>/dev/null || python -m zi
 dir="$(dirname "$(find "$work/src" -name bundle.json -print -quit)")"
 cargo run -q --release --locked -p loom-parity-cli -- bundle-check "$dir"
 mkdir -p crates/loom-tauri/shipped
-cargo run -q --locked -p loom-release -- pack "$dir" --secret-env LOOM_DATA_KEY \
+cargo run -q --locked -p loom-release -- pack "$dir" --secret "$secret" \
   --out crates/loom-tauri/shipped/game-data.loombundle
 echo "SHIPPED_CONFIG=--config crates/loom-tauri/tauri.shipped.conf.json" >> "$out"
 echo "shipped bundle: crates/loom-tauri/shipped/game-data.loombundle"

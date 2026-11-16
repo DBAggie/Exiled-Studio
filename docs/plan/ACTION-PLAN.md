@@ -70,6 +70,8 @@ A full passive tree editor: allocation with path finding, deallocation, masterie
 ### Phase 5: Packaging, signing, updates
 Installers, two-key signing, prompted app updates, signed data bundles with rollback, security checks.
 
+Status 2026-11-15: every step built (P5 in PR #115; P1 to P4 and P6 to P8 in the Phase 5 sprint PR from `feat/p5-release`). **Gate not met yet** (`docs/phase-5/phase-5-report.md`): the CI items pass; the recorded `release` run (gate 6) and the decisions on the performance exceptions (gate 9) are the maintainer's.
+
 ### Phase 6+: Expansion
 PoE1 mechanics expansion (each promoted through corpus and oracle gates); timeless jewels and alternate trees; PoE2 calculations begin; PoE2 `.build` import.
 

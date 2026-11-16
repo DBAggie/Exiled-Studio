@@ -1015,6 +1015,7 @@ export const en = {
   'error.FEED_MISMATCH':
     'The downloaded game data does not match its list. Nothing was installed.',
   'error.FEED_IO': 'The game data could not be saved for installing.',
+  'error.FEED_BUSY': 'That game data is already downloading.',
   'error.APP_ADD_ITEM':
     'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':

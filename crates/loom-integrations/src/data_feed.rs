@@ -24,8 +24,16 @@ pub const FEED_URL: &str =
 pub const FEED_SIGNATURE_URL: &str =
     "https://github.com/DBAggie/Exiled-Studio/releases/latest/download/data-feed.json.sig";
 
-/// How long a request may wait.
-const TIMEOUT: Duration = Duration::from_secs(60);
+/// How long a small fetch (the feed, its signature) may take in all.
+const FETCH_TIMEOUT: Duration = Duration::from_secs(60);
+/// How long a connection may take.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+/// A download's time: two minutes plus a second per 64 KiB, so a link of
+/// about 0.5 Mbit/s or faster finishes (the blocking client has no
+/// per-read timeout; a 130 MB pack gets about 37 minutes).
+fn download_timeout(size: u64) -> Duration {
+    Duration::from_secs(120_u64.saturating_add(size / (64 * 1024)))
+}
 
 /// Why a fetch or download failed.
 #[derive(Debug, thiserror::Error)]
@@ -57,16 +65,20 @@ impl FetchError {
     }
 }
 
-fn client() -> Result<reqwest::blocking::Client, FetchError> {
-    reqwest::blocking::Client::builder()
-        .timeout(TIMEOUT)
-        .user_agent(concat!("exiled-studio/", env!("CARGO_PKG_VERSION")))
-        .build()
-        .map_err(|e| FetchError::Http(e.to_string()))
+/// The client: HTTPS only, redirects included (the unit tests serve
+/// plain HTTP on loopback); a whole-request timeout for small fetches,
+/// one scaled to the size for a download ([`download_timeout`]).
+fn client(download: Option<u64>) -> Result<reqwest::blocking::Client, FetchError> {
+    let builder = reqwest::blocking::Client::builder()
+        .https_only(cfg!(not(test)))
+        .connect_timeout(CONNECT_TIMEOUT)
+        .user_agent(concat!("exiled-studio/", env!("CARGO_PKG_VERSION")));
+    let builder = builder.timeout(download.map_or(FETCH_TIMEOUT, download_timeout));
+    builder.build().map_err(|e| FetchError::Http(e.to_string()))
 }
 
-fn get(url: &str) -> Result<reqwest::blocking::Response, FetchError> {
-    let response = client()?
+fn get(url: &str, download: Option<u64>) -> Result<reqwest::blocking::Response, FetchError> {
+    let response = client(download)?
         .get(url)
         .send()
         .map_err(|e| FetchError::Http(e.to_string()))?;
@@ -82,8 +94,8 @@ fn get(url: &str) -> Result<reqwest::blocking::Response, FetchError> {
 /// [`FetchError::Http`], [`FetchError::TooLarge`].
 pub fn fetch(url: &str, cap: u64) -> Result<Vec<u8>, FetchError> {
     let mut out = Vec::new();
-    get(url)?
-        .take(cap + 1)
+    get(url, None)?
+        .take(cap.saturating_add(1))
         .read_to_end(&mut out)
         .map_err(|e| FetchError::Http(e.to_string()))?;
     if out.len() as u64 > cap {
@@ -99,7 +111,7 @@ pub fn fetch(url: &str, cap: u64) -> Result<Vec<u8>, FetchError> {
 /// [`FetchError`].
 pub fn download(url: &str, sha256: &str, size: u64, dest: &Path) -> Result<(), FetchError> {
     let result = (|| {
-        let mut body = get(url)?.take(size + 1);
+        let mut body = get(url, Some(size))?.take(size.saturating_add(1));
         let mut file = std::fs::File::create(dest)?;
         let mut hasher = Sha256::new();
         let mut written: u64 = 0;

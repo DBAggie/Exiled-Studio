@@ -34,6 +34,8 @@ Gate 8: no blocker, by CI and the fuzz records below.
 
 Run here 2026-11-15: `advisories ok, bans ok, licenses ok, sources ok`. The two ignores were the only findings.
 
+The fuzz workspace (`fuzz/Cargo.lock`) is not checked by this job. Its targets are never shipped, and their dependencies beyond the shipped crates' are `libfuzzer-sys` alone.
+
 ## Secrets
 - CI's `secrets` job runs gitleaks 8.30.1 over the whole history (`gitleaks git --redact --exit-code 1`), required in `ci-ok`.
   - The binary is pinned by version and by the SHA-256 in the release's checksums file.

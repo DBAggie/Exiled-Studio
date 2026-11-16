@@ -301,19 +301,84 @@ fn a_file_of_the_right_size_and_other_bytes_is_refused_while_extracting() {
 }
 
 #[test]
-fn another_bundle_with_the_same_id_is_refused() {
+fn other_content_with_the_same_id_is_replaced_only_by_a_trusted_pack() {
     let tmp = temp("exists");
     let data = tmp.0.join("data");
-    let found = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust())
+    let found = install::install_pack(&data, &pack(&tmp.0, None), &trust())
         .unwrap()
         .found;
     // Change the installed manifest (as another bundle with this ID would
     // differ).
     let mut m = manifest_bytes(&found.dir);
-    m.push(b'\n');
-    std::fs::write(found.dir.join("bundle.json"), m).unwrap();
-    let e = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust()).unwrap_err();
+    m.push(b' ');
+    std::fs::write(found.dir.join("bundle.json"), &m).unwrap();
+    // An unsigned or unknown-key pack does not replace it.
+    let e = install::install_pack(&data, &pack(&tmp.0, None), &trust()).unwrap_err();
     assert_eq!(e.code, "APP_PACK_EXISTS");
+    let stranger = KeyPair::from_seed(&[9; 32]);
+    let e = install::install_pack(&data, &pack(&tmp.0, Some(&stranger)), &trust()).unwrap_err();
+    assert_eq!(e.code, "APP_PACK_EXISTS");
+    assert_eq!(manifest_bytes(&found.dir), m);
+    // A trusted one does, whole, and leaves no temporary folder.
+    let replaced = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust()).unwrap();
+    assert!(!replaced.already);
+    assert!(replaced.found.status.loads());
+    assert_eq!(manifest_bytes(&found.dir), manifest_bytes(&fixture()));
+    install::verify_full(&found.dir).unwrap();
+    assert!(walk(&data).iter().all(|p| {
+        let name = p.to_string_lossy();
+        !name.contains(".incoming-") && !name.contains(".outgoing-")
+    }));
+}
+
+#[test]
+fn installing_again_repairs_damaged_files() {
+    let tmp = temp("repair");
+    let data = tmp.0.join("data");
+    let found = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust())
+        .unwrap()
+        .found;
+    let (path, _) = first_file();
+    std::fs::write(found.dir.join(&path), b"short").unwrap();
+    assert!(
+        !install::status_of(&found.dir, &trust())
+            .unwrap()
+            .status
+            .loads()
+    );
+    // Even an unsigned pack of the same manifest repairs it, and the
+    // trusted signature stays.
+    let again = install::install_pack(&data, &pack(&tmp.0, None), &trust()).unwrap();
+    assert!(!again.already);
+    assert!(again.found.status.loads(), "{:?}", again.found.status);
+    install::verify_full(&found.dir).unwrap();
+}
+
+#[test]
+fn a_weaker_signature_never_replaces_a_trusted_one() {
+    let tmp = temp("weaker");
+    let data = tmp.0.join("data");
+    install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust()).unwrap();
+    let stranger = KeyPair::from_seed(&[9; 32]);
+    let again = install::install_pack(&data, &pack(&tmp.0, Some(&stranger)), &trust()).unwrap();
+    assert!(again.already);
+    assert!(again.found.status.loads(), "{:?}", again.found.status);
+    let unsigned = install::install_pack(&data, &pack(&tmp.0, None), &trust()).unwrap();
+    assert!(unsigned.found.status.loads(), "{:?}", unsigned.found.status);
+}
+
+#[test]
+fn a_temporary_folder_left_by_another_process_is_swept() {
+    let tmp = temp("sweep");
+    let data = tmp.0.join("data");
+    let found = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust())
+        .unwrap()
+        .found;
+    let game = found.dir.parent().unwrap().to_owned();
+    let stale = game.join(".incoming-1-2");
+    std::fs::create_dir_all(stale.join("data")).unwrap();
+    let _ = install::scan(&data, &trust());
+    assert!(!stale.exists());
 }
 
 #[test]

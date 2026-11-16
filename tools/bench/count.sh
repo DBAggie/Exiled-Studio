@@ -31,7 +31,7 @@ for scenario in validate load import calculate allocate; do
   echo "$scenario $count" >> "$out/counts"
 done
 python3 - "$out/counts" tools/bench/baseline.json "$update" <<'PY'
-import json, sys
+import json, os, sys
 counts_file, baseline_file, update = sys.argv[1], sys.argv[2], sys.argv[3] == "--update"
 counts = {}
 for line in open(counts_file):
@@ -64,5 +64,9 @@ missing = [n for n in counts if n not in base]
 if missing:
     print("No baseline for " + ", ".join(missing) + ". Counts to commit:")
     print(json.dumps(counts, indent=2))
+    # In CI a scenario without a baseline checks nothing: fail until the
+    # counts above are committed.
+    if os.environ.get("CI"):
+        failed = True
 sys.exit(1 if failed else 0)
 PY

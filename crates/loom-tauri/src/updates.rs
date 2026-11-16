@@ -42,8 +42,13 @@ pub const RELEASES: &str = "https://github.com/DBAggie/Exiled-Studio/releases";
 /// first key (`docs/release/signing.md`); a build without one cannot check.
 const UPDATE_KEY: &str = include_str!("../../../release/updater.pub");
 
-/// How long a check or download may wait for the server.
+/// How long a check may wait for the server.
 const TIMEOUT: Duration = Duration::from_secs(30);
+
+/// How long an update's download may take in all: the plugin applies the
+/// update's timeout to the whole download, and the NSIS setup carries the
+/// offline WebView2 installer (about 130 MB), so a slow link needs this.
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(60 * 60);
 
 /// Marks a builder that registered the updater plugin (`run` does; tests
 /// that build the shell without it do not, and every check then answers
@@ -132,9 +137,19 @@ pub fn offer(update: &Update) -> api::UpdateOffer {
 struct Inner {
     mode: api::UpdateMode,
     checking: bool,
+    installing: bool,
     checked: bool,
     update: Option<Update>,
     error: Option<api::ApiError>,
+}
+
+/// Clears [`Inner::checking`] when dropped.
+struct Checking<'u>(&'u Updates);
+
+impl Drop for Checking<'_> {
+    fn drop(&mut self) {
+        self.0.lock().checking = false;
+    }
 }
 
 /// The shell's update state.
@@ -239,9 +254,11 @@ impl Updates {
             }
             inner.checking = true;
         }
+        // Cleared however the check ends, a dropped future included.
+        let guard = Checking(self);
         let result = check(handle, UPDATE_KEY.trim(), None).await;
+        drop(guard);
         let mut inner = self.lock();
-        inner.checking = false;
         inner.checked = true;
         match result {
             Ok(update) => {
@@ -266,17 +283,25 @@ impl Updates {
     /// # Errors
     /// Those of [`installable`]; `UPDATE_NONE` without an offer.
     pub fn to_install(&self) -> Result<Update, api::ApiError> {
-        let inner = self.lock();
+        let mut inner = self.lock();
         installable(self.artifact, inner.mode)?;
-        inner
+        if inner.installing {
+            return Err(refuse("UPDATE_BUSY", "an update is already installing"));
+        }
+        let mut update = inner
             .update
             .clone()
-            .ok_or_else(|| refuse("UPDATE_NONE", "no update was offered"))
+            .ok_or_else(|| refuse("UPDATE_NONE", "no update was offered"))?;
+        update.timeout = Some(DOWNLOAD_TIMEOUT);
+        inner.installing = true;
+        Ok(update)
     }
 
-    /// Records a failed install.
+    /// Records a failed install (another may be tried).
     pub fn failed(&self, error: api::ApiError) {
-        self.lock().error = Some(error);
+        let mut inner = self.lock();
+        inner.installing = false;
+        inner.error = Some(error);
     }
 }
 

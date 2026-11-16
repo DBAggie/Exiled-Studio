@@ -38,6 +38,9 @@ cargo run -p loom-release -- trust --secret <file>                 # the trust e
 cargo run -p loom-release -- sign bundle.json --secret-env LOOM_DATA_KEY --out signature.json
 cargo run -p loom-release -- verify bundle.json signature.json --trust release/trust.json
 cargo run -p loom-release -- test-sign bundle.json --out signature.json   # the test key
+cargo run -p loom-release -- trust-add release/trust.json --secret <file>   # a key into a trust list
+cargo run -p loom-release -- pack <bundle dir> --secret <file> --out game-data.loombundle
+cargo run -p loom-release -- feed --sequence <n> --base-url https://.../download/vX --out data-feed.json <pack>...
 ```
 
 ## First keys (the maintainer, once)
@@ -50,6 +53,14 @@ cargo run -p loom-release -- test-sign bundle.json --out signature.json   # the 
    - The private key file's content goes into `LOOM_UPDATER_KEY`, its password into `LOOM_UPDATER_KEY_PASSWORD`.
    - Losing it strands installed copies: they accept only updates signed by the key they shipped with. Keep two offline copies.
 
+## Secrets in the release workflow
+- **Never in the job's environment.** Each key step gets its secret alone and writes it to a file in `RUNNER_TEMP/keys` (`tools/package/data-key.sh`, `updater-key.sh`). So `cargo build`, `pnpm`, and the other build steps do not carry it in their environment.
+- **The data key** is used once per build job, by `shipped-bundle.sh` to sign the shipped pack, and deleted right after.
+- **The update key** reaches only the `tauri build` commands, through `tools/package/with-updater-key.sh`.
+- **The draft job's feed step** gets the data key alone.
+- **What this does not stop.** A build step can still read the update key's file while the job runs. Full isolation would need signing in a job of its own; that is a later change if the threat warrants it.
+- **The update key pair is checked.** In a real run, `updater-key.sh` signs a probe file with the secret and compares the signature's key ID with `release/updater.pub`'s. A mismatch fails the run: installed copies would refuse every update signed with it.
+
 ## Release environment (GitHub)
 Settings → Environments → New environment `release`:
 - **Required reviewers:** the maintainer. Every `release` workflow job waits for approval.
@@ -60,7 +71,7 @@ Settings → Environments → New environment `release`:
 ## Throwaway mode
 The update key works the same way (`tools/package/updater-key.sh`): without `LOOM_UPDATER_KEY`, a throwaway key from `tauri signer generate` signs the run's update packages and its public half goes into the run's `release/updater.pub`; a tag's run refuses it; with the secret, `release/updater.pub` must not be empty.
 
-When `LOOM_DATA_KEY` is absent (before the first key exists, or in a fork), `tools/package/data-key.sh` makes a throwaway key, adds it to the run's copy of `release/trust.json` (never committed), and exports it for the later steps. The artifacts then verify their own data, so the workflow is fully exercised, but no later build trusts that key. **A tag's run refuses throwaway mode.** With the secret set, its key must already be in `release/trust.json` and not revoked, or the run fails.
+When `LOOM_DATA_KEY` is absent (before the first key exists, or in a fork), `tools/package/data-key.sh` makes a throwaway key and adds it to the run's copy of `release/trust.json` (never committed). The artifacts then verify their own data, so the workflow is fully exercised, but no later build trusts that key. **A tag's run refuses throwaway mode.** With the secret set, its key must already be in `release/trust.json` and not revoked, or the run fails.
 
 ## Rotation
 1. Generate the new key (as above) and add its entry to `release/trust.json`, keeping the old one.

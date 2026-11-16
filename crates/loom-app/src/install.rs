@@ -10,11 +10,17 @@
 //! is then extracted into a temporary folder beside the target, its size
 //! and SHA-256 checked as it is written; any mismatch removes the folder.
 //! Last, one rename moves it to `bundles/<game>/<steam build>-s<schema>/`.
+//! An ID already installed: the same manifest with intact files is a
+//! no-op (the signature rewritten only when not weaker); damaged files are
+//! extracted again; another manifest is replaced only by a pack signed by a
+//! trusted key (extracted first, then swapped, the old folder kept until
+//! the new one is in place).
 //!
 //! **Status** ([`scan`]): each installed folder's signature is checked
 //! against the trust list and its files' sizes against the manifest at
-//! every start (cheap); hashes only at install and when the user asks
-//! ([`verify_full`]). A bundle signed by a trusted key loads. An unsigned
+//! every start; [`verify_full`] checks hashes (at install, on the user's
+//! Verify; the bundle that loads also goes through the bundle validator,
+//! which hashes every file). A bundle signed by a trusted key loads. An unsigned
 //! one, or one signed by a key this build does not know, is
 //! **quarantined**: stored, listed, not loaded, until the user accepts it
 //! with its manifest's SHA-256 shown ([`accept`]). A bad signature, a
@@ -125,7 +131,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 /// Reads at most `cap` bytes of a file; more is an error.
 fn read_capped(path: &Path, cap: u64) -> std::io::Result<Vec<u8>> {
     let mut out = Vec::new();
-    File::open(path)?.take(cap + 1).read_to_end(&mut out)?;
+    File::open(path)?
+        .take(cap.saturating_add(1))
+        .read_to_end(&mut out)?;
     if out.len() as u64 > cap {
         return Err(std::io::Error::other("too large"));
     }
@@ -217,6 +225,9 @@ pub fn scan(data_dir: &Path, trust: &TrustList) -> Vec<Found> {
         .map(|b| b.path())
         .collect();
     dirs.sort();
+    for game in dirs.iter().filter_map(|d| d.parent()) {
+        sweep_stale(game);
+    }
     for dir in dirs {
         if let Some(found) = status_of(&dir, trust)
             && out.iter().all(|f| f.id != found.id)
@@ -262,6 +273,33 @@ fn small_entry<R: Read + std::io::Seek>(
         return Err(pack_error(&PackError::TooLarge(name.to_owned())));
     }
     Ok(Some(out))
+}
+
+/// The name prefix of a pack's temporary extraction folder.
+const INCOMING: &str = ".incoming-";
+/// The name prefix of a replaced bundle folder before it is removed.
+const OUTGOING: &str = ".outgoing-";
+
+/// Removes temporary folders another process left in a game's bundles
+/// folder (a crash or kill mid-install). This process's own are left: one
+/// may be in use.
+fn sweep_stale(game_dir: &Path) {
+    let Ok(entries) = std::fs::read_dir(game_dir) else {
+        return;
+    };
+    let own = format!("-{}-", std::process::id());
+    for e in entries.flatten() {
+        let name = e.file_name().to_string_lossy().into_owned();
+        let Some(rest) = name
+            .strip_prefix(INCOMING)
+            .or_else(|| name.strip_prefix(OUTGOING))
+        else {
+            continue;
+        };
+        if !format!("-{rest}").starts_with(&own) {
+            let _ = std::fs::remove_dir_all(e.path());
+        }
+    }
 }
 
 /// Removes a folder when dropped, unless kept.
@@ -318,7 +356,7 @@ pub fn install_from<R: Read + std::io::Seek>(
     let signature = small_entry(&mut archive, SIGNATURE_FILE)?;
     // The signature first: a changed or revoked pack is refused before its
     // listing is even read.
-    pack::trust_of(&manifest_bytes, signature.as_deref(), trust)
+    let new_trust = pack::trust_of(&manifest_bytes, signature.as_deref(), trust)
         .map_err(|e| AppError::layer("PACK_SIGNATURE", e))?;
     let manifest = pack::manifest(&manifest_bytes).map_err(|e| pack_error(&e))?;
     let version = version_of(&manifest).ok_or_else(|| {
@@ -345,35 +383,54 @@ pub fn install_from<R: Read + std::io::Seek>(
 
     let id = bundle_id(&version);
     let target = data_dir.join(BUNDLES_DIR).join(&id);
-    if target.exists() {
-        let same = read_capped(&target.join(MANIFEST), pack::MAX_SMALL_FILE)
-            .is_ok_and(|b| b == manifest_bytes);
-        if !same {
+    // The signature the folder gets: the pack's, unless the installed one
+    // is trusted and the pack's is not (never weaker).
+    let mut written_signature = signature.clone();
+    let replacing = target.exists();
+    if replacing {
+        let existing_manifest = read_capped(&target.join(MANIFEST), pack::MAX_SMALL_FILE).ok();
+        let existing_signature =
+            read_capped(&target.join(SIGNATURE_FILE), pack::MAX_SMALL_FILE).ok();
+        let same = existing_manifest.as_deref() == Some(manifest_bytes.as_slice());
+        // Whether the installed signature verifies with a trusted key
+        // (whatever the files' state: a damaged bundle keeps it).
+        let existing_trusted = existing_manifest.as_deref().is_some_and(|m| {
+            pack::trust_of(m, existing_signature.as_deref(), trust).is_ok_and(|t| t.is_trusted())
+        });
+        if same && existing_trusted && !new_trust.is_trusted() {
+            written_signature = existing_signature;
+        }
+        if same && verify_full(&target).is_ok() {
+            if let Some(sig) = &signature
+                && (new_trust.is_trusted() || !existing_trusted)
+            {
+                std::fs::write(target.join(SIGNATURE_FILE), sig).map_err(|e| io(&target, &e))?;
+            }
+            let found = status_of(&target, trust)
+                .ok_or_else(|| AppError::new(Code::BundleDamaged, format!("{id}: manifest")))?;
+            return Ok(Installed {
+                found,
+                already: true,
+            });
+        }
+        // Damaged files of the same manifest are extracted again; other
+        // content only from a trusted key.
+        if !same && !new_trust.is_trusted() {
             return Err(AppError::new(
                 Code::PackExists,
                 format!("{id} is installed with other content"),
             ));
         }
-        // The same manifest: rewrite the signature (a re-signed pack), keep
-        // the files.
-        if let Some(sig) = &signature {
-            std::fs::write(target.join(SIGNATURE_FILE), sig).map_err(|e| io(&target, &e))?;
-        }
-        let found = status_of(&target, trust)
-            .ok_or_else(|| AppError::new(Code::BundleDamaged, format!("{id}: manifest")))?;
-        return Ok(Installed {
-            found,
-            already: true,
-        });
     }
     let parent = target
         .parent()
         .ok_or_else(|| AppError::new(Code::Read, "no bundles folder"))?;
     std::fs::create_dir_all(parent).map_err(|e| io(parent, &e))?;
+    sweep_stale(parent);
     let nonce = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos());
-    let temp = parent.join(format!(".incoming-{}-{nonce}", std::process::id()));
+    let temp = parent.join(format!("{INCOMING}{}-{nonce}", std::process::id()));
     std::fs::create_dir(&temp).map_err(|e| io(&temp, &e))?;
     let mut guard = TempFolder(Some(temp.clone()));
     for f in &manifest.files {
@@ -390,7 +447,7 @@ pub fn install_from<R: Read + std::io::Seek>(
         let mut buf = vec![0u8; 64 * 1024];
         // Never more than the manifest's size plus one byte, whatever the
         // archive claims (zip bomb).
-        let mut limited = (&mut entry).take(f.size + 1);
+        let mut limited = (&mut entry).take(f.size.saturating_add(1));
         loop {
             let n = limited
                 .read(&mut buf)
@@ -408,10 +465,22 @@ pub fn install_from<R: Read + std::io::Seek>(
         }
     }
     std::fs::write(temp.join(MANIFEST), &manifest_bytes).map_err(|e| io(&temp, &e))?;
-    if let Some(sig) = &signature {
+    if let Some(sig) = &written_signature {
         std::fs::write(temp.join(SIGNATURE_FILE), sig).map_err(|e| io(&temp, &e))?;
     }
-    std::fs::rename(&temp, &target).map_err(|e| io(&target, &e))?;
+    if replacing {
+        // The old folder aside, the new one in, then the old one removed;
+        // if the new one cannot move in, the old one goes back.
+        let old = parent.join(format!("{OUTGOING}{}-{nonce}", std::process::id()));
+        std::fs::rename(&target, &old).map_err(|e| io(&target, &e))?;
+        if let Err(e) = std::fs::rename(&temp, &target) {
+            let _ = std::fs::rename(&old, &target);
+            return Err(io(&target, &e));
+        }
+        let _ = std::fs::remove_dir_all(&old);
+    } else {
+        std::fs::rename(&temp, &target).map_err(|e| io(&target, &e))?;
+    }
     guard.0 = None;
     let found = status_of(&target, trust)
         .ok_or_else(|| AppError::new(Code::BundleDamaged, format!("{id}: manifest")))?;

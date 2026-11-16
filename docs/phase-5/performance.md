@@ -33,7 +33,7 @@ bash tools/bench/count.sh [--update]      # Linux with valgrind
 
 ## The baseline
 - `tools/bench/baseline.json` holds CI's own counts: the ubuntu-24.04 runner and the pinned toolchain.
-- The first run had no baseline, so it printed its counts and passed. They were committed from this PR's `bench` log.
+- A scenario without a baseline fails in CI (`CI` set), after printing its counts. This PR's first `bench` run therefore fails, and its counts are committed from that log.
 - A change meant to cost more updates the baseline from its CI log (`count.sh --update` on Linux, or the printed counts), and says so in the PR.
 
 ## Budgets on the reference tier

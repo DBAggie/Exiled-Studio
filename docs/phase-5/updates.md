@@ -43,6 +43,8 @@ Kept in `settings.json` (`updates`), set under About, Updates.
   - Before the process exits, the application stops as at any exit (`loom_tauri::shutdown`), so a change made since the last autosave is kept for recovery and the MCP server stops.
   - On Linux the application restarts itself.
   - A failed download or signature leaves the installed version unchanged (`UPDATE_INSTALL`).
+  - The download may take up to an hour; a check, 30 seconds. The plugin applies an update's timeout to the whole download, and the NSIS setup is about 130 MB with the offline WebView2 installer.
+  - A second install while one runs is refused (`UPDATE_BUSY`). A check that ends any way, including a dropped request, clears its busy flag.
 
 ## Privacy (ADR-011)
 - A check is an HTTPS request to GitHub. GitHub sees the IP address, and the URL and the user agent reveal the running version. Nothing else is sent: no identifier, no build data.
@@ -56,7 +58,7 @@ Kept in `settings.json` (`updates`), set under About, Updates.
 |---|---|
 | `UPDATE_OFFLINE` | strict offline mode |
 | `UPDATE_UNAVAILABLE` | no update key in this build, or no plugin (tests) |
-| `UPDATE_BUSY` | a check is already running |
+| `UPDATE_BUSY` | a check or an install is already running |
 | `UPDATE_CHECK` | the feed could not be fetched or read; kept in the status, not raised |
 | `UPDATE_NONE` | an install without an offer |
 | `UPDATE_NOTIFY_ONLY` | an install from a `.deb` or the portable zip |
