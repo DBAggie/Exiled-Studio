@@ -13,8 +13,13 @@
 //!   or removed when the format cannot hold the spec;
 //! - when it is the active spec, the build's class and ascendancy names
 //!   set to match, as PoB's `Load` expects.
+//!
+//! A spec is edited on its own tree ([`spec_tree`]): the data's, with the
+//! nodes of the cluster jewels it socketed added (passive tree plan, T5b),
+//! so their nodes are allocated as any other.
 
-use std::collections::BTreeMap;
+use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::Bundle;
 use loom_data::stat_desc::render::{NotRenderedReason, StatValue, VariantFilter};
@@ -24,7 +29,7 @@ use loom_domain::{
     OpaqueNode, PassiveSpec, SpecId, SpecPart, TreeVersion,
 };
 use loom_serialization::dto::app::v1 as api;
-use loom_tree::poe1::{self, EditError, Spec};
+use loom_tree::poe1::{self, EditError, Spec, cluster};
 use loom_tree::{Kind, Tree};
 
 use crate::error::{AppError, Code};
@@ -50,6 +55,23 @@ pub fn spec_of(build: &Build, id: u32) -> Result<&PassiveSpec, AppError> {
         .typed()
         .find(|s| s.id.0 == id)
         .ok_or_else(|| AppError::new(Code::Tree, format!("no passive spec {id}")))
+}
+
+/// The tree `spec` is edited on: `tree` with the nodes of the cluster
+/// jewels the spec socketed added (`loom_tree::poe1::cluster::expand`;
+/// passive tree plan, T5b), else `tree` itself.
+#[must_use]
+pub fn spec_tree<'t>(build: &Build, spec: &PassiveSpec, tree: &'t Tree) -> Cow<'t, Tree> {
+    let jewels = loom_pipeline::cluster_jewels(build, spec, tree);
+    if jewels.is_empty() {
+        return Cow::Borrowed(tree);
+    }
+    let subgraphs = cluster::subgraphs(tree, &jewels);
+    if subgraphs.is_empty() {
+        Cow::Borrowed(tree)
+    } else {
+        Cow::Owned(cluster::expand(tree, &subgraphs))
+    }
 }
 
 /// Whether `spec` is the build's active one.
@@ -162,7 +184,17 @@ pub fn write_spec(build: &mut Build, id: u32, tree: &Tree, next: &Spec) -> Resul
     spec.set_class(next.class);
     spec.set_ascendancy(next.ascendancy);
     let secondary = spec.secondary_ascendancy().unwrap_or(0);
-    match poe1::url::encode(tree, next, secondary) {
+    let url = {
+        let spec = spec_of(build, id)?;
+        poe1::url::encode(&spec_tree(build, spec, tree), next, secondary)
+    };
+    let spec = build
+        .passives
+        .specs
+        .typed_mut()
+        .find(|s| s.id.0 == id)
+        .ok_or_else(|| AppError::new(Code::Tree, format!("no passive spec {id}")))?;
+    match url {
         Some(url) => {
             for node in spec.layout.opaque_mut() {
                 if let OpaqueNode::Element { name, children, .. } = node
@@ -345,15 +377,42 @@ pub fn delete_spec(build: &mut Build, id: u32) -> Result<(), AppError> {
 }
 
 /// The item classes a tree socket takes (passive tree plan, A-a:
-/// `SocketJewel`, cluster jewels aside).
+/// `SocketJewel`).
 const JEWEL_CLASSES: [&str; 2] = ["Jewel", "AbyssJewel"];
 
+/// The size of cluster jewel base `base` (an item's base name), if it is
+/// one: PoB's `sizeIndex`, 0 small to 2 large.
+fn cluster_size(tree: &Tree, base: &str) -> Option<u32> {
+    let id = tree.cluster_bases.get(base)?;
+    Some(tree.cluster_jewels.as_ref()?.jewel(id)?.size)
+}
+
+/// The largest cluster jewel socket `node` of `tree` takes, if it is a
+/// cluster socket: one the cluster jewel data has a slot for (PoB's
+/// `expansionJewel.size`; the outer large sockets are plain jewel sockets
+/// in the passives table, as in the game's).
+fn socket_size(tree: &Tree, node: u32) -> Option<u32> {
+    tree.node(node)?;
+    Some(tree.cluster_jewels.as_ref()?.slot(i64::from(node))?.size)
+}
+
+const fn size_view(size: u32) -> api::ClusterSize {
+    match size {
+        0 => api::ClusterSize::Small,
+        1 => api::ClusterSize::Medium,
+        _ => api::ClusterSize::Large,
+    }
+}
+
 /// Sockets jewel `item` (an item's ID; `None` empties it) in socket `node`
-/// of spec `id`. The socket must be an allocated jewel socket of the tree,
-/// the item a jewel of the build (by its base's item class when `bundle`
-/// is known), not a cluster jewel: cluster jewels' sockets and generated
-/// nodes come with T3 and T5b. The spec's `<Sockets>` list gets the socket
-/// if it lacks it.
+/// of spec `id`. The socket must be an allocated jewel socket of the
+/// spec's tree ([`spec_tree`]), the item a jewel of the build (by its
+/// base's item class when `bundle` is known). A cluster jewel goes only in
+/// a cluster socket that takes its size, and any other jewel in any
+/// socket (PoB's `IsItemValidForSlot`). The spec's `<Sockets>` list gets
+/// the socket if it lacks it. Then the nodes of cluster jewels no longer
+/// socketed are deallocated, with their mastery choices, as PoB's
+/// `BuildClusterJewelGraphs` drops a removed subgraph.
 ///
 /// # Errors
 /// `APP_TREE`.
@@ -366,9 +425,10 @@ pub fn socket_jewel(
     item: Option<u32>,
 ) -> Result<(), AppError> {
     let spec = spec_of(build, id)?;
-    let n = tree
+    let own = spec_tree(build, spec, tree);
+    let n = own
         .node(node)
-        .filter(|n| n.kind == Kind::JewelSocket && n.modelled)
+        .filter(|n| matches!(n.kind, Kind::JewelSocket | Kind::ClusterSocket) && n.modelled)
         .ok_or_else(|| AppError::new(Code::Tree, format!("node {node} is not a jewel socket")))?;
     if !spec.nodes.value().contains(&NodeId(n.id)) {
         return Err(AppError::new(
@@ -376,13 +436,17 @@ pub fn socket_jewel(
             format!("socket {node} is not allocated"),
         ));
     }
+    let takes = socket_size(&own, node);
+    drop(own);
     let item = item.filter(|i| *i != 0).map(ItemId);
     if let Some(i) = item {
         let found = build
             .items
             .item(i)
             .ok_or_else(|| AppError::new(Code::Tree, format!("no item {}", i.0)))?;
-        if let Some(b) = bundle {
+        let base = found.body.base.as_deref().unwrap_or_default();
+        // A cluster jewel base is a jewel by the cluster jewel data.
+        if let Some(b) = bundle.filter(|_| cluster_size(tree, base).is_none()) {
             let class = crate::view::item_class(b, found);
             if !class.as_deref().is_some_and(|c| JEWEL_CLASSES.contains(&c)) {
                 return Err(AppError::new(
@@ -391,20 +455,30 @@ pub fn socket_jewel(
                 ));
             }
         }
-        let base = found.body.base.as_deref().unwrap_or_default();
-        if base.contains("Cluster Jewel") {
-            return Err(AppError::new(
-                Code::Tree,
-                "cluster jewels are not socketed by the tree editor yet",
-            ));
+        match (cluster_size(tree, base), takes) {
+            (Some(size), Some(takes)) if size <= takes => {}
+            (Some(_), Some(_)) => {
+                return Err(AppError::new(
+                    Code::Tree,
+                    format!("socket {node} does not take a cluster jewel of that size"),
+                ));
+            }
+            (Some(_), None) => {
+                return Err(AppError::new(
+                    Code::Tree,
+                    format!("socket {node} does not take cluster jewels"),
+                ));
+            }
+            (None, _) if base.contains("Cluster Jewel") => {
+                return Err(AppError::new(
+                    Code::Tree,
+                    "the game data has no cluster jewel of that base",
+                ));
+            }
+            (None, _) => {}
         }
     }
-    let spec = build
-        .passives
-        .specs
-        .typed_mut()
-        .find(|s| s.id.0 == id)
-        .ok_or_else(|| AppError::new(Code::Tree, format!("no passive spec {id}")))?;
+    let spec = spec_mut(build, id)?;
     if let Some(socket) = spec.jewel_sockets.typed_mut().find(|s| s.node.0 == node) {
         socket.item = item;
     } else {
@@ -417,7 +491,171 @@ pub fn socket_jewel(
     if !spec.layout.typed().any(|p| *p == SpecPart::JewelSockets) {
         spec.layout.push(SpecPart::JewelSockets);
     }
+    // The nodes of the cluster jewels no longer socketed.
+    let spec = spec_of(build, id)?;
+    let gone: BTreeSet<NodeId> = {
+        let now = spec_tree(build, spec, tree);
+        spec.nodes
+            .value()
+            .iter()
+            .copied()
+            .filter(|n| n.0 & poe1::CLUSTER_NODE_BIT != 0 && now.node(n.0).is_none())
+            .collect()
+    };
+    if !gone.is_empty() {
+        let spec = spec_mut(build, id)?;
+        let nodes: Vec<NodeId> = spec
+            .nodes
+            .value()
+            .iter()
+            .copied()
+            .filter(|n| !gone.contains(n))
+            .collect();
+        spec.nodes.set(nodes);
+        let masteries: Vec<MasteryEffect> = spec
+            .mastery_effects
+            .value()
+            .iter()
+            .copied()
+            .filter(|m| !gone.contains(&m.node))
+            .collect();
+        if masteries.len() != spec.mastery_effects.value().len() {
+            spec.mastery_effects.set(masteries);
+        }
+    }
     Ok(())
+}
+
+fn spec_mut(build: &mut Build, id: u32) -> Result<&mut PassiveSpec, AppError> {
+    build
+        .passives
+        .specs
+        .typed_mut()
+        .find(|s| s.id.0 == id)
+        .ok_or_else(|| AppError::new(Code::Tree, format!("no passive spec {id}")))
+}
+
+/// Converts spec `id` to the loaded data's tree version `data` (passive
+/// tree plan, T5b), as PoB's `ConvertToVersion` does: a copy on `data` is
+/// inserted after it and made active ([`converted`]). The old spec stays.
+/// Returns the copy's ID and the nodes it dropped, ascending.
+///
+/// # Errors
+/// `APP_TREE`: as [`converted`].
+pub fn convert_spec(
+    build: &mut Build,
+    id: u32,
+    tree: &Tree,
+    data: Option<&TreeVersion>,
+) -> Result<(u32, Vec<u32>), AppError> {
+    let (mut spec, dropped) = converted(build, id, tree, data)?;
+    let index = build
+        .passives
+        .specs
+        .typed()
+        .position(|s| s.id.0 == id)
+        .ok_or_else(|| AppError::new(Code::Tree, format!("no passive spec {id}")))?;
+    // Marked so the renumbering below finds the copy's ID.
+    let copy = SpecId(u32::MAX);
+    spec.id = copy;
+    build.passives.specs.insert_typed(index + 1, spec);
+    let mut n = 0;
+    let mut new = None;
+    for e in build.passives.specs.entries_mut() {
+        if is_spec(e) {
+            n += 1;
+            if let Entry::Typed(s) = e {
+                if s.id == copy {
+                    new = Some(n);
+                }
+                s.id = SpecId(n);
+            }
+        }
+    }
+    let new =
+        new.ok_or_else(|| AppError::new(Code::Tree, "the converted spec was not inserted"))?;
+    build.passives.active = Some(SpecId(new));
+    // The build's class names follow the active spec.
+    let next = rules_spec(build, spec_of(build, new)?, tree);
+    write_spec(build, new, tree, &next)?;
+    Ok((new, dropped))
+}
+
+/// The copy of spec `id` on tree version `data` ([`convert_spec`]) and the
+/// nodes it drops, without changing the build. Its nodes are imported as
+/// PoB's `ImportFromNodeList` imports them: the ones `tree` lacks dropped,
+/// then only what connects to the starts (`loom_tree::poe1::connected`,
+/// cluster jewels' nodes on the spec's tree, [`spec_tree`]); its mastery
+/// choices kept on the nodes left when `tree` has the effect; an
+/// ascendancy the class lacks cleared.
+///
+/// # Errors
+/// `APP_TREE`: no spec `id`, the data's version not known, nothing to
+/// convert (the spec is already on `data`, or names no version), or the
+/// spec's class not on `tree`.
+pub fn converted(
+    build: &Build,
+    id: u32,
+    tree: &Tree,
+    data: Option<&TreeVersion>,
+) -> Result<(PassiveSpec, Vec<u32>), AppError> {
+    let own = spec_of(build, id)?;
+    let Some(data) = data else {
+        return Err(AppError::new(
+            Code::Tree,
+            "the loaded data's tree version is not known",
+        ));
+    };
+    if own.tree_version.as_ref().is_none_or(|v| v == data) {
+        return Err(AppError::new(
+            Code::Tree,
+            format!("the spec is already on tree version {}", data.as_str()),
+        ));
+    }
+    let class = class_of(build, own, tree).ok_or_else(|| {
+        AppError::new(
+            Code::Tree,
+            "the spec's class is not on the loaded data's tree",
+        )
+    })?;
+    let expanded = spec_tree(build, own, tree);
+    let tree = &*expanded;
+    let wanted: BTreeSet<u32> = own.nodes.value().iter().map(|n| n.0).collect();
+    let next = poe1::convert(
+        tree,
+        &Spec {
+            class,
+            ascendancy: ascendancy_of(build, own, tree, class),
+            nodes: wanted.clone(),
+            masteries: own
+                .mastery_effects
+                .value()
+                .iter()
+                .map(|m| (m.node.0, m.effect))
+                .collect(),
+            leaps: loom_pipeline::leaps(build, own, tree),
+        },
+    );
+    let masteries: Vec<MasteryEffect> = own
+        .mastery_effects
+        .value()
+        .iter()
+        .copied()
+        .filter(|m| next.masteries.get(&m.node.0) == Some(&m.effect))
+        .collect();
+    let dropped: Vec<u32> = wanted
+        .iter()
+        .copied()
+        .filter(|n| !next.nodes.contains(n))
+        .collect();
+    let mut copy = own.clone();
+    copy.tree_version = Some(data.clone());
+    copy.nodes
+        .set(next.nodes.iter().map(|n| NodeId(*n)).collect());
+    copy.mastery_effects.set(masteries);
+    copy.set_class(next.class);
+    copy.set_ascendancy(next.ascendancy);
+    Ok((copy, dropped))
 }
 
 /// The spec and edit of a requested tree change.
@@ -482,6 +720,8 @@ pub fn run(
     if let Some(why) = locked(build, own, tree, data) {
         return Err(AppError::new(Code::Tree, format!("not edited: {why}")));
     }
+    let expanded = spec_tree(build, own, tree);
+    let tree = &*expanded;
     let spec = rules_spec(build, own, tree);
     let removal = |r: poe1::Removal| Outcome {
         spec: r.spec,
@@ -535,9 +775,18 @@ pub fn run(
 /// The active spec as the editor sees it; `data` is the loaded data's
 /// tree version.
 #[must_use]
-pub fn view(build: &Build, tree: &Tree, data: Option<&TreeVersion>) -> Option<api::TreeView> {
+pub fn view(
+    build: &Build,
+    tree: &Tree,
+    data: Option<&TreeVersion>,
+    bundle: Option<&Bundle>,
+) -> Option<api::TreeView> {
     let spec = loom_calc::poe1::collect::active_spec(build)?;
+    let base = tree;
+    let expanded = spec_tree(build, spec, tree);
+    let tree = &*expanded;
     let s = rules_spec(build, spec, tree);
+    let lock = locked(build, spec, tree, data);
     let points = poe1::points(tree, &s);
     Some(api::TreeView {
         spec: spec.id.0,
@@ -560,7 +809,30 @@ pub fn view(build: &Build, tree: &Tree, data: Option<&TreeVersion>) -> Option<ap
             .collect(),
         points: points.passive,
         ascendancy_points: points.ascendancy,
-        locked: locked(build, spec, tree, data),
+        convert: lock
+            .as_ref()
+            .and(data)
+            .filter(|d| spec.tree_version.as_ref().is_some_and(|v| v != *d))
+            .and_then(|d| {
+                let (_, dropped) = converted(build, spec.id.0, base, Some(d)).ok()?;
+                Some(api::TreeConversion {
+                    version: d.as_str().to_owned(),
+                    dropped,
+                })
+            }),
+        locked: lock,
+        cluster_nodes: cluster_views(base, tree, bundle),
+        cluster_sockets: tree
+            .nodes
+            .values()
+            .filter(|n| n.modelled)
+            .filter_map(|n| {
+                Some(api::TreeClusterSocket {
+                    node: n.id,
+                    size: size_view(socket_size(tree, n.id)?),
+                })
+            })
+            .collect(),
         jewels: spec
             .jewel_sockets
             .typed()
@@ -572,6 +844,70 @@ pub fn view(build: &Build, tree: &Tree, data: Option<&TreeVersion>) -> Option<ap
             })
             .collect(),
     })
+}
+
+/// The nodes of `expanded` that `base` lacks or that the expansion
+/// changed (cluster jewels' nodes and the nested sockets they place), as
+/// the layout's nodes are viewed; links to the layout's nodes kept both
+/// ways, links among them once.
+fn cluster_views(base: &Tree, expanded: &Tree, bundle: Option<&Bundle>) -> Vec<api::TreeNodeView> {
+    if std::ptr::eq(base, expanded) {
+        return Vec::new();
+    }
+    let scope = bundle.and_then(|b| {
+        b.scope_root(PASSIVE_DESCRIPTIONS)
+            .ok()
+            .and_then(|root| b.stat_descriptions.scope(root).ok())
+    });
+    let changed: BTreeSet<u32> = expanded
+        .nodes
+        .values()
+        .filter(|n| base.node(n.id).is_none_or(|b| b != *n))
+        .map(|n| n.id)
+        .collect();
+    changed
+        .iter()
+        .filter_map(|id| expanded.node(*id))
+        .map(|n| {
+            let mut v = node_view(n, |stats| match bundle {
+                Some(b) => lines(b, scope.as_ref(), stats),
+                None => stats
+                    .iter()
+                    .map(|s| format!("{} {}", s.stat, s.value))
+                    .collect(),
+            });
+            v.links = n
+                .neighbours
+                .iter()
+                .copied()
+                .filter(|m| *m > n.id || !changed.contains(m))
+                .collect();
+            v
+        })
+        .collect()
+}
+
+/// A node as the screen views it: its links the layout's (to higher
+/// numbers), its lines from `lines`, no flavour text.
+fn node_view(
+    n: &loom_tree::Node,
+    lines: impl Fn(&[loom_data::bundle::passives::StatAmount]) -> Vec<String>,
+) -> api::TreeNodeView {
+    api::TreeNodeView {
+        id: n.id,
+        name: n.name.clone(),
+        kind: kind(n.kind),
+        group: u32::try_from(n.group).unwrap_or(u32::MAX),
+        orbit: n.orbit,
+        position: n.position.map(|(x, y)| api::TreePoint { x, y }),
+        ascendancy: n.ascendancy.clone(),
+        mastery_group: n.mastery_group.clone(),
+        modelled: n.modelled,
+        cluster_area: n.cluster_area,
+        links: n.neighbours.iter().copied().filter(|m| *m > n.id).collect(),
+        lines: lines(&n.stats),
+        flavour: None,
+    }
 }
 
 const fn kind(k: Kind) -> api::TreeNodeKind {
@@ -658,21 +994,10 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
             .nodes
             .values()
             .map(|n| api::TreeNodeView {
-                id: n.id,
-                name: n.name.clone(),
-                kind: kind(n.kind),
-                group: u32::try_from(n.group).unwrap_or(u32::MAX),
-                orbit: n.orbit,
-                position: n.position.map(point),
-                ascendancy: n.ascendancy.clone(),
-                mastery_group: n.mastery_group.clone(),
-                modelled: n.modelled,
-                cluster_area: n.cluster_area,
-                links: n.neighbours.iter().copied().filter(|m| *m > n.id).collect(),
-                lines: lines(bundle, scope, &n.stats),
                 flavour: poe1
                     .and_then(|p| p.passive_flavour(i64::from(n.id)))
                     .map(str::to_owned),
+                ..node_view(n, |stats| lines(bundle, scope, stats))
             })
             .collect(),
         classes: tree

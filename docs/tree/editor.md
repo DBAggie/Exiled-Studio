@@ -57,11 +57,28 @@ An unedited spec is not touched, so Phase 3's documents and the round-trip gate 
 When the spec has no `classId` (or no `ascendClassId`) and is the active spec, the class (or ascendancy) is taken from the build's names, as PoB's `Load` does.
 
 **A spec is shown, not edited** (`TreeView.locked` gives the reason, and every command gives `APP_TREE`) when:
-- its `treeVersion` and the loaded data's tree version are both known and differ. Converting versions is T4 and T5b. When the data's version is not known (a bundle `TREE_VERSIONS` lacks), the spec is edited, and the calculation reports `unchecked-tree-version` as before;
+- its `treeVersion` and the loaded data's tree version are both known and differ. The spec can be converted to the data's version (T5b, "Converting a tree" below). With a tree pack of its version, it is calculated on its own tree (T4, [tree-packs.md](tree-packs.md)) but still not edited there. When the data's version is not known (a bundle `TREE_VERSIONS` lacks), the spec is edited, and the calculation reports `unchecked-tree-version` as before;
 - its class is not one of the tree's.
 The screen then shows the tree with a note and offers no edits.
 
-**`socket-jewel`** puts a jewel of the build in an allocated jewel socket of the tree, or empties the socket. The item must be a `Jewel` or `AbyssJewel` by its base's item class, and not a cluster jewel: cluster jewels' sockets and generated nodes come with T3 and T5b. The spec's `<Sockets>` list gets the socket if it lacks it. Removing a socket's node leaves its jewel entry, as PoB does.
+**`socket-jewel`** puts a jewel of the build in an allocated jewel socket of the tree, or empties the socket. The item must be a `Jewel` or `AbyssJewel` by its base's item class, or a cluster jewel. The spec's `<Sockets>` list gets the socket if it lacks it. Removing a socket's node leaves its jewel entry, as PoB does. Cluster jewels are below.
+
+### Cluster sockets (T5b)
+
+The editor works on the tree with the spec's cluster jewels expanded (`spec_tree`: the data's tree plus each socketed cluster jewel's subgraph, as the calculation builds it; [cluster-jewels.md](cluster-jewels.md)). So a cluster jewel's nodes are allocated, removed, previewed, and exported like any other, under PoB's numbering, and its nested sockets take jewels in turn.
+
+- **Which socket takes which jewel.** A socket's size comes from the cluster slot table: the outer sockets take a large jewel, and nested ones a medium or small one. In the game the outer sockets are plain jewel sockets, so the node's kind is not checked. A cluster jewel goes in a socket of its size or larger, as PoB's `IsItemValidForSlot`; anything else gives `APP_TREE`. A known cluster base needs no item class check (the base table names it).
+- **Unsocketing or replacing** a cluster jewel drops its nodes from the spec, with their mastery choices, so the spec never holds nodes no tree has. A node the new jewel's subgraph has again (the same ID) stays allocated, as PoB's `BuildClusterJewelGraphs` keeps it (`allocSubgraphNodes`).
+- **The view.** `TreeView.cluster_nodes` gives each expanded node as a `TreeNodeView` (position, links, lines). The screen merges them into the layout, so they draw and are found like others. `TreeView.cluster_sockets` gives each socket's size.
+
+### Converting a tree (T5b)
+
+A spec on another tree version can be converted to the data's version, as PoB's "convert" button does: `convert-tree-version { spec }` (history kind `tree-specs`, one undoable change).
+
+- The converted copy goes right after the spec and becomes active. The old spec stays, so nothing is lost.
+- It keeps the allocated nodes the data's tree has, adds the class and ascendancy starts, keeps only the nodes still connected (`poe1::connected`), and clears an ascendancy the tree lacks (`loom_tree::poe1::convert`). A mastery stays only with a chosen effect the tree gives it, as PoB's import does.
+- Conversion matches PoB's on 8,000 seeded specs and 65 public builds' specs ([parity.md](parity.md), "Older versions"). The preview takes under 0.5 ms on real builds.
+- `TreeView.convert` says what conversion would do before you ask: the version, and the nodes it would drop. It is set only for a spec locked by its version. The screen's locked note shows a "Convert to {version}" button, which asks first with the count of nodes left out.
 
 | API v1 (additive) | |
 |---|---|
@@ -69,6 +86,8 @@ The screen then shows the tree with a note and offers no edits.
 | Spec commands | `new-spec` (a copy of a spec, or a new one on the data's tree version with the active spec's class, ascendancy, and bloodline and only the starts), `rename-spec`, `delete-spec` (never the last; later specs are renumbered, and when the active spec goes, the one before it becomes active). None changes the active spec otherwise. History kind `tree-specs`. |
 | `BuildView.tree` | the active spec as the editor sees it: class, ascendancy, nodes, masteries, socketed jewels, kept nodes, points, and `locked` |
 | `TreeNodeView.cluster_area` | the node is a cluster area: not drawn, not listed |
+| `convert-tree-version` (T5b) | converts a spec to the data's tree version as a new active copy (above) |
+| `TreeView.cluster_nodes`, `cluster_sockets`, `convert` (T5b) | the expanded cluster nodes, each cluster socket's size (`small`, `medium`, `large`), and what conversion would do |
 | Shell `tree_layout` | the loaded data's tree: groups, nodes (kind, position, links, stat lines printed from `passive_skill_stat_descriptions`), classes, mastery effects. Made once per data load. |
 | Shell `preview_tree` | what clicking a node would do: the path or the removed nodes, and each slice field before and after. Calculated off the writer, never committed. |
 
@@ -95,12 +114,12 @@ Five tools join the contract (`schemas/mcp-tools.v1.json`, an additive diff):
 - **Sprites** (T-a, ADR-005 Amendment 2): when the bundle carries the export's sprite sheets, the canvas draws each passive's icon and frame (allocated or not), the jewel sockets' frames, and the masteries' icons (unconnected, connected when their group has an allocated node, chosen), at the export's zoom (a sprite covers its pixel size divided by the zoom in tree units). The preview's path and removals and search matches are rings over the art. Class and ascendancy starts stay our shapes. The shell's `tree_sprites` gives the sheets as `data:` URLs (the CSP already allows `data:` images; nothing is fetched); without sprites it answers `APP_NO_DATA` and the canvas draws our shapes. Screenshots with GGG's art are not committed.
 - **Canvas**, without sprites drawn in our own shapes: circles for passives, a ring for notables and keystones, octagons for keystones and class starts, diamonds for sockets, a hollow circle for masteries. Allocated nodes and links are in the accent colour. Hovering shows the allocation path in blue and the nodes a removal would drop in red. Kept nodes are faded. Search matches are ringed. Arcs are drawn along an orbit when both ends share a group and an orbit. Masteries' links and class-to-ascendancy links are not drawn, as in PoB. You can drag to pan, zoom with the wheel or the buttons (zooming keeps the point under the pointer still), and Fit the whole tree. The colours are tokens (`--c-tree-*`).
 - **Hover card** (DOM): the node's name, kind, and lines; a mastery's chosen effect; how many nodes a click allocates or removes; and the fields that change (the application's preview).
-- **Click** allocates the node and its path or removes the node. A mastery opens its effect picker, where effects taken by a mastery of the same kind are disabled and the mastery can be removed. An allocated jewel socket opens its jewel picker: the build's jewels (cluster jewels aside), Empty socket, and Remove socket.
+- **Click** allocates the node and its path or removes the node. A mastery opens its effect picker, where effects taken by a mastery of the same kind are disabled and the mastery can be removed. An allocated jewel socket opens its jewel picker: the build's jewels, Empty socket, and Remove socket. In a cluster socket the picker lists the cluster jewels that fit its size; elsewhere it lists the other jewels.
 - **Spec bar**: New tree, Copy tree, Rename tree, and Delete tree (which asks first).
 - **Bar**: class and ascendancy pickers (a class change asks first when nodes would be lost), points, search with a count, Tree or List view, and Reset (which asks first). A note counts the kept nodes.
 - **List view**, the non-visual tree, does everything the canvas does: allocated, search results, keystones, notables, masteries, and the chosen ascendancy, each node with its lines and an Allocate, Remove, Choose-an-effect, or Choose-jewel button. It is the only view when the bundle has no layout.
 
-The fake API carries a small synthetic tree with the same rules (`ui/src/api/fakeTree.ts`) and no sprites. `ui/src/test/tree.test.tsx` covers allocation, removal with orphans, undo, the mastery picker, the jewel picker, the ascendancy, the class change and its question, reset, search, a locked spec, the spec commands, and axe. The real-app workflow (`ui/e2e/workflow.mjs`, CI's `e2e` job) runs on the synthetic tree bundle: it imports the synthetic build as its Test Brute, allocates a notable from the List view, and checks the exported spec has it.
+The fake API carries a small synthetic tree with the same rules (`ui/src/api/fakeTree.ts`) and no sprites. `ui/src/test/tree.test.tsx` covers allocation, removal with orphans, undo, the mastery picker, the jewel picker, the ascendancy, the class change and its question, reset, search, a locked spec, conversion, the spec commands, and axe; `ui/src/test/treeCluster.test.ts` covers merging the cluster nodes, the base's size, and the fit rule. The real-app workflow (`ui/e2e/workflow.mjs`, CI's `e2e` job) runs on the synthetic tree bundle. It imports the synthetic build as its Test Brute, with a large cluster jewel added, and allocates a notable from the List view. It then sockets the cluster jewel in socket 5000 and allocates a notable the jewel adds. Finally it checks that the exported spec has the notable, the socket, and a cluster node. The e2e cannot show conversion, because the synthetic bundle's data names no tree version. `crates/loom-app/tests/tree_cluster.rs` covers socketing, allocating, and unsocketing; the size refusals; conversion and its view; and the e2e's steps against the export.
 
 ## Seen in the running application (2026-11-15)
 
@@ -110,8 +129,7 @@ With the sprites (2026-11-15, a bundle made by `tree-layout` from the latest rul
 
 ## Not in this step
 
-Below the plan's cut line (maintainer 2026-11-14: they may become their own PRs), each needing data this workstation does not have:
-- **Cluster jewels in the editor** (T5b): T3 added the data, the subgraphs, both numberings, and the calculation ([cluster-jewels.md](cluster-jewels.md)). Socketing a cluster jewel and drawing its nodes come next. `socket-jewel` still refuses cluster jewels.
-- **Older tree versions** and conversion (T4, T5b): packs 3_25 to 3_28 from the export's older tags, converted with node text resolved to stat IDs.
+The cut-line steps T3, T4, T5b, and T8 were done on `feat/tree-remaining` (2026-11-16; [tree-report.md](tree-report.md)). Left:
 - **Timeless jewels and the other radius jewels** (transforming nodes, counting attributes): not modelled; their nodes are allocated as usual.
-- **The corpus run and the tree report** (T8): the corpus is on the main workstation. The 3_29 records for layout, allocation, and read-back are in [parity.md](parity.md).
+- **Editing an older spec on its own tree**: it is calculated on its pack but edited only after conversion.
+- **The private corpus run** on the tree packs: the corpus is on the main workstation ([tree-report.md](tree-report.md), "Maintainer-run").

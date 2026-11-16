@@ -205,6 +205,58 @@ fn reaches(tree: &Tree, a: u32, b: u32) -> bool {
         }
 }
 
+/// `spec`, allocated on another tree version, converted to `tree` (plan
+/// T5b, PoB's `ConvertToVersion`): its nodes `tree` has, with the class's
+/// and ascendancy's starts, and only those still [`connected`]; its
+/// ascendancy none when `tree`'s class lacks it. A mastery stays only
+/// with a chosen effect `tree` gives it, as PoB's import allocates no
+/// mastery without a selection (`ImportFromNodeList`) and drops one whose
+/// effect its tree does not know (`BuildAllDependsAndPaths`).
+#[must_use]
+pub fn convert(tree: &Tree, spec: &Spec) -> Spec {
+    let ascendancy = if tree
+        .class(spec.class)
+        .is_some_and(|c| c.ascendancies.iter().any(|a| a.number == spec.ascendancy))
+    {
+        spec.ascendancy
+    } else {
+        0
+    };
+    let mut next = Spec {
+        class: spec.class,
+        ascendancy,
+        nodes: spec
+            .nodes
+            .iter()
+            .copied()
+            .filter(|n| tree.node(*n).is_some())
+            .collect(),
+        masteries: BTreeMap::new(),
+        leaps: spec.leaps.clone(),
+    };
+    next.nodes.extend(starts(tree, &next));
+    next.nodes = connected(tree, &next);
+    next.masteries = spec
+        .masteries
+        .iter()
+        .filter(|(node, effect)| {
+            next.nodes.contains(node)
+                && tree
+                    .node(**node)
+                    .and_then(|n| n.mastery_group.as_ref())
+                    .and_then(|g| tree.mastery_effects.get(g))
+                    .is_some_and(|effects| effects.contains(effect))
+        })
+        .map(|(n, e)| (*n, *e))
+        .collect();
+    let masteries = &next.masteries;
+    next.nodes.retain(|n| {
+        tree.node(*n)
+            .is_none_or(|node| node.kind != Kind::Mastery || masteries.contains_key(n))
+    });
+    next
+}
+
 /// The allocated nodes connected to the spec's starts, with every kept
 /// node (T-g), masteries of connected groups included.
 #[must_use]

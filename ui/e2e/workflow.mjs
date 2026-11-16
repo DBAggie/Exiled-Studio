@@ -153,6 +153,31 @@ try {
   })
   await text('Up to date')
 
+  step('socket a cluster jewel and allocate a node it adds (T5b)')
+  // The large socket 5000 takes the build's large cluster jewel (item 5,
+  // added by run.sh and run.ps1); its notables then allocate.
+  const searchFor = async (what) => {
+    await wd('POST', `/session/${session}/element/${search}/clear`, {})
+    await wd('POST', `/session/${session}/element/${search}/value`, {
+      text: what,
+    })
+  }
+  await searchFor('Test Large Jewel Socket')
+  await click(button('Allocate Test Large Jewel Socket'), 'the large socket')
+  await click(
+    button('Choose jewel for Test Large Jewel Socket'),
+    "the socket's jewel picker",
+  )
+  await click(
+    `//button[contains(normalize-space(.), 'Loom Test Cluster')]`,
+    'the cluster jewel',
+  )
+  await text('Up to date')
+  await searchFor('Test Cluster Notable A')
+  await click(button('Allocate Test Cluster Notable A'), 'the added notable')
+  await text('Remove Test Cluster Notable A')
+  await text('Up to date')
+
   step('save (the first save asks where)')
   await click(button('Save'), 'save')
   await until('saved.json', () => existsSync(join(work, 'saved.json')))
@@ -174,6 +199,13 @@ try {
   // The allocated notable (node 10023) is in the exported spec.
   if (!/<Spec [^>]*nodes="[^"]*\b10023\b/.test(xml)) {
     throw new Error('export.xml does not have the allocated notable')
+  }
+  // So are the cluster jewel's socket and a node it adds (65536 and up).
+  if (!/<Socket nodeId="5000" itemId="5"/.test(xml)) {
+    throw new Error('export.xml does not have the socketed cluster jewel')
+  }
+  if (!/<Spec [^>]*nodes="[^"]*\b6\d{4}\b/.test(xml)) {
+    throw new Error('export.xml does not have a cluster jewel node')
   }
 
   step('install game data from a signed pack (Phase 5, P4)')

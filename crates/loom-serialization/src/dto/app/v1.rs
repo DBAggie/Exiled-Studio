@@ -375,6 +375,48 @@ dto! {
         /// The jewels socketed in the spec's sockets.
         #[serde(default)]
         pub jewels: Vec<TreeJewel>,
+        /// The nodes the spec's socketed cluster jewels add, placed, and
+        /// the nested sockets they change (passive tree plan, T5b): drawn
+        /// over the layout's node of the same ID, ascending.
+        #[serde(default)]
+        pub cluster_nodes: Vec<TreeNodeView>,
+        /// The cluster jewel sockets the spec's tree has (the layout's and
+        /// the added ones), with the largest cluster jewel each takes.
+        #[serde(default)]
+        pub cluster_sockets: Vec<TreeClusterSocket>,
+        /// What converting the spec to the loaded data's tree version
+        /// would do, when it is locked for its version
+        /// (`convert-tree-version`, T5b): the preview the screen confirms.
+        #[serde(default)]
+        pub convert: Option<TreeConversion>,
+    }
+
+    /// A spec's conversion to the loaded data's tree version.
+    pub struct TreeConversion {
+        /// The version it converts to.
+        pub version: String,
+        /// The allocated nodes the conversion deallocates (the version
+        /// lacks them, or they no longer connect), ascending.
+        pub dropped: Vec<u32>,
+    }
+
+    /// A cluster jewel socket of a spec's tree.
+    pub struct TreeClusterSocket {
+        /// The socket node.
+        pub node: u32,
+        /// The largest cluster jewel it takes: `small`, `medium`, or
+        /// `large` (any jewel takes a socket too).
+        pub size: ClusterSize,
+    }
+
+    /// A cluster jewel's size.
+    pub enum ClusterSize {
+        /// Small.
+        Small,
+        /// Medium.
+        Medium,
+        /// Large.
+        Large,
     }
 
     /// A jewel in a tree socket.
@@ -1640,8 +1682,9 @@ dto_enum! {
             spec: u32,
         },
         /// Sockets a jewel of the build in an allocated jewel socket of a
-        /// spec, or empties the socket (`item` absent). Cluster jewels
-        /// are refused for now.
+        /// spec, or empties the socket (`item` absent). A cluster jewel
+        /// goes only in a cluster socket that takes its size; the nodes
+        /// of a jewel taken out are deallocated.
         SocketJewel {
             /// The spec's ID.
             spec: u32,
@@ -1650,6 +1693,15 @@ dto_enum! {
             /// The item's ID; absent to empty the socket.
             #[serde(default)]
             item: Option<u32>,
+        },
+        /// Converts a spec of an older tree version to the loaded data's
+        /// (passive tree plan, T5b; PoB's `ConvertToVersion`): a copy on
+        /// the data's version is added after it and becomes active, with
+        /// the nodes the version lacks or that no longer connect
+        /// deallocated. The old spec stays.
+        ConvertTreeVersion {
+            /// The spec's ID.
+            spec: u32,
         },
         /// Adds a passive tree at the end of the list (a stage of its
         /// own): a copy of spec `copy`, or a new one with the active

@@ -50,6 +50,9 @@ pub struct GameData {
     pub tree_version: Option<TreeVersion>,
     /// Its passive tree, when it has one (the tree editor).
     pub tree: Option<Arc<loom_tree::Tree>>,
+    /// Its older tree versions, by version (tree packs, T4): a build whose
+    /// spec names one is calculated on it ([`loom_pipeline::pick_tree`]).
+    pub trees: Arc<std::collections::BTreeMap<String, loom_tree::Tree>>,
     /// The tree's layout DTO, made once.
     pub tree_layout: Option<Arc<loom_serialization::dto::app::v1::TreeLayout>>,
     /// The tree's sprites DTO, made on first use ([`GameData::tree_sprites`]).
@@ -101,6 +104,10 @@ impl GameData {
         let version = loom_parser::import::data_version(data);
         let tree_version = tree_version(&version);
         let tree = loom_tree::Tree::from_bundle(bundle);
+        let trees = tree
+            .as_ref()
+            .map(|t| loom_pipeline::pack_trees(bundle, t))
+            .unwrap_or_default();
         let tree_layout = tree.as_ref().map(|t| {
             Arc::new(crate::tree::layout(
                 t,
@@ -116,6 +123,7 @@ impl GameData {
             tree_version,
             version,
             tree: tree.map(Arc::new),
+            trees: Arc::new(trees),
             tree_layout,
             sprites: OnceLock::new(),
         })

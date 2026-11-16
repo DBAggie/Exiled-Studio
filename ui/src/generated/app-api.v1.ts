@@ -463,6 +463,14 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
+        'convert-tree-version': {
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
         'new-spec': {
           /**
            * The spec it copies, if any.
@@ -1949,6 +1957,23 @@ export interface TreeView {
    */
   class: number
   /**
+   * The nodes the spec's socketed cluster jewels add, placed, and
+   * the nested sockets they change (passive tree plan, T5b): drawn
+   * over the layout's node of the same ID, ascending.
+   */
+  'cluster-nodes'?: TreeNodeView[]
+  /**
+   * The cluster jewel sockets the spec's tree has (the layout's and
+   * the added ones), with the largest cluster jewel each takes.
+   */
+  'cluster-sockets'?: TreeClusterSocket[]
+  /**
+   * What converting the spec to the loaded data's tree version
+   * would do, when it is locked for its version
+   * (`convert-tree-version`, T5b): the preview the screen confirms.
+   */
+  convert?: TreeConversion | null
+  /**
    * The jewels socketed in the spec's sockets.
    */
   jewels?: TreeJewel[]
@@ -1980,6 +2005,114 @@ export interface TreeView {
    * The spec's ID.
    */
   spec: number
+}
+/**
+ * One node of the tree.
+ */
+export interface TreeNodeView {
+  /**
+   * The ascendancy it belongs to (its ID), if any.
+   */
+  ascendancy?: string | null
+  /**
+   * Whether it exists only once a cluster jewel is socketed (a
+   * nested socket or position proxy): not drawn, as PoB does not.
+   */
+  'cluster-area'?: boolean
+  /**
+   * Its flavour text, as the game shows it under a keystone's lines
+   * (the game data's; B-2 item evidence), lines split by `\n`.
+   */
+  flavour?: string | null
+  /**
+   * Its group's index.
+   */
+  group: number
+  /**
+   * Its number.
+   */
+  id: number
+  /**
+   * What it is.
+   */
+  kind:
+    | 'normal'
+    | 'notable'
+    | 'keystone'
+    | 'mastery'
+    | 'jewel-socket'
+    | 'cluster-socket'
+    | 'class-start'
+    | 'ascendancy-start'
+  /**
+   * Its stat lines as the game prints them.
+   */
+  lines: string[]
+  /**
+   * The nodes it links to with a higher number (each link once).
+   */
+  links: number[]
+  /**
+   * For a mastery: its mastery group's ID.
+   */
+  'mastery-group'?: string | null
+  /**
+   * Whether the editor allocates it.
+   */
+  modelled: boolean
+  /**
+   * Its name.
+   */
+  name: string
+  /**
+   * Its orbit.
+   */
+  orbit: number
+  /**
+   * Where it is drawn, when the tree is placed.
+   */
+  position?: TreePoint | null
+}
+/**
+ * A point on the tree.
+ */
+export interface TreePoint {
+  /**
+   * x.
+   */
+  x: number
+  /**
+   * y (down is positive).
+   */
+  y: number
+}
+/**
+ * A cluster jewel socket of a spec's tree.
+ */
+export interface TreeClusterSocket {
+  /**
+   * The socket node.
+   */
+  node: number
+  /**
+   * The largest cluster jewel it takes: `small`, `medium`, or
+   * `large` (any jewel takes a socket too).
+   */
+  size: 'small' | 'medium' | 'large'
+}
+/**
+ * A spec's conversion to the loaded data's tree version.
+ */
+export interface TreeConversion {
+  /**
+   * The allocated nodes the conversion deallocates (the version
+   * lacks them, or they no longer connect), ascending.
+   */
+  dropped: number[]
+  /**
+   * The version it converts to.
+   */
+  version: string
 }
 /**
  * A jewel in a tree socket.
@@ -2354,19 +2487,6 @@ export interface TreeAscendancyView {
   start?: number | null
 }
 /**
- * A point on the tree.
- */
-export interface TreePoint {
-  /**
-   * x.
-   */
-  x: number
-  /**
-   * y (down is positive).
-   */
-  y: number
-}
-/**
  * A mastery group's effects.
  */
 export interface MasteryGroupView {
@@ -2391,73 +2511,6 @@ export interface MasteryEffectView {
    * Its stat lines as the game prints them.
    */
   lines: string[]
-}
-/**
- * One node of the tree.
- */
-export interface TreeNodeView {
-  /**
-   * The ascendancy it belongs to (its ID), if any.
-   */
-  ascendancy?: string | null
-  /**
-   * Whether it exists only once a cluster jewel is socketed (a
-   * nested socket or position proxy): not drawn, as PoB does not.
-   */
-  'cluster-area'?: boolean
-  /**
-   * Its flavour text, as the game shows it under a keystone's lines
-   * (the game data's; B-2 item evidence), lines split by `\n`.
-   */
-  flavour?: string | null
-  /**
-   * Its group's index.
-   */
-  group: number
-  /**
-   * Its number.
-   */
-  id: number
-  /**
-   * What it is.
-   */
-  kind:
-    | 'normal'
-    | 'notable'
-    | 'keystone'
-    | 'mastery'
-    | 'jewel-socket'
-    | 'cluster-socket'
-    | 'class-start'
-    | 'ascendancy-start'
-  /**
-   * Its stat lines as the game prints them.
-   */
-  lines: string[]
-  /**
-   * The nodes it links to with a higher number (each link once).
-   */
-  links: number[]
-  /**
-   * For a mastery: its mastery group's ID.
-   */
-  'mastery-group'?: string | null
-  /**
-   * Whether the editor allocates it.
-   */
-  modelled: boolean
-  /**
-   * Its name.
-   */
-  name: string
-  /**
-   * Its orbit.
-   */
-  orbit: number
-  /**
-   * Where it is drawn, when the tree is placed.
-   */
-  position?: TreePoint | null
 }
 /**
  * What clicking a node would do: allocate the path to it, or

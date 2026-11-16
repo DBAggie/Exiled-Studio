@@ -66,6 +66,6 @@ Maintainer-run, on the main workstation:
 - `data-parity` at export format 9 (`cluster_jewels` 0 differences expected, else each one explained).
 - The corpus builds with cluster jewels through `calc-parity`, to check the subgraph numbers against PoB's.
 
-## Not in this step
+## In the editor (T5b)
 
-The app's cluster sockets: socketing a cluster jewel, drawing the added nodes, and the jewel picker are T5b. `socket-jewel` still refuses cluster jewels.
+Done on the same branch: `socket-jewel` takes a cluster jewel in a socket of its size, and the editor works on the tree with the spec's cluster jewels expanded. The screen draws the added nodes, and the jewel picker lists the jewels that fit ([editor.md](editor.md), "Cluster sockets").
