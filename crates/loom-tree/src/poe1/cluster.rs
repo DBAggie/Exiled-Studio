@@ -143,6 +143,10 @@ pub struct Subgraph {
     pub links: Vec<(u32, u32)>,
     /// The node that links to the socket.
     pub entrance: u32,
+    /// For a spec with PoB's legacy numbering ([`subgraphs_for`]): each
+    /// legacy node number this subgraph's nodes had, with the number they
+    /// have now (PoB's `legacyClusterNodeMap`); else empty.
+    pub legacy: BTreeMap<u32, u32>,
 }
 
 /// The subgraphs of the jewels socketed in `tree`'s large cluster sockets
@@ -150,6 +154,17 @@ pub struct Subgraph {
 /// recursively. Empty when the tree has no cluster jewel data.
 #[must_use]
 pub fn subgraphs(tree: &Tree, jewels: &BTreeMap<u32, Jewel>) -> Vec<Subgraph> {
+    subgraphs_for(tree, jewels, false)
+}
+
+/// [`subgraphs`] for a spec numbered as PoB numbered cluster nodes before
+/// its hash fix (`clusterHashFormatVersion` 1, `legacy`): each subgraph
+/// also maps the legacy numbers of its nodes to the current ones
+/// ([`Subgraph::legacy`], [`legacy_map`]), and a nested socket's jewel is
+/// also looked up under its legacy number, as PoB's `GetSocketedJewel`
+/// does (`PassiveSpec.lua` 880 to 892, 1807 to 1884, 2016 to 2093, 2223).
+#[must_use]
+pub fn subgraphs_for(tree: &Tree, jewels: &BTreeMap<u32, Jewel>, legacy: bool) -> Vec<Subgraph> {
     let Some(data) = &tree.cluster_jewels else {
         return Vec::new();
     };
@@ -162,7 +177,7 @@ pub fn subgraphs(tree: &Tree, jewels: &BTreeMap<u32, Jewel>) -> Vec<Subgraph> {
             continue;
         }
         if let Some(jewel) = jewels.get(&socket) {
-            build(tree, data, socket, jewel, None, jewels, &mut out);
+            build(tree, data, socket, jewel, None, jewels, legacy, &mut out);
         }
     }
     out
@@ -218,6 +233,10 @@ type Places = BTreeMap<u32, ClusterNode>;
     clippy::too_many_lines,
     reason = "one function per PoB's BuildSubgraph keeps the port checkable line by line"
 )]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "PoB's BuildSubgraph's own inputs, kept as its port's"
+)]
 fn build(
     tree: &Tree,
     data: &ClusterJewels,
@@ -225,6 +244,7 @@ fn build(
     jewel: &Jewel,
     id: Option<u32>,
     jewels: &BTreeMap<u32, Jewel>,
+    legacy: bool,
     out: &mut Vec<Subgraph>,
 ) {
     let (Some(slot), Some(base)) = (data.slot(i64::from(socket)), data.jewel(&jewel.base)) else {
@@ -273,6 +293,7 @@ fn build(
             nodes: vec![node(node_id, Kind::Keystone, t, 0, 1)],
             links: vec![(node_id, socket)],
             entrance: node_id,
+            legacy: BTreeMap::new(),
         });
         return;
     }
@@ -316,11 +337,17 @@ fn build(
     }
 
     let mut places: Places = BTreeMap::new();
-    // First pass: sockets.
-    let add_socket = |place: u32, jewel_index: i64, places: &mut Places| -> bool {
+    let mut legacy_map: BTreeMap<u32, u32> = BTreeMap::new();
+    let legacy_group = legacy.then(|| legacy_proxy_group(tree, data, group, slot.size, base.size));
+    // First pass: sockets (a legacy spec numbered each as the socket of its
+    // index in the legacy proxy group).
+    let mut add_socket = |place: u32, jewel_index: i64, places: &mut Places| -> bool {
         let Some(s) = cluster_socket(tree, data, group, jewel_index) else {
             return false;
         };
+        if let Some(old) = legacy_group.and_then(|g| cluster_socket(tree, data, g, jewel_index)) {
+            legacy_map.insert(old, s);
+        }
         let name = tree.node(s).map(|n| n.name.clone()).unwrap_or_default();
         places.insert(
             place,
@@ -445,6 +472,16 @@ fn build(
         let turned = (n.orbit_index + start) % base.total_indices;
         n.orbit_index = translate(turned, base.total_indices, per_orbit);
     }
+    if legacy {
+        legacy_orbit_map(
+            tree,
+            proxy,
+            &places,
+            base.total_indices,
+            per_orbit,
+            &mut legacy_map,
+        );
+    }
 
     // Links around the ring in place order, closed unless small.
     let ring: Vec<u32> = places.values().map(|n| n.id).collect();
@@ -468,18 +505,126 @@ fn build(
         .filter(|n| n.kind == Kind::ClusterSocket)
         .map(|n| n.id)
         .collect();
+    // A nested socket's jewel, under its number or (legacy) its old one.
+    let socketed = |s: u32| {
+        jewels.get(&s).or_else(|| {
+            legacy_map
+                .iter()
+                .find(|(_, now)| **now == s)
+                .and_then(|(old, _)| jewels.get(old))
+        })
+    };
+    let found: Vec<(u32, &Jewel)> = nested
+        .iter()
+        .filter_map(|s| socketed(*s).map(|j| (*s, j)))
+        .collect();
     out.push(Subgraph {
         socket,
         id: node_id,
         nodes,
         links,
         entrance,
+        legacy: legacy_map,
     });
-    for s in nested {
-        if let Some(j) = jewels.get(&s) {
-            build(tree, data, s, j, Some(id), jewels, out);
+    for (s, j) in found {
+        build(tree, data, s, j, Some(id), jewels, legacy, out);
+    }
+}
+
+/// The group PoB's old parser placed a jewel's nodes around: it went down
+/// the proxy groups of nested sockets while the jewel was smaller than the
+/// group's socket (PoB's `BuildLegacyProxyGroup`).
+fn legacy_proxy_group(
+    tree: &Tree,
+    data: &ClusterJewels,
+    group: usize,
+    socket_size: u32,
+    jewel_size: u32,
+) -> usize {
+    let (mut group, mut size) = (group, socket_size);
+    for _ in 0..4 {
+        if jewel_size >= size {
+            break;
+        }
+        let Some(socket) =
+            cluster_socket(tree, data, group, 1).or_else(|| cluster_socket(tree, data, group, 0))
+        else {
+            break;
+        };
+        let Some(slot) = data.slot(i64::from(socket)) else {
+            break;
+        };
+        let Some(proxy) = u32::try_from(slot.proxy).ok().and_then(|p| tree.node(p)) else {
+            break;
+        };
+        group = proxy.group;
+        size = slot.size;
+    }
+    group
+}
+
+/// The legacy numbers of a subgraph's nodes on the ring (PoB's
+/// `BuildLegacyClusterOrbitMappings`): the old parser turned each place by
+/// the proxy's own slot, on the proxy's orbit; a node whose old slot is a
+/// node's current slot (both on the proxy's orbit) had that node's number.
+/// `places` by template place, their slots already turned and translated.
+/// Where two places share a slot PoB keeps whichever its table walk sees
+/// last (no set order); here the later place.
+fn legacy_orbit_map(
+    tree: &Tree,
+    proxy: &Node,
+    places: &Places,
+    total: u32,
+    per_orbit: u32,
+    map: &mut BTreeMap<u32, u32>,
+) {
+    let Some(&legacy_per_orbit) = usize::try_from(proxy.orbit)
+        .ok()
+        .and_then(|o| tree.orbit_slots.get(o))
+    else {
+        return;
+    };
+    let proxy_rel = translate(proxy.orbit_index, legacy_per_orbit, total);
+    let mut legacy_at: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut current_at: BTreeMap<u32, u32> = BTreeMap::new();
+    for (&place, n) in places {
+        let old = translate((place + proxy_rel) % total, total, legacy_per_orbit);
+        legacy_at.insert(old, n.id);
+        let now = translate(
+            translate(n.orbit_index, per_orbit, total),
+            total,
+            legacy_per_orbit,
+        );
+        current_at.insert(now, n.id);
+    }
+    for (slot, old) in legacy_at {
+        if let Some(&now) = current_at.get(&slot)
+            && now != old
+        {
+            map.insert(old, now);
         }
     }
+}
+
+/// Every subgraph's legacy numbers ([`Subgraph::legacy`]) in one map.
+#[must_use]
+pub fn legacy_map(subgraphs: &[Subgraph]) -> BTreeMap<u32, u32> {
+    subgraphs
+        .iter()
+        .flat_map(|g| g.legacy.iter().map(|(a, b)| (*a, *b)))
+        .collect()
+}
+
+/// The number a node of a spec numbered as PoB numbered cluster nodes
+/// before its hash fix has now: the map's ([`legacy_map`]) when its new
+/// node is on `expanded` (the tree with the subgraphs), else its own (PoB's
+/// `GetMappedClusterNodeId`).
+#[must_use]
+pub fn remapped(expanded: &Tree, map: &BTreeMap<u32, u32>, node: u32) -> u32 {
+    map.get(&node)
+        .copied()
+        .filter(|m| expanded.node(*m).is_some())
+        .unwrap_or(node)
 }
 
 /// `tree` with `subgraphs` on it (module docs): the cluster areas' own

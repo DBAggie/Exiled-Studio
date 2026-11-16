@@ -1087,6 +1087,17 @@ fn cluster_domain(b: &Bundle, c: &super::poe1::ClusterJewels, report: &mut Repor
             format!("stat {} does not exist", s.stat),
         );
     }
+    for g in &c.grants {
+        for stat in [&g.stat, &g.granted] {
+            if !stats.contains(stat.as_str()) {
+                report.add(
+                    "BUNDLE_DANGLING_REF",
+                    format!("{CLUSTER_JEWELS}:grants:{}", g.stat),
+                    format!("stat {stat} does not exist"),
+                );
+            }
+        }
+    }
     let bases: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();
     for j in c.jewels.iter().filter(|j| !bases.contains(j.base.as_str())) {
         report.add(
@@ -1106,6 +1117,11 @@ fn cluster_domain(b: &Bundle, c: &super::poe1::ClusterJewels, report: &mut Repor
         report,
         CLUSTER_JEWELS,
         c.specials.iter().map(|s| s.stat.as_str()),
+    );
+    duplicates(
+        report,
+        CLUSTER_JEWELS,
+        c.grants.iter().map(|g| g.stat.as_str()),
     );
     for (at, detail) in findings {
         report.add("BUNDLE_VALUE_RANGE", at, detail);

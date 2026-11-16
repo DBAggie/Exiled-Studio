@@ -63,7 +63,7 @@ fn xml(nodes: &str) -> String {
 <PathOfBuilding>
 	<Build level="1" targetVersion="3_0" className="Test Brute" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
 	<Tree activeSpec="1">
-		<Spec treeVersion="3_29" classId="1" ascendClassId="0" nodes="{nodes}">
+		<Spec treeVersion="3_29" classId="1" ascendClassId="0" clusterHashFormatVersion="2" nodes="{nodes}">
 			<Sockets>
 				<Socket nodeId="5000" itemId="1"/>
 			</Sockets>
@@ -190,4 +190,87 @@ fn cluster_nodes_without_their_jewel_should_stay_a_reason() {
     let resolved = loom_pipeline::resolve_passives(&build, Some(&tree));
     assert_eq!(resolved.state(NodeId(65574)), PassiveState::ClusterNode);
     assert!(resolved.cluster.is_empty());
+}
+
+/// The legacy numbers of the large jewel's nodes on this tree
+/// (`loom-tree/tests/cluster.rs`, `a_legacy_spec_should_map_old_numbers_to_new_as_pob`),
+/// as current number to legacy number.
+fn legacy_of(n: u32) -> u32 {
+    match n {
+        65570 => 65573,
+        5001 => 65575,
+        65573 => 5008,
+        other => other,
+    }
+}
+
+#[test]
+fn a_legacy_spec_should_resolve_and_migrate_as_pob() {
+    let bundle = bundle();
+    let tree = Tree::from_bundle(&bundle).unwrap();
+    let build = import(&bundle, "1000");
+    let spec = loom_calc::poe1::collect::active_spec(&build).unwrap();
+    let jewels = loom_pipeline::cluster_jewels(&build, spec, &tree);
+    let expanded = cluster::expand(&tree, &cluster::subgraphs(&tree, &jewels));
+    // Through the socket 5001 to small 65573 and notable A (65574).
+    let start = Spec {
+        class: 1,
+        nodes: [1000].into_iter().collect(),
+        ..Spec::default()
+    };
+    let to_small = poe1::allocate(&expanded, &start, 65573).unwrap();
+    let current = poe1::allocate(&expanded, &to_small.spec, 65574)
+        .unwrap()
+        .spec
+        .nodes;
+    assert!(current.contains(&5001) && current.contains(&65570));
+
+    // The same allocation as an older PoB saved it: no format attribute.
+    let data = BundleData::new(&bundle);
+    let resolver = Resolver::new(&data).unwrap();
+    let text = xml(&joined(current.iter().map(|n| legacy_of(*n))))
+        .replace(r#" clusterHashFormatVersion="2""#, "");
+    let mut build = loom_pipeline::read_pob(&text).unwrap();
+    loom_pipeline::resolve(&resolver, &data, &mut build).unwrap();
+    let spec = loom_calc::poe1::collect::active_spec(&build).unwrap();
+    assert_eq!(spec.cluster_hash_format(), 1);
+
+    // Resolved under the spec's own numbers, as the nodes they are now.
+    let resolved = loom_pipeline::resolve_passives(&build, Some(&tree));
+    for n in &current {
+        assert_eq!(
+            resolved.state(NodeId(legacy_of(*n))),
+            PassiveState::Connected,
+            "{n}"
+        );
+    }
+    // Legacy 5008 is the small passive 65573 now.
+    let small = &resolved.cluster[&NodeId(5008)];
+    assert_eq!((small.stats[0].value, small.effect), (5, 25));
+    assert!(
+        !resolved.cluster.contains_key(&NodeId(65575)),
+        "a socket now"
+    );
+
+    // Not against a tree of another version.
+    let other = loom_domain::TreeVersion::new("3_25");
+    assert!(!loom_pipeline::migrate_cluster_hashes(
+        &mut build.clone(),
+        &tree,
+        Some(&other)
+    ));
+    // Migrated once: the current numbers, marked 2; then nothing to do.
+    assert!(loom_pipeline::migrate_cluster_hashes(
+        &mut build, &tree, None
+    ));
+    let spec = loom_calc::poe1::collect::active_spec(&build).unwrap();
+    assert_eq!(spec.cluster_hash_format(), 2);
+    let migrated: std::collections::BTreeSet<u32> =
+        spec.nodes.value().iter().map(|n| n.0).collect();
+    assert_eq!(migrated, current);
+    assert!(!loom_pipeline::migrate_cluster_hashes(
+        &mut build, &tree, None
+    ));
+    let xml = loom_serialization::legacy::pob_xml::export(&build);
+    assert!(xml.contains(r#"clusterHashFormatVersion="2""#));
 }

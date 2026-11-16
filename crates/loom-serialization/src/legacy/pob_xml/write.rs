@@ -306,6 +306,15 @@ fn spec(w: &mut Writer, s: &PassiveSpec) {
         .as_deref(),
     );
     kept(&mut a, &s.attributes);
+    // Nodes made or edited here are numbered as PoB numbers them now
+    // (passive tree plan, T-i): without the attribute PoB would read a
+    // spec that lists nodes as legacy and renumber its cluster nodes.
+    if s.nodes.source().is_none()
+        && !s.nodes.value().is_empty()
+        && !a.iter().any(|(n, _)| n == PassiveSpec::CLUSTER_HASH_FORMAT)
+    {
+        a.push((PassiveSpec::CLUSTER_HASH_FORMAT.to_owned(), "2".to_owned()));
+    }
     w.element(2, "Spec", &a, |w| {
         w.ordered(3, &s.layout, |w, part| match part {
             SpecPart::JewelSockets => w.element(3, "Sockets", &Attrs::new(), |w| {

@@ -16,6 +16,7 @@ mod calc_parity;
 mod calc_run;
 mod calc_survey;
 mod categorize;
+mod cluster_jewels;
 mod custom_lines;
 mod data_parity;
 mod divergence;

@@ -75,6 +75,23 @@ pub struct ClusterJewels {
     pub specials: Vec<ClusterSpecial>,
     /// The tree's jewel slots that take a cluster jewel.
     pub slots: Vec<ClusterSlot>,
+    /// What each "Added Small Passive Skills also grant: ..." stat grants
+    /// each small passive (`local_affliction_jewel_small_nodes_grant_*`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub grants: Vec<ClusterGrant>,
+}
+
+/// An "Added Small Passive Skills also grant: ..." stat and the stat it
+/// grants each small passive, at the same value: paired by the bundle
+/// step from the two stats' descriptions (the granted line's text after
+/// "also grant: "), or from its short list of pairs the texts word apart.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClusterGrant {
+    /// The jewel's stat.
+    pub stat: String,
+    /// The stat each small passive gains.
+    pub granted: String,
 }
 
 /// A cluster jewel base's node layout (`PassiveTreeExpansionJewels`): the
@@ -172,6 +189,15 @@ impl ClusterJewels {
     #[must_use]
     pub fn slot(&self, socket: i64) -> Option<&ClusterSlot> {
         self.slots.iter().find(|s| s.socket == socket)
+    }
+
+    /// The stat a small passive gains from the jewel stat `stat`, if any.
+    #[must_use]
+    pub fn grant(&self, stat: &str) -> Option<&str> {
+        self.grants
+            .iter()
+            .find(|g| g.stat == stat)
+            .map(|g| g.granted.as_str())
     }
 
     /// The special that stat `stat` adds, if any.

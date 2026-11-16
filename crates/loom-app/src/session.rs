@@ -279,6 +279,11 @@ impl Session {
         let data = self.need_data()?;
         let mut build = loom_pipeline::read_pob(text)?;
         let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+        // A spec PoB numbered before its cluster hash fix takes the
+        // current numbers, as PoB loads it (passive tree plan, T-i).
+        if let Some(tree) = &data.tree {
+            loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
+        }
         let mut state = State { build, ends };
         // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
         crate::main_skill::set_default(&mut state, &data);

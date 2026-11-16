@@ -111,7 +111,7 @@ With the sprites (2026-11-15, a bundle made by `tree-layout` from the latest rul
 ## Not in this step
 
 Below the plan's cut line (maintainer 2026-11-14: they may become their own PRs), each needing data this workstation does not have:
-- **Cluster jewels** (T3, T5b; and T7's cluster hash v2): the expansion tables (`PassiveJewelSlots`, `PassiveTreeExpansionJewels`, `...Skills`, `...SpecialSkills`) need an extraction run (the extractor already roots `PassiveJewelSlots`), then the subgraphs, the hash formats, and the calculation. `socket-jewel` refuses cluster jewels.
+- **Cluster jewels in the editor** (T5b): T3 added the data, the subgraphs, both numberings, and the calculation ([cluster-jewels.md](cluster-jewels.md)). Socketing a cluster jewel and drawing its nodes come next. `socket-jewel` still refuses cluster jewels.
 - **Older tree versions** and conversion (T4, T5b): packs 3_25 to 3_28 from the export's older tags, converted with node text resolved to stat IDs.
 - **Timeless jewels and the other radius jewels** (transforming nodes, counting attributes): not modelled; their nodes are allocated as usual.
 - **The corpus run and the tree report** (T8): the corpus is on the main workstation. The 3_29 records for layout, allocation, and read-back are in [parity.md](parity.md).

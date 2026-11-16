@@ -299,3 +299,37 @@ fn a_tree_without_cluster_data_should_expand_to_itself() {
     assert!(cluster::subgraphs(&t, &jewels()).is_empty());
     assert_eq!(cluster::expand(&t, &[]), t);
 }
+
+/// PoB's legacy numbering (`clusterHashFormatVersion` 1), worked by hand
+/// from `BuildLegacyClusterOrbitMappings` for the large jewel: its proxy
+/// 5005 sits at slot 3 of a 16-slot orbit, so the old parser turned each
+/// place `p` to slot `T12_16[(p + T16_12[3]) % 12]` = `T12_16[(p + 2) % 12]`;
+/// each node now sits at `T12_16[T16_12[slot]]`. Old and new slots meet
+/// at 0, 9, 12, and 13: the old numbers there were the nodes at places
+/// 10, 5, 7, and 8, now the nodes at places 7, 2, 4 (socket 5001), and 5.
+#[test]
+fn a_legacy_spec_should_map_old_numbers_to_new_as_pob() {
+    let t = tree();
+    let legacy = cluster::subgraphs_for(&t, &jewels(), true);
+    let mut map: Vec<(u32, u32)> = cluster::legacy_map(&legacy)
+        .into_iter()
+        .filter(|(a, b)| a != b)
+        .collect();
+    map.sort_unstable();
+    assert_eq!(
+        map,
+        [(5008, 65573), (65573, 65570), (65575, 5001), (65578, 65575)]
+    );
+    // The nodes themselves are the same as for a current spec.
+    let current = cluster::subgraphs(&t, &jewels());
+    assert_eq!(
+        legacy.iter().map(|g| &g.nodes).collect::<Vec<_>>(),
+        current.iter().map(|g| &g.nodes).collect::<Vec<_>>()
+    );
+    assert!(current.iter().all(|g| g.legacy.is_empty()));
+    // A node is renumbered only to a node on the expanded tree.
+    let x = cluster::expand(&t, &legacy);
+    let all = cluster::legacy_map(&legacy);
+    assert_eq!(cluster::remapped(&x, &all, 65578), 65575);
+    assert_eq!(cluster::remapped(&x, &all, 12345), 12345);
+}
