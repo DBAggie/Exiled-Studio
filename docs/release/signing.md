@@ -44,6 +44,8 @@ cargo run -p loom-release -- feed --sequence <n> --base-url https://.../download
 ```
 
 ## First keys (the maintainer, once)
+**Made 2026-11-16 for the first release (0.9), by Claude at the maintainer's request:** data key `ed25519:7a628db5136b36e0` (note "data key 2026-1") in `release/trust.json`; update key ID `7122eb74720e04fd` in `release/updater.pub` (its pair checked as `updater-key.sh` checks it); the private halves and the update key's password in one folder on the maintainer's workstation, outside the repository and any sync folder, for the maintainer to copy offline twice; the `release` environment (required reviewer: the maintainer; deployments: `main`, `experimental`, tags `v*`) with the three secrets; the tag ruleset "release tags" (`v*`: creation, update, and deletion only by repository admins). The steps below are for the next key.
+
 1. **Data key.** On an offline machine (or one you trust, with no sync folder): `loom-release keygen --out <dir> --note "data key <year>-1"`. It writes `<dir>/ed25519-<id>.secret` and prints the trust entry.
    - Keep two copies of the secret offline (for example, two USB drives in different places). Losing it means rotating; leaking it means revoking.
    - Add the printed entry to `release/trust.json` in a PR to `dev`.

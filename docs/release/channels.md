@@ -79,6 +79,12 @@ The maintainer's request on 2026-11-15:
   - The `github-pages` environment deploys from `main` and from tags `v*`. A release event's ref is its tag.
 - **Cache.** GitHub's servers cache a page for about ten minutes, so a new release appears on the page, and reaches the experimental application's update check, up to ten minutes after the workflow finishes.
 
-## Not done here
-- **No release exists yet.** The page says so until the maintainer publishes the first one (`docs/phase-5/phase-5-report.md`, "For the maintainer").
-- **The experimental feeds wait for a published pre-release.** Until one is published, the experimental application's update and data checks find nothing (`FEED_FETCH`, or no update offered).
+## Releases
+The maintainer named the first release 0.9 (2026-11-16). One state of `dev` goes to both channels, through two release commits, since a tag must equal the workspace version:
+
+| Version | Release commit on `dev` | Branch | Tag |
+|---|---|---|---|
+| `0.9.0-1` | this PR (keys, shipped data, version) | `experimental` | `v0.9.0-1`, a pre-release |
+| `0.9.0` | the next PR (version only) | `main` | `v0.9.0`, a release |
+
+- **Merging `dev` into a protected branch.** Both allow only squash merges with a linear history. So a squash commit on `experimental` or `main` is not an ancestor of `dev`, and the next merge's base stays where the branch was made. Later merges may then conflict where `dev` changed lines the earlier squash had also changed. If that happens, resolve it in the PR from `dev` by taking `dev`'s side: the target branch only ever holds states of `dev`.

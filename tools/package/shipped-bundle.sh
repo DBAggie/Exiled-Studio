@@ -7,6 +7,12 @@
 #   { "url": "https://github.com/.../bundle-poe1-<build>-schema<n>.zip",
 #     "sha256": "<the zip's SHA-256>" }
 #
+# The zip holds GGG's tree sprites unsigned, which ADR-005 Amendment 2 lets
+# ship only inside signed bundles, so it is kept as an asset of a draft
+# release (visible only to the repository's members) and `url` is that
+# asset's API URL (https://api.github.com/repos/<o>/<r>/releases/assets/<id>),
+# fetched with GH_TOKEN (the release jobs' token, contents: write).
+#
 # This script downloads the zip, checks its hash, unpacks it, runs
 # bundle-check, and packs it signed with the data key
 # ($LOOM_KEYS_DIR/data.secret, tools/package/data-key.sh; deleted here
@@ -32,7 +38,13 @@ sha="$(jq -r .sha256 release/bundle.json)"
 work="${RUNNER_TEMP:-$(mktemp -d)}/shipped"
 rm -rf "$work"
 mkdir -p "$work/src"
-curl -fsSL --retry 3 -o "$work/bundle.zip" "$url"
+case "$url" in
+  https://api.github.com/*)
+    # curl drops the Authorization header on the redirect to the storage
+    # host, as that host requires.
+    curl -fsSL --retry 3 -H "Authorization: Bearer ${GH_TOKEN:?a draft release asset needs GH_TOKEN}"       -H "Accept: application/octet-stream" -o "$work/bundle.zip" "$url" ;;
+  *) curl -fsSL --retry 3 -o "$work/bundle.zip" "$url" ;;
+esac
 echo "$sha  $work/bundle.zip" | sha256sum -c -
 python3 -m zipfile -e "$work/bundle.zip" "$work/src" 2>/dev/null || python -m zipfile -e "$work/bundle.zip" "$work/src"
 # The zip holds the bundle folder, or its files at the top.
