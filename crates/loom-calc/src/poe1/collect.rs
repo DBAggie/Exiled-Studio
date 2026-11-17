@@ -1648,7 +1648,10 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
     // Named conditions, multipliers, and distances only modifiers read,
     // and the enemy's damage: no computed field changes, for an input or a
     // placeholder (`poe1::config`, P3-12a, P3-12b).
-    if super::config::named_only(&input.name) || super::config::enemy_damage(&input.name) {
+    if super::config::named_only(&input.name)
+        || super::config::enemy_damage(&input.name)
+        || super::config::inert(&input.name)
+    {
         return InputUse::NoEffect;
     }
     if input.kind == ConfigInputKind::Placeholder {

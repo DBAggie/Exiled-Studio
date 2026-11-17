@@ -130,7 +130,19 @@ Not modelled, each a reason through its unmapped stat:
 - chaos poison chance;
 - the elemental types that can poison;
 - aggravated bleeding;
-- bleeding against moving enemies.
+- bleeding against moving enemies;
+- the conditions PoB sets after the stacks: `SingleBleed` (fewer than one bleed) and `NonPoisonedOnly` (fewer poisons than the additional ones), read only by lines that are unmapped here;
+- the configured number of bleeds on the enemy (`Multiplier:BleedStacks`), an unmodelled config input;
+- an enemy's debuffs expiring slower (PoB's `debuffDurationMult`; Temporal Chains), for every ailment.
+
+The breakdown steps of the three ailments are named `ailment-*` (they were `ignite-*` in P6-2b), in the calc result and MCP `get_breakdown`.
+
+### The P6-2c review (code-architecture-reviewer), applied in P6-4
+
+- **Poison's physical part** also takes the chaos damage modifiers, as PoB's `calcAilmentSourceDamage(..., "Physical", dmgTypeFlags.Chaos)` (`CalcOffence.lua` 4655 to 4694). `chaos_damage_+%` now maps (it was unmapped). Fixture `smite-poison-chaos-templar.xml`: equal to PoB but for the rate (Q11, DIV-0091 to DIV-0093).
+- **Skills that change their ailment** (Puncture's `bleedIsSkillEffect`, Viper Strike's `poisonIsSkillEffect`, and the duration and base-percent keys): a partial reason `ailment-skill-data` on that ailment.
+- **`staff_ailment_damage_+%`** applies only to attacks' ailments (PoB's `ModFlag.Staff` is only in an attack's config).
+- **The rate:** PoB's bleed and poison rate has no slower term; a comment in `damaging` records why `faster / slower` is equal.
 
 ### Evidence
 

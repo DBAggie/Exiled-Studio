@@ -536,6 +536,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "chaos_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_CHAOS, NONE)],
     ),
+    // "#% increased Chaos Damage": `ChaosDamage` INC, as the other types'
+    // (PoB `SkillStatMap.lua`; P6-2c review: poison's physical part reads
+    // it too).
+    (
+        "chaos_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::CHAOS, NONE)],
+    ),
     // P3-8h: "#% increased Chaos Damage with Attack Skills": `ChaosDamage`
     // INC with `KeywordFlag.Attack` (701, 978); "with Spell Skills" with
     // `KeywordFlag.Spell` (971); the other damage types likewise.
@@ -1275,13 +1282,16 @@ pub const STATE_ROWS: &[StateRow] = &[
     ),
     // "Staff Attacks deal #% increased Damage with Ailments": PoB's
     // `Damage` INC with `ModFlag.Ailment` and the staff's weapon flag
-    // (PoB's own parse); ailments read it (P6-2b review).
+    // (PoB's own parse, `ModParser.lua` 1111); ailments read it (P6-2b
+    // review). Only an attack's config carries the weapon flag, so the
+    // attack keyword stands for it: a spell's ailment while holding a staff
+    // does not take it (P6-2c review).
     (
         "staff_ailment_damage_+%",
         &[(
             Quantity::Damage,
             Op::Increased,
-            Flags::AILMENT,
+            Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
             states::USING_STAFF,
         )],
     ),
@@ -3463,7 +3473,11 @@ mod tests {
             ),
             (
                 "staff_ailment_damage_+%",
-                vec![staff(Quantity::Damage, Op::Increased, Flags::AILMENT)],
+                vec![staff(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+                )],
             ),
             ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
             (

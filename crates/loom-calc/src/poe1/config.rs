@@ -188,10 +188,48 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
 ///   (not a slice field).
+///
+/// Added in P6-4a, every remaining input of the public builds and the
+/// corpus whose `apply` (`ConfigOptions.lua`) sets only `Condition:` and
+/// `Multiplier:` names, checked as in P3-12g against every calc module
+/// (`local` script output in `docs/phase-6/config-inputs.md`):
+/// - no calc module reads the names: the corpse, warcry, totem, mine,
+///   channelling, blocking, hit, kill, and impale conditions and counts;
+///   the enemy's `Burning`, `Hindered`, `Taunted`, `ChampionIntimidate`,
+///   and presence time; Focused, Gale Force, Soul Eater (its speed needs
+///   `Condition:CanHaveSoulEater`, set only by modifiers), Resonance,
+///   Otherworldly Pressure, Infusion, Magmatic Strikes, Plague Bearer, Pride's maximum
+///   effect (Pride is not a modelled gem), Perforate's spikes, Raise
+///   Spiders, Meat Shield, Arcane Cloak, Cyclone, and the summoned minion
+///   and nearby rare count overrides;
+/// - calc modules set them from the build too (`condList` in
+///   `CalcPerform.lua` 242 to 276: `AttackedRecently`, `HitRecently`,
+///   `HitSpellRecently`, `Channelling`, `SummonedTotemRecently`,
+///   `TotemsHitRecently`, `DetonatedMinesRecently`; the enemy's `Cursed`
+///   3303; `UsingFlask` from active flasks 1735) and read them only
+///   through modifiers;
+/// - read only outside the slice: `LowLife` (a flask's instant recovery,
+///   1605), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
+///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
+///   with a support that is not modelled), the enemy's `Debilitated` and
+///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
+///   `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), the
+///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72), and the
+///   enemy's `Withered` stacks (`ChaosDamageTaken` only with
+///   `WitherEffectStack`, 812 to 815, which only unmapped stats and gems
+///   that are not modelled give).
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
+    (
+        "DetonatedMinesRecently",
+        &["Condition:DetonatedMinesRecently"],
+    ),
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
     ("ShockStacks", &["enemy Multiplier:ShockStacks"]),
+    (
+        "arcaneCloakUsedRecentlyCheck",
+        &["Condition:ArcaneCloakUsedRecently"],
+    ),
     (
         "aspectOfLunarisLunarProtection",
         &["Multiplier:LunarProtection"],
@@ -204,34 +242,126 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "aspectOfSolarisSunscaldStacks",
         &["Multiplier:SunscaldStack"],
     ),
+    ("buffElusive", &["Condition:Elusive", "Elusive"]),
     (
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
+    ("buffLifetap", &["Condition:Lifetap", "FlaskLifeRecovery"]),
+    (
+        "buffNgamahuFlamesAdvance",
+        &["Condition:NgamahuFlamesAdvance"],
+    ),
+    (
+        "carrionGolemNearbyMinion",
+        &["Multiplier:NearbyNonGolemMinion"],
+    ),
+    ("changedStance", &["Condition:ChangedStanceRecently"]),
+    ("channellingCycloneCheck", &["Condition:ChannellingCyclone"]),
+    (
+        "conditionAttackedRecently",
+        &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],
+    ),
     ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
+    (
+        "conditionBlockedAttackRecently",
+        &[
+            "Condition:BlockedAttackRecently",
+            "Condition:BlockedRecently",
+        ],
+    ),
     ("conditionBlockedRecently", &["Condition:BlockedRecently"]),
+    (
+        "conditionBlockedSpellRecently",
+        &[
+            "Condition:BlockedSpellRecently",
+            "Condition:BlockedRecently",
+        ],
+    ),
     (
         "conditionCastSpellRecently",
         &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],
     ),
     (
+        "conditionCausedBleedingRecently",
+        &["Condition:CausedBleedingRecently"],
+    ),
+    (
+        "conditionChampionIntimidate",
+        &["enemy Condition:ChampionIntimidate"],
+    ),
+    (
         "conditionChilledEnemyRecently",
         &["Condition:ChilledEnemyRecently"],
     ),
+    (
+        "conditionConsumedCorpseInPast2Sec",
+        &["Condition:ConsumedCorpseInPast2Sec"],
+    ),
+    (
+        "conditionConsumedCorpseRecently",
+        &["Condition:ConsumedCorpseRecently"],
+    ),
     ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
+    ("conditionEnemyBurning", &["enemy Condition:Burning"]),
+    ("conditionEnemyCursed", &["enemy Condition:Cursed"]),
+    (
+        "conditionEnemyDebilitated",
+        &["enemy Condition:Debilitated"],
+    ),
+    ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
     ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
     ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
+    (
+        "conditionEnemyMalignantMadness",
+        &["enemy Condition:MalignantMadness"],
+    ),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
+    ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
+    ("conditionFocused", &["Condition:Focused"]),
     ("conditionFullLife", &["Condition:FullLife"]),
+    ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
+    ("conditionHitRecently", &["Condition:HitRecently"]),
+    (
+        "conditionHitSpellRecently",
+        &["Condition:HitSpellRecently", "Condition:HitRecently"],
+    ),
+    ("conditionIgnited", &["Condition:Ignited"]),
+    ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),
     ("conditionKilledRecently", &["Condition:KilledRecently"]),
+    (
+        "conditionKilledUniqueEnemy",
+        &["Condition:KilledUniqueEnemy"],
+    ),
     ("conditionLeeching", &["Condition:Leeching"]),
+    ("conditionLowLife", &["Condition:LowLife"]),
+    ("conditionMoving", &["Condition:Moving"]),
     (
         "conditionOnConsecratedGround",
         &["Condition:OnConsecratedGround"],
     ),
     (
+        "conditionSacrificeMinion",
+        &["Condition:SacrificeMinionOnAttack"],
+    ),
+    (
+        "conditionSpawnedCorpseRecently",
+        &["Condition:SpawnedCorpseRecently"],
+    ),
+    (
         "conditionStationary",
         &["Multiplier:StationarySeconds", "Condition:Stationary"],
+    ),
+    (
+        "conditionSummonedTotemRecently",
+        &["Condition:SummonedTotemRecently"],
+    ),
+    (
+        "conditionTotemsHitSpellRecently",
+        &[
+            "Condition:TotemsHitSpellRecently",
+            "Condition:TotemsHitRecently",
+        ],
     ),
     (
         "conditionUsedMinionSkillRecently",
@@ -241,31 +371,127 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         ],
     ),
     (
+        "conditionUsedWarcryInPast8Seconds",
+        &["Condition:UsedWarcryInPast8Seconds"],
+    ),
+    (
+        "conditionUsedWarcryRecently",
+        &[
+            "Condition:UsedWarcryRecently",
+            "Condition:UsedWarcryInPast8Seconds",
+            "Condition:UsedSkillRecently",
+        ],
+    ),
+    ("conditionUsingFlask", &["Condition:UsingFlask"]),
+    ("configResonanceCount", &["Multiplier:ResonanceCount"]),
+    (
         "configSpectralTigerCount",
         &[
             "Multiplier:SpectralTigerConfig",
             "Multiplier:SpectralTigerCount",
         ],
     ),
+    (
+        "enemyMultiplierEnemyPresenceSeconds",
+        &["enemy Multiplier:EnemyPresenceSeconds"],
+    ),
+    (
+        "heraldOfTheHivePressure",
+        &["Multiplier:OtherworldlyPressure"],
+    ),
+    ("infusedChannellingInfusion", &["Condition:InfusionActive"]),
+    (
+        "meatShieldEnemyNearYou",
+        &["Condition:MeatShieldEnemyNearYou"],
+    ),
     ("meleeDistance", &["skillDist"]),
+    (
+        "multiplierBeenHitRecently",
+        &["Multiplier:BeenHitRecently", "Condition:BeenHitRecently"],
+    ),
+    (
+        "multiplierChannelling",
+        &["Multiplier:ChannellingTime", "Condition:Channelling"],
+    ),
+    (
+        "multiplierCorpseConsumedRecently",
+        &[
+            "Multiplier:CorpseConsumedRecently",
+            "Condition:ConsumedCorpseRecently",
+        ],
+    ),
     (
         "multiplierEnemyHallowingFlame",
         &["enemy Multiplier:HallowingFlame"],
     ),
+    ("multiplierGaleForce", &["Multiplier:GaleForce"]),
     (
         "multiplierHallowingFlameStacksRemovedByAlly",
         &["Multiplier:HallowingFlameStacksRemovedByAlly"],
     ),
     (
+        "multiplierKilledRecently",
+        &["Multiplier:EnemyKilledRecently", "Condition:KilledRecently"],
+    ),
+    (
+        "multiplierManaSpentRecently",
+        &["Multiplier:ManaSpentRecently"],
+    ),
+    (
+        "multiplierMineDetonatedRecently",
+        &["Multiplier:MineDetonatedRecently"],
+    ),
+    ("multiplierNearbyCorpse", &["Multiplier:NearbyCorpse"]),
+    (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
+    ),
+    (
+        "multiplierNearbyRareOrUniqueEnemies",
+        &[
+            "Multiplier:NearbyRareOrUniqueEnemies",
+            "Multiplier:NearbyEnemies",
+            "Condition:AtMostOneNearbyRareOrUniqueEnemy",
+            "enemy Condition:NearbyRareOrUniqueEnemy",
+        ],
+    ),
+    ("multiplierSoulEater", &["Multiplier:SoulEaterStack"]),
+    ("multiplierSummonedMinion", &["Multiplier:SummonedMinion"]),
+    (
+        "multiplierWarcryUsedRecently",
+        &[
+            "Multiplier:WarcryUsedRecently",
+            "Condition:UsedWarcryRecently",
+            "Condition:UsedWarcryInPast8Seconds",
+            "Condition:UsedSkillRecently",
+        ],
+    ),
+    (
+        "multiplierWitheredStackCount",
+        &["enemy Multiplier:WitheredStack"],
     ),
     (
         "multiplierWitheredStackCountSelf",
         &["Multiplier:WitheredStack"],
     ),
     ("overrideFortification", &["FortificationStacks"]),
+    (
+        "perforateSpikeOverlap",
+        &["Multiplier:PerforateSpikeOverlap"],
+    ),
+    (
+        "plagueBearerState",
+        &[
+            "Condition:PlagueBearerIncubating",
+            "Condition:PlagueBearerInfecting",
+        ],
+    ),
+    ("prideEffect", &["Condition:PrideMaxEffect"]),
     ("projectileDistance", &["skillDist"]),
+    (
+        "raiseSpidersSpiderCount",
+        &["Multiplier:RaisedSpiderConfig", "Multiplier:RaisedSpider"],
+    ),
     ("sigilOfPowerStages", &["Multiplier:SigilOfPowerStage"]),
 ];
 
@@ -276,13 +502,19 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
 /// as an input or placeholder. `enemyDamageRollRange` is also read by
 /// `presetBossSkills`'s `apply` (2286), which only sets the damage
 /// placeholders. No effect for an input or a placeholder.
+///
+/// Added in P6-4a, the other inputs only that estimate reads:
+/// `DisableEHPGainOnBlock` (`CalcDefence.lua` 2760, 2793) and
+/// `enemyDamageType` (1643), neither with an `apply`.
 pub const ENEMY_DAMAGE: &[&str] = &[
+    "DisableEHPGainOnBlock",
     "enemyChaosDamage",
     "enemyColdDamage",
     "enemyColdPen",
     "enemyCritChance",
     "enemyCritDamage",
     "enemyDamageRollRange",
+    "enemyDamageType",
     "enemyFireDamage",
     "enemyFirePen",
     "enemyLightningDamage",
@@ -446,6 +678,25 @@ pub fn named_only(input: &str) -> bool {
         .is_ok()
 }
 
+/// Inputs PoB v2.67.2 neither defines (`Modules/ConfigOptions.lua`) nor
+/// reads (`configInput`, `input`, in any module), sorted (P6-4a): saved by
+/// other versions of PoB, they change nothing in v2.67.2. `buffFortify`
+/// is only written by `ConfigTab:ImportCalcSettings` (1165) from an old
+/// calcs tab, and no option reads it (fortification is
+/// `buffFortification`). No effect for an input or a placeholder.
+pub const INERT: &[&str] = &[
+    "brandAttachedToEnemy",
+    "buffFortify",
+    "enemyAwakeningLevel",
+    "igniteMode",
+];
+
+/// Whether PoB v2.67.2 ignores `input` ([`INERT`]).
+#[must_use]
+pub fn inert(input: &str) -> bool {
+    INERT.binary_search(&input).is_ok()
+}
+
 /// Whether `input` is the enemy's damage ([`ENEMY_DAMAGE`]).
 #[must_use]
 pub fn enemy_damage(input: &str) -> bool {
@@ -459,6 +710,11 @@ mod tests {
     #[test]
     fn the_table_should_be_sorted_and_unique() {
         assert!(NAMED_ONLY.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(ENEMY_DAMAGE.windows(2).all(|w| w[0] < w[1]));
+        assert!(INERT.windows(2).all(|w| w[0] < w[1]));
+        for input in INERT {
+            assert!(inert(input) && !named_only(input) && !enemy_damage(input));
+        }
         assert!(NAMED_ONLY.iter().all(|(_, names)| !names.is_empty()));
     }
 

@@ -877,6 +877,7 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         crit,
         hit_chance: spell_hit_chance,
         rate: speed,
+        skill: super::pob_skill::skill(&spell.skill.effect().id).map(|p| (p, spell.source())),
     };
     set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)
 }
@@ -1139,6 +1140,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             crit: crit.0,
             hit_chance: hit_chance.0,
             rate: speed.0,
+            skill: super::pob_skill::skill(id).map(|p| (p, attack.source())),
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
@@ -1157,6 +1159,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
                 crit: hand.crit.0,
                 hit_chance: hand.hit_chance.0,
                 rate: hand.speed.0,
+                skill: None,
             };
             any |= super::ailment::damaging(calc, &ailment_hit, &enemy, input.data, ailment)?
                 .is_some();
@@ -1175,6 +1178,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             crit: hand.crit.0,
             hit_chance: hand.hit_chance.0,
             rate: hand.speed.0,
+            skill: None,
         };
         impales |= super::ailment::impale(calc, &ailment_hit, &enemy, input.data)?.is_some();
     }

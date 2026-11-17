@@ -45,6 +45,7 @@
 use super::enemy::Enemy;
 use super::hit::{self, HitSources};
 use super::phases::{self, Valued};
+use super::pob_skill::{PobSkill, Value};
 use super::{Poe1Quantity, keystones};
 use crate::condition::{ConditionKey, Flags, QueryContext};
 use crate::engine::Calc;
@@ -52,7 +53,8 @@ use crate::error::CalcError;
 use crate::graph::Term;
 use crate::input::CalcData;
 use crate::quantity::{DamageType, Op, Quantity};
-use crate::state::Reasons;
+use crate::source::Source;
+use crate::state::{Reasons, UnsupportedReason};
 
 /// A damaging ailment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -141,6 +143,8 @@ pub(super) struct AilmentHit<'a> {
     pub(super) hit_chance: Valued,
     /// Hits per second.
     pub(super) rate: Valued,
+    /// The main skill's PoB data and source, when PoB has it.
+    pub(super) skill: Option<(&'static PobSkill, Source)>,
 }
 
 /// The ailment's config (module docs, step 2) with the hit's settled crit
@@ -200,6 +204,13 @@ struct Spec {
     crit_over_stacks: bool,
     /// Only attacks inflict it (bleed).
     attack_only: bool,
+    /// The physical source also takes the modifiers of chaos damage
+    /// (poison: PoB's `calcAilmentSourceDamage(..., "Physical",
+    /// dmgTypeFlags.Chaos)`, `CalcOffence.lua` 4655 to 4694).
+    physical_as_chaos: bool,
+    /// The keys of PoB's skill data that change the ailment's duration or
+    /// stacks (`bleedIsSkillEffect`, ...), not modelled: a reason.
+    skill_keys: &'static [&'static str],
 }
 
 const fn spec(ailment: Ailment) -> Spec {
@@ -213,6 +224,8 @@ const fn spec(ailment: Ailment) -> Spec {
             roll: Roll::SourceThenMultiplier,
             crit_over_stacks: true,
             attack_only: false,
+            physical_as_chaos: false,
+            skill_keys: &[],
         },
         Ailment::Bleed => Spec {
             sources: &[DamageType::Physical],
@@ -223,6 +236,12 @@ const fn spec(ailment: Ailment) -> Spec {
             roll: Roll::MultiplierFirst,
             crit_over_stacks: true,
             attack_only: true,
+            physical_as_chaos: false,
+            skill_keys: &[
+                "bleedIsSkillEffect",
+                "bleedDurationIsSkillDuration",
+                "bleedBasePercent",
+            ],
         },
         // PoB sums chaos first, then the other types that can poison
         // (physical always; lightning, cold, and fire with their flags, not
@@ -236,6 +255,8 @@ const fn spec(ailment: Ailment) -> Spec {
             roll: Roll::Midpoint,
             crit_over_stacks: false,
             attack_only: false,
+            physical_as_chaos: true,
+            skill_keys: &["poisonIsSkillEffect", "poisonDurationIsSkillDuration"],
         },
     }
 }
@@ -247,7 +268,7 @@ const fn spec(ailment: Ailment) -> Spec {
 fn source_damage(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
-    sources: &[DamageType],
+    spec: &Spec,
     cx: &QueryContext,
     hit_cx: &QueryContext,
     reasons: &mut Reasons,
@@ -255,17 +276,22 @@ fn source_damage(
     let mut mins = Vec::new();
     let mut maxes = Vec::new();
     let mut zero = None;
-    for &t in sources {
+    for &t in spec.sources {
         let Some(index) = hit::TYPES.iter().position(|x| *x == t) else {
             continue;
         };
         if hit::cannot_deal(calc, t, hit_cx, reasons)? {
             continue;
         }
+        let extra = if spec.physical_as_chaos && t == DamageType::Physical {
+            Flags::damage(DamageType::Chaos)
+        } else {
+            Flags::NONE
+        };
         let [min, max] = hit::calc_damage(
             calc,
             index,
-            Flags::NONE,
+            extra,
             &hit.sources.bases,
             hit.sources.conversion.as_ref(),
             cx,
@@ -314,6 +340,20 @@ pub(super) fn damaging(
     let mut reasons = Reasons::new();
     if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
         return Ok(None);
+    }
+    // Puncture's `bleedIsSkillEffect`, Viper Strike's `poisonIsSkillEffect`,
+    // and kin: PoB adds the skill's duration to the ailment's (4311, 4580),
+    // not modelled (P6-2c review).
+    if let Some((pob, source)) = &hit.skill
+        && spec
+            .skill_keys
+            .iter()
+            .any(|k| pob.skill_data(k).is_some_and(Value::truthy))
+    {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "ailment-skill-data",
+        });
     }
     let hit_cx = calc.context(hit.flags).with_state(
         ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
@@ -368,13 +408,17 @@ pub(super) fn damaging(
     // Step 5 first: no source damage, no ailment.
     let ailment_flags = ailment.flag() | Flags::dot_keyword(spec.dot_type);
     let cx = ailment_context(calc, hit, ailment_flags);
-    let [min, max] = source_damage(calc, hit, spec.sources, &cx, &hit_cx, &mut reasons)?;
+    let [min, max] = source_damage(calc, hit, &spec, &cx, &hit_cx, &mut reasons)?;
     if min.value == 0.0 && max.value == 0.0 {
         return Ok(None);
     }
 
     // Step 3: rate and duration (the rate in the hit's config, with the
-    // ailment's flag so only its and every ailment's rows apply).
+    // ailment's flag so only its and every ailment's rows apply). PoB's
+    // bleed and poison rate is `mod(Faster) + enemy inc / 100` with no
+    // slower term (4315, 4575); `faster / slower` is the same while no
+    // bleed or poison row maps to `AilmentSlower` and the enemy's own
+    // faster bleed and poison are unmapped (P6-2c review).
     let rate_cx = calc.context(hit.flags | ailment.flag());
     let faster = modifier(
         calc,
@@ -839,5 +883,32 @@ mod tests {
     fn the_ailment_config_should_keep_only_keywords() {
         let hit = Flags::SPELL | Flags::HIT | Flags::AREA | Flags::SKILL_FIRE | Flags::CAST;
         assert_eq!(Flags::from_bits_and(hit, KEYWORDS), Flags::SKILL_FIRE);
+    }
+
+    /// Whether a skill sets one of the ailment's unmodelled skill-data keys.
+    fn reads_skill_keys(id: &str, ailment: Ailment) -> bool {
+        let pob = super::super::pob_skill::skill(id).expect("PoB has the skill");
+        spec(ailment)
+            .skill_keys
+            .iter()
+            .any(|k| pob.skill_data(k).is_some_and(Value::truthy))
+    }
+
+    #[test]
+    fn skills_that_change_their_ailment_should_be_reasons() {
+        // Puncture's bleed and Viper Strike's poison take the skill's
+        // duration (P6-2c review); Smite sets none of the keys.
+        assert!(reads_skill_keys("Puncture", Ailment::Bleed));
+        assert!(reads_skill_keys("ViperStrike", Ailment::Poison));
+        assert!(!reads_skill_keys("Smite", Ailment::Bleed));
+        assert!(!reads_skill_keys("Smite", Ailment::Poison));
+        assert!(!reads_skill_keys("Puncture", Ailment::Ignite));
+    }
+
+    #[test]
+    fn only_poison_should_read_chaos_modifiers_for_physical() {
+        assert!(spec(Ailment::Poison).physical_as_chaos);
+        assert!(!spec(Ailment::Bleed).physical_as_chaos);
+        assert!(!spec(Ailment::Ignite).physical_as_chaos);
     }
 }

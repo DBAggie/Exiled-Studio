@@ -42,6 +42,22 @@
 //! `CalcSetup.lua` (108) makes it the `Convergence` flag and
 //! `CalcPerform.lua` (755 to 758) gives `ElementalDamage` MORE `floor(30 x
 //! (1 + BuffEffectOnSelf / 100))`, here 30 (`BuffEffectOnSelf` unmapped).
+//!
+//! **Tailwind and Adrenaline** (P6-4a). `buffTailwind` (`ConfigOptions.lua`
+//! 1034) and `buffAdrenaline` (1037) set `Condition:Tailwind` and
+//! `Condition:Adrenaline` in combat; `CalcSetup.lua` (84, 85) makes each
+//! its flag, and `CalcPerform.lua` gives:
+//! - Tailwind (733 to 736): `ActionSpeed` INC `floor(8 x (1 +
+//!   (TailwindEffectOnSelf + BuffEffectOnSelf) / 100))`;
+//! - Adrenaline (740 to 746): `Damage` INC `floor(100 x effect)`, `Speed`
+//!   INC `floor(25 x effect)` for attacks and for casts, the effect `1 +
+//!   BuffEffectOnSelf / 100`; its movement speed and physical damage
+//!   reduction are not slice fields.
+//!
+//! The effect stats are unmapped ([`TAILWIND_DEPENDS_ON`], [`DEPENDS_ON`]'s
+//! `buff_effect_on_self_+%`), so the constants. Other sources of either
+//! buff are unmapped stats, so reasons; the conditions themselves are read
+//! only by modifiers, which leave an unsettled condition a reason.
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
@@ -93,11 +109,65 @@ pub const CONVERGENCE_INPUT: &str = "conditionConvergence";
 /// Convergence's more elemental damage (`CalcPerform.lua` 756).
 pub const CONVERGENCE_MORE: f64 = 30.0;
 
+/// The check that grants Tailwind.
+pub const TAILWIND_INPUT: &str = "buffTailwind";
+
+/// Tailwind's increased action speed (`CalcPerform.lua` 734).
+pub const TAILWIND_ACTION_SPEED: f64 = 8.0;
+
+/// The stats that change Tailwind's effect (PoB's `TailwindEffectOnSelf`,
+/// `ModParser.lua` 683), sorted: they must stay reasons.
+pub const TAILWIND_DEPENDS_ON: &[&str] = &["tailwind_effect_on_self_+%"];
+
+/// The check that grants Adrenaline.
+pub const ADRENALINE_INPUT: &str = "buffAdrenaline";
+
+/// Adrenaline's increased damage (`CalcPerform.lua` 742).
+pub const ADRENALINE_DAMAGE: f64 = 100.0;
+
+/// Adrenaline's increased attack and cast speed (743, 744).
+pub const ADRENALINE_SPEED: f64 = 25.0;
+
 /// Whether this module handles `input` (Arcane Surge's check is
 /// [`super::conditions`]').
 #[must_use]
 pub fn is_buff_input(input: &str) -> bool {
-    input == ONSLAUGHT_INPUT || input == CONVERGENCE_INPUT
+    [
+        ONSLAUGHT_INPUT,
+        CONVERGENCE_INPUT,
+        TAILWIND_INPUT,
+        ADRENALINE_INPUT,
+    ]
+    .contains(&input)
+}
+
+/// A check buff's constant effects (Tailwind, Adrenaline; module docs),
+/// with the check on; a value that is not a boolean is a reason.
+fn constant_buff(
+    set: Option<&ConfigSet>,
+    ingest: &mut Ingest<'_>,
+    input: &str,
+    effects: &[(Quantity, f64, Flags)],
+) {
+    match check(set, input) {
+        Ok(false) => {}
+        Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: input.to_owned(),
+        }),
+        Ok(true) => {
+            for &(quantity, value, flags) in effects {
+                ingest.effect(Effect {
+                    quantity,
+                    op: Op::Increased,
+                    value,
+                    conditions: Conditions::none().with_all(flags),
+                    source: Source::Config {
+                        input: input.to_owned(),
+                    },
+                });
+            }
+        }
+    }
 }
 
 /// A check's value: `Ok(false)` when unset or off, `Err(())` for a value
@@ -196,6 +266,26 @@ pub const ONSLAUGHT_STAT: &str = "base_should_have_onslaught_from_stat";
 pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     arcane_surge(set, ingest);
     convergence(set, ingest);
+    constant_buff(
+        set,
+        ingest,
+        TAILWIND_INPUT,
+        &[(
+            Quantity::Poe1(Poe1Quantity::ActionSpeed),
+            TAILWIND_ACTION_SPEED,
+            Flags::NONE,
+        )],
+    );
+    constant_buff(
+        set,
+        ingest,
+        ADRENALINE_INPUT,
+        &[
+            (Quantity::Damage, ADRENALINE_DAMAGE, Flags::NONE),
+            (Quantity::Speed, ADRENALINE_SPEED, Flags::ATTACK),
+            (Quantity::Speed, ADRENALINE_SPEED, Flags::CAST),
+        ],
+    );
     // The last input counts; a check's placeholder is not applied.
     let mut source = match set
         .and_then(|set| super::config::last_input(set, ONSLAUGHT_INPUT, ConfigInputKind::Input))
@@ -254,7 +344,11 @@ mod tests {
     #[test]
     fn no_mapped_stat_should_grant_or_change_onslaught() {
         assert!(DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
-        let names = |id: &str| id.contains("onslaught") && id != ONSLAUGHT_STAT;
+        let names = |id: &str| {
+            (id.contains("onslaught") && id != ONSLAUGHT_STAT)
+                || id.contains("tailwind")
+                || id.contains("adrenaline")
+        };
         let ids = HIT_ROWS
             .iter()
             .map(|r| r.0)
@@ -269,7 +363,11 @@ mod tests {
             slot: ArmourSlot::Helmet,
         };
         let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
-        for stat in DEPENDS_ON.iter().chain(ARCANE_SURGE_DEPENDS_ON) {
+        for stat in DEPENDS_ON
+            .iter()
+            .chain(ARCANE_SURGE_DEPENDS_ON)
+            .chain(TAILWIND_DEPENDS_ON)
+        {
             for m in mappings {
                 assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
             }
@@ -282,6 +380,8 @@ mod tests {
         assert!(!super::super::config::named_only(CONVERGENCE_INPUT));
         assert!(!super::super::config::named_only(ARCANE_SURGE_INPUT));
         assert!(!super::super::config::named_only(ONSLAUGHT_INPUT));
+        assert!(!super::super::config::named_only(TAILWIND_INPUT));
+        assert!(!super::super::config::named_only(ADRENALINE_INPUT));
         assert!(!super::super::charges::is_charge_input(ONSLAUGHT_INPUT));
     }
 
@@ -334,6 +434,40 @@ mod tests {
         let mut without = Ingest::new(&Poe1Mapping);
         buffs(Some(&on), &mut without);
         assert!(more(&without).is_empty());
+    }
+
+    /// Tailwind and Adrenaline (P6-4a): the constants with the check on,
+    /// nothing with it off, a reason for a value that is not a boolean.
+    #[test]
+    fn tailwind_and_adrenaline_should_give_their_constants() {
+        let values = |ingest: &Ingest<'_>, q: Quantity| {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| e.quantity == q && e.op == Op::Increased)
+                .map(|e| e.value)
+                .collect::<Vec<_>>()
+        };
+        let on = set(&[
+            (TAILWIND_INPUT, ConfigValue::Boolean(true)),
+            (ADRENALINE_INPUT, ConfigValue::Boolean(true)),
+        ]);
+        let mut ingest = Ingest::new(&Poe1Mapping);
+        buffs(Some(&on), &mut ingest);
+        assert_eq!(
+            values(&ingest, Quantity::Poe1(Poe1Quantity::ActionSpeed)),
+            [TAILWIND_ACTION_SPEED]
+        );
+        assert_eq!(values(&ingest, Quantity::Damage), [ADRENALINE_DAMAGE]);
+        assert_eq!(
+            values(&ingest, Quantity::Speed),
+            [ADRENALINE_SPEED, ADRENALINE_SPEED]
+        );
+        let off = set(&[(TAILWIND_INPUT, ConfigValue::Boolean(false))]);
+        let mut none = Ingest::new(&Poe1Mapping);
+        buffs(Some(&off), &mut none);
+        assert!(none.effects().is_empty());
+        assert!(is_buff_input(TAILWIND_INPUT) && is_buff_input(ADRENALINE_INPUT));
     }
 
     /// The stat's one row: an unconditional flag (`buffs` reads only

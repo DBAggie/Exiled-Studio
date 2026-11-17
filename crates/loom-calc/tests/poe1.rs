@@ -908,7 +908,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "buffTailwind".to_owned(),
+        name: "conditionEnemyCrushed".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1577,9 +1577,11 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "buffTailwind",
+        // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
+        // `poe1::config`).
+        "conditionEnemyCrushed",
         // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
-        "buffElusive",
+        "buffAlchemistsGenius",
         // Wrath's check has effects since the close-out (`poe1::gems`).
         "buffUnholyMight",
     ] {
@@ -1647,7 +1649,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["buffTailwind", "resistancePenalty"] {
+    for name in ["conditionEnemyCrushed", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");
