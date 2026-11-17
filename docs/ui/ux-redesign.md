@@ -2,7 +2,7 @@
 
 The maintainer asked for two versions of the UX audit's result: the design language refined (`ux-audit.md`, branch `feat/ux-audit`, PR #128) and a free redesign. This is the second: branch `feat/ux-audit-redesign`, PR #129 (draft), stacked on the first, so it has every layout and component change of the audit and differs only in how the app looks. The redesign is a token change, one stylesheet, and one control.
 
-**The maintainer chose the redesign** (2026-11-16, after running both versions in the desktop shell: "Let's go with the second one"): PR #129 is the version to carry forward, on top of #128; `docs/ui/UI-DESIGN-BRIEF.md` section 2 and decision 14 hold its values.
+**The maintainer chose the redesign** (2026-11-16, after running both versions in the desktop shell: "Let's go with the second one"): PR #129 is the version to carry forward; `docs/ui/UI-DESIGN-BRIEF.md` section 2 and decision 14 hold its values. #129's branch was merged down into `feat/ux-audit` on 2026-11-16 at the maintainer's word ("yes, merge #129 into #128's branch"; fast-forward to `5ef256e`): PR #128 now carries the audit and the redesign into `dev` as one PR.
 
 ## The direction: numbers first
 The brief's look (amber on warm dark, Space Grotesk headings) reads as a game companion. The redesign reads as an instrument: the frame recedes and the numbers carry the page.
