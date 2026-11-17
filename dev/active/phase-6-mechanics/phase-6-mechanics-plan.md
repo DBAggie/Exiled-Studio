@@ -22,6 +22,15 @@ Measured on the calc-run documents of PR #137's evidence (`local/card-fix/ev/new
 
 **Bundle caveat (plan review):** that bundle predates #134: it has no `poe1/cluster_jewels.json` and no tree packs. T3 already feeds cluster jewel nodes into the calculation (`docs/tree/cluster-jewels.md`, "The calculation"), so most `cluster-jewel-node` and `tree-version` reasons below come from the bundle, not the engine. They wait on the maintainer's extraction rerun (cluster tables; the installed game is now build 26694821, so the extraction is the maintainer's) and on a bundle with packs (P6-0b below builds one locally for evidence). The gate's starting numbers are re-measured on that bundle.
 
+**Baseline with packs (P6-0b, 2026-11-17):** `local/p6/packs/b-3_25`, the evidence bundle plus the packs 3_28 to 3_25 made by `tools/tree/acquire.ps1` and `tree-pack` (manifest SHA-256 `4814e3ac…`, the same as #134's record; `bundle-check` clean; local only, unsigned). On it, `local/p6/base-packs`:
+
+| Set | Complete | Partial | Unsupported | Indeterminate | calc-parity unexpected |
+|---|---|---|---|---|---|
+| Public (136, 135 ok) | 2,270 | 386 | 482 | 102 | 0 |
+| Corpus (21) | 0 | 193 | 141 | 170 | 0 |
+
+This is the gate's starting point. The corpus runs on the packs also cover the tree report's maintainer-run item 3 locally (no corpus value is compared yet, as every corpus field is still `partial` or worse).
+
 Reasons by the number of builds they touch (public / corpus): `unmapped-stat` 26 / 21; `unmodelled-config` 24 / 18; `unresolved-line` 22 / 12; `unmodelled-gem` 21 / 19; `unmodelled-item` (active flasks) 20 / 12; `unmodelled-passive` (cluster jewel nodes, unconnected nodes) 20 / 11; `tree-version` 16 / 21; `scaled-line` 12 / 4; `excluded-line` 10 / 5; `unmodelled-skill` 3 / 0. The main skill of most corpus builds is a damage-over-time, ailment, or minion skill, whose fields are `Unsupported` (`NotComputed`).
 
 The engine (`loom-calc`, 18.6k lines in `poe1`) computes the 24 slice fields for a self-cast spell or a main-hand attack hit and the core defences. PoB's calculation is 22.8k lines of Lua in `Modules/Calc*.lua` (pinned v2.67.2 at `local/oracle/pob`), most of it in `CalcOffence.lua` (6.1k), `CalcPerform.lua` (3.9k), `CalcDefence.lua` (3.8k), `CalcTriggers.lua` (1.6k), `CalcSetup.lua` (1.9k).

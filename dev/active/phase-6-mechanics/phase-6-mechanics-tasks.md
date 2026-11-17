@@ -11,8 +11,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #139 (base `dev`)
 
 ## P6-0b: evidence bundle with tree packs (local)
-- [ ] `tools/tree/acquire` 3_28 to 3_25; `tree-pack` chained; `bundle-check`
-- [ ] Baseline re-measured on it (`local/p6/base-packs`); plan's numbers updated
+- [x] `tools/tree/acquire` 3_28 to 3_25; `tree-pack` chained; `bundle-check` (manifest `4814e3ac…`, as #134 recorded)
+- [x] Baseline re-measured on it (`local/p6/base-packs`); plan's numbers updated (#139)
 
 ## P6-1: slice revision 3, PoB skill table, skill damage over time
 - [ ] Slice revision 3: emission rule (`applies`), new fields, `Field` variants
