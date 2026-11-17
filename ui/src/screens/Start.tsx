@@ -389,6 +389,9 @@ export function Start() {
               <thead>
                 <tr>
                   <th scope="col">{t('start.colBuild')}</th>
+                  <th scope="col" className="col-file">
+                    {t('start.colFile')}
+                  </th>
                   <th scope="col">{t('start.colOpened')}</th>
                   <th scope="col">
                     <span className="visually-hidden">
@@ -416,16 +419,24 @@ export function Start() {
                         >
                           {r.name}
                         </button>
-                        {what !== '' && <span className="sub">{what}</span>}
-                        <span className="sub mono" title={r.path}>
+                        {what !== '' && (
+                          <span className="recent-what">{what}</span>
+                        )}
+                      </th>
+                      {/* One line a build (UX audit follow-up): the file
+                          in its own column, gone on a narrow window. */}
+                      <td className="col-file">
+                        <span className="mono" title={r.path}>
                           {fileName(r.path)}
                         </span>
-                      </th>
-                      <td title={when(r.at)}>{ago(r.at)}</td>
+                      </td>
+                      <td className="nowrap" title={when(r.at)}>
+                        {ago(r.at)}
+                      </td>
                       <td className="right">
                         <button
                           type="button"
-                          className="link"
+                          className="link quiet"
                           aria-label={t('start.forget', { name: r.name })}
                           onClick={() =>
                             void dispatch(

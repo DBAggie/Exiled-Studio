@@ -98,32 +98,38 @@ export function ImportReview() {
 
   return (
     <div className="stack import-page">
-      <div className="pills">
-        <Badge tone={status.tone}>
-          {t('import.imported', {
-            state: tDynamic(
-              `state.${build['in-use-completeness']}`,
-              'state.unsupported',
-            ),
-          })}
-        </Badge>
-        <Badge tone="neutral">{build.game === 'poe2' ? 'PoE2' : 'PoE1'}</Badge>
-      </div>
-      <ScreenHeading>{name}</ScreenHeading>
-      <p className="muted">
-        {build.warnings.length === 0
-          ? t('import.summaryClean')
-          : build.warnings.length === 1
-            ? t('import.summaryWarnings1')
-            : t('import.summaryWarnings', { n: build.warnings.length })}
-        {unused.length > 0 &&
-          ` ${
-            used.length === 0
-              ? t('import.summaryUnusedAll')
-              : t('import.summaryUnused', { n: unused.length })
-          }`}
-      </p>
-      <div className="row">
+      {/* The name, what the import is, and the way on in one band (UX
+          audit follow-up): the numbers start right under it. */}
+      <div className="import-head">
+        <div className="import-title">
+          <div className="row">
+            <ScreenHeading>{name}</ScreenHeading>
+            <Badge tone={status.tone}>
+              {t('import.imported', {
+                state: tDynamic(
+                  `state.${build['in-use-completeness']}`,
+                  'state.unsupported',
+                ),
+              })}
+            </Badge>
+            <Badge tone="neutral">
+              {build.game === 'poe2' ? 'PoE2' : 'PoE1'}
+            </Badge>
+          </div>
+          <p className="muted">
+            {build.warnings.length === 0
+              ? t('import.summaryClean')
+              : build.warnings.length === 1
+                ? t('import.summaryWarnings1')
+                : t('import.summaryWarnings', { n: build.warnings.length })}
+            {unused.length > 0 &&
+              ` ${
+                used.length === 0
+                  ? t('import.summaryUnusedAll')
+                  : t('import.summaryUnused', { n: unused.length })
+              }`}
+          </p>
+        </div>
         <button type="button" className="primary" onClick={open}>
           {t('import.continue')}
         </button>
