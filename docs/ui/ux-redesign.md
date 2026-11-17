@@ -1,6 +1,8 @@
 # The free redesign (2026-11-15)
 
-The maintainer asked for two versions of the UX audit's result: the design language refined (`ux-audit.md`, branch `feat/ux-audit`, PR #128) and a free redesign. This is the second: branch `feat/ux-audit-redesign`, PR #129 (draft), stacked on the first, so it has every layout and component change of the audit and differs only in how the app looks. Pick one, or take parts: the redesign is a token change, one stylesheet, and one control.
+The maintainer asked for two versions of the UX audit's result: the design language refined (`ux-audit.md`, branch `feat/ux-audit`, PR #128) and a free redesign. This is the second: branch `feat/ux-audit-redesign`, PR #129 (draft), stacked on the first, so it has every layout and component change of the audit and differs only in how the app looks. The redesign is a token change, one stylesheet, and one control.
+
+**The maintainer chose the redesign** (2026-11-16, after running both versions in the desktop shell: "Let's go with the second one"): PR #129 is the version to carry forward, on top of #128; `docs/ui/UI-DESIGN-BRIEF.md` section 2 and decision 14 hold its values.
 
 ## The direction: numbers first
 The brief's look (amber on warm dark, Space Grotesk headings) reads as a game companion. The redesign reads as an instrument: the frame recedes and the numbers carry the page.
@@ -33,7 +35,7 @@ Unchanged on purpose: the game-style item tooltip and inventory (the maintainer'
 - Screenshots (sample data, 1440 wide): [dashboard](ux-redesign/redesign-dashboard.png), [defence](ux-redesign/redesign-defence.png), [trends](ux-redesign/redesign-trends.png), [equipment](ux-redesign/redesign-equipment.png), [skills](ux-redesign/redesign-skills.png), [passive tree](ux-redesign/redesign-tree.png), [configuration](ux-redesign/redesign-config.png). Compare with `ux-audit/after-*.png`.
 
 ## Not done
-- The start page, About, and the import review take the tokens and the control styles but were not composed for the new look.
+- The start page, About, and the import review take the tokens and the control styles but were not composed for the new look (the start page and the import review were looked at in a browser with it after #128's density pass, 2026-11-16).
 - The passive tree's sprites (GGG's, from a data bundle) were not checked against the violet allocation colour: the browser run draws the tree in the app's own shapes.
 - The packaged app was not rebuilt with it.
-- If this version is chosen, `UI-DESIGN-BRIEF.md` section 2 (visual language) needs rewriting to these values.
+- `UI-DESIGN-BRIEF.md` section 2 (visual language) is rewritten to these values (2026-11-16, when this version was chosen); the brief's mockups and its live canvas still show the first draft's look.

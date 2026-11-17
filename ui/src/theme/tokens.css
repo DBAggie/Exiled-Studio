@@ -1,6 +1,6 @@
-/* Design tokens. The free redesign (docs/ui/ux-redesign.md): neutral
-   near-black surfaces, a violet accent, one type family. The brief's
-   values (docs/ui/UI-DESIGN-BRIEF.md, section 2) are the refined version's. Every colour the UI uses is a
+/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2: the redesign the
+   maintainer chose on 2026-11-16, docs/ui/ux-redesign.md): neutral
+   near-black surfaces, a violet accent, one type family. Every colour the UI uses is a
    token here; theme/pairs.ts lists each foreground and background pair the
    CSS combines, and a test checks their contrast (WCAG 2.2 AA) and that no
    other CSS file writes a colour. */
