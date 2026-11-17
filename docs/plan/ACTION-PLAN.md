@@ -75,6 +75,7 @@ Status 2026-11-15: every step built (P5 in PR #115; P1 to P4 and P6 to P8 in the
 
 ### Phase 6+: Expansion
 PoE1 mechanics expansion (each promoted through corpus and oracle gates); timeless jewels and alternate trees; PoE2 calculations begin; PoE2 `.build` import.
+**Status:** the PoE1 part started 2026-11-17 at the maintainer's request ("do phase 6 in full without stopping. We can do gate testing after. Include the stat mop up as well."): plan, context, and tasks in `dev/active/phase-6-mechanics/`; the gate runs after the work.
 
 ## Deferred on purpose
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
