@@ -591,13 +591,18 @@ jobs:
         if: runner.os == 'Linux'
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
+        # With the knowledge MCP server inside (a sidecar, as the release's
+        # installers carry it).
         run: |
-          ui/node_modules/.bin/tauri build --bundles appimage
+          bash tools/package/knowledge-sidecar.sh
+          ui/node_modules/.bin/tauri build --bundles appimage --config crates/loom-tauri/tauri.knowledge.conf.json
           mkdir -p out/package
           cp target/release/bundle/appimage/*.AppImage out/package/
       - name: Smoke-run the AppImage (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a bash tools/package/smoke.sh out/package/*.AppImage app-image
+        run: |
+          xvfb-run -a bash tools/package/smoke.sh out/package/*.AppImage app-image
+          bash tools/package/appimage-sidecar.sh out/package/*.AppImage
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: package-${{ runner.os }}

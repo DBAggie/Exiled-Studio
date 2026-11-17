@@ -1059,3 +1059,59 @@ fn a_tree_packs_bad_references_should_each_give_their_code() {
     });
     assert_eq!(codes(&src), ["BUNDLE_VALUE_RANGE"]);
 }
+
+/// The jewel radii (T-f): each mutation gives its code alone; the rows
+/// must stay in the game's order, which a ring jewel's stat counts by.
+#[test]
+fn jewel_radius_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/jewel_radii.json";
+    let cases: [(&str, Edit, &str); 6] = [
+        (
+            "an ID twice",
+            |v| {
+                v[1]["id"] = v[0]["id"].clone();
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "row without an ID",
+            |v| {
+                v[0]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "negative radius",
+            |v| {
+                v[0]["radius"] = (-1).into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "ring inside out",
+            |v| {
+                v[1]["ring_inner"] = 1500.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "rows swapped",
+            |v| {
+                v.as_array_mut().unwrap().swap(0, 1);
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "a ring no larger than the row before",
+            |v| {
+                v[1]["ring_outer"] = v[0]["ring_outer"].clone();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}

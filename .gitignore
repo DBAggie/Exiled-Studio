@@ -23,6 +23,8 @@ Thumbs.db
 # Claude Code local settings
 .claude/settings.local.json
 crates/loom-tauri/shipped/
+# The knowledge MCP sidecar (tools/package/knowledge-sidecar.sh)
+crates/loom-tauri/binaries/
 
 # Python bytecode (tools/site tests)
 __pycache__/

@@ -100,6 +100,32 @@ impl<'b> Text<'b> {
         }
     }
 
+    /// A mod's game text, one string per line (none without a scope).
+    fn lines(&self, m: &ModEntry) -> Vec<String> {
+        let Some(scope) = &self.scope else {
+            return Vec::new();
+        };
+        let map: BTreeMap<String, StatValue> = m
+            .stats
+            .iter()
+            .map(|s| {
+                (
+                    s.stat.clone(),
+                    StatValue {
+                        min: s.min,
+                        max: s.max,
+                    },
+                )
+            })
+            .collect();
+        scope
+            .render(&map, self.bundle, VariantFilter::default())
+            .lines
+            .into_iter()
+            .map(|l| l.text)
+            .collect()
+    }
+
     fn render(&self, stats: &[(String, i64, i64)]) -> Value {
         let Some(scope) = &self.scope else {
             return json!({"lines": [], "not_rendered": stats.iter().map(|s| &s.0).collect::<Vec<_>>()});
@@ -152,9 +178,21 @@ pub fn search_mods(data: &Loaded, args: &SearchMods) -> Result<Value, ToolError>
     let bundle = data.bundle;
     let text = Text::new(bundle, scope_root(bundle, None)?);
     let limit = args.limit.unwrap_or(DEFAULT_LIMIT).clamp(1, MAX_LIMIT);
+    let needle = args.text.as_deref().map(str::to_lowercase);
+    // Rendering every mod's text is the slow part: it is done once per
+    // process, and only when a call filters on text.
+    let lines = needle.as_ref().map(|_| {
+        data.mod_text(|| {
+            bundle
+                .mods
+                .iter()
+                .map(|m| text.lines(m).join("\n").to_lowercase())
+                .collect()
+        })
+    });
     let mut total = 0usize;
     let mut out = Vec::new();
-    for m in &bundle.mods {
+    for (i, m) in bundle.mods.iter().enumerate() {
         if args.domain.is_some_and(|d| d != m.domain)
             || args.generation.is_some_and(|g| g != m.generation)
             || args
@@ -168,19 +206,20 @@ pub fn search_mods(data: &Loaded, args: &SearchMods) -> Result<Value, ToolError>
         {
             continue;
         }
-        let item = mod_json(&text, m);
-        if let Some(needle) = args.text.as_deref() {
-            let in_lines = item["text"]["lines"].as_array().is_some_and(|l| {
-                l.iter()
-                    .any(|x| x.as_str().is_some_and(|x| contains(x, needle)))
-            });
-            if !(contains(&m.id, needle) || contains(&m.name, needle) || in_lines) {
+        if let Some(needle) = needle.as_deref() {
+            let in_lines = lines
+                .and_then(|l| l.get(i))
+                .is_some_and(|l| l.contains(needle));
+            if !(m.id.to_lowercase().contains(needle)
+                || m.name.to_lowercase().contains(needle)
+                || in_lines)
+            {
                 continue;
             }
         }
         total += 1;
         if out.len() < limit {
-            out.push(item);
+            out.push(mod_json(&text, m));
         }
     }
     Ok(json!({"total": total, "mods": out}))

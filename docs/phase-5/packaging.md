@@ -19,6 +19,12 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
   - The portable zip expects WebView2 to be present.
 - **Portable zip.** It holds `Exiled Studio.exe`, a `portable` marker file, and the license. With the marker beside it, the application keeps its data in `data\` beside the executable, not in the user's application data folder (`loom_tauri::release::portable_data`). `LOOM_DATA_DIR` still wins, for development.
 - **One trap:** `tauri build` patches the executable in place with its installer type (Tauri's `__TAURI_BUNDLE_TYPE`). The portable zip is therefore made from the executable `cargo build` writes, before any `tauri build`. Otherwise it would report itself as an installer and try to update itself.
+- **The knowledge MCP server** (ADR-018). Every installer carries `exiled-studio-knowledge-mcp` beside the application: in the install folder on Windows, in `/usr/bin` in the `.deb` and the AppImage.
+  - It is a Tauri sidecar: `tools/package/knowledge-sidecar.sh` builds it and copies it to `crates/loom-tauri/binaries/` with the host's target triple in its name (ignored by git), and `tauri build` takes it when given `--config crates/loom-tauri/tauri.knowledge.conf.json` (`bundle.externalBin`).
+  - Only the release workflow and CI's `package` job pass that config. A plain `cargo build` or `tauri dev` does not need the binary.
+  - The portable zip has it from `portable.ps1`, and the release also ships it as its own asset.
+  - The install checks find it, run `--version`, and check it is gone after uninstalling (`install-windows.ps1`, `install-deb.sh`); `appimage-sidecar.sh` checks the AppImage's.
+  - **Known limitation:** an update replaces the sidecar's file. On Windows, if an MCP client is running the server during an in-app update, the file may be locked, and the installer may fail to replace it or need a restart. Closing the MCP client first avoids it.
 - **Not made:** macOS packages (out of scope), RPM.
 - **No OS code signing** (maintainer, MQ4). Windows SmartScreen warns on first run of an unsigned setup ("Windows protected your PC"; More info, Run anyway), and some browsers mark the download. The update and data signatures (P2) are separate from OS code signing; they protect updates and data, not the first download.
 
@@ -53,7 +59,7 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
   An installed build runs with a throwaway `LOOM_DATA_DIR`, never the user's application data.
 
 ## CI
-- **`package` (every PR, gates `ci-ok`).** Windows builds the portable zip; Linux builds the AppImage (`APPIMAGE_EXTRACT_AND_RUN`, since runners have no FUSE). Each is smoke-run, Linux under Xvfb. The packages are uploaded as artifacts.
+- **`package` (every PR, gates `ci-ok`).** Windows builds the portable zip; Linux builds the AppImage (`APPIMAGE_EXTRACT_AND_RUN`, since runners have no FUSE) with the knowledge MCP sidecar inside, and checks the sidecar runs. Each is smoke-run, Linux under Xvfb. The packages are uploaded as artifacts.
 - **`release` (`.github/workflows/release.yml`; by hand, or on a `v*` tag).**
   - All five artifacts are built.
   - The portable zip and the AppImage are smoke-run.

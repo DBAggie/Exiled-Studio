@@ -475,11 +475,15 @@ impl Poe1Section {
 
     /// The jewel radii's domain checks for the validator: unique IDs, and
     /// the rows whose values are out of range (a negative radius, or a
-    /// ring whose inner radius is above its outer one).
+    /// ring whose inner radius is above its outer one) or out of order. A
+    /// ring jewel's stat names its ring by row number
+    /// (`loom_tree::Tree::ring`), so the rows must stay in the game's
+    /// table order, smallest first: each row's radius and ring above the
+    /// row before.
     pub(super) fn radius_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
         let radii = self.jewel_radii.as_deref().unwrap_or_default();
         let ids = radii.iter().map(|r| r.id.as_str()).collect();
-        let bad = radii
+        let mut bad: Vec<(String, &'static str)> = radii
             .iter()
             .filter(|r| r.radius < 0 || r.ring_inner < 0 || r.ring_inner > r.ring_outer)
             .map(|r| {
@@ -489,6 +493,22 @@ impl Poe1Section {
                 )
             })
             .collect();
+        bad.extend(
+            radii
+                .iter()
+                .zip(radii.iter().skip(1))
+                .filter(|(before, r)| {
+                    r.radius <= before.radius
+                        || r.ring_inner < before.ring_inner
+                        || r.ring_outer <= before.ring_outer
+                })
+                .map(|(_, r)| {
+                    (
+                        format!("{JEWEL_RADII}:{}", r.id),
+                        "not after the row before: the rows go from the smallest radius and ring up, in the game's order",
+                    )
+                }),
+        );
         (ids, bad)
     }
 
