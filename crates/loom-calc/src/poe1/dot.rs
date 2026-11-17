@@ -300,8 +300,13 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
 /// `dotCfg.flags` is `skillCfg.flags` with `Dot` (`CalcOffence.lua` 5649),
 /// and `skillCfg.flags` holds `weapon1Flags or weapon2Flags`
 /// (`CalcActiveSkill.lua` 455); its keyword flags keep `KeywordFlag.Bow`
-/// (406). The main hand's weapon, else the off hand's; none for a skill
-/// that is not an attack, or with no weapon (unarmed is not modelled).
+/// (406). The main hand's: a weapon's flags, `Unarmed` for an empty hand
+/// (PoB's `weaponTypeInfo["None"]`, `CalcActiveSkill.lua` 297 to 299, with
+/// no `Weapon` flag); none for a skill that is not an attack or another
+/// item (a skill its main hand cannot use is disabled in PoB, and
+/// `weapon2Flags` stands in only when the main hand gives none: a forced
+/// off hand, not modelled). PoB's `dotFromAttack` skills without the
+/// `Attack` type are not read (P6-11c review).
 /// PoB also strips `KeywordFlag.Hit` from a DoT that is a hit, which the
 /// engine's one `HIT` flag (`ModFlag.Hit`) does not tell apart: a "Hits
 /// and Ailments" line would reach such a DoT (no vetted skill has one).
@@ -310,19 +315,14 @@ fn attack_weapon_flags(input: &crate::input::CalcInput<'_>, skill: &MainSkill<'_
         return Flags::NONE;
     }
     let hands = super::collect::hands(input);
-    let Some(weapon) = hands
-        .main
-        .as_ref()
-        .or(hands.off.as_ref())
-        .and_then(|(_, w)| hit::weapon_type_flags(&w.class))
-    else {
-        return Flags::NONE;
-    };
-    let main_bow = hands.main.as_ref().is_some_and(|(_, w)| w.class == "Bow");
-    if main_bow {
-        weapon | Flags::KEYWORD_BOW
-    } else {
-        weapon
+    match &hands.main_hand {
+        super::collect::Held::Empty => Flags::UNARMED,
+        super::collect::Held::Weapon(class) => match hit::weapon_type_flags(class) {
+            Some(flags) if flags.contains(Flags::BOW) => flags | Flags::KEYWORD_BOW,
+            Some(flags) => flags,
+            None => Flags::NONE,
+        },
+        _ => Flags::NONE,
     }
 }
 

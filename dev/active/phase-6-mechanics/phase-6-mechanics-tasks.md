@@ -101,4 +101,6 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11b PR #159 (base `feat/p6-11a-stat-batch`)
 - [x] P6-11c: the P6-11b review (an attack's DoT keeps its weapon flags, per-hand ailment flags, Intimidating Cry's uptime on the combined speed via `hand_rate`/`hand_hit`, `MainHandWeapon` replaced by `Flags::WEAPON`, staff lines on `Flags::STAFF`, `KEYWORD_ARROW`, wand damage); fixture `burning-arrow-bow-lines-templar.xml` (Q11 DIV-0108 to DIV-0110); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11c PR #160 (base `feat/p6-11b-stat-batch`)
+- [x] P6-11d: the P6-11c review (arrow keyword from the active gem only, an attack DoT's main-hand flags with `Unarmed`, weapon-row and dual-wield Intimidating Cry tests); `docs/phase-6/stat-mop-up.md`
+- [ ] P6-11d PR (base `feat/p6-11c-weapon-review`)
 ## P6-12: combined and full DPS; report
