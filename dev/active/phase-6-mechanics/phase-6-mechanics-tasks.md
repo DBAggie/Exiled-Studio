@@ -57,7 +57,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-6a: the skill sweep and skill stats, batch 1 (order change: before P6-5, whose channelled skills need P6-6's parts)
 - [x] The P6-4b review applied: negative buffs merge at the smallest scale; data without the flask table keeps `active-flask` a reason; flags unscaled; flask tests; doc and test placement
 - [x] `tools/oracle/sweep/make_sweep.py` (376 builds, local) and `skill_stats.py`; `poe1::skill_no_output` (148 stats), 7 + 2 `NoEffect` rows, fire and cold skill conversion, `global_always_hit`; `docs/phase-6/skill-data.md`
-- [ ] Open PR (base `feat/p6-4b-flasks`)
+- [x] Open PR: #147 (base `feat/p6-4b-flasks`)
 ## P6-6b: PoB skill data as a rule (flags, parts, the vetting reason), with the sweep as evidence
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
