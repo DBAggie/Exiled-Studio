@@ -34,6 +34,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Fixtures (3; Q11 DIV-0075 to DIV-0078); community Smite builds' ignite (Q11 DIV-0079 to DIV-0082); `data-parity` export format 10; `docs/phase-6/ailments.md`
 - [x] Open PR: #142 (base `feat/p6-2a-dual-wield`)
 ## P6-2c: bleed and poison
+- [x] The ailment base generalized (`ailment::damaging`, one spec per ailment); bleed and poison; `bleed-dps`, `poison-dps` (slice `present`)
+- [x] `CannotInflict`, `MELEE_HIT`; bleed and poison rows; Melee Physical Damage's and staff ailment damage leave `NO_EFFECT`
+- [x] P6-2b review applied (dual-wield hands, `HitChance` dependency, staff row, register prose, the Elemental Overload fixture); fixtures (3; Q11 DIV-0083 to DIV-0087); `docs/phase-6/ailments.md`
 ## P6-2d: impale
 ## P6-3: cluster jewels (what remains)
 ## P6-4: flasks and config inputs

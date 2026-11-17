@@ -61,6 +61,13 @@ pub enum Field {
     /// The main skill's ignite damage per second (PoB's `IgniteDPS`;
     /// Phase 6). Present only when the skill ignites.
     IgniteDps,
+    /// The main skill's bleeding damage per second (PoB's `BleedDPS`;
+    /// Phase 6). Present only when the skill's attack bleeds.
+    BleedDps,
+    /// The main skill's poisons' damage per second, every poison together
+    /// (PoB's `TotalPoisonDPS`; Phase 6). Present only when the skill
+    /// poisons.
+    PoisonDps,
     /// A Path of Exile only field.
     Poe1(Poe1Field),
 }
@@ -89,6 +96,8 @@ impl core::fmt::Display for Field {
             Self::HitDps => "hit-dps",
             Self::DotDps => "dot-dps",
             Self::IgniteDps => "ignite-dps",
+            Self::BleedDps => "bleed-dps",
+            Self::PoisonDps => "poison-dps",
             Self::Poe1(p) => return write!(f, "poe1.{}", p.name()),
         };
         f.write_str(name)

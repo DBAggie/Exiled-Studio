@@ -281,6 +281,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `SkillStatMap.lua` 709: `EnemyBleedDuration` INC (P6-2c).
+    (
+        "base_bleed_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::BLEED,
+            NONE,
+        )],
+    ),
     (
         "base_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)],
@@ -290,6 +301,17 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_chance_to_ignite_%",
         &[(
             Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1023: `PoisonChance` BASE (P6-2c).
+    (
+        "base_chance_to_poison_on_hit_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
             Op::Base,
             1.0,
             NONE,
@@ -325,6 +347,23 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `SkillStatMap.lua` 1163: `Damage` INC with `KeywordFlag.Poison`
+    // (P6-2c).
+    (
+        "base_poison_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::POISON, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1123: `EnemyPoisonDuration` INC (P6-2c).
+    (
+        "base_poison_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::POISON,
+            NONE,
+        )],
+    ),
     (
         "base_reduce_enemy_cold_resistance_%",
         &[(Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE)],
@@ -350,6 +389,24 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 995: `BleedChance` BASE with `ModFlag.Attack`
+    // (P6-2c).
+    (
+        "bleed_on_hit_with_attacks_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1154: `Damage` INC with `KeywordFlag.Bleed`
+    // (P6-2c).
+    (
+        "bleeding_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::BLEED, NONE)],
+    ),
     // PoB `SkillStatMap.lua` 755: `FireDamage` INC with
     // `KeywordFlag.FireDot` (P6-1).
     (
@@ -359,6 +416,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             Flags::FIRE.union(Flags::FIRE_DOT),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1223: the `CannotBleed` flag (P6-2c).
+    (
+        "cannot_cause_bleeding",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CannotInflict(Ailment::Bleed)),
+            Op::Flag,
+            1.0,
+            NONE,
             NONE,
         )],
     ),
@@ -541,6 +609,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ELEMENTAL,
         )],
     ),
+    // PoB `SkillStatMap.lua` 1011: `BleedFaster` INC (P6-2c).
+    (
+        "faster_bleed_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::BLEED,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 758: `IgniteBurnFaster` INC (P6-2b).
     (
         "faster_burn_%",
@@ -549,6 +628,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             Flags::IGNITE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 761: `PoisonFaster` INC (P6-2c).
+    (
+        "faster_poison_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::POISON,
             NONE,
         )],
     ),
@@ -577,6 +667,17 @@ pub const HIT_ROWS: &[HitRow] = &[
         "fire_dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::FIRE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 998: `BleedChance` BASE 100 (P6-2c).
+    (
+        "global_bleed_on_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "global_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -592,6 +693,17 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "global_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1026: `PoisonChance` BASE 100 (P6-2c).
+    (
+        "global_poison_on_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 1129: `EnemyIgniteDuration` INC (P6-2b).
     (
@@ -675,6 +787,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::PHYSICAL,
             NONE,
         )],
+    ),
+    // PoB `SkillStatMap.lua` 1169: `DotMultiplier` BASE with
+    // `KeywordFlag.Poison` (P6-2c).
+    (
+        "poison_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::POISON, NONE)],
     ),
     // PoB `ModParser.lua` 719 ("projectile damage"): `Damage` INC with
     // `ModFlag.Projectile` (P6-1).
@@ -814,6 +932,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_melee_physical_damage_attack_speed_+%_final",
         &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
     ),
+    // PoB `Data/Skills/sup_str.lua` 3660 (Melee Physical Damage): `Damage`
+    // MORE with `ModFlag.MeleeHit` and `KeywordFlag.Bleed` or `Poison`
+    // (P6-2c).
+    (
+        "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE_HIT,
+            Flags::BLEED.union(Flags::POISON),
+        )],
+    ),
 ];
 
 /// Whether `quantity` is read only by the main skill's hit: an effect of
@@ -834,6 +965,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::DotMultiplier
             | Quantity::Poe1(
                 Poe1Quantity::AilmentChance(..)
+                    | Poe1Quantity::CannotInflict(..)
                     | Poe1Quantity::AilmentDuration
                     | Poe1Quantity::AilmentFaster
                     | Poe1Quantity::AilmentSlower
@@ -1077,6 +1209,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Quantity::Damage,
             Op::Increased,
             Flags::SPELL,
+            states::USING_STAFF,
+        )],
+    ),
+    // "Staff Attacks deal #% increased Damage with Ailments": PoB's
+    // `Damage` INC with `ModFlag.Ailment` and the staff's weapon flag
+    // (PoB's own parse); ailments read it (P6-2b review).
+    (
+        "staff_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::AILMENT,
             states::USING_STAFF,
         )],
     ),
@@ -1790,8 +1934,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("skill_mana_cost_+_with_non_channelling_skills", "mana-cost"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
-    // P3-8n: "Staff Attacks deal #% increased Damage with Ailments": ailments.
-    ("staff_ailment_damage_+%", "ailment-damage"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
     // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
     // regeneration); its cast speed and spell damage are `poe1::buffs`.
@@ -1805,12 +1947,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "regeneration",
     ),
     ("support_inspiration_mana_cost_+%_final", "mana-cost"),
-    // Melee Physical Damage's more damage with poison and bleeding: no
-    // ailment is in the slice.
-    (
-        "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
-        "ailment-damage",
-    ),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
     // the channelling time to no modifier, the speed per momentum lost to
     // `MovementSpeed`); its attack speed is `poe1::stacks`.
@@ -3263,6 +3399,10 @@ mod tests {
             (
                 "spell_staff_damage_+%",
                 vec![staff(Quantity::Damage, Op::Increased, Flags::SPELL)],
+            ),
+            (
+                "staff_ailment_damage_+%",
+                vec![staff(Quantity::Damage, Op::Increased, Flags::AILMENT)],
             ),
             ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
             (

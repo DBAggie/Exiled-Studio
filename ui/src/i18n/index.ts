@@ -66,4 +66,6 @@ export const OFFENCE = new Set([
   'hit-dps',
   'dot-dps',
   'ignite-dps',
+  'bleed-dps',
+  'poison-dps',
 ])

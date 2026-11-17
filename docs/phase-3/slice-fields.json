@@ -156,7 +156,9 @@
       }
     },
     {"id": "TotalDot", "group": "dot", "pob_key": "TotalDot", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-1): the main skill's own damage over time. Our result has the field only when the skill has a DoT of its own; compared when we have it or PoB's value is not 0."},
-    {"id": "IgniteDPS", "group": "dot", "pob_key": "IgniteDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2b): the main skill's ignite. Our result has the field only when its hit ignites; a dual-wielding attack's is not computed yet."}
+    {"id": "IgniteDPS", "group": "dot", "pob_key": "IgniteDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2b): the main skill's ignite. Our result has the field only when its hit ignites; a dual-wielding attack's is not computed yet."},
+    {"id": "BleedDPS", "group": "dot", "pob_key": "BleedDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): the main skill's bleeding (attacks). Our result has the field only when its attack bleeds."},
+    {"id": "TotalPoisonDPS", "group": "dot", "pob_key": "TotalPoisonDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): every poison of the main skill together. Our result has the field only when its hit poisons."}
   ],
   "not_in_slice": [
     {"what": "ailments, minions, CombinedDPS beyond hit DPS", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},
