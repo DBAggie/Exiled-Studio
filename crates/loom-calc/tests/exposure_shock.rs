@@ -84,7 +84,6 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
-    "chance_to_freeze_shock_ignite_%",
     "lightning_ailment_duration_+%",
     "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
     "shocked_effect_on_self_+%",

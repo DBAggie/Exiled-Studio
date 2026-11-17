@@ -15,6 +15,7 @@ use loom_domain::{StatId, TypedResolution};
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
+use crate::poe1::ailment::Ailment;
 use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, conditions, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -51,20 +52,25 @@ const SK_FIRE: Flags = Flags::SKILL_FIRE;
 const SK_COLD: Flags = Flags::SKILL_COLD;
 const SK_LIGHTNING: Flags = Flags::SKILL_LIGHTNING;
 const SK_CHAOS: Flags = Flags::SKILL_CHAOS;
+/// The damaging ailments (for an `any` condition; P6-2b).
+const DAMAGING_AILMENTS: Flags = Flags::IGNITE.union(Flags::BLEED).union(Flags::POISON);
 const fn cast_with(keyword: Flags) -> Flags {
     Flags::CAST.union(keyword)
 }
 // A damage type's damage with attack or spell skills (P3-8h).
-const ATTACK_PHYSICAL: Flags = Flags::ATTACK.union(Flags::PHYSICAL);
-const ATTACK_FIRE: Flags = Flags::ATTACK.union(Flags::FIRE);
-const ATTACK_COLD: Flags = Flags::ATTACK.union(Flags::COLD);
-const ATTACK_LIGHTNING: Flags = Flags::ATTACK.union(Flags::LIGHTNING);
-const ATTACK_CHAOS: Flags = Flags::ATTACK.union(Flags::CHAOS);
-const SPELL_PHYSICAL: Flags = Flags::SPELL.union(Flags::PHYSICAL);
-const SPELL_FIRE: Flags = Flags::SPELL.union(Flags::FIRE);
-const SPELL_COLD: Flags = Flags::SPELL.union(Flags::COLD);
-const SPELL_LIGHTNING: Flags = Flags::SPELL.union(Flags::LIGHTNING);
-const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
+// "with Attack Skills" and "with Spell Skills" are PoB's keyword flags
+// (`KeywordFlag.Attack`, `KeywordFlag.Spell`, `ModParser.lua` 971, 978),
+// which an attack's or a spell's ailments and damage over time keep (P6-2b).
+const ATTACK_PHYSICAL: Flags = Flags::KEYWORD_ATTACK.union(Flags::PHYSICAL);
+const ATTACK_FIRE: Flags = Flags::KEYWORD_ATTACK.union(Flags::FIRE);
+const ATTACK_COLD: Flags = Flags::KEYWORD_ATTACK.union(Flags::COLD);
+const ATTACK_LIGHTNING: Flags = Flags::KEYWORD_ATTACK.union(Flags::LIGHTNING);
+const ATTACK_CHAOS: Flags = Flags::KEYWORD_ATTACK.union(Flags::CHAOS);
+const SPELL_PHYSICAL: Flags = Flags::KEYWORD_SPELL.union(Flags::PHYSICAL);
+const SPELL_FIRE: Flags = Flags::KEYWORD_SPELL.union(Flags::FIRE);
+const SPELL_COLD: Flags = Flags::KEYWORD_SPELL.union(Flags::COLD);
+const SPELL_LIGHTNING: Flags = Flags::KEYWORD_SPELL.union(Flags::LIGHTNING);
+const SPELL_CHAOS: Flags = Flags::KEYWORD_SPELL.union(Flags::CHAOS);
 
 /// The stats of hits P3-9b maps (a self-cast spell's), sorted by stat ID (a
 /// test checks the order), each read as PoB v2.67.2 reads it
@@ -170,13 +176,36 @@ pub const HIT_ROWS: &[HitRow] = &[
         "accuracy_rating_+%",
         &[(Quantity::Accuracy, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1020: `Damage` MORE with `KeywordFlag.Ailment`
+    // (P6-2b).
+    (
+        "active_skill_ailment_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::AILMENT, NONE)],
+    ),
     (
         "active_skill_area_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1184: `Damage` MORE with `KeywordFlag.Ignite`
+    // (P6-2b).
+    (
+        "active_skill_ignite_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::IGNITE, NONE)],
+    ),
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1033: `EnemyIgniteChance` BASE 100 (P6-2b).
+    (
+        "always_ignite",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
     (
@@ -235,13 +264,53 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1017: `Damage` INC with `KeywordFlag.Ailment`
+    // (P6-2b).
+    (
+        "base_ailment_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::AILMENT, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1151: `EnemyAilmentDuration` INC (P6-2b).
+    (
+        "base_all_ailment_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "base_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1030: `EnemyIgniteChance` BASE (P6-2b).
+    (
+        "base_chance_to_ignite_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "base_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1148: `EnemyElementalAilmentDuration` INC
+    // (P6-2b): the elemental ailments, of which ignite is the damaging one.
+    (
+        "base_elemental_status_ailment_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            NONE,
+            Flags::IGNITE,
+        )],
     ),
     // P3-8n: "#% of Physical Damage Converted to Fire Damage"
     // (`PhysicalDamageConvertToFire` BASE), conversion that is not the
@@ -359,6 +428,22 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // "#% chance to Freeze, Shock and Ignite" (PoB `EnemyFreezeChance`,
+    // `EnemyShockChance`, `EnemyIgniteChance` BASE): the ignite's chance on
+    // hit (P6-2b). The freeze and shock chances set only PoB's
+    // non-damaging ailment outputs, which no field reads (never the
+    // enemy's shock in a hit: the config and guaranteed shocks set it,
+    // P3-8k); they join when those are computed.
+    (
+        "chance_to_freeze_shock_ignite_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Critical Strike Chance with Chaos Skills",
     // "+#% to Critical Strike Multiplier with Chaos Skills": `CritChance`
     // INC, `CritMultiplier` BASE with `KeywordFlag.Chaos` (745, 748); the
@@ -425,6 +510,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "damage_over_time_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1187: `BleedFaster`, `PoisonFaster`, and
+    // `IgniteBurnFaster` INC (P6-2b).
+    (
+        "damaging_ailments_deal_damage_+%_faster",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            NONE,
+            DAMAGING_AILMENTS,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1172: `DotMultiplier` BASE (P6-1).
     (
         "dot_multiplier_+",
@@ -440,8 +537,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             Quantity::Damage,
             Op::Increased,
             1.0,
-            Flags::ATTACK,
+            Flags::KEYWORD_ATTACK,
             Flags::ELEMENTAL,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 758: `IgniteBurnFaster` INC (P6-2b).
+    (
+        "faster_burn_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::IGNITE,
+            NONE,
         )],
     ),
     (
@@ -484,6 +592,17 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "global_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1129: `EnemyIgniteDuration` INC (P6-2b).
+    (
+        "ignite_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::IGNITE,
+            NONE,
+        )],
     ),
     (
         "lightning_critical_strike_chance_+%",
@@ -669,7 +788,7 @@ pub const HIT_ROWS: &[HitRow] = &[
             Quantity::Damage,
             Op::More,
             1.0,
-            Flags::ATTACK,
+            Flags::KEYWORD_ATTACK,
             Flags::ELEMENTAL,
         )],
     ),
@@ -713,6 +832,13 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::AddedDamage(..)
             | Quantity::Penetration(..)
             | Quantity::DotMultiplier
+            | Quantity::Poe1(
+                Poe1Quantity::AilmentChance(..)
+                    | Poe1Quantity::AilmentDuration
+                    | Poe1Quantity::AilmentFaster
+                    | Poe1Quantity::AilmentSlower
+                    | Poe1Quantity::AilmentEffect
+            )
             | Quantity::Poe1(
                 Poe1Quantity::SkillBaseDamage(..)
                     | Poe1Quantity::SkillConversion(..)
@@ -1474,12 +1600,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ground-creation-chance",
     ),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
-    // "#% chance to Freeze, Shock and Ignite" (PoB `EnemyFreezeChance`,
-    // `EnemyShockChance`, `EnemyIgniteChance` BASE): a chance, as
-    // `base_chance_to_shock_%_from_skill` above; PoB's ailment chances
-    // (`CalcOffence.lua` 4262) set the chance on hit and the ailment's
-    // flags, never the enemy's shock or a hit (P3-8c).
-    ("chance_to_freeze_shock_ignite_%", "ailment-chance"),
     (
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
@@ -2501,7 +2621,7 @@ mod tests {
                 Op::Increased,
                 1.0,
                 Conditions::none()
-                    .with_all(Flags::ATTACK)
+                    .with_all(Flags::KEYWORD_ATTACK)
                     .with_any(Flags::ELEMENTAL)
             )]
         );
@@ -2526,10 +2646,11 @@ mod tests {
                 "{stat}"
             );
         }
-        assert_eq!(
+        // P6-2b: its ignite chance is read by the ignite.
+        assert!(matches!(
             Poe1Mapping.map(&StatId::new("chance_to_freeze_shock_ignite_%")),
-            StatMap::NoEffect
-        );
+            StatMap::Effects(_)
+        ));
         // P3-8j: minion damage is a minion modifier (`poe1::minions`).
         assert!(matches!(
             Poe1Mapping.map(&StatId::new("minion_damage_+%")),
@@ -2843,7 +2964,10 @@ mod tests {
             )]
         );
         for (name, t) in types.into_iter().chain([("physical", PHYS)]) {
-            for (kind, flag) in [("attack", Flags::ATTACK), ("spell", Flags::SPELL)] {
+            for (kind, flag) in [
+                ("attack", Flags::KEYWORD_ATTACK),
+                ("spell", Flags::KEYWORD_SPELL),
+            ] {
                 assert_eq!(
                     hit(&format!("{name}_damage_with_{kind}_skills_+%")),
                     [(
@@ -2896,7 +3020,7 @@ mod tests {
                 Quantity::Damage,
                 Op::More,
                 1.0,
-                all(Flags::ATTACK).with_any(Flags::ELEMENTAL)
+                all(Flags::KEYWORD_ATTACK).with_any(Flags::ELEMENTAL)
             )]
         );
         assert_eq!(

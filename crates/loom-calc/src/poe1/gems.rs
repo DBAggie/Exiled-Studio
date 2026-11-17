@@ -352,9 +352,17 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         (enemy_res(DamageType::Lightning), Op::Base, 1.0, NONE, NONE),
                     ]),
                 ),
+                // PoB: the enemy's `SelfElementalAilmentDuration` INC, `mult =
+                // -1`; ignite's duration reads it (P6-2b).
                 (
                     "self_elemental_status_duration_-%",
-                    BuffStat::NoSlice("ailment-duration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration),
+                        Op::Increased,
+                        -1.0,
+                        NONE,
+                        Flags::IGNITE,
+                    )]),
                 ),
             ],
         },
@@ -2030,6 +2038,7 @@ mod tests {
                         | Poe1Quantity::SkillExposure(_)
                         | Poe1Quantity::EnemyTypeDamageTaken(_)
                         | Poe1Quantity::EnemyDamageTaken
+                        | Poe1Quantity::EnemyAilmentDuration
                 )
             )
         };

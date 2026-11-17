@@ -816,7 +816,11 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::SPELL | Flags::CAST | Flags::HIT | spell.skill.keyword_flags();
+    let mut flags = Flags::SPELL
+        | Flags::KEYWORD_SPELL
+        | Flags::CAST
+        | Flags::HIT
+        | spell.skill.keyword_flags();
     if spell.area {
         flags = flags | Flags::AREA;
     }
@@ -853,7 +857,8 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         crit_recently: crit.value != 0.0,
         exert_uptime: None,
     };
-    let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
+    let (hit, crit_hit, sources) =
+        passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, None)?;
     calc.set_derived(
         Field::AverageDamage,
@@ -864,7 +869,37 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
     let (speed, mut speed_reasons) = cast_rate(calc, spell, &cx)?;
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
-    hit_dps(calc, average, speed)
+    hit_dps(calc, average, speed)?;
+    let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
+    let ailment_hit = super::ailment::AilmentHit {
+        flags,
+        sources: &sources,
+        crit,
+        hit_chance: spell_hit_chance,
+        rate: speed,
+    };
+    set_ignite(calc, &ailment_hit, &enemy, input.data, &unvetted)
+}
+
+/// The main skill's ignite from one hit pass (Phase 6, [`super::ailment`]):
+/// the field only when the hit ignites, with the hit's skill reasons; it
+/// reads the crit chance and rate.
+fn set_ignite(
+    calc: &mut Calc<'_>,
+    hit: &super::ailment::AilmentHit<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    unvetted: &Reasons,
+) -> Result<(), CalcError> {
+    if let Some((dps, mut reasons)) = super::ailment::ignite(calc, hit, enemy, data)? {
+        reasons.extend(unvetted);
+        calc.set_derived(
+            Field::IgniteDps,
+            phases::query(dps, reasons),
+            &[Field::CritChance, Field::Speed],
+        );
+    }
+    Ok(())
 }
 
 /// `output.AverageHit = totalHitAvg x (1 - CritChance / 100) +
@@ -924,6 +959,8 @@ struct HandHit {
     multiplier: (Valued, Reasons),
     speed: (Valued, Reasons),
     average: (Valued, Reasons),
+    /// The pass's bases and conversion, for its ailments.
+    sources: HitSources,
 }
 
 /// One hand's pass (module docs, steps 4 to 9) with the weapon `item` in
@@ -988,7 +1025,8 @@ fn hand_hit(
         crit_recently: crit.value != 0.0,
         exert_uptime,
     };
-    let (hit, crit_hit) = passes(calc, &shape, enemy, input.data, multiplier, &mut reasons)?;
+    let (hit, crit_hit, sources) =
+        passes(calc, &shape, enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, Some(hit_chance))?;
     Ok(HandHit {
         hit_chance: (hit_chance, hit_reasons),
@@ -996,6 +1034,7 @@ fn hand_hit(
         multiplier: (multiplier, multiplier_reasons),
         speed: (speed, speed_reasons),
         average: (average, reasons),
+        sources,
     })
 }
 
@@ -1004,7 +1043,8 @@ fn hand_hit(
 fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::ATTACK | Flags::HIT | attack.skill.keyword_flags();
+    let mut flags =
+        Flags::ATTACK | Flags::KEYWORD_ATTACK | Flags::HIT | attack.skill.keyword_flags();
     if attack.part.melee {
         flags = flags | Flags::MELEE;
     }
@@ -1045,6 +1085,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             multiplier,
             speed,
             average,
+            sources,
         } = main;
         calc.set_derived(
             Field::HitChance,
@@ -1071,10 +1112,32 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             ],
         );
         calc.set(Field::Speed, phases::query(speed.0, speed.1));
-        return hit_dps(calc, average.0, speed.0);
+        hit_dps(calc, average.0, speed.0)?;
+        let ailment_hit = super::ailment::AilmentHit {
+            flags,
+            sources: &sources,
+            crit: crit.0,
+            hit_chance: hit_chance.0,
+            rate: speed.0,
+        };
+        return set_ignite(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
     let off = hand_hit(calc, attack, Hand::Off, off_item, flags, &enemy, &unvetted)?;
-    dual_wield(calc, attack, &main, &off)
+    dual_wield(calc, attack, &main, &off)?;
+    // PoB computes each hand's ailments and combines them (`combineStat`
+    // `CHANCE_AILMENT`): not modelled yet. A dual-wielding attack that
+    // would ignite has the field, not computed (P6-2b).
+    let ailment_hit = super::ailment::AilmentHit {
+        flags,
+        sources: &main.sources,
+        crit: main.crit.0,
+        hit_chance: main.hit_chance.0,
+        rate: main.speed.0,
+    };
+    if super::ailment::ignite(calc, &ailment_hit, &enemy, input.data)?.is_some() {
+        calc.set_unsupported(Field::IgniteDps, UnsupportedReason::NotComputed);
+    }
+    Ok(())
 }
 
 /// Both hands' passes combined (Phase 6; PoB's `combineStat`,
@@ -1769,6 +1832,80 @@ fn double_damage(
     )?))
 }
 
+/// `(1 + inc / 100)` and the more product of `quantity` in `cx` (for
+/// other phases; Phase 6).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn modifiers_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<(Valued, Valued), CalcError> {
+    modifiers(calc, quantity, cx, reasons)
+}
+
+/// The flag on `quantity` in `cx` when one applies (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn flag_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    flag_on(calc, quantity, cx, reasons)
+}
+
+/// `a / b` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn ratio(
+    calc: &mut Calc<'_>,
+    a: Valued,
+    b: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    quotient(calc, a, b, term)
+}
+
+/// `a - b` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn minus(
+    calc: &mut Calc<'_>,
+    a: Valued,
+    b: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    difference(calc, a, b, term)
+}
+
+/// `x / 100` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn percent_of(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+    percent(calc, x, term)
+}
+
+/// `base ^ exponent` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn power_of(
+    calc: &mut Calc<'_>,
+    base: Valued,
+    exponent: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    power(calc, base, exponent, term)
+}
+
 /// A leaf of the main skill's own value (Phase 6: a skill's base damage
 /// over time), as a `Base` contribution of `source`.
 ///
@@ -2166,9 +2303,19 @@ struct HitShape<'a> {
 /// The skill's conversion table (module docs, step 2), when it converts:
 /// `share[from][to]` the share of `from` converted to `to`, `kept[from]`
 /// the share `from` keeps (`conversionTable[type].mult`).
-struct Conversion {
+pub(super) struct Conversion {
     share: [[Option<Valued>; 5]; 5],
-    kept: [Option<Valued>; 5],
+    pub(super) kept: [Option<Valued>; 5],
+}
+
+/// What a hit's damage was computed from (Phase 6, for its ailments,
+/// which PoB recomputes in their own config, `calcAilmentSourceDamage`):
+/// each type's base damage and the conversion table.
+pub(super) struct HitSources {
+    /// Each type's `[min, max]` base, in [`TYPES`] order.
+    pub(super) bases: [Option<[Valued; 2]>; 5],
+    /// The conversion table, when the hit converts.
+    pub(super) conversion: Option<Conversion>,
 }
 
 /// PoB's `buildConversionTable` (`CalcOffence.lua` 1878 to 1921) over
@@ -2387,7 +2534,7 @@ fn conversion(
     clippy::too_many_arguments,
     reason = "the recursion carries PoB's arguments"
 )]
-fn calc_damage(
+pub(super) fn calc_damage(
     calc: &mut Calc<'_>,
     t: usize,
     extra: Flags,
@@ -2512,7 +2659,7 @@ fn passes(
     data: &dyn CalcData,
     multiplier: Valued,
     reasons: &mut Reasons,
-) -> Result<(Valued, Valued), CalcError> {
+) -> Result<(Valued, Valued, HitSources), CalcError> {
     let cx = calc.context(shape.flags).with_state(
         ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
         shape.crit_recently,
@@ -2694,7 +2841,7 @@ fn passes(
     }
     let hit = phases::total(calc, &hits, Term::Step("hit"))?;
     let crit = phases::total(calc, &crits, Term::Step("crit-hit"))?;
-    Ok((hit, crit))
+    Ok((hit, crit, HitSources { bases, conversion }))
 }
 
 #[cfg(test)]

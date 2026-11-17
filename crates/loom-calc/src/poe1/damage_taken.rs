@@ -814,7 +814,6 @@ mod tests {
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
         "cannot_be_shocked_while_at_maximum_power_charges",
-        "chance_to_freeze_shock_ignite_%",
         // Damage taken by you, as another type: not the enemy's.
         "physical_damage_taken_%_as_fire",
         "physical_damage_taken_%_as_lightning",
@@ -843,7 +842,12 @@ mod tests {
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
         // The rows this module reads (P3-8n): consecrated ground's damage
         // taken, applied with the enemy on it (`enemy_states`).
-        let read_here = ["consecrated_ground_enemy_damage_taken_+%"];
+        // P6-2b: "#% chance to Freeze, Shock and Ignite" sets only the
+        // ignite's chance (`poe1::ailment`), never the enemy's shock.
+        let read_here = [
+            "consecrated_ground_enemy_damage_taken_+%",
+            "chance_to_freeze_shock_ignite_%",
+        ];
         for id in ids {
             assert!(
                 !names(id, &words) || read_here.contains(&id),

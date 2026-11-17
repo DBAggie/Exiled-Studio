@@ -86,6 +86,7 @@ const SHORT = 6
 const FIRST = [
   'hit-dps',
   'dot-dps',
+  'ignite-dps',
   'average-damage',
   'hit-speed',
   'crit-chance',

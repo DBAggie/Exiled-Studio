@@ -1491,6 +1491,166 @@
       "test": "crates/loom-calc/tests/attack.rs::dual_wielding_should_combine_each_hands_own_pass",
       "added": "2026-11-17",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0075",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ignite-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a Rusted Hatchet (667 ms), added fire damage to attacks, and 25% chance to ignite (P6-2b): every other field equals PoB's; the ignite's DPS differs only through the rate, since fewer than one ignite is active (min(stacks, 1) scales with the rate): 19.49927 / 19.50902 is 1000 / 667 over 1.5"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0076",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ignite-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 105.16669040624998,
+      "successor_value": 105.11413333958019,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a Rusted Hatchet (667 ms), added fire damage to attacks, and 25% chance to ignite (P6-2b): every other field equals PoB's; the ignite's DPS differs only through the rate, since fewer than one ignite is active (min(stacks, 1) scales with the rate): 19.49927 / 19.50902 is 1000 / 667 over 1.5"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0077",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ignite-templar.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 19.5090204375,
+      "successor_value": 19.49927080209895,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a Rusted Hatchet (667 ms), added fire damage to attacks, and 25% chance to ignite (P6-2b): every other field equals PoB's; the ignite's DPS differs only through the rate, since fewer than one ignite is active (min(stacks, 1) scales with the rate): 19.49927 / 19.50902 is 1000 / 667 over 1.5"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0078",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ignite-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "105.2",
+      "successor_value": "105.1",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a Rusted Hatchet (667 ms), added fire damage to attacks, and 25% chance to ignite (P6-2b): every other field equals PoB's; the ignite's DPS differs only through the rate, since fewer than one ignite is active (min(stacks, 1) scales with the rate): 19.49927 / 19.50902 is 1000 / 667 over 1.5"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0079",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 236.3819852375173,
+      "successor_value": 236.5097004757743,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "The ignite reads the rate through its stacks (PoB's igniteStacks = hit chance x chance x duration x rate), so its DPS follows the weapon's floored attack time as the speed and hit DPS of this fixture do (their entries above); every other ignite term equals PoB's (P6-2b)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0080",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1320.929298425107,
+      "successor_value": 1321.0057049365303,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "The ignite reads the rate through its stacks (PoB's igniteStacks = hit chance x chance x duration x rate), so its DPS follows the weapon's floored attack time as the speed and hit DPS of this fixture do (their entries above); every other ignite term equals PoB's (P6-2b)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0081",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 7074.117083638837,
+      "successor_value": 7074.5223325,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "The ignite reads the rate through its stacks (PoB's igniteStacks = hit chance x chance x duration x rate), so its DPS follows the weapon's floored attack time as the speed and hit DPS of this fixture do (their entries above); every other ignite term equals PoB's (P6-2b)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0082",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-conversion-penetration-templar.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 5.4286099256249996,
+      "successor_value": 5.410215193965517,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "The ignite reads the rate through its stacks (PoB's igniteStacks = hit chance x chance x duration x rate), so its DPS follows the weapon's floored attack time as the speed and hit DPS of this fixture do (their entries above); every other ignite term equals PoB's (P6-2b)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
     }
   ]
 }

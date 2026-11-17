@@ -65,4 +65,5 @@ export const OFFENCE = new Set([
   'crit-multiplier',
   'hit-dps',
   'dot-dps',
+  'ignite-dps',
 ])

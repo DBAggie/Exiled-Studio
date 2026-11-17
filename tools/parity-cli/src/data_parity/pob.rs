@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 9;
+pub const FORMAT: u32 = 10;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -274,6 +274,17 @@ pub struct Skill {
     pub add_minions: Vec<String>,
     /// A support's `isTrigger` (format 4).
     pub is_trigger: bool,
+    /// PoB's hand-written base flags (format 10; read by `pob-skills`, not
+    /// compared here).
+    #[serde(default, deserialize_with = "list")]
+    pub base_flags: Vec<String>,
+    /// PoB's hand-written parts (format 10; read by `pob-skills`).
+    #[serde(default)]
+    pub parts: IgnoredAny,
+    /// The names of the skill's functions (format 10; read by
+    /// `pob-skills`).
+    #[serde(default, deserialize_with = "list")]
+    pub functions: Vec<String>,
 }
 
 /// The mods one stat of a skill gives (format 4): PoB's

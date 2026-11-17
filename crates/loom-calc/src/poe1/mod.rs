@@ -13,6 +13,7 @@
 //! multiplier, hit DPS. Its other hit fields, and every hit field of
 //! another kind of skill, are `Unsupported` with `NotComputed`.
 
+pub mod ailment;
 pub mod buffs;
 pub mod charges;
 pub mod collect;
@@ -249,6 +250,33 @@ pub enum Poe1Quantity {
     /// `<From>DamageGainAs<To>` BASE; P3-close): `Base`, percent, read by
     /// [`hit`]'s conversion table.
     GainAs(DamageType, DamageType),
+    /// A chance to inflict a damaging ailment on hit, percent (PoB's
+    /// `EnemyIgniteChance`, `BleedChance`, `PoisonChance`; Phase 6):
+    /// `Base`, read by [`ailment`].
+    AilmentChance(ailment::Ailment),
+    /// The duration of the ailments you inflict (PoB's `EnemyIgniteDuration`,
+    /// `EnemyAilmentDuration`, `EnemyElementalAilmentDuration`,
+    /// `DamagingAilmentDuration`, one quantity whose conditions say which
+    /// ailments; Phase 6): `Increased` and `More`.
+    AilmentDuration,
+    /// Ailments deal their damage faster (PoB's `IgniteBurnFaster`,
+    /// `BleedFaster`, `PoisonFaster`, by conditions; Phase 6): `Increased`.
+    AilmentFaster,
+    /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
+    /// Phase 6): `Increased`.
+    AilmentSlower,
+    /// The duration of ailments on the enemy (PoB's enemy
+    /// `SelfIgniteDuration`, `SelfAilmentDuration`,
+    /// `SelfElementalAilmentDuration`, by conditions; curses such as
+    /// Elemental Weakness; Phase 6): `Increased`, read by [`ailment`].
+    EnemyAilmentDuration,
+    /// "Ailments never count as being from Critical Strikes" (PoB's
+    /// `AilmentsAreNeverFromCrit`, Elemental Overload; Phase 6): a `Flag`
+    /// read by [`ailment`].
+    AilmentsNeverFromCrit,
+    /// The effect of the ailments you inflict (PoB's `AilmentEffect`, by
+    /// conditions; Phase 6): `Increased` and `More`.
+    AilmentEffect,
     /// Intimidating Cry's terms for its exerted attacks' uptime
     /// ([`gems::WarcryValue`]; close-out): `Base`, read by [`hit`].
     IntimidatingCry(gems::WarcryValue),
@@ -451,6 +479,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
             Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
+            Self::AilmentChance(a) => write!(f, "ailment-chance.{}", a.name()),
+            Self::AilmentDuration => f.write_str("ailment-duration"),
+            Self::AilmentFaster => f.write_str("ailment-faster"),
+            Self::AilmentSlower => f.write_str("ailment-slower"),
+            Self::AilmentEffect => f.write_str("ailment-effect"),
+            Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
+            Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
         }
     }
 }

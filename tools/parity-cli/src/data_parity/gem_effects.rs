@@ -255,6 +255,11 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("SupportGuardiansBlessing", "lifeReservationPercent"),
     ("SupportGuardiansBlessing", "manaReservationFlat"),
     ("SupportGuardiansBlessing", "manaReservationPercent"),
+    // Righteous Fire's own burn (P6-2b): its `SkillData` multipliers make
+    // its damage over time when it is the main skill (`poe1::dot`); as
+    // another skill only its buff acts.
+    ("RighteousFire", "RFESMultiplier"),
+    ("RighteousFire", "RFLifeMultiplier"),
 ];
 
 /// Types a modelled support may not add.
@@ -545,6 +550,11 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
     effects
         .iter()
         .map(|&(q, op, divisor, all, any)| {
+            // The enemy's elemental ailment duration (Elemental Weakness,
+            // P6-2b): our condition names the ailments PoB's name does.
+            let elemental_duration =
+                q == Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration) && any == Flags::IGNITE;
+            let any = if elemental_duration { Flags::NONE } else { any };
             // A damage type's more or increased (Herald of Purity's
             // `PhysicalDamage` MORE): the type is the name.
             let typed = [
@@ -561,6 +571,7 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
                     format!("{t}Damage"),
                     if all == f { Flags::NONE } else { all },
                 ),
+                None if elemental_duration => ("SelfElementalAilmentDuration".to_owned(), all),
                 None => (pob_name(q), all),
             };
             let kind = match op {
@@ -594,8 +605,11 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
                 name,
                 f.join(","),
                 if other { " other-flags" } else { "" },
+                // A divisor of -1 is PoB's `mult = -1` (a "-%" stat).
                 if divisor == 1.0 {
                     String::new()
+                } else if divisor == -1.0 {
+                    " mult -1".to_owned()
                 } else {
                     format!(" div {divisor}")
                 }

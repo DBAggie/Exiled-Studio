@@ -243,6 +243,13 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
     if !has("Attack") {
         skill_flags = skill_flags | Flags::CAST;
     }
+    // The keyword flags PoB's `dotCfg` keeps (`keywordFlags` less `Hit`).
+    if skill_flags.contains(Flags::SPELL) {
+        skill_flags = skill_flags | Flags::KEYWORD_SPELL;
+    }
+    if skill_flags.contains(Flags::ATTACK) {
+        skill_flags = skill_flags | Flags::KEYWORD_ATTACK;
+    }
     // `dotCfg` (`CalcOffence.lua` 5648 to 5671): `Dot` added; `Area`,
     // `Projectile`, `Spell`, `Attack`, and `Hit` removed unless the skill's
     // DoT is one; every other flag kept.

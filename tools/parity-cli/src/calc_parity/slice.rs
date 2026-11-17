@@ -22,7 +22,7 @@ pub const REVISION: u32 = 3;
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 1] = [("TotalDot", "dot-dps")];
+pub const PRESENT_NAMES: [(&str, &str); 2] = [("TotalDot", "dot-dps"), ("IgniteDPS", "ignite-dps")];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),
 /// for every field of `loom_calc::poe1::SLICE`.

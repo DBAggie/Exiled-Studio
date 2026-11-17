@@ -19,8 +19,9 @@
 //!   not 0 (3184), before the hit's damage; "Your Critical Strikes do not
 //!   deal extra Damage" is the `NoCritMultiplier` flag (3517): the crit
 //!   multiplier is then 1 (3115); "Ailments never count as being from
-//!   Critical Strikes" (`AilmentsAreNeverFromCrit`, 2227) reaches no slice
-//!   field.
+//!   Critical Strikes" (`AilmentsAreNeverFromCrit`, 2227): an ailment's
+//!   chance on a crit is then its chance on a hit, and its DoT multiplier
+//!   has no critical bonus (Phase 6, [`super::ailment`]).
 //! - **Bitter Frost** (`keystone_cold_purist`): "Enemies Chilled by your
 //!   Hits have Cold Damage taken increased by Chill Effect" is the
 //!   `ChillEffectIncColdDamageTaken` flag (3823), "Enemies in your Chilling
@@ -107,7 +108,19 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
                 Flags::ELEMENTAL,
                 Some(CRIT_IN_PAST_8_SEC),
             ),
+            // PoB's keyword flags are `Hit` or `Ailment`: the same more for
+            // ailments (Phase 6, P6-2b). A hit's context never has the
+            // ailment flag, an ailment's never the hit's.
+            (
+                Quantity::Damage,
+                Op::More,
+                ELEMENTAL_OVERLOAD_MORE,
+                Flags::AILMENT,
+                Flags::ELEMENTAL,
+                Some(CRIT_IN_PAST_8_SEC),
+            ),
             flag(Poe1Quantity::NoCritMultiplier),
+            flag(Poe1Quantity::AilmentsNeverFromCrit),
         ],
     ),
     (

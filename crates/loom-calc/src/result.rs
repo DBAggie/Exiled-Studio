@@ -58,6 +58,9 @@ pub enum Field {
     /// The main skill's own damage over time per second (PoB's
     /// `TotalDot`; Phase 6). Present only when the skill has some.
     DotDps,
+    /// The main skill's ignite damage per second (PoB's `IgniteDPS`;
+    /// Phase 6). Present only when the skill ignites.
+    IgniteDps,
     /// A Path of Exile only field.
     Poe1(Poe1Field),
 }
@@ -85,6 +88,7 @@ impl core::fmt::Display for Field {
             Self::CritMultiplier => "crit-multiplier",
             Self::HitDps => "hit-dps",
             Self::DotDps => "dot-dps",
+            Self::IgniteDps => "ignite-dps",
             Self::Poe1(p) => return write!(f, "poe1.{}", p.name()),
         };
         f.write_str(name)

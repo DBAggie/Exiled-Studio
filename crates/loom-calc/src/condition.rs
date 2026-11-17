@@ -82,6 +82,14 @@ impl Flags {
     pub const BLEED: Self = Self(1 << 25);
     /// Poison (PoB's `KeywordFlag.Poison`).
     pub const POISON: Self = Self(1 << 26);
+    /// An attack skill (PoB's `KeywordFlag.Attack`, "with Attack Skills";
+    /// Phase 6): unlike [`Self::ATTACK`] (`ModFlag.Attack`), an attack's
+    /// ailments and damage over time keep it.
+    pub const KEYWORD_ATTACK: Self = Self(1 << 27);
+    /// A spell skill (PoB's `KeywordFlag.Spell`, "with Spell Skills"; Phase
+    /// 6): unlike [`Self::SPELL`] (`ModFlag.Spell`), a spell's ailments and
+    /// damage over time keep it.
+    pub const KEYWORD_SPELL: Self = Self(1 << 28);
 
     /// The raw bits.
     #[must_use]
@@ -148,6 +156,12 @@ impl Flags {
             DamageType::Lightning => Self::LIGHTNING_DOT,
             DamageType::Chaos => Self::CHAOS_DOT,
         }
+    }
+
+    /// The flags of `a` that `b` also has.
+    #[must_use]
+    pub const fn from_bits_and(a: Self, b: Self) -> Self {
+        Self(a.0 & b.0)
     }
 
     /// The set without the flags of `other`.
