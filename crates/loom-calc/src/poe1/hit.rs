@@ -129,14 +129,17 @@ use crate::store::Effect;
 /// Skill types that make a spell something other than a plain self-cast
 /// hit: PoB computes their rate or damage another way (attacks with
 /// weapons, triggers, totems, traps, mines, minions, brands' activations).
+/// Totems' skills are plain hits since P6-6d: PoB computes a totem's hit
+/// as the skill's, per totem, with the totem's action speed (`1 +
+/// TotemActionSpeed INC / 100`, `CalcOffence.lua` 2346 to 2351) in place
+/// of the player's (no totem action speed stat is mapped: 1).
 /// Channelled skills are plain hits since P6-5: PoB computes them as any
 /// skill, without the server tick cap on their rate (`CalcOffence.lua`
 /// 2366); their stages and release are skill data and tagged stat map
 /// entries, which leave a skill unvetted ([`pob_vetted`]).
-pub const NOT_SELF_CAST: [&str; 8] = [
+pub const NOT_SELF_CAST: [&str; 7] = [
     "Attack",
     "Triggered",
-    "SummonsTotem",
     "Trapped",
     "RemoteMined",
     "Minion",
@@ -146,9 +149,8 @@ pub const NOT_SELF_CAST: [&str; 8] = [
 
 /// Skill types that make an attack something other than a plain attack
 /// with the weapon in hand ([`NOT_SELF_CAST`] but `Attack`).
-pub const NOT_PLAIN_ATTACK: [&str; 7] = [
+pub const NOT_PLAIN_ATTACK: [&str; 6] = [
     "Triggered",
-    "SummonsTotem",
     "Trapped",
     "RemoteMined",
     "Minion",
@@ -242,6 +244,12 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
         return false;
     };
     if !pob.functions.is_empty() || !pob.own_stats.is_empty() {
+        return false;
+    }
+    // A channelled release skill: PoB sets its hit time outside its data
+    // (Snipe's `hitTimeMultiplier`, `CalcTriggers.lua` 1405 to 1418), which
+    // the engine does not read (P6-5 review).
+    if pob.flag("channelRelease") {
         return false;
     }
     let display = |m: &super::pob_skill::PobBaseMod| {
@@ -1868,7 +1876,13 @@ fn cast_rate(
         Quantity::Poe1(Poe1Quantity::CastTime),
         seconds,
     )?;
-    rate(calc, cast_time, cx, !spell.skill.types.contains("Channel"))
+    rate(
+        calc,
+        cast_time,
+        cx,
+        !spell.skill.types.contains("Channel"),
+        !spell.skill.types.contains("SummonsTotem"),
+    )
 }
 
 /// Attack rate (module docs, step 6): the weapon's rate times the skill's
@@ -1896,7 +1910,13 @@ fn attack_rate(
     )?;
     let one = phases::constant(calc, "one", 1.0)?;
     let base_time = quotient(calc, one, skill_rate, Term::Step("attack-time"))?;
-    rate(calc, base_time, cx, !attack.skill.types.contains("Channel"))
+    rate(
+        calc,
+        base_time,
+        cx,
+        !attack.skill.types.contains("Channel"),
+        !attack.skill.types.contains("SummonsTotem"),
+    )
 }
 
 /// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`.
@@ -1905,6 +1925,7 @@ fn rate(
     base_time: Valued,
     cx: &QueryContext,
     capped: bool,
+    self_cast: bool,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
@@ -1913,7 +1934,13 @@ fn rate(
     let time = quotient(calc, base_time, modifier, Term::Step("time"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     let rate = quotient(calc, one, time, Term::Step("uncapped"))?;
-    let rate = action_speed(calc, rate, &mut reasons)?;
+    // The player's action speed reaches a self-cast skill only; a totem
+    // has its own (P6-6d, module docs of `NOT_SELF_CAST`).
+    let rate = if self_cast {
+        action_speed(calc, rate, &mut reasons)?
+    } else {
+        rate
+    };
     // A channelled skill's rate is not capped (`CalcOffence.lua` 2366; P6-5).
     if !capped {
         return Ok((rate, reasons));
@@ -3121,6 +3148,10 @@ mod tests {
         assert!(knives.projectile && !knives.area);
         assert!(!pob_vetted("IceSpear", 1));
         assert!(pob_part("NoSuchSkill", 1).is_none());
+        assert!(!pob_vetted("NoSuchSkill", 0));
+        // A release skill, whose hit time PoB sets in Lua (Snipe,
+        // `CalcTriggers.lua` 1405 to 1418; P6-5 review).
+        assert!(!pob_vetted("Snipe", 0));
         // Tagged stat map entries (P6-6b review): Conflagration's DoT in part
         // 2 only, Animosity's per stack.
         assert!(!pob_vetted("Conflagration", 0) && !pob_vetted("AnimosityUniqueSkill", 0));
@@ -3140,6 +3171,5 @@ mod tests {
         assert_eq!(weapon_flags("Claw", false, true), (false, true));
         assert_eq!(weapon_flags("Wand", true, false), (true, false));
         assert_eq!(weapon_flags("Staff", false, false), (false, false));
-        assert!(!pob_vetted("NoSuchSkill", 0));
     }
 }

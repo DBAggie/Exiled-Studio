@@ -68,7 +68,10 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-5: channelling and Vaal skills
 - [x] Channelled skills computed (no tick cap; stages and release left to the vetting rule); Vaal skills checked by the sweep; the P6-6c review (`weapon_flags`, melee over projectile for spells and DoT); `docs/phase-6/channelling.md`
 - [x] Open PR: #150 (base `feat/p6-6c-skill-review`)
-## P6-6: totems, traps, mines, brands
+## P6-6d: totems (P6-6 split: traps, mines, brands are P6-6e)
+- [x] Totems' hit and DoT computed per totem, the player's action speed for self-cast skills only; the P6-5 review (release skills unvetted, Vaal wording, test placement); `docs/phase-6/totems.md`
+- [ ] Open PR (base `feat/p6-5-channel-vaal`)
+## P6-6e: traps, mines, brands
 ## P6-7a: minion data
 ## P6-7b: minion actor, auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres

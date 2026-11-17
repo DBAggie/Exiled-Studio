@@ -23,7 +23,7 @@ import sys
 
 bundle, pob_rs, out = sys.argv[1:4]
 
-NOT_SELF_CAST = ["Attack", "Triggered", "SummonsTotem", "Trapped",
+NOT_SELF_CAST = ["Attack", "Triggered", "Trapped",
                  "RemoteMined", "Minion", "CreatesMinion", "Brand"]
 NOT_PLAIN_ATTACK = NOT_SELF_CAST[1:]
 

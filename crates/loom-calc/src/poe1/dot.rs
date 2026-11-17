@@ -143,9 +143,8 @@ pub const DOT_FUNCTIONS_NOT_PORTED: [&str; 3] = [
 
 /// Skill types whose DoT this phase leaves not computed (the kinds the hit
 /// leaves out, [`hit::NOT_SELF_CAST`] but spells' and attacks' own).
-const NOT_COMPUTED_KINDS: [&str; 7] = [
+const NOT_COMPUTED_KINDS: [&str; 6] = [
     "Triggered",
-    "SummonsTotem",
     "Trapped",
     "RemoteMined",
     "Minion",

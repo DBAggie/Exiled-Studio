@@ -9,7 +9,10 @@ The engine now computes channelled skills: `Channel` is no longer in `hit::NOT_S
 - **Stages and release:** read through PoB's data (base mods, tagged stat map entries), so the vetting rule (`hit::pob_vetted`, `docs/phase-6/skill-data.md`) leaves such a skill `Partial` until a step ports them.
 - **`Channelling`:** left unsettled, so a modifier that reads it is a reason (the config input `multiplierChannelling` names it, `config::NAMED_ONLY`).
 
-**Vaal skills.** A Vaal gem grants two skills. With the Vaal one as the main skill, the engine computes it as any other skill: the skill model picks the main active skill, and soul costs reach no field. The P6-6a sweep held 13 Vaal skills; P6-6b's rule moved 11 of them closer to PoB, none further. Nothing more to port here: a Vaal skill's own data acts through the same vetting.
+**Vaal skills.** A Vaal gem grants two skills. With the Vaal one as the main skill, the engine computes it as any other skill: the skill model picks the main active skill, and soul costs reach no field. The P6-6a sweep held 13 Vaal skills; P6-6b's rule moved 11 of them closer to PoB, none further. A Vaal skill's own data acts through the same vetting. Not modelled yet, so reasons:
+- PoB's `KeywordFlag.Vaal` (`CalcActiveSkill.lua` 387 to 389): "Vaal Skills deal ..." lines;
+- `UsedVaalSkillRecently` (`CalcPerform.lua` 252);
+- the Pact masteries' Vaal branches (`CalcOffence.lua` 2815).
 
 **Evidence:**
 - **The sweep's 49 new channelled builds:**
@@ -23,3 +26,10 @@ The engine now computes channelled skills: `Channel` is no longer in `hit::NOT_S
 **The P6-6c review** (code-architecture-reviewer), applied here: `docs/phase-6/skill-data.md`, "The P6-6c review, applied in P6-5".
 
 **Left:** porting the stages (Blade Flurry, Scorching Ray, Divine Ire...), the release skills, and settling `Channelling`. Each is a reason now and belongs to the mop-up batches, measured by the sweep.
+
+## The P6-5 review (code-architecture-reviewer), applied in P6-6d
+
+- **Release skills are not vetted** (`channelRelease` in PoB's flags). PoB sets Snipe's hit time in Lua (`CalcTriggers.lua` 1405 to 1418), outside its skill data. Before, only Snipe's unmapped stats kept it `Partial`; a test now pins it.
+- **Seals (Unleash, `CalcOffence.lua` 910 to 935):** read from the support's and items' mods (`HasSeals`, `SealCount`). Those stats are unmapped, so a sealed skill is `Partial` through `unmapped-stat`.
+- **The Vaal paragraph** now lists what is not modelled.
+- **Tests:** a misplaced assertion is back in the vetting test.
