@@ -80,7 +80,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] Maintainer: the next data run ships `poe1/minions.json`
 ## P6-7a2: the P6-7a review
 - [x] Converter strict on IDs and types; validator (duplicate types, empty fields, negatives, skill references); PoB's rod key; `MinionType::life_scaling`; `pob_data.lua` stops on duplicates; start cost measured (+40 ms); `docs/phase-6/minions.md`
-- [ ] Open PR (base `feat/p6-7a-minion-data`)
+- [x] Open PR: #154 (base `feat/p6-7a-minion-data`)
 ## P6-7b: minion actor, auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
