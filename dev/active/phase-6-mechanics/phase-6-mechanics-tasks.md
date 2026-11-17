@@ -32,6 +32,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `poe1::ailment`: the shared base (chance, config, rate and duration, stacks and roll, source recomputed in the ailment's config, crit weighting) and ignite; `ignite-dps` (slice `present`)
 - [x] Keyword flags `KEYWORD_ATTACK` and `KEYWORD_SPELL` ("with Attack/Spell Skills" rows); Elemental Overload's ailment more and `AilmentsAreNeverFromCrit`; Elemental Weakness's duration on the enemy; the critical ailment DoT multiplier
 - [x] Fixtures (3; Q11 DIV-0075 to DIV-0078); community Smite builds' ignite (Q11 DIV-0079 to DIV-0082); `data-parity` export format 10; `docs/phase-6/ailments.md`
+- [x] Open PR: #142 (base `feat/p6-2a-dual-wield`)
 ## P6-2c: bleed and poison
 ## P6-2d: impale
 ## P6-3: cluster jewels (what remains)
