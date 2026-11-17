@@ -41,6 +41,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-2d: impale
 - [x] `ailment::impale` (chance, default maximum stacks, stored hit, effect, the enemy's armour and damage taken, `(1 + x) - 1`); `poe1.impale-dps` (slice `present`); `hit::armour_reduction` split
 - [x] Impale rows; fixture `smite-impale-templar.xml` (Q11 DIV-0088 to DIV-0090); `docs/phase-6/ailments.md`, "P6-2d"
+- [x] Open PR: #144 (base `feat/p6-2c-bleed-poison`)
 ## P6-3: cluster jewels (what remains)
 ## P6-4: flasks and config inputs
 ## P6-5: channelling and Vaal skills
