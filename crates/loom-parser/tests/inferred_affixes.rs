@@ -16,8 +16,8 @@ mod common;
 use loom_data::bundle::{Bundle, ModEntry, ModStat, SpawnWeight};
 use loom_data::rules::AffixGenerations;
 use loom_domain::{
-    ItemBody, ItemLine, LineKind, LineResolution, ModSection, ModifierLine, Prefix, Rarity,
-    Resolved, StatId, StatLine, StatValue,
+    InfluenceId, ItemBody, ItemLine, LineKind, LineResolution, ModSection, ModifierLine, Prefix,
+    Rarity, Resolved, StatId, StatLine, StatValue,
 };
 use loom_parser::import::affixes::{Affix, AffixKind, item_affixes};
 use loom_parser::import::{BaseQuery, BundleData, find_base};
@@ -415,4 +415,65 @@ fn a_line_a_set_aside_stat_could_join_should_get_no_header() {
         explicit("+15 to Accuracy", &[(ACCURACY, 15)]),
     ]);
     assert_eq!(summary(&on_ring(&b, &body)), []);
+}
+
+/// An influence mod's tier counts the rows of its own influence on the
+/// influence tag it spawns on (B-2 item evidence: Tempest Refuge's "of
+/// Shaping" is Tier 1 in the game).
+#[test]
+fn an_influence_mod_should_get_its_tier_among_its_influences_rows() {
+    let mut b = bundle();
+    b.item_rules.mods.influences = vec![("Shaper".to_owned(), 0), ("Elder".to_owned(), 1)];
+    let shaped = |id: &str, level, min, max, tag: &str, influence| {
+        let mut e = entry(
+            id,
+            1,
+            "TestShapedLife",
+            level,
+            &[(LIFE, min, max)],
+            &[(tag, 1000), ("default", 0)],
+        );
+        e.influence = Some(influence);
+        e
+    };
+    b.mods.extend([
+        shaped("TestShapedLife1", 68, 45, 49, "ring_shaper", 0),
+        shaped("TestShapedLife2", 80, 50, 54, "ring_shaper", 0),
+        // On another class's tag: not a tier on a ring.
+        shaped("TestShapedLife3", 85, 60, 69, "amulet_shaper", 0),
+        // Another influence's row of the same type: not counted.
+        shaped("TestElderLife1", 90, 70, 79, "ring_shaper", 1),
+    ]);
+    let shaper = |line: ItemLine| {
+        let mut body = ring(vec![line]);
+        body.lines.push(ItemLine {
+            source: "Shaper Item".to_owned(),
+            kind: LineKind::Influence(InfluenceId::new("Shaper")),
+        });
+        body
+    };
+    let body = shaper(explicit("+45 to maximum Life", &[(LIFE, 45)]));
+    assert_eq!(
+        summary(&on_ring(&b, &body)),
+        [(AffixKind::Prefix, "TestShapedLife1", Some(2), vec![0])]
+    );
+    let body = shaper(explicit("+52 to maximum Life", &[(LIFE, 52)]));
+    assert_eq!(
+        summary(&on_ring(&b, &body)),
+        [(AffixKind::Prefix, "TestShapedLife2", Some(1), vec![0])]
+    );
+    // A row on two classes' tags whose tiers differ there: no tier.
+    if let Some(m) = b.mods.iter_mut().find(|m| m.id == "TestShapedLife2") {
+        m.spawn.insert(
+            0,
+            SpawnWeight {
+                tag: "amulet_shaper".to_owned(),
+                weight: 1000,
+            },
+        );
+    }
+    assert_eq!(
+        summary(&on_ring(&b, &body)),
+        [(AffixKind::Prefix, "TestShapedLife2", None, vec![0])]
+    );
 }

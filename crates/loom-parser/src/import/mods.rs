@@ -612,7 +612,7 @@ pub fn filter(ctx: &Context<'_>, line: &LineContext, candidates: &[Candidate]) -
         });
     }
 
-    if d.kept.len() > 1 && line.section == ModSection::Explicit && !ctx.unique {
+    if d.kept.len() > 1 && line.section == ModSection::Explicit {
         local_stat(ctx, line, candidates, &fit, &mut d);
     }
 
@@ -666,8 +666,13 @@ pub fn filter(ctx: &Context<'_>, line: &LineContext, candidates: &[Candidate]) -
     d
 }
 
-/// `local-stat`: on an explicit line of a non-unique item whose kept
-/// candidates are local and global readings of one line, the base decides:
+/// `local-stat`: on an explicit line whose kept candidates are local and
+/// global readings of one line, the base decides (a unique's lines too,
+/// as the game reads them: Replica Dreamfeather's "increased Attack Speed"
+/// is the sword's own, 1.65 attacks per second in the game, and as PoB
+/// reads a weapon's or armour's local lines whatever the rarity; on a
+/// unique only when each kept reading is one stat, note
+/// `local-stat-unique-not-a-pair` otherwise):
 /// a base with the locality's carrier tag keeps the local readings, any
 /// other base the global ones. Skipped, with a note, when the base's tags
 /// are unknown or disagree, when a candidate mixes localities, or when a
@@ -680,6 +685,18 @@ fn local_stat(
     fit: &[Vec<Fit>],
     d: &mut Decision,
 ) {
+    // On a unique, the readings are backed by unique rows of any item, a
+    // jewel's among them: only a plain pair (one stat each) is decided, so
+    // Windscream's "+15% to all Elemental Resistances" on boots is never
+    // read as Thread of Hope's two jewel stats.
+    if ctx.unique
+        && d.kept
+            .iter()
+            .any(|&i| candidates.get(i).is_none_or(|c| c.stats.len() != 1))
+    {
+        d.notes.insert("local-stat-unique-not-a-pair");
+        return;
+    }
     let kinds: Vec<LocalKind> = d
         .kept
         .iter()

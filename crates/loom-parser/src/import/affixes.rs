@@ -45,9 +45,13 @@
 //! level that spawn on the base's tags (no essence or influence rows).
 //! Checked against the game: Urchin's (`LocalBaseArmourAndLife2`, level
 //! 46) on a Pig-Faced Bascinet is Tier 2, under Nautilus's (62);
-//! Crocodile's (78) does not spawn on helmets. A row that does not spawn on
-//! the base by its tags (an essence, an influence, a crafted row) has no
-//! tier.
+//! Crocodile's (78) does not spawn on helmets. An influence row's tier
+//! counts the rows of its own influence instead, on the influence tags it
+//! spawns on (`shield_shaper`), and only when each of those tags gives
+//! the same tier: Tempest Refuge's "of Shaping"
+//! (`RecoverLifePercentOnBlockUber1_`) is Tier 1, as the game shows. A row
+//! that does not spawn on the base by its tags (an essence, a crafted row)
+//! has no tier.
 //!
 //! The affix name, level, and tags come from a data schema 4 bundle
 //! ([`bundle::AFFIX_SCHEMA`]); an older bundle gives the header without
@@ -772,11 +776,42 @@ impl<'s, 'c> Search<'s, 'c> {
 fn tier(ctx: &Context<'_>, bundle: &Bundle, n: usize) -> Option<u32> {
     let row = ctx.mods.row(n)?;
     let mod_type = row.mod_type?;
-    if row.essence_only || row.influence.is_some() {
+    if row.essence_only {
         return None;
     }
     let level = |k: usize| bundle.mods.get(k).and_then(|m| m.level);
     let own = level(n)?;
+    if let Some(influence) = row.influence {
+        // Counted among the influence's own rows, on the influence tags
+        // the row spawns on (`shield_shaper`): the base's tags never
+        // carry them. A row on several classes' tags has a tier only when
+        // each tag gives the same one.
+        let tiers: BTreeSet<usize> = row
+            .spawn
+            .iter()
+            .filter(|(_, w)| *w > 0)
+            .map(|(tag, _)| {
+                let tag = std::slice::from_ref(tag);
+                ctx.mods
+                    .row_indexes_of_type(mod_type)
+                    .iter()
+                    .filter(|&&k| {
+                        ctx.mods.row(k).is_some_and(|q| {
+                            q.influence == Some(influence)
+                                && q.domain == row.domain
+                                && q.generation == row.generation
+                                && !q.essence_only
+                                && q.weight(tag) > 0
+                        }) && level(k).is_some_and(|l| l > own)
+                    })
+                    .count()
+            })
+            .collect();
+        return match tiers.into_iter().collect::<Vec<_>>()[..] {
+            [above] => u32::try_from(above).ok().map(|a| a + 1),
+            _ => None,
+        };
+    }
     let tiers: BTreeSet<Option<u32>> = ctx
         .bases
         .iter()

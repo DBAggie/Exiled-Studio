@@ -1013,18 +1013,20 @@ fn filter_should_need_the_weapon_tag_for_a_weapon_local_stat() {
 }
 
 #[test]
-fn filter_should_not_apply_local_stat_to_unique_or_implicit_lines() {
+fn filter_should_not_apply_local_stat_to_implicit_lines_but_should_to_a_uniques_pair() {
     let mods = local_global_mods();
     let bases = [base(Some(&["ring"]))];
     let implicit = line(Section::Implicit);
     let d = filter(&ctx(&mods, &bases), implicit, &es_candidates(15));
     assert!(!d.rules.contains(&"local-stat"));
+    // A unique's plain local and global pair is decided by the base too
+    // (2026-11-17, Replica Dreamfeather; `docs/ui/b2-data/item-evidence.md`).
     let unique = Context {
         unique: true,
         ..ctx(&mods, &bases)
     };
     assert!(
-        !filter(&unique, CRAFTED, &es_candidates(15))
+        filter(&unique, CRAFTED, &es_candidates(15))
             .rules
             .contains(&"local-stat")
     );
