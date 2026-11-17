@@ -19,6 +19,7 @@ pub mod collect;
 pub mod conditions;
 pub mod config;
 pub mod damage_taken;
+pub mod dot;
 pub mod enemy;
 pub mod exposure;
 pub mod gem_levels;
@@ -29,6 +30,9 @@ pub mod keystones;
 pub mod mapping;
 pub mod minions;
 pub mod pantheon;
+pub mod pob_skill;
+#[rustfmt::skip]
+pub mod pob_skills;
 pub mod phases;
 pub mod skill;
 pub mod skill_modifiers;
@@ -728,7 +732,8 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
-                "hit"
+                "hit",
+                "dot"
             ]
         );
         assert_eq!(

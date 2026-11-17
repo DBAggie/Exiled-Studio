@@ -1391,10 +1391,14 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         return;
     }
     let levels = GemLevels::from_effects(ingest.effects());
-    let hit = hit::hit_skill(input, &levels);
-    let modelled: Vec<_> = hit.as_ref().map_or_else(Vec::new, |h| {
-        std::iter::once(&h.skill().active_gem)
-            .chain(&h.skill().supports)
+    // The main skill whose gems act through a computed field: its hit, else
+    // its own damage over time (Phase 6, `poe1::dot`).
+    let main = hit::hit_skill(input, &levels)
+        .map(|h| (h.group(), h.skill().clone()))
+        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels));
+    let modelled: Vec<_> = main.as_ref().map_or_else(Vec::new, |(_, m)| {
+        std::iter::once(&m.active_gem)
+            .chain(&m.supports)
             .copied()
             .collect()
     });
@@ -1409,19 +1413,16 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     }
     super::gems::gems(
         input,
-        hit.as_ref().map(|h| (h.group(), h.skill())),
+        main.as_ref().map(|(g, m)| (*g, m)),
         &levels,
         &totals,
         ingest,
     );
-    let Some(hit) = hit else { return };
+    let Some((group, main)) = main else { return };
     // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
-    let buff_scale = totals.buff_scale(true, &hit.skill().types, 0.0);
+    let buff_scale = totals.buff_scale(true, &main.types, 0.0);
     for r in modelled {
-        let source = Source::Gem {
-            group: hit.group(),
-            gem: r.gem,
-        };
+        let source = Source::Gem { group, gem: r.gem };
         let instance = skill::instance(r.effect, r.level, r.quality, input.data);
         for p in &instance.problems {
             match p {

@@ -4,7 +4,7 @@
 use loom_domain::{
     Attributes, Build, BuildPart, Character, Config, ConfigInputKind, ConfigLayout, ConfigSet,
     ConfigValue, Entry, GameSpecific, Gem, Item, ItemPart, Items, ItemsEntry, OpaqueNode, Ordered,
-    PassiveSpec, Passives, Skills, Sourced, SpecPart,
+    PassiveSpec, Passives, Skills, SkillsLayout, SocketGroup, Sourced, SpecPart,
 };
 
 /// An XML writer that indents with tabs, as PoB does.
@@ -343,27 +343,35 @@ fn skills(w: &mut Writer, s: &Skills) {
         s.active.map(|x| x.0.to_string()).as_deref(),
     );
     kept(&mut a, &s.attributes);
-    w.element(1, "Skills", &a, |w| {
-        w.ordered(2, &s.sets, |w, set| {
+    // PoB's layout before skill sets: the one set's groups directly under
+    // `<Skills>` (as the config's flat layout).
+    let flat = s.layout == SkillsLayout::Flat && s.check_layout().is_ok();
+    w.element(1, "Skills", &a, |w| match s.sets.typed().next() {
+        Some(set) if flat => w.ordered(2, &set.groups, |w, g| socket_group(w, 2, g)),
+        _ => w.ordered(2, &s.sets, |w, set| {
             let mut a = vec![("id".to_owned(), set.id.0.to_string())];
             put(&mut a, "title", set.title.as_deref());
             kept(&mut a, &set.attributes);
             w.element(2, "SkillSet", &a, |w| {
-                w.ordered(3, &set.groups, |w, g| {
-                    let mut a = Attrs::new();
-                    put(&mut a, "label", g.label.as_deref());
-                    put(&mut a, "enabled", Some(bool_text(g.enabled)));
-                    put(&mut a, "slot", g.slot.as_ref().map(|x| x.as_str()));
-                    put_number(&mut a, "mainActiveSkill", g.main_active_skill.as_ref());
-                    kept(&mut a, &g.attributes);
-                    w.element(3, "Skill", &a, |w| w.ordered(4, &g.gems, gem));
-                });
+                w.ordered(3, &set.groups, |w, g| socket_group(w, 3, g));
             });
-        });
+        }),
     });
 }
 
-fn gem(w: &mut Writer, g: &Gem) {
+fn socket_group(w: &mut Writer, depth: usize, g: &SocketGroup) {
+    let mut a = Attrs::new();
+    put(&mut a, "label", g.label.as_deref());
+    put(&mut a, "enabled", Some(bool_text(g.enabled)));
+    put(&mut a, "slot", g.slot.as_ref().map(|x| x.as_str()));
+    put_number(&mut a, "mainActiveSkill", g.main_active_skill.as_ref());
+    kept(&mut a, &g.attributes);
+    w.element(depth, "Skill", &a, |w| {
+        w.ordered(depth + 1, &g.gems, |w, x| gem(w, depth + 1, x))
+    });
+}
+
+fn gem(w: &mut Writer, depth: usize, g: &Gem) {
     let mut a = Attrs::new();
     put(&mut a, "gemId", g.gem.as_ref().map(|x| x.as_str()));
     put(&mut a, "skillId", g.skill.as_ref().map(|x| x.as_str()));
@@ -372,7 +380,7 @@ fn gem(w: &mut Writer, g: &Gem) {
     put_number(&mut a, "quality", Some(&g.quality));
     put(&mut a, "enabled", Some(bool_text(g.enabled)));
     kept(&mut a, &g.attributes);
-    w.element(4, "Gem", &a, |_| {});
+    w.element(depth, "Gem", &a, |_| {});
 }
 
 fn config(w: &mut Writer, c: &Config) {

@@ -1,12 +1,12 @@
 # PoB data export (Phase 3 plan, step 2)
 
-`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 9; format 8 before the passive tree's T3 had no `cluster_jewels`, format 7 before B-2's card data had no `flavour_text`, format 6 before the passive tree's T-f had no `jewel_radii`, format 5 before B-2 had no `mods` or `base_requirements`, format 2 before P3-12g no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
+`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 10; format 9 before Phase 6 P6-1 had no skills' `base_flags`, `parts`, or `functions`, format 8 before the passive tree's T3 had no `cluster_jewels`, format 7 before B-2's card data had no `flavour_text`, format 6 before the passive tree's T-f had no `jewel_radii`, format 5 before B-2 had no `mods` or `base_requirements`, format 2 before P3-12g no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
 
 It is maintainer-run, not in CI, and outside the oracle adapter and its protocol (it reads no build, so the adapter protocol does not apply). It runs on the pinned oracle runtime (`local/oracle/`, built by `tools/oracle/acquire.ps1` or `acquire.sh`, checked by `oracle-verify`), starts PoB with its own `HeadlessWrapper.lua`, and copies plain values from:
 
 | Export field | PoB source |
 |---|---|
-| `skills` | `data.skills` (`src/Data/Skills/*.lua`): stats, per-level values, costs, crit, effectiveness, multipliers, cooldown, reservations, types, constant and quality stats |
+| `skills` | `data.skills` (`src/Data/Skills/*.lua`): stats, per-level values, costs, crit, effectiveness, multipliers, cooldown, reservations, types, constant and quality stats; PoB's hand-written base flags, parts, and skill function names (format 10, read by `loom-parity-cli pob-skills`) |
 | `gems` | `data.gems` (`src/Data/Gems.lua`) |
 | `bases` | `data.itemBases` with `weapon` or `armour` |
 | `base_requirements` | `data.itemBases`: every base's `req` (level, str, dex, int) and whether it is a flask (format 6) |

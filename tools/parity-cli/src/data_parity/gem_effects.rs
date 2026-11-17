@@ -514,6 +514,13 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
                 json!({ "stat": "Mana", "threshold": 1, "type": "StatThreshold" })
             ),
         ),
+        BuffStat::LifeThreshold(rows) => (
+            rows,
+            format!(
+                " tags {}",
+                json!({ "stat": "LifeUnreserved", "threshold": 2, "type": "StatThreshold" })
+            ),
+        ),
         BuffStat::NoSlice(_) | BuffStat::Gated(_) => return Vec::new(),
     };
     if let Some(one) = collapse(rows) {
@@ -708,7 +715,10 @@ fn check_one(
                     strings(conds),
                 );
             }
-            BuffStat::Rows(_) | BuffStat::BloodStance(_) | BuffStat::Threshold(_) => {}
+            BuffStat::Rows(_)
+            | BuffStat::BloodStance(_)
+            | BuffStat::Threshold(_)
+            | BuffStat::LifeThreshold(_) => {}
         }
     }
     // Rows.

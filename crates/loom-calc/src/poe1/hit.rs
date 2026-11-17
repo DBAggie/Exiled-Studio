@@ -754,6 +754,9 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             life >= 2.0 && mana >= 1.0,
         );
     }
+    if let Some(life) = life {
+        calc.settle_state(ConditionKey::new(super::gems::LIFE_THRESHOLD), life >= 2.0);
+    }
     let skill = hit_skill(&input, &levels);
     if let Some(h) = &skill {
         let sources = std::iter::once(&h.skill().active_gem)
@@ -1568,11 +1571,151 @@ fn double_damage(
     )?))
 }
 
+/// A leaf of the main skill's own value (Phase 6: a skill's base damage
+/// over time), as a `Base` contribution of `source`.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn skill_leaf(
+    calc: &mut Calc<'_>,
+    source: Source,
+    value: f64,
+) -> Result<Valued, CalcError> {
+    leaf(calc, source, Quantity::Damage, value)
+}
+
+/// Whether "Cannot deal <Type> Damage" holds for `t` in `cx` (PoB's
+/// `canDeal`, `DealNo<Type>`).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn cannot_deal(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<bool, CalcError> {
+    Ok(flag_on(calc, Quantity::Poe1(Poe1Quantity::DealNo(t)), cx, reasons)?.is_some())
+}
+
+/// `1 + inc / 100` and the more product of `Damage` in `cx` (a typed
+/// context reads the type's names too), as a hit's damage reads them.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn damage_modifiers(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<(Valued, Valued), CalcError> {
+    modifiers(calc, Quantity::Damage, cx, reasons)
+}
+
+/// The sum of `op` effects on `quantity` in `cx` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn sum_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    op: Op,
+    cx: &QueryContext,
+    term: Term,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    sum_in(calc, quantity, op, cx, term, reasons)
+}
+
+/// The enemy's effect on damage over time of type `t` (`CalcOffence.lua`
+/// 5698 to 5711): `(1 - resist / 100) x (1 + taken inc / 100) x taken
+/// more`, the resistance without penetration (`calcResistForType`), for
+/// physical the enemy's physical damage reduction (nothing modelled gives
+/// the enemy any: 0).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn dot_enemy_effect(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    t: DamageType,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let one = phases::constant(calc, "one", 1.0)?;
+    let effect = match resistance_index(t) {
+        Some(index) => {
+            let resist = enemy_resistance(calc, enemy, data, t, index, cx, reasons)?;
+            let share = percent(calc, resist, Term::Step("resistance-share"))?;
+            difference(calc, one, share, Term::Step("enemy-effect"))?
+        }
+        None => one,
+    };
+    enemy_reasons(enemy, false, reasons);
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    if !phases::has(calc, all) && !phases::has(calc, typed) {
+        return Ok(effect);
+    }
+    // `effMult = (1 - resist / 100) x (1 + takenInc / 100) x takenMore`, in
+    // PoB's order; `takenInc` one sum of the names, `takenMore` their
+    // product.
+    let inc_all = sum_in(
+        calc,
+        all,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-damage-taken-increased"),
+        reasons,
+    )?;
+    let inc_typed = sum_in(
+        calc,
+        typed,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-type-damage-taken-increased"),
+        reasons,
+    )?;
+    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
+    let inc = phases::factor(calc, sum, Term::Increased)?;
+    let more_all = more(calc, all, cx, reasons)?;
+    let more_typed = more(calc, typed, cx, reasons)?;
+    let taken_more = phases::product(calc, &[more_all, more_typed], Term::More)?;
+    phases::product(
+        calc,
+        &[effect, inc, taken_more],
+        Term::Step("effective-multiplier"),
+    )
+}
+
 /// The enemy's resistance to `t` a hit meets (`calcResistForType`):
 /// `max(min(resist, max), -200)`, `max` the configured resistance when
 /// above the base maximum, at most 90; with the hit's penetration taken
 /// off: `resist - pen`.
 fn effective_resistance(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    t: DamageType,
+    index: usize,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let resist = enemy_resistance(calc, enemy, data, t, index, cx, reasons)?;
+    let pen = sum_in(
+        calc,
+        Quantity::Penetration(t),
+        Op::Base,
+        cx,
+        Term::Step("penetration"),
+        reasons,
+    )?;
+    difference(calc, resist, pen, Term::Step("effective-resistance"))
+}
+
+/// The enemy's resistance to `t` (`calcResistForType`), before
+/// penetration: `max(min(resist, max), -200)`.
+fn enemy_resistance(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
@@ -1632,16 +1775,7 @@ fn effective_resistance(
     let max = phases::pair(calc, max, cap, Term::Step("enemy-maximum"), true)?;
     let capped = phases::pair(calc, resist, max, Term::Step("enemy-capped"), true)?;
     let floor = phases::constant(calc, "resistance-floor", RESIST_FLOOR)?;
-    let resist = phases::pair(calc, capped, floor, Term::Step("enemy-resistance"), false)?;
-    let pen = sum_in(
-        calc,
-        Quantity::Penetration(t),
-        Op::Base,
-        cx,
-        Term::Step("penetration"),
-        reasons,
-    )?;
-    difference(calc, resist, pen, Term::Step("effective-resistance"))
+    phases::pair(calc, capped, floor, Term::Step("enemy-resistance"), false)
 }
 
 /// The share of a physical hit the enemy's armour lets through (module

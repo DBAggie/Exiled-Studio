@@ -55,6 +55,9 @@ pub enum Field {
     /// The main skill's hit damage per second: not the whole build's
     /// damage (Phase 3 plan, N6).
     HitDps,
+    /// The main skill's own damage over time per second (PoB's
+    /// `TotalDot`; Phase 6). Present only when the skill has some.
+    DotDps,
     /// A Path of Exile only field.
     Poe1(Poe1Field),
 }
@@ -81,6 +84,7 @@ impl core::fmt::Display for Field {
             Self::CritChance => "crit-chance",
             Self::CritMultiplier => "crit-multiplier",
             Self::HitDps => "hit-dps",
+            Self::DotDps => "dot-dps",
             Self::Poe1(p) => return write!(f, "poe1.{}", p.name()),
         };
         f.write_str(name)

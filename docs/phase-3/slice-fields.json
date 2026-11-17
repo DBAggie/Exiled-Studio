@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 2,
+  "revision": 3,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 3 (Phase 6, P6-1): fields with applies present. Our result has such a field only when it applies to the build (the engine sets it); calc-parity compares it when our result has it or the oracle's value is a number other than 0, and leaves it out otherwise, so builds without the mechanic count no such field.",
     "Phase 3 plan, decision 4 (Q3, Q6). The calc computes these fields for the character and the main skill; calc-parity (P3-5) compares the Complete ones with each field's rule and the ten breakdowns term by term.",
     "comparison: every field is exact for now (Q6 default). A field moves to abs or rel only with a written reason once a successor output shows where summation order changes the last bits (P3-5 on); no broad tolerance (ADR-006).",
     "applies: always, or only when the main skill is an attack or a spell (calc_survey::rules::Kind).",
@@ -153,10 +154,11 @@
           {"term": "total", "graph": "result", "line": "= %.1f", "contributions": ["result"]}
         ]
       }
-    }
+    },
+    {"id": "TotalDot", "group": "dot", "pob_key": "TotalDot", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-1): the main skill's own damage over time. Our result has the field only when the skill has a DoT of its own; compared when we have it or PoB's value is not 0."}
   ],
   "not_in_slice": [
-    {"what": "damage over time, ailments, minions, CombinedDPS beyond hit DPS", "why": "plan decision 4: their absence is reported, not compared"},
+    {"what": "ailments, minions, CombinedDPS beyond hit DPS", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},
     {"what": "AverageHit", "why": "absent for attacks (per hand in PoB); AverageDamage stands for the average hit of both kinds"}
   ]
 }

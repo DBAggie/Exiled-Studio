@@ -44,6 +44,9 @@ pub enum DomainError {
     /// A flat config does not hold exactly one set with ID 1, no title,
     /// and no attributes.
     FlatConfigLayout,
+    /// Flat skills do not hold exactly one set with ID 1, no title, and no
+    /// attributes.
+    FlatSkillsLayout,
 }
 
 impl DomainError {
@@ -59,6 +62,7 @@ impl DomainError {
                 "DOMAIN_CONTINUED_CUSTOM_LINE"
             }
             Self::FlatConfigLayout => "DOMAIN_FLAT_CONFIG_LAYOUT",
+            Self::FlatSkillsLayout => "DOMAIN_FLAT_SKILLS_LAYOUT",
         }
     }
 }
@@ -89,6 +93,11 @@ impl fmt::Display for DomainError {
             Self::FlatConfigLayout => write!(
                 f,
                 "{}: a flat config holds one set, ID 1, without title or attributes",
+                self.code()
+            ),
+            Self::FlatSkillsLayout => write!(
+                f,
+                "{}: flat skills hold one set, ID 1, without title or attributes",
                 self.code()
             ),
         }

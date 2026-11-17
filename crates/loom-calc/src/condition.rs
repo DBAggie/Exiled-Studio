@@ -16,7 +16,7 @@ use crate::quantity::DamageType;
 
 /// A set of skill and damage flags.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Flags(u32);
+pub struct Flags(u64);
 
 impl Flags {
     /// No flag.
@@ -62,10 +62,30 @@ impl Flags {
     /// A fire, cold, or lightning skill (for an `any` condition).
     pub const SKILL_ELEMENTAL: Self =
         Self(Self::SKILL_FIRE.0 | Self::SKILL_COLD.0 | Self::SKILL_LIGHTNING.0);
+    /// Damage over time (PoB's `ModFlag.Dot`, Phase 6).
+    pub const DOT: Self = Self(1 << 17);
+    /// Physical damage over time (PoB's `KeywordFlag.PhysicalDot`).
+    pub const PHYSICAL_DOT: Self = Self(1 << 18);
+    /// Fire damage over time (PoB's `KeywordFlag.FireDot`).
+    pub const FIRE_DOT: Self = Self(1 << 19);
+    /// Cold damage over time (PoB's `KeywordFlag.ColdDot`).
+    pub const COLD_DOT: Self = Self(1 << 20);
+    /// Lightning damage over time (PoB's `KeywordFlag.LightningDot`).
+    pub const LIGHTNING_DOT: Self = Self(1 << 21);
+    /// Chaos damage over time (PoB's `KeywordFlag.ChaosDot`).
+    pub const CHAOS_DOT: Self = Self(1 << 22);
+    /// A damaging ailment (PoB's `ModFlag.Ailment` and `KeywordFlag.Ailment`).
+    pub const AILMENT: Self = Self(1 << 23);
+    /// Ignite (PoB's `KeywordFlag.Ignite`).
+    pub const IGNITE: Self = Self(1 << 24);
+    /// Bleeding (PoB's `KeywordFlag.Bleed`).
+    pub const BLEED: Self = Self(1 << 25);
+    /// Poison (PoB's `KeywordFlag.Poison`).
+    pub const POISON: Self = Self(1 << 26);
 
     /// The raw bits.
     #[must_use]
-    pub const fn bits(self) -> u32 {
+    pub const fn bits(self) -> u64 {
         self.0
     }
 
@@ -115,6 +135,25 @@ impl Flags {
             DamageType::Lightning => Self::SKILL_LIGHTNING,
             DamageType::Chaos => Self::SKILL_CHAOS,
         }
+    }
+
+    /// The damage over time keyword of a damage type (PoB's
+    /// `KeywordFlag[type .. "Dot"]`).
+    #[must_use]
+    pub const fn dot_keyword(t: DamageType) -> Self {
+        match t {
+            DamageType::Physical => Self::PHYSICAL_DOT,
+            DamageType::Fire => Self::FIRE_DOT,
+            DamageType::Cold => Self::COLD_DOT,
+            DamageType::Lightning => Self::LIGHTNING_DOT,
+            DamageType::Chaos => Self::CHAOS_DOT,
+        }
+    }
+
+    /// The set without the flags of `other`.
+    #[must_use]
+    pub const fn without(self, other: Self) -> Self {
+        Self(self.0 & !other.0)
     }
 }
 

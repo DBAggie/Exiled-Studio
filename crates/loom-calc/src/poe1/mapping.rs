@@ -281,6 +281,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 755: `FireDamage` INC with
+    // `KeywordFlag.FireDot` (P6-1).
+    (
+        "burn_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::FIRE.union(Flags::FIRE_DOT),
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
     // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
     // skills"; `ModParser.lua` 754, 1052); likewise below.
@@ -370,6 +382,11 @@ pub const HIT_ROWS: &[HitRow] = &[
         "chaos_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_CHAOS, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1178: `ChaosDotMultiplier` BASE (P6-1).
+    (
+        "chaos_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::CHAOS, NONE)],
+    ),
     (
         "cold_critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, SK_COLD, NONE)],
@@ -390,6 +407,11 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cold_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_COLD, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1181: `ColdDotMultiplier` BASE (P6-1).
+    (
+        "cold_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::COLD, NONE)],
+    ),
     (
         "critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)],
@@ -397,6 +419,16 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 752: `Damage` INC with `ModFlag.Dot` (P6-1).
+    (
+        "damage_over_time_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1172: `DotMultiplier` BASE (P6-1).
+    (
+        "dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, NONE, NONE)],
     ),
     (
         "elemental_damage_+%",
@@ -431,6 +463,11 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "fire_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_FIRE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1175: `FireDotMultiplier` BASE (P6-1).
+    (
+        "fire_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::FIRE, NONE)],
     ),
     (
         "global_maximum_added_cold_damage",
@@ -507,6 +544,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "physical_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_PHYSICAL, NONE)],
+    ),
+    // PoB `ModParser.lua` 739 ("physical damage over time multiplier"):
+    // `PhysicalDotMultiplier` BASE (P6-1).
+    (
+        "physical_dot_multiplier_+",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            1.0,
+            Flags::PHYSICAL,
+            NONE,
+        )],
     ),
     (
         "skill_physical_damage_%_to_convert_to_lightning",
@@ -651,6 +700,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Accuracy
             | Quantity::AddedDamage(..)
             | Quantity::Penetration(..)
+            | Quantity::DotMultiplier
             | Quantity::Poe1(
                 Poe1Quantity::SkillBaseDamage(..)
                     | Poe1Quantity::SkillConversion(..)
@@ -678,7 +728,9 @@ pub struct SkillMapping;
 
 impl StatMapping for SkillMapping {
     fn map(&self, stat: &StatId) -> StatMap {
-        if SKILL_FLAGS.contains(&stat.as_str()) {
+        if SKILL_FLAGS.contains(&stat.as_str())
+            || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
+        {
             return StatMap::NoEffect;
         }
         match Poe1Mapping.map(stat) {

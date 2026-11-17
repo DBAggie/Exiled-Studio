@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-1): Vortex (level 20) with damage
+     over time modifiers: increased damage over time and cold damage, the
+     damage over time multiplier and the cold one; spell damage does not
+     reach the skill's DoT (PoB's dotCfg drops Spell). Original; not from
+     PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Vortex" skillId="Vortex" variantId="Vortex" gemId="Metadata/Items/Gems/SkillGemFrostBoltNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				40% increased Damage over Time
+25% increased Cold Damage
+30% increased Spell Damage
++20% to Damage over Time Multiplier
++15% to Cold Damage over Time Multiplier
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

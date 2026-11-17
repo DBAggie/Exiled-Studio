@@ -1,4 +1,4 @@
-Last Updated: 2026-11-17 (P6-0: plan, plan-reviewer findings applied)
+Last Updated: 2026-11-17 (P6-1: slice revision 3, PoB skill table, skill damage over time)
 
 # Phase 6: PoE1 mechanics expansion (tasks)
 
@@ -15,11 +15,12 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Baseline re-measured on it (`local/p6/base-packs`); plan's numbers updated (#139)
 
 ## P6-1: slice revision 3, PoB skill table, skill damage over time
-- [ ] Slice revision 3: emission rule (`applies`), new fields, `Field` variants
-- [ ] Readers that count fields: engine and parity tests, golden documents, UI (`OFFENCE`, `FIRST`, labels, dashboards)
-- [ ] `pob_data.lua` format 10: `base_flags`, `parts`, `base_mods`; generator; generated table; `data-parity` table
-- [ ] Skill DoT (`CalcOffence.lua` 5647 on), DoT multipliers, enemy DoT taken, `TotalDot`; DoT stat rows
-- [ ] Mechanic fixtures; evidence
+- [x] Slice revision 3: `applies: present`, `TotalDot`, `Field::DotDps` (emitted only when the main skill has a DoT)
+- [x] Readers that count fields: parity tests (revision, `present`), UI (`OFFENCE`, `FIRST`, label); golden documents unchanged (no DoT in the synthetic build)
+- [x] `pob_data.lua` format 10: `base_flags`, `parts`, `functions`; `loom-parity-cli pob-skills`; generated `poe1/pob_skills.rs` (1,231 skills, regenerates byte-identical). The `data-parity` check of the table itself is left for P6-6, where parts are first read; the base mods read here are `dotIsArea` and the ground flags.
+- [x] Skill DoT (`poe1::dot`), DoT multipliers, enemy DoT taken, `TotalDot`; DoT stat rows; Righteous Fire and Vaal Righteous Fire; Righteous Fire as an other-gem buff
+- [x] Found on the way: PoB's skills layout before skill sets (`SkillsLayout::Flat`, build v1 `skills.layout` additive); gems the data does not have are skipped as PoB does (a reason), renamed `skillId`s found by name
+- [x] Mechanic fixtures (4, all equal to PoB); evidence (`docs/phase-6/dot.md`)
 
 ## P6-2a: dual wielding
 ## P6-2b: ignite and the shared ailment base

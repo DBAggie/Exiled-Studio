@@ -576,6 +576,18 @@ fn compare_raw(oracle: &Value, ours: &calc_dto::Document, slice: &SliceFile) -> 
         }
     }
     for f in &slice.fields {
+        // A Phase 6 field (`applies: present`) counts only where either side
+        // has the mechanic: our field, or the oracle's value other than 0.
+        if f.applies == "present" {
+            let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
+            let oracle_has = main
+                .and_then(|m| m.get(&f.pob_key))
+                .and_then(Value::as_f64)
+                .is_some_and(|v| v != 0.0);
+            if !ours_has && !oracle_has {
+                continue;
+            }
+        }
         raw.fields.push(compare_field(f, main, &ours));
         let Some(spec) = &f.breakdown else { continue };
         let not_compared = |reason: String| BreakdownComparison {

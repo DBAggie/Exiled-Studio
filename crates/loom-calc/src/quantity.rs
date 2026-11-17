@@ -117,6 +117,9 @@ pub enum Quantity {
     AddedDamage(DamageType, Bound),
     /// Penetration of the enemy's resistance to a damage type, percent.
     Penetration(DamageType),
+    /// The damage over time multiplier, percent (PoB's `DotMultiplier`;
+    /// a type's own, `FireDotMultiplier`, by the effect's conditions).
+    DotMultiplier,
     /// A Path of Exile only quantity.
     Poe1(Poe1Quantity),
 }
@@ -143,6 +146,7 @@ impl fmt::Display for Quantity {
             Self::Accuracy => f.write_str("accuracy"),
             Self::AddedDamage(t, b) => write!(f, "added-damage.{}.{}", t.name(), b.name()),
             Self::Penetration(t) => write!(f, "penetration.{}", t.name()),
+            Self::DotMultiplier => f.write_str("dot-multiplier"),
             Self::Poe1(q) => write!(f, "poe1.{q}"),
         }
     }

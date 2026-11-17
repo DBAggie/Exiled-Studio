@@ -434,12 +434,21 @@ fn skills_to(s: &d::Skills) -> Skills {
             }),
             attributes: attrs_to(&set.attributes),
         }),
+        layout: match s.layout {
+            d::SkillsLayout::Sets => ConfigLayout::Sets,
+            d::SkillsLayout::Flat => ConfigLayout::Flat,
+        },
         attributes: attrs_to(&s.attributes),
     }
 }
 
 fn skills_from(s: Skills) -> Result<d::Skills, DtoError> {
-    Ok(d::Skills {
+    let layout = match s.layout {
+        ConfigLayout::Sets => d::SkillsLayout::Sets,
+        ConfigLayout::Flat => d::SkillsLayout::Flat,
+    };
+    let skills = d::Skills {
+        layout,
         active: s.active.map(d::SkillSetId),
         sets: ordered_from(s.sets, |set| {
             Ok(d::SkillSet {
@@ -472,7 +481,9 @@ fn skills_from(s: Skills) -> Result<d::Skills, DtoError> {
             })
         })?,
         attributes: attrs_from(s.attributes),
-    })
+    };
+    skills.check_layout().map_err(DtoError::Domain)?;
+    Ok(skills)
 }
 
 // ---- items -----------------------------------------------------------------

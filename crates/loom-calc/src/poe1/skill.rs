@@ -77,12 +77,6 @@ pub enum SkillProblem {
     UntypedGroup,
     /// The main group has no active skill.
     NoActiveSkill,
-    /// A gem of the main group is not in the data (by `gemId`, else
-    /// `skillId`).
-    UnknownGem {
-        /// The gem.
-        gem: String,
-    },
     /// An effect PoB might count was skipped before the chosen index
     /// (module docs).
     Uncertain,
@@ -96,7 +90,6 @@ impl SkillProblem {
             Self::NoSkillSet => "no-skill-set",
             Self::UntypedGroup => "untyped-group",
             Self::NoActiveSkill => "no-active-skill",
-            Self::UnknownGem { .. } => "unknown-gem",
             Self::Uncertain => "main-skill-uncertain",
         }
     }
@@ -239,13 +232,39 @@ pub fn gem_variant<'d>(
     };
     let row = data.skill_gem(gem_id.as_str())?;
     let variant = attribute(&gem.attributes, "variantId");
-    let effect = row
-        .effects
-        .iter()
-        .filter_map(|e| data.gem_effect(e.as_str()))
+    let effects = || {
+        row.effects
+            .iter()
+            .filter_map(|e| data.gem_effect(e.as_str()))
+    };
+    // PoB's `LoadSkill` (`Classes/SkillsTab.lua` 437 to 459): the variant
+    // `variantId` names, else the one whose granted effect is `skillId`;
+    // with neither, `ProcessSocketGroup` finds the gem by its name
+    // (`FindSkillGem`, 1166 to 1174; old builds whose `skillId` the game has
+    // since renamed, Phase 6).
+    let effect = effects()
         .find(|e| match variant {
             Some(v) => e.id == v,
             None => e.granted_effect.as_deref() == skill,
+        })
+        .or_else(|| {
+            let name = gem.name.as_deref()?.trim();
+            // A variant's name; the default variant has none in the game
+            // data, and its name is its active skill's (the gem's base).
+            let shown = |e: &GemEffect| -> Option<String> {
+                if !e.name.is_empty() {
+                    return Some(e.name.clone());
+                }
+                let granted = data.granted_effect(e.granted_effect.as_deref()?)?;
+                Some(
+                    data.active_skill(granted.active_skill.as_deref()?)?
+                        .name
+                        .clone(),
+                )
+            };
+            effects().find(|e| {
+                !name.is_empty() && shown(e).is_some_and(|n| n.eq_ignore_ascii_case(name))
+            })
         })?;
     let mut out = Vec::new();
     for id in effect
@@ -435,7 +454,7 @@ fn choose<'d>(actives: &[Candidate<'d>], wanted: usize) -> Result<Candidate<'d>,
 /// plus its socket colour bonus.
 ///
 /// # Errors
-/// [`SkillProblem::UnknownGem`].
+/// Never: kept a `Result` for the callers.
 fn group_effects<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
@@ -448,15 +467,12 @@ fn group_effects<'d>(
         if !gem.enabled {
             continue;
         }
-        let (variant, effects) =
-            gem_variant(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
-                gem: gem
-                    .gem
-                    .as_ref()
-                    .map(|g| g.as_str().to_owned())
-                    .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
-                    .unwrap_or_default(),
-            })?;
+        // A gem the data does not have grants nothing: PoB skips a gem
+        // without `gemData` (`Modules/CalcSetup.lua` 1649; Phase 6). Its
+        // reason is `poe1::gems`' ([`unknown_gems`]).
+        let Some((variant, effects)) = gem_variant(gem, data) else {
+            continue;
+        };
         let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()));
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
@@ -476,6 +492,20 @@ fn group_effects<'d>(
         }
     }
     Ok((actives, supports))
+}
+
+/// The enabled gems of `group` the data does not have (by position among
+/// the group's typed gems): they grant nothing, as in PoB, and each is a
+/// reason (Phase 6).
+#[must_use]
+pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
+    group
+        .gems
+        .typed()
+        .enumerate()
+        .filter(|(_, gem)| gem.enabled && gem_variant(gem, data).is_none())
+        .map(|(i, _)| i)
+        .collect()
 }
 
 /// The build's main skill (module docs), its gems at the levels `levels`
@@ -565,10 +595,11 @@ pub struct GroupSkill<'d> {
 /// 1740: gems in order, each gem's effects in order; supports as for the
 /// main skill, module docs). `matches` are the group's gems' socket
 /// matches ([`socket_matches`]), each adding its bonus to the gem's
-/// quality. `Err` names a gem the data does not have.
+/// quality. A gem the data does not have is skipped, as PoB does
+/// ([`unknown_gems`] names it).
 ///
 /// # Errors
-/// [`SkillProblem::UnknownGem`].
+/// None today; kept for the callers.
 pub fn group_skills<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],

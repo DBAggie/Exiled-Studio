@@ -418,6 +418,48 @@ fn the_old_config_layout_should_be_one_flat_set() {
     assert_eq!(b.config.sets.entries().len(), 0);
 }
 
+/// PoB's layout before skill sets: `<Skill>` elements directly under
+/// `<Skills>` are set 1 (`Classes/SkillsTab.lua` 523 to 531), read as one
+/// flat set and written back without a set element (Phase 6).
+#[test]
+fn the_old_skills_layout_should_be_one_flat_set() {
+    let xml = BASE.replace(
+        r#"<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill enabled="true" slot="Weapon 1" mainActiveSkill="1">
+				<Gem skillId="A" level="20" quality="0" enabled="true"/>
+				<Gem skillId="B" level="20" quality="20" enabled="true"/>
+			</Skill>
+		</SkillSet>
+	</Skills>"#,
+        r#"<Skills sortGemsByDPS="true">
+		<Skill enabled="true" slot="Weapon 1" mainActiveSkill="1">
+			<Gem skillId="A" level="20" quality="0" enabled="true"/>
+		</Skill>
+		<Skill enabled="false" mainActiveSkill="1">
+			<Gem skillId="B" level="20" quality="20" enabled="true"/>
+		</Skill>
+	</Skills>"#,
+    );
+    let b = round_trip(&xml);
+    assert_eq!(b.skills.layout, loom_domain::SkillsLayout::Flat);
+    let set = b.skills.sets.typed().next().unwrap();
+    assert_eq!(
+        (set.id, set.title.as_deref(), set.groups.typed().count()),
+        (loom_domain::SkillSetId(1), None, 2)
+    );
+    assert!(!export(&b).contains("SkillSet"));
+    let json = crate::dto::v1::to_json(&b).unwrap();
+    assert!(json.contains(r#""layout": "flat""#), "{json}");
+    let mut bad = b.clone();
+    bad.skills.sets.typed_mut().next().unwrap().title = Some("t".to_owned());
+    let err = crate::dto::v1::to_json(&bad).unwrap_err();
+    assert!(
+        err.to_string().contains("DOMAIN_FLAT_SKILLS_LAYOUT"),
+        "{err}"
+    );
+}
+
 /// A build document refuses a flat config that breaks the layout check
 /// on read; a comment alone does not make the flat layout; a broken flat
 /// build exports with set elements, dropping nothing.

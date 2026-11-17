@@ -226,10 +226,17 @@ pub enum BuffStat {
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
     Threshold(&'static [HitEffect]),
+    /// Applies while unreserved life is at least 2 (PoB's one
+    /// `StatThreshold` tag on Righteous Fire's own buff, Phase 6): the rows
+    /// carry the state [`LIFE_THRESHOLD`], which the hit sets.
+    LifeThreshold(&'static [HitEffect]),
 }
 
 /// The state of [`BuffStat::Threshold`] rows.
 pub const STAT_THRESHOLD: &str = "LifeUnreservedAtLeast2AndManaAtLeast1";
+
+/// The state of [`BuffStat::LifeThreshold`] rows.
+pub const LIFE_THRESHOLD: &str = "LifeUnreservedAtLeast2";
 
 const NONE: Flags = Flags::NONE;
 const fn added(t: DamageType, b: Bound) -> Quantity {
@@ -600,6 +607,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 (
                     "warcry_count_power_from_enemies",
                     BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
+    // PoB `Data/Skills/act_int.lua` `skills["RighteousFire"]`: its spell
+    // damage more is a buff while unreserved life is at least 2; the
+    // degeneration reaches no slice field (Phase 6, P6-1).
+    (
+        "RighteousFire",
+        Kind::Buff {
+            name: "Righteous Fire",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "base_nonlethal_fire_damage_%_of_maximum_energy_shield_taken_per_minute",
+                    BuffStat::NoSlice("degeneration"),
+                ),
+                (
+                    "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",
+                    BuffStat::NoSlice("degeneration"),
+                ),
+                (
+                    "righteous_fire_spell_damage_+%_final",
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -1215,6 +1252,13 @@ pub fn gems(
             }
             continue;
         }
+        // A gem the data does not have grants nothing, as in PoB; it is a
+        // reason (Phase 6).
+        for i in skill::unknown_gems(group, input.data) {
+            ingest.reason(UnsupportedReason::UnmodelledGem {
+                source: Source::Gem { group: g, gem: i },
+            });
+        }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
         let skills = match skill::group_skills(group, group_matches, input.data, levels) {
             Ok(s) => s,
@@ -1661,6 +1705,7 @@ fn add_rows(
                 (rows, None)
             }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
+            BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
         };
         #[expect(
             clippy::cast_precision_loss,
@@ -1977,7 +2022,8 @@ mod tests {
                 BuffStat::Rows(e)
                 | BuffStat::WhenInput { rows: e, .. }
                 | BuffStat::BloodStance(e)
-                | BuffStat::Threshold(e) => e,
+                | BuffStat::Threshold(e)
+                | BuffStat::LifeThreshold(e) => e,
                 BuffStat::NoSlice(_) | BuffStat::Gated(_) => &[],
             };
             for e in effects {

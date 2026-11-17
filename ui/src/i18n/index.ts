@@ -64,4 +64,5 @@ export const OFFENCE = new Set([
   'crit-chance',
   'crit-multiplier',
   'hit-dps',
+  'dot-dps',
 ])

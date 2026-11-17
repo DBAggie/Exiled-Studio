@@ -14,8 +14,15 @@ use crate::divergence::Comparison;
 pub const FORMAT: u32 = 1;
 
 /// The slice-file revision this reader knows: revision 2 added `graph`
-/// to every breakdown term and `node` to slot rows (P3-5).
-pub const REVISION: u32 = 2;
+/// to every breakdown term and `node` to slot rows (P3-5); revision 3
+/// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`.
+pub const REVISION: u32 = 3;
+
+/// The Phase 6 fields (slice revision 3; Phase 6 plan, decision 2): PoB's
+/// id to our field name. Our result has such a field only when it applies
+/// to the build; it is compared when our result has it or the oracle's
+/// value is a number other than 0 (`applies: present`).
+pub const PRESENT_NAMES: [(&str, &str); 1] = [("TotalDot", "dot-dps")];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),
 /// for every field of `loom_calc::poe1::SLICE`.
@@ -296,7 +303,11 @@ impl SliceFile {
         if ids.len() != file.fields.len() {
             return Err("a field id is listed twice".to_owned());
         }
-        let known: BTreeSet<&str> = OUR_NAMES.iter().map(|(id, _)| *id).collect();
+        let known: BTreeSet<&str> = OUR_NAMES
+            .iter()
+            .chain(&PRESENT_NAMES)
+            .map(|(id, _)| *id)
+            .collect();
         if ids != known {
             return Err(format!(
                 "the fields must be exactly the slice's {} fields",
@@ -305,6 +316,10 @@ impl SliceFile {
         }
         for f in &file.fields {
             let bad = |what: String| Err(format!("{}: {what}", f.id));
+            let present = PRESENT_NAMES.iter().any(|(id, _)| *id == f.id);
+            if present != (f.applies == "present") {
+                return bad("a Phase 6 field, and only one, applies when present".to_owned());
+            }
             if !f.comparison.valid() {
                 return bad("an abs or rel rule needs a positive tolerance and a reason".to_owned());
             }
@@ -355,7 +370,11 @@ impl SliceFile {
 
     /// Our field name for a PoB id.
     pub fn our_name(id: &str) -> Option<&'static str> {
-        OUR_NAMES.iter().find(|(p, _)| *p == id).map(|(_, o)| *o)
+        OUR_NAMES
+            .iter()
+            .chain(&PRESENT_NAMES)
+            .find(|(p, _)| *p == id)
+            .map(|(_, o)| *o)
     }
 }
 
@@ -381,7 +400,7 @@ mod tests {
     #[test]
     fn the_committed_slice_file_should_read() {
         let file = SliceFile::read(COMMITTED).unwrap();
-        assert_eq!(file.fields.len(), 24);
+        assert_eq!(file.fields.len(), 24 + PRESENT_NAMES.len());
         let with_breakdown = file.fields.iter().filter(|f| f.breakdown.is_some()).count();
         assert_eq!(with_breakdown, 10);
     }

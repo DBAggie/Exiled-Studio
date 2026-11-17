@@ -56,5 +56,6 @@ pub use item::{
 pub use opaque::{Attribute, Attributes, Entry, OpaqueNode, Ordered};
 pub use passive::{JewelSocket, MasteryEffect, PassiveSpec, Passives, SpecPart};
 pub use quarantine::{Completeness, QuarantineEntry, QuarantineReason};
+pub use skill::SkillsLayout;
 pub use skill::{Gem, SkillSet, Skills, SocketGroup};
 pub use value::{Number, Sourced};

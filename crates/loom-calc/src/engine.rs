@@ -178,6 +178,13 @@ impl<'a> Calc<'a> {
         );
     }
 
+    /// Writes a field the engine does not compute for this build, with
+    /// `reason` (Phase 6: a field that applies but whose kind is not
+    /// modelled).
+    pub fn set_unsupported(&mut self, field: Field, reason: UnsupportedReason) {
+        self.fields.insert(field, FieldResult::unsupported(reason));
+    }
+
     /// Writes a field computed from other fields (`deps`): its state also
     /// carries every reason of each dependency, so a derived field is never
     /// `Complete` when what it reads is not. A dependency that is not

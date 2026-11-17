@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 9
+local FORMAT = 10
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -235,6 +235,34 @@ for id, effect in pairs(data.skills) do
 	skill.add_types = addTypes
 	skill.add_minions = list(effect.addMinionList)
 	skill.is_trigger = effect.isTrigger == true
+	-- PoB's hand-written skill data (format 10, Phase 6 plan decision 5):
+	-- the skill's base flags, its parts with their plain fields (a part's
+	-- flags, stages, and the like), and the names of its skill functions
+	-- (ported by hand per skill).
+	local flags = {}
+	for name, on in pairs(effect.baseFlags or {}) do
+		if on == true then flags[#flags + 1] = name end
+	end
+	table.sort(flags)
+	skill.base_flags = flags
+	local parts = {}
+	for i, part in ipairs(effect.parts or {}) do
+		local p = {}
+		for k, v in pairs(part) do
+			local kind = type(v)
+			if kind == "number" or kind == "string" or kind == "boolean" then
+				p[k] = v
+			end
+		end
+		parts[i] = p
+	end
+	skill.parts = parts
+	local functions = {}
+	for k, v in pairs(effect) do
+		if type(v) == "function" then functions[#functions + 1] = k end
+	end
+	table.sort(functions)
+	skill.functions = functions
 	skills[id] = skill
 end
 

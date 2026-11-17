@@ -1351,6 +1351,46 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "A level 90 Templar with a Life Mastery's 15% increased maximum Life if there are no Life Modifiers on Equipped Body Armour and a rare Astral Plate with armour and fire resistance: the condition holds, from the mods' life tags (PoB: no line with the text \"life\") (P3-8n)."
+    },
+    {
+      "id": "vortex-dot-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-witch.xml",
+      "sha256": "6244a0baf9af9ff394a22329acaea15ec0eb24e04fde5e093e08d8918e2fef41",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex alone: the skill's own cold damage over time against the default enemy's resistance, TotalDot (P6-1)."
+    },
+    {
+      "id": "vortex-dot-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-modifiers-witch.xml",
+      "sha256": "2ee061b134858cb5a40ba846154b5c71d6496908a43e9bee1e88d8b25f8a494a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex with increased damage over time and cold damage, spell damage (which reaches its DoT through spell_damage_modifiers_apply_to_skill_dot), and the damage over time and cold damage over time multipliers (P6-1)."
+    },
+    {
+      "id": "righteous-fire-marauder.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/righteous-fire-marauder.xml",
+      "sha256": "69abd30639634b24b7839a8b65ac323491655dd7cf49c5b3229ebb620ec187c0",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Righteous Fire as the main skill: its burn from maximum life and energy shield (PoB's preDamageFunc), burning damage, and the fire damage over time multiplier (P6-1)."
+    },
+    {
+      "id": "vaal-righteous-fire-marauder.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vaal-righteous-fire-marauder.xml",
+      "sha256": "5f5b085f765a3a7240d32a9a7a39828e90ffdf53670645604eab2517ea6b605f",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vaal Righteous Fire as the main skill: its burn from life plus energy shield, the share sacrificed, and the burn per second (PoB's preDamageFunc); the gem's Righteous Fire as a buff (P6-1)."
     }
   ]
 }

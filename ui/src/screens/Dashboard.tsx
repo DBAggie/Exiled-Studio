@@ -85,6 +85,7 @@ const SHORT = 6
  * calculation's order. */
 const FIRST = [
   'hit-dps',
+  'dot-dps',
   'average-damage',
   'hit-speed',
   'crit-chance',

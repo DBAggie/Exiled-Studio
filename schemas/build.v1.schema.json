@@ -433,7 +433,7 @@
       ]
     },
     "ConfigLayout": {
-      "description": "How a build's format held its config sets.",
+      "description": "How a build's format held its config sets or skill sets.",
       "oneOf": [
         {
           "description": "Each set in its own element.",
@@ -2134,6 +2134,10 @@
           "items": {
             "$ref": "#/$defs/Attribute"
           }
+        },
+        "layout": {
+          "description": "How the build's format held the sets; left out for one element\nper set (Phase 6, additive).",
+          "$ref": "#/$defs/ConfigLayout"
         },
         "sets": {
           "description": "The sets.",

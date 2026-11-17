@@ -153,11 +153,10 @@ fn the_main_group_should_be_clamped_and_a_missing_gem_named() {
         vec![group(vec![gem(Some("Test/Gems/Nothing"), "Nothing", 1, 0)])],
         1,
     );
+    // A gem the data does not have grants nothing (PoB skips it).
     assert_eq!(
         main_skill(&b, &data, &GemLevels::none()).unwrap_err(),
-        SkillProblem::UnknownGem {
-            gem: "Test/Gems/Nothing".to_owned()
-        }
+        SkillProblem::NoActiveSkill
     );
     assert_eq!(
         main_skill(
