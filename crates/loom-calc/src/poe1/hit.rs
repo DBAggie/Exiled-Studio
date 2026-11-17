@@ -210,8 +210,10 @@ pub fn pob_part(id: &str, wanted: usize) -> Option<(SkillPart, usize)> {
     Some((part, index))
 }
 
-/// Whether the engine reads all of PoB's hand-written data of the skill
-/// (P6-6b): no skill functions, no base mod but the display `SkillData`
+/// Whether the engine reads PoB's hand-written data of the skill that
+/// changes its hit (P6-6b): no skill functions, no stat of its stat map
+/// read under a tag ([`super::pob_skill::PobSkill::own_stats`], P6-6b
+/// review), no base mod but the display `SkillData`
 /// ([`DISPLAY_SKILL_DATA`], untagged), and, for part `index` (1-based; 0
 /// without parts), no field but a name and flags ([`PART_FIELDS`]). Else
 /// the hit is `Partial` (`unmodelled-skill`, `pob-skill-data`): PoB computes
@@ -222,7 +224,7 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
     let Some(pob) = super::pob_skill::skill(id) else {
         return false;
     };
-    if !pob.functions.is_empty() {
+    if !pob.functions.is_empty() || !pob.own_stats.is_empty() {
         return false;
     }
     let display = |m: &super::pob_skill::PobBaseMod| {
@@ -528,7 +530,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
         return None;
     }
-    let (part, known_parts) = match pob_part(&effect.id, wanted) {
+    let (mut part, known_parts) = match pob_part(&effect.id, wanted) {
         Some((p, index)) => (p, pob_vetted(&effect.id, index)),
         None => (
             SkillPart {
@@ -540,6 +542,16 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
             false,
         ),
     };
+    // The main-hand weapon decides between melee and projectile
+    // (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears the
+    // projectile flag, a ranged one (bow, wand: not melee in PoB's
+    // `weaponTypeInfo`) the melee flag (P6-6b review).
+    let ranged = matches!(base.class.as_str(), "Bow" | "Wand");
+    if !ranged && part.melee {
+        part.projectile = false;
+    } else if ranged && part.projectile {
+        part.melee = false;
+    }
     Some(AttackSkill {
         skill,
         group,
@@ -1139,17 +1151,18 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     let enemy = enemy::enemy(input.build, input.data);
     let mut flags =
         Flags::ATTACK | Flags::KEYWORD_ATTACK | Flags::HIT | attack.skill.keyword_flags();
+    // Melee, else projectile (`CalcActiveSkill.lua` 361 to 366; the
+    // weapon already cleared the other, [`attack_skill`]).
     if attack.part.melee {
         flags = flags | Flags::MELEE;
+    } else if attack.part.projectile {
+        flags = flags | Flags::PROJECTILE;
     }
     if attack.part.area {
         flags = flags | Flags::AREA;
     }
     let mut unvetted = Reasons::new();
     let id = attack.skill.effect().id.as_str();
-    if attack.part.projectile {
-        flags = flags | Flags::PROJECTILE;
-    }
     if !attack.known_parts {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
@@ -3085,6 +3098,12 @@ mod tests {
         assert!(knives.projectile && !knives.area);
         assert!(!pob_vetted("IceSpear", 1));
         assert!(pob_part("NoSuchSkill", 1).is_none());
+        // Tagged stat map entries (P6-6b review): Conflagration's DoT in part
+        // 2 only, Animosity's per stack.
+        assert!(!pob_vetted("Conflagration", 0) && !pob_vetted("AnimosityUniqueSkill", 0));
+        // Both flags in PoB's data: the weapon picks one (`attack_skill`).
+        let (frenzy, _) = pob_part("Frenzy", 1).unwrap();
+        assert!(frenzy.melee && frenzy.projectile);
         assert!(!pob_vetted("NoSuchSkill", 0));
     }
 }

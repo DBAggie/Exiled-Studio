@@ -104,6 +104,11 @@ pub struct PobSkill {
     pub base_mods: &'static [PobBaseMod],
     /// The names of its skill functions, sorted.
     pub functions: &'static [&'static str],
+    /// The stats of its own `statMap` with a tagged mod acting on the
+    /// skill itself (tags, none `GlobalEffect`: a part, a multiplier, a
+    /// condition), sorted (P6-6b review): PoB reads them under that tag,
+    /// which the engine's mapping does not.
+    pub own_stats: &'static [&'static str],
 }
 
 impl PobSkill {

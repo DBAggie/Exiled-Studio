@@ -143,7 +143,51 @@ pub fn generate(export: &Value) -> Result<String, String> {
                 )
             })
             .collect();
-        if flags.is_empty() && parts.is_empty() && base_mods.is_empty() && functions.is_empty() {
+        // The stats of the skill's own `statMap` with a tagged mod acting
+        // on the skill itself (tags, none `GlobalEffect`: a part, a
+        // multiplier, a condition): PoB reads them under that tag, which the
+        // engine's mapping does not (P6-6b review). Untagged own mods are
+        // the stat's plain reading.
+        // A tag that leaves the skill's own hit alone: `GlobalEffect` (a buff
+        // for others), or PoB's `notMinionStat` marker (`ActorCondition` on
+        // the parent, negated: not for minions; `Data.lua` 81 to 91).
+        let is_global = |tag: &Value| {
+            let kind = tag.get("type").and_then(Value::as_str);
+            kind == Some("GlobalEffect")
+                || (kind == Some("ActorCondition")
+                    && tag.get("actor").and_then(Value::as_str) == Some("parent")
+                    && tag.get("neg").and_then(Value::as_bool) == Some(true))
+        };
+        let tags_of = |m: &Value| -> Vec<Value> {
+            match m.get("tags") {
+                Some(Value::Array(a)) => a.clone(),
+                Some(Value::Object(o)) => o.values().cloned().collect(),
+                _ => Vec::new(),
+            }
+        };
+        let mut own_stats: Vec<String> = skill
+            .get("mods")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter(|m| m.get("own").and_then(Value::as_bool) == Some(true))
+            .filter_map(|m| {
+                let stat = m.get("stat").and_then(Value::as_str)?;
+                let mods = m.get("mods").and_then(Value::as_array)?;
+                let on_skill = mods.iter().any(|x| {
+                    let tags = tags_of(x);
+                    !tags.is_empty() && !tags.iter().any(is_global)
+                });
+                (!stat.is_empty() && on_skill).then(|| stat.to_owned())
+            })
+            .collect();
+        own_stats.sort();
+        if flags.is_empty()
+            && parts.is_empty()
+            && base_mods.is_empty()
+            && functions.is_empty()
+            && own_stats.is_empty()
+        {
             continue;
         }
         let list = |v: &[String]| v.iter().map(|s| lit_str(s)).collect::<Vec<_>>().join(", ");
@@ -153,6 +197,7 @@ pub fn generate(export: &Value) -> Result<String, String> {
         let _ = writeln!(out, "        parts: &[{}],", parts.join(", "));
         let _ = writeln!(out, "        base_mods: &[{}],", base_mods.join(", "));
         let _ = writeln!(out, "        functions: &[{}],", list(&functions));
+        let _ = writeln!(out, "        own_stats: &[{}],", list(&own_stats));
         let _ = writeln!(out, "    }},");
     }
     out.push_str("];\n");

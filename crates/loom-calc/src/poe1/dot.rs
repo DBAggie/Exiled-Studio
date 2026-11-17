@@ -71,6 +71,26 @@ pub const RF_LIFE_STAT: &str = "base_righteous_fire_%_of_max_life_to_deal_to_nea
 pub const RF_ES_STAT: &str =
     "base_righteous_fire_%_of_max_energy_shield_to_deal_to_nearby_per_minute";
 
+/// The `SkillData` keys of PoB's DoT this phase reads (its flags; P6-6b
+/// review: an explicit list, so a new key is a reason).
+pub const DOT_SKILL_DATA_KEYS: [&str; 5] = [
+    "dotIsArea",
+    "dotIsAttack",
+    "dotIsHit",
+    "dotIsProjectile",
+    "dotIsSpell",
+];
+
+/// The `FLAG` base mods of PoB's DoT this phase reads: the ground and
+/// stacking DoTs it leaves not computed.
+pub const DOT_FLAGS: [&str; 5] = [
+    "DotCanStack",
+    "dotIsBurningGround",
+    "dotIsCausticGround",
+    "dotIsCorruptingBlood",
+    "dotIsHeraldOfAsh",
+];
+
 /// Vaal Righteous Fire's stats: the share of life and energy shield it
 /// sacrifices and the burn per second, percent of that (PoB's
 /// `percentSacrificed`, `RFMultiplier`, `div = 100`).
@@ -321,15 +341,15 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         !m.tagged
             && match (m.name, m.key) {
                 ("SkillData", Some(k)) => {
-                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || k.starts_with("dotIs")
+                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || DOT_SKILL_DATA_KEYS.contains(&k)
                 }
-                (name, None) => {
-                    m.kind == "FLAG" && (name.starts_with("dotIs") || name == "DotCanStack")
-                }
+                (name, None) => m.kind == "FLAG" && DOT_FLAGS.contains(&name),
                 _ => false,
             }
     };
-    if !pob.is_some_and(|p| p.base_mods.iter().all(read)) {
+    // A stat of its stat map read under a tag (P6-6b review: Conflagration's
+    // DoT in part 2 only, Animosity's per stack): a reason too.
+    if !pob.is_some_and(|p| p.base_mods.iter().all(read) && p.own_stats.is_empty()) {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "pob-skill-data",

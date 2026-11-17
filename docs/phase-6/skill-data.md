@@ -91,3 +91,26 @@ Public `calc-parity` (153 builds, 99 expected differences, 0 unexpected) and the
 - Shared skill stats PoB maps to outputs not computed yet: projectiles, chains, pierce, `showAverage`.
 - Each skill's own stat map: P6-11's batches, measured by the sweep.
 - Base mods and skill functions the engine does not port: reasons until a step ports them.
+
+## P6-6c: the P6-6b review
+
+The review (code-architecture-reviewer) found two ways the P6-6b rule let a wrong value through as `Complete`. Neither was in the sweep's builds: the sweep's evidence covers its own builds only.
+
+1. **Melee and projectile.** PoB's data gives 28 vetted skills both flags (Frenzy, the default attack, Frost Blades, Lightning Strike...). PoB keeps one of them, by the main-hand weapon (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears projectile, a bow or wand clears melee. It then applies melee in preference to projectile (361 to 366). The engine applied both; now it follows PoB's rule.
+2. **Tagged stat map entries.** PoB reads some stats of a skill's stat map under a tag:
+   - Conflagration's DoT only in part 2;
+   - Animosity's and Resentment's DoT per stack;
+   - Shattering Steel of Ammunition's damage per distance.
+
+   The generated table now carries each skill's `own_stats`: the stats with a tagged mod acting on the skill itself (none `GlobalEffect`, nor PoB's `notMinionStat` marker). A skill with any is not vetted, for the hit and for the DoT. This is conservative: a skill can be unvetted for a stat its level lacks. The table is regenerated from export format 11. It lists 430 skills, and Smite, Ice Nova, and Ethereal Knives have none.
+
+Also:
+- the DoT's `SkillData` keys and flags are explicit lists (`dot::DOT_SKILL_DATA_KEYS`, `DOT_FLAGS`), not prefixes;
+- the `pob_vetted` doc no longer claims every hand-written datum is read;
+- tests cover Conflagration, Animosity, and Frenzy's two flags.
+
+**Evidence:**
+- **Sweep:** no `Complete` field differs from PoB except through the weapon's rate (Q11). Complete fields: 667 to 661 (the conservative rule).
+- **Public `calc-parity`:** unchanged (153 builds, 99 expected, 0 unexpected).
+- **Corpus:** no unexpected difference.
+- **Determinism:** both runs were byte-identical.
