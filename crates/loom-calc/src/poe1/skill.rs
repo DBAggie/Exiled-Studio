@@ -454,13 +454,12 @@ fn choose<'d>(actives: &[Candidate<'d>], wanted: usize) -> Result<Candidate<'d>,
 /// plus its socket colour bonus.
 ///
 /// # Errors
-/// Never: kept a `Result` for the callers.
 fn group_effects<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
     data: &'d dyn CalcData,
     levels: &GemLevels,
-) -> Result<(Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>), SkillProblem> {
+) -> (Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>) {
     let mut actives: Vec<Candidate<'d>> = Vec::new();
     let mut supports: Vec<GemEffectRef<'d>> = Vec::new();
     for (g, gem) in group.gems.typed().enumerate() {
@@ -491,7 +490,7 @@ fn group_effects<'d>(
             }
         }
     }
-    Ok((actives, supports))
+    (actives, supports)
 }
 
 /// The enabled gems of `group` the data does not have (by position among
@@ -530,7 +529,7 @@ pub fn main_skill<'d>(
     let all = socket_matches(build, &groups, data);
     let matches: &[SocketMatch] = all.get(index - 1).map_or(&[], Vec::as_slice);
 
-    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
+    let (actives, group_supports) = group_effects(group, matches, data, levels);
     let wanted = group
         .main_active_skill
         .as_ref()
@@ -597,16 +596,14 @@ pub struct GroupSkill<'d> {
 /// matches ([`socket_matches`]), each adding its bonus to the gem's
 /// quality. A gem the data does not have is skipped, as PoB does
 /// ([`unknown_gems`] names it).
-///
-/// # Errors
-/// None today; kept for the callers.
+#[must_use]
 pub fn group_skills<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
     data: &'d dyn CalcData,
     levels: &GemLevels,
-) -> Result<Vec<GroupSkill<'d>>, SkillProblem> {
-    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
+) -> Vec<GroupSkill<'d>> {
+    let (actives, group_supports) = group_effects(group, matches, data, levels);
     let mut out = Vec::new();
     for (active_gem, _, global_off) in &actives {
         let effect = active_gem.effect;
@@ -636,7 +633,7 @@ pub fn group_skills<'d>(
             types,
         });
     }
-    Ok(out)
+    out
 }
 
 /// Why a gem instance's stats are not all known.

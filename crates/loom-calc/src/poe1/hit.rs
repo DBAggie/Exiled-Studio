@@ -1660,6 +1660,26 @@ pub(super) fn dot_enemy_effect(
     // `effMult = (1 - resist / 100) x (1 + takenInc / 100) x takenMore`, in
     // PoB's order; `takenInc` one sum of the names, `takenMore` their
     // product.
+    let [inc, more_all, more_typed] = taken_parts(calc, cx, t, reasons)?;
+    let taken_more = phases::product(calc, &[more_all, more_typed], Term::More)?;
+    phases::product(
+        calc,
+        &[effect, inc, taken_more],
+        Term::Step("effective-multiplier"),
+    )
+}
+
+/// The enemy's damage taken of type `t` in parts (P3-8m; shared by hits
+/// and damage over time): `1 + (inc + typeInc) / 100`, PoB's `takenInc` as
+/// one sum, then the more of each name.
+fn taken_parts(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<[Valued; 3], CalcError> {
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
     let inc_all = sum_in(
         calc,
         all,
@@ -1680,12 +1700,7 @@ pub(super) fn dot_enemy_effect(
     let inc = phases::factor(calc, sum, Term::Increased)?;
     let more_all = more(calc, all, cx, reasons)?;
     let more_typed = more(calc, typed, cx, reasons)?;
-    let taken_more = phases::product(calc, &[more_all, more_typed], Term::More)?;
-    phases::product(
-        calc,
-        &[effect, inc, taken_more],
-        Term::Step("effective-multiplier"),
-    )
+    Ok([inc, more_all, more_typed])
 }
 
 /// The enemy's resistance to `t` a hit meets (`calcResistForType`):
@@ -1873,33 +1888,8 @@ fn type_damage_taken(
     t: DamageType,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
-    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
-    let inc_all = sum_in(
-        calc,
-        all,
-        Op::Increased,
-        cx,
-        Term::Step("enemy-damage-taken-increased"),
-        reasons,
-    )?;
-    let inc_typed = sum_in(
-        calc,
-        typed,
-        Op::Increased,
-        cx,
-        Term::Step("enemy-type-damage-taken-increased"),
-        reasons,
-    )?;
-    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
-    let inc = phases::factor(calc, sum, Term::Increased)?;
-    let more_all = more(calc, all, cx, reasons)?;
-    let more_typed = more(calc, typed, cx, reasons)?;
-    phases::product(
-        calc,
-        &[inc, more_all, more_typed],
-        Term::Step("enemy-damage-taken"),
-    )
+    let parts = taken_parts(calc, cx, t, reasons)?;
+    phases::product(calc, &parts, Term::Step("enemy-damage-taken"))
 }
 
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type

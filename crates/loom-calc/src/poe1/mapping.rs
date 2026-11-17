@@ -557,6 +557,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `ModParser.lua` 719 ("projectile damage"): `Damage` INC with
+    // `ModFlag.Projectile` (P6-1).
+    (
+        "projectile_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PROJECTILE,
+            NONE,
+        )],
+    ),
     (
         "skill_physical_damage_%_to_convert_to_lightning",
         &[(
@@ -1413,6 +1425,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
     ),
+    // A skill marked a projectile skill (`base_is_projectile`): the skill's
+    // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
+    ("base_is_projectile", "skill type marker"),
     // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
     // counts fortification only while Fortified (`buffFortification`, a named
     // condition), and then only damage taken when hit and modifiers per
@@ -1851,6 +1866,9 @@ pub const NO_EFFECT_PREFIXES: &[(&str, &str)] = &[
     ),
     ("local_affliction_notable_", "cluster jewel: adds a notable"),
     ("local_jewel_expansion_", "cluster jewel: adds nodes"),
+    // A gem's quality display stats (`quality_display_<skill>_is_gem`): text
+    // on the gem only; PoB maps none of them (P6-1).
+    ("quality_display_", "gem display text"),
     (
         "local_unique_jewel_grants_x_empty_passives",
         "cluster jewel: adds nodes that grant nothing",

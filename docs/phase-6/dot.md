@@ -8,7 +8,7 @@ Phase 6 plan (`dev/active/phase-6-mechanics/`), step P6-1. The main skill's own 
 
 ## What is computed (`loom_calc::poe1::dot`)
 
-1. **The DoT config:** the skill's flags with `Dot`. `Area`, `Projectile`, `Spell`, `Attack` and `Hit` stay only when the skill's DoT is one, by either:
+1. **The DoT config:** the skill's own flags (PoB's base flags, else the game's types) with `Dot`, every other flag kept. `Area`, `Projectile`, `Spell`, `Attack` and `Hit` stay only when the skill's DoT is one, by either:
    - PoB's skill data: `dotIsArea` and kin, the hand-written base mods;
    - the skill's own stats: `spell_damage_modifiers_apply_to_skill_dot` gives `dotIsSpell`, `projectile_damage_modifiers_apply_to_skill_dot` gives `dotIsProjectile` (`SkillStatMap.lua` 161, 164).
 
@@ -28,7 +28,9 @@ Left `NotComputed` (the field is present, unsupported):
 - burning, caustic and Corrupting Blood ground;
 - the kinds the hit leaves out (triggered, totem, trap, mine, minion, brand, channelled).
 
-An aura's DoT is a reason (`aura-dot`).
+An aura's DoT is a reason (`aura-dot`). Herald of Ash's DoT is also left `NotComputed`: PoB subtracts the skill's own increases from it (`dotIsHeraldOfAsh`).
+
+A skill function that changes a DoT and is not ported is a reason (`skill-function`). Searching every skill function of PoB v2.67.2 for a `Dot` value finds six: the two Righteous Fires ported here, Herald of Ash, Righteous Fire of Arcane Devotion, and the two Waves of Conviction (`dot::DOT_FUNCTIONS_NOT_PORTED`).
 
 ## Stats mapped
 
@@ -39,6 +41,9 @@ An aura's DoT is a reason (`aura-dot`).
 | `dot_multiplier_+` | 1172 | `DotMultiplier` BASE |
 | `fire_dot_multiplier_+`, `cold_`, `chaos_` | 1175, 1181, 1178 | `DotMultiplier` BASE of that type |
 | `physical_dot_multiplier_+` | `ModParser.lua` 739 | `DotMultiplier` BASE, physical |
+| `projectile_damage_+%` | `ModParser.lua` 719 | `Damage` INC, `PROJECTILE` |
+
+No effect: `base_is_projectile`, a skill type marker PoB maps no row for, and the `quality_display_` stats, which are gem display text.
 
 The skill's DoT stats themselves are read from the gem instance (`dot::DOT_SKILL_STATS`: no effect through the mapping). Righteous Fire's own buff and degeneration also have no effect when it is the main skill: its burn is not a spell, and the slice has no degeneration.
 
@@ -76,14 +81,30 @@ Mechanic fixtures, each equal to PoB on every target (`tools/oracle/fixtures/mec
 | `vortex-dot-modifiers-witch.xml` | Increased DoT and cold damage, spell damage reaching the DoT, the DoT and cold DoT multipliers |
 | `righteous-fire-marauder.xml` | Righteous Fire as the main skill, burning damage, the fire DoT multiplier |
 | `vaal-righteous-fire-marauder.xml` | Vaal Righteous Fire as the main skill, the gem's Righteous Fire as a buff |
+| `vortex-dot-shock-witch.xml` | A shocked enemy with 40% cold resistance, and cold penetration that a DoT ignores |
+
+An Essence Drain fixture is kept local for now (`local/p6/essence-drain-dot-witch.xml`). It covers a projectile spell whose DoT is a spell but not a projectile, and its DoT equals PoB's (2856.00315). Its leech stat is not mapped yet, so every field is partial, and a mechanic fixture needs a target. It joins the manifest when leech is computed (P6-10b).
 
 Before-and-after on the evidence bundle with tree packs (`local/p6/base-packs` against `local/p6/p6-1`), and `calc-parity` against the close-out oracle plus the new fixtures' PoB outputs (`local/p6/oracle`):
 
 | Set | Before | After |
 |---|---|---|
-| Public `calc-parity` | 136 builds; 2,223 match; 0 unexpected | 140 builds; 2,295 match (the 72 fixture targets); 0 unexpected |
+| Public `calc-parity` | 136 builds; 2,223 match; 0 unexpected | 141 builds; 2,313 match (the 90 fixture targets); 0 unexpected |
 | Corpus | 141 unsupported, 170 indeterminate | 111 unsupported, 204 indeterminate |
 
 In the corpus, more main skills now calculate: missing and renamed gems no longer stop their group. Corpus fields stay `indeterminate` or `partial` on their other reasons.
 
 Community builds with a DoT skill (Essence Drain, Vaal Righteous Fire, Vortex) now have `dot-dps`, `partial` on their stats that are not mapped yet (`chaos_damage_+%` and others: P6-11).
+
+Performance: `loom-bench wall`, 20 runs on the bench bundle: `calculate` median 1.3 ms. The instruction counts are CI's `bench` job (Linux, callgrind), which this PR runs.
+
+## Review (code-architecture-reviewer)
+Applied:
+- the DoT flags start from the skill's own flags, as PoB's `dotCfg` does;
+- Herald of Ash is left not computed, and the unported DoT functions are a reason;
+- one helper for the enemy's damage taken parts, shared by hits and DoT;
+- `group_skills` returns its value;
+- tests for unknown and renamed gems and for the pinned table entries;
+- the shock fixture.
+
+Recorded in the context file as decisions D6 to D9: the table's check, Righteous Fire's own stats, ground DoTs, and the Essence Drain fixture.

@@ -110,6 +110,17 @@ pub const SPELL_DOT_STAT: &str = "spell_damage_modifiers_apply_to_skill_dot";
 /// (PoB's `skill("dotIsProjectile", true)`, `SkillStatMap.lua` 164).
 pub const PROJECTILE_DOT_STAT: &str = "projectile_damage_modifiers_apply_to_skill_dot";
 
+/// The skills whose PoB skill function changes their damage over time
+/// (`Data/Skills/*.lua`: a function that reads or writes a `Dot` value),
+/// other than the two Righteous Fires ported here and Herald of Ash (left
+/// not computed). Found by searching every skill function of PoB v2.67.2
+/// (`docs/phase-6/dot.md`).
+pub const DOT_FUNCTIONS_NOT_PORTED: [&str; 3] = [
+    "RighteousFireAltX",
+    "WaveOfConviction",
+    "WaveOfConvictionAltY",
+];
+
 /// Skill types whose DoT this phase leaves not computed (the kinds the hit
 /// leaves out, [`hit::NOT_SELF_CAST`] but spells' and attacks' own).
 const NOT_COMPUTED_KINDS: [&str; 8] = [
@@ -211,24 +222,41 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
             || (key == "dotIsSpell" && stat(SPELL_DOT_STAT))
             || (key == "dotIsProjectile" && stat(PROJECTILE_DOT_STAT))
     };
-    let mut flags = Flags::DOT | skill.keyword_flags();
+    let pob_flag = |name: &str| pob.is_some_and(|p| p.flag(name));
+    // The skill's own flags (`skillCfg.flags`: PoB's base flags, else the
+    // game's types), as its hit would have them.
+    let mut skill_flags = skill.keyword_flags();
+    for (flag, pob_name, game_type) in [
+        (Flags::SPELL, "spell", "Spell"),
+        (Flags::ATTACK, "attack", "Attack"),
+        (Flags::AREA, "area", "Area"),
+        (Flags::PROJECTILE, "projectile", "Projectile"),
+        (Flags::MELEE, "melee", "Melee"),
+    ] {
+        if pob_flag(pob_name) || (pob.is_none() && has(game_type)) {
+            skill_flags = skill_flags | flag;
+        }
+    }
+    if pob_flag("hit") || has("Damage") || has("Attack") {
+        skill_flags = skill_flags | Flags::HIT;
+    }
     if !has("Attack") {
-        flags = flags | Flags::CAST;
+        skill_flags = skill_flags | Flags::CAST;
     }
-    if has("Spell") && data("dotIsSpell") {
-        flags = flags | Flags::SPELL;
-    }
-    if has("Attack") && data("dotIsAttack") {
-        flags = flags | Flags::ATTACK;
-    }
-    if data("dotIsArea") {
-        flags = flags | Flags::AREA;
-    }
-    if data("dotIsProjectile") {
-        flags = flags | Flags::PROJECTILE;
-    }
-    if data("dotIsHit") {
-        flags = flags | Flags::HIT;
+    // `dotCfg` (`CalcOffence.lua` 5648 to 5671): `Dot` added; `Area`,
+    // `Projectile`, `Spell`, `Attack`, and `Hit` removed unless the skill's
+    // DoT is one; every other flag kept.
+    let mut flags = skill_flags | Flags::DOT;
+    for (flag, key) in [
+        (Flags::AREA, "dotIsArea"),
+        (Flags::PROJECTILE, "dotIsProjectile"),
+        (Flags::SPELL, "dotIsSpell"),
+        (Flags::ATTACK, "dotIsAttack"),
+        (Flags::HIT, "dotIsHit"),
+    ] {
+        if !data(key) {
+            flags = flags.without(flag);
+        }
     }
     flags
 }
@@ -261,10 +289,21 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             || p.base_flag("dotIsCausticGround")
             || p.base_flag("dotIsCorruptingBlood")
             || p.base_flag("DotCanStack")
+            // PoB removes the skill's own increases from Herald of Ash's
+            // DoT (`CalcOffence.lua` 5702): not modelled.
+            || p.base_flag("dotIsHeraldOfAsh")
     });
     if ground {
         calc.set_unsupported(Field::DotDps, UnsupportedReason::NotComputed);
         return Ok(());
+    }
+    // A skill function of PoB's that changes the DoT and is not ported
+    // ([`DOT_FUNCTIONS_NOT_PORTED`]): a reason (Phase 6 review).
+    if DOT_FUNCTIONS_NOT_PORTED.contains(&skill.effect().id.as_str()) {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "skill-function",
+        });
     }
     if skill.types.contains("Aura") {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {

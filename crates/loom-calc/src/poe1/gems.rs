@@ -1105,13 +1105,13 @@ pub fn arcane_surge_support(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
             return false;
         }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        skill::group_skills(group, group_matches, input.data, levels).is_ok_and(|skills| {
-            skills.iter().any(|s| {
+        skill::group_skills(group, group_matches, input.data, levels)
+            .iter()
+            .any(|s| {
                 s.supports
                     .iter()
                     .any(|sup| sup.effect.id == "SupportArcaneSurge")
             })
-        })
     })
 }
 
@@ -1260,21 +1260,7 @@ pub fn gems(
             });
         }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        let skills = match skill::group_skills(group, group_matches, input.data, levels) {
-            Ok(s) => s,
-            Err(_) => {
-                // A gem the data does not have: every enabled gem of the
-                // group is a reason, as before P3-12h.
-                for (i, gem) in group.gems.typed().enumerate() {
-                    if gem.enabled {
-                        ingest.reason(UnsupportedReason::UnmodelledGem {
-                            source: Source::Gem { group: g, gem: i },
-                        });
-                    }
-                }
-                continue;
-            }
-        };
+        let skills = skill::group_skills(group, group_matches, input.data, levels);
         for s in &skills {
             let is_main = main.is_some_and(|(mg, m)| {
                 mg == g

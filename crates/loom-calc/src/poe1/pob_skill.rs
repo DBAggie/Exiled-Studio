@@ -194,4 +194,45 @@ mod tests {
         );
         assert!(skill("NoSuchSkill").is_none());
     }
+
+    /// The entries P6-1 reads, pinned against PoB v2.67.2's skill data
+    /// (`Data/Skills/act_int.lua`), so a regenerated table that loses them
+    /// fails here.
+    #[test]
+    fn the_dot_skills_should_have_pobs_data() {
+        for (id, flags, dot_is_area, function) in [
+            (
+                "Vortex",
+                &["area", "duration", "forceInstant", "spell"][..],
+                true,
+                true,
+            ),
+            ("RighteousFire", &["area", "spell"][..], true, true),
+            ("VaalRighteousFire", &["area", "spell"][..], true, true),
+            (
+                "EssenceDrain",
+                &["duration", "projectile", "spell"][..],
+                false,
+                false,
+            ),
+        ] {
+            let s = skill(id).expect(id);
+            assert_eq!(s.flags, flags, "{id}");
+            assert_eq!(
+                s.skill_data("dotIsArea").is_some_and(Value::truthy),
+                dot_is_area,
+                "{id}"
+            );
+            assert_eq!(s.has_function("preDamageFunc"), function, "{id}");
+        }
+        assert!(
+            skill("HeraldOfAsh")
+                .expect("Herald of Ash")
+                .base_flag("dotIsHeraldOfAsh")
+        );
+        assert!(skill("Swordstorm").is_some_and(|s| {
+            s.skill_data("doubleHitsWhenDualWielding")
+                .is_some_and(Value::truthy)
+        }));
+    }
 }

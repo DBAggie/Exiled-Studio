@@ -1391,6 +1391,16 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
       "description": "Vaal Righteous Fire as the main skill: its burn from life plus energy shield, the share sacrificed, and the burn per second (PoB's preDamageFunc); the gem's Righteous Fire as a buff (P6-1)."
+    },
+    {
+      "id": "vortex-dot-shock-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-shock-witch.xml",
+      "sha256": "08eaef8669fd9b6fdb4c323a0c08081e746d4318ab220504d52b3602b60b64a2",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex against a shocked enemy with 40% cold resistance and cold penetration: the resistance without penetration and shock's damage taken on the skill's damage over time (P6-1)."
     }
   ]
 }

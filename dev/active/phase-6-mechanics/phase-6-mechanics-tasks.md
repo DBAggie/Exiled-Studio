@@ -20,7 +20,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `pob_data.lua` format 10: `base_flags`, `parts`, `functions`; `loom-parity-cli pob-skills`; generated `poe1/pob_skills.rs` (1,231 skills, regenerates byte-identical). The `data-parity` check of the table itself is left for P6-6, where parts are first read; the base mods read here are `dotIsArea` and the ground flags.
 - [x] Skill DoT (`poe1::dot`), DoT multipliers, enemy DoT taken, `TotalDot`; DoT stat rows; Righteous Fire and Vaal Righteous Fire; Righteous Fire as an other-gem buff
 - [x] Found on the way: PoB's skills layout before skill sets (`SkillsLayout::Flat`, build v1 `skills.layout` additive); gems the data does not have are skipped as PoB does (a reason), renamed `skillId`s found by name
-- [x] Mechanic fixtures (4, all equal to PoB); evidence (`docs/phase-6/dot.md`)
+- [x] Mechanic fixtures (5, all equal to PoB; Essence Drain kept local until P6-10b, D9); code-architecture-reviewer run, findings applied or recorded (D6 to D9); evidence (`docs/phase-6/dot.md`)
 
 ## P6-2a: dual wielding
 ## P6-2b: ignite and the shared ailment base
