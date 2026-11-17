@@ -70,7 +70,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #150 (base `feat/p6-6c-skill-review`)
 ## P6-6d: totems (P6-6 split: traps, mines, brands are P6-6e)
 - [x] Totems' hit and DoT computed per totem, the player's action speed for self-cast skills only; the P6-5 review (release skills unvetted, Vaal wording, test placement); `docs/phase-6/totems.md`
-- [ ] Open PR (base `feat/p6-5-channel-vaal`)
+- [x] Open PR: #151 (base `feat/p6-5-channel-vaal`)
 ## P6-6e: traps, mines, brands
 ## P6-7a: minion data
 ## P6-7b: minion actor, auras and buffs on it, minion defences
