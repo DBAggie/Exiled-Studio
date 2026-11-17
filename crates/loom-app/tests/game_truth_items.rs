@@ -364,12 +364,11 @@ fn each_cards_values_should_equal_what_its_copy_prints() {
     }
     println!("{checked} cards checked; partial {partial:?}");
     assert!(checked >= 15, "{checked}");
-    // Replica Dreamfeather's "(5-10)% increased Attack Speed" is one of its
-    // three lines the resolver finds ambiguous (`LINE_AMBIGUOUS`, local or
-    // global), so the card leaves it out (1.50 for the game's 1.65) and
-    // says so; Loath Crown's unresolved lines are not local ones.
-    assert_eq!(partial, ["loath-crown", "replica-dreamfeather"]);
-    assert_eq!(differences, ["replica-dreamfeather"]);
+    // Loath Crown's unresolved lines are not local ones. Replica
+    // Dreamfeather's local lines resolve by its base as a rare's do
+    // (`local-stat`), so its 1.65 attacks per second equals the game's.
+    assert_eq!(partial, ["loath-crown"]);
+    assert!(differences.is_empty(), "{differences:?}");
 }
 
 /// The copy's `Requirements:` section: `(name, value)`, `(unmet)` removed.
@@ -511,10 +510,7 @@ fn each_copys_affix_headers_should_equal_the_cards_affixes() {
     }
     println!("{compared} headers; the cards name {named}; differences {differences:?}");
     assert!(named >= 40, "{named}");
-    // The card gives an influence mod no tier (`affixes::tier`); the game
-    // counts its tier among the influence's rows (Tier 1).
-    assert_eq!(
-        differences,
-        [r#"tempest-refuge: suffix "of Shaping" None ["Life"]"#]
-    );
+    // An influence mod's tier counts among its influence's rows, as the
+    // game's (Tempest Refuge's "of Shaping", Tier 1; `affixes::tier`).
+    assert!(differences.is_empty(), "{differences:?}");
 }

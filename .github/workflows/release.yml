@@ -111,12 +111,16 @@ jobs:
           $v = & target/release/exiled-studio-knowledge-mcp.exe --version
           if ($v -ne "exiled-studio-knowledge-mcp ${{ steps.version.outputs.version }}") { throw "knowledge MCP version: $v" }
           ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
+      # The installers carry it too, beside the application (a sidecar).
+      - name: Knowledge MCP sidecar
+        shell: bash
+        run: bash tools/package/knowledge-sidecar.sh ${{ steps.version.outputs.version }}
       - name: NSIS setup (WebView2 offline installer inside)
         shell: bash
-        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json --config crates/loom-tauri/tauri.knowledge.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
       - name: MSI
         shell: bash
-        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json --config crates/loom-tauri/tauri.knowledge.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
       - name: Collect
         shell: bash
         run: |
@@ -194,23 +198,25 @@ jobs:
       - name: Version
         id: version
         run: echo "version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "loom-tauri") | .version')" >> "$GITHUB_OUTPUT"
+      # Before `tauri build`: the AppImage and the .deb carry it (a sidecar).
+      - name: Knowledge MCP server (ADR-018)
+        run: |
+          bash tools/package/knowledge-sidecar.sh ${{ steps.version.outputs.version }}
+          # Started over stdio: it answers `initialize` with no bundle installed.
+          reply="$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | target/release/exiled-studio-knowledge-mcp --data-dir "$RUNNER_TEMP/no-data")"
+          grep -q '"protocolVersion"' <<<"$reply"
+          mkdir -p out/release
+          cp target/release/exiled-studio-knowledge-mcp "out/release/exiled-studio-knowledge-mcp_${{ steps.version.outputs.version }}_amd64"
       - name: AppImage and .deb
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
-          mkdir -p out/release
+          bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json --config crates/loom-tauri/tauri.knowledge.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
           cp target/release/bundle/appimage/*.AppImage* target/release/bundle/deb/*.deb out/release/
-      - name: Knowledge MCP server (ADR-018)
+      - name: AppImage, started, with the knowledge MCP inside
         run: |
-          cargo build --release --locked -p loom-knowledge-mcp
-          target/release/exiled-studio-knowledge-mcp --version | grep -qx "exiled-studio-knowledge-mcp ${{ steps.version.outputs.version }}"
-          # Started over stdio: it answers `initialize` with no bundle installed.
-          reply="$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | target/release/exiled-studio-knowledge-mcp --data-dir "$RUNNER_TEMP/no-data")"
-          grep -q '"protocolVersion"' <<<"$reply"
-          cp target/release/exiled-studio-knowledge-mcp "out/release/exiled-studio-knowledge-mcp_${{ steps.version.outputs.version }}_amd64"
-      - name: AppImage, started
-        run: xvfb-run -a bash tools/package/smoke.sh out/release/*.AppImage app-image ${{ steps.version.outputs.version }}
+          xvfb-run -a bash tools/package/smoke.sh out/release/*.AppImage app-image ${{ steps.version.outputs.version }}
+          bash tools/package/appimage-sidecar.sh out/release/*.AppImage ${{ steps.version.outputs.version }}
       - name: .deb, installed, started, removed
         run: bash tools/package/install-deb.sh out/release/*.deb ${{ steps.version.outputs.version }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

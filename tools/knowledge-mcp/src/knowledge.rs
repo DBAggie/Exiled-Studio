@@ -1,7 +1,7 @@
 //! The bundle the server answers from, and its provenance (ADR-018, "Data it
 //! serves").
 
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -83,6 +83,9 @@ pub struct Loaded {
     /// Its provenance.
     pub provenance: Provenance,
     indexes: RefCell<BTreeMap<String, Index<'static>>>,
+    /// Each mod's game text in the item scope, lowercased, one line per
+    /// line: what `search_mods` matches its `text` against, rendered once.
+    mod_text: OnceCell<Vec<String>>,
 }
 
 impl std::fmt::Debug for Loaded {
@@ -107,6 +110,12 @@ impl Loaded {
             map.insert(root.to_owned(), Index::build_with(&scope, self.bundle));
         }
         map.get(root).map(f)
+    }
+
+    /// Each mod's lowercased game text (in the bundle's mod order), made
+    /// by `build` on first use.
+    pub(crate) fn mod_text(&self, build: impl FnOnce() -> Vec<String>) -> &[String] {
+        self.mod_text.get_or_init(build)
     }
 }
 
@@ -170,5 +179,6 @@ fn load(game: Game, dir: &Path, signed: bool) -> Result<Loaded, OpenError> {
         bundle: Box::leak(Box::new(bundle)),
         provenance,
         indexes: RefCell::new(BTreeMap::new()),
+        mod_text: OnceCell::new(),
     })
 }

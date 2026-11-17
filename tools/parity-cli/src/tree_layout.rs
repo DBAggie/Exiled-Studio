@@ -435,4 +435,144 @@ mod tests {
         assert_eq!(readme_angles(text), Some(vec![0.0, 30.0, 45.0]));
         assert_eq!(readme_angles("nothing"), None);
     }
+
+    struct TempDir(std::path::PathBuf);
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// An export folder with two sheets in `assets/`.
+    fn export(name: &str) -> TempDir {
+        let dir =
+            std::env::temp_dir().join(format!("loom-tree-layout-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("assets")).unwrap();
+        std::fs::write(dir.join("assets/skills-3.jpg"), b"skills").unwrap();
+        std::fs::write(dir.join("assets/frame-3.png"), b"frame").unwrap();
+        TempDir(dir)
+    }
+
+    /// A `data.json` whose categories all use `skills-3.jpg` (with the
+    /// export's cache-busting query), but `frame`, which has its own sheet.
+    fn data(sprite_w: u32) -> Value {
+        let mut sprites = serde_json::Map::new();
+        for name in CATEGORIES {
+            let (file, icon) = if name == "frame" {
+                ("https://web.poecdn.com/image/frame-3.png?1", "PSSkillFrame")
+            } else {
+                (
+                    "https://web.poecdn.com/image/skills-3.jpg?64320931",
+                    "Art/Life.png",
+                )
+            };
+            sprites.insert(
+                name.to_owned(),
+                serde_json::json!({ ZOOM: {
+                    "filename": file,
+                    "w": 64,
+                    "h": 32,
+                    "coords": { icon: {"x": 0, "y": 0, "w": sprite_w, "h": 32} }
+                }}),
+            );
+        }
+        serde_json::json!({
+            "sprites": sprites,
+            "nodes": {
+                // In the bundle: a known icon, and an active icon no sheet has.
+                "20": {"icon": "Art/Life.png", "activeIcon": "Art/Missing.png"},
+                // In the bundle, with no art any sheet has: left out.
+                "10": {"icon": "Art/Gone.png"},
+                // Not in the bundle's tree: skipped.
+                "30": {"icon": "Art/Life.png"},
+                "root": {}
+            }
+        })
+    }
+
+    fn source() -> TreeExport {
+        TreeExport {
+            repository: "grindinggear/skilltree-export".to_owned(),
+            tag: "3.29.0".to_owned(),
+            commit: "0".repeat(40),
+            files: Vec::new(),
+            angle_rule: ANGLE_RULE.to_owned(),
+        }
+    }
+
+    #[test]
+    fn sprites_should_copy_each_sheet_once_and_keep_only_known_icons() {
+        let dir = export("ok");
+        let nodes: BTreeSet<u32> = [10, 20].into_iter().collect();
+        let (index, sheets, missing) = sprites(&data(64), &dir.0, &nodes, source()).unwrap();
+        assert_eq!(
+            index
+                .categories
+                .iter()
+                .map(|c| c.name.as_str())
+                .collect::<Vec<_>>(),
+            CATEGORIES
+        );
+        assert_eq!(index.categories[0].file, "frame-3.png");
+        assert_eq!(index.categories[1].file, "skills-3.jpg");
+        assert_eq!(
+            sheets.keys().map(String::as_str).collect::<Vec<_>>(),
+            [
+                format!("{SPRITES_DIR}frame-3.png"),
+                format!("{SPRITES_DIR}skills-3.jpg")
+            ]
+        );
+        assert_eq!(sheets[&format!("{SPRITES_DIR}skills-3.jpg")], b"skills");
+        // Node 20 keeps its known icon only; node 10 has none; 30 is not read.
+        assert_eq!(index.nodes.len(), 1);
+        let art = &index.nodes[0];
+        assert_eq!(
+            (art.node, art.icon.as_deref(), art.active_icon.as_deref()),
+            (20, Some("Art/Life.png"), None)
+        );
+        assert_eq!(missing, 2);
+        // Each copied sheet is named in the source with its hash.
+        assert_eq!(
+            index
+                .source
+                .files
+                .iter()
+                .map(|f| (f.path.as_str(), f.sha256.clone()))
+                .collect::<Vec<_>>(),
+            [
+                ("assets/frame-3.png", hex(&Sha256::digest(b"frame"))),
+                ("assets/skills-3.jpg", hex(&Sha256::digest(b"skills")))
+            ]
+        );
+        assert!((index.zoom - 0.3835).abs() < 1e-12);
+    }
+
+    #[test]
+    fn sprites_should_refuse_a_missing_category_sheet_or_a_sprite_off_its_sheet() {
+        let dir = export("errors");
+        let nodes = BTreeSet::new();
+        // A sprite wider than its sheet.
+        let err = sprites(&data(65), &dir.0, &nodes, source()).unwrap_err();
+        assert!(err.contains("outside the sheet"), "{err}");
+        // A category the export does not have.
+        let mut d = data(64);
+        d["sprites"]
+            .as_object_mut()
+            .unwrap()
+            .remove("masteryInactive");
+        let err = sprites(&d, &dir.0, &nodes, source()).unwrap_err();
+        assert!(err.contains("sprites.masteryInactive"), "{err}");
+        // A sheet missing from `assets/`.
+        std::fs::remove_file(dir.0.join("assets/frame-3.png")).unwrap();
+        assert!(sprites(&data(64), &dir.0, &nodes, source()).is_err());
+        // A file name that is hidden or empty.
+        for bad in ["https://x/.hidden.png", "https://x/"] {
+            let mut d = data(64);
+            d["sprites"]["frame"][ZOOM]["filename"] = Value::from(bad);
+            let err = sprites(&d, &dir.0, &nodes, source()).unwrap_err();
+            assert!(err.starts_with("frame: file"), "{err}");
+        }
+    }
 }

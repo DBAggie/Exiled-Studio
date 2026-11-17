@@ -40,18 +40,27 @@ if ($Kind -eq 'nsis') {
         throw "the MSI installed no folder at $($candidates -join ' or ')"
     }
 }
-$exe = Get-ChildItem -Path $dir -Filter '*.exe' | Where-Object { $_.Name -notlike 'uninstall*' } | Select-Object -First 1
+$mcpName = 'exiled-studio-knowledge-mcp.exe'
+$exe = Get-ChildItem -Path $dir -Filter '*.exe' | Where-Object { $_.Name -notlike 'uninstall*' -and $_.Name -ne $mcpName } | Select-Object -First 1
 if ($null -eq $exe) { throw "no application in $dir" }
 Write-Output "installed: $($exe.FullName)"
+# The knowledge MCP server (ADR-018), beside the application.
+$mcp = Join-Path $dir $mcpName
+if (-not (Test-Path $mcp)) { throw "no knowledge MCP in $dir" }
+$got = & $mcp --version
+Write-Output "installed: $got"
+if ($Version -and $got -ne "exiled-studio-knowledge-mcp $Version") { throw "knowledge MCP version: $got, not $Version" }
 
 & (Join-Path $PSScriptRoot 'smoke.ps1') $exe.FullName $Kind $Version
 
 if ($Kind -eq 'nsis') {
     Run (Join-Path $dir 'uninstall.exe') @('/S')
     # The NSIS uninstaller copies itself and returns before it is done.
-    for ($i = 0; $i -lt 60 -and (Test-Path $exe.FullName); $i++) { Start-Sleep -Seconds 1 }
+    for ($i = 0; $i -lt 60 -and ((Test-Path $exe.FullName) -or (Test-Path $mcp)); $i++) { Start-Sleep -Seconds 1 }
 } else {
     Run 'msiexec.exe' @('/x', "`"$Installer`"", '/qn')
 }
-if (Test-Path $exe.FullName) { throw "still installed after uninstalling: $($exe.FullName)" }
+foreach ($f in @($exe.FullName, $mcp)) {
+    if (Test-Path $f) { throw "still installed after uninstalling: $f" }
+}
 Write-Output "uninstalled: $Kind"

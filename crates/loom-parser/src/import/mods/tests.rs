@@ -300,6 +300,49 @@ fn local_stat_should_keep_the_local_reading_on_a_carrier_base() {
     );
 }
 
+/// On a unique, a plain local and global pair is decided by the base
+/// (Replica Dreamfeather's attack speed); a reading of two stats is not
+/// (Windscream's resistances against Thread of Hope's jewel stats).
+#[test]
+fn local_stat_should_decide_a_uniques_plain_pair_only() {
+    let r = rules();
+    // A jewel's row with a local stat and the global one, as Thread of
+    // Hope's.
+    let mut jewel = row("jewel", OWN, AFFIX, "local_jewel_a", &[]);
+    jewel.stats.push(("global_a".to_owned(), 1, 10));
+    let mut mods = Mods::from_rows(vec![
+        row("local", OWN, AFFIX, "local_a", &[]),
+        row("global", OWN, AFFIX, "global_a", &[]),
+        jewel,
+    ]);
+    mods.locality.insert("local_a".to_owned(), Locality::Item);
+    mods.locality
+        .insert("local_jewel_a".to_owned(), Locality::Item);
+    let bases = [base(OWN, &["shell"])];
+    let unique = Context {
+        unique: true,
+        ..ctx(&r, &mods, &bases)
+    };
+    let explicit = line(ModSection::Explicit, &[]);
+    let d = filter(
+        &unique,
+        &explicit,
+        &[cand("local_a", 5), cand("global_a", 5)],
+    );
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![0], "resolved/local-stat".to_owned())
+    );
+    let mut two = cand("local_jewel_a", 5);
+    two.stats.push(ResolvedStat {
+        stat: "global_a".to_owned(),
+        value: RawValue::Exact(StatValue::exact(5)),
+    });
+    let d = filter(&unique, &explicit, &[two, cand("global_a", 5)]);
+    assert!(d.notes.contains("local-stat-unique-not-a-pair"), "{d:?}");
+    assert_eq!(d.kept, [0, 1]);
+}
+
 /// The custom-line rule (P3-12j): a global reading a row of one of the
 /// domains backs; a local reading, a row of another domain, or no row is
 /// not.
