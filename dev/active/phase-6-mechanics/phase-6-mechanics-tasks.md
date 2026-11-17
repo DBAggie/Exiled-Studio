@@ -98,5 +98,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)
 - [x] P6-11b: weapon types (PoB's weapon `ModFlag`s per hand, `KeywordFlag.Bow`, ailments' `WeaponMask`; 43 hit rows, 3 state rows with `UsingWand`, 2 `NoEffect`), the P6-11a review (one `DualWielding` definition, three shield rows), and the dual-wield hit DPS fix (combined speed; DIV-0074 retired); fixtures `smite-axe-lines-templar.xml`, `smite-dual-wield-lines-templar.xml` (Q11 DIV-0102 to DIV-0107); `docs/phase-6/stat-mop-up.md`
-- [ ] P6-11b PR (base `feat/p6-11a-stat-batch`)
+- [x] P6-11b PR #159 (base `feat/p6-11a-stat-batch`)
 ## P6-12: combined and full DPS; report
