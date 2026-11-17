@@ -81,7 +81,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-7a2: the P6-7a review
 - [x] Converter strict on IDs and types; validator (duplicate types, empty fields, negatives, skill references); PoB's rod key; `MinionType::life_scaling`; `pob_data.lua` stops on duplicates; start cost measured (+40 ms); `docs/phase-6/minions.md`
 - [x] Open PR: #154 (base `feat/p6-7a-minion-data`)
-## P6-7b: minion actor, auras and buffs on it, minion defences
+## P6-7b: minion actor (plan: `p6-7b-minion-actor-plan.md`, reviewed by plan-reviewer)
+- [x] Plan written and reviewed; split into b1 (data, blocked on the maintainer's depot download of the `.ot` bundles), b2 (actor in the core and parity tool, no value change), b3a, b3b, b4
+- [ ] Plan PR (base `feat/p6-7a2-minion-review`), auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages
