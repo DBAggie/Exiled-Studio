@@ -4,6 +4,10 @@
   "description": "Every top-level type of the API, so one schema names them all. Never\nsent.",
   "type": "object",
   "properties": {
+    "build-fields": {
+      "description": "The numbers of another build file (the `compare_file` query).",
+      "$ref": "#/$defs/BuildFields"
+    },
     "command": {
       "description": "A command.",
       "$ref": "#/$defs/Command"
@@ -75,6 +79,10 @@
       "description": "The snapshot query's answer.",
       "$ref": "#/$defs/Snapshot"
     },
+    "stage-view": {
+      "description": "A stage's tree and equipment (the `stage_view` query).",
+      "$ref": "#/$defs/StageView"
+    },
     "tree-layout": {
       "description": "The loaded data's passive tree.",
       "$ref": "#/$defs/TreeLayout"
@@ -90,6 +98,14 @@
     "updates": {
       "description": "Application updates (Phase 5, P-d).",
       "$ref": "#/$defs/UpdateStatus"
+    },
+    "what-if": {
+      "description": "A what-if query.",
+      "$ref": "#/$defs/WhatIfRequest"
+    },
+    "what-if-series": {
+      "description": "A what-if query's answer.",
+      "$ref": "#/$defs/WhatIfSeries"
     }
   },
   "additionalProperties": false,
@@ -111,7 +127,11 @@
     "crashes",
     "diagnostics",
     "updates",
-    "data-feed"
+    "data-feed",
+    "what-if",
+    "what-if-series",
+    "build-fields",
+    "stage-view"
   ],
   "$defs": {
     "AffixKind": {
@@ -211,6 +231,28 @@
         "message"
       ]
     },
+    "BuildFields": {
+      "description": "The computed fields of a build file calculated without opening it,\nto compare the open build with: a saved build document or a PoB\nXML file, read and calculated with the loaded data. The open build,\nits history, and the recent list never change.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Each slice field, as a what-if point gives them.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WhatIfField"
+          }
+        },
+        "name": {
+          "description": "The file's name without its extension.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fields"
+      ]
+    },
     "BuildView": {
       "description": "The open build.",
       "type": "object",
@@ -250,6 +292,18 @@
           "items": {
             "$ref": "#/$defs/SetView"
           }
+        },
+        "dashboards": {
+          "description": "The build's dashboards, if it has any: the layout its author\nchose to show it with (which components, which fields), never\ncalculated numbers; kept in the build file\n(`set-dashboards`).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Dashboards"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "data-version": {
           "description": "The data version the build is pinned to.",
@@ -641,6 +695,11 @@
           "description": "An item added (and perhaps put in a slot).",
           "type": "string",
           "const": "item-added"
+        },
+        {
+          "description": "The build's dashboards changed.",
+          "type": "string",
+          "const": "dashboards"
         }
       ]
     },
@@ -1431,6 +1490,34 @@
           ]
         },
         {
+          "description": "Sets the build's dashboards ([`BuildView::dashboards`]), as one\nundoable change; the same dashboards again change nothing.\n`APP_DASHBOARDS`, with nothing changed, for dashboards outside\nthe limits their types name, a repeated ID, or an `active` that\nis none of them.",
+          "type": "object",
+          "properties": {
+            "set-dashboards": {
+              "type": "object",
+              "properties": {
+                "dashboards": {
+                  "description": "The dashboards; absent or null to clear them.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Dashboards"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-dashboards"
+          ]
+        },
+        {
           "description": "Allocates a node of a passive spec and the path to it (the\npath is the application's, never sent), as one undoable\nchange.",
           "type": "object",
           "properties": {
@@ -2153,6 +2240,116 @@
       "required": [
         "text",
         "status"
+      ]
+    },
+    "Dashboard": {
+      "description": "One dashboard: a named list of components.",
+      "type": "object",
+      "properties": {
+        "components": {
+          "description": "The components, in order: at most 24.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DashboardComponent"
+          }
+        },
+        "id": {
+          "description": "The dashboard's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name its author gave it: 1 to 40 characters.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "components"
+      ]
+    },
+    "DashboardComponent": {
+      "description": "One component of a dashboard: what it shows, never the numbers.\nEvery text here is 1 to 64 characters.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The calc result field a stat, history, or curve component\nshows.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fields": {
+          "description": "The calc result fields a progression component charts: at most\n6.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "The component's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "input": {
+          "description": "The config input a scaling curve varies.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The component's kind (`stat`, `progression`, `timeline`, ...):\nopen text, so the UI adds kinds without a schema change and an\nolder application still opens the build.",
+          "type": "string"
+        },
+        "target": {
+          "description": "The life a fight timeline deals damage to.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "vary": {
+          "description": "What a scaling curve varies (`gem-level`, `character-level`,\n`config-number`): open text, as `kind`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "description": "The component's width (`third`, `half`, `full`, ...): open\ntext, as `kind`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "width"
+      ]
+    },
+    "Dashboards": {
+      "description": "A build's dashboards and which one is shown.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The ID of the dashboard shown: one of `list`.",
+          "type": "string"
+        },
+        "list": {
+          "description": "The dashboards, in order: 1 to 8.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Dashboard"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "list"
       ]
     },
     "DataFeedStatus": {
@@ -4188,6 +4385,66 @@
         "notices"
       ]
     },
+    "StageSlot": {
+      "description": "An item in a slot of a stage's item set.",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item's ID ([`ItemSummary::id`]).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "slot": {
+          "description": "The slot, as [`ItemSummary::slot`] names it.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "item"
+      ]
+    },
+    "StageView": {
+      "description": "One stage's passive tree and equipment, as the build would show\nthem with that stage chosen (`use-loadout`), read without choosing\nit: for a visual difference of two stages. `APP_LOADOUT` when the\nbuild has no such stage.",
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "description": "The spec's allocated nodes, ascending: the IDs\n[`TreeView::nodes`] gives when the stage is the active one.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "slots": {
+          "description": "The items in the slots of the stage's item set (the linked one,\nelse the one the build keeps when the stage is chosen), in\nbuild order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StageSlot"
+          }
+        },
+        "spec": {
+          "description": "The passive spec's ID (the stage's key, as [`LoadoutView`]'s).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "title": {
+          "description": "The title, without colour codes and links.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "spec",
+        "title",
+        "nodes",
+        "slots"
+      ]
+    },
     "StatView": {
       "description": "One stat a line resolved to.",
       "type": "object",
@@ -5205,6 +5462,234 @@
         "text",
         "code",
         "in-use"
+      ]
+    },
+    "WhatIfField": {
+      "description": "One field at a what-if point.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The field's name.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Its state.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Its value, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "state"
+      ]
+    },
+    "WhatIfPoint": {
+      "description": "One point of a what-if series: the build with one stage chosen or\none value set, calculated.",
+      "type": "object",
+      "properties": {
+        "current": {
+          "description": "Whether this point is the build as it is now: the active stage,\nor the value the build has.",
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "Each slice field at this point.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WhatIfField"
+          }
+        },
+        "label": {
+          "description": "The stage's title, without colour codes and links (as\n[`LoadoutView`]'s), or the swept value as text.",
+          "type": "string"
+        },
+        "x": {
+          "description": "The swept value; for stages, the stage's index from 0.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "x",
+        "current",
+        "fields"
+      ]
+    },
+    "WhatIfRequest": {
+      "description": "A what-if query: the computed fields of the open build across its\nstages or across one swept input, for a chart. Each point is\ncalculated on a copy of the build; the build, its history, and its\nfile never change. At most 41 points (`APP_WHAT_IF` for more, for a\nrange that is not one, and for a group, gem, or input the build\ndoes not have).",
+      "type": "object",
+      "properties": {
+        "vary": {
+          "description": "What varies from point to point.",
+          "$ref": "#/$defs/WhatIfVary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "vary"
+      ]
+    },
+    "WhatIfSeries": {
+      "description": "A what-if query's answer: its points, in the order of the stages\nor of the swept value.",
+      "type": "object",
+      "properties": {
+        "points": {
+          "description": "The points.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WhatIfPoint"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "points"
+      ]
+    },
+    "WhatIfVary": {
+      "description": "What a what-if query varies ([`WhatIfRequest`]).",
+      "oneOf": [
+        {
+          "description": "The build's stages (PoB's loadouts): one point for each, in\nbuild order, as choosing the stage would calculate.",
+          "type": "string",
+          "const": "stages"
+        },
+        {
+          "description": "A gem's level: one point for each level from `from` to `to`,\nboth included. The group and the gem are indexed as the\n`edit-gem` command indexes them.",
+          "type": "object",
+          "properties": {
+            "gem-level": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first level, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "gem": {
+                  "description": "The gem's index in the group.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "group": {
+                  "description": "The socket group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last level.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem",
+                "from",
+                "to"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "gem-level"
+          ]
+        },
+        {
+          "description": "The character's level: one point for `from` and each `step`\nafter it up to `to`.",
+          "type": "object",
+          "properties": {
+            "character-level": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first level, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "step": {
+                  "description": "The distance between two points, at least 1.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last level, at most 100.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to",
+                "step"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "character-level"
+          ]
+        },
+        {
+          "description": "A numeric config input of the active config set: `steps`\nevenly spaced values from `from` to `to`, both included.",
+          "type": "object",
+          "properties": {
+            "config-number": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "description": "The first value.",
+                  "type": "number",
+                  "format": "double"
+                },
+                "name": {
+                  "description": "The input's name.",
+                  "type": "string"
+                },
+                "steps": {
+                  "description": "How many points, at least 2.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "to": {
+                  "description": "The last value, above `from`.",
+                  "type": "number",
+                  "format": "double"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "from",
+                "to",
+                "steps"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "config-number"
+          ]
+        }
       ]
     }
   }

@@ -1,0 +1,940 @@
+/* The dashboards' grid, panels, and charts, the explanation layers, and
+   the detail dialog (UX audit 2026-11-15). Colours only through the
+   tokens (theme/tokens.css). */
+
+/* ------------------------------------------------------------ the grid */
+
+.dash-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.dash-third {
+  grid-column: span 2;
+}
+
+.dash-half {
+  grid-column: span 3;
+}
+
+.dash-two-thirds {
+  grid-column: span 4;
+}
+
+.dash-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1280px) {
+  .dash-two-thirds {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1000px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-third,
+  .dash-half,
+  .dash-two-thirds,
+  .dash-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.dash-cell > .panel {
+  height: 100%;
+}
+
+.dash-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-grid {
+  align-items: stretch;
+}
+
+.dash-bar {
+  gap: 8px;
+}
+
+.dash-tabs {
+  flex-wrap: wrap;
+}
+
+.dash-tabs button.icon {
+  width: 36px;
+}
+
+.baseline-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-sub {
+  margin: 0;
+  color: var(--c-muted);
+}
+
+/* ---------------------------------------------------------- the panels */
+
+.dash-panel .panel-head {
+  flex-wrap: nowrap;
+  min-height: 32px;
+}
+
+.dash-panel .panel-head h2 {
+  flex: 0 1 auto;
+  font-size: 1.05rem;
+  min-width: 3rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The few words beside a title give way first. */
+.dash-panel .panel-head > .muted {
+  flex: 0 100 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A control that stays quiet until wanted: the panel's options and
+   details. */
+button.icon.quiet {
+  width: 32px;
+  min-height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--c-muted);
+}
+
+button.icon.quiet:hover:not(:disabled) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.panel-search {
+  min-height: 32px;
+  width: 12rem;
+  max-width: 100%;
+}
+
+.show-all {
+  margin-top: 8px;
+}
+
+.headline {
+  margin: 0 0 4px;
+}
+
+.headline strong {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.meter-row {
+  display: grid;
+  /* The same columns on every row, so the bars share one scale. */
+  grid-template-columns: 7rem minmax(3rem, 1fr) 11rem;
+  align-items: center;
+}
+
+.meter-row .stat-end {
+  justify-content: flex-end;
+}
+
+.stat-columns {
+  columns: 2 22rem;
+  column-gap: 28px;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.stat-columns li {
+  break-inside: avoid;
+}
+
+.stat-tile-line {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.main-skill-gems li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.main-skill-gems .gem-mark {
+  align-self: center;
+}
+
+.main-skill-gems .gem-mark.support {
+  border-radius: 2px;
+}
+
+/* ----------------------------------------------------------- the marks */
+
+.meter {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--c-row);
+  overflow: hidden;
+}
+
+.meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 4px;
+}
+
+.meter-fill.behind {
+  opacity: 0.35;
+}
+
+.meter-series {
+  background: var(--c-chart-series);
+}
+
+.meter-life {
+  background: var(--c-chart-life);
+}
+
+.meter-mana {
+  background: var(--c-chart-mana);
+}
+
+.meter-shield {
+  background: var(--c-chart-shield);
+}
+
+.meter-good {
+  background: var(--c-chart-good);
+}
+
+.meter-bad {
+  background: var(--c-chart-bad);
+}
+
+.meter-zero,
+.meter-cap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--c-text);
+}
+
+.meter-zero {
+  background: var(--c-chart-axis);
+}
+
+.delta-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+}
+
+.delta-mid {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--c-chart-axis);
+}
+
+.delta-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.delta-fill.up {
+  background: var(--c-chart-good);
+  border-radius: 0 4px 4px 0;
+}
+
+.delta-fill.down {
+  background: var(--c-chart-bad);
+  border-radius: 4px 0 0 4px;
+}
+
+.delta {
+  font-size: 0.857rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.delta.up {
+  color: var(--c-ok);
+}
+
+.delta.down {
+  color: var(--c-danger);
+}
+
+.delta.same {
+  color: var(--c-muted);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------- the charts */
+
+.chart {
+  position: relative;
+  width: 100%;
+  border-radius: 6px;
+  cursor: crosshair;
+}
+
+.chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart-grid {
+  stroke: var(--c-chart-grid);
+  stroke-width: 1;
+}
+
+.chart-tick {
+  fill: var(--c-muted);
+  font-size: 11px;
+  font-family: var(--font-body);
+}
+
+.chart-tick.current {
+  fill: var(--c-text);
+  font-weight: 600;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--c-chart-series);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-dot {
+  fill: var(--c-chart-series);
+  stroke: var(--c-panel);
+  stroke-width: 2;
+}
+
+.chart-dot.current {
+  fill: var(--c-accent);
+}
+
+.chart-dot.active {
+  fill: var(--c-text);
+}
+
+.chart-cross {
+  stroke: var(--c-chart-axis);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.chart-target {
+  stroke: var(--c-warn);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.chart-target-label {
+  fill: var(--c-warn);
+}
+
+.chart-readout {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 14rem;
+  padding: 6px 10px;
+  background: var(--c-raised);
+  border: 1px solid var(--c-border-strong);
+  border-radius: 6px;
+  font-size: 0.857rem;
+  color: var(--c-muted);
+  pointer-events: none;
+}
+
+.chart-readout strong {
+  color: var(--c-text);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.sparkline {
+  flex: none;
+}
+
+.sparkline .chart-line {
+  stroke-width: 1.5;
+}
+
+.sparkline .chart-dot {
+  stroke-width: 0;
+}
+
+.small-multiples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 16px 24px;
+}
+
+.small-multiples figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.small-multiples figcaption {
+  color: var(--c-muted);
+  font-size: 0.857rem;
+  margin-bottom: 2px;
+}
+
+/* ------------------------------------------- options, details, tables */
+
+.popover-content,
+.hint-content {
+  z-index: 60;
+  background: var(--c-header);
+  color: var(--c-text);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 36px var(--c-bg);
+}
+
+.popover-content {
+  padding: 12px 14px;
+  width: min(20rem, calc(100vw - 16px));
+  max-height: min(28rem, calc(100vh - 16px));
+  overflow-y: auto;
+}
+
+.hint-content {
+  padding: 8px 12px;
+  max-width: min(26rem, calc(100vw - 16px));
+  font-size: 0.857rem;
+  line-height: 1.45;
+  color: var(--c-soft);
+}
+
+button.hint {
+  width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-muted);
+  vertical-align: middle;
+}
+
+button.hint:hover:not(:disabled) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.settings label,
+.settings legend {
+  color: var(--c-muted);
+  font-size: 0.857rem;
+  padding: 0;
+}
+
+.settings select {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.settings-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.settings-checks .check {
+  color: var(--c-text);
+  font-size: 1rem;
+}
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--c-scrim);
+}
+
+.dialog-content {
+  z-index: 41;
+}
+
+.dialog-content.dialog-wide {
+  top: 6vh;
+  width: min(64rem, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.dialog-wide .chart-dot {
+  stroke: var(--c-header);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.929rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 6px 10px;
+  border-top: 1px solid var(--c-row);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  text-align: left;
+}
+
+.data-table thead th {
+  border-top: 0;
+  color: var(--c-muted);
+  font-weight: 500;
+}
+
+.data-table tbody th {
+  font-weight: 400;
+  color: var(--c-soft);
+}
+
+/* ---------------------------------------------------- the customizing */
+
+.dash-tools {
+  gap: 6px;
+}
+
+.dash-tools button.icon {
+  width: 32px;
+  min-height: 32px;
+}
+
+.dash-tools select {
+  min-height: 32px;
+  padding: 0 8px;
+}
+
+.dash-library {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dash-library li,
+.dash-library li + li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--c-row);
+  border-radius: var(--radius);
+}
+
+.dash-library-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-library button {
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.dash-stat-add {
+  margin-top: 16px;
+}
+
+.other-skills {
+  margin: 14px 0 6px;
+}
+
+/* -------------------------------------------------------- equipment */
+
+/* The inventory beside the item list; it stays in view while the list
+   scrolls. */
+.equip-layout {
+  display: grid;
+  grid-template-columns: minmax(28rem, 34rem) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.equip-layout > .inventory-panel {
+  position: sticky;
+  top: 0;
+  margin-bottom: 0;
+}
+
+.equip-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.equip-side .unused-items {
+  margin-top: 0;
+}
+
+@media (max-width: 1100px) {
+  .equip-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .equip-layout > .inventory-panel {
+    position: static;
+  }
+}
+
+/* The inventory's dark ground hugs its slots instead of filling the
+   panel's width, and its slots shrink to fit a narrow panel (eight
+   columns, seven gaps, the padding) instead of spilling out of it. */
+.inventory-panel {
+  container-type: inline-size;
+}
+
+.inventory {
+  --cell: min(3.1rem, calc((100cqw - 76px) / 8));
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.dash-cell > .inventory-panel {
+  margin-bottom: 0;
+}
+
+/* A page's heading row: the heading, its explanation, its pickers. */
+.page-head .hint {
+  margin-left: -6px;
+}
+
+/* The calculation's state when nothing needs attention. */
+.calc-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 0.857rem;
+}
+
+.calc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-ok);
+}
+
+/* ------------------------------------------------------ passive tree */
+
+.tree-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tree-specs {
+  gap: 6px;
+}
+
+.tree-bar {
+  row-gap: 8px;
+}
+
+.tree-bar .tree-points {
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--c-row);
+  border-radius: 999px;
+  color: var(--c-soft);
+  font-size: 0.857rem;
+}
+
+/* A comparison's rows end in the change and the value: more room. */
+.compare-list .meter-row {
+  grid-template-columns: 7rem minmax(2rem, 1fr) 17rem;
+}
+
+/* --------------------------------------- UX audit follow-up (2026-11-16) */
+
+/* Dragging a component by its handle (pointer events). */
+.dash-tools .drag-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.dash-cell {
+  position: relative;
+}
+
+.dash-cell.dragging {
+  opacity: 0.45;
+}
+
+.dash-cell.dragging .drag-handle {
+  cursor: grabbing;
+}
+
+.dash-cell.drop-before::before,
+.dash-cell.drop-after::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--c-accent);
+}
+
+.dash-cell.drop-before::before {
+  left: -10px;
+}
+
+.dash-cell.drop-after::after {
+  right: -10px;
+}
+
+/* The customize row: the name, then whose dashboards these are. */
+.dash-edit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-tabs {
+  align-items: center;
+}
+
+/* Kept snapshots. */
+.baseline-with {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popover-content.snapshots {
+  width: min(22rem, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.snapshots .panel-head {
+  margin: 0;
+}
+
+.snapshots h2 {
+  margin: 0;
+}
+
+.snapshot-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.snapshot-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.snapshot-list .snapshot-name {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+}
+
+.snapshot-list .snapshot-name[aria-pressed='true'] {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.snapshot-keep {
+  display: flex;
+  gap: 6px;
+}
+
+.snapshot-keep input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The Skills page as a table. */
+.skill-table th,
+.skill-table td {
+  text-align: left;
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.skill-table tbody th {
+  color: var(--c-text);
+}
+
+.skill-table tbody th > * {
+  margin-right: 8px;
+}
+
+.skill-table-title {
+  font-weight: 600;
+}
+
+.skill-table tr.disabled > th,
+.skill-table tr.disabled > td {
+  opacity: 0.6;
+}
+
+.skill-table td:nth-child(4),
+.skill-table td:nth-child(5),
+.skill-table th:nth-child(4),
+.skill-table th:nth-child(5) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.gem-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.gem-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.gem-chip .gem-mark.support {
+  border-radius: 2px;
+}
+
+.skill-table-editor > td {
+  padding: 0 0 12px;
+  border-top: 0;
+}
+
+.skill-table-editor .skill-group {
+  margin: 0 10px;
+}
+
+/* A stage compared with another. */
+.stage-diff {
+  margin: 0 0 8px;
+  font-size: 0.929rem;
+}
+
+.stage-diff summary {
+  cursor: pointer;
+  color: var(--c-soft);
+}
+
+.stage-diff-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.stage-diff-lists ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+.stage-diff-lists h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.diff-ring {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--c-tree-removed);
+}
+
+.diff-ring-other {
+  border: 2px dashed var(--c-tree-path);
+}
+
+.stage-diff-table td,
+.stage-diff-table th {
+  text-align: left;
+  white-space: normal;
+}
+
+.stage-diff-table button.link {
+  text-align: left;
+}

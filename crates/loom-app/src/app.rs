@@ -158,6 +158,7 @@ impl HostCommand {
             // Named without serializing its text.
             Self::Api(api::Command::ImportText { .. }) => "import-text".to_owned(),
             Self::Api(api::Command::AddItem { .. }) => "add-item".to_owned(),
+            Self::Api(api::Command::SetDashboards { .. }) => "set-dashboards".to_owned(),
             Self::Api(c) => match serde_json::to_value(c) {
                 Ok(serde_json::Value::String(s)) => s,
                 Ok(serde_json::Value::Object(m)) => m.keys().next().cloned().unwrap_or_default(),
@@ -577,6 +578,58 @@ impl App {
         let shared = &self.shared;
         let cancel = || shared.latest.load(Ordering::SeqCst) != version;
         session::preview(&state, &data, edit, before, &cancel).map(|p| (p, generation))
+    }
+
+    /// A what-if query ([`crate::what_if`]): the computed fields across the
+    /// build's stages or one swept input, calculated on the caller's
+    /// thread with the latest snapshot (never on the writer, as
+    /// [`App::preview`]) and abandoned when the build changes meanwhile.
+    /// Nothing is committed.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_GAME_MISMATCH`,
+    /// `APP_DATA_VERSION`, `APP_WHAT_IF`, the calculation's codes.
+    pub fn what_if(&self, request: &api::WhatIfRequest) -> Result<api::WhatIfSeries, AppError> {
+        let (state, data, version) =
+            self.read(|p| (p.state.clone(), p.data.clone(), p.snapshot.version));
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
+        crate::what_if::what_if(&state, &data, request, &cancel)
+    }
+
+    /// The computed fields of the build file at `path`
+    /// ([`crate::compare`]), to compare the open build with: read and
+    /// calculated on the caller's thread with the loaded data (never on
+    /// the writer), abandoned only when the application stops. No build
+    /// needs to be open; nothing about the open build or the recent list
+    /// changes.
+    ///
+    /// # Errors
+    /// `APP_NO_DATA`; `APP_READ`; the build document reader's codes
+    /// (`PERSIST_*`, `MIGRATE_*`, `DTO_*`) or the import's;
+    /// `APP_GAME_MISMATCH`, `APP_DATA_VERSION`; the calculation's codes.
+    pub fn fields_of_file(&self, path: &Path) -> Result<api::BuildFields, AppError> {
+        let data = self
+            .read(|p| p.data.clone())
+            .ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) == u64::MAX;
+        crate::compare::fields_of_file(path, &data, &cancel)
+    }
+
+    /// The tree and equipment of the open build's stage of passive spec
+    /// `spec` ([`crate::view::stage_view`]), read from the latest snapshot's
+    /// state: nothing is calculated or changed, and the writer is not
+    /// asked.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`; `APP_LOADOUT` when the build has no stage `spec`.
+    pub fn stage_view(&self, spec: u32) -> Result<api::StageView, AppError> {
+        let (state, data) = self.read(|p| (p.state.clone(), p.data.clone()));
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        crate::view::stage_view(&state.build, spec, data.as_deref())
     }
 
     /// The loaded data's passive tree layout (static while the data is
@@ -1458,6 +1511,10 @@ impl Writer {
             api::Command::SetLeague { league } => Ok(self
                 .session
                 .set_league(&league)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SetDashboards { dashboards } => Ok(self
+                .session
+                .set_dashboards(dashboards)?
                 .map_or(api::Outcome::Nothing, done)),
             api::Command::UseConfigSet { id } => Ok(self
                 .session

@@ -1,0 +1,316 @@
+/* The free redesign (docs/ui/ux-redesign.md), over the refined version's
+   layout: flatter and quieter, numbers first. Panels are plain cards with
+   small capital labels; controls are outlines until pressed; the side
+   menu is a rail of icons with their names under them; the stage is a
+   stepper in the header. Colours only through the tokens. */
+
+/* ---------------------------------------------------------------- type */
+
+:root {
+  font-feature-settings:
+    'cv11' 1,
+    'ss01' 1;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.page-head h1,
+.tree-screen h1 {
+  font-size: 1.5rem;
+}
+
+.brand {
+  font-family: var(--font-brand);
+  font-size: 1.05rem;
+}
+
+.stat-value,
+.stat-tile-value,
+.headline strong,
+.chart-readout strong,
+.data-table td,
+.delta {
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------ controls */
+
+button {
+  background: transparent;
+  border-color: var(--c-border-control);
+  font-weight: 550;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--c-hover);
+}
+
+button.primary {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-weight: 650;
+}
+
+input,
+textarea,
+select {
+  background: var(--c-input);
+}
+
+/* --------------------------------------------------------------- frame */
+
+.app {
+  --nav-width: 208px;
+}
+
+.app.nav-rail {
+  --nav-width: 84px;
+}
+
+.app-header {
+  padding: 8px 20px;
+  gap: 10px;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.build-name {
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.side-nav {
+  border-right-color: var(--c-row);
+  padding: 10px 8px;
+}
+
+.side-nav button {
+  border-radius: var(--radius);
+  color: var(--c-muted);
+}
+
+.side-nav button[aria-current='page'] {
+  background: var(--c-raised);
+  color: var(--c-text);
+  box-shadow: none;
+}
+
+.side-nav button[aria-current='page'] > svg {
+  color: var(--c-accent);
+}
+
+/* The rail: each page's icon with its name under it (never an icon
+   alone). */
+.nav-rail .side-nav button {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 56px;
+  padding: 6px 2px;
+}
+
+.nav-rail .side-nav .nav-text {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: hidden;
+  clip-path: none;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.714rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.nav-rail .side-nav button .badge {
+  top: 4px;
+  right: 10px;
+}
+
+.nav-rail .side-nav .nav-toggle .nav-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+}
+
+.nav-rail .side-nav .nav-toggle {
+  min-height: 36px;
+}
+
+.content {
+  padding: 24px 28px 56px;
+  gap: 18px;
+}
+
+/* The stage as a stepper: the build's progression, one press each. */
+.stage-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 3px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-input);
+}
+
+.stage-steps button {
+  min-height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--c-muted);
+  font-size: 0.929rem;
+}
+
+.stage-steps button[aria-pressed='true'] {
+  background: var(--c-selected);
+  color: var(--c-text);
+}
+
+.stage-steps .stage-arrow {
+  color: var(--c-border-strong);
+  font-size: 0.857rem;
+  padding: 0 1px;
+}
+
+/* -------------------------------------------------------------- panels */
+
+.panel {
+  border-color: var(--c-row);
+  padding: 18px 20px;
+}
+
+/* A panel's title is a label, not a headline: the numbers lead. */
+.dash-panel .panel-head h2,
+.stat-tile-button h2,
+.inventory-panel .panel-head h2 {
+  font-size: 0.786rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.dash-panel .panel-head {
+  margin-bottom: 6px;
+}
+
+.stat-row {
+  min-height: 38px;
+  padding: 7px 0;
+}
+
+.stat-list > li:first-child .stat-row {
+  border-top-color: transparent;
+}
+
+.stat-label {
+  color: var(--c-soft);
+}
+
+/* Stat tiles: one large number each, an accent rule above. */
+.stat-tile {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 44px;
+  height: 3px;
+  background: var(--c-accent);
+  border-radius: 0 0 3px 0;
+}
+
+.stat-tile-value {
+  font-size: 2.3rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Dashboard tabs: text with a rule under the one shown. */
+.dash-bar {
+  border-bottom: 1px solid var(--c-row);
+  padding-bottom: 0;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+
+.dash-bar > button,
+.dash-bar > .baseline-control {
+  margin-bottom: 8px;
+}
+
+.dash-tabs {
+  gap: 2px;
+}
+
+.dash-tabs button {
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  min-height: 38px;
+  padding: 0 14px;
+  color: var(--c-muted);
+  border-bottom: 2px solid transparent;
+}
+
+.dash-tabs button[aria-pressed='true'] {
+  color: var(--c-text);
+  border-bottom-color: var(--c-accent);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--c-selected);
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+.badge {
+  font-weight: 550;
+}
+
+.meter {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.chart-line {
+  stroke-width: 2.25;
+}
+
+.dialog-content,
+.menu-content,
+.popover-content,
+.hint-content {
+  border-color: var(--c-border-control);
+}
+
+.tree-canvas {
+  border-color: var(--c-row);
+}
+
+.dash-library li,
+.dash-library li + li {
+  border-color: var(--c-row);
+  background: var(--c-header);
+}

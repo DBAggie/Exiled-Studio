@@ -2,10 +2,24 @@
 // screen. Screens read projections from the store; every change is a
 // command to the application.
 import { Dialog, DropdownMenu } from 'radix-ui'
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import type { DataVersionView, LoadoutView } from './api/types'
-import { Badge, Brand, ErrorAlert, Icon, LiveRegion } from './components'
+import {
+  Badge,
+  Brand,
+  ErrorAlert,
+  Icon,
+  type IconName,
+  LiveRegion,
+} from './components'
 import { errorText, t, tDynamic } from './i18n'
 import {
   actions,
@@ -15,6 +29,7 @@ import {
   replaceBuild,
   run,
   saveBuild,
+  setPrefs,
   type Screen,
 } from './store'
 import { Breakdown } from './screens/Breakdown'
@@ -42,7 +57,13 @@ function CalcStatus() {
     case 'running':
       return <Badge tone="info">{t('calc.running')}</Badge>
     case 'done':
-      return <Badge tone="ok">{t('calc.done')}</Badge>
+      // Nothing to act on: said quietly (UX audit A-04).
+      return (
+        <span className="calc-quiet">
+          <span className="calc-dot" aria-hidden="true" />
+          {t('calc.done')}
+        </span>
+      )
     case 'failed':
       return (
         <Badge tone="danger">
@@ -163,6 +184,9 @@ function ExportMenu() {
   )
 }
 
+/** The most stages the header shows as a stepper. */
+const MAX_STEPS = 5
+
 /** The build's stage (PoB's loadout): one choice sets the passive tree,
  * the item set, the skill set, and the configuration together. */
 function StagePicker({ loadouts }: { loadouts: LoadoutView[] }) {
@@ -173,6 +197,35 @@ function StagePicker({ loadouts }: { loadouts: LoadoutView[] }) {
     (s) => s.session.snapshot?.build?.specs.find((x) => x.active)?.id,
   )
   const near = loadouts.find((l) => l.spec === spec)
+  // A few stages are a stepper (the redesign): the build's progression
+  // in order, one press each. More than fit, or sets that are mixed, keep
+  // the list.
+  if (active !== undefined && loadouts.length <= MAX_STEPS) {
+    return (
+      <span className="stage-steps" role="group" aria-label={t('header.stage')}>
+        {loadouts.map((l, i) => (
+          <Fragment key={l.spec}>
+            {i > 0 && (
+              <span className="stage-arrow" aria-hidden="true">
+                ›
+              </span>
+            )}
+            <button
+              type="button"
+              aria-pressed={l.active}
+              onClick={() => {
+                if (!l.active) {
+                  void dispatch(run({ 'use-loadout': { spec: l.spec } }))
+                }
+              }}
+            >
+              {l.title}
+            </button>
+          </Fragment>
+        ))}
+      </span>
+    )
+  }
   return (
     <span className="stage-picker">
       <label htmlFor={id}>{t('header.stage')}</label>
@@ -273,11 +326,17 @@ function Header() {
 function NavButton({
   screen,
   current,
+  icon,
+  label,
   children,
 }: {
   screen: Screen
   current: boolean
-  children: ReactNode
+  icon: IconName
+  /** The page's name: the button's text, and its tooltip on the rail. */
+  label: string
+  /** A count beside the name. */
+  children?: ReactNode
 }) {
   const dispatch = useAppDispatch()
   return (
@@ -285,8 +344,11 @@ function NavButton({
       <button
         type="button"
         aria-current={current ? 'page' : undefined}
+        title={label}
         onClick={() => dispatch(actions.go(screen))}
       >
+        <Icon name={icon} />
+        <span className="nav-text">{label}</span>
         {children}
       </button>
     </li>
@@ -303,6 +365,8 @@ function SideNav() {
       0,
   )
   const dirty = useAppSelector((s) => s.session.snapshot?.dirty === true)
+  const prefs = useAppSelector((s) => s.ui.prefs)
+  const rail = prefs.rail === true
   const [confirmClose, setConfirmClose] = useState(false)
   const pending = useAppSelector(
     (s) =>
@@ -316,23 +380,42 @@ function SideNav() {
   return (
     <nav className="side-nav" aria-label={t('nav.label')}>
       <ul>
-        <NavButton screen="dashboard" current={current('dashboard')}>
-          {t('nav.dashboard')}
-        </NavButton>
-        <NavButton screen="items" current={current('items')}>
-          {t('nav.items')}
-        </NavButton>
-        <NavButton screen="skills" current={current('skills')}>
-          {t('nav.skills')}
-        </NavButton>
-        <NavButton screen="tree" current={current('tree')}>
-          {t('nav.tree')}
-        </NavButton>
-        <NavButton screen="config" current={current('config')}>
-          {t('nav.config')}
-        </NavButton>
-        <NavButton screen="warnings" current={current('warnings')}>
-          {t('nav.warnings')}
+        <NavButton
+          screen="dashboard"
+          current={current('dashboard')}
+          icon="nav-dashboard"
+          label={t('nav.dashboard')}
+        />
+        <NavButton
+          screen="items"
+          current={current('items')}
+          icon="nav-items"
+          label={t('nav.items')}
+        />
+        <NavButton
+          screen="skills"
+          current={current('skills')}
+          icon="nav-skills"
+          label={t('nav.skills')}
+        />
+        <NavButton
+          screen="tree"
+          current={current('tree')}
+          icon="nav-tree"
+          label={t('nav.tree')}
+        />
+        <NavButton
+          screen="config"
+          current={current('config')}
+          icon="nav-config"
+          label={t('nav.config')}
+        />
+        <NavButton
+          screen="warnings"
+          current={current('warnings')}
+          icon="nav-warnings"
+          label={t('nav.warnings')}
+        >
           {warnings > 0 && ' '}
           {warnings > 0 && (
             <Badge tone="warn" className="count">
@@ -342,8 +425,12 @@ function SideNav() {
         </NavButton>
       </ul>
       <ul className="nav-bottom">
-        <NavButton screen="ai" current={current('ai')}>
-          {t('nav.ai')}
+        <NavButton
+          screen="ai"
+          current={current('ai')}
+          icon="nav-ai"
+          label={t('nav.ai')}
+        >
           {pending > 0 && ' '}
           {pending > 0 && (
             <Badge tone="info" className="count">
@@ -354,17 +441,34 @@ function SideNav() {
             </Badge>
           )}
         </NavButton>
-        <NavButton screen="about" current={current('about')}>
-          {t('nav.about')}
-        </NavButton>
+        <NavButton
+          screen="about"
+          current={current('about')}
+          icon="nav-about"
+          label={t('nav.about')}
+        />
         <li>
           <button
             type="button"
+            title={t('header.close')}
             onClick={() =>
               dirty ? setConfirmClose(true) : void dispatch(closeBuild())
             }
           >
-            {t('header.close')}
+            <Icon name="nav-close" />
+            <span className="nav-text">{t('header.close')}</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-pressed={rail}
+            title={rail ? t('nav.expand') : t('nav.collapse')}
+            onClick={() => void dispatch(setPrefs({ ...prefs, rail: !rail }))}
+          >
+            <Icon name="rail" />
+            <span className="nav-text">{t('nav.collapse')}</span>
           </button>
         </li>
       </ul>
@@ -728,11 +832,18 @@ export function App() {
 }
 
 function Workspace({ screen }: { screen: Screen }) {
+  const rail = useAppSelector((s) => s.ui.prefs.rail === true)
+  const content = useRef<HTMLElement>(null)
+  // The page scrolls inside the frame (the header and the side menu stay
+  // put): a new page starts at its top.
+  useEffect(() => {
+    content.current?.scrollTo?.(0, 0)
+  }, [screen])
   return (
-    <div className="app">
+    <div className={rail ? 'app nav-rail' : 'app'}>
       <Header />
       <SideNav />
-      <main className="content">
+      <main className="content" ref={content}>
         <ErrorAlert />
         <UpdatePrompt />
         <Flash />

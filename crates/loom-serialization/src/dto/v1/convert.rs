@@ -13,12 +13,13 @@ use super::DtoError;
 use super::types::{Adapted, Exclusion, League};
 use super::types::{
     AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
-    ConfigLayout, ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion,
-    Entry, Game, GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items,
-    ItemsEntry, JewelSocket, LineKind, LineResolution, MasteryEffect, ModSection, ModifierLine,
-    NoBase, NonFinite, Number, OpaqueNode, PassiveSpec, Passives, Poe2Choices, Prefix,
-    PropertyValue, Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup, Sourced, SpecPart,
-    StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
+    ConfigLayout, ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, Dashboard,
+    DashboardComponent, Dashboards, DataVersion, Entry, Game, GameSpecific, Gem, HeaderLine, Item,
+    ItemBody, ItemLine, ItemPart, ItemSet, Items, ItemsEntry, JewelSocket, LineKind,
+    LineResolution, MasteryEffect, ModSection, ModifierLine, NoBase, NonFinite, Number, OpaqueNode,
+    PassiveSpec, Passives, Poe2Choices, Prefix, PropertyValue, Rarity, Resolved, SkillSet, Skills,
+    SlotEntry, SocketGroup, Sourced, SpecPart, StatLine, StatValue, TypedResolution,
+    UnresolvedReason, VariantSelection,
 };
 
 // ---- shared ----------------------------------------------------------------
@@ -206,6 +207,62 @@ const fn part_from(p: BuildPart) -> Result<d::BuildPart, DtoError> {
     })
 }
 
+fn dashboards_to(v: &d::Dashboards) -> Dashboards {
+    Dashboards {
+        active: v.active.clone(),
+        list: v
+            .list
+            .iter()
+            .map(|b| Dashboard {
+                id: b.id.clone(),
+                name: b.name.clone(),
+                components: b
+                    .components
+                    .iter()
+                    .map(|c| DashboardComponent {
+                        id: c.id.clone(),
+                        kind: c.kind.clone(),
+                        width: c.width.clone(),
+                        field: c.field.clone(),
+                        fields: c.fields.clone(),
+                        vary: c.vary.clone(),
+                        input: c.input.clone(),
+                        target: c.target,
+                    })
+                    .collect(),
+            })
+            .collect(),
+    }
+}
+
+fn dashboards_from(v: Dashboards) -> d::Dashboards {
+    d::Dashboards {
+        active: v.active,
+        list: v
+            .list
+            .into_iter()
+            .map(|b| d::Dashboard {
+                id: b.id,
+                name: b.name,
+                components: b
+                    .components
+                    .into_iter()
+                    .map(|c| d::DashboardComponent {
+                        id: c.id,
+                        kind: c.kind,
+                        width: c.width,
+                        field: c.field,
+                        fields: c.fields,
+                        vary: c.vary,
+                        input: c.input,
+                        target: c.target,
+                    })
+                    .collect(),
+            })
+            .collect(),
+    }
+}
+
 pub(super) fn build_to(b: &d::Build) -> Build {
     let c = &b.character;
     Build {
@@ -223,6 +280,7 @@ pub(super) fn build_to(b: &d::Build) -> Build {
             d::League::Challenge => League::Challenge,
             d::League::Standard => League::Standard,
         }),
+        dashboards: b.dashboards.as_ref().map(dashboards_to),
         character: Character {
             class: c.class.as_ref().map(|i| i.as_str().to_owned()),
             ascendancy: c.ascendancy.as_ref().map(|i| i.as_str().to_owned()),
@@ -259,6 +317,7 @@ pub(super) fn build_from(b: Build) -> Result<d::Build, DtoError> {
         League::Challenge => d::League::Challenge,
         League::Standard => d::League::Standard,
     });
+    out.dashboards = b.dashboards.map(dashboards_from);
     let c = b.character;
     out.character = d::Character {
         class: c.class.map(d::ClassId::new),

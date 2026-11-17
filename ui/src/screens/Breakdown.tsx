@@ -11,15 +11,18 @@ import type {
   ItemView,
   Node,
 } from '../api/types'
+import { type ChartPoint, Delta, LineChart } from '../charts'
 import { FieldBadge, ScreenHeading } from '../components'
 import { OFFENCE, fieldLabel, formatNumber, t, tOr } from '../i18n'
 import { actions, query } from '../store'
 import {
   fieldValue,
   itemName,
+  numberOf,
   reasonText,
   useAppDispatch,
   useAppSelector,
+  withUnit,
 } from '../util'
 
 type Graph = CalcResultDocumentV1['result']['graph']
@@ -568,6 +571,8 @@ export function Breakdown() {
   const field = useAppSelector((s) => s.ui.field)
   const calc = useAppSelector((s) => s.session.calc)
   const build = useAppSelector((s) => s.session.snapshot?.build)
+  const baseline = useAppSelector((s) => s.ui.baseline)
+  const trail = useAppSelector((s) => s.ui.trail)
   const [selected, setSelected] = useState<number | null>(null)
   const [lines, setLines] = useState<Record<number, ItemView>>({})
   const f = calc?.[1].result.fields.find((x) => x.field === field)
@@ -619,6 +624,11 @@ export function Breakdown() {
   ]
   const top = fieldNode
   const pick = selected ?? top
+  const trend: ChartPoint[] = trail.map((m, i) => ({
+    label: i === 0 ? t('trail.start') : String(i),
+    y: m.fields[field] ?? null,
+    note: m.label,
+  }))
   return (
     <>
       <nav className="crumbs" aria-label={t('breakdown.crumbs')}>
@@ -647,7 +657,35 @@ export function Breakdown() {
             : t('breakdown.titleNoValue', { field: fieldLabel(field) })}
         </ScreenHeading>
         <FieldBadge field={f} />
+        {/* Against the pinned numbers, when comparing (UX audit D-03). */}
+        {baseline !== null && (
+          <Delta
+            now={numberOf(f)}
+            before={baseline.fields[field]}
+            format={(v) => withUnit(field, v)}
+          />
+        )}
       </div>
+
+      {top === null && reasons.length === 0 && (
+        <p className="muted">{t('breakdown.noSteps')}</p>
+      )}
+      {trend.filter((p) => p.y !== null).length > 1 && (
+        <section className="panel" aria-labelledby="bh-h">
+          <div className="panel-head">
+            <h2 id="bh-h">{t('breakdown.trend')}</h2>
+            <span className="muted small-text">{t('trend.hint')}</span>
+          </div>
+          <LineChart
+            points={trend}
+            label={t('trend.title', { field: fieldLabel(field) })}
+            format={(v) => withUnit(field, v)}
+            current={trend.length - 1}
+            height={130}
+            step
+          />
+        </section>
+      )}
 
       <div className="columns">
         {top !== null && (

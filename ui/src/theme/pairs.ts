@@ -106,6 +106,17 @@ export const PAIRS: Pair[] = [
     min: TEXT,
     use: 'item tooltip text',
   })),
+  // Chart marks on a panel and in a dialog (the header's surface): lines,
+  // bars, and dots are read by shape, so the non-text ratio applies; every
+  // value is also in text.
+  ...['series', 'life', 'mana', 'shield', 'good', 'bad', 'axis'].flatMap((c) =>
+    ['--c-panel', '--c-header'].map((bg) => ({
+      fg: `--c-chart-${c}`,
+      bg,
+      min: NON_TEXT,
+      use: 'chart mark',
+    })),
+  ),
   // A gem's colour mark sits on a socket group card (a panel).
   ...['red', 'green', 'blue', 'white'].map((c) => ({
     fg: `--c-gem-${c}`,

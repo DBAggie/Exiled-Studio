@@ -73,6 +73,14 @@ pub enum Code {
     Quarantined,
     /// An installed bundle's files are not its manifest's.
     BundleDamaged,
+    /// A what-if query was refused: too many points, a range that is not
+    /// one, or a group, gem, or numeric config input the build does not
+    /// have.
+    WhatIf,
+    /// A build's dashboards are outside their limits
+    /// ([`crate::MAX_DASHBOARDS`] and the limits beside it), repeat an
+    /// ID, or name an active dashboard they do not hold.
+    Dashboards,
 }
 
 impl Code {
@@ -109,6 +117,8 @@ impl Code {
             Self::PackExists => "APP_PACK_EXISTS",
             Self::Quarantined => "APP_QUARANTINED",
             Self::BundleDamaged => "APP_BUNDLE_DAMAGED",
+            Self::WhatIf => "APP_WHAT_IF",
+            Self::Dashboards => "APP_DASHBOARDS",
         }
     }
 }

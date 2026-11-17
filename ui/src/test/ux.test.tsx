@@ -213,6 +213,9 @@ describe('UX High fixes', () => {
       'C:\\builds\\witch.json',
     )
     expect(screen.getByText('2 hours ago')).toBeTruthy()
+    // One line a build: the file has its own column (UX audit follow-up).
+    expect(screen.getByRole('columnheader', { name: 'File' })).toBeTruthy()
+    expect(screen.getByText('witch.json').closest('td')).not.toBeNull()
     // What the build is (UX-20).
     expect(screen.getByText('Elementalist 92 · Ice Nova')).toBeTruthy()
     await user.click(
@@ -299,9 +302,14 @@ describe('UX High fixes', () => {
 
   it('switches the whole stage from the header', async () => {
     const { user, api } = await importBuild()
-    const stage = screen.getByLabelText('Stage') as HTMLSelectElement
-    expect(stage.selectedOptions[0]?.text).toBe('Leveling')
-    await user.selectOptions(stage, 'Endgame')
+    // A few stages are a stepper in the header: one press each.
+    const stage = screen.getByRole('group', { name: 'Stage' })
+    expect(
+      within(stage)
+        .getByRole('button', { name: 'Leveling' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    await user.click(within(stage).getByRole('button', { name: 'Endgame' }))
     expect(api.executed).toContainEqual({ 'use-loadout': { spec: 2 } })
     // Items and skills follow the stage.
     await user.click(screen.getByRole('button', { name: 'Equipment' }))
@@ -722,7 +730,8 @@ describe('dashboards (B-5)', () => {
     await user.click(screen.getByRole('button', { name: 'Add stat' }))
     const life = screen.getByRole('group', { name: 'Stat: Life: arrange' })
     await user.click(within(life).getByRole('button', { name: 'Move up' }))
-    await user.click(within(life).getByRole('button', { name: 'Full width' }))
+    // Any of four widths on the six-column grid.
+    await user.selectOptions(within(life).getByLabelText('Width'), 'full')
     await expectAccessible()
 
     let saved = JSON.parse(api.prefs ?? '{}') as {
@@ -740,17 +749,21 @@ describe('dashboards (B-5)', () => {
     await user.click(screen.getByRole('button', { name: 'Done' }))
     expect(within(tabs).getByRole('button', { name: 'Bossing' })).toBeTruthy()
 
-    // Up to four dashboards; then deleting one.
-    await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    // Up to eight dashboards; then deleting one.
+    for (let n = 4; n < 8; n += 1) {
+      await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    }
     expect(screen.queryByRole('button', { name: 'Add a dashboard' })).toBeNull()
     await user.click(
       screen.getByRole('button', { name: 'Delete this dashboard' }),
     )
     saved = JSON.parse(api.prefs ?? '{}')
-    expect(saved.dashboards.map((d) => d.name)).toEqual([
+    expect(saved.dashboards.map((d) => d.name).slice(0, 4)).toEqual([
       'Overview',
       'Defence',
+      'Trends',
       'Bossing',
     ])
+    expect(saved.dashboards).toHaveLength(7)
   })
 })

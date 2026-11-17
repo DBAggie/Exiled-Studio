@@ -48,15 +48,24 @@ Other facts the UI must respect (from the repo's ADRs):
 
 ---
 
-## 2. Visual language (draft)
+## 2. Visual language
+
+The owner chose the UX audit's free redesign on 2026-11-16 (decision 14), after running it and the
+refined version of the first draft side by side in the desktop app. The values below are the
+application's (`ui/src/theme/tokens.css`); the first draft's (amber on warm dark, Space Grotesk
+headings) are in `ux-redesign.md`'s table and in the mockups of this package, which were not redrawn.
+
+**The direction: numbers first.** The frame recedes and the numbers carry the page: neutral
+surfaces, one accent that is no status's or rarity's colour, one type family.
 
 | Token | Value | Use |
 |---|---|---|
-| Background | `#101215`, panels `#181B20`, borders `#2A2F37` | Dark theme throughout |
-| Text | `#E9E6DF`, muted `#A3A9B3` | Muted text still passes 4.5:1 on panels |
-| Accent | `#E8A33D` (amber) | Primary buttons, selection, focus of attention. A Tweaks control exists to try `#7FB2E5`, `#9FD39B` or `#D98A6A` |
+| Background | `#0B0C0F`, panels `#121419`, raised `#1A1D24`, borders `#22262E` | Dark theme throughout (no light theme, decision 13). The side menu is the page's ground, not a panel |
+| Text | `#ECEEF2`, soft `#C8CDD6`, muted `#A3A9B3` | Muted text still passes 4.5:1 on panels |
+| Accent | `#A995FF` (violet), links `#C3B5FF`, text on the accent `#14102B` | Selection, the one filled button a screen (Save), links, allocated passives. Never a status, a rarity, or a chart series |
 | Focus ring | `#8DC1F2` 2px | All interactive elements |
-| Fonts | Inter (body), Space Grotesk (headings), JetBrains Mono (stat IDs, item text) | |
+| Fonts | Inter (body, headings, numbers: by weight and size, tabular figures for every number), Space Grotesk (the brand mark only), JetBrains Mono (stat IDs, item text) | |
+| Corners | 10 px controls, 14 px panels | |
 | Rarity | Normal `#C9CED6`, Magic `#8DC1F2`, Rare `#F2D97A`, Unique `#E39A6E` | Item borders and names |
 | Gem attribute | Strength `#E0796A`, Dexterity `#7FC27A`, Intelligence `#6FA6E6`, White `#D6D9DE` | Gems, sockets, attribute cards |
 | Links | Gold bar `#B9A57A` | Joins linked gems or sockets |
@@ -68,6 +77,18 @@ Other facts the UI must respect (from the repo's ADRs):
 - **Orange.** Warning(s), Partial, "N short".
 - **Grey.** Not yet, Not needed, Coming later, Edited.
 - **Reddish "Str 120" tag.** Requirement not met.
+
+**Components.**
+
+- **Panel titles** are small capital labels (11 px, muted): the title names the panel, the number
+  leads.
+- **Stat tiles** are a large number (32 px) under an accent rule.
+- **Controls** are outlines until pressed; one filled button a screen.
+- **Dashboard tabs** are text with a rule under the one shown.
+- **The stage** is a stepper in the header (Leveling › Endgame), one press a stage; a drop-down when
+  there are more than five stages or the sets are mixed.
+- **The side menu's rail** shows icons with their names under them.
+- **Item tooltips and the inventory** are not restyled: they mirror the game's.
 
 **Item and gem pictures.** These are original line drawings by slot type (wand, circlet, shield,
 body armour, gloves, boots, belt, ring, amulet, flask, jewel), never game art.
@@ -156,6 +177,24 @@ connections (count) on some screens.
 10. **Equipment summary** no longer shows passive points or skill groups (not relevant there). It
     shows **attributes versus item requirements** and flags any item whose requirement isn't met.
 11. **Terminology:** "held lines" became **Warning / Warnings** everywhere in the UI.
+12. **Dashboards, widened (UX audit, 2026-11-15; changes decision 6).** The owner asked for flexibility,
+    charts, comparison, and detail on request. Up to **8** dashboards per user; a six-column grid
+    where a component is a third, a half, two thirds, or the full width (so up to three side by
+    side); charts and a comparison with pinned numbers among the components; lists short by default
+    with the rest one click away. See `ux-audit.md`.
+13. **Dashboards per build, kept snapshots, a Skills table (UX audit follow-up, 2026-11-16).** The
+    owner's answers to the audit's "left for later" list: a build may keep its **own dashboards**
+    (a choice in Customize; the user's set stays the default) in the build file: the layout only,
+    never a number, so the build looks the same to whoever opens it, and AI clients can read it
+    (ADR-009 Amendment 1). **Snapshots** of its numbers by name are kept on the user's computer,
+    never in the build file. Components are arranged by **dragging**;
+    a stage is **compared with another** on the tree and the equipment pages; the Skills page has
+    the **Cards / Table** switch of screen 10. **No light theme.** See `ux-audit.md`, "Follow-up".
+14. **The redesign's look (UX audit, 2026-11-16; replaces section 2's first draft).** The audit
+    delivered two versions: the first draft's look refined, and a free redesign. The owner ran both
+    in the desktop app and chose the redesign: neutral near-black surfaces, a violet accent, Inter
+    throughout, small capital panel titles, the stage as a stepper. Section 2 holds its values;
+    `ux-redesign.md` has the comparison and the evidence.
 
 ---
 

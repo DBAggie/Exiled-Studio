@@ -2,14 +2,16 @@
 //! build as an immutable state, its version, history, and file paths.
 //! [`crate::App`] owns one on its writer thread; tests drive it directly.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use loom_calc::CalcResult;
 use loom_domain::{
     Attribute, Attributes, Build, ConfigInput, ConfigInputKind, ConfigSet, ConfigSetId,
-    ConfigValue, CustomModifierBlock, CustomModifierLine, ItemId, ItemSetId, ItemsEntry, League,
-    LineResolution, Number, Ordered, SkillSetId, SlotId, SocketGroup, Sourced,
+    ConfigValue, CustomModifierBlock, CustomModifierLine, Dashboard, DashboardComponent,
+    Dashboards, ItemId, ItemSetId, ItemsEntry, League, LineResolution, Number, Ordered, SkillSetId,
+    SlotId, SocketGroup, Sourced,
 };
 use loom_persistence::{Overwrite, SaveOptions, Store};
 use loom_pipeline::{RangeEnds, Reresolved};
@@ -55,6 +57,24 @@ pub struct UndoStep {
 
 /// How many changes undo keeps.
 pub const HISTORY_LIMIT: usize = 100;
+
+/// The most dashboards a build keeps ([`Session::set_dashboards`]); it
+/// keeps at least one, or none at all.
+pub const MAX_DASHBOARDS: usize = 8;
+
+/// The most components one dashboard holds.
+pub const MAX_DASHBOARD_COMPONENTS: usize = 24;
+
+/// The most fields one dashboard component charts.
+pub const MAX_DASHBOARD_FIELDS: usize = 6;
+
+/// The longest name of a dashboard, in characters; at least one.
+pub const MAX_DASHBOARD_NAME: usize = 40;
+
+/// The longest of every other text of a dashboard (an ID, a kind, a
+/// width, a field, what a curve varies, a config input), in characters; at
+/// least one.
+pub const MAX_DASHBOARD_TEXT: usize = 64;
 
 /// The application core.
 #[derive(Debug)]
@@ -103,7 +123,8 @@ pub(crate) const NEW_BUILD: &str = r#"<PathOfBuilding>
 </PathOfBuilding>
 "#;
 
-fn stem(path: &Path) -> String {
+/// A file's name without its extension (a build's display name).
+pub(crate) fn stem(path: &Path) -> String {
     path.file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default()
@@ -277,16 +298,7 @@ impl Session {
     /// `APP_NO_DATA`, the import adapter's and the resolver's codes.
     pub fn import_text(&mut self, text: &str, origin: Option<PathBuf>) -> Result<u64, AppError> {
         let data = self.need_data()?;
-        let mut build = loom_pipeline::read_pob(text)?;
-        let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
-        // A spec PoB numbered before its cluster hash fix takes the
-        // current numbers, as PoB loads it (passive tree plan, T-i).
-        if let Some(tree) = &data.tree {
-            loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
-        }
-        let mut state = State { build, ends };
-        // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
-        crate::main_skill::set_default(&mut state, &data);
+        let state = import_state(text, &data)?;
         self.notices.clear();
         self.replace(state, None, origin, true);
         Ok(self.version)
@@ -347,22 +359,9 @@ impl Session {
         dirty: bool,
     ) -> u64 {
         self.notices.clear();
-        let mut ends = RangeEnds::new();
-        if let Some(data) = &self.data
-            && build.game() == data.version.game
-            && build.data.as_ref() == Some(&data.version)
-        {
-            match loom_pipeline::reresolve(data.resolver, data.data, &build) {
-                Ok(Reresolved::Same(e)) => ends = e,
-                Ok(Reresolved::Changed) => self.notices.push(AppError::new(
-                    Code::ResolutionChanged,
-                    "the stored resolutions differ from this bundle's; they stand",
-                )),
-                // The checks above match the resolver's own.
-                Err(e) => self.notices.push(e.into()),
-            }
-        }
-        self.replace(State { build, ends }, path, origin, dirty);
+        let (state, notice) = opened_state(build, self.data.as_deref());
+        self.notices.extend(notice);
+        self.replace(state, path, origin, dirty);
         self.version
     }
 
@@ -500,10 +499,7 @@ impl Session {
     pub fn use_loadout(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
         let main = self.main_skill_default()?;
         self.change_build(api::ChangeKind::Loadout, spec, |build| {
-            let l = loadout::loadouts(build)
-                .into_iter()
-                .find(|l| l.spec.0 == spec)
-                .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))?;
+            let l = stage(build, spec)?;
             let before = build.skills.active;
             loadout::apply(build, &l);
             if build.skills.active != before {
@@ -527,15 +523,7 @@ impl Session {
             .unwrap_or_default();
         Ok(move |build: &mut Build| {
             if let Some(data) = &data {
-                let state = State {
-                    build: build.clone(),
-                    ends: ends.clone(),
-                };
-                if let Some(choice) =
-                    crate::main_skill::choose_after_switch(&state, data, &previous)
-                {
-                    crate::main_skill::apply(build, choice);
-                }
+                main_after_switch(build, &ends, data, &previous);
             }
         })
     }
@@ -573,24 +561,7 @@ impl Session {
         enabled: Option<bool>,
     ) -> Result<Option<u64>, AppError> {
         self.change_build(api::ChangeKind::SkillEdit, group, |build| {
-            let g = socket_group(build, group)?
-                .gems
-                .typed_mut()
-                .nth(gem as usize)
-                .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
-            if let Some(level) = level.filter(|l| *l != *g.level.value()) {
-                if level == 0 {
-                    return Err(AppError::new(Code::Skill, "a gem's level is at least 1"));
-                }
-                g.level.set(level);
-            }
-            if let Some(quality) = quality.filter(|q| *q != *g.quality.value()) {
-                g.quality.set(quality);
-            }
-            if let Some(enabled) = enabled {
-                g.enabled = enabled;
-            }
-            Ok(())
+            set_gem(build, group, gem, level, quality, enabled)
         })
     }
 
@@ -969,6 +940,25 @@ impl Session {
         })
     }
 
+    /// Sets the build's dashboards (the layout its author chose to show
+    /// it with; never numbers), or clears them, as one undoable change.
+    /// The same dashboards again change nothing.
+    ///
+    /// # Errors
+    /// `APP_DASHBOARDS`, with nothing changed, for dashboards outside the
+    /// limits ([`MAX_DASHBOARDS`] and the limits beside it), with a
+    /// repeated ID, or whose `active` is none of them; `APP_NO_BUILD`.
+    pub fn set_dashboards(
+        &mut self,
+        dashboards: Option<api::Dashboards>,
+    ) -> Result<Option<u64>, AppError> {
+        let dashboards = dashboards.map(checked_dashboards).transpose()?;
+        self.change_build(api::ChangeKind::Dashboards, 0, |build| {
+            build.dashboards = dashboards;
+            Ok(())
+        })
+    }
+
     /// Makes config set `id` the active one.
     ///
     /// # Errors
@@ -1016,27 +1006,7 @@ impl Session {
             api::ConfigValueView::Text(t) => ConfigValue::String(t.clone()),
         };
         self.change_build(api::ChangeKind::Config, 0, |build| {
-            let set = active_config_or_new(build);
-            if let Some(input) = set.inputs.typed_mut().find(|i| i.name == name) {
-                // The same number keeps its source text (an export writes
-                // it as read).
-                let same = match (&input.value, &value) {
-                    (ConfigValue::Number(a), ConfigValue::Number(b)) => a.value() == b.value(),
-                    (a, b) => a == b,
-                };
-                if !same {
-                    input.value = value;
-                }
-                input.kind = ConfigInputKind::Input;
-            } else {
-                set.inputs.push(ConfigInput {
-                    name: name.to_owned(),
-                    value,
-                    kind: ConfigInputKind::Input,
-                    lines: Vec::new(),
-                    attributes: Attributes::default(),
-                });
-            }
+            write_config_input(build, name, value);
             Ok(())
         })
     }
@@ -1182,11 +1152,7 @@ impl Session {
     /// The range ends of a build resolved again with the loaded data, when
     /// the data is the build's and it resolves the same.
     fn ends_of(&self, build: &Build) -> Option<RangeEnds> {
-        let data = self.data.as_ref()?;
-        if build.game() != data.version.game || build.data.as_ref() != Some(&data.version) {
-            return None;
-        }
-        match loom_pipeline::reresolve(data.resolver, data.data, build) {
+        match reresolved(build, self.data.as_deref()?)? {
             Ok(Reresolved::Same(e)) => Some(e),
             _ => None,
         }
@@ -1492,6 +1458,67 @@ fn set_main_gem(g: &mut SocketGroup, bundle: &loom_data::bundle::Bundle, main: O
     }
 }
 
+/// The build's stage (PoB's loadout) of passive spec `spec`.
+///
+/// # Errors
+/// `APP_LOADOUT` when no spec has ID `spec`.
+pub(crate) fn stage(build: &Build, spec: u32) -> Result<loadout::Loadout, AppError> {
+    loadout::loadouts(build)
+        .into_iter()
+        .find(|l| l.spec.0 == spec)
+        .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))
+}
+
+/// A PoB share code or XML text read and resolved with the data, as an
+/// import makes it ([`Session::import_text`]; a file compared without
+/// opening it is read the same way).
+///
+/// # Errors
+/// The import adapter's and the resolver's codes.
+pub(crate) fn import_state(text: &str, data: &GameData) -> Result<State, AppError> {
+    let mut build = loom_pipeline::read_pob(text)?;
+    let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+    // A spec PoB numbered before its cluster hash fix takes the
+    // current numbers, as PoB loads it (passive tree plan, T-i).
+    if let Some(tree) = &data.tree {
+        loom_pipeline::migrate_cluster_hashes(&mut build, tree, data.tree_version.as_ref());
+    }
+    let mut state = State { build, ends };
+    // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
+    crate::main_skill::set_default(&mut state, data);
+    Ok(state)
+}
+
+/// A build resolved again with the data, when the data is the build's
+/// (its game and data version); `None` when it is not.
+fn reresolved(build: &Build, data: &GameData) -> Option<Result<Reresolved, loom_pipeline::Error>> {
+    (build.game() == data.version.game && build.data.as_ref() == Some(&data.version))
+        .then(|| loom_pipeline::reresolve(data.resolver, data.data, build))
+}
+
+/// The state of a build read with its resolutions (a saved document, a
+/// recovery snapshot), as [`Session::open_build`] opens it: with data of
+/// the build's version, a clone is resolved again to recover the range
+/// ends; when it resolves differently the stored resolutions stand, and
+/// the notice says so.
+pub(crate) fn opened_state(build: Build, data: Option<&GameData>) -> (State, Option<AppError>) {
+    let mut ends = RangeEnds::new();
+    let mut notice = None;
+    match data.and_then(|d| reresolved(&build, d)) {
+        Some(Ok(Reresolved::Same(e))) => ends = e,
+        Some(Ok(Reresolved::Changed)) => {
+            notice = Some(AppError::new(
+                Code::ResolutionChanged,
+                "the stored resolutions differ from this bundle's; they stand",
+            ));
+        }
+        // The checks match the resolver's own.
+        Some(Err(e)) => notice = Some(e.into()),
+        None => {}
+    }
+    (State { build, ends }, notice)
+}
+
 /// Socket group `group` of the active skill set.
 pub(crate) fn group_of(build: &Build, group: u32) -> Result<&SocketGroup, AppError> {
     let active = loadout::active_skill_set(build);
@@ -1513,6 +1540,85 @@ fn socket_group(build: &mut Build, group: u32) -> Result<&mut SocketGroup, AppEr
         .find(|s| Some(s.id) == active)
         .and_then(|s| s.groups.typed_mut().nth(group as usize))
         .ok_or_else(|| AppError::new(Code::Skill, format!("no socket group {group}")))
+}
+
+/// Changes gem `gem` of socket group `group` of the active skill set
+/// ([`Session::edit_gem`]; a what-if point writes a level the same way).
+///
+/// # Errors
+/// `APP_SKILL` when there is no such group or gem, or a level is 0.
+pub(crate) fn set_gem(
+    build: &mut Build,
+    group: u32,
+    gem: u32,
+    level: Option<u32>,
+    quality: Option<i32>,
+    enabled: Option<bool>,
+) -> Result<(), AppError> {
+    let g = socket_group(build, group)?
+        .gems
+        .typed_mut()
+        .nth(gem as usize)
+        .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
+    if let Some(level) = level.filter(|l| *l != *g.level.value()) {
+        if level == 0 {
+            return Err(AppError::new(Code::Skill, "a gem's level is at least 1"));
+        }
+        g.level.set(level);
+    }
+    if let Some(quality) = quality.filter(|q| *q != *g.quality.value()) {
+        g.quality.set(quality);
+    }
+    if let Some(enabled) = enabled {
+        g.enabled = enabled;
+    }
+    Ok(())
+}
+
+/// Sets the build's main skill after its active skill set changed
+/// ([`crate::main_skill::choose_after_switch`]); `previous` is the main
+/// skill before the switch ([`crate::main_skill::current_skills`]).
+pub(crate) fn main_after_switch(
+    build: &mut Build,
+    ends: &RangeEnds,
+    data: &GameData,
+    previous: &std::collections::BTreeSet<String>,
+) {
+    let state = State {
+        build: build.clone(),
+        ends: ends.clone(),
+    };
+    if let Some(choice) = crate::main_skill::choose_after_switch(&state, data, previous) {
+        crate::main_skill::apply(build, choice);
+    }
+}
+
+/// Writes input `name` of the active config set
+/// ([`Session::set_config_input`]; a what-if point writes a number the
+/// same way): a placeholder of that name becomes an input; a new input
+/// goes after the others. A build with no config set gets one (ID 1).
+pub(crate) fn write_config_input(build: &mut Build, name: &str, value: ConfigValue) {
+    let set = active_config_or_new(build);
+    if let Some(input) = set.inputs.typed_mut().find(|i| i.name == name) {
+        // The same number keeps its source text (an export writes it as
+        // read).
+        let same = match (&input.value, &value) {
+            (ConfigValue::Number(a), ConfigValue::Number(b)) => a.value() == b.value(),
+            (a, b) => a == b,
+        };
+        if !same {
+            input.value = value;
+        }
+        input.kind = ConfigInputKind::Input;
+    } else {
+        set.inputs.push(ConfigInput {
+            name: name.to_owned(),
+            value,
+            kind: ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Attributes::default(),
+        });
+    }
 }
 
 /// Whether the data can calculate the build.
@@ -1739,4 +1845,115 @@ fn custom_lines(text: &str) -> Vec<CustomModifierLine> {
 fn resolve_pending(build: &mut Build, data: &GameData) -> Result<(), AppError> {
     loom_pipeline::resolve(data.resolver, data.data, build)?;
     Ok(())
+}
+
+/// Whether `text` has 1 to `max` characters.
+fn within(text: &str, max: usize) -> bool {
+    !text.is_empty() && text.chars().count() <= max
+}
+
+/// One text of a dashboard, checked against [`MAX_DASHBOARD_TEXT`].
+fn dashboard_text(what: &str, text: &str) -> Result<(), AppError> {
+    if within(text, MAX_DASHBOARD_TEXT) {
+        Ok(())
+    } else {
+        Err(AppError::new(
+            Code::Dashboards,
+            format!("a dashboard's {what} must have 1 to {MAX_DASHBOARD_TEXT} characters"),
+        ))
+    }
+}
+
+/// The dashboards a command sent as the build keeps them, once every rule
+/// of [`Session::set_dashboards`] holds.
+fn checked_dashboards(dashboards: api::Dashboards) -> Result<Dashboards, AppError> {
+    let refuse = |message: String| AppError::new(Code::Dashboards, message);
+    let count = dashboards.list.len();
+    if count == 0 || count > MAX_DASHBOARDS {
+        return Err(refuse(format!(
+            "{count} dashboards; a build keeps 1 to {MAX_DASHBOARDS}"
+        )));
+    }
+    let mut ids = BTreeSet::new();
+    let mut component_ids = BTreeSet::new();
+    for dashboard in &dashboards.list {
+        dashboard_text("ID", &dashboard.id)?;
+        if !ids.insert(dashboard.id.as_str()) {
+            return Err(refuse(format!(
+                "two dashboards have the ID {}",
+                dashboard.id
+            )));
+        }
+        if !within(&dashboard.name, MAX_DASHBOARD_NAME) {
+            return Err(refuse(format!(
+                "a dashboard's name must have 1 to {MAX_DASHBOARD_NAME} characters"
+            )));
+        }
+        if dashboard.components.len() > MAX_DASHBOARD_COMPONENTS {
+            return Err(refuse(format!(
+                "a dashboard of {} components; at most {MAX_DASHBOARD_COMPONENTS}",
+                dashboard.components.len()
+            )));
+        }
+        for component in &dashboard.components {
+            dashboard_text("component ID", &component.id)?;
+            if !component_ids.insert(component.id.as_str()) {
+                return Err(refuse(format!(
+                    "two dashboard components have the ID {}",
+                    component.id
+                )));
+            }
+            dashboard_text("component kind", &component.kind)?;
+            dashboard_text("component width", &component.width)?;
+            if component.fields.len() > MAX_DASHBOARD_FIELDS {
+                return Err(refuse(format!(
+                    "a dashboard component of {} fields; at most {MAX_DASHBOARD_FIELDS}",
+                    component.fields.len()
+                )));
+            }
+            let texts = [
+                ("field", &component.field),
+                ("varied value", &component.vary),
+                ("config input", &component.input),
+            ];
+            for (what, text) in texts {
+                if let Some(text) = text {
+                    dashboard_text(what, text)?;
+                }
+            }
+            for field in &component.fields {
+                dashboard_text("field", field)?;
+            }
+        }
+    }
+    if !ids.contains(dashboards.active.as_str()) {
+        return Err(refuse(
+            "the active dashboard is none of the build's dashboards".to_owned(),
+        ));
+    }
+    Ok(Dashboards {
+        active: dashboards.active,
+        list: dashboards
+            .list
+            .into_iter()
+            .map(|d| Dashboard {
+                id: d.id,
+                name: d.name,
+                components: d
+                    .components
+                    .into_iter()
+                    .map(|c| DashboardComponent {
+                        id: c.id,
+                        kind: c.kind,
+                        width: c.width,
+                        field: c.field,
+                        fields: c.fields,
+                        vary: c.vary,
+                        input: c.input,
+                        target: c.target,
+                    })
+                    .collect(),
+            })
+            .collect(),
+    })
 }

@@ -380,10 +380,19 @@ th.right {
 /* -------------------------------------------------------------- shell */
 
 .app {
+  --nav-width: 220px;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
-  min-height: 100vh;
+  grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  /* The window is the frame: the header and the side menu stay put and
+     only the page scrolls (UX audit A-01). */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app.nav-rail {
+  --nav-width: 60px;
 }
 
 .app-header,
@@ -419,10 +428,12 @@ th.right {
 .side-nav {
   background: var(--c-nav);
   border-right: 1px solid var(--c-border);
-  padding: 16px 12px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .side-nav ul {
@@ -441,8 +452,9 @@ th.right {
 
 .side-nav button {
   width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 10px;
+  gap: 10px;
   justify-content: flex-start;
   border: 0;
   background: transparent;
@@ -461,14 +473,60 @@ th.right {
 .side-nav button[aria-current='page'] {
   background: var(--c-hover);
   color: var(--c-text);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.side-nav button > svg {
+  flex: none;
+}
+
+.nav-rail .side-nav {
+  padding: 12px 8px;
+}
+
+.nav-rail .side-nav button {
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+
+.nav-rail .side-nav .nav-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nav-rail .side-nav button .badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin: 0;
+  min-width: 0;
+  padding: 0 5px;
+  font-size: 0.65rem;
 }
 
 .content {
   padding: 20px 24px 48px;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Pages read best under a measure: wide windows get air, not longer
+   lines. */
+.content > * {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  flex: none;
 }
 
 .page-head {
@@ -582,28 +640,29 @@ th.right {
   max-width: 1192px;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 48px 24px 64px;
+  /* The same density as a build's pages (UX audit follow-up): five recent
+     builds show without scrolling on a 900 px tall window. */
+  padding: 28px 24px 40px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
   flex: 1;
 }
 
 .start h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .start .lead {
-  margin-top: 12px;
-  font-size: 1.15rem;
+  margin-top: 6px;
 }
 
 .command-panel {
   border-color: var(--c-accent);
-  padding: 20px 24px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Start page B: one input with its icon and the import button. */
@@ -622,9 +681,8 @@ th.right {
   flex: 1;
   /* Words as much as code here: the body font, not the mono one. */
   font-family: inherit;
-  min-height: 44px;
+  min-height: 40px;
   resize: vertical;
-  font-size: 1.05rem;
 }
 
 .command-panel .small {
@@ -674,11 +732,47 @@ th.right {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.recent-head h2 {
-  font-size: 1.5rem;
+/* A recent build is one line: its name, what it is, its file, when. */
+.recent-what {
+  margin-left: 10px;
+  font-weight: 400;
+  font-size: 0.928rem;
+  color: var(--c-muted);
+}
+
+.table-panel td.col-file {
+  font-size: 0.857rem;
+  color: var(--c-muted);
+  overflow-wrap: anywhere;
+}
+
+.start .table-panel th,
+.start .table-panel td {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* A link that is not the row's point (Remove): muted, still underlined. */
+button.link.quiet {
+  color: var(--c-muted);
+  font-weight: 400;
+}
+
+button.link.quiet:hover:not(:disabled) {
+  color: var(--c-text);
+}
+
+@media (max-width: 720px) {
+  .col-file {
+    display: none;
+  }
 }
 
 .recent-name {
@@ -712,6 +806,25 @@ th.right {
   max-width: 1192px;
 }
 
+/* The name and the import's state, with the way on at the right. */
+.import-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.import-title {
+  flex: 1 1 28rem;
+  min-width: 0;
+}
+
+.import-title p {
+  margin: 6px 0 0;
+  max-width: 62rem;
+}
+
 .pills {
   display: flex;
   flex-wrap: wrap;
@@ -721,32 +834,37 @@ th.right {
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 16px;
+  gap: 12px;
   margin: 0;
 }
 
+/* The label, then the number with what it counts beside it. */
 .stat-card {
-  padding: 18px 20px;
+  padding: 10px 16px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
 }
 
 .stat-card dt {
-  font-size: 0.928rem;
+  grid-column: 1 / -1;
+  font-size: 0.857rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--c-soft);
 }
 
 .stat-card dd:not(.sub) {
-  margin: 6px 0 4px;
+  margin: 2px 0 0;
   font-family: var(--font-heading);
-  font-size: 2.25rem;
+  font-size: 1.6rem;
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .stat-card dd.sub {
   margin: 0;
-  font-size: 0.928rem;
 }
 
 .tone-ok {
@@ -767,26 +885,35 @@ th.right {
   padding: 0;
 }
 
+/* A line to review is one row: the line and its item, why it is not
+   calculated, the way to the item. */
 .review-list > li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px 24px;
-  padding: 16px 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 10px 20px;
   border-top: 1px solid var(--c-row);
 }
 
 .review-list .line-text {
   font-family: var(--font-mono);
-  font-size: 1.05rem;
+  font-size: 0.928rem;
   overflow-wrap: anywhere;
 }
 
-.review-list .actions {
-  grid-column: 1;
+.review-list p {
+  margin: 2px 0 0;
+}
+
+.unused-review > summary {
+  padding: 10px 20px;
+  border-top: 1px solid var(--c-row);
+  cursor: pointer;
 }
 
 .panel-foot {
-  padding: 14px 20px;
+  padding: 10px 20px;
   border-top: 1px solid var(--c-row);
   color: var(--c-muted);
 }
@@ -1411,6 +1538,11 @@ details > summary {
 @media (max-width: 48rem) {
   .app {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .side-nav {
+    overflow: visible;
   }
 
   .side-nav {
@@ -1720,12 +1852,15 @@ h1[tabindex='-1']:focus-visible {
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--c-row);
 }
 
-.recovery-list .sub,
-.recent-name + .sub {
+.recovery-list li:last-child {
+  padding-bottom: 0;
+}
+
+.recovery-list .sub {
   display: block;
 }
 
@@ -2460,7 +2595,8 @@ button.inv-slot:focus-visible {
 .tree-canvas {
   display: block;
   width: 100%;
-  height: 70vh;
+  /* The canvas fills what the window leaves under the page's controls. */
+  height: max(360px, calc(100dvh - 300px));
   min-height: 360px;
   background: var(--c-tree-bg);
   border: 1px solid var(--c-border);
@@ -2482,8 +2618,8 @@ button.inv-slot:focus-visible {
 }
 
 .tree-card {
-  position: absolute;
-  z-index: 5;
+  position: fixed;
+  z-index: 50;
   max-width: 22rem;
   padding: 10px 12px;
   background: var(--c-raised);

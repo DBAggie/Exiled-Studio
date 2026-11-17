@@ -309,6 +309,12 @@ export interface Build {
   character: Character
   config: Config
   /**
+   * The build's dashboards, if it has any: the layout its author
+   * chose to show it with, never calculated numbers (additive,
+   * accepted 2026-11-16).
+   */
+  dashboards?: Dashboards | null
+  /**
    * The data bundle the build was made with, if recorded.
    */
   data?: DataVersion | null
@@ -640,6 +646,78 @@ export interface NonFinite {
    * The bits as 16 lowercase hexadecimal digits.
    */
   f64_bits: string
+}
+/**
+ * A build's dashboards and which one is shown.
+ */
+export interface Dashboards {
+  /**
+   * The ID of the dashboard shown.
+   */
+  active: string
+  /**
+   * The dashboards, in order.
+   */
+  list: Dashboard[]
+}
+/**
+ * One dashboard: a named list of components.
+ */
+export interface Dashboard {
+  /**
+   * The components, in order.
+   */
+  components: DashboardComponent[]
+  /**
+   * The dashboard's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The name its author gave it.
+   */
+  name: string
+}
+/**
+ * One component of a dashboard: what it shows, never the numbers.
+ */
+export interface DashboardComponent {
+  /**
+   * The calc result field a stat, history, or curve component
+   * shows.
+   */
+  field?: string | null
+  /**
+   * The calc result fields a progression component charts.
+   */
+  fields?: string[]
+  /**
+   * The component's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The config input a scaling curve varies.
+   */
+  input?: string | null
+  /**
+   * The component's kind (`stat`, `progression`, `timeline`, ...):
+   * open text, so the UI adds kinds without a schema change and an
+   * older application still opens the document.
+   */
+  kind: string
+  /**
+   * The life a fight timeline deals damage to.
+   */
+  target?: number | null
+  /**
+   * What a scaling curve varies (`gem-level`, `character-level`,
+   * `config-number`): open text, as `kind`.
+   */
+  vary?: string | null
+  /**
+   * The component's width (`third`, `half`, `full`, ...): open
+   * text, as `kind`.
+   */
+  width: string
 }
 /**
  * The data bundle a build was made with.

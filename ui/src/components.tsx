@@ -1,6 +1,7 @@
 // Shared components. Colour is never the only signal: every badge has a
 // text label (docs/ui/UI-DESIGN-BRIEF.md, section 2).
-import { useEffect, useRef, type ReactNode } from 'react'
+import { Tooltip } from 'radix-ui'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import type { FieldResult, LineView } from './api/types'
 import { errorText, t, tDynamic, type MessageKey } from './i18n'
@@ -138,8 +139,128 @@ type IconName =
   | 'copy'
   | 'folder'
   | 'plus'
+  | 'sliders'
+  | 'expand'
+  | 'arrow-left'
+  | 'arrow-right'
+  | 'pin'
+  | 'grip'
+  | 'camera'
+  | 'info'
+  | 'rail'
+  | 'nav-dashboard'
+  | 'nav-items'
+  | 'nav-skills'
+  | 'nav-tree'
+  | 'nav-config'
+  | 'nav-warnings'
+  | 'nav-ai'
+  | 'nav-about'
+  | 'nav-close'
 
 const PATHS: Record<IconName, ReactNode> = {
+  sliders: (
+    <>
+      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="10" cy="17" r="2" />
+    </>
+  ),
+  expand: <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />,
+  'arrow-left': <path d="M19 12H5M11 6l-6 6 6 6" />,
+  'arrow-right': <path d="M5 12h14M13 6l6 6-6 6" />,
+  pin: (
+    <>
+      <path d="M9 4h6l-1 6 3 3H7l3-3z" />
+      <path d="M12 13v7" />
+    </>
+  ),
+  grip: (
+    <>
+      <circle cx="9" cy="6" r="1" />
+      <circle cx="15" cy="6" r="1" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="9" cy="18" r="1" />
+      <circle cx="15" cy="18" r="1" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5v.5" />
+    </>
+  ),
+  rail: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </>
+  ),
+  'nav-dashboard': (
+    <>
+      <rect x="3" y="3" width="8" height="10" rx="1.5" />
+      <rect x="13" y="3" width="8" height="6" rx="1.5" />
+      <rect x="13" y="11" width="8" height="10" rx="1.5" />
+      <rect x="3" y="15" width="8" height="6" rx="1.5" />
+    </>
+  ),
+  'nav-items': (
+    <path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.200-8-4.500-8-9V6z" />
+  ),
+  'nav-skills': (
+    <>
+      <path d="M12 3l7.800 4.500v9L12 21l-7.800-4.500v-9z" />
+      <path d="M12 8l3.500 2v4L12 16l-3.500-2v-4z" />
+    </>
+  ),
+  'nav-tree': (
+    <>
+      <circle cx="12" cy="5" r="2" />
+      <circle cx="5" cy="18" r="2" />
+      <circle cx="19" cy="18" r="2" />
+      <circle cx="12" cy="13" r="2" />
+      <path d="M12 7v4M10.500 14.500L6.300 16.600M13.500 14.500l4.200 2.100" />
+    </>
+  ),
+  'nav-config': (
+    <>
+      <path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" />
+      <circle cx="15" cy="6" r="2" />
+      <circle cx="9" cy="12" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </>
+  ),
+  'nav-warnings': (
+    <>
+      <path d="M12 3.500l9.500 16.500h-19z" />
+      <path d="M12 10v4.500M12 17v.500" />
+    </>
+  ),
+  'nav-ai': (
+    <>
+      <path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 01-12 0z" />
+      <path d="M12 17v4" />
+    </>
+  ),
+  'nav-about': (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.500v.500" />
+    </>
+  ),
+  'nav-close': (
+    <>
+      <path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4" />
+      <path d="M10 8l-4 4 4 4M6 12h10" />
+    </>
+  ),
   logo: (
     <>
       <path d="M3 5l18 14M3 19L21 5" />
@@ -178,6 +299,8 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
 }
 
+export type { IconName }
+
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   return (
     <svg
@@ -194,6 +317,49 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     >
       {PATHS[name]}
     </svg>
+  )
+}
+
+/** An explanation kept out of the way (UX audit B-01): a small "i" beside
+ * a heading that shows its text on hover, on keyboard focus, and on a
+ * press; the layer is placed inside the window whatever the control's
+ * place. The text is the control's description, so a screen reader reads
+ * it with the control. */
+export function Hint({
+  children,
+  label,
+}: {
+  children: string
+  label?: string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Tooltip.Provider delayDuration={150}>
+      <Tooltip.Root open={open} onOpenChange={setOpen}>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            className="hint"
+            aria-label={label ?? t('hint.label')}
+            aria-description={children}
+            onClick={() => setOpen(true)}
+          >
+            <Icon name="info" size={16} />
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            className="hint-content"
+            side="bottom"
+            align="start"
+            sideOffset={6}
+            collisionPadding={8}
+          >
+            {children}
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
   )
 }
 

@@ -27,7 +27,7 @@ Use `--scope user`: on Windows a project-scoped server is keyed by the folder's 
 Read-only unless marked. Results are app API v1 DTOs (`schemas/app-api.v1.schema.json`).
 | Tool | Use it for |
 |---|---|
-| `get_build` | Class, level, main skill, data version, calc status. Call first. |
+| `get_build` | Class, level, main skill, data version, calc status. Call first. Its `dashboards`, when the build has any, are the layout the build's author chose to show: which components and stats matter for this build, no numbers. |
 | `list_fields` | Every calculated field with its value and **state** |
 | `get_breakdown(field)` | One field's provenance graph: every node and contribution, each naming its source (item line, passive, gem, config) |
 | `list_items`, `get_item(item)` | Items; each line's status (`matched`, `adapted`, `warning`, `excluded`) and the stat IDs it resolved to |

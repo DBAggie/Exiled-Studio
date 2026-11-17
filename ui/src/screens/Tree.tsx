@@ -21,6 +21,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react'
 
 import type {
@@ -29,7 +30,8 @@ import type {
   TreePreview,
   TreeView,
 } from '../api/types'
-import { ScreenHeading } from '../components'
+import { Hint, ScreenHeading } from '../components'
+import { floatingStyle, placeByPoint, useFloating } from '../floating'
 import { fieldLabel, formatNumber, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
 import {
@@ -38,6 +40,8 @@ import {
   useAttributes,
   withUnit,
 } from '../util'
+import { nodeDiff, useCompareStage, useStageView } from '../stageDiff'
+import { StageCompareSelect } from './StageDiff'
 import {
   type LoadedSprites,
   type SpriteRect,
@@ -47,6 +51,37 @@ import {
   useTreeSprites,
   withClusterNodes,
 } from './treeLayout'
+
+/** The hovered node's card, by the pointer and always whole in the
+ * window. `sized` changes when its content does. */
+function HoverCard({
+  x,
+  y,
+  sized,
+  children,
+}: {
+  x: number
+  y: number
+  sized: unknown
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const placement = useFloating(
+    ref,
+    (box, view) => placeByPoint({ x, y }, box, view),
+    `${x}:${y}:${sized === null ? 0 : 1}`,
+  )
+  return (
+    <div
+      ref={ref}
+      className="tree-card"
+      role="tooltip"
+      style={floatingStyle(placement)}
+    >
+      {children}
+    </div>
+  )
+}
 
 /** A node's drawn radius by kind, in tree units. */
 const RADIUS: Record<TreeNodeView['kind'], number> = {
@@ -89,6 +124,12 @@ function colours(el: Element) {
     kept: c('--c-tree-kept', 'dimgray'),
     ring: c('--c-tree-ring', 'white'),
   }
+}
+
+/** The nodes only the other stage has (`added`) and only this one has. */
+interface StageNodes {
+  added: Set<number>
+  removed: Set<number>
 }
 
 interface Camera {
@@ -168,6 +209,7 @@ function TreeCanvas({
   tree,
   found,
   preview,
+  diff,
   onHover,
   onActivate,
 }: {
@@ -176,6 +218,8 @@ function TreeCanvas({
   tree: TreeView
   found: Set<number>
   preview: TreePreview | null
+  /** The nodes that differ from the stage compared with. */
+  diff: StageNodes | null
   onHover: (node: TreeNodeView | null, at: { x: number; y: number }) => void
   onActivate: (node: TreeNodeView) => void
 }) {
@@ -396,10 +440,29 @@ function TreeCanvas({
       }
     }
     ctx.globalAlpha = 1
+    // The stage compared with: a dashed ring on a node only it has, a
+    // solid ring on a node only this stage has (the line, not the colour
+    // alone, tells them apart).
+    if (diff !== null) {
+      for (const n of placed) {
+        const other = diff.added.has(n.id)
+        if (!other && !diff.removed.has(n.id)) continue
+        const p = at(n)
+        const r = Math.max(4, RADIUS[n.kind] * camera.scale) + 4
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = other ? c.path : c.removed
+        ctx.setLineDash(other ? [5, 4] : [])
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+        ctx.stroke()
+      }
+      ctx.setLineDash([])
+    }
   }, [
     allocated,
     byId,
     camera,
+    diff,
     found,
     groupsOn,
     layout,
@@ -483,8 +546,9 @@ function TreeCanvas({
               return
             }
           }
-          const rect = e.currentTarget.getBoundingClientRect()
-          onHover(hit(e), { x: e.clientX - rect.left, y: e.clientY - rect.top })
+          // Window coordinates: the card is placed in the window, so it is
+          // never cut off by the canvas or the page (UX audit A-02).
+          onHover(hit(e), { x: e.clientX, y: e.clientY })
         }}
         onPointerUp={(e) => {
           const d = drag.current
@@ -957,6 +1021,88 @@ function TreeList({
   )
 }
 
+/** What differs from the stage compared with, in words: the counts,
+ * what the rings on the tree mean, and the nodes by name. */
+function StageNodeDiff({
+  title,
+  state,
+  diff,
+  layout,
+}: {
+  title: string
+  state: 'none' | 'loading' | 'failed' | 'done'
+  diff: StageNodes | null
+  layout: TreeLayout
+}) {
+  if (state === 'loading') {
+    return (
+      <p className="muted small-text" role="status">
+        {t('stageDiff.loading')}
+      </p>
+    )
+  }
+  if (diff === null) {
+    return (
+      <p className="small-text" role="status">
+        {t('stageDiff.failed')}
+      </p>
+    )
+  }
+  if (diff.added.size === 0 && diff.removed.size === 0) {
+    return (
+      <p className="muted small-text" role="status">
+        {t('stageDiff.same')}
+      </p>
+    )
+  }
+  const names = (ids: Set<number>) => {
+    const byId = new Map(layout.nodes.map((n) => [n.id, n]))
+    const rank = { keystone: 0, notable: 1 } as Record<string, number>
+    return [...ids]
+      .map((id) => byId.get(id))
+      .filter((n) => n !== undefined)
+      .sort((a, b) => (rank[a.kind] ?? 2) - (rank[b.kind] ?? 2))
+      .map((n) => n.name)
+  }
+  const lists = [
+    ['other', t('stageDiff.onlyOther', { other: title }), names(diff.added)],
+    ['here', t('stageDiff.onlyHere'), names(diff.removed)],
+  ] as const
+  return (
+    <details className="stage-diff">
+      <summary>
+        {t('stageDiff.treeSummary', {
+          other: title,
+          added: diff.added.size,
+          removed: diff.removed.size,
+        })}
+      </summary>
+      <div className="stage-diff-lists">
+        {lists.map(([key, heading, list]) => (
+          <div key={key}>
+            <h3 className="eyebrow">
+              <span
+                className={`diff-ring diff-ring-${key}`}
+                aria-hidden="true"
+              />
+              {heading}
+            </h3>
+            {list.length === 0 ? (
+              <p className="muted small-text">—</p>
+            ) : (
+              <ul className="small-text">
+                {list.map((name, i) => (
+                  <li key={i}>{name}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
+  )
+}
+
 export function Tree() {
   const dispatch = useAppDispatch()
   const tree = useAppSelector((s) => s.session.snapshot?.build?.tree ?? null)
@@ -993,6 +1139,15 @@ export function Tree() {
     title: string
   } | null>(null)
   const specs = useAppSelector((s) => s.session.snapshot?.build?.specs ?? [])
+  // The stage this one is compared with (UX audit follow-up).
+  const build = useAppSelector((s) => s.session.snapshot?.build)
+  const stage = useCompareStage(build)
+  const other = useStageView(stage?.spec ?? null)
+  const diff = useMemo(() => {
+    if (other.state !== 'done' || tree === null) return null
+    const d = nodeDiff(tree.nodes, other.view.nodes)
+    return { added: new Set(d.added), removed: new Set(d.removed) }
+  }, [other, tree])
   const specNameId = useId()
   const searchId = useId()
   const classId = useId()
@@ -1108,7 +1263,51 @@ export function Tree() {
 
   return (
     <section className="screen tree-screen">
-      <ScreenHeading>{t('tree.title')}</ScreenHeading>
+      {/* The heading row: the page, how to use it (one press away), and
+          the tree's own actions; then one row of controls. */}
+      <div className="page-head">
+        <ScreenHeading>{t('tree.title')}</ScreenHeading>
+        <Hint>{t('tree.canvasHelp')}</Hint>
+        <span className="spacer" />
+        <div
+          className="row tree-specs"
+          role="group"
+          aria-label={t('tree.specs')}
+        >
+          <span className="muted small-text">{specTitle}</span>
+          <button
+            type="button"
+            className="small"
+            onClick={() => setSpecForm({ kind: 'new', title: '' })}
+          >
+            {t('tree.specNew')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            onClick={() =>
+              setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
+            }
+          >
+            {t('tree.specCopy')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
+          >
+            {t('tree.specRename')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            disabled={specs.length <= 1}
+            onClick={() => setConfirm({ kind: 'delete' })}
+          >
+            {t('tree.specDelete')}
+          </button>
+        </div>
+      </div>
       <div className="row tree-bar">
         <label htmlFor={classId}>{t('tree.class')}</label>
         <select
@@ -1173,6 +1372,7 @@ export function Tree() {
             </p>
           )}
         <span className="spacer" />
+        {build != null && <StageCompareSelect build={build} />}
         <label htmlFor={searchId} className="visually-hidden">
           {t('tree.search')}
         </label>
@@ -1211,36 +1411,6 @@ export function Tree() {
           onClick={() => setConfirm({ kind: 'reset' })}
         >
           {t('tree.reset')}
-        </button>
-      </div>
-      <div className="row tree-specs" role="group" aria-label={t('tree.specs')}>
-        <span className="muted small-text">{specTitle}</span>
-        <button
-          type="button"
-          onClick={() => setSpecForm({ kind: 'new', title: '' })}
-        >
-          {t('tree.specNew')}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
-          }
-        >
-          {t('tree.specCopy')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
-        >
-          {t('tree.specRename')}
-        </button>
-        <button
-          type="button"
-          disabled={specs.length <= 1}
-          onClick={() => setConfirm({ kind: 'delete' })}
-        >
-          {t('tree.specDelete')}
         </button>
       </div>
       {specForm !== null && (
@@ -1360,6 +1530,14 @@ export function Tree() {
           {t('tree.keptCount', { n: tree.kept.length })}
         </p>
       )}
+      {stage !== null && (
+        <StageNodeDiff
+          title={stage.title}
+          state={other.state}
+          diff={diff}
+          layout={layout}
+        />
+      )}
       {!layout.placed && <p className="muted">{t('tree.notPlaced')}</p>}
       {view === 'canvas' && layout.placed ? (
         <div className="tree-stage">
@@ -1369,26 +1547,22 @@ export function Tree() {
             tree={tree}
             found={found}
             preview={preview === 'refused' ? null : preview}
+            diff={diff}
             onHover={(node, at) =>
               setHover(node === null ? null : { node, ...at })
             }
             onActivate={activate}
           />
           {hover !== null && (
-            <div
-              className="tree-card"
-              style={{ left: hover.x + 16, top: hover.y + 16 }}
-              role="tooltip"
-            >
+            <HoverCard x={hover.x} y={hover.y} sized={preview}>
               <NodeCard
                 node={hover.node}
                 tree={tree}
                 layout={layout}
                 preview={preview}
               />
-            </div>
+            </HoverCard>
           )}
-          <p className="muted small-text">{t('tree.canvasHelp')}</p>
         </div>
       ) : (
         <TreeList

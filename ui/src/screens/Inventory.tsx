@@ -2,10 +2,11 @@
 // inventory, with the weapon swap (I / II), and the game's hover tooltip
 // over each item; holding Alt (or the "Details" switch) shows each roll's
 // range and the item level, as the game does.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { ItemSummary, ItemView, LineView } from '../api/types'
 import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
+import { floatingStyle, placeBeside, useFloating } from '../floating'
 import { formatNumber, t } from '../i18n'
 import { actions, attempt, run } from '../store'
 import { Sprite } from '../sprites'
@@ -82,6 +83,8 @@ function unmet(have: Have | undefined, label: ReqLabel, value: string) {
 interface Hover {
   id: number
   rect: DOMRect
+  /** The item's element: its place is read again when the page scrolls. */
+  el: Element
 }
 
 /** The game's hover tooltip for item `id`, next to `rect`. */
@@ -91,7 +94,6 @@ function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
   const version = useAppSelector((s) => s.session.snapshot?.version)
   const [item, setItem] = useState<ItemView | null>(null)
   const ref = useRef<HTMLDivElement>(null)
-  const [place, setPlace] = useState({ left: 0, top: 0 })
   useEffect(() => {
     let live = true
     void dispatch(attempt((api) => api.item(hover.id))).then((v) => {
@@ -101,21 +103,13 @@ function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
       live = false
     }
   }, [dispatch, hover.id, version])
-  // Beside the item, kept on screen (the game's placement).
-  useLayoutEffect(() => {
-    const box = ref.current?.getBoundingClientRect()
-    if (box == null) return
-    const gap = 8
-    let left = hover.rect.right + gap
-    if (left + box.width > window.innerWidth - gap) {
-      left = Math.max(gap, hover.rect.left - box.width - gap)
-    }
-    const top = Math.min(
-      Math.max(gap, hover.rect.top),
-      Math.max(gap, window.innerHeight - box.height - gap),
-    )
-    setPlace({ left, top })
-  }, [hover.rect, item, details])
+  // Beside the item and always whole in the window (UX audit A-02).
+  const shown = item != null && item.id === hover.id
+  const placement = useFloating(
+    ref,
+    (box, view) => placeBeside(hover.rect, box, view),
+    `${hover.id}:${shown}:${details}:${hover.rect.left}:${hover.rect.top}`,
+  )
   if (item == null || item.id !== hover.id) return null
   return (
     <div
@@ -123,7 +117,7 @@ function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
       className={`game-tooltip rarity-frame-${item.rarity?.toLowerCase() ?? 'normal'}`}
       role="tooltip"
       id="item-tooltip"
-      style={{ left: place.left, top: place.top }}
+      style={floatingStyle(placement)}
     >
       <TooltipBody item={item} details={details} have={have} />
     </div>
@@ -482,7 +476,11 @@ function Slot({
 }) {
   const dispatch = useAppDispatch()
   const hover = (id: number) => (e: { currentTarget: Element }) =>
-    onHover({ id, rect: e.currentTarget.getBoundingClientRect() })
+    onHover({
+      id,
+      rect: e.currentTarget.getBoundingClientRect(),
+      el: e.currentTarget,
+    })
   const leave = () => onHover(null)
   if (item == null) {
     return (
@@ -604,7 +602,22 @@ export function Inventory() {
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
     window.addEventListener('blur', blur)
+    // The tooltip follows its item when the page scrolls, and closes once
+    // the item has left the window.
+    const scrolled = () =>
+      setHover((h) => {
+        if (h === null) return h
+        const rect = h.el.getBoundingClientRect()
+        const gone =
+          rect.bottom < 0 ||
+          rect.top > window.innerHeight ||
+          rect.right < 0 ||
+          rect.left > window.innerWidth
+        return gone ? null : { ...h, rect }
+      })
+    window.addEventListener('scroll', scrolled, true)
     return () => {
+      window.removeEventListener('scroll', scrolled, true)
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
       window.removeEventListener('blur', blur)
@@ -702,7 +715,11 @@ function TreeJewels({
       <ul>
         {jewels.map((j) => {
           const hover = (e: { currentTarget: Element }) =>
-            onHover({ id: j.id, rect: e.currentTarget.getBoundingClientRect() })
+            onHover({
+              id: j.id,
+              rect: e.currentTarget.getBoundingClientRect(),
+              el: e.currentTarget,
+            })
           return (
             <li key={j.id}>
               <button

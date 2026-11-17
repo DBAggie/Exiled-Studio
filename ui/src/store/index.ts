@@ -24,6 +24,9 @@ import {
 } from '../api/types'
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
+import { historyText } from '../util'
+import { type BuildDashboards, writeBuildDashboards } from '../buildDashboards'
+import { type Kept, keptKey, readKept, writeKept } from '../kept'
 import { importFlow, importActions } from './importFlow'
 
 export type Screen =
@@ -85,6 +88,47 @@ interface UiState {
   confirm: Replace | null
   /** The user's dashboards (B-5). */
   prefs: Prefs
+  /** The numbers compared against (UX audit D-03): the ones pinned this
+   * session, a snapshot kept in the build, or another build file's. */
+  baseline: Mark | null
+  /** The build's own dashboard shown (a build that keeps its own set);
+   * for the session, so that changing tabs is not a change to the build. */
+  dashActive: string | null
+  /** The open build's kept snapshots of its numbers, oldest first
+   * (`../kept`: this computer's, never in the build file). */
+  kept: Kept[]
+  /** The stage the tree and the equipment are compared with, by its
+   * spec. */
+  compareStage: number | null
+  /** The numbers after each change this session, oldest first: what the
+   * history charts draw. */
+  trail: Mark[]
+}
+
+/** Every computed field's value at one moment of the build. */
+export interface Mark {
+  /** The calculation's version. */
+  version: number
+  /** What made these numbers, in words ("Opened", "edit of Shiny Wand"). */
+  label: string
+  /** Each field's value; `null` when it was not computed. */
+  fields: Record<string, number | null>
+}
+
+/** The most steps a session's trail keeps. */
+export const MAX_TRAIL = 60
+
+/** A calculation's fields as a mark. */
+export function markOf(
+  calc: [number, CalcResultDocumentV1],
+  label: string,
+): Mark {
+  const fields: Record<string, number | null> = {}
+  for (const f of calc[1].result.fields) {
+    const value = (f as { value?: unknown }).value
+    fields[f.field] = typeof value === 'number' ? value : null
+  }
+  return { version: calc[0], label, fields }
 }
 
 /** What replaces the open build: a new one, a file the user picks, a
@@ -108,6 +152,11 @@ const ui = createSlice({
     dragging: false,
     confirm: null,
     prefs: defaultPrefs(),
+    baseline: null,
+    dashActive: null,
+    kept: [],
+    compareStage: null,
+    trail: [],
   } as UiState,
   reducers: {
     go(state, action: PayloadAction<Screen>) {
@@ -142,6 +191,34 @@ const ui = createSlice({
     },
     prefs(state, action: PayloadAction<Prefs>) {
       state.prefs = action.payload
+    },
+    baseline(state, action: PayloadAction<Mark | null>) {
+      state.baseline = action.payload
+    },
+    dashActive(state, action: PayloadAction<string | null>) {
+      state.dashActive = action.payload
+    },
+    kept(state, action: PayloadAction<Kept[]>) {
+      state.kept = action.payload
+    },
+    compareStage(state, action: PayloadAction<number | null>) {
+      state.compareStage = action.payload
+    },
+    /** A new calculation's numbers join the trail (once per version). */
+    tracked(state, action: PayloadAction<Mark>) {
+      const last = state.trail[state.trail.length - 1]
+      if (last !== undefined && last.version === action.payload.version) {
+        return
+      }
+      state.trail.push(action.payload)
+      if (state.trail.length > MAX_TRAIL) state.trail.shift()
+    },
+    /** Another build (or none): its numbers start over. */
+    forgetNumbers(state) {
+      state.baseline = null
+      state.trail = []
+      state.dashActive = null
+      state.compareStage = null
     },
   },
 })
@@ -219,11 +296,58 @@ function codeOf(e: unknown): string {
 
 /** Reads the snapshot (and the calculation, when it changed). */
 export const refresh = (): Thunk => async (dispatch, getState, api) => {
+  const before = getState().session.snapshot
   const snapshot = await api.snapshot()
   dispatch(actions.snapshot(snapshot))
+  // Another build's numbers are not this one's history: a build opened,
+  // imported, or closed starts the trail and the baseline over. (A build
+  // is the same while its version only grows by its own changes; the
+  // application starts each build's history empty.)
+  const replaced =
+    snapshot.build == null ||
+    before?.build == null ||
+    (snapshot.history['can-undo'] !== true &&
+      snapshot.history['can-redo'] !== true &&
+      snapshot.version !== before.version)
+  const ui = getState().ui
+  if (
+    replaced &&
+    (ui.trail.length > 0 ||
+      ui.baseline !== null ||
+      ui.dashActive !== null ||
+      ui.compareStage !== null)
+  ) {
+    dispatch(actions.forgetNumbers())
+  }
+  // The kept snapshots are this computer's, under the build's file: read
+  // for a build just opened; carried along when the build is saved under
+  // a new name.
+  const key = keptKey(snapshot)
+  if (replaced || key !== keptKey(before)) {
+    const kept = getState().ui.kept
+    if (!replaced && key !== null && kept.length > 0) writeKept(key, kept)
+    else dispatch(actions.kept(key === null ? [] : readKept(key)))
+  }
   const held = getState().session.calc
   if (held === null || held[0] !== snapshot.calc.version) {
-    dispatch(actions.calc(await api.calcDocument()))
+    const calc = await api.calcDocument()
+    dispatch(actions.calc(calc))
+    if (calc !== null && snapshot.build != null) {
+      const undo = snapshot.history.undo
+      const mark = markOf(
+        calc,
+        undo == null ? t('trail.opened') : historyText(undo, snapshot.build),
+      )
+      // A change to the build's own dashboards (done or undone) moves no
+      // number: it is not a step of the trail.
+      const last = getState().ui.trail.at(-1)
+      const layout =
+        (undo?.kind === 'dashboards' ||
+          snapshot.history.redo?.kind === 'dashboards') &&
+        last !== undefined &&
+        JSON.stringify(last.fields) === JSON.stringify(mark.fields)
+      if (!layout) dispatch(actions.tracked(mark))
+    }
   }
 }
 
@@ -253,6 +377,30 @@ export const setPrefs =
     } catch (e) {
       dispatch(actions.error(codeOf(e)))
     }
+  }
+
+/** Stores the build's own dashboards in the build (`null`: it keeps
+ * none and shows the user's): one undoable change. */
+export const setBuildDashboards =
+  (own: BuildDashboards | null): Thunk<Outcome | null> =>
+  (dispatch) =>
+    dispatch(
+      run({
+        'set-dashboards': {
+          dashboards: own === null ? null : writeBuildDashboards(own),
+        },
+      }),
+    )
+
+/** Changes the open build's kept snapshots and keeps them on this
+ * computer under the build's file (for the session, with no file). */
+export const setKept =
+  (list: Kept[]): Thunk =>
+  (dispatch, getState) => {
+    dispatch(actions.kept(list))
+    const key = keptKey(getState().session.snapshot)
+    if (key !== null) writeKept(key, list)
+    return Promise.resolve()
   }
 
 /** Runs a call; on failure shows its code and returns null. */

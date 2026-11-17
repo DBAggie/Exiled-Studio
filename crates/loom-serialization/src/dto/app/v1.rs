@@ -63,6 +63,94 @@ dto! {
         pub updates: UpdateStatus,
         /// The data feed's answer (Phase 5, P-e).
         pub data_feed: DataFeedStatus,
+        /// A what-if query.
+        pub what_if: WhatIfRequest,
+        /// A what-if query's answer.
+        pub what_if_series: WhatIfSeries,
+        /// The numbers of another build file (the `compare_file` query).
+        pub build_fields: BuildFields,
+        /// A stage's tree and equipment (the `stage_view` query).
+        pub stage_view: StageView,
+    }
+
+    /// The computed fields of a build file calculated without opening it,
+    /// to compare the open build with: a saved build document or a PoB
+    /// XML file, read and calculated with the loaded data. The open build,
+    /// its history, and the recent list never change.
+    pub struct BuildFields {
+        /// The file's name without its extension.
+        pub name: String,
+        /// Each slice field, as a what-if point gives them.
+        pub fields: Vec<WhatIfField>,
+    }
+
+    /// One stage's passive tree and equipment, as the build would show
+    /// them with that stage chosen (`use-loadout`), read without choosing
+    /// it: for a visual difference of two stages. `APP_LOADOUT` when the
+    /// build has no such stage.
+    pub struct StageView {
+        /// The passive spec's ID (the stage's key, as [`LoadoutView`]'s).
+        pub spec: u32,
+        /// The title, without colour codes and links.
+        pub title: String,
+        /// The spec's allocated nodes, ascending: the IDs
+        /// [`TreeView::nodes`] gives when the stage is the active one.
+        pub nodes: Vec<u32>,
+        /// The items in the slots of the stage's item set (the linked one,
+        /// else the one the build keeps when the stage is chosen), in
+        /// build order.
+        pub slots: Vec<StageSlot>,
+    }
+
+    /// An item in a slot of a stage's item set.
+    pub struct StageSlot {
+        /// The slot, as [`ItemSummary::slot`] names it.
+        pub slot: String,
+        /// The item's ID ([`ItemSummary::id`]).
+        pub item: u32,
+    }
+
+    /// A what-if query: the computed fields of the open build across its
+    /// stages or across one swept input, for a chart. Each point is
+    /// calculated on a copy of the build; the build, its history, and its
+    /// file never change. At most 41 points (`APP_WHAT_IF` for more, for a
+    /// range that is not one, and for a group, gem, or input the build
+    /// does not have).
+    pub struct WhatIfRequest {
+        /// What varies from point to point.
+        pub vary: WhatIfVary,
+    }
+
+    /// A what-if query's answer: its points, in the order of the stages
+    /// or of the swept value.
+    pub struct WhatIfSeries {
+        /// The points.
+        pub points: Vec<WhatIfPoint>,
+    }
+
+    /// One point of a what-if series: the build with one stage chosen or
+    /// one value set, calculated.
+    pub struct WhatIfPoint {
+        /// The stage's title, without colour codes and links (as
+        /// [`LoadoutView`]'s), or the swept value as text.
+        pub label: String,
+        /// The swept value; for stages, the stage's index from 0.
+        pub x: f64,
+        /// Whether this point is the build as it is now: the active stage,
+        /// or the value the build has.
+        pub current: bool,
+        /// Each slice field at this point.
+        pub fields: Vec<WhatIfField>,
+    }
+
+    /// One field at a what-if point.
+    pub struct WhatIfField {
+        /// The field's name.
+        pub field: String,
+        /// Its value, when computed and finite.
+        pub value: Option<f64>,
+        /// Its state.
+        pub state: String,
     }
 
     /// The data feed's answer (Phase 5, P-e): the game data the project
@@ -345,6 +433,62 @@ dto! {
         /// loaded data has a passive tree (passive tree plan, T5a).
         #[serde(default)]
         pub tree: Option<TreeView>,
+        /// The build's dashboards, if it has any: the layout its author
+        /// chose to show it with (which components, which fields), never
+        /// calculated numbers; kept in the build file
+        /// (`set-dashboards`).
+        #[serde(default)]
+        pub dashboards: Option<Dashboards>,
+    }
+
+    /// A build's dashboards and which one is shown.
+    pub struct Dashboards {
+        /// The ID of the dashboard shown: one of `list`.
+        pub active: String,
+        /// The dashboards, in order: 1 to 8.
+        pub list: Vec<Dashboard>,
+    }
+
+    /// One dashboard: a named list of components.
+    pub struct Dashboard {
+        /// The dashboard's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The name its author gave it: 1 to 40 characters.
+        pub name: String,
+        /// The components, in order: at most 24.
+        pub components: Vec<DashboardComponent>,
+    }
+
+    /// One component of a dashboard: what it shows, never the numbers.
+    /// Every text here is 1 to 64 characters.
+    pub struct DashboardComponent {
+        /// The component's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The component's kind (`stat`, `progression`, `timeline`, ...):
+        /// open text, so the UI adds kinds without a schema change and an
+        /// older application still opens the build.
+        pub kind: String,
+        /// The component's width (`third`, `half`, `full`, ...): open
+        /// text, as `kind`.
+        pub width: String,
+        /// The calc result field a stat, history, or curve component
+        /// shows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub field: Option<String>,
+        /// The calc result fields a progression component charts: at most
+        /// 6.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub fields: Vec<String>,
+        /// What a scaling curve varies (`gem-level`, `character-level`,
+        /// `config-number`): open text, as `kind`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub vary: Option<String>,
+        /// The config input a scaling curve varies.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub input: Option<String>,
+        /// The life a fight timeline deals damage to.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub target: Option<u64>,
     }
 
     /// The active passive spec as the tree editor sees it.
@@ -1363,6 +1507,8 @@ dto_enum! {
         TreeRequestApplied,
         /// An item added (and perhaps put in a slot).
         ItemAdded,
+        /// The build's dashboards changed.
+        Dashboards,
     }
 
     /// The league a build is planned for.
@@ -1402,6 +1548,48 @@ dto_enum! {
         Number(f64),
         /// Text.
         Text(String),
+    }
+
+    /// What a what-if query varies ([`WhatIfRequest`]).
+    pub enum WhatIfVary {
+        /// The build's stages (PoB's loadouts): one point for each, in
+        /// build order, as choosing the stage would calculate.
+        Stages,
+        /// A gem's level: one point for each level from `from` to `to`,
+        /// both included. The group and the gem are indexed as the
+        /// `edit-gem` command indexes them.
+        GemLevel {
+            /// The socket group's index in the active skill set.
+            group: u32,
+            /// The gem's index in the group.
+            gem: u32,
+            /// The first level, at least 1.
+            from: u32,
+            /// The last level.
+            to: u32,
+        },
+        /// The character's level: one point for `from` and each `step`
+        /// after it up to `to`.
+        CharacterLevel {
+            /// The first level, at least 1.
+            from: u32,
+            /// The last level, at most 100.
+            to: u32,
+            /// The distance between two points, at least 1.
+            step: u32,
+        },
+        /// A numeric config input of the active config set: `steps`
+        /// evenly spaced values from `from` to `to`, both included.
+        ConfigNumber {
+            /// The input's name.
+            name: String,
+            /// The first value.
+            from: f64,
+            /// The last value, above `from`.
+            to: f64,
+            /// How many points, at least 2.
+            steps: u32,
+        },
     }
 
     /// What a config input does to the computed fields.
@@ -1634,6 +1822,16 @@ dto_enum! {
             /// The league.
             league: League,
         },
+        /// Sets the build's dashboards ([`BuildView::dashboards`]), as one
+        /// undoable change; the same dashboards again change nothing.
+        /// `APP_DASHBOARDS`, with nothing changed, for dashboards outside
+        /// the limits their types name, a repeated ID, or an `active` that
+        /// is none of them.
+        SetDashboards {
+            /// The dashboards; absent or null to clear them.
+            #[serde(default)]
+            dashboards: Option<Dashboards>,
+        },
         /// Allocates a node of a passive spec and the path to it (the
         /// path is the application's, never sent), as one undoable
         /// change.
@@ -1858,6 +2056,173 @@ mod tests {
             })
         );
         assert_eq!(serde_json::to_string(&Command::Undo).unwrap(), r#""undo""#);
+    }
+
+    #[test]
+    fn what_if_should_read_and_write_its_wire_form() {
+        let request = WhatIfRequest {
+            vary: WhatIfVary::GemLevel {
+                group: 0,
+                gem: 1,
+                from: 1,
+                to: 20,
+            },
+        };
+        let json = r#"{"vary":{"gem-level":{"group":0,"gem":1,"from":1,"to":20}}}"#;
+        assert_eq!(serde_json::to_string(&request).unwrap(), json);
+        assert_eq!(
+            serde_json::from_str::<WhatIfRequest>(json).unwrap(),
+            request
+        );
+        assert_eq!(
+            serde_json::from_str::<WhatIfRequest>(r#"{"vary":"stages"}"#).unwrap(),
+            WhatIfRequest {
+                vary: WhatIfVary::Stages
+            }
+        );
+        assert_eq!(
+            serde_json::to_string(&WhatIfVary::CharacterLevel {
+                from: 1,
+                to: 100,
+                step: 5
+            })
+            .unwrap(),
+            r#"{"character-level":{"from":1,"to":100,"step":5}}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&WhatIfVary::ConfigNumber {
+                name: "enemyLevel".to_owned(),
+                from: 1.0,
+                to: 84.0,
+                steps: 2
+            })
+            .unwrap(),
+            r#"{"config-number":{"name":"enemyLevel","from":1.0,"to":84.0,"steps":2}}"#
+        );
+        let series = WhatIfSeries {
+            points: vec![WhatIfPoint {
+                label: "Endgame".to_owned(),
+                x: 1.0,
+                current: true,
+                fields: vec![WhatIfField {
+                    field: "life".to_owned(),
+                    value: None,
+                    state: "partial".to_owned(),
+                }],
+            }],
+        };
+        assert_eq!(
+            serde_json::to_string(&series).unwrap(),
+            r#"{"points":[{"label":"Endgame","x":1.0,"current":true,"fields":[{"field":"life","value":null,"state":"partial"}]}]}"#
+        );
+    }
+
+    #[test]
+    fn dashboards_and_comparison_types_should_read_and_write_their_wire_form() {
+        let component = |id: &str, kind: &str, width: &str| DashboardComponent {
+            id: id.to_owned(),
+            kind: kind.to_owned(),
+            width: width.to_owned(),
+            field: None,
+            fields: Vec::new(),
+            vary: None,
+            input: None,
+            target: None,
+        };
+        let dashboards = Dashboards {
+            active: "overview".to_owned(),
+            list: vec![Dashboard {
+                id: "overview".to_owned(),
+                name: "Overview".to_owned(),
+                components: vec![
+                    DashboardComponent {
+                        field: Some("hit-dps".to_owned()),
+                        ..component("c1", "stat", "third")
+                    },
+                    DashboardComponent {
+                        fields: vec!["life".to_owned(), "hit-dps".to_owned()],
+                        ..component("c2", "progression", "full")
+                    },
+                    DashboardComponent {
+                        target: Some(5_000_000),
+                        ..component("c3", "timeline", "half")
+                    },
+                    DashboardComponent {
+                        field: Some("hit-dps".to_owned()),
+                        vary: Some("config-number".to_owned()),
+                        input: Some("enemyLevel".to_owned()),
+                        ..component("c4", "curve", "half")
+                    },
+                ],
+            }],
+        };
+        // Absent values and an empty `fields` are left out.
+        let shape = r#"{"active":"overview","list":[{"id":"overview","name":"Overview","components":[{"id":"c1","kind":"stat","width":"third","field":"hit-dps"},{"id":"c2","kind":"progression","width":"full","fields":["life","hit-dps"]},{"id":"c3","kind":"timeline","width":"half","target":5000000},{"id":"c4","kind":"curve","width":"half","field":"hit-dps","vary":"config-number","input":"enemyLevel"}]}]}"#;
+        assert_eq!(serde_json::to_string(&dashboards).unwrap(), shape);
+        assert_eq!(
+            serde_json::from_str::<Dashboards>(shape).unwrap(),
+            dashboards
+        );
+
+        let set = Command::SetDashboards {
+            dashboards: Some(dashboards),
+        };
+        let json = format!(r#"{{"set-dashboards":{{"dashboards":{shape}}}}}"#);
+        assert_eq!(serde_json::to_string(&set).unwrap(), json);
+        assert_eq!(serde_json::from_str::<Command>(&json).unwrap(), set);
+        let clear = Command::SetDashboards { dashboards: None };
+        assert_eq!(
+            serde_json::to_string(&clear).unwrap(),
+            r#"{"set-dashboards":{"dashboards":null}}"#
+        );
+        for json in [
+            r#"{"set-dashboards":{"dashboards":null}}"#,
+            r#"{"set-dashboards":{}}"#,
+        ] {
+            assert_eq!(serde_json::from_str::<Command>(json).unwrap(), clear);
+        }
+        // A field the shape does not have is refused, not dropped.
+        assert!(
+            serde_json::from_str::<Command>(
+                r#"{"set-dashboards":{"dashboards":{"active":"a","list":[],"snapshots":[]}}}"#
+            )
+            .is_err()
+        );
+        assert_eq!(
+            serde_json::to_string(&HistoryEntry {
+                kind: ChangeKind::Dashboards,
+                item: 0,
+                request: None,
+            })
+            .unwrap(),
+            r#"{"kind":"dashboards","item":0,"request":null}"#
+        );
+
+        let fields = BuildFields {
+            name: "other".to_owned(),
+            fields: vec![WhatIfField {
+                field: "life".to_owned(),
+                value: Some(60.0),
+                state: "complete".to_owned(),
+            }],
+        };
+        let json =
+            r#"{"name":"other","fields":[{"field":"life","value":60.0,"state":"complete"}]}"#;
+        assert_eq!(serde_json::to_string(&fields).unwrap(), json);
+        assert_eq!(serde_json::from_str::<BuildFields>(json).unwrap(), fields);
+
+        let stage = StageView {
+            spec: 2,
+            title: "Endgame".to_owned(),
+            nodes: vec![3, 58833],
+            slots: vec![StageSlot {
+                slot: "Ring 1".to_owned(),
+                item: 1,
+            }],
+        };
+        let json = r#"{"spec":2,"title":"Endgame","nodes":[3,58833],"slots":[{"slot":"Ring 1","item":1}]}"#;
+        assert_eq!(serde_json::to_string(&stage).unwrap(), json);
+        assert_eq!(serde_json::from_str::<StageView>(json).unwrap(), stage);
     }
 
     #[test]

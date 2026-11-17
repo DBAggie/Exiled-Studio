@@ -16,5 +16,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
+    // The screen tests walk whole workflows over the in-memory API: a
+    // file's first test also pays for its imports, and on a busy machine
+    // (or a CI runner) that passes the default five seconds.
+    testTimeout: 20000,
   },
 })

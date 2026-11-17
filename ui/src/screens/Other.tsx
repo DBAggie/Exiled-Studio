@@ -11,7 +11,14 @@ import type {
   TreeLayout,
   WarningView,
 } from '../api/types'
-import { Badge, ErrorCode, Icon, ScreenHeading, type Tone } from '../components'
+import {
+  Badge,
+  ErrorCode,
+  Hint,
+  Icon,
+  ScreenHeading,
+  type Tone,
+} from '../components'
 import {
   errorText,
   fieldLabel,
@@ -38,8 +45,10 @@ export function Warnings() {
   const { used, unused } = splitWarnings(build)
   return (
     <>
-      <ScreenHeading>{t('warnings.title')}</ScreenHeading>
-      <p className="lead">{t('warnings.help')}</p>
+      <div className="page-head">
+        <ScreenHeading>{t('warnings.title')}</ScreenHeading>
+        <Hint>{t('warnings.help')}</Hint>
+      </div>
       {build.warnings.length === 0 ? (
         <p>{t('warnings.none')}</p>
       ) : (
@@ -335,8 +344,10 @@ export function AiConnection() {
       : `claude mcp add --scope user --transport http exiled-studio ${mcp.url} --header "Authorization: Bearer ${token}"`
   return (
     <>
-      <ScreenHeading>{t('ai.title')}</ScreenHeading>
-      <p className="lead">{t('ai.help')}</p>
+      <div className="page-head">
+        <ScreenHeading>{t('ai.title')}</ScreenHeading>
+        <Hint>{t('ai.help')}</Hint>
+      </div>
       <div className="ai-grid">
         <section className="panel client" aria-labelledby="ai-server">
           <div className="panel-head">

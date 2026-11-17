@@ -107,6 +107,7 @@ export type TreeChange =
  * sent.
  */
 export interface ApplicationAPIV1 {
+  'build-fields': BuildFields
   /**
    * A command.
    */
@@ -375,6 +376,14 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
+        'set-dashboards': {
+          /**
+           * The dashboards; absent or null to clear them.
+           */
+          dashboards?: Dashboards | null
+        }
+      }
+    | {
         'allocate-node': {
           /**
            * The node.
@@ -607,10 +616,43 @@ export interface ApplicationAPIV1 {
    */
   recovery: RecoveryEntry[]
   snapshot: Snapshot
+  'stage-view': StageView
   'tree-layout': TreeLayout
   'tree-preview': TreePreview1
   'tree-sprites': TreeSprites
   updates: UpdateStatus
+  'what-if': WhatIfRequest
+  'what-if-series': WhatIfSeries
+}
+/**
+ * The numbers of another build file (the `compare_file` query).
+ */
+export interface BuildFields {
+  /**
+   * Each slice field, as a what-if point gives them.
+   */
+  fields: WhatIfField[]
+  /**
+   * The file's name without its extension.
+   */
+  name: string
+}
+/**
+ * One field at a what-if point.
+ */
+export interface WhatIfField {
+  /**
+   * The field's name.
+   */
+  field: string
+  /**
+   * Its state.
+   */
+  state: string
+  /**
+   * Its value, when computed and finite.
+   */
+  value?: number | null
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -645,6 +687,80 @@ export interface ExpectedLine {
    * Its text.
    */
   text: string
+}
+/**
+ * A build's dashboards and which one is shown.
+ */
+export interface Dashboards {
+  /**
+   * The ID of the dashboard shown: one of `list`.
+   */
+  active: string
+  /**
+   * The dashboards, in order: 1 to 8.
+   */
+  list: Dashboard[]
+}
+/**
+ * One dashboard: a named list of components.
+ */
+export interface Dashboard {
+  /**
+   * The components, in order: at most 24.
+   */
+  components: DashboardComponent[]
+  /**
+   * The dashboard's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The name its author gave it: 1 to 40 characters.
+   */
+  name: string
+}
+/**
+ * One component of a dashboard: what it shows, never the numbers.
+ * Every text here is 1 to 64 characters.
+ */
+export interface DashboardComponent {
+  /**
+   * The calc result field a stat, history, or curve component
+   * shows.
+   */
+  field?: string | null
+  /**
+   * The calc result fields a progression component charts: at most
+   * 6.
+   */
+  fields?: string[]
+  /**
+   * The component's ID, unique among the build's dashboards.
+   */
+  id: string
+  /**
+   * The config input a scaling curve varies.
+   */
+  input?: string | null
+  /**
+   * The component's kind (`stat`, `progression`, `timeline`, ...):
+   * open text, so the UI adds kinds without a schema change and an
+   * older application still opens the build.
+   */
+  kind: string
+  /**
+   * The life a fight timeline deals damage to.
+   */
+  target?: number | null
+  /**
+   * What a scaling curve varies (`gem-level`, `character-level`,
+   * `config-number`): open text, as `kind`.
+   */
+  vary?: string | null
+  /**
+   * The component's width (`third`, `half`, `full`, ...): open
+   * text, as `kind`.
+   */
+  width: string
 }
 /**
  * A panic the application recorded (ADR-014; Phase 5, P-f), redacted.
@@ -1532,6 +1648,13 @@ export interface BuildView {
    */
   'config-sets': SetView[]
   /**
+   * The build's dashboards, if it has any: the layout its author
+   * chose to show it with (which components, which fields), never
+   * calculated numbers; kept in the build file
+   * (`set-dashboards`).
+   */
+  dashboards?: Dashboards | null
+  /**
    * The data version the build is pinned to.
    */
   'data-version'?: DataVersionView | null
@@ -2396,10 +2519,48 @@ export interface HistoryEntry {
     | 'tree-specs'
     | 'tree-request-applied'
     | 'item-added'
+    | 'dashboards'
   /**
    * The change request it applied, when an MCP client asked for it.
    */
   request?: number | null
+}
+/**
+ * A stage's tree and equipment (the `stage_view` query).
+ */
+export interface StageView {
+  /**
+   * The spec's allocated nodes, ascending: the IDs
+   * [`TreeView::nodes`] gives when the stage is the active one.
+   */
+  nodes: number[]
+  /**
+   * The items in the slots of the stage's item set (the linked one,
+   * else the one the build keeps when the stage is chosen), in
+   * build order.
+   */
+  slots: StageSlot[]
+  /**
+   * The passive spec's ID (the stage's key, as [`LoadoutView`]'s).
+   */
+  spec: number
+  /**
+   * The title, without colour codes and links.
+   */
+  title: string
+}
+/**
+ * An item in a slot of a stage's item set.
+ */
+export interface StageSlot {
+  /**
+   * The item's ID ([`ItemSummary::id`]).
+   */
+  item: number
+  /**
+   * The slot, as [`ItemSummary::slot`] names it.
+   */
+  slot: string
 }
 /**
  * The loaded data's passive tree.
@@ -2698,4 +2859,103 @@ export interface UpdateOffer {
    * Its version.
    */
   version: string
+}
+/**
+ * A what-if query.
+ */
+export interface WhatIfRequest {
+  /**
+   * What varies from point to point.
+   */
+  vary:
+    | 'stages'
+    | {
+        'gem-level': {
+          /**
+           * The first level, at least 1.
+           */
+          from: number
+          /**
+           * The gem's index in the group.
+           */
+          gem: number
+          /**
+           * The socket group's index in the active skill set.
+           */
+          group: number
+          /**
+           * The last level.
+           */
+          to: number
+        }
+      }
+    | {
+        'character-level': {
+          /**
+           * The first level, at least 1.
+           */
+          from: number
+          /**
+           * The distance between two points, at least 1.
+           */
+          step: number
+          /**
+           * The last level, at most 100.
+           */
+          to: number
+        }
+      }
+    | {
+        'config-number': {
+          /**
+           * The first value.
+           */
+          from: number
+          /**
+           * The input's name.
+           */
+          name: string
+          /**
+           * How many points, at least 2.
+           */
+          steps: number
+          /**
+           * The last value, above `from`.
+           */
+          to: number
+        }
+      }
+}
+/**
+ * A what-if query's answer.
+ */
+export interface WhatIfSeries {
+  /**
+   * The points.
+   */
+  points: WhatIfPoint[]
+}
+/**
+ * One point of a what-if series: the build with one stage chosen or
+ * one value set, calculated.
+ */
+export interface WhatIfPoint {
+  /**
+   * Whether this point is the build as it is now: the active stage,
+   * or the value the build has.
+   */
+  current: boolean
+  /**
+   * Each slice field at this point.
+   */
+  fields: WhatIfField[]
+  /**
+   * The stage's title, without colour codes and links (as
+   * [`LoadoutView`]'s), or the swept value as text.
+   */
+  label: string
+  /**
+   * The swept value; for stages, the stage's index from 0.
+   */
+  x: number
 }

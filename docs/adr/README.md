@@ -13,7 +13,7 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [006](006-parity-and-oracle.md) | Parity verification, oracle, divergence register | Revised |
 | [007](007-corpus-and-coverage.md) | Parity corpus and coverage | Revised; Amendment 1 (credited community builds, removal on request) |
 | [008](008-ui-and-accessibility.md) | UI, UX, and accessibility | Accepted; Amendment 1 (passive tree editor before skills, accepted 2026-11-14 with PR #107) |
-| [009](009-persistence-and-recovery.md) | Persistence, undo, and recovery | Accepted |
+| [009](009-persistence-and-recovery.md) | Persistence, undo, and recovery | Accepted; Amendment 1 (a build keeps its own dashboards: a typed section, layout only; accepted 2026-11-16 with PR #128) |
 | [010](010-updates-security-and-offline.md) | Updates, signing, addons, offline | Revised |
 | [011](011-integrations-and-privacy.md) | Integrations, sharing, and privacy | Accepted |
 | [012](012-toolchain-and-repository.md) | Repository, toolchain, governance | Revised |

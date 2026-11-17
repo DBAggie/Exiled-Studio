@@ -91,6 +91,9 @@ export const tauriApi: LoomApi = {
       listener(e.payload)
     }),
   previewTree: (spec, node) => call('preview_tree', { spec, node }),
+  whatIf: (request) => call('what_if', { request }),
+  compareFile: () => call('compare_file'),
+  stageView: (spec) => call('stage_view', { spec }),
   uiPrefs: () => call('ui_prefs'),
   setUiPrefs: (text) => call('set_ui_prefs', { text }),
   onEvent: (listener) =>
