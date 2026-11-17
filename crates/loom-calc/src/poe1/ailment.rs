@@ -125,6 +125,7 @@ pub const CRIT_AILMENT_DOT_MULTIPLIER: &str = "critical_ailment_dot_multiplier_+
 const KEYWORDS: Flags = Flags::SKILL_PHYSICAL
     .union(Flags::KEYWORD_ATTACK)
     .union(Flags::KEYWORD_BOW)
+    .union(Flags::KEYWORD_ARROW)
     // `band(cfg.flags, ModFlag.WeaponMask)` (P6-11b).
     .union(Flags::AILMENT_WEAPON_MASK)
     .union(Flags::KEYWORD_SPELL)

@@ -128,6 +128,10 @@ impl Flags {
     /// A bow skill (PoB's `KeywordFlag.Bow`: an attack whose main hand
     /// holds a bow, `CalcActiveSkill.lua` 406; its ailments keep it).
     pub const KEYWORD_BOW: Self = Self(1 << 45);
+    /// An arrow skill (PoB's `KeywordFlag.Arrow`: the skill's
+    /// `skill_can_fire_arrows`, `SkillStatMap.lua` 1341 and
+    /// `CalcActiveSkill.lua` 412; P6-11c; its ailments and DoT keep it).
+    pub const KEYWORD_ARROW: Self = Self(1 << 46);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

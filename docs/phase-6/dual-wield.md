@@ -55,6 +55,8 @@ Each of these is a reason or out of the slice:
 
 Speed and hit DPS differ only through each hand's rate. That is the game's floored milliseconds (Q11), registered as DIV-0072, DIV-0073, and DIV-0107 (`game-truth`).
 
+**Intimidating Cry (P6-11c).** Its exert uptime reads the combined speed too (`CalcOffence.lua` 2598, `globalOutput.Speed`), so each hand's damage pass follows both hands' rates.
+
 **Fixed in P6-11b.** Each hand's `TotalDPS` is its average damage times `globalOutput.Speed`, the combined speed (`CalcOffence.lua` 3712), so PoB's `TotalDPS` is the combined average times the combined speed. P6-2a multiplied each hand's own speed, which agrees only when the hands' speeds do. The fixture's hands are close, so the error was small (90.960 against 90.927 now). P6-2a had registered PoB's breakdown, which prints that product, as a display quirk (DIV-0074). DIV-0074 is retired: the breakdown is PoB's real formula, and the engine's graph now has its rate term. `smite-dual-wield-lines-templar.xml`, with a hatchet and a sword, showed the error at 0.39%.
 
 **Before and after** (`local/p6/p6-1` against `local/p6/p6-2a`, the evidence bundle with tree packs):

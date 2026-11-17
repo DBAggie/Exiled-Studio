@@ -792,7 +792,6 @@ mod tests {
         settled.extend([
             states::USING_STAFF,
             states::USING_SHIELD,
-            states::MAIN_HAND_WEAPON,
             states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
             keystones::CRIT_IN_PAST_8_SEC,
             gems::STAT_THRESHOLD,

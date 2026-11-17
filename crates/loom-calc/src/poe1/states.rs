@@ -9,9 +9,9 @@
 //!   is `Staff`).
 //!
 //! **The engine** settles only the conditions a mapping row reads
-//! ([`USING_STAFF`], [`USING_SHIELD`], [`DUAL_WIELDING`] (P6-11a),
-//! [`USING_WAND`] (P6-11b), and
-//! the engine's own [`MAIN_HAND_WEAPON`]), each from the hands of the
+//! ([`USING_STAFF`], [`USING_SHIELD`], [`DUAL_WIELDING`] (P6-11a), and
+//! [`USING_WAND`] (P6-11b); "with Weapons" reads each hand's
+//! `Flags::WEAPON` since the P6-11b review), each from the hands of the
 //! weapon set in use ([`collect::hands`]): a hand holding an item whose
 //! base is not known leaves its condition unsettled, so an effect that
 //! needs it is `unmodelled-condition` (a reason), never a guess. Any other
@@ -48,11 +48,6 @@ pub const USING_WAND: &str = "UsingWand";
 /// Both hands hold a weapon (PoB's `DualWielding`; P6-11a):
 /// [`collect::Hands::dual_wielding`].
 pub const DUAL_WIELDING: &str = "DualWielding";
-
-/// The main hand holds a weapon (P3-8n): PoB gives an attack with it
-/// `ModFlag.Weapon` (`CalcActiveSkill.lua` 209: the weapon's type is not
-/// `None`), which "with Weapons" modifiers need. Not a PoB condition.
-pub const MAIN_HAND_WEAPON: &str = "MainHandWeapon";
 
 /// "if there are no Life Modifiers on Equipped Body Armour" (P3-8n). PoB
 /// v2.67.2 reads it as an `ItemCondition` with `searchCond = "life"`
@@ -91,17 +86,11 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         Held::Empty | Held::Weapon(_) | Held::Other => Some(false),
         Held::Unknown => None,
     };
-    let weapon = match &hands.main_hand {
-        Held::Weapon(_) => Some(true),
-        Held::Empty | Held::Shield | Held::Other => Some(false),
-        Held::Unknown => None,
-    };
     let dual = hands.dual_wielding();
     let wand = using_wand(&hands);
     for (key, value) in [
         (USING_STAFF, staff),
         (USING_SHIELD, shield),
-        (MAIN_HAND_WEAPON, weapon),
         (DUAL_WIELDING, dual),
         (USING_WAND, wand),
     ] {

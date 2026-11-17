@@ -1533,6 +1533,16 @@
       "description": "Smite dual wielding a Rusted Hatchet and a Rusted Sword, with dual wielding lines and lines of one hand's weapon type (P6-11b)."
     },
     {
+      "id": "burning-arrow-bow-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/burning-arrow-bow-lines-templar.xml",
+      "sha256": "aab1a1831922b332898dd198e6be2c58fd8290990941dd135933eb41dc2afed4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Burning Arrow with a Short Bow and lines by weapon type: bow and bow-skill lines apply (damage over time with bow skills to the ignite); wand, melee, and one-handed lines do not (P6-11c)."
+    },
+    {
       "id": "ice-nova-ignite-overload-witch.xml",
       "tier": "mechanic",
       "source": "local",

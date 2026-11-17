@@ -269,6 +269,10 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
     if skill_flags.contains(Flags::ATTACK) {
         skill_flags = skill_flags | Flags::KEYWORD_ATTACK;
     }
+    // `KeywordFlag.Arrow` from the skill's stat (P6-11c).
+    if stat(hit::ARROW_STAT) {
+        skill_flags = skill_flags | Flags::KEYWORD_ARROW;
+    }
     // `dotCfg` (`CalcOffence.lua` 5648 to 5671): `Dot` added; `Area`,
     // `Projectile`, `Spell`, `Attack`, and `Hit` removed unless the skill's
     // DoT is one; every other flag kept.
@@ -290,6 +294,36 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
         }
     }
     flags
+}
+
+/// The weapon flags an attack's DoT config keeps (P6-11b review): PoB's
+/// `dotCfg.flags` is `skillCfg.flags` with `Dot` (`CalcOffence.lua` 5649),
+/// and `skillCfg.flags` holds `weapon1Flags or weapon2Flags`
+/// (`CalcActiveSkill.lua` 455); its keyword flags keep `KeywordFlag.Bow`
+/// (406). The main hand's weapon, else the off hand's; none for a skill
+/// that is not an attack, or with no weapon (unarmed is not modelled).
+/// PoB also strips `KeywordFlag.Hit` from a DoT that is a hit, which the
+/// engine's one `HIT` flag (`ModFlag.Hit`) does not tell apart: a "Hits
+/// and Ailments" line would reach such a DoT (no vetted skill has one).
+fn attack_weapon_flags(input: &crate::input::CalcInput<'_>, skill: &MainSkill<'_>) -> Flags {
+    if !skill.types.contains("Attack") {
+        return Flags::NONE;
+    }
+    let hands = super::collect::hands(input);
+    let Some(weapon) = hands
+        .main
+        .as_ref()
+        .or(hands.off.as_ref())
+        .and_then(|(_, w)| hit::weapon_type_flags(&w.class))
+    else {
+        return Flags::NONE;
+    };
+    let main_bow = hands.main.as_ref().is_some_and(|(_, w)| w.class == "Bow");
+    if main_bow {
+        weapon | Flags::KEYWORD_BOW
+    } else {
+        weapon
+    }
 }
 
 /// The DoT phase (module docs). Sets [`Field::DotDps`] only when the main
@@ -461,7 +495,7 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         }
     }
     let enemy = super::enemy::enemy(input.build, input.data);
-    let flags = dot_flags(&skill, pob, &instance.stats);
+    let flags = dot_flags(&skill, pob, &instance.stats) | attack_weapon_flags(&input, &skill);
     let mut totals = Vec::new();
     for (i, t) in hit::TYPES.into_iter().enumerate() {
         let Some(Some(base)) = bases.get(i).copied() else {

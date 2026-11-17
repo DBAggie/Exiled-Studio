@@ -1057,6 +1057,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P3-8n, P6-11b review: "#% increased Physical Damage with Staves":
+    // `PhysicalDamage` INC with `ModFlag.Staff` and `ModFlag.Hit`
+    // (`ModParser.lua` 939; the hand's weapon flag, P3-8n read it from the
+    // `UsingStaff` state).
+    (
+        "physical_staff_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::STAFF).union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Physical Damage with Swords": `PhysicalDamage` INC, `ModFlag.Sword` and `Hit`.
     (
         "physical_sword_damage_+%",
@@ -1083,6 +1097,48 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             Flags::PROJECTILE,
+            NONE,
+        )],
+    ),
+    // P6-11b review: "Damage with Weapons Penetrates #% Elemental
+    // Resistances": `ElementalPenetration` BASE with `ModFlag.Weapon`
+    // (each hand's weapon flag).
+    (
+        "reduce_enemy_elemental_resistance_with_weapons_%",
+        &[
+            (
+                Quantity::Penetration(FIRE_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(COLD_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+        ],
+    ),
+    // P3-8n, P6-11b review: "Damage with Weapons Penetrates #% Fire
+    // Resistance": `FirePenetration` BASE with `ModFlag.Weapon` (each hand's
+    // weapon flag; P3-8n read it from a main-hand state).
+    (
+        "reduce_enemy_fire_resistance_with_weapons_%",
+        &[(
+            Quantity::Penetration(FIRE_T),
+            Op::Base,
+            1.0,
+            Flags::WEAPON,
             NONE,
         )],
     ),
@@ -1213,6 +1269,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             Flags::KEYWORD_SPELL,
+            NONE,
+        )],
+    ),
+    // P6-2b, P6-11b review: "Staff Attacks deal #% increased Damage with
+    // Ailments": `Damage` INC with `ModFlag.Ailment` and `ModFlag.Staff`
+    // (`ModParser.lua` 1111): the hand's weapon flag, which an ailment keeps
+    // (`WeaponMask`); P6-2b read it from `UsingStaff` with the attack keyword.
+    (
+        "staff_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::STAFF.union(Flags::AILMENT),
             NONE,
         )],
     ),
@@ -1495,6 +1565,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11c: "#% increased Damage with Wands": `Damage` INC, `ModFlag.Wand`
+    // and `Hit` (`ModParser.lua` 945, "with wands").
+    (
+        "wand_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Elemental Damage with Wands": `ElementalDamage` INC, `ModFlag.Wand` and `Hit`.
     (
         "wand_elemental_damage_+%",
@@ -1583,6 +1665,7 @@ impl StatMapping for SkillMapping {
         if SKILL_FLAGS.contains(&stat.as_str())
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
             || stat.as_str() == super::hit::DOUBLE_HITS_STAT
+            || stat.as_str() == super::hit::ARROW_STAT
         {
             return StatMap::NoEffect;
         }
@@ -1842,31 +1925,6 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_SHIELD,
         )],
     ),
-    // P3-8n: "Physical Damage with Staves": `PhysicalDamage` INC with
-    // `ModFlag.Staff` and `ModFlag.Hit` (939), which only an attack with a
-    // staff in the main hand has (a staff is two-handed).
-    (
-        "physical_staff_damage_+%",
-        &[(
-            Quantity::Damage,
-            Op::Increased,
-            Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
-            states::USING_STAFF,
-        )],
-    ),
-    // P3-8n: "Damage with Weapons Penetrates #% Fire Resistance"
-    // (`FirePenetration` BASE with `ModFlag.Weapon`, `ModParser.lua` 982),
-    // which an attack has when its hand holds a weapon
-    // (`CalcActiveSkill.lua` 209).
-    (
-        "reduce_enemy_fire_resistance_with_weapons_%",
-        &[(
-            Quantity::Penetration(FIRE_T),
-            Op::Base,
-            Flags::ATTACK,
-            states::MAIN_HAND_WEAPON,
-        )],
-    ),
     // P6-11a: "+#% Elemental Resistances while holding a Shield":
     // `ElementalResist` BASE, `UsingShield`.
     (
@@ -1916,21 +1974,6 @@ pub const STATE_ROWS: &[StateRow] = &[
             Quantity::Damage,
             Op::Increased,
             Flags::SPELL,
-            states::USING_STAFF,
-        )],
-    ),
-    // "Staff Attacks deal #% increased Damage with Ailments": PoB's
-    // `Damage` INC with `ModFlag.Ailment` and the staff's weapon flag
-    // (PoB's own parse, `ModParser.lua` 1111); ailments read it (P6-2b
-    // review). Only an attack's config carries the weapon flag, so the
-    // attack keyword stands for it: a spell's ailment while holding a staff
-    // does not take it (P6-2c review).
-    (
-        "staff_ailment_damage_+%",
-        &[(
-            Quantity::Damage,
-            Op::Increased,
-            Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
             states::USING_STAFF,
         )],
     ),
@@ -4086,7 +4129,6 @@ mod tests {
                         states::USING_STAFF,
                         states::USING_SHIELD,
                         states::USING_WAND,
-                        states::MAIN_HAND_WEAPON,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                         states::DUAL_WIELDING,
                     ]
@@ -4172,23 +4214,6 @@ mod tests {
                 )],
             ),
             (
-                "physical_staff_damage_+%",
-                vec![staff(
-                    Quantity::Damage,
-                    Op::Increased,
-                    Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
-                )],
-            ),
-            (
-                "reduce_enemy_fire_resistance_with_weapons_%",
-                vec![(
-                    Quantity::Penetration(FIRE_T),
-                    Op::Base,
-                    Flags::ATTACK,
-                    states::MAIN_HAND_WEAPON,
-                )],
-            ),
-            (
                 "shield_spell_block_%",
                 vec![shield(SPELL_BLOCK, Op::Base, NONE)],
             ),
@@ -4203,14 +4228,6 @@ mod tests {
             (
                 "spell_staff_damage_+%",
                 vec![staff(Quantity::Damage, Op::Increased, Flags::SPELL)],
-            ),
-            (
-                "staff_ailment_damage_+%",
-                vec![staff(
-                    Quantity::Damage,
-                    Op::Increased,
-                    Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
-                )],
             ),
             ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
             (

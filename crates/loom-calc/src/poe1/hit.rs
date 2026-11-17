@@ -322,6 +322,11 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 /// [`attack_skill`], so the mapping gives it no effect.
 pub const DOUBLE_HITS_STAT: &str = "skill_double_hits_when_dual_wielding";
 
+/// PoB's `skillFlag = "arrow"` (`SkillStatMap.lua` 1341): the skill's
+/// keyword `KeywordFlag.Arrow` (`CalcActiveSkill.lua` 412; P6-11c), from a
+/// stat of any of its gems.
+pub const ARROW_STAT: &str = "skill_can_fire_arrows";
+
 /// PoB's damage types in its conversion order (`dmgTypeList`), the order
 /// it sums each pass in.
 pub(super) const TYPES: [DamageType; 5] = [
@@ -419,6 +424,8 @@ pub struct AttackSkill<'d> {
     /// The skill hits with both weapons at once (PoB's skill data
     /// `doubleHitsWhenDualWielding`); else it alternates.
     pub double_hits: bool,
+    /// The skill fires arrows ([`ARROW_STAT`]).
+    pub arrow: bool,
     /// The skill part computed.
     pub part: SkillPart,
     /// Whether the engine reads all of PoB's data of the skill
@@ -603,6 +610,9 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
                 .iter()
                 .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
         });
+    let arrow = skill::instances(&skill, data)
+        .iter()
+        .any(|i| i.stats.iter().any(|(s, v)| s == ARROW_STAT && *v != 0));
     // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
     // is 1 (P6-6b: PoB's parts and flags from its skill data).
     let wanted = main_group
@@ -643,6 +653,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         off_weapon,
         off_weapon_flags,
         double_hits,
+        arrow,
         part,
         known_parts,
     })
@@ -1167,23 +1178,63 @@ struct HandHit {
     sources: HitSources,
 }
 
-/// One hand's pass (module docs, steps 4 to 9) with the weapon `item` in
-/// `hand`.
-fn hand_hit(
+/// One hand's weapon and rate, before its damage (P6-11c review: PoB
+/// combines the hands' speeds before either hand's damage, `CalcOffence.lua`
+/// 2444, which Intimidating Cry's uptime then reads).
+struct HandRate {
+    hand: Hand,
+    flags: Flags,
+    weapon: WeaponData,
+    /// The pass's reasons with the weapon's.
+    unvetted: Reasons,
+    speed: (Valued, Reasons),
+}
+
+/// One hand's weapon values and rate (module docs, step 8) with the
+/// weapon `item` in `hand`.
+fn hand_rate(
     calc: &mut Calc<'_>,
     attack: &AttackSkill<'_>,
     hand: Hand,
     item: ItemId,
     flags: Flags,
-    enemy: &Enemy,
     unvetted: &Reasons,
-) -> Result<HandHit, CalcError> {
-    let input = *calc.input();
+) -> Result<HandRate, CalcError> {
     let cx = calc.context(flags);
     let mut unvetted = unvetted.clone();
     let mut weapon_reasons = Reasons::new();
     let weapon = weapon_data(calc, item, hand, &mut weapon_reasons)?;
     unvetted.extend(&weapon_reasons);
+    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
+    speed_reasons.extend(&unvetted);
+    Ok(HandRate {
+        hand,
+        flags,
+        weapon,
+        unvetted,
+        speed: (speed, speed_reasons),
+    })
+}
+
+/// One hand's pass (module docs, steps 4 to 9) after its rate:
+/// `global_speed` is PoB's `globalOutput.Speed` (the hands' combined speed
+/// when dual wielding), which Intimidating Cry's uptime reads.
+fn hand_hit(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    rate: HandRate,
+    global_speed: Valued,
+    enemy: &Enemy,
+) -> Result<HandHit, CalcError> {
+    let input = *calc.input();
+    let HandRate {
+        hand,
+        flags,
+        weapon,
+        unvetted,
+        speed,
+    } = rate;
+    let cx = calc.context(flags);
 
     // Chance to hit (step 9).
     let mut hit_reasons = unvetted.clone();
@@ -1215,11 +1266,9 @@ fn hand_hit(
         "strength-per-melee-damage",
         "strength-bonus",
     )?;
-    // The rate first, as PoB (`CalcOffence.lua`: speed before damage):
-    // Intimidating Cry's uptime reads it.
-    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
-    speed_reasons.extend(&unvetted);
-    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, speed, &mut reasons)?;
+    // The rate came first, as PoB (`CalcOffence.lua`: speed before
+    // damage): Intimidating Cry's uptime reads the global speed.
+    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, global_speed, &mut reasons)?;
     let shape = HitShape {
         source: attack.source(),
         level: attack.level,
@@ -1236,7 +1285,7 @@ fn hand_hit(
         hit_chance: (hit_chance, hit_reasons),
         crit: (crit, crit_reasons),
         multiplier: (multiplier, multiplier_reasons),
-        speed: (speed, speed_reasons),
+        speed,
         average: (average, reasons),
         sources,
     })
@@ -1263,6 +1312,9 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     // (`CalcActiveSkill.lua` 406: both hands' configs).
     if attack.weapon_flags.contains(Flags::BOW) {
         flags = flags | Flags::KEYWORD_BOW;
+    }
+    if attack.arrow {
+        flags = flags | Flags::KEYWORD_ARROW;
     }
     // Each hand's config adds its weapon's flags (`weapon1Cfg`,
     // `weapon2Cfg`, `CalcActiveSkill.lua` 470 to 479; P6-11b).
@@ -1292,16 +1344,10 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             what: "skill-crit-chance",
         });
     }
-    let main = hand_hit(
-        calc,
-        attack,
-        Hand::Main,
-        attack.weapon,
-        flags,
-        &enemy,
-        &unvetted,
-    )?;
+    let main_rate = hand_rate(calc, attack, Hand::Main, attack.weapon, flags, &unvetted)?;
     let Some(off_item) = attack.off_weapon else {
+        let speed = main_rate.speed.0;
+        let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
         let HandHit {
             hit_chance,
             crit,
@@ -1346,23 +1392,20 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
-    let off = hand_hit(
-        calc,
-        attack,
-        Hand::Off,
-        off_item,
-        off_flags,
-        &enemy,
-        &unvetted,
-    )?;
-    dual_wield(calc, attack, &main, &off)?;
+    let off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
+    let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
+    let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
+    let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;
+    dual_wield(calc, attack, &main, &off, speed)?;
     // PoB computes each hand's ailments and combines them (`combineStat`
     // `CHANCE_AILMENT`, `CHANCE`): not modelled yet. A dual-wielding attack
     // either of whose hands would inflict an ailment has its field, not
     // computed (P6-2b, P6-2c).
     for ailment in super::ailment::Ailment::ALL {
         let mut any = false;
-        for hand in [&main, &off] {
+        // Each pass's own flags (`band(cfg.flags, ModFlag.WeaponMask)`, the
+        // hand's config; P6-11b review).
+        for (hand, flags) in [(&main, flags), (&off, off_flags)] {
             let ailment_hit = super::ailment::AilmentHit {
                 flags,
                 sources: &hand.sources,
@@ -1381,7 +1424,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     // PoB combines a dual wielder's impales per hand only for double hits:
     // not modelled yet (P6-2d).
     let mut impales = false;
-    for hand in [&main, &off] {
+    for (hand, flags) in [(&main, flags), (&off, off_flags)] {
         let ailment_hit = super::ailment::AilmentHit {
             flags,
             sources: &hand.sources,
@@ -1401,6 +1444,21 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     Ok(())
 }
 
+/// The hands' combined speed (PoB's `combineStat("Speed",
+/// "HARMONICMEAN")`, `CalcOffence.lua` 2444): `2 / (1 / main + 1 / off)`, 0
+/// when either is 0.
+fn combined_speed(calc: &mut Calc<'_>, main: Valued, off: Valued) -> Result<Valued, CalcError> {
+    if main.value == 0.0 || off.value == 0.0 {
+        return phases::constant(calc, "no-speed", 0.0);
+    }
+    let two = phases::constant(calc, "two", 2.0)?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let a = quotient(calc, one, main, Term::Step("main-hand-time"))?;
+    let b = quotient(calc, one, off, Term::Step("off-hand-time"))?;
+    let sum = phases::total(calc, &[a, b], Term::Step("both-hands-time"))?;
+    quotient(calc, two, sum, Term::Result)
+}
+
 /// Both hands' passes combined (Phase 6; PoB's `combineStat`,
 /// `CalcOffence.lua` 2003 to 2108, 2441 to 2445, 3869 to 3875): chance to
 /// hit, crit chance, and crit multiplier `AVERAGE`; speed the harmonic mean
@@ -1413,6 +1471,7 @@ fn dual_wield(
     attack: &AttackSkill<'_>,
     main: &HandHit,
     off: &HandHit,
+    speed: Valued,
 ) -> Result<(), CalcError> {
     let two = phases::constant(calc, "two", 2.0)?;
     let average_of = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
@@ -1441,16 +1500,6 @@ fn dual_wield(
         Field::CritMultiplier,
         phases::query(multiplier, joined(&main.multiplier.1, &off.multiplier.1)),
     );
-    // `HARMONICMEAN`: `2 / (1 / main + 1 / off)`, 0 when either is 0.
-    let speed = if main.speed.0.value == 0.0 || off.speed.0.value == 0.0 {
-        phases::constant(calc, "no-speed", 0.0)?
-    } else {
-        let one = phases::constant(calc, "one", 1.0)?;
-        let a = quotient(calc, one, main.speed.0, Term::Step("main-hand-time"))?;
-        let b = quotient(calc, one, off.speed.0, Term::Step("off-hand-time"))?;
-        let sum = phases::total(calc, &[a, b], Term::Step("both-hands-time"))?;
-        quotient(calc, two, sum, Term::Result)?
-    };
     calc.set(
         Field::Speed,
         phases::query(speed, joined(&main.speed.1, &off.speed.1)),
