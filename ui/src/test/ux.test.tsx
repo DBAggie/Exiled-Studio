@@ -213,6 +213,9 @@ describe('UX High fixes', () => {
       'C:\\builds\\witch.json',
     )
     expect(screen.getByText('2 hours ago')).toBeTruthy()
+    // One line a build: the file has its own column (UX audit follow-up).
+    expect(screen.getByRole('columnheader', { name: 'File' })).toBeTruthy()
+    expect(screen.getByText('witch.json').closest('td')).not.toBeNull()
     // What the build is (UX-20).
     expect(screen.getByText('Elementalist 92 · Ice Nova')).toBeTruthy()
     await user.click(

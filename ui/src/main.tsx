@@ -28,7 +28,42 @@ if (root === null) {
 
 // Outside the shell (a plain browser during UI work) the in-memory API
 // stands in, with sample data.
-const api = inTauri() ? tauriApi : new FakeApi({ demo: true })
+const api = inTauri() ? tauriApi : new FakeApi({ demo: true, ...demoLists() })
+
+/** Sample recent builds and unsaved work, so the start page can be looked
+ * at in a browser with its lists filled. */
+function demoLists() {
+  const now = Math.floor(Date.now() / 1000)
+  const recent = (
+    [
+      ['Smite Inquisitor', 'Templar', 'Inquisitor', 92, 'Smite', 2 * 3600],
+      ['Ice Nova league start', 'Witch', 'Occultist', 68, 'Ice Nova', 86400],
+      ['Essence Drain', 'Witch', 'Trickster', 94, 'Essence Drain', 3 * 86400],
+      ['Bow test', 'Ranger', null, 12, null, 9 * 86400],
+      ['Untitled idea', null, null, null, null, 40 * 86400],
+    ] as const
+  ).map(([name, cls, ascendancy, level, skill, age], i) => ({
+    id: `r${i + 1}`,
+    name,
+    path: `C:\\Builds\\${name.toLowerCase().replaceAll(' ', '-')}.loom.json`,
+    at: now - age,
+    class: cls,
+    ascendancy,
+    level,
+    'main-skill': skill,
+  }))
+  return {
+    recent,
+    recovery: [
+      {
+        id: 'u1',
+        name: 'Smite Inquisitor',
+        path: recent[0]!.path,
+        'saved-at': now - 1500,
+      },
+    ],
+  }
+}
 // In `pnpm dev` the fake is reachable from the console, to stage what an
 // AI client would do (`loomFake.addRequest(...)`).
 if (import.meta.env.DEV && api instanceof FakeApi) {

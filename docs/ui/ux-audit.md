@@ -24,7 +24,7 @@ Decisions the maintainer made before the work (2026-11-15): the audit may change
 ## How it was run
 - The UI in a browser over the in-memory API (`ui/src/api/fake.ts`), now with demo data (`FakeApi({ demo: true })`: a full set of fields that follow the stage, the main gem's level, and the enemy's level; full gear with long flask tooltips). In `pnpm dev`, `?screen=skills` opens the sample build on a screen (`&dash=trends`, `&pin`, `&stage=2`, `&item=1`, `&field=life`), so a screen can be captured by a headless browser.
 - Screenshots: headless Chrome at 1440 wide, before from `dev` `b89587b` and after from this branch, in `ux-audit/`. All numbers and items in them are sample data.
-- Not covered: the packaged app (the WebView2 shell) was not driven by hand for this audit (CI's Linux `e2e` job drives the shell, see Evidence); a screen reader pass; the start page and the import review, which the walkthrough reworked.
+- Not covered: the packaged app (the WebView2 shell) was not driven by hand for this audit (CI's Linux `e2e` job drives the shell, see Evidence); a screen reader pass. The start page and the import review, which the walkthrough reworked, were left out at first and done in the follow-up (below).
 
 ## Findings and fixes
 Severity: **High** gets in the way on every visit; **Medium** costs clarity on a common task; **Low** polish.
@@ -76,6 +76,8 @@ Sample data; 1440 wide. Before is `dev` `b89587b` with its small sample build; a
 | Skills | [before](ux-audit/before-skills.png) | [after](ux-audit/after-skills.png) |
 | Passive tree | [before](ux-audit/before-tree.png) | [after](ux-audit/after-tree.png) |
 | Configuration | [before](ux-audit/before-config.png) | [after](ux-audit/after-config.png) |
+| Start page (follow-up; sample lists) | [before](ux-audit/before-start.png) | [after](ux-audit/after-start.png) |
+| Import review (follow-up) | [before](ux-audit/before-import.png) | [after](ux-audit/after-import.png) |
 
 ## The what-if query (app API v1, additive)
 The charts by stage and the scaling curves need the calculation at states the build is not in. The application gains one read-only query, `what_if` (`loom_app::what_if`, Tauri command `what_if`): the calculated fields at each stage (loadout) of the build, or with one input swept over a range (a gem's level, the character's level, a numeric configuration input). It runs the existing calculation on copies of the build off the writer thread, as the item edit preview does: it never changes the build, adds no undo step, and changes no calculation (`loom-calc` is untouched). At most 41 points a request; `APP_WHAT_IF` for a range it refuses. It is not an MCP tool (the tool list is fixed, ADR-017).
@@ -84,7 +86,7 @@ The charts by stage and the scaling curves need the calculation at states the bu
 The fight timeline is a straight line because the engine computes hits only: no damage over time, no ramp from stacks, no buff uptime. When the engine computes those (the plan's later calc phases), the timeline should take them; until then it is labelled an estimate. The resistance bars mark 75%: a build's own maximum resistance is not a field yet.
 
 ## Follow-up (2026-11-16): the "left for later" items the maintainer chose
-The first version of this report listed seven items as left for later. The maintainer answered each on 2026-11-16: five to do in these PRs, no light theme. They are done on the same branches.
+The first version of this report listed seven items as left for later. The maintainer answered each on 2026-11-16: five to do in these PRs, no light theme, and, later the same day, the seventh (the start page and the import review). They are done on the same branches.
 
 | Item | What was done |
 |---|---|
@@ -94,7 +96,21 @@ The first version of this report listed seven items as left for later. The maint
 | Stage against stage on the tree and the equipment page | "Compare with stage" on both pages (one choice for the session). Equipment: a table of the slots whose item differs, this stage's item and the other's, each a link to the item. Tree: a dashed ring on nodes only the other stage has and a solid ring on nodes only this one has (the line style tells them apart, not the colour alone), the counts, and the nodes by name. The other stage is read with the app API query `stage_view`; nothing is switched. |
 | A compact Skills view | Cards / Table on the Skills page (the brief's screen 10). Table: a row a socket group with its slot, active skills and supports with levels, on or off, and the main skill marked; a row opens to the group's full editor. The choice is kept in the UI preferences. |
 | A light theme | Declined by the maintainer (2026-11-16). |
-| Start page and import review density | Not asked for; unchanged. |
+| Start page and import review density | Done (maintainer, 2026-11-16: "You can change that"); see "Start page and import review" below. |
+
+### Start page and import review
+Both screens kept the looser spacing the rest of the app had before the audit. No text, action, or order changed; what changed is how much room each thing takes. At 1440 by 900 the start page now shows five recent builds without scrolling (three before), and the import review's lines to review start at 300 px from the top (about 450 before). The sizes after are measured in the browser; the sizes before are read off the before screenshots.
+
+| Screen | Finding | Fix (done) |
+|---|---|---|
+| Start page | A 2.5 rem heading, 48 px above it, and 32 px between sections push the recent builds below the middle of the window. | The heading at 2 rem, 28 px above, 20 px between sections; the command panel's padding as a panel's elsewhere. |
+| Start page | A recent build is three lines (name, what it is, file), so a row is about 85 px and five builds do not fit. | One line a build: the name with what it is beside it, the file in its own column (left out under 720 px wide; the full path stays its hover text), when it was opened: a row is 39 px. |
+| Start page | "Remove" is an accent-coloured link on every row, as loud as the build's name. | Muted, still underlined, the text colour on hover. |
+| Import review | The state badges, the name, the summary, and "Open the dashboard" are four stacked rows before any number. | One band: the name with its badges, the summary under it, the button at the right. |
+| Import review | The four count cards hold a 2.25 rem number each and are about 125 px tall. | The label, then the number (1.6 rem) with what it counts beside it: 70 px. |
+| Import review | A line to review is two columns with "Open item" on a row of its own under them: about 120 px a line. | One row: the line and its item, why it is not calculated, "Open item" at the right (78 px a line); one column on a narrow window, as before. The folded "On items not in use" list lines up with the rows. |
+
+In `pnpm dev` the browser's sample data now has recent builds and one piece of unsaved work, so the start page can be looked at with its lists filled; `?screen=import-review` opens the import review.
 
 ### Where the build's own dashboards and the snapshots are kept
 The maintainer decided on 2026-11-16 (ADR-009 Amendment 1), after reading the first version of this follow-up, which kept both as one text field (`workspace`) the core did not read:
