@@ -166,7 +166,7 @@ const SPELL_CHAOS: Flags = Flags::KEYWORD_SPELL.union(Flags::CHAOS);
 /// for both spell flags likewise (PoB leaves `KeywordFlag.Spell` off only
 /// for the skills its own data marks `cast`: Bear Trap, Vaal Detonate
 /// Dead, the Heralds of Agony, Ice, and Thunder, one minion skill; none is
-/// a vetted spell, `hit::VETTED_SPELLS`, so any of them is `Partial`).
+/// a spell PoB's data vets, `hit::pob_vetted`, so any of them is `Partial`).
 pub const HIT_ROWS: &[HitRow] = &[
     (
         "accuracy_rating",
@@ -1080,6 +1080,13 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
 /// its skill data; P3-9b reads the game's stat instead).
 pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
 
+/// A gem's "always hits" (P6-6a review): PoB's `skill("cannotBeEvaded")`
+/// (`SkillStatMap.lua` 145), which `CalcOffence.lua` 2162 reads as the
+/// `CannotBeEvaded` flag. Only through a gem: an item's "Hits can't be
+/// Evaded" is tagged with its hand (`ModCache.lua` 9458), not modelled, so
+/// on an item or a passive the stat stays unmapped (a reason).
+pub const ALWAYS_HIT_STAT: &str = "global_always_hit";
+
 /// The mapping of a gem's stats: the game's ([`Poe1Mapping`]), where every
 /// effect must be one only the skill's hit reads ([`is_hit_quantity`]);
 /// a stat with another effect is `Unmapped` (PoB applies a gem's stats to
@@ -1095,6 +1102,15 @@ impl StatMapping for SkillMapping {
             || stat.as_str() == super::hit::DOUBLE_HITS_STAT
         {
             return StatMap::NoEffect;
+        }
+        if stat.as_str() == ALWAYS_HIT_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
         }
         match Poe1Mapping.map(stat) {
             StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
@@ -1617,13 +1633,6 @@ pub const ROWS: &[Row] = &[
             Op::Flag,
             1.0,
         )],
-    ),
-    // PoB `SkillStatMap.lua` 145: `skill("cannotBeEvaded")`, which
-    // `CalcOffence.lua` 2162 reads as the `CannotBeEvaded` flag does
-    // (P6-6a, the skill sweep).
-    (
-        "global_always_hit",
-        &[(Quantity::Poe1(Poe1Quantity::CannotBeEvaded), Op::Flag, 1.0)],
     ),
     (
         "global_defences_+%",
@@ -3635,5 +3644,45 @@ mod tests {
                 .with_all(Flags::SPELL)
                 .with_state(ConditionKey::new(states::USING_STAFF), true)
         );
+    }
+
+    /// P6-6a review: "always hits" acts through a gem only; every stat of
+    /// `skill_no_output` is `NoEffect` through the game's and the gem's
+    /// mappings; fire and cold skill conversion reach the skill.
+    #[test]
+    fn skill_stats_batch_one_should_map_as_pob_reads_them() {
+        let id = StatId::new;
+        match SkillMapping.map(&id(ALWAYS_HIT_STAT)) {
+            StatMap::Effects(e) => {
+                assert_eq!(e.len(), 1);
+                assert_eq!(e[0].quantity, Quantity::Poe1(Poe1Quantity::CannotBeEvaded));
+                assert_eq!(e[0].op, Op::Flag);
+            }
+            other => panic!("{other:?}"),
+        }
+        assert_eq!(Poe1Mapping.map(&id(ALWAYS_HIT_STAT)), StatMap::Unmapped);
+        assert_eq!(WeaponMapping.map(&id(ALWAYS_HIT_STAT)), StatMap::Unmapped);
+        for s in crate::poe1::skill_no_output::STATS {
+            assert_eq!(Poe1Mapping.map(&id(s)), StatMap::NoEffect, "{s}");
+            assert_eq!(SkillMapping.map(&id(s)), StatMap::NoEffect, "{s}");
+        }
+        for (s, t) in [
+            (
+                "skill_physical_damage_%_to_convert_to_fire",
+                DamageType::Fire,
+            ),
+            (
+                "skill_physical_damage_%_to_convert_to_cold",
+                DamageType::Cold,
+            ),
+        ] {
+            let StatMap::Effects(e) = SkillMapping.map(&id(s)) else {
+                panic!("{s}");
+            };
+            assert_eq!(
+                e[0].quantity,
+                Quantity::Poe1(Poe1Quantity::SkillConversion(DamageType::Physical, t))
+            );
+        }
     }
 }

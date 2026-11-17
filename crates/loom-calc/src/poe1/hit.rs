@@ -155,19 +155,6 @@ pub const NOT_PLAIN_ATTACK: [&str; 8] = [
     "Brand",
 ];
 
-/// The spells whose hit the oracle has checked (P3-9b's mechanic fixtures):
-/// another spell is computed but `Partial` (`unmodelled-skill`,
-/// `pob-skill-data`) until a PR adds its fixtures. PoB also computes a skill
-/// from its own skill data (parts, cast time overrides, skill functions,
-/// the hand-written `area` and `projectile` flags), which the game data
-/// does not carry.
-pub const VETTED_SPELLS: [&str; 1] = ["IceNova"];
-
-/// The attacks whose hit the oracle has checked (P3-10's mechanic
-/// fixtures); another attack is computed but `Partial` as for spells
-/// ([`VETTED_SPELLS`]).
-pub const VETTED_ATTACKS: [&str; 1] = ["Smite"];
-
 /// A part of a skill as PoB's skill data writes it (`parts`), with the
 /// flags it sets (`skillFlags.melee`, `skillFlags.area`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -178,27 +165,77 @@ pub struct SkillPart {
     pub melee: bool,
     /// The part's hits are area damage.
     pub area: bool,
+    /// The part's hits are projectiles (P6-6b).
+    pub projectile: bool,
 }
 
-/// The parts of the vetted attacks, from PoB v2.67.2's skill data
-/// (`Data/Skills/act_str.lua`, `skills["Smite"]`: `baseFlags` melee and
-/// area; part 1 "Melee Hit" `area = false`, part 2 "Area Hit" `area = true,
-/// melee = false`). The game data has no parts.
-pub const SKILL_PARTS: [(&str, &[SkillPart]); 1] = [(
-    "Smite",
-    &[
-        SkillPart {
-            name: "Melee Hit",
-            melee: true,
-            area: false,
-        },
-        SkillPart {
-            name: "Area Hit",
-            melee: false,
-            area: true,
-        },
-    ],
-)];
+/// `SkillData` keys of PoB's base mods that only label or size what PoB
+/// shows (the area's radius and its labels), read into no slice field
+/// (P6-6b).
+pub const DISPLAY_SKILL_DATA: [&str; 5] = [
+    "radius",
+    "radiusLabel",
+    "radiusSecondary",
+    "radiusSecondaryLabel",
+    "radiusTertiaryLabel",
+];
+
+/// The fields of a PoB part the engine reads (P6-6b): its name and flags.
+const PART_FIELDS: [&str; 4] = ["area", "melee", "name", "projectile"];
+
+/// The main skill's part from PoB's skill data (P6-6b; the generated
+/// [`super::pob_skills`], v2.67.2's `Data/Skills/*.lua`): the base flags
+/// `area`, `melee`, `projectile` (`baseFlags`), each overridden by the part's
+/// own field, the part `m_min(#parts, skillPart or 1)` (`wanted`, 1-based).
+/// `None` when PoB has no data for the skill.
+#[must_use]
+pub fn pob_part(id: &str, wanted: usize) -> Option<(SkillPart, usize)> {
+    let pob = super::pob_skill::skill(id)?;
+    let mut part = SkillPart {
+        name: "",
+        melee: pob.flag("melee"),
+        area: pob.flag("area"),
+        projectile: pob.flag("projectile"),
+    };
+    if pob.parts.is_empty() {
+        return Some((part, 0));
+    }
+    let index = wanted.min(pob.parts.len()).max(1);
+    let p = pob.parts[index - 1];
+    part.name = p.name();
+    let truthy = |k: &str| p.get(k).map(super::pob_skill::Value::truthy);
+    part.melee = truthy("melee").unwrap_or(part.melee);
+    part.area = truthy("area").unwrap_or(part.area);
+    part.projectile = truthy("projectile").unwrap_or(part.projectile);
+    Some((part, index))
+}
+
+/// Whether the engine reads all of PoB's hand-written data of the skill
+/// (P6-6b): no skill functions, no base mod but the display `SkillData`
+/// ([`DISPLAY_SKILL_DATA`], untagged), and, for part `index` (1-based; 0
+/// without parts), no field but a name and flags ([`PART_FIELDS`]). Else
+/// the hit is `Partial` (`unmodelled-skill`, `pob-skill-data`): PoB computes
+/// it from data the engine does not read. The skill sweep is the evidence
+/// (`docs/phase-6/skill-data.md`, "P6-6b").
+#[must_use]
+pub fn pob_vetted(id: &str, index: usize) -> bool {
+    let Some(pob) = super::pob_skill::skill(id) else {
+        return false;
+    };
+    if !pob.functions.is_empty() {
+        return false;
+    }
+    let display = |m: &super::pob_skill::PobBaseMod| {
+        m.name == "SkillData" && !m.tagged && m.key.is_some_and(|k| DISPLAY_SKILL_DATA.contains(&k))
+    };
+    if !pob.base_mods.iter().all(display) {
+        return false;
+    }
+    match index.checked_sub(1).and_then(|i| pob.parts.get(i)) {
+        Some(part) => part.values.iter().all(|(k, _)| PART_FIELDS.contains(k)),
+        None => true,
+    }
+}
 
 /// "Hits with both weapons" while dual wielding (PoB's
 /// `doubleHitsWhenDualWielding`): read from the skill's gems by
@@ -255,8 +292,14 @@ pub struct SpellSkill<'d> {
     pub level: &'d StatSetLevel,
     /// Cast time, milliseconds.
     pub cast_time: i64,
-    /// Whether its hits are area damage (`is_area_damage`).
+    /// Whether its hits are area damage (PoB's flags and part, else
+    /// `is_area_damage`).
     pub area: bool,
+    /// Whether its hits are projectiles (PoB's flags and part; P6-6b).
+    pub projectile: bool,
+    /// Whether the engine reads all of PoB's data of the skill
+    /// ([`pob_vetted`]).
+    pub vetted: bool,
 }
 
 impl SpellSkill<'_> {
@@ -292,9 +335,9 @@ pub struct AttackSkill<'d> {
     pub double_hits: bool,
     /// The skill part computed.
     pub part: SkillPart,
-    /// Whether PoB's parts of the skill are known ([`SKILL_PARTS`]); if
-    /// not, the part's flags are the game's (`Melee` type,
-    /// `is_area_damage`).
+    /// Whether the engine reads all of PoB's data of the skill
+    /// ([`pob_vetted`]); without PoB's data, the part's flags are the
+    /// game's (`Melee` type, `is_area_damage`).
     pub known_parts: bool,
 }
 
@@ -364,13 +407,42 @@ pub fn spell_skill<'d>(
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
-    let area = is_area_damage(&skill, data);
+    // PoB's flags and part (P6-6b), else the game's area stat.
+    let wanted = skill::active_groups(build)
+        .ok()
+        .and_then(|groups| groups.get(group).cloned())
+        .and_then(|g| {
+            g.gems
+                .typed()
+                .nth(gem.gem)
+                .and_then(|x| skill::attribute(&x.attributes, "skillPart"))
+                .and_then(|v| v.parse::<usize>().ok())
+        })
+        .unwrap_or(1);
+    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
+        return None;
+    }
+    let (part, part_index, known) = match pob_part(&effect.id, wanted) {
+        Some((p, i)) => (p, i, true),
+        None => (
+            SkillPart {
+                name: "",
+                melee: false,
+                area: is_area_damage(&skill, data),
+                projectile: false,
+            },
+            0,
+            false,
+        ),
+    };
     Some(SpellSkill {
         skill,
         group,
         level,
         cast_time: effect.cast_time,
-        area,
+        area: part.area,
+        projectile: part.projectile,
+        vetted: known && pob_vetted(&effect.id, part_index),
     })
 }
 
@@ -443,29 +515,27 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
                 .iter()
                 .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
         });
-    let parts = SKILL_PARTS
-        .iter()
-        .find(|(id, _)| *id == effect.id)
-        .map(|(_, parts)| *parts);
-    let (part, known_parts) = match parts {
-        Some(parts) => {
-            // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing
-            // attribute is 1.
-            let wanted = main_group
-                .gems
-                .typed()
-                .nth(gem.gem)
-                .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
-                .and_then(|v| v.parse::<usize>().ok())
-                .unwrap_or(1)
-                .min(parts.len());
-            (*parts.get(wanted.checked_sub(1)?)?, true)
-        }
+    // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
+    // is 1 (P6-6b: PoB's parts and flags from its skill data).
+    let wanted = main_group
+        .gems
+        .typed()
+        .nth(gem.gem)
+        .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(1);
+    // Part 0: PoB would index a part that does not exist.
+    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
+        return None;
+    }
+    let (part, known_parts) = match pob_part(&effect.id, wanted) {
+        Some((p, index)) => (p, pob_vetted(&effect.id, index)),
         None => (
             SkillPart {
                 name: "",
                 melee: has("Melee"),
                 area: is_area_damage(&skill, data),
+                projectile: false,
             },
             false,
         ),
@@ -824,12 +894,15 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
     if spell.area {
         flags = flags | Flags::AREA;
     }
+    if spell.projectile {
+        flags = flags | Flags::PROJECTILE;
+    }
     let cx = calc.context(flags);
     // A spell PoB's oracle has not checked: PoB computes it from its own
     // skill data too (parts, cast time overrides, skill functions, flags),
     // which the game data does not carry.
     let mut unvetted = Reasons::new();
-    if !VETTED_SPELLS.contains(&spell.skill.effect().id.as_str()) {
+    if !spell.vetted {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
             what: "pob-skill-data",
@@ -1074,7 +1147,10 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     }
     let mut unvetted = Reasons::new();
     let id = attack.skill.effect().id.as_str();
-    if !VETTED_ATTACKS.contains(&id) || !attack.known_parts {
+    if attack.part.projectile {
+        flags = flags | Flags::PROJECTILE;
+    }
+    if !attack.known_parts {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: "pob-skill-data",
@@ -2986,11 +3062,29 @@ mod tests {
         assert_eq!(&NOT_SELF_CAST[1..], &NOT_PLAIN_ATTACK[..]);
     }
 
+    /// PoB's parts and flags (P6-6b): Smite's two parts as its data writes
+    /// them, the rule's vetting, and a skill whose data the engine does not
+    /// read (Ice Spear's `preDamageFunc`).
     #[test]
-    fn skill_parts_should_be_vetted_attacks() {
-        for (id, parts) in SKILL_PARTS {
-            assert!(VETTED_ATTACKS.contains(&id), "{id}");
-            assert!(!parts.is_empty());
-        }
+    fn pob_parts_and_vetting_should_follow_pobs_skill_data() {
+        let (melee, i) = pob_part("Smite", 1).unwrap();
+        assert_eq!(
+            (melee.name, melee.melee, melee.area, i),
+            ("Melee Hit", true, false, 1)
+        );
+        let (area, i) = pob_part("Smite", 9).unwrap();
+        assert_eq!(
+            (area.name, area.melee, area.area, i),
+            ("Area Hit", false, true, 2)
+        );
+        assert!(pob_vetted("Smite", 1) && pob_vetted("Smite", 2));
+        let (nova, i) = pob_part("IceNova", 1).unwrap();
+        assert!(nova.area && !nova.projectile && i == 0);
+        assert!(pob_vetted("IceNova", 0));
+        let (knives, _) = pob_part("EtherealKnives", 1).unwrap();
+        assert!(knives.projectile && !knives.area);
+        assert!(!pob_vetted("IceSpear", 1));
+        assert!(pob_part("NoSuchSkill", 1).is_none());
+        assert!(!pob_vetted("NoSuchSkill", 0));
     }
 }

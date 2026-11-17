@@ -59,6 +59,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `tools/oracle/sweep/make_sweep.py` (376 builds, local) and `skill_stats.py`; `poe1::skill_no_output` (148 stats), 7 + 2 `NoEffect` rows, fire and cold skill conversion, `global_always_hit`; `docs/phase-6/skill-data.md`
 - [x] Open PR: #147 (base `feat/p6-4b-flasks`)
 ## P6-6b: PoB skill data as a rule (flags, parts, the vetting reason), with the sweep as evidence
+- [x] The P6-6a review: `global_always_hit` gem-only; the classifier's whole-tree scan; mapping tests; flask merge slot
+- [x] `hit::pob_part` / `pob_vetted` replace `SKILL_PARTS` and the vetted lists; spells take the projectile flag; DoT: `pob-skill-data` without PoB data or with unread base mods (four Complete-but-wrong DoTs found by the sweep)
+- [ ] Open PR (base `feat/p6-6a-skill-sweep`)
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
 ## P6-7a: minion data

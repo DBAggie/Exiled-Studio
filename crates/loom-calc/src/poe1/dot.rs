@@ -312,6 +312,29 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             what: "skill-function",
         });
     }
+    // PoB's hand-written data the DoT does not read (P6-6b, the skill
+    // sweep): no PoB data for the skill (a variant PoB v2.67.2 lacks, whose
+    // DoT PoB does not compute), or a base mod other than the display data
+    // and the DoT's own keys and flags (Exsanguinate's stages, a tagged
+    // mod): a reason.
+    let read = |m: &pob_skill::PobBaseMod| {
+        !m.tagged
+            && match (m.name, m.key) {
+                ("SkillData", Some(k)) => {
+                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || k.starts_with("dotIs")
+                }
+                (name, None) => {
+                    m.kind == "FLAG" && (name.starts_with("dotIs") || name == "DotCanStack")
+                }
+                _ => false,
+            }
+    };
+    if !pob.is_some_and(|p| p.base_mods.iter().all(read)) {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "pob-skill-data",
+        });
+    }
     if skill.types.contains("Aura") {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),

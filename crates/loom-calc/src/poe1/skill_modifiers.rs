@@ -372,6 +372,13 @@ pub fn reserved(
 
 #[cfg(test)]
 mod tests {
+    /// A flag is not scaled (P6-4b review; `ScaleAddMod` scales numbers).
+    #[test]
+    fn a_flag_should_not_be_scaled() {
+        assert_eq!(scale(Quantity::Damage, Op::Flag, 1.0, 0.5), 1.0);
+        assert_eq!(scale(Quantity::Damage, Op::Increased, 40.0, 0.5), 20.0);
+    }
+
     use super::*;
     use crate::ingest::{StatMap, StatMapping};
     use crate::poe1::ArmourSlot;
