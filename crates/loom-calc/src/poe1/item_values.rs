@@ -75,8 +75,13 @@ pub fn item_values(input: &CalcInput<'_>) -> Result<ItemValues, CalcError> {
         }
     }
     out.block = phases::shield_block(&mut calc, &mut reasons)?.map(|b| b.value);
-    if let Some((id, _)) = collect::hands(input).main {
-        let weapon = hit::weapon_data(&mut calc, id, &mut reasons)?;
+    let hands = collect::hands(input);
+    let held = hands
+        .main
+        .map(|(id, _)| (id, super::Hand::Main))
+        .or_else(|| hands.off.map(|(id, _)| (id, super::Hand::Off)));
+    if let Some((id, hand)) = held {
+        let weapon = hit::weapon_data(&mut calc, id, hand, &mut reasons)?;
         out.weapon = Some(WeaponValues {
             damage: hit::TYPES
                 .iter()

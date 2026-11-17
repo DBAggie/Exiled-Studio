@@ -1401,6 +1401,16 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
       "description": "Vortex against a shocked enemy with 40% cold resistance and cold penetration: the resistance without penetration and shock's damage taken on the skill's damage over time (P6-1)."
+    },
+    {
+      "id": "smite-dual-wield-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-dual-wield-templar.xml",
+      "sha256": "d8b5c5787f09057410c3e92608f3662f14c48750b07fb7353988ac841ccaaae8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite dual wielding a Rusted Hatchet and a Driftwood Club: one pass per hand, hit and crit chance averaged, speed the harmonic mean, average damage and DPS halved, with dual wielding's inherent attack speed and block (P6-2a); each hand's rate is the game's (Q11, DIV-0072 to DIV-0074)."
     }
   ]
 }

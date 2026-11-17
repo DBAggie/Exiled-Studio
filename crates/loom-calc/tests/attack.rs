@@ -708,9 +708,21 @@ fn only_attacks_with_a_usable_main_hand_weapon_should_be_computed() {
     };
     // No weapon (unarmed is not modelled).
     assert!(not_computed(&run(&build("Smite", None, &[], &OPEN), &[])));
-    // Dual wielding.
+    // Dual wielding (Phase 6, P6-2a): computed, one pass per hand; two
+    // equal weapons give each hand's average damage (PoB's `DPS` mode
+    // halves the sum).
     let two = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Axe")];
-    assert!(not_computed(&run(&build("Smite", None, &two, &OPEN), &two)));
+    let dual = run(&build("Smite", None, &two, &OPEN), &two);
+    assert!(!not_computed(&dual));
+    let one = run(&build("Smite", None, &AXE, &OPEN), &AXE);
+    assert_eq!(
+        value(&dual, Field::AverageDamage),
+        value(&one, Field::AverageDamage)
+    );
+    assert_eq!(
+        value(&dual, Field::HitChance),
+        value(&one, Field::HitChance)
+    );
     // A weapon the skill cannot use.
     assert!(not_computed(&run(
         &build("TestMaceStrike", None, &AXE, &OPEN),

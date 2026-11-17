@@ -24,6 +24,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #140 (base `plan/phase-6-mechanics`)
 
 ## P6-2a: dual wielding
+- [x] The off hand's weapon as its own quantities (`OffHandWeapon`, `OffHandWeaponMapping`); which hands attack (`CalcActiveSkill.lua` 318 to 335)
+- [x] One pass per hand and PoB's `combineStat` (average, harmonic mean, `DPS` with double hits); inherent dual-wield speed and block; the item card's off-hand weapon
+- [x] Fixture `smite-dual-wield-templar.xml` (21 fields equal to PoB; Q11 rate DIV-0072, DIV-0073; breakdown DIV-0074 `harness`); `docs/phase-6/dual-wield.md`
 ## P6-2b: ignite and the shared ailment base
 ## P6-2c: bleed and poison
 ## P6-2d: impale

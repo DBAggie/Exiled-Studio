@@ -742,6 +742,7 @@ impl StatMapping for SkillMapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if SKILL_FLAGS.contains(&stat.as_str())
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
+            || stat.as_str() == super::hit::DOUBLE_HITS_STAT
         {
             return StatMap::NoEffect;
         }
@@ -2266,6 +2267,31 @@ impl StatMapping for WeaponMapping {
                 })
                 .collect(),
         )
+    }
+}
+
+/// The mapping of a weapon in the off hand's lines (Phase 6, dual
+/// wielding): [`WeaponMapping`]'s, each weapon value on the off hand's
+/// weapon ([`super::Hand::Off`]).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OffHandWeaponMapping;
+
+impl StatMapping for OffHandWeaponMapping {
+    fn map(&self, stat: &StatId) -> StatMap {
+        match WeaponMapping.map(stat) {
+            StatMap::Effects(effects) => StatMap::Effects(
+                effects
+                    .into_iter()
+                    .map(|mut e| {
+                        if let Quantity::Poe1(Poe1Quantity::Weapon(v)) = e.quantity {
+                            e.quantity = super::Hand::Off.weapon(v);
+                        }
+                        e
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
     }
 }
 

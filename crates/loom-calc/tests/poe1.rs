@@ -1412,8 +1412,11 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
             .unwrap_or("none")
     };
     assert_eq!(reason(&r("Helmet", None, vec![])), "no-base-name");
+    // A weapon in the off hand acts as the off hand's weapon (Phase 6,
+    // dual wielding): no reason; a weapon in another armour slot is one.
+    assert_eq!(reason(&r("Weapon 2", Some("Test Sword"), vec![])), "none");
     assert_eq!(
-        reason(&r("Weapon 2", Some("Test Sword"), vec![])),
+        reason(&r("Helmet", Some("Test Sword"), vec![])),
         "base-properties"
     );
     assert_eq!(

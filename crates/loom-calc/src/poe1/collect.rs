@@ -47,9 +47,11 @@ use loom_domain::{
 };
 
 use super::gem_levels::GemLevels;
-use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
+use super::mapping::{
+    OffHandWeaponMapping, PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping,
+};
 use super::skill::{self, InstanceProblem};
-use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, hit};
+use super::{ArmourSlot, Defence, Hand, PieceValue, Poe1Quantity, WeaponValue, hit};
 use crate::ingest::{Ingest, StatMapping};
 use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveState, StatAmount, WeaponBase};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
@@ -92,6 +94,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
+    dual_wielding(input, ingest);
     // After the items: "Allocates <notable>" (P3-8n).
     granted_passives(input, spec, ingest);
     config(build, ingest);
@@ -903,6 +906,8 @@ fn is_main_hand(slot: &str) -> bool {
 pub struct Hands {
     /// The main hand's weapon.
     pub main: Option<(ItemId, WeaponBase)>,
+    /// The off hand's weapon (Phase 6, dual wielding).
+    pub off: Option<(ItemId, WeaponBase)>,
     /// The off hand holds a weapon, or an item whose base is not known.
     pub off_hand_weapon: bool,
     /// What the main hand holds (P3-8f).
@@ -969,7 +974,10 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
             "Weapon 2" => {
                 hands.off_hand_weapon =
                     !matches!(base, Some(ItemBase::Armour(_) | ItemBase::Other));
-                hands.off_hand = Held::of(base);
+                hands.off_hand = Held::of(base.clone());
+                if let Some(ItemBase::Weapon(w)) = base {
+                    hands.off = Some((id, w));
+                }
             }
             _ => {}
         }
@@ -992,7 +1000,7 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
         return;
     };
     match name.find(input.data) {
-        Some(ItemBase::Weapon(base)) => weapon(item, &base, ingest),
+        Some(ItemBase::Weapon(base)) => weapon(item, &base, Hand::Main, ingest),
         Some(ItemBase::Armour(_) | ItemBase::Other) => {
             ingest.reason(unmodelled("not-weapon"));
             item_lines(item, ingest);
@@ -1017,8 +1025,8 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
 /// all on the weapon's own quantities ([`Poe1Quantity::Weapon`]); its
 /// other lines are global. The hit phase computes the weapon's values from
 /// them as PoB does (`hit` module docs).
-fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
-    let value = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
+    let value = |v| hand.weapon(v);
     let from_base = Source::ItemBase { item: item.id };
     let effect = |quantity, value: f64, source: &Source| Effect {
         quantity,
@@ -1075,7 +1083,10 @@ fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
-    item_lines_with(&WeaponMapping, item, ingest);
+    match hand {
+        Hand::Main => item_lines_with(&WeaponMapping, item, ingest),
+        Hand::Off => item_lines_with(&OffHandWeaponMapping, item, ingest),
+    }
     // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
     // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
     // 0.0001)`, the character's (`ModParser.lua` 5759, `ModStore`'s
@@ -1152,6 +1163,11 @@ fn armour_slot(
             ingest.reason(unmodelled("not-armour"));
             item_lines(item, ingest);
         }
+        // A weapon in the off hand (Phase 6, dual wielding): its base and
+        // local lines act on the off hand's weapon.
+        Some(ItemBase::Weapon(base)) if slot == ArmourSlot::Weapon2 => {
+            weapon(item, &base, Hand::Off, ingest);
+        }
         Some(ItemBase::Weapon(_)) => {
             ingest.reason(unmodelled("base-properties"));
             item_lines(item, ingest);
@@ -1166,6 +1182,48 @@ fn armour_slot(
                 key: name.name.clone(),
             });
             item_lines(item, ingest);
+        }
+    }
+}
+
+/// The inherent bonuses of dual wielding (Phase 6; PoB's `CalcSetup.lua`
+/// 533 and 535, `Condition:DualWielding`: a weapon in each hand): attacks'
+/// `Speed` MORE by the character template's
+/// `dual_wield_inherent_attack_speed_+%_final`, and `BlockChance` BASE by
+/// its `inherent_block_while_dual_wielding_%`. PoB's doubled and removed
+/// variants come from stats this engine does not map (each a reason).
+fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let hands = hands(input);
+    if hands.main.is_none() || hands.off.is_none() {
+        return;
+    }
+    for (stat, quantity, op, all) in [
+        (
+            "dual_wield_inherent_attack_speed_+%_final",
+            Quantity::Speed,
+            Op::More,
+            crate::condition::Flags::ATTACK,
+        ),
+        (
+            "inherent_block_while_dual_wielding_%",
+            Quantity::BlockChance,
+            Op::Base,
+            crate::condition::Flags::NONE,
+        ),
+    ] {
+        match input.data.character_constant(stat) {
+            #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+            Some(value) => ingest.effect(Effect {
+                quantity,
+                op,
+                value: value as f64,
+                conditions: Conditions::none().with_all(all),
+                source: Source::Rule("dual-wielding"),
+            }),
+            None => ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "character_constants",
+                key: stat.to_owned(),
+            }),
         }
     }
 }
