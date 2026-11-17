@@ -95,6 +95,9 @@ pub struct ActorState {
     pub global: Reasons,
     /// Its settled conditions.
     pub states: BTreeMap<ConditionKey, bool>,
+    /// The sources of its computed skill's own list
+    /// ([`Calc::set_skill_sources`]; per actor, P6-7b2 review).
+    pub skill_sources: std::collections::BTreeSet<Source>,
 }
 
 /// The state phases work on. Store, reasons, and states are the current
@@ -108,7 +111,6 @@ pub struct Calc<'a> {
     actor: Actor,
     graph: Graph,
     fields: BTreeMap<Field, FieldResult>,
-    skill_sources: std::collections::BTreeSet<Source>,
 }
 
 impl<'a> Calc<'a> {
@@ -145,14 +147,19 @@ impl<'a> Calc<'a> {
         self.minion.is_some()
     }
 
-    /// Runs `f` with `actor` current (the character when there is no
-    /// minion), then restores the actor before.
-    pub fn with_actor<R>(&mut self, actor: Actor, f: impl FnOnce(&mut Self) -> R) -> R {
+    /// Runs `f` with `actor` current, then restores the actor before;
+    /// `None` without running `f` for [`Actor::Minion`] when there is no
+    /// minion (P6-7b2 review: a minion step never falls back to the
+    /// character's store).
+    pub fn with_actor<R>(&mut self, actor: Actor, f: impl FnOnce(&mut Self) -> R) -> Option<R> {
+        if actor == Actor::Minion && self.minion.is_none() {
+            return None;
+        }
         let before = self.actor;
         self.actor = actor;
         let out = f(self);
         self.actor = before;
-        out
+        Some(out)
     }
 
     /// A query context with `flags` and the conditions the rules settled
@@ -192,9 +199,11 @@ impl<'a> Calc<'a> {
         (store, &mut self.graph)
     }
 
-    /// The reasons collecting the build gave (unmapped stats, unmodelled
-    /// items, missing data), which every computed field of the current
-    /// actor carries.
+    /// The reasons collecting the current actor gave (unmapped stats,
+    /// unmodelled items, missing data): its own only. A minion's fields
+    /// carry the character's too (`field_reasons`); the result's build-wide
+    /// reasons are the character's (a minion's reach the result through its
+    /// fields' states).
     #[must_use]
     pub const fn global(&self) -> &Reasons {
         &self.current().global
@@ -223,13 +232,13 @@ impl<'a> Calc<'a> {
     /// (PoB's `skillModList` without its parent): the rules' more
     /// multipliers round that list apart from the character's.
     pub fn set_skill_sources(&mut self, sources: std::collections::BTreeSet<Source>) {
-        self.skill_sources = sources;
+        self.current_mut().skill_sources = sources;
     }
 
     /// Whether `source` is one of [`Calc::set_skill_sources`]'.
     #[must_use]
     pub fn is_skill_source(&self, source: &Source) -> bool {
-        self.skill_sources.contains(source)
+        self.current().skill_sources.contains(source)
     }
 
     /// Settles a condition from a value an earlier phase computed (a
@@ -342,12 +351,12 @@ pub(crate) fn collected<'a>(
             store,
             global,
             states,
+            skill_sources: std::collections::BTreeSet::new(),
         },
         minion: None,
         actor: Actor::Player,
         graph: Graph::new(),
         fields: BTreeMap::new(),
-        skill_sources: std::collections::BTreeSet::new(),
     })
 }
 
@@ -422,4 +431,138 @@ pub fn calculate_cancellable(
 /// As [`calculate_with`].
 pub fn calculate(input: &CalcInput<'_>) -> Result<CalcResult, CalcError> {
     calculate_cancellable(input, &|| false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::UnsupportedReason;
+
+    /// Data with nothing (the tests read none).
+    struct NoData;
+
+    impl crate::input::CalcData for NoData {
+        fn data_version(&self) -> loom_domain::DataVersion {
+            loom_domain::DataVersion {
+                game: Game::Poe1,
+                schema_version: 0,
+                steam_build: None,
+            }
+        }
+        fn character(&self, _: &str) -> Option<crate::input::CharacterBase> {
+            None
+        }
+        fn character_constant(&self, _: &str) -> Option<i64> {
+            None
+        }
+        fn monster_constant(&self, _: &str) -> Option<i64> {
+            None
+        }
+        fn passive_stats(&self, _: u32) -> Option<&[crate::input::StatAmount]> {
+            None
+        }
+        fn mastery_effect_stats(&self, _: u32) -> Option<&[crate::input::StatAmount]> {
+            None
+        }
+        fn item_base(&self, _: &str) -> Option<crate::input::ItemBase> {
+            None
+        }
+        fn skill_gem(&self, _: &str) -> Option<&crate::input::SkillGem> {
+            None
+        }
+        fn gem_effect(&self, _: &str) -> Option<&crate::input::GemEffect> {
+            None
+        }
+        fn granted_effect(&self, _: &str) -> Option<&crate::input::GrantedEffect> {
+            None
+        }
+        fn active_skill(&self, _: &str) -> Option<&crate::input::ActiveSkill> {
+            None
+        }
+        fn stat_set(&self, _: &str) -> Option<&crate::input::StatSet> {
+            None
+        }
+        fn monster_level(&self, _: i64) -> Option<crate::input::MonsterStats> {
+            None
+        }
+        fn monster_type(&self, _: &str) -> Option<crate::input::MonsterDefences> {
+            None
+        }
+        fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
+            None
+        }
+    }
+
+    fn state(reason: Option<&'static str>) -> ActorState {
+        let mut global = Reasons::new();
+        if let Some(what) = reason {
+            global.partial.insert(UnsupportedReason::UnmodelledSkill {
+                source: Source::Rule(what),
+                what,
+            });
+        }
+        ActorState {
+            store: ModStore::default(),
+            global,
+            states: BTreeMap::new(),
+            skill_sources: std::collections::BTreeSet::new(),
+        }
+    }
+
+    /// A calculation's state with the given player state, as `collected`
+    /// builds it, without an input (the tests read none).
+    fn calc(input: &'static CalcInput<'static>) -> Calc<'static> {
+        Calc {
+            input,
+            player: state(Some("player")),
+            minion: None,
+            actor: Actor::Player,
+            graph: Graph::new(),
+            fields: BTreeMap::new(),
+        }
+    }
+
+    /// The per-actor state (P6-7b2 review): `with_actor` refuses a missing
+    /// minion and restores the actor; states, skill sources, and reasons
+    /// stay apart; a minion's field carries both actors' reasons.
+    #[test]
+    fn actors_should_keep_their_state_apart() {
+        let build: &'static loom_domain::Build =
+            Box::leak(Box::new(loom_domain::Build::new(Game::Poe1)));
+        let options: &'static crate::input::CalcOptions = Box::leak(Box::default());
+        let input: &'static CalcInput<'static> = Box::leak(Box::new(CalcInput {
+            build,
+            data: &NoData,
+            options,
+        }));
+        let mut c = calc(input);
+        assert_eq!(c.with_actor(Actor::Minion, |_| ()), None);
+        assert_eq!(c.actor(), Actor::Player);
+        c.add_minion(state(Some("minion")));
+        let key = ConditionKey::new("FullLife");
+        c.with_actor(Actor::Minion, |c| {
+            assert_eq!(c.actor(), Actor::Minion);
+            c.settle_state(key.clone(), true);
+            c.set_skill_sources([Source::Character].into_iter().collect());
+            assert_eq!(c.global().partial.len(), 1);
+            assert_eq!(c.field_reasons().partial.len(), 2);
+        });
+        assert_eq!(c.actor(), Actor::Player);
+        assert!(!c.context(Flags::NONE).states.contains_key(&key));
+        assert!(!c.is_skill_source(&Source::Character));
+        assert_eq!(c.field_reasons().partial.len(), 1);
+        assert!(c.with_actor(Actor::Minion, |c| c.context(Flags::NONE).states[&key]) == Some(true));
+    }
+
+    #[test]
+    fn minion_fields_should_be_named_and_sorted_last() {
+        use crate::quantity::DamageType;
+        use crate::result::MinionField;
+        assert_eq!(Field::Minion(MinionField::Life).to_string(), "minion.life");
+        assert_eq!(
+            Field::Minion(MinionField::Resistance(DamageType::Cold)).to_string(),
+            "minion.resistance.cold"
+        );
+        assert!(Field::Minion(MinionField::Life) > Field::PoisonDps);
+    }
 }
