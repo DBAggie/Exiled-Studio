@@ -121,9 +121,9 @@ How they are computed:
 - **No ward.** Ward is not shown.
 
 Game truth (`each_cards_values_should_equal_what_its_copy_prints`, real bundle): the card's values printed as the game prints them, against each copy's property lines.
-- 18 copies have values; 17 print exactly the copy's lines. That covers the weapons' damage per type (the bow's elemental ranges included), crit and attack rate, the shields' block, and the defences.
-- **Replica Dreamfeather** prints 1.50 attacks per second for the game's 1.65. Its "(5-10)% increased Attack Speed" is one of the three lines the resolver finds ambiguous (local or global), so the card leaves it out and is marked partial.
-- Loath Crown is also marked partial (lines without a template), and its values still match.
+- 18 copies have values, and all 18 print exactly the copy's lines. That covers the weapons' damage per type (the bow's elemental ranges included), crit and attack rate, the shields' block, and the defences.
+- **Replica Dreamfeather** (fixed 2026-11-17, "Unique lines by their base" below) printed 1.50 attacks per second for the game's 1.65. Its "(5-10)% increased Attack Speed" was one of three lines the resolver found ambiguous (local or global), so the card left it out and was marked partial. It now prints 1.65.
+- Loath Crown is marked partial (lines without a template), and its values still match.
 
 ## Requirements (E6)
 
@@ -145,7 +145,7 @@ Game truth (`each_cards_requirements_should_be_the_copys_without_its_gems`, real
 The copies' headers are the game's own Alt view. Each prefix, suffix, and named implicit header was compared with the card's affixes on the real bundle (`each_copys_affix_headers_should_equal_the_cards_affixes`), comparing kind, affix name, tier, crafted, and tags.
 - The card names 45 of the 61 headed affixes. It leaves the others out: their lines have more than one reading in the data, such as two mods summed into one line, or stats on two lines.
 - **Ghoul Pelt.** The card named the suffix "of Stone Skin", which the item does not have. The item's two "% increased Armour" lines carry one stat, so the inference set them aside. The third line, "16% increased Stun and Block Recovery", then looked like a single-stat suffix. In the game it is the second line of the hybrid prefix "Mammoth's". Fixed in `loom_parser::import::affixes`: a line that a fitting row could join to a set-aside line is set aside too. Test: `a_line_a_set_aside_stat_could_join_should_get_no_header`.
-- **One difference left.** Tempest Refuge's "of Shaping" has no tier on the card; the game shows Tier 1. The card gives influence mods no tier, while the game counts tiers among the influence's own rows. The test lists this entry.
+- **Influence tiers** (fixed 2026-11-17). Tempest Refuge's "of Shaping" had no tier on the card; the game shows Tier 1. The card gave influence mods no tier, while the game counts tiers among the influence's own rows. `affixes::tier` now counts, for an influence row, the higher-level rows of the same mod type and influence on each influence tag the row spawns on (`shield_shaper`), and gives a tier only when every such tag agrees. "of Shaping" (`RecoverLifePercentOnBlockUber1_`, level 68) is the only row of its type on `shield_shaper`: Tier 1. No difference is left; test `an_influence_mod_should_get_its_tier_among_its_influences_rows`.
 
 ## Socket caps (E9)
 
@@ -219,5 +219,29 @@ On the real bundle every copy adds, and every line resolves or warns visibly. Wa
 - "Socketed Gems are Supported by ...";
 - the timeless jewel's lines;
 - the flask's Taunt;
-- "+% to Item Rarity";
-- three Replica Dreamfeather lines the resolver finds ambiguous (`LINE_AMBIGUOUS`).
+- "+% to Item Rarity".
+
+Replica Dreamfeather's three lines that were ambiguous (`LINE_AMBIGUOUS`) resolve since 2026-11-17 (below).
+
+## Unique lines by their base (2026-11-17)
+
+A unique's line that reads as a local or a global stat was left ambiguous: the resolver's `local-stat` step (the base decides: a weapon keeps a weapon-local reading, armour an armour-local one, any other base the global one) ran on non-unique items only, since Spike B's gate counted those. It now runs on uniques too, as the game and PoB read them:
+- **The game:** Replica Dreamfeather's "(5-10)% increased Attack Speed" is the sword's own; the copy prints 1.65 attacks per second (1.50 x 1.10).
+- **PoB:** reads a weapon's or armour's local lines by the item's type, whatever its rarity.
+
+**One guard.** A unique's readings are backed by unique rows of any item, a jewel's among them. With the step alone, Windscream's "+(10-15)% to all Elemental Resistances" on boots read as Thread of Hope's two jewel stats (both marked local, and boots carry the armour locality), and the build's resistances dropped. On a unique the step therefore decides only a plain pair, one stat each (note `local-stat-unique-not-a-pair` otherwise). Test: `local_stat_should_decide_a_uniques_plain_pair_only`.
+
+**Evidence** (`local/card-fix/`, this workstation, the schema 4 evidence bundle `bundle-poe1-tree-a`): `calc-run` before and after the change, the public fixtures (136) and the private corpus (21), the new run twice.
+- The two new runs are byte-identical.
+- **Public:** 9 documents change. Four values move, each toward PoB's (`local/p3/close/evidence/oracle`); the other five documents change reasons only.
+
+  | Build | Field | Before | After | PoB |
+  |---|---|---|---|---|
+  | OccVortex | energy shield | 1012 | 1236 | 1611 |
+  | arakaalis-raise-spider-occultist | energy shield | 1742 | 1962 | 4688 |
+  | ethereal-knives-mines-assassin | evasion | 2365 | 2514 | 2930 |
+  | poisonous-concoction-of-bouncing-pathfinder | evasion | 7016 | 7699 | 25807 |
+
+  Reason entries (a line's reason repeats on each field it may touch): 204 `ambiguous` entries gone, 68 added, from 4 lines that now resolve. Two are `unmapped-stat` `local_attack_speed_+%` on two dual-wielding builds' unique weapons (dual wielding is not modelled), two are `scaled-line` (catalyst, modifier magnitude). All four fields are `partial` or `indeterminate`, so `calc-parity` (against the close-out oracle run) is unchanged: 0 unexpected differences before and after, identical summaries.
+- **Corpus:** 6 documents change, 6 values, each toward PoB's (`local/p3/p3-5/evidence-p4/oracle-corpus`): armour in four builds, evasion in two (one ends 2 above PoB's 198, from 25 below). 244 reason entries gone, none added.
+- **Real-bundle tests:** `game_truth_items` 7 and `game_truth_affixes` 3 pass; Replica Dreamfeather's card prints the game's values and resolves every line, and no affix header differs from the game's.
