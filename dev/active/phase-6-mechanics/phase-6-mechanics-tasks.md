@@ -47,7 +47,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] The P6-2c review applied: poison's physical part with chaos modifiers (`chaos_damage_+%` mapped), skill-data ailment keys as reasons, the staff row on attacks only; fixture `smite-poison-chaos-templar.xml` (Q11 DIV-0091 to DIV-0093); `docs/phase-6/ailments.md`
 - [x] Tailwind and Adrenaline (`poe1::buffs`); 61 inputs into `config::NAMED_ONLY`, 2 into `ENEMY_DAMAGE`, 4 into the new `config::INERT`
 - [x] Fixtures `ice-nova-tailwind-adrenaline-witch.xml`, `smite-tailwind-adrenaline-templar.xml` (Q11 DIV-0094 to DIV-0096); `docs/phase-6/config-inputs.md`
-- [ ] Open PR (base `feat/p6-2d-impale`)
+- [x] Open PR: #145 (base `feat/p6-2d-impale`)
 ## P6-4b: flasks
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
