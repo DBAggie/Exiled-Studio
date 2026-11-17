@@ -78,3 +78,26 @@ Still open:
 - the module docs are corrected.
 
 The review's other suggestion, integration tests for the trap and mine rate and reasons, is left to P6-7b's test pass. The sweep (33 builds against the oracle) is the evidence meanwhile.
+
+## P6-7b2: the actor in the core, and the parity tool
+
+The plan's step b2 (`dev/active/phase-6-mechanics/p6-7b-minion-actor-plan.md`) changes no value.
+
+**Engine** (`loom_calc::engine`):
+- `Actor` (`Player`, `Minion`), and `ActorState` (a modifier store, the reasons collecting it gave, its settled states).
+- `Calc` keeps one graph and one field map, shared, with the player's state and an optional minion's. `store`, `context`, `global`, `settle_state`, `chain`, `set`, and `set_derived` work on the current actor.
+- `with_actor` runs a step as another actor, and `add_minion` adds the minion's collected state.
+- A minion's fields carry the player's global reasons too: an unmapped "Minions have ..." line lands there.
+- **`Field::Minion(MinionField)`:** `minion.life`, `minion.energy-shield`, `minion.armour`, `minion.evasion`, `minion.resistance.<type>`, `minion.block-chance` (plan decision 2, a shared name). Nothing emits it yet (P6-7b3a).
+
+**Parity tool:**
+- Slice revision 4: a field may give `pob_path`, PoB's nested keys under `main_output`, with the pointer built per segment (`/main_output/Minion/Life`).
+- `MINION_NAMES` lists the eight minion fields: life, energy shield, armour, evasion, and the four resistances. Block is left for b3a.
+- `applies: minion`: each is compared when the oracle's `main_output` has a `Minion` table or our result has the field, so a minion's 0 is compared, not skipped. They are compared by value only; the oracle writes no minion breakdown.
+
+**Evidence:**
+- **Documents:** every public, mechanic, and corpus calc-run document is byte-identical to P6-6e's.
+- **Public `calc-parity`:** 153 builds, 99 expected differences, 0 unexpected. Not-computed rows rose by 16: the minion fields of the public builds with a minion, which the engine does not compute yet.
+- **Corpus:** no unexpected difference (not computed +8).
+- **Tests:** the slice file's revision and fields, and the nested lookup and its pointer.
+- **Not run locally:** the instruction-count bench runs in CI.

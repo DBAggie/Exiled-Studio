@@ -707,7 +707,7 @@ fn the_committed_slice_fields_are_well_formed() {
         assert!(
             matches!(
                 f["applies"].as_str(),
-                Some("always" | "attack" | "spell" | "present")
+                Some("always" | "attack" | "spell" | "present" | "minion")
             ),
             "{id}"
         );

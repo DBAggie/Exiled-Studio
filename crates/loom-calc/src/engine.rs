@@ -74,26 +74,94 @@ pub trait Ruleset {
     }
 }
 
-/// The state phases work on.
+/// Whose values a step computes (Phase 6 P6-7b2, plan decision 7): the
+/// character, or the main skill's minion (a second actor in the shared
+/// core; PoE2 has minions too).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Actor {
+    /// The character.
+    Player,
+    /// The main skill's minion.
+    Minion,
+}
+
+/// What each actor keeps apart (P6-7b2): its modifier store, the reasons
+/// collecting it gave, and its settled conditions.
+#[derive(Debug)]
+pub struct ActorState {
+    /// The modifier store.
+    pub store: ModStore,
+    /// The reasons collecting it gave.
+    pub global: Reasons,
+    /// Its settled conditions.
+    pub states: BTreeMap<ConditionKey, bool>,
+}
+
+/// The state phases work on. Store, reasons, and states are the current
+/// actor's ([`Calc::with_actor`]); the graph and the fields are shared, so
+/// a minion's node can read the character's.
 #[derive(Debug)]
 pub struct Calc<'a> {
     input: &'a CalcInput<'a>,
-    store: ModStore,
+    player: ActorState,
+    minion: Option<ActorState>,
+    actor: Actor,
     graph: Graph,
-    global: Reasons,
     fields: BTreeMap<Field, FieldResult>,
-    states: BTreeMap<ConditionKey, bool>,
     skill_sources: std::collections::BTreeSet<Source>,
 }
 
 impl<'a> Calc<'a> {
+    /// The current actor's state.
+    const fn current(&self) -> &ActorState {
+        match (self.actor, &self.minion) {
+            (Actor::Minion, Some(m)) => m,
+            _ => &self.player,
+        }
+    }
+
+    /// The current actor's state, mutable.
+    const fn current_mut(&mut self) -> &mut ActorState {
+        match (self.actor, &mut self.minion) {
+            (Actor::Minion, Some(m)) => m,
+            _ => &mut self.player,
+        }
+    }
+
+    /// The current actor.
+    #[must_use]
+    pub const fn actor(&self) -> Actor {
+        self.actor
+    }
+
+    /// Adds the main skill's minion with its collected state (P6-7b2).
+    pub fn add_minion(&mut self, minion: ActorState) {
+        self.minion = Some(minion);
+    }
+
+    /// Whether the calculation has a minion actor.
+    #[must_use]
+    pub const fn has_minion(&self) -> bool {
+        self.minion.is_some()
+    }
+
+    /// Runs `f` with `actor` current (the character when there is no
+    /// minion), then restores the actor before.
+    pub fn with_actor<R>(&mut self, actor: Actor, f: impl FnOnce(&mut Self) -> R) -> R {
+        let before = self.actor;
+        self.actor = actor;
+        let out = f(self);
+        self.actor = before;
+        out
+    }
+
     /// A query context with `flags` and the conditions the rules settled
-    /// for this calculation ([`Ruleset::states`]).
+    /// for this calculation ([`Ruleset::states`]), the current actor's.
     #[must_use]
     pub fn context(&self, flags: Flags) -> QueryContext {
         QueryContext {
             flags,
-            states: self.states.clone(),
+            states: self.current().states.clone(),
         }
     }
 
@@ -103,10 +171,10 @@ impl<'a> Calc<'a> {
         self.input
     }
 
-    /// The modifier store.
+    /// The current actor's modifier store.
     #[must_use]
     pub const fn store(&self) -> &ModStore {
-        &self.store
+        &self.current().store
     }
 
     /// The graph, to combine query results.
@@ -116,15 +184,33 @@ impl<'a> Calc<'a> {
 
     /// The store and the graph together, to query the store into the
     /// graph.
-    pub const fn parts(&mut self) -> (&ModStore, &mut Graph) {
-        (&self.store, &mut self.graph)
+    pub fn parts(&mut self) -> (&ModStore, &mut Graph) {
+        let store = match (self.actor, &self.minion) {
+            (Actor::Minion, Some(m)) => &m.store,
+            _ => &self.player.store,
+        };
+        (store, &mut self.graph)
     }
 
     /// The reasons collecting the build gave (unmapped stats, unmodelled
-    /// items, missing data), which every computed field carries.
+    /// items, missing data), which every computed field of the current
+    /// actor carries.
     #[must_use]
     pub const fn global(&self) -> &Reasons {
-        &self.global
+        &self.current().global
+    }
+
+    /// The reasons a field of the current actor carries: the character's;
+    /// a minion's carry the character's too (an unmapped "Minions have ..."
+    /// line lands in the character's).
+    fn field_reasons(&self) -> Reasons {
+        let mut r = self.player.global.clone();
+        if self.actor == Actor::Minion
+            && let Some(m) = &self.minion
+        {
+            r.extend(&m.global);
+        }
+        r
     }
 
     /// A field written by an earlier phase.
@@ -150,7 +236,7 @@ impl<'a> Calc<'a> {
     /// threshold on a field), for the later phases' contexts. A condition
     /// the rules settled before the phases keeps its value.
     pub fn settle_state(&mut self, key: ConditionKey, value: bool) {
-        self.states.entry(key).or_insert(value);
+        self.current_mut().states.entry(key).or_insert(value);
     }
 
     /// `base * increased * more` on `quantity` (or its override); see
@@ -159,7 +245,8 @@ impl<'a> Calc<'a> {
     /// # Errors
     /// [`CalcError::Graph`].
     pub fn chain(&mut self, quantity: Quantity, cx: &QueryContext) -> Result<Query, CalcError> {
-        Ok(self.store.chain(&mut self.graph, quantity, cx)?)
+        let (store, graph) = self.parts();
+        Ok(store.chain(graph, quantity, cx)?)
     }
 
     /// Writes a field from a query: its value and node, and its state from
@@ -167,7 +254,7 @@ impl<'a> Calc<'a> {
     /// later phase may replace the field.
     pub fn set(&mut self, field: Field, query: Query) {
         let mut reasons = query.reasons;
-        reasons.extend(&self.global);
+        reasons.extend(&self.field_reasons());
         self.fields.insert(
             field,
             FieldResult {
@@ -192,7 +279,7 @@ impl<'a> Calc<'a> {
     /// with `DependsOnNotComputed`, without a value.
     pub fn set_derived(&mut self, field: Field, query: Query, deps: &[Field]) {
         let mut reasons = query.reasons;
-        reasons.extend(&self.global);
+        reasons.extend(&self.field_reasons());
         for dep in deps {
             match self.fields.get(dep).map(|f| &f.state) {
                 None | Some(FieldState::Unsupported(_)) => {
@@ -251,11 +338,15 @@ pub(crate) fn collected<'a>(
     let states = rules.states(input);
     Ok(Calc {
         input,
-        store,
+        player: ActorState {
+            store,
+            global,
+            states,
+        },
+        minion: None,
+        actor: Actor::Player,
         graph: Graph::new(),
-        global,
         fields: BTreeMap::new(),
-        states,
         skill_sources: std::collections::BTreeSet::new(),
     })
 }
@@ -287,9 +378,10 @@ pub fn calculate_with(
     let Calc {
         graph,
         mut fields,
-        global,
+        player,
         ..
     } = calc;
+    let global = player.global;
     for field in rules.slice() {
         fields
             .entry(*field)

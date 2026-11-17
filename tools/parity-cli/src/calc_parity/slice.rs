@@ -15,8 +15,47 @@ pub const FORMAT: u32 = 1;
 
 /// The slice-file revision this reader knows: revision 2 added `graph`
 /// to every breakdown term and `node` to slot rows (P3-5); revision 3
-/// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`.
-pub const REVISION: u32 = 3;
+/// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`;
+/// revision 4 added the minion's fields ([`MINION_NAMES`], P6-7b2), each
+/// with a nested PoB path (`pob_path`) and `applies: minion`.
+pub const REVISION: u32 = 4;
+
+/// The minion's fields (slice revision 4; Phase 6 P6-7b2): our id, PoB's
+/// path under `main_output` (`output.Minion`), and our field name. Our
+/// result has them only when the main skill has a minion the engine
+/// computes; every one is compared when the oracle's `main_output` has a
+/// `Minion` table or our result has the field (`applies: minion`), so a
+/// minion value of 0 is compared, not skipped.
+pub const MINION_NAMES: [(&str, [&str; 2], &str); 8] = [
+    ("Minion.Life", ["Minion", "Life"], "minion.life"),
+    (
+        "Minion.EnergyShield",
+        ["Minion", "EnergyShield"],
+        "minion.energy-shield",
+    ),
+    ("Minion.Armour", ["Minion", "Armour"], "minion.armour"),
+    ("Minion.Evasion", ["Minion", "Evasion"], "minion.evasion"),
+    (
+        "Minion.FireResist",
+        ["Minion", "FireResist"],
+        "minion.resistance.fire",
+    ),
+    (
+        "Minion.ColdResist",
+        ["Minion", "ColdResist"],
+        "minion.resistance.cold",
+    ),
+    (
+        "Minion.LightningResist",
+        ["Minion", "LightningResist"],
+        "minion.resistance.lightning",
+    ),
+    (
+        "Minion.ChaosResist",
+        ["Minion", "ChaosResist"],
+        "minion.resistance.chaos",
+    ),
+];
 
 /// The Phase 6 fields (slice revision 3; Phase 6 plan, decision 2): PoB's
 /// id to our field name. Our result has such a field only when it applies
@@ -97,6 +136,11 @@ pub struct SliceField {
     pub group: String,
     /// The `main_output` key.
     pub pob_key: String,
+    /// PoB's nested path under `main_output` (revision 4: a minion's
+    /// `Minion/Life`); when present it replaces `pob_key` for the lookup
+    /// and the pointer.
+    #[serde(default)]
+    pub pob_path: Option<Vec<String>>,
     /// `always`, `attack`, or `spell` (informational: a field the oracle
     /// does not write and we do not compute is listed as absent).
     pub applies: String,
@@ -313,6 +357,7 @@ impl SliceFile {
             .iter()
             .chain(&PRESENT_NAMES)
             .map(|(id, _)| *id)
+            .chain(MINION_NAMES.iter().map(|(id, _, _)| *id))
             .collect();
         if ids != known {
             return Err(format!(
@@ -325,6 +370,26 @@ impl SliceFile {
             let present = PRESENT_NAMES.iter().any(|(id, _)| *id == f.id);
             if present != (f.applies == "present") {
                 return bad("a Phase 6 field, and only one, applies when present".to_owned());
+            }
+            // A minion field (revision 4): `applies: minion`, its PoB path
+            // as listed, and no breakdown (the oracle writes the player's).
+            let minion = MINION_NAMES.iter().find(|(id, _, _)| *id == f.id);
+            match minion {
+                Some((_, path, _)) => {
+                    if f.applies != "minion"
+                        || f.pob_path.as_deref().is_none_or(|p| p != path.as_slice())
+                        || f.breakdown.is_some()
+                    {
+                        return bad(
+                            "a minion field applies to minions, with its PoB path and no breakdown"
+                                .to_owned(),
+                        );
+                    }
+                }
+                None if f.applies == "minion" || f.pob_path.is_some() => {
+                    return bad("only a minion field has a PoB path".to_owned());
+                }
+                None => {}
             }
             if !f.comparison.valid() {
                 return bad("an abs or rel rule needs a positive tolerance and a reason".to_owned());
@@ -381,6 +446,12 @@ impl SliceFile {
             .chain(&PRESENT_NAMES)
             .find(|(p, _)| *p == id)
             .map(|(_, o)| *o)
+            .or_else(|| {
+                MINION_NAMES
+                    .iter()
+                    .find(|(p, _, _)| *p == id)
+                    .map(|(_, _, o)| *o)
+            })
     }
 }
 
@@ -406,7 +477,11 @@ mod tests {
     #[test]
     fn the_committed_slice_file_should_read() {
         let file = SliceFile::read(COMMITTED).unwrap();
-        assert_eq!(file.fields.len(), 24 + PRESENT_NAMES.len());
+        assert_eq!(
+            file.fields.len(),
+            24 + PRESENT_NAMES.len() + MINION_NAMES.len()
+        );
+        assert_eq!(SliceFile::our_name("Minion.Life"), Some("minion.life"));
         let with_breakdown = file.fields.iter().filter(|f| f.breakdown.is_some()).count();
         assert_eq!(with_breakdown, 10);
     }
