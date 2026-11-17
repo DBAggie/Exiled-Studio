@@ -1350,7 +1350,9 @@ const MINION_WEAPONS: [(&str, &str); 16] = [
     ("Bow", "Bow"),
     ("Claw", "Claw"),
     ("Dagger", "Dagger"),
-    ("FishingRod", "Fishing Rod"),
+    // PoB's key is "Fishing Rod", which no item class ID matches (the
+    // game's is `FishingRod`): its exporter writes no weapon for a rod.
+    ("Fishing Rod", "Fishing Rod"),
     ("One Hand Axe", "One Handed Axe"),
     ("One Hand Mace", "One Handed Mace"),
     ("One Hand Sword", "One Handed Sword"),
@@ -1463,13 +1465,10 @@ fn compare_minions(out: &mut Comparison, bundle: &Bundle, export: &Export) {
             over(ty.accuracy, 100.0),
             num(pob.accuracy),
         );
-        let scaling = if ty.alt_life2 {
-            Some("AltLife2")
-        } else if ty.alt_life1 {
-            Some("AltLife1")
-        } else {
-            None
-        };
+        let scaling = ty.life_scaling().map(|s| match s {
+            loom_data::bundle::poe1::LifeScaling::AltLife1 => "AltLife1",
+            loom_data::bundle::poe1::LifeScaling::AltLife2 => "AltLife2",
+        });
         out.check(T, k, "lifeScaling", json!(scaling), json!(pob.life_scaling));
         out.check(
             T,

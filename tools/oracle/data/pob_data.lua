@@ -341,18 +341,22 @@ end
 -- the variety. A name the template does not map is written under its key.
 local minionVariety = {}
 local template = openFile("Export/Minions/Minions.txt", "r")
-if template then
-	for line in template:lines() do
-		local id, name = line:match("^#monster%s+(%S+)%s+(%S+)")
-		if id and name then
-			minionVariety[name] = id
-		end
-	end
-	template:close()
+if not template then
+	die("Export/Minions/Minions.txt not found")
 end
+for line in template:lines() do
+	local id, name = line:match("^#monster%s+(%S+)%s+(%S+)")
+	if id and name and name ~= "#" then
+		minionVariety[name] = id
+	end
+end
+template:close()
 local minions = {}
 for key, m in pairs(data.minions) do
 	local id = minionVariety[key] or key
+	if minions[id] then
+		die("two minions for " .. id)
+	end
 	minions[id] = {
 		key = key,
 		name = m.name,

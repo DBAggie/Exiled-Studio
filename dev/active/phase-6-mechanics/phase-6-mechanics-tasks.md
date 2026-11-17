@@ -78,6 +78,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `poe1/minions.json` (converter, loader, validator, synthetic row); data-parity `minions` (export format 12; 5,959 values, 1 rule); evidence bundle `local/p6/packs/b-minions`; the P6-6e review (docs); `docs/phase-6/minions.md`
 - [x] Open PR: #153 (base `feat/p6-6e-traps-mines-brands`)
 - [ ] Maintainer: the next data run ships `poe1/minions.json`
+## P6-7a2: the P6-7a review
+- [x] Converter strict on IDs and types; validator (duplicate types, empty fields, negatives, skill references); PoB's rod key; `MinionType::life_scaling`; `pob_data.lua` stops on duplicates; start cost measured (+40 ms); `docs/phase-6/minions.md`
+- [ ] Open PR (base `feat/p6-7a-minion-data`)
 ## P6-7b: minion actor, auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers

@@ -990,7 +990,25 @@ fn socket_cap_mutations_should_each_give_their_code() {
 fn minion_mutations_should_each_give_their_code() {
     type Edit = fn(&mut Value);
     let path = "poe1/minions.json";
-    let cases: [(&str, Edit, &str); 2] = [
+    let cases: [(&str, Edit, &str); 5] = [
+        (
+            "type twice",
+            |v| {
+                let first = v["types"][0].clone();
+                v["types"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "negative life",
+            |v| v["varieties"][0]["life"] = json!(-1),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "unknown skill",
+            |v| v["varieties"][0]["skills"] = json!(["NoSuchSkill"]),
+            "BUNDLE_DANGLING_REF",
+        ),
         (
             "variety twice",
             |v| {

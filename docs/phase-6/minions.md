@@ -50,7 +50,26 @@ PoB's mod list is not compared, because it includes the `.ot` stats.
 
 **Evidence bundle:** `local/p6/packs/b-minions` is the flask evidence bundle with only `poe1/minions.json` added, and `bundle-check` reports no findings. The bundle is local and unsigned. **Maintainer:** the next data run ships the file.
 
-**Size:** the file is 11 MB as JSON. The bundle is zipped when shipped.
+**Size and start:** the file is 11 MB as JSON, zipped when shipped. It is parsed at load. `loom-bench wall`, 7 runs on the flask evidence bundle without and with the file, gives:
+- load: 631 ms against 668 ms;
+- start: 743 ms against 783 ms (+40 ms).
+
+**Versions:** an older application reading a newer bundle ignores the file (the loader reads only the files it knows).
+
+**The P6-7a review (code-architecture-reviewer), applied in its own PR (P6-7a2):**
+- The converter fails on a variety without an ID or a type.
+- The validator checks:
+  - duplicate type IDs;
+  - empty IDs, names, and types;
+  - negative values (the game has varieties at 0);
+  - each variety's skills against the granted effects.
+- The rod's weapon key is PoB's verbatim.
+- `MinionType::life_scaling` holds PoB's precedence (AltLife2 over AltLife1).
+- `pob_data.lua` stops on a duplicate minion or a missing template.
+
+Still open:
+- the varieties PoB does not list are checked only structurally;
+- PoB's mod list, and the `.ot` stats it adds, are neither carried nor compared. P6-7b must not compute a minion's life or resistances without them.
 
 ## The P6-6e review, applied here
 
