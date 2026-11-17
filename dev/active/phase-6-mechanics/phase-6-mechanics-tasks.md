@@ -54,6 +54,11 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `loom_calc::poe1::flasks` (effect scale, merge, Silver's Onslaught), `FlaskMapping` (charges, duration, eight aliases), rows for `flask_effect_+%`, `magic_utility_flask_effect_+%`, Basalt, Stibnite, Silver, Phasing; fixture `smite-flasks-templar.xml` (Q11 DIV-0097 to DIV-0099); `docs/phase-6/flasks.md`
 - [x] Open PR: #146 (base `feat/p6-4-config-inputs`)
 - [ ] Maintainer: the next data run ships `poe1/flasks.json` (the extraction with the `Flasks` root)
+## P6-6a: the skill sweep and skill stats, batch 1 (order change: before P6-5, whose channelled skills need P6-6's parts)
+- [x] The P6-4b review applied: negative buffs merge at the smallest scale; data without the flask table keeps `active-flask` a reason; flags unscaled; flask tests; doc and test placement
+- [x] `tools/oracle/sweep/make_sweep.py` (376 builds, local) and `skill_stats.py`; `poe1::skill_no_output` (148 stats), 7 + 2 `NoEffect` rows, fire and cold skill conversion, `global_always_hit`; `docs/phase-6/skill-data.md`
+- [ ] Open PR (base `feat/p6-4b-flasks`)
+## P6-6b: PoB skill data as a rule (flags, parts, the vetting reason), with the sweep as evidence
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
 ## P6-7a: minion data

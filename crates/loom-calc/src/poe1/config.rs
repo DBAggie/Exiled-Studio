@@ -782,9 +782,6 @@ mod tests {
         }
     }
 
-    /// Fortification (P3-12e): every reader of its names is a modifier,
-    /// and no mapped stat reads or changes it (the `NoEffect` rows that
-    /// name it are listed and reach no slice field).
     /// No name a [`NAMED_ONLY`] input sets is a condition the engine
     /// settles (P6-4a review): a settled condition the config sets would be
     /// left at the engine's value, so such an input would need its effect.
@@ -824,6 +821,9 @@ mod tests {
         assert!(DEFAULT_ON.windows(2).all(|w| w[0] < w[1]));
     }
 
+    /// Fortification (P3-12e): every reader of its names is a modifier,
+    /// and no mapped stat reads or changes it (the `NoEffect` rows that
+    /// name it are listed and reach no slice field).
     #[test]
     fn no_mapped_stat_should_read_fortification() {
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};

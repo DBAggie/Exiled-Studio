@@ -38,6 +38,7 @@ pub mod pob_skills;
 pub mod phases;
 pub mod skill;
 pub mod skill_modifiers;
+pub mod skill_no_output;
 pub mod sockets;
 pub mod stacks;
 pub mod states;

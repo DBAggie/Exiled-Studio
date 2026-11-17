@@ -724,14 +724,14 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
     Some(n <= count)
 }
 
-/// Whether a slot is in use for the item set's weapon set (PoB's
-/// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
-/// slots to set 1, every other slot to both.
 /// Whether `slot` is a flask slot (PoB's `Flask 1` to `Flask 5`).
 pub(super) fn is_flask_slot(slot: &str) -> bool {
     slot_kind(slot) == SlotKind::Flask
 }
 
+/// Whether a slot is in use for the item set's weapon set (PoB's
+/// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
+/// slots to set 1, every other slot to both.
 pub(super) fn slot_in_use(slot: &str, second_set: bool) -> bool {
     if slot.contains("Swap") {
         second_set
@@ -1759,6 +1759,9 @@ mod tests {
         assert_eq!(slot_kind("Helmet"), SlotKind::Properties);
         assert_eq!(slot_kind("Weapon 1 Swap"), SlotKind::Properties);
         assert_eq!(slot_kind("Flask 3"), SlotKind::Flask);
+        assert_eq!(slot_kind("Belt Abyssal Socket 1"), SlotKind::Abyssal);
+        assert_eq!(slot_kind("Ring 3"), SlotKind::Other);
+        assert_eq!(slot_kind("Graft 1"), SlotKind::Other);
     }
 
     /// P6-4a review: the inputs P6-4a classified change no field, as an
@@ -1786,9 +1789,6 @@ mod tests {
                 assert_eq!(input_use(&input), InputUse::NoEffect, "{name}");
             }
         }
-        assert_eq!(slot_kind("Belt Abyssal Socket 1"), SlotKind::Abyssal);
-        assert_eq!(slot_kind("Ring 3"), SlotKind::Other);
-        assert_eq!(slot_kind("Graft 1"), SlotKind::Other);
     }
 
     #[test]

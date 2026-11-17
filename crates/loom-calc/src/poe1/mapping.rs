@@ -859,6 +859,30 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `SkillStatMap.lua` 962: `SkillPhysicalDamageConvertToCold` BASE
+    // (P6-6a, the skill sweep).
+    (
+        "skill_physical_damage_%_to_convert_to_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, COLD_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 965: `SkillPhysicalDamageConvertToFire` BASE
+    // (P6-6a, the skill sweep).
+    (
+        "skill_physical_damage_%_to_convert_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, FIRE_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "skill_physical_damage_%_to_convert_to_lightning",
         &[(
@@ -1594,6 +1618,13 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // PoB `SkillStatMap.lua` 145: `skill("cannotBeEvaded")`, which
+    // `CalcOffence.lua` 2162 reads as the `CannotBeEvaded` flag does
+    // (P6-6a, the skill sweep).
+    (
+        "global_always_hit",
+        &[(Quantity::Poe1(Poe1Quantity::CannotBeEvaded), Op::Flag, 1.0)],
+    ),
     (
         "global_defences_+%",
         &[
@@ -1752,13 +1783,26 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "%_of_your_and_your_minions_damage_cannot_be_reflected",
         "reflect",
     ),
+    // PoB `SkillStatMap.lua` 588: `AreaOfEffect` MORE, which feeds only
+    // radius outputs, as `base_skill_area_of_effect_+%` (P6-6a).
+    ("active_skill_area_of_effect_+%_final", "area"),
     // A skill's own base radius (PoB `skill("radius")`): it sets the area
     // PoB shows, which no slice field reads (P3-9b). Increased area stays
     // unmapped, as above.
     ("active_skill_base_area_of_effect_radius", "skill-radius"),
+    // PoB `SkillStatMap.lua` 570: `skill("radiusExtra")`, the area PoB
+    // shows, as the skill's own base radius (P6-6a).
+    ("active_skill_base_radius_+", "skill-radius"),
     (
         "active_skill_base_secondary_area_of_effect_radius",
         "skill-radius",
+    ),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    (
+        "active_skill_projectile_speed_+%_variation_final",
+        "display",
     ),
     // How the game describes a skill's areas, its visuals, its targeting:
     // nothing PoB computes from (P3-10, Smite).
@@ -1845,6 +1889,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "cannot_be_stunned_if_have_been_stunned_or_blocked_stunning_hit_in_past_2_seconds",
         "stun",
     ),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("cannot_cancel_skill_before_contact_point", "display"),
     (
         "cannot_gain_corrupted_blood_while_you_have_at_least_5_stacks",
         "ailment-on-self",
@@ -1880,6 +1928,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    (
+        "damage_cannot_be_reflected_or_leech_if_used_by_other_object",
+        "display",
+    ),
     ("debuff_time_passed_+%", "ailment-on-self"),
     ("degen_effect_+%", "damage-taken"),
     // P3-8n: Intensify's text; PoB maps no modifier.
@@ -2047,7 +2102,23 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "damage-taken",
     ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("show_number_of_projectiles", "display"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_can_add_multiple_charges_per_action", "display"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_cannot_be_stunned_before_contact_point", "display"),
     ("skill_mana_cost_+_with_non_channelling_skills", "mana-cost"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_override_pvp_scaling_time_ms", "display"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
@@ -2256,6 +2327,7 @@ impl StatMapping for Poe1Mapping {
             || NO_EFFECT_PREFIXES
                 .iter()
                 .any(|(p, _)| stat.as_str().starts_with(p))
+            || super::skill_no_output::contains(stat.as_str())
         {
             return StatMap::NoEffect;
         }

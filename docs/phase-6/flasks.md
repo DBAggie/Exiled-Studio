@@ -34,7 +34,7 @@ Phase 6, step P6-4b: active flasks act on the calculation as PoB v2.67.2 merges 
    A conditional `FlaskEffect` is a reason.
 3. **Scaling:** the base's buff and the flask's own lines are scaled as PoB's `ScaleAddList` (`skill_modifiers::scale`).
 4. **Merging** (`mergeBuff`):
-   - the base's buff is applied once per base, at the largest scale among that base's active flasks;
+   - each stat of the base's buff is applied once per base, at the scale that gives its mods the largest value: the largest scale for a positive mod, the smallest for a negative one (P6-4b review); a stat whose mods differ in sign is a reason;
    - two active flasks with one merge key (a unique's name, or the same lines) are a reason.
 5. **Silver Flask:** Onslaught is `floor(20 x scale)`, at the largest Silver scale. `buffs` adds the constant 20 for the flag; `flasks` adds the difference, for attacks and for casts.
 
@@ -82,3 +82,18 @@ See `docs/phase-6/config-inputs.md`, "Guards":
 - `DEFAULT_ON`;
 - the corrected counts (59 inputs added, 89 entries, 36 inputs left);
 - the readers the review found (`CalcDefence.lua` 2216 and 2238, `CalcPerform.lua` 1469).
+
+## The P6-4b review (code-architecture-reviewer), applied in P6-6a
+
+- **Merging negative buffs:** PoB keeps each mod's numerically largest value, so a negative buff (Aquamarine's) takes the smallest scale. Before the fix the code used the largest scale for every buff; Aquamarine's stat is unmapped, so no value was wrong.
+- **Data without the flask table** (every bundle before the data run): an active flask stays the reason it was (`unmodelled-item`, `active-flask`), not `Indeterminate`, so such builds keep their other values.
+- **`skill_modifiers::scale`** leaves a flag unscaled, as `ScaleAddMod`.
+- **Tests** (`active_flasks_should_scale_and_merge_their_buffs`):
+  - one flask, an inactive one, and two of one base;
+  - a negative buff, a scale below 1, and the global effect;
+  - the merge reason, a life flask, and data without the table.
+- **Docs:** the alias comments name the game's text. Silver's split floor is noted, and so is the pasted base buff line PoB drops. Two misplaced doc comments and a split test are restored.
+
+Not changed:
+- tinctures in flask slots stay `flask-base` reasons;
+- the merge key stays the sorted lines, which is the more cautious key.

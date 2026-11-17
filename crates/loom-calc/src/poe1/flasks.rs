@@ -15,10 +15,14 @@
 //!   lines, `Data/Bases/flask.lua`, from the game's `Flasks` row) and to the
 //!   flask's other lines.
 //! - **Merging** (`mergeBuff`, 44 to 66): the buffs of flasks of one base
-//!   merge keeping each mod's largest value. Here the base's buff is applied
-//!   once per base, at the largest scale of its active flasks (equal mods,
-//!   so the largest value). A flask's own lines merge by the unique's name
-//!   or by the mods; two active flasks with one key are a reason.
+//!   merge keeping each mod's numerically largest value. Here each stat of
+//!   the base's buff is applied once per base, at the scale that gives its
+//!   mods the largest value: the largest scale for a positive mod, the
+//!   smallest for a negative one (a stat whose mods differ in sign is a
+//!   reason). A flask's own lines merge by the unique's name or by the
+//!   mods; two active flasks with one key are a reason (PoB keys a magic
+//!   flask by its mods in order, so the engine's sorted lines are the more
+//!   cautious key).
 //! - **Silver Flask's Onslaught** (658 to 678): with a Silver Flask active,
 //!   Onslaught's speed is `floor(20 x (1 + inc / 100))`, `inc` the largest
 //!   of the Silver flasks' (without the magic part for a flask that is not
@@ -43,7 +47,7 @@ use crate::ingest::{EffectTemplate, Ingest, StatMap, StatMapping};
 use crate::input::CalcInput;
 use crate::quantity::{Op, Quantity};
 use crate::source::Source;
-use crate::state::{IndeterminateReason, UnsupportedReason};
+use crate::state::UnsupportedReason;
 use crate::store::{Conditions, Effect};
 
 /// A flask's own increased effect (PoB's local `FlaskEffect`).
@@ -98,7 +102,8 @@ pub const ALIASES: &[(&str, &str)] = &[
     ),
     // "#% increased Evasion Rating during Effect".
     ("local_flask_evasion_+%_while_healing", "evasion_rating_+%"),
-    // "+#% to Elemental Resistances during Effect".
+    // "#% additional Elemental Resistances during Effect" (PoB: "additional"
+    // is BASE).
     (
         "local_flask_resistances_+%_while_healing",
         "base_resist_all_elements_%",
@@ -109,14 +114,17 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_unique_flask_additional_maximum_all_elemental_resistances_%_while_healing",
         "additional_maximum_all_elemental_resistances_%",
     ),
-    // "+#% to all Elemental Resistances during Effect" (a unique's).
+    // "+#% to Elemental Resistances during Effect" (a unique's).
     (
         "local_unique_flask_resist_all_elements_%_during_flask_effect",
         "base_resist_all_elements_%",
     ),
 ];
 
-/// The mapping of a flask's own lines (module docs).
+/// The mapping of a flask's own lines (module docs). Not modelled: a
+/// pasted base buff line on the item, which PoB drops (`Classes/Item.lua`
+/// 515, `flaskBuffLines`); neither PoB's saved items nor the game's copies
+/// carry one.
 #[derive(Debug, Clone, Copy)]
 pub struct FlaskMapping {
     /// Whether the flask recovers life or mana.
@@ -199,6 +207,45 @@ fn increased(effects: &[Effect], quantity: Quantity) -> (f64, bool) {
     (sum, conditional)
 }
 
+/// The flask of `group` whose scale gives `line`'s mods their largest
+/// value: the largest scale when every mod is positive (or zero), the
+/// smallest when every one is negative; `None` when they differ in sign
+/// and the flasks' scales differ.
+fn merge_pick<'a, 'd>(
+    line: &StatLine,
+    value: i64,
+    group: &[&'a Active<'d>],
+) -> Option<&'a Active<'d>> {
+    let largest = group
+        .iter()
+        .copied()
+        .max_by(|x, y| x.scale.total_cmp(&y.scale))?;
+    let smallest = group
+        .iter()
+        .copied()
+        .min_by(|x, y| x.scale.total_cmp(&y.scale))?;
+    if largest.scale == smallest.scale {
+        return Some(largest);
+    }
+    #[expect(clippy::cast_precision_loss, reason = "a small stat value")]
+    let v = value as f64;
+    let signs: Vec<bool> = match Poe1Mapping.map(&line.stat) {
+        StatMap::Effects(t) => t
+            .iter()
+            .filter(|e| e.op != Op::Flag)
+            .map(|e| v * e.scale / e.divisor >= 0.0)
+            .collect(),
+        StatMap::NoEffect | StatMap::Unmapped => Vec::new(),
+    };
+    if signs.iter().all(|s| *s) {
+        Some(largest)
+    } else if signs.iter().all(|s| !*s) {
+        Some(smallest)
+    } else {
+        None
+    }
+}
+
 /// One active flask, after its lines are in.
 struct Active<'d> {
     item: ItemId,
@@ -236,16 +283,15 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     if slots.is_empty() {
         return;
     }
+    // Data without the flask table (a bundle from before P6-4b): each
+    // active flask stays the reason it was (P6-4b review), so such a build
+    // keeps its other values.
     let Some(bases) = input.data.poe1().and_then(super::Poe1Data::flasks) else {
-        for (id, slot) in &slots {
-            let key = build
-                .items
-                .item(*id)
-                .and_then(|i| i.body.base.clone())
-                .unwrap_or_else(|| slot.clone());
-            ingest.indeterminate(IndeterminateReason::MissingData {
-                table: "flasks",
-                key,
+        for (id, slot) in slots {
+            ingest.reason(UnsupportedReason::UnmodelledItem {
+                item: id,
+                slot,
+                what: "active-flask",
             });
         }
         return;
@@ -318,39 +364,48 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             scale,
         });
     }
-    // The base's buff once per base, at the largest scale (`mergeBuff`).
+    // Each stat of the base's buff once per base, at the scale that gives
+    // its mods the largest value (`mergeBuff`, module docs).
     let mut done: Vec<&str> = Vec::new();
     for a in &active {
         if done.contains(&a.base.name.as_str()) {
             continue;
         }
         done.push(&a.base.name);
-        let best = active
+        let group: Vec<&Active<'_>> = active
             .iter()
             .filter(|b| b.base.name == a.base.name)
-            .max_by(|x, y| x.scale.total_cmp(&y.scale))
-            .unwrap_or(a);
-        let lines: Vec<StatLine> = best
-            .base
-            .stats
-            .iter()
-            .map(|(stat, value)| StatLine {
+            .collect();
+        for (stat, value) in &a.base.stats {
+            let line = StatLine {
                 stat: StatId::new(stat.as_str()),
                 value: StatValue::Exact {
                     min: *value,
                     max: *value,
                 },
-            })
-            .collect();
-        let scale = best.scale;
-        ingest.stats_scaled(
-            &Source::ItemBase { item: best.item },
-            &lines,
-            &|q, op, v| skill_modifiers::scale(q, op, v, scale),
-        );
+            };
+            let Some(pick) = merge_pick(&line, *value, &group) else {
+                ingest.reason(UnsupportedReason::UnmodelledItem {
+                    item: a.item,
+                    slot: String::new(),
+                    what: "flask-merge",
+                });
+                continue;
+            };
+            let scale = pick.scale;
+            ingest.stats_scaled(
+                &Source::ItemBase { item: pick.item },
+                std::slice::from_ref(&line),
+                &|q, op, v| skill_modifiers::scale(q, op, v, scale),
+            );
+        }
     }
     // Silver Flask's Onslaught (module docs): the difference from the
-    // constant [`super::buffs`] adds.
+    // constant [`super::buffs`] adds. PoB floors one sum, `20 x (1 + flask
+    // inc + Onslaught effect inc)`, and gives it to movement speed too; the
+    // split equals it while the Onslaught effect stats stay unmapped
+    // (`buffs::DEPENDS_ON`, a test), and movement speed is no field. Mapping
+    // either must compute the extra as one floor here.
     let silver = active
         .iter()
         .filter(|a| a.base.stats.iter().any(|(s, _)| s == SILVER_STAT))
