@@ -348,6 +348,11 @@ pub enum WeaponValue {
     /// `AlternateQualityWeapon`, P3-8n): a `Flag`; the weapon's physical
     /// damage then ignores its quality.
     AlternateQuality,
+    /// The weapon's local "+# to Accuracy Rating" (`Base`; Phase 6): PoB's
+    /// `Accuracy` BASE with the hand's `MainHandAttack` or `OffHandAttack`
+    /// condition (`Classes/Item.lua` 2282 to 2288), so each hand's pass
+    /// reads only its own weapon's ([`hit`]).
+    Accuracy,
     /// "Grants #% increased Elemental Damage per 2% Quality" (P3-8n):
     /// `Base`; `collect` turns it into the character's elemental damage
     /// times `floor(quality / 2)`.
@@ -365,6 +370,7 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::Accuracy => f.write_str("accuracy"),
         }
     }
 }

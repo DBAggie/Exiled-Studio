@@ -419,10 +419,16 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         return None;
     }
     // The off hand (Phase 6, `CalcActiveSkill.lua` 318 to 335): a weapon
-    // the skill can use attacks too; one it cannot use does not. An item
-    // there whose base is not known leaves the attack not computed.
+    // the skill can use attacks too; one it cannot use disables the skill
+    // (PoB: "Off Hand weapon is not usable with this skill"), so the attack
+    // is not computed. An item there whose base is not known leaves it not
+    // computed too. The skill types that require dual wielding or two
+    // different weapon types, and supports' weapon types, are not checked:
+    // only vetted attacks are `Complete` (`VETTED_ATTACKS`), and none has
+    // them.
     let off_weapon = match hands.off {
-        Some((id, off)) => usable(&off.class).then_some(id),
+        Some((id, off)) if usable(&off.class) => Some(id),
+        Some(_) => return None,
         None if hands.off_hand_weapon => return None,
         None => None,
     };
@@ -948,7 +954,7 @@ fn hand_hit(
         Some(flag) => by_flag(calc, flag, "hits-cannot-be-evaded", 100.0)?,
         None => {
             enemy_reasons(enemy, true, &mut hit_reasons);
-            let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
+            let accuracy = accuracy(calc, &cx, hand, &mut hit_reasons)?;
             accuracy_hit_chance(calc, enemy, accuracy, &cx, &mut hit_reasons)?
         }
     };
@@ -1014,8 +1020,9 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         });
     }
     // PoB takes a main-hand attack's base crit from the weapon alone
-    // (`source.CritChance`); a level's own attack crit chance is read only
-    // for the off hand.
+    // (`source.CritChance`); a level's own attack crit chance replaces the
+    // off hand's weapon crit (`skillData.CritChance`), which is not
+    // modelled: a reason for either hand.
     if attack.level.attack_crit_chance != 0 {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
@@ -1359,6 +1366,7 @@ pub(super) fn weapon_data(
 fn accuracy(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
+    hand: Hand,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
     let input = *calc.input();
@@ -1411,6 +1419,19 @@ fn accuracy(
         Term::Step("accuracy-base-effects"),
         reasons,
     )?);
+    // The hand's weapon's own accuracy (its `MainHandAttack` or
+    // `OffHandAttack` condition), only when it has some.
+    let local = hand.weapon(WeaponValue::Accuracy);
+    if phases::has(calc, local) {
+        terms.push(sum_in(
+            calc,
+            local,
+            Op::Base,
+            cx,
+            Term::Step("weapon-accuracy"),
+            reasons,
+        )?);
+    }
     let base = phases::total(calc, &terms, Term::Base)?;
     let (inc, more) = modifiers(calc, Quantity::Accuracy, cx, reasons)?;
     let raw = phases::product(calc, &[base, inc, more], Term::Step("accuracy-unrounded"))?;

@@ -1483,12 +1483,12 @@
       },
       "oracle_value": "1.38",
       "successor_value": null,
-      "kind": "harness",
+      "kind": "pob-bug",
       "evidence": [
         "PoB v2.67.2 Modules/CalcOffence.lua 3869 to 3875: TotalDPS = combineStat(\"TotalDPS\", \"DPS\"), the hands' sum halved; the breakdown's lines print output.AverageDamage and output.Speed, the combined values, which PoB never multiplies (the printed total is TotalDPS)",
-        "docs/phase-6/dual-wield.md: the engine computes TotalDPS as PoB does; only the breakdown's display term differs"
+        "docs/phase-6/dual-wield.md: the engine computes TotalDPS as PoB does (the hands' DPS combined); PoB's breakdown display multiplies two combined values it never multiplies itself, so its rate line has no counterpart"
       ],
-      "test": "crates/loom-calc/tests/attack.rs::only_attacks_with_a_usable_main_hand_weapon_should_be_computed",
+      "test": "crates/loom-calc/tests/attack.rs::dual_wielding_should_combine_each_hands_own_pass",
       "added": "2026-11-17",
       "status": "accepted"
     }

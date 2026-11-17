@@ -734,6 +734,45 @@ fn only_attacks_with_a_usable_main_hand_weapon_should_be_computed() {
     assert!(partial(&r, Field::AverageDamage).is_empty());
 }
 
+/// Phase 6, P6-2a: two different weapons, one with local accuracy. Each
+/// hand's pass reads its own weapon's accuracy (PoB's `MainHandAttack` and
+/// `OffHandAttack` conditions), and the hit chance and average damage are
+/// the two hands' averaged (`combineStat` `AVERAGE` and `DPS`); an off-hand
+/// weapon the skill cannot use disables the skill.
+#[test]
+fn dual_wielding_should_combine_each_hands_own_pass() {
+    let evasive = [
+        ("enemyArmour", 0.0),
+        ("enemyEvasion", 2000.0),
+        ("enemyLightningResist", 0.0),
+    ];
+    let accuracy = [("local_accuracy_rating", 400)];
+    let both = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Siege Axe")];
+    let dual = run(
+        &with_lines(build("Smite", Some("1"), &both, &evasive), 2, &accuracy),
+        &both,
+    );
+    let main = run(&build("Smite", Some("1"), &AXE, &evasive), &AXE);
+    let siege = [("Weapon 1", "Test Siege Axe")];
+    let off = run(
+        &with_lines(build("Smite", Some("1"), &siege, &evasive), 1, &accuracy),
+        &siege,
+    );
+    // The off hand's accuracy reaches its own pass only.
+    assert!(value(&off, Field::HitChance) > value(&main, Field::HitChance));
+    for field in [Field::HitChance, Field::AverageDamage] {
+        let expected = (value(&main, field) + value(&off, field)) / 2.0;
+        assert_eq!(value(&dual, field), expected, "{field}");
+    }
+    // A mace the skill cannot use in the off hand: not computed.
+    let mace = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Mace")];
+    let r = run(&build("Smite", Some("1"), &mace, &OPEN), &mace);
+    assert_eq!(
+        r.fields[&Field::AverageDamage].state.kind(),
+        StateKind::Unsupported
+    );
+}
+
 #[test]
 fn an_attack_the_oracle_has_not_checked_should_be_partial() {
     let r = run(&build("TestStrike", None, &AXE, &OPEN), &AXE);
