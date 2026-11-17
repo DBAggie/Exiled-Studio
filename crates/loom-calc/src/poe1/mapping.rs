@@ -1433,6 +1433,12 @@ pub const ROWS: &[Row] = &[
             (INT, Op::Increased, 1.0),
         ],
     ),
+    // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // MORE (P6-4b).
+    (
+        "basalt_flask_armour_+%_final",
+        &[(Quantity::Armour, Op::More, 1.0)],
+    ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
     ("base_dexterity", &[(DEX, Op::Base, 1.0)]),
@@ -1568,6 +1574,16 @@ pub const ROWS: &[Row] = &[
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
+    // "Flasks applied to you have #% increased Effect": PoB's `FlaskEffect`
+    // INC (`SkillStatMap.lua` 422); `poe1::flasks` reads it (P6-4b).
+    (
+        "flask_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::FlaskEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P3-8n: "Gain Convergence when you Hit a Unique Enemy"
     // (`Condition:CanGainConvergence`, 2661; `poe1::buffs`).
     (
@@ -1601,6 +1617,17 @@ pub const ROWS: &[Row] = &[
     (
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
+    ),
+    // "Magic Utility Flasks applied to you have #% increased Effect": PoB's
+    // `MagicUtilityFlaskEffect` INC (`ModParser.lua` 5180); `poe1::flasks`
+    // reads it (P6-4b).
+    (
+        "magic_utility_flask_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MagicUtilityFlaskEffect),
+            Op::Increased,
+            1.0,
+        )],
     ),
     (
         "maximum_block_%",
@@ -1641,6 +1668,19 @@ pub const ROWS: &[Row] = &[
             (LIGHTNING, Op::Base, 1.0),
             (CHAOS, Op::Base, 1.0),
         ],
+    ),
+    // Silver Flask's buff flag, "Onslaught" in PoB's base data (the line
+    // PoB parses as the `Onslaught` condition, as the custom line); its
+    // effect with flask effect is `poe1::flasks`' (P6-4b).
+    (
+        "silver_flask_display_onslaught",
+        &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
+    ),
+    // Stibnite Flask's buff, "20% more Evasion Rating" in PoB's base data:
+    // `Evasion` MORE (P6-4b).
+    (
+        "stibnite_flask_evasion_rating_+%_final",
+        &[(Quantity::Evasion, Op::More, 1.0)],
     ),
     ("strength_+%", &[(STR, Op::Increased, 1.0)]),
     // P3-8n: Arcane Surge Support's cast speed (`ArcaneSurgeCastSpeed` MAX,
@@ -1970,6 +2010,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "pantheon_shakari_self_poison_duration_+%_final",
         "ailment-on-self",
     ),
+    // Quartz Flask's "Phasing" (PoB's `Condition:Phasing`, `ModParser.lua`
+    // 3972): only modifiers read it (unmapped, or an unsettled condition)
+    // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
+    // not modelled, a reason of their own) (P6-4b).
+    ("phase_through_objects", "condition"),
     (
         "physical_damage_over_time_taken_+%_while_moving",
         "damage-taken",

@@ -1,0 +1,16 @@
+[
+ {
+  "base": "Test/Items/Ring1",
+  "buff": "test_buff",
+  "duration": 50,
+  "life": 0,
+  "mana": 0,
+  "name": "Plain Test Ring",
+  "stats": [
+   [
+    "test_maximum_life",
+    10
+   ]
+  ]
+ }
+]

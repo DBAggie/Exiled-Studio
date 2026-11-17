@@ -985,6 +985,42 @@ fn socket_cap_mutations_should_each_give_their_code() {
     }
 }
 
+/// Flask bases (P6-4b): each mutation gives its code alone.
+#[test]
+fn flask_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/flasks.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "base twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown base",
+            |v| v[0]["base"] = json!("Test/Items/Nothing"),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "unknown stat",
+            |v| v[0]["stats"] = json!([["test_no_such_stat", 1]]),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "negative duration",
+            |v| v[0]["duration"] = json!(-1),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
 /// Tree flavour (B-2 item evidence, E10): each mutation gives its code
 /// alone.
 #[test]

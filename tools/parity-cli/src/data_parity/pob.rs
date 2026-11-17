@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 10;
+pub const FORMAT: u32 = 11;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -36,6 +36,8 @@ pub struct Export {
     pub bases: BTreeMap<String, Base>,
     /// Every `data.itemBases` entry's requirements, by name (format 6).
     pub base_requirements: BTreeMap<String, BaseRequirements>,
+    /// Every flask base's `flask` data, by name (format 11, P6-4b).
+    pub flasks: BTreeMap<String, FlaskBase>,
     /// The mods of the keyed `data.itemMods` files, by mod ID (format 6).
     pub mods: BTreeMap<String, ItemMod>,
     /// `data.monster*Table`, by table name; entry `i` is level `i + 1`.
@@ -152,6 +154,23 @@ pub struct Boss {
     /// `isUber`.
     #[serde(rename = "isUber")]
     pub is_uber: bool,
+}
+
+/// A flask base's `flask` table (`src/Data/Bases/flask.lua`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlaskBase {
+    /// Life per use, when the flask recovers life.
+    #[serde(default)]
+    pub life: Option<f64>,
+    /// Mana per use, when the flask recovers mana.
+    #[serde(default)]
+    pub mana: Option<f64>,
+    /// The duration, seconds (`RecoveryTime / 10`).
+    pub duration: f64,
+    /// The buff's lines, as the exporter rendered them.
+    #[serde(deserialize_with = "list")]
+    pub buff: Vec<String>,
 }
 
 /// A god of data.pantheons.
