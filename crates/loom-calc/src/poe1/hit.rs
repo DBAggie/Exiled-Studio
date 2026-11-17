@@ -128,11 +128,13 @@ use crate::store::Effect;
 
 /// Skill types that make a spell something other than a plain self-cast
 /// hit: PoB computes their rate or damage another way (attacks with
-/// weapons, channelling stages, triggers, totems, traps, mines, minions,
-/// brands' activations).
-pub const NOT_SELF_CAST: [&str; 9] = [
+/// weapons, triggers, totems, traps, mines, minions, brands' activations).
+/// Channelled skills are plain hits since P6-5: PoB computes them as any
+/// skill, without the server tick cap on their rate (`CalcOffence.lua`
+/// 2366); their stages and release are skill data and tagged stat map
+/// entries, which leave a skill unvetted ([`pob_vetted`]).
+pub const NOT_SELF_CAST: [&str; 8] = [
     "Attack",
-    "Channel",
     "Triggered",
     "SummonsTotem",
     "Trapped",
@@ -144,8 +146,7 @@ pub const NOT_SELF_CAST: [&str; 9] = [
 
 /// Skill types that make an attack something other than a plain attack
 /// with the weapon in hand ([`NOT_SELF_CAST`] but `Attack`).
-pub const NOT_PLAIN_ATTACK: [&str; 8] = [
-    "Channel",
+pub const NOT_PLAIN_ATTACK: [&str; 7] = [
     "Triggered",
     "SummonsTotem",
     "Trapped",
@@ -208,6 +209,22 @@ pub fn pob_part(id: &str, wanted: usize) -> Option<(SkillPart, usize)> {
     part.area = truthy("area").unwrap_or(part.area);
     part.projectile = truthy("projectile").unwrap_or(part.projectile);
     Some((part, index))
+}
+
+/// An attack's melee and projectile flags after its main-hand weapon of
+/// class `class` (`CalcActiveSkill.lua` 302 to 308; P6-6b review): a melee
+/// weapon clears the projectile flag, a ranged one (bow, wand: the
+/// classes PoB's `weaponTypeInfo` marks not melee) the melee flag.
+#[must_use]
+pub fn weapon_flags(class: &str, melee: bool, projectile: bool) -> (bool, bool) {
+    let ranged = matches!(class, "Bow" | "Wand");
+    if !ranged && melee {
+        (true, false)
+    } else if ranged && projectile {
+        (false, true)
+    } else {
+        (melee, projectile)
+    }
 }
 
 /// Whether the engine reads PoB's hand-written data of the skill that
@@ -299,6 +316,8 @@ pub struct SpellSkill<'d> {
     pub area: bool,
     /// Whether its hits are projectiles (PoB's flags and part; P6-6b).
     pub projectile: bool,
+    /// Whether its hits are melee (PoB's flags and part; P6-6c review).
+    pub melee: bool,
     /// Whether the engine reads all of PoB's data of the skill
     /// ([`pob_vetted`]).
     pub vetted: bool,
@@ -444,6 +463,7 @@ pub fn spell_skill<'d>(
         cast_time: effect.cast_time,
         area: part.area,
         projectile: part.projectile,
+        melee: part.melee,
         vetted: known && pob_vetted(&effect.id, part_index),
     })
 }
@@ -546,12 +566,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     // (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears the
     // projectile flag, a ranged one (bow, wand: not melee in PoB's
     // `weaponTypeInfo`) the melee flag (P6-6b review).
-    let ranged = matches!(base.class.as_str(), "Bow" | "Wand");
-    if !ranged && part.melee {
-        part.projectile = false;
-    } else if ranged && part.projectile {
-        part.melee = false;
-    }
+    (part.melee, part.projectile) = weapon_flags(&base.class, part.melee, part.projectile);
     Some(AttackSkill {
         skill,
         group,
@@ -906,7 +921,10 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
     if spell.area {
         flags = flags | Flags::AREA;
     }
-    if spell.projectile {
+    // Melee, else projectile (`CalcActiveSkill.lua` 361 to 366).
+    if spell.melee {
+        flags = flags | Flags::MELEE;
+    } else if spell.projectile {
         flags = flags | Flags::PROJECTILE;
     }
     let cx = calc.context(flags);
@@ -1850,7 +1868,7 @@ fn cast_rate(
         Quantity::Poe1(Poe1Quantity::CastTime),
         seconds,
     )?;
-    rate(calc, cast_time, cx)
+    rate(calc, cast_time, cx, !spell.skill.types.contains("Channel"))
 }
 
 /// Attack rate (module docs, step 6): the weapon's rate times the skill's
@@ -1878,7 +1896,7 @@ fn attack_rate(
     )?;
     let one = phases::constant(calc, "one", 1.0)?;
     let base_time = quotient(calc, one, skill_rate, Term::Step("attack-time"))?;
-    rate(calc, base_time, cx)
+    rate(calc, base_time, cx, !attack.skill.types.contains("Channel"))
 }
 
 /// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`.
@@ -1886,6 +1904,7 @@ fn rate(
     calc: &mut Calc<'_>,
     base_time: Valued,
     cx: &QueryContext,
+    capped: bool,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
@@ -1895,6 +1914,10 @@ fn rate(
     let one = phases::constant(calc, "one", 1.0)?;
     let rate = quotient(calc, one, time, Term::Step("uncapped"))?;
     let rate = action_speed(calc, rate, &mut reasons)?;
+    // A channelled skill's rate is not capped (`CalcOffence.lua` 2366; P6-5).
+    if !capped {
+        return Ok((rate, reasons));
+    }
     let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
     let value = phases::pair(calc, rate, cap, Term::Result, true)?;
     Ok((value, reasons))
@@ -3101,9 +3124,22 @@ mod tests {
         // Tagged stat map entries (P6-6b review): Conflagration's DoT in part
         // 2 only, Animosity's per stack.
         assert!(!pob_vetted("Conflagration", 0) && !pob_vetted("AnimosityUniqueSkill", 0));
-        // Both flags in PoB's data: the weapon picks one (`attack_skill`).
-        let (frenzy, _) = pob_part("Frenzy", 1).unwrap();
-        assert!(frenzy.melee && frenzy.projectile);
+        // Both flags in PoB's data, and vetted: the default attack. The
+        // weapon picks one (`weapon_flags`).
+        let (melee, i) = pob_part("Melee", 1).unwrap();
+        assert!(melee.melee && melee.projectile && pob_vetted("Melee", i));
+    }
+
+    /// PoB's weapon rule (P6-6c review): a melee weapon keeps melee, a bow
+    /// or wand projectile; a flag the weapon does not clear stays.
+    #[test]
+    fn the_weapon_should_pick_melee_or_projectile() {
+        assert_eq!(weapon_flags("One Hand Axe", true, true), (true, false));
+        assert_eq!(weapon_flags("Bow", true, true), (false, true));
+        assert_eq!(weapon_flags("Wand", true, true), (false, true));
+        assert_eq!(weapon_flags("Claw", false, true), (false, true));
+        assert_eq!(weapon_flags("Wand", true, false), (true, false));
+        assert_eq!(weapon_flags("Staff", false, false), (false, false));
         assert!(!pob_vetted("NoSuchSkill", 0));
     }
 }

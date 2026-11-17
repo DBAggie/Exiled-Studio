@@ -143,8 +143,7 @@ pub const DOT_FUNCTIONS_NOT_PORTED: [&str; 3] = [
 
 /// Skill types whose DoT this phase leaves not computed (the kinds the hit
 /// leaves out, [`hit::NOT_SELF_CAST`] but spells' and attacks' own).
-const NOT_COMPUTED_KINDS: [&str; 8] = [
-    "Channel",
+const NOT_COMPUTED_KINDS: [&str; 7] = [
     "Triggered",
     "SummonsTotem",
     "Trapped",
@@ -273,6 +272,11 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
     // `dotCfg` (`CalcOffence.lua` 5648 to 5671): `Dot` added; `Area`,
     // `Projectile`, `Spell`, `Attack`, and `Hit` removed unless the skill's
     // DoT is one; every other flag kept.
+    // Melee, else projectile (`CalcActiveSkill.lua` 361 to 366; P6-6c
+    // review).
+    if skill_flags.contains(Flags::MELEE) {
+        skill_flags = skill_flags.without(Flags::PROJECTILE);
+    }
     let mut flags = skill_flags | Flags::DOT;
     for (flag, key) in [
         (Flags::AREA, "dotIsArea"),

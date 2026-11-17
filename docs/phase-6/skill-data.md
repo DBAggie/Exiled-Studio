@@ -96,7 +96,7 @@ Public `calc-parity` (153 builds, 99 expected differences, 0 unexpected) and the
 
 The review (code-architecture-reviewer) found two ways the P6-6b rule let a wrong value through as `Complete`. Neither was in the sweep's builds: the sweep's evidence covers its own builds only.
 
-1. **Melee and projectile.** PoB's data gives 28 vetted skills both flags (Frenzy, the default attack, Frost Blades, Lightning Strike...). PoB keeps one of them, by the main-hand weapon (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears projectile, a bow or wand clears melee. It then applies melee in preference to projectile (361 to 366). The engine applied both; now it follows PoB's rule.
+1. **Melee and projectile.** PoB's data gives some vetted skills both flags (22 after the stat map rule below, the default attack `Melee` among them; none a spell). PoB keeps one of them, by the main-hand weapon (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears projectile, a bow or wand clears melee. It then applies melee in preference to projectile (361 to 366). The engine applied both; now it follows PoB's rule.
 2. **Tagged stat map entries.** PoB reads some stats of a skill's stat map under a tag:
    - Conflagration's DoT only in part 2;
    - Animosity's and Resentment's DoT per stack;
@@ -114,3 +114,9 @@ Also:
 - **Public `calc-parity`:** unchanged (153 builds, 99 expected, 0 unexpected).
 - **Corpus:** no unexpected difference.
 - **Determinism:** both runs were byte-identical.
+
+### The P6-6c review, applied in P6-5
+
+- **Tests:** the weapon rule is a pure function (`hit::weapon_flags`) with its own test. The vetted example with both flags is the default attack (`Melee`); Frenzy has tagged stat map entries, so it is not vetted.
+- **Melee over projectile** (`CalcActiveSkill.lua` 361 to 366) for spells and for the DoT's flags too. No vetted spell has both flags.
+- **Limits stated:** a skill's own untagged stat map entries are taken as the plain reading. Their `div` or `mult` against the engine's mapping is not compared, and the sweep checks only its own builds.
