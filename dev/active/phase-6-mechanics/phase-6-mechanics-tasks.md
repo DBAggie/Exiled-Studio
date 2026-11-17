@@ -8,7 +8,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Plan, context, tasks in `dev/active/phase-6-mechanics/`
 - [x] plan-reviewer run; findings applied (context file, "Plan review")
 - [x] ACTION-PLAN, handoff, CLAUDE.md updated
-- [ ] Open PR
+- [x] Open PR: #139 (base `dev`)
 
 ## P6-0b: evidence bundle with tree packs (local)
 - [ ] `tools/tree/acquire` 3_28 to 3_25; `tree-pack` chained; `bundle-check`
