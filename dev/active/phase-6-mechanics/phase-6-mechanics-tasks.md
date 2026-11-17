@@ -96,5 +96,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-10b: recovery and defence outputs
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
-- [ ] P6-11a PR (base `feat/p6-7b2b-actor-review`)
+- [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)
 ## P6-12: combined and full DPS; report
