@@ -38,12 +38,12 @@ A build with one weapon computes exactly as before: its documents are byte-ident
 ## Not modelled yet
 
 Each of these is a reason or out of the slice:
-- per-hand weapon-type conditions (`Using<Type>` from the off hand, "with Axes" on one hand only);
+- per-hand weapon-type conditions (`Using<Type>` from the off hand, other than `UsingWand`); since P6-11b each hand's pass carries its weapon's flags, so "with Axes" acts on that hand only;
 - `MainHandAttack` and `OffHandAttack` conditions;
 - a level's attack crit chance for the off hand (`skill-crit-chance`, as before);
-- the `DualWielding` condition for "while dual wielding" stats (mapped in the mop-up);
+- the `DualWielding` condition for "while dual wielding" stats (settled since P6-11a, `docs/phase-6/stat-mop-up.md`);
 - the skill types that require dual wielding or two different weapon types (`DualWieldOnly`, `DualWieldRequiresDifferentTypes`), supports' weapon types, `countsAsAll1H` and `countsAsDualWielding` (no vetted attack has them);
-- an empty main hand with an off-hand weapon, which PoB counts as dual wielding for block and speed;
+- an empty main hand with an off-hand weapon, which PoB counts as dual wielding for block and speed (the engine leaves `DualWielding` unsettled there, a reason; P6-11a review);
 - `UseOffhandAttackSpeed` and the off hand's accuracy taken from the main hand, which stay `unmapped-stat` reasons.
 
 ## Evidence
@@ -53,9 +53,9 @@ Each of these is a reason or out of the slice:
 - hit chance, crit chance and crit multiplier, averaged;
 - average damage, halved.
 
-Speed and hit DPS differ only through each hand's rate. That is the game's floored milliseconds (Q11), registered as DIV-0072 and DIV-0073 (`game-truth`).
+Speed and hit DPS differ only through each hand's rate. That is the game's floored milliseconds (Q11), registered as DIV-0072, DIV-0073, and DIV-0107 (`game-truth`).
 
-PoB's `TotalDPS` breakdown prints the combined average times the combined speed, while its `TotalDPS` is the per-hand DPS combined. The engine computes the value as PoB does, so the breakdown's rate term has no node in our graph. This is registered as DIV-0074 (`pob-bug`, a display quirk of PoB's: the breakdown multiplies two combined values PoB never multiplies).
+**Fixed in P6-11b.** Each hand's `TotalDPS` is its average damage times `globalOutput.Speed`, the combined speed (`CalcOffence.lua` 3712), so PoB's `TotalDPS` is the combined average times the combined speed. P6-2a multiplied each hand's own speed, which agrees only when the hands' speeds do. The fixture's hands are close, so the error was small (90.960 against 90.927 now). P6-2a had registered PoB's breakdown, which prints that product, as a display quirk (DIV-0074). DIV-0074 is retired: the breakdown is PoB's real formula, and the engine's graph now has its rate term. `smite-dual-wield-lines-templar.xml`, with a hatchet and a sword, showed the error at 0.39%.
 
 **Before and after** (`local/p6/p6-1` against `local/p6/p6-2a`, the evidence bundle with tree packs):
 

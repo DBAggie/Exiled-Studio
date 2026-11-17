@@ -232,9 +232,42 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_fire_damage",
         &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "attack_maximum_added_fire_damage_with_swords",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_maximum_added_fire_damage_with_wand",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_maximum_added_lightning_damage_with_wand",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_maximum_added_physical_damage",
@@ -252,9 +285,42 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_fire_damage",
         &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "attack_minimum_added_fire_damage_with_swords",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_minimum_added_fire_damage_with_wand",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_minimum_added_lightning_damage_with_wand",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_minimum_added_physical_damage",
@@ -273,6 +339,28 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-11b: "Axe Attacks deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Axe` and `Ailment`.
+    (
+        "axe_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::AXE.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Axes": `Speed` INC, `ModFlag.Axe`, `Hit`, `Attack`.
+    (
+        "axe_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::AXE.union(Flags::HIT).union(Flags::ATTACK),
             NONE,
         )],
     ),
@@ -418,6 +506,61 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "bleeding_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::BLEED, NONE)],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Bows": `Accuracy` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Bows": `Speed` INC, `ModFlag.Bow`, `Hit`, `Attack`.
+    (
+        "bow_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Bows": `CritChance` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Bows": `CritMultiplier` BASE, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Damage with Bows": `Damage` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 755: `FireDamage` INC with
     // `KeywordFlag.FireDot` (P6-1).
@@ -592,10 +735,32 @@ pub const HIT_ROWS: &[HitRow] = &[
         "damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
+    (
+        "damage_+%_with_bow_skills",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_BOW,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 752: `Damage` INC with `ModFlag.Dot` (P6-1).
     (
         "damage_over_time_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
+    ),
+    // P6-11b: "#% increased Damage Over Time with Bow Skills": `Damage` INC, `ModFlag.Dot`, `KeywordFlag.Bow`.
+    (
+        "damage_over_time_+%_with_bow_skills",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::DOT.union(Flags::KEYWORD_BOW),
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 1187: `BleedFaster`, `PoisonFaster`, and
     // `IgniteBurnFaster` INC (P6-2b).
@@ -789,6 +954,17 @@ pub const HIT_ROWS: &[HitRow] = &[
         "lightning_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_LIGHTNING, NONE)],
     ),
+    // P6-11b: "#% increased Attack Speed with Maces or Sceptres": `Speed` INC, `ModFlag.Mace`, `Hit`, `Attack`.
+    (
+        "mace_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::MACE.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
     (
         "maximum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -813,9 +989,49 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11b: "Attacks with Melee Weapons deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.WeaponMelee` and `Ailment`.
+    (
+        "melee_weapon_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_MELEE.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Melee Critical Strike Multiplier": `CritMultiplier` BASE, `ModFlag.Melee`.
+    (
+        "melee_weapon_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::MELEE, NONE)],
+    ),
     (
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with One Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon1H`, `WeaponMelee`, `Hit`.
+    (
+        "one_handed_melee_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WEAPON_1H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Axes": `PhysicalDamage` INC, `ModFlag.Axe` and `Hit`.
+    (
+        "physical_axe_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::AXE).union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "physical_damage_+%",
@@ -838,6 +1054,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             Flags::PHYSICAL,
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Swords": `PhysicalDamage` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "physical_sword_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::SWORD).union(Flags::HIT),
             NONE,
         )],
     ),
@@ -989,6 +1216,28 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11b: "#% increased Critical Strike Chance with Staves": `CritChance` INC, `ModFlag.Staff` and `Hit`.
+    (
+        "staff_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Staff Attacks deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Staff`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "staff_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::STAFF,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
     (
         "support_attack_skills_elemental_damage_+%_final",
         &[(
@@ -1032,6 +1281,240 @@ pub const HIT_ROWS: &[HitRow] = &[
             1.0,
             Flags::MELEE_HIT,
             Flags::BLEED.union(Flags::POISON),
+        )],
+    ),
+    // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_accuracy_rating",
+        &[(
+            Quantity::Accuracy,
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Swords": `Accuracy` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Sword Attacks deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Sword` and `Ailment`.
+    (
+        "sword_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Swords": `Speed` INC, `ModFlag.Sword`, `Hit`, `Attack`.
+    (
+        "sword_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Swords": `CritChance` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Swords": `CritMultiplier` BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Damage with Swords": `Damage` INC, `ModFlag.Sword` and `Hit` (ModParser "with swords").
+    (
+        "sword_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Two Handed Melee Weapons": `Speed` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`, `Attack`.
+    (
+        "two_handed_melee_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT)
+                .union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Two Handed Melee Weapons": `CritChance` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Two Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Two Handed Melee Weapons": `PhysicalDamage` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_physical_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL
+                .union(Flags::WEAPON_2H)
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Attacks with Two Handed Melee Weapons deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Ailment` (in PoB's `WeaponMask`, which an ailment keeps).
+    (
+        "two_handed_melee_weapon_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Attacks with Two Handed Melee Weapons deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Weapon2H` and `WeaponMelee`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "two_handed_melee_weapon_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H.union(Flags::WEAPON_MELEE),
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Wands": `Accuracy` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Wands": `Speed` INC, `ModFlag.Wand`, `Hit`, `Attack`.
+    (
+        "wand_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Wands": `CritChance` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Wands": `CritMultiplier` BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Elemental Damage with Wands": `ElementalDamage` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_elemental_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            Flags::ELEMENTAL,
+        )],
+    ),
+    // P6-11b: "Wand Attacks deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Wand`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "wand_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND,
+            Flags::HIT.union(Flags::AILMENT),
         )],
     ),
 ];
@@ -1161,6 +1644,12 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // P6-11b: "+#% Chance to Block Attack Damage while wielding a Staff":
+    // `BlockChance` BASE, `UsingStaff` (as `staff_block_%`).
+    (
+        "additional_staff_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
     // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
     // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
     // keyword, `UsingShield` (as the staff row).
@@ -1171,6 +1660,51 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
             states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "#% increased Attack Damage while holding a Shield":
+    // `Damage` INC with `ModFlag.Attack`, `UsingShield`.
+    (
+        "attack_damage_+%_while_holding_a_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "Attack Skills deal #% increased Damage while holding a
+    // Shield": `Damage` INC with `KeywordFlag.Attack` (an attack's ailments
+    // too), `UsingShield`.
+    (
+        "attack_skills_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::KEYWORD_ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "#% increased Attack Speed while holding a Shield":
+    // `Speed` INC with `ModFlag.Attack`, `UsingShield`.
+    (
+        "attack_speed_+%_while_holding_shield",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed while Dual Wielding": `Speed` INC,
+    // `ModFlag.Attack`, `DualWielding`.
+    (
+        "attack_speed_while_dual_wielding_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            states::DUAL_WIELDING,
         )],
     ),
     // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
@@ -1225,6 +1759,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             NONE,
             conditions::SHOCKED_ENEMY_RECENTLY,
         )],
+    ),
+    // P6-11b: "#% increased Damage while wielding a Wand": `Damage` INC,
+    // `UsingWand`.
+    (
+        "damage_+%_while_wielding_wand",
+        &[(Quantity::Damage, Op::Increased, NONE, states::USING_WAND)],
     ),
     (
         "defences_+%_while_wielding_staff",
@@ -1893,6 +2433,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
     ("always_shock", "ailment-chance"),
+    // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
+    // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
+    ("area_of_effect_+%_while_wielding_bow", "area"),
+    // P6-11b: "#% increased Area of Effect while wielding a Staff" (PoB:
+    // `AreaOfEffect` INC, `UsingStaff`): area.
+    ("area_of_effect_+%_while_wielding_staff", "area"),
     // P3-8n: "#% increased Area of Effect while you don't have
     // Convergence" (`AreaOfEffect` INC, not `Convergence`): area, as above.
     (
@@ -3539,6 +4085,7 @@ mod tests {
                     [
                         states::USING_STAFF,
                         states::USING_SHIELD,
+                        states::USING_WAND,
                         states::MAIN_HAND_WEAPON,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                         states::DUAL_WIELDING,
@@ -3693,6 +4240,35 @@ mod tests {
         // P6-11a: the shield and dual wielding rows.
         let dual = |q: Quantity, op: Op, all: Flags| (q, op, all, states::DUAL_WIELDING);
         expected.extend([
+            // P6-11b: the weapon-condition rows.
+            (
+                "additional_staff_block_%",
+                vec![staff(BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "attack_speed_while_dual_wielding_+%",
+                vec![dual(Quantity::Speed, Op::Increased, Flags::ATTACK)],
+            ),
+            (
+                "damage_+%_while_wielding_wand",
+                vec![(Quantity::Damage, Op::Increased, NONE, states::USING_WAND)],
+            ),
+            (
+                "attack_damage_+%_while_holding_a_shield",
+                vec![shield(Quantity::Damage, Op::Increased, Flags::ATTACK)],
+            ),
+            (
+                "attack_skills_damage_+%_while_holding_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::KEYWORD_ATTACK,
+                )],
+            ),
+            (
+                "attack_speed_+%_while_holding_shield",
+                vec![shield(Quantity::Speed, Op::Increased, Flags::ATTACK)],
+            ),
             (
                 "attack_ailment_damage_+%_while_holding_shield",
                 vec![shield(

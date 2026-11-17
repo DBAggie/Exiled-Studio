@@ -233,6 +233,8 @@ pub fn pob_part(id: &str, wanted: usize) -> Option<(SkillPart, usize)> {
 /// classes PoB's `weaponTypeInfo` marks not melee) the melee flag.
 #[must_use]
 pub fn weapon_flags(class: &str, melee: bool, projectile: bool) -> (bool, bool) {
+    // Kept apart from [`weapon_type_flags`]: this one decides the part's
+    // melee and projectile flags, as PoB's `weaponTypeInfo.melee`.
     let ranged = matches!(class, "Bow" | "Wand");
     if !ranged && melee {
         (true, false)
@@ -241,6 +243,43 @@ pub fn weapon_flags(class: &str, melee: bool, projectile: bool) -> (bool, bool) 
     } else {
         (melee, projectile)
     }
+}
+
+/// The weapon flags of an attack with a weapon of item class `class`
+/// (P6-11b; PoB's `getWeaponFlags`, `CalcActiveSkill.lua` 192 to 223, with
+/// `data.weaponTypeInfo`, `Modules/Data.lua` 550): its type, `Weapon`,
+/// one- or two-handed, and melee or ranged. `None` for a class PoB has no
+/// weapon type of (the attack is not computed). A weapon that counts as
+/// all one-handed types (Varunastra) is not modelled: its line is an
+/// unmapped stat (a reason).
+#[must_use]
+pub fn weapon_type_flags(class: &str) -> Option<Flags> {
+    let (kind, one_hand, melee) = match class {
+        "Bow" => (Flags::BOW, false, false),
+        "Claw" => (Flags::CLAW, true, true),
+        "Dagger" | "Rune Dagger" => (Flags::DAGGER, true, true),
+        "Staff" | "Warstaff" => (Flags::STAFF, false, true),
+        "Wand" => (Flags::WAND, true, false),
+        "One Hand Axe" => (Flags::AXE, true, true),
+        "Two Hand Axe" => (Flags::AXE, false, true),
+        "One Hand Mace" | "Sceptre" => (Flags::MACE, true, true),
+        "Two Hand Mace" => (Flags::MACE, false, true),
+        "One Hand Sword" | "Thrusting One Hand Sword" => (Flags::SWORD, true, true),
+        "Two Hand Sword" => (Flags::SWORD, false, true),
+        "FishingRod" => (Flags::FISHING, false, true),
+        _ => return None,
+    };
+    let hands = if one_hand {
+        Flags::WEAPON_1H
+    } else {
+        Flags::WEAPON_2H
+    };
+    let range = if melee {
+        Flags::WEAPON_MELEE
+    } else {
+        Flags::WEAPON_RANGED
+    };
+    Some(kind | Flags::WEAPON | hands | range)
 }
 
 /// Whether the engine reads PoB's hand-written data of the skill that
@@ -370,9 +409,13 @@ pub struct AttackSkill<'d> {
     pub attack_speed_multiplier: i64,
     /// The weapon in the main hand.
     pub weapon: ItemId,
+    /// The main hand's weapon flags ([`weapon_type_flags`], P6-11b).
+    pub weapon_flags: Flags,
     /// The weapon in the off hand when the skill attacks with it too
     /// (Phase 6, dual wielding: PoB's `weapon2Attack`).
     pub off_weapon: Option<ItemId>,
+    /// The off hand's weapon flags when it attacks (P6-11b).
+    pub off_weapon_flags: Flags,
     /// The skill hits with both weapons at once (PoB's skill data
     /// `doubleHitsWhenDualWielding`); else it alternates.
     pub double_hits: bool,
@@ -542,11 +585,12 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     // different weapon types, and supports' weapon types, are not checked:
     // only vetted attacks are `Complete` (`VETTED_ATTACKS`), and none has
     // them.
-    let off_weapon = match hands.off {
-        Some((id, off)) if usable(&off.class) => Some(id),
+    let main_flags = weapon_type_flags(&base.class)?;
+    let (off_weapon, off_weapon_flags) = match hands.off {
+        Some((id, off)) if usable(&off.class) => (Some(id), weapon_type_flags(&off.class)?),
         Some(_) => return None,
         None if hands.off_hand_weapon => return None,
-        None => None,
+        None => (None, Flags::NONE),
     };
     // PoB's `doubleHitsWhenDualWielding`: the skill's data (Swordstorm's)
     // or the stat `skill_double_hits_when_dual_wielding` of the skill or a
@@ -595,7 +639,9 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         level,
         attack_speed_multiplier: level_row.attack_speed_multiplier,
         weapon,
+        weapon_flags: main_flags,
         off_weapon,
+        off_weapon_flags,
         double_hits,
         part,
         known_parts,
@@ -1213,6 +1259,15 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     if attack.part.area {
         flags = flags | Flags::AREA;
     }
+    // `KeywordFlag.Bow` for an attack whose main hand holds a bow
+    // (`CalcActiveSkill.lua` 406: both hands' configs).
+    if attack.weapon_flags.contains(Flags::BOW) {
+        flags = flags | Flags::KEYWORD_BOW;
+    }
+    // Each hand's config adds its weapon's flags (`weapon1Cfg`,
+    // `weapon2Cfg`, `CalcActiveSkill.lua` 470 to 479; P6-11b).
+    let off_flags = flags | attack.off_weapon_flags;
+    let flags = flags | attack.weapon_flags;
     let mut unvetted = Reasons::new();
     let id = attack.skill.effect().id.as_str();
     if !attack.known_parts {
@@ -1291,7 +1346,15 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
-    let off = hand_hit(calc, attack, Hand::Off, off_item, flags, &enemy, &unvetted)?;
+    let off = hand_hit(
+        calc,
+        attack,
+        Hand::Off,
+        off_item,
+        off_flags,
+        &enemy,
+        &unvetted,
+    )?;
     dual_wield(calc, attack, &main, &off)?;
     // PoB computes each hand's ailments and combines them (`combineStat`
     // `CHANCE_AILMENT`, `CHANCE`): not modelled yet. A dual-wielding attack
@@ -1341,8 +1404,10 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
 /// Both hands' passes combined (Phase 6; PoB's `combineStat`,
 /// `CalcOffence.lua` 2003 to 2108, 2441 to 2445, 3869 to 3875): chance to
 /// hit, crit chance, and crit multiplier `AVERAGE`; speed the harmonic mean
-/// (0 when a hand's is 0); average damage and hit DPS `DPS` (the hands'
-/// sum, halved unless the skill hits with both at once).
+/// (0 when a hand's is 0); average damage `DPS` (the hands' sum, halved
+/// unless the skill hits with both at once); hit DPS the combined average
+/// times the combined speed (each hand's `TotalDPS` reads the combined
+/// speed, so `DPS` of them is that product).
 fn dual_wield(
     calc: &mut Calc<'_>,
     attack: &AttackSkill<'_>,
@@ -1410,24 +1475,12 @@ fn dual_wield(
             Field::Strength,
         ],
     );
-    // Each hand's `TotalDPS = AverageDamage x Speed x 1 x 1`, then `DPS`.
-    let main_dps = phases::product(
-        calc,
-        &[main.average.0, main.speed.0],
-        Term::Step("main-hand-dps"),
-    )?;
-    let off_dps = phases::product(
-        calc,
-        &[off.average.0, off.speed.0],
-        Term::Step("off-hand-dps"),
-    )?;
-    let dps = dps_mode(calc, main_dps, off_dps)?;
-    calc.set_derived(
-        Field::HitDps,
-        phases::query(dps, Reasons::new()),
-        &[Field::AverageDamage, Field::Speed],
-    );
-    Ok(())
+    // Each hand's `TotalDPS = AverageDamage x globalOutput.Speed x 1 x 1`
+    // (`CalcOffence.lua` 3712: the combined speed, set before the passes'
+    // damage), then `DPS`: the combined average times the combined speed
+    // (P6-11b; P6-2a used each hand's own speed, which agreed only when
+    // the hands' speeds did).
+    hit_dps(calc, average, speed)
 }
 
 /// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
@@ -3260,5 +3313,39 @@ mod tests {
         assert_eq!(weapon_flags("Claw", false, true), (false, true));
         assert_eq!(weapon_flags("Wand", true, false), (true, false));
         assert_eq!(weapon_flags("Staff", false, false), (false, false));
+    }
+
+    /// PoB's `getWeaponFlags` per item class (P6-11b): type, `Weapon`,
+    /// hands, and range; an unknown class has none.
+    #[test]
+    fn weapon_type_flags_should_follow_pobs_weapon_types() {
+        let f = |c| weapon_type_flags(c).expect(c);
+        let melee1 = Flags::WEAPON | Flags::WEAPON_1H | Flags::WEAPON_MELEE;
+        let melee2 = Flags::WEAPON | Flags::WEAPON_2H | Flags::WEAPON_MELEE;
+        assert_eq!(
+            f("Bow"),
+            Flags::BOW | Flags::WEAPON | Flags::WEAPON_2H | Flags::WEAPON_RANGED
+        );
+        assert_eq!(
+            f("Wand"),
+            Flags::WAND | Flags::WEAPON | Flags::WEAPON_1H | Flags::WEAPON_RANGED
+        );
+        assert_eq!(f("Claw"), Flags::CLAW | melee1);
+        assert_eq!(f("Rune Dagger"), Flags::DAGGER | melee1);
+        assert_eq!(f("Warstaff"), Flags::STAFF | melee2);
+        assert_eq!(f("Sceptre"), Flags::MACE | melee1);
+        assert_eq!(f("Two Hand Mace"), Flags::MACE | melee2);
+        assert_eq!(f("Thrusting One Hand Sword"), Flags::SWORD | melee1);
+        assert_eq!(f("Two Hand Axe"), Flags::AXE | melee2);
+        assert_eq!(f("FishingRod"), Flags::FISHING | melee2);
+        assert_eq!(weapon_type_flags("Shield"), None);
+        // An ailment keeps two-handed but not one-handed (PoB's
+        // `WeaponMask`, 0x2FFF0000).
+        let kept = |c| Flags::from_bits_and(f(c), Flags::AILMENT_WEAPON_MASK);
+        assert_eq!(
+            kept("Two Hand Axe"),
+            Flags::AXE | Flags::WEAPON_2H | Flags::WEAPON_MELEE
+        );
+        assert_eq!(kept("Claw"), Flags::CLAW | Flags::WEAPON_MELEE);
     }
 }
