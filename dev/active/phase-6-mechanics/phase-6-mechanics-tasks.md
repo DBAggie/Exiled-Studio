@@ -52,7 +52,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] The P6-4a review applied: a guard that no `NAMED_ONLY` name is settled; an `input_use` test; `DEFAULT_ON`; the corrected counts and readers
 - [x] Data: the `Flasks` extractor root, `poe1/flasks.json` (converter, loader, validator, synthetic row), `data-parity` table `flasks` (export format 11; 192 values, 0 differences); evidence bundle `local/p6/packs/b-flasks`
 - [x] `loom_calc::poe1::flasks` (effect scale, merge, Silver's Onslaught), `FlaskMapping` (charges, duration, eight aliases), rows for `flask_effect_+%`, `magic_utility_flask_effect_+%`, Basalt, Stibnite, Silver, Phasing; fixture `smite-flasks-templar.xml` (Q11 DIV-0097 to DIV-0099); `docs/phase-6/flasks.md`
-- [ ] Open PR (base `feat/p6-4-config-inputs`)
+- [x] Open PR: #146 (base `feat/p6-4-config-inputs`)
 - [ ] Maintainer: the next data run ships `poe1/flasks.json` (the extraction with the `Flasks` root)
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
