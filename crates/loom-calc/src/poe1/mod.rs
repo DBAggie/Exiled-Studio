@@ -265,6 +265,15 @@ pub enum Poe1Quantity {
     /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
     /// Phase 6): `Increased`.
     AilmentSlower,
+    /// A chance to impale on hit, percent (PoB's `ImpaleChance`; Phase 6):
+    /// `Base`, read by [`ailment::impale`].
+    ImpaleChance,
+    /// The effect of impales (PoB's `ImpaleEffect`; Phase 6): `Increased`
+    /// and `More`.
+    ImpaleEffect,
+    /// Impales on the enemy at most, added to the character template's
+    /// (PoB's `ImpaleStacksMax` BASE; Phase 6).
+    ImpaleStacksMax,
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
@@ -490,6 +499,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
+            Self::ImpaleChance => f.write_str("impale-chance"),
+            Self::ImpaleEffect => f.write_str("impale-effect"),
+            Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
         }
     }
 }
@@ -635,6 +647,9 @@ pub enum Poe1Field {
     SpellSuppressionChance,
     /// Chance to block spell damage.
     SpellBlockChance,
+    /// The main skill's impale damage per second (PoB's `ImpaleDPS`; Phase
+    /// 6). Present only when the skill impales.
+    ImpaleDps,
 }
 
 impl Poe1Field {
@@ -644,6 +659,7 @@ impl Poe1Field {
         match self {
             Self::SpellSuppressionChance => "spell-suppression-chance",
             Self::SpellBlockChance => "spell-block-chance",
+            Self::ImpaleDps => "impale-dps",
         }
     }
 }

@@ -1,4 +1,4 @@
-# P6-2b and P6-2c: damaging ailments
+# P6-2b to P6-2d: damaging ailments and impale
 
 Phase 6 plan (`dev/active/phase-6-mechanics/`), step P6-2b: the main skill's ignite, as PoB v2.67.2 computes it (`Modules/CalcOffence.lua` 4036 to 4287, 4866 to 5206). The base it builds on (`loom_calc::poe1::ailment`) is shared with bleed and poison (P6-2c).
 
@@ -156,3 +156,35 @@ Not changed:
 - **`always_ignite`:** its row's 0.01 is a divisor (`value x scale / divisor`, `ingest::EffectTemplate`), so the chance is 1 / 0.01 = 100, as PoB's.
 - **The added-damage rows that PoB flags with keywords:** they feed only the hit's bases, which the ailments reuse.
 - **Temporal Chains** (an enemy's debuffs expiring slower): it is not a modelled gem, so it is a reason.
+
+## P6-2d: impale
+
+`ailment::impale`, from PoB v2.67.2 `CalcOffence.lua` 5472 to 5520 and 6027 to 6047. The field is `poe1.impale-dps` (PoB's `ImpaleDPS`; a PoE1-only field; slice `applies: present`).
+
+1. **Chance:** `ImpaleChance` at most 100, the same on a crit, then `min(chance / 100, 1) x (1 - crit) + min(chance / 100, 1) x crit`.
+2. **Stacks:**
+   - PoB's default is the maximum (`CalcPerform.lua` 3321 to 3326): the character template's `impaled_debuff_number_of_reflected_hits` plus that stat from items.
+   - A configured number of impales on the enemy is an unmodelled config input, so a reason.
+   - The additional duration chance is unmapped, so a reason.
+3. **The stored hit:** the hit's physical average before the enemy, from crits then non-crits, weighted by the crit chance (PoB's `impaleStoredHitAvg`, 3415 to 3420). `hit::passes` now keeps it.
+4. **Each impale stores** `0.1 x (1 + effect inc / 100) x round(effect more, 2)`. Times the stacks, this is the hit damage modifier.
+5. **The enemy:**
+   - its armour against `modifier x stored hit` (`armourReductionF`, capped; `hit::armour_reduction`, split from the hit's armour effect with the same nodes);
+   - its damage taken from hits, physical too (`impaleTaken`).
+6. **DPS:** `stored hit x ((1 + modifier x (1 - reduction / 100) x chance x taken) - 1) x hit chance / 100`, then times the rate, in PoB's order. The `(1 + x) - 1` step is kept, because it is not `x` in floating point.
+
+A dual wielder's impale is `NotComputed` when either hand impales (PoB combines the hands only for double hits).
+
+**Rows:**
+
+| Stat | Effect |
+|---|---|
+| `attacks_impale_on_hit_%_chance` | `ImpaleChance` BASE, attack keyword (`SkillStatMap.lua` 1708) |
+| `impale_on_hit_%_chance` | `ImpaleChance` BASE (1711) |
+| `spells_impale_on_hit_%_chance` | `ImpaleChance` BASE, spell keyword (1714) |
+| `impale_debuff_effect_+%` | `ImpaleEffect` INC (1717) |
+| `impaled_debuff_number_of_reflected_hits` | `ImpaleStacksMax` BASE |
+
+**Fixture:** `smite-impale-templar.xml` (40% chance, 30% effect, 3000 enemy armour). Equal to PoB but for the weapon's rate (DIV-0088 to DIV-0090): the impales' DPS scales with the rate, -0.050%, as Speed.
+
+**Public `calc-parity`:** 149 builds, 90 expected differences, 0 unexpected.

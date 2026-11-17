@@ -662,6 +662,167 @@ pub(super) fn damaging(
     Ok((dps.value > 0.0).then_some((dps, reasons)))
 }
 
+/// PoB's `data.misc.ImpaleStoredDamageBase` (`Modules/Data.lua` 262): an
+/// impale stores 10% of the hit's physical damage.
+pub const IMPALE_STORED_DAMAGE_BASE: f64 = 0.1;
+/// The character template's impale stacks (PoB's `ImpaleStacksMax` BASE,
+/// `CalcSetup.lua` 48).
+pub const IMPALE_STACKS_STAT: &str = "impaled_debuff_number_of_reflected_hits";
+
+/// The main skill's impale (P6-2d; PoB v2.67.2 `CalcOffence.lua` 5472 to
+/// 5520 and 6027 to 6047): its DPS with the reasons of what it read, or
+/// `None` when the hit cannot impale. Every impale on the enemy (PoB's
+/// default stacks, `CalcPerform.lua` 3321 to 3326: the maximum), each
+/// storing `0.1 x (1 + effect inc / 100) x round(effect more, 2)` of the
+/// hit's physical average before the enemy, reduced by the enemy's armour
+/// against the stored damage, times the chance to impale and the enemy's
+/// damage taken from hits: `stored hit x ((1 + modifier) - 1) x hit chance
+/// / 100 x rate`. A configured number of impales on the enemy is an
+/// unmodelled config input (a reason); so are the additional duration
+/// chance and the impale's own physical damage reduction stats.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+) -> Result<Option<(Valued, Reasons)>, CalcError> {
+    let mut reasons = Reasons::new();
+    let [Some(stored_hit), Some(stored_crit)] = hit.sources.physical else {
+        return Ok(None);
+    };
+    let hit_cx = calc.context(hit.flags).with_state(
+        ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
+        hit.crit.value != 0.0,
+    );
+    if hit::cannot_deal(calc, DamageType::Physical, &hit_cx, &mut reasons)? {
+        return Ok(None);
+    }
+    // `ImpaleChance = min(100, Sum)`; on a crit the same sum (no mapped
+    // stat is crit only).
+    let chance = hit::sum_of(
+        calc,
+        Quantity::Poe1(Poe1Quantity::ImpaleChance),
+        Op::Base,
+        &hit_cx,
+        Term::Step("impale-chance-sum"),
+        &mut reasons,
+    )?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let chance = phases::pair(calc, chance, hundred, Term::Step("impale-chance"), true)?;
+    if chance.value == 0.0 {
+        return Ok(None);
+    }
+    // `impaleChance = min(chance / 100, 1) x (1 - crit) + min(chance / 100,
+    // 1) x crit`, `crit = CritChance / 100`.
+    let one = phases::constant(calc, "one", 1.0)?;
+    let share = hit::percent_of(calc, chance, Term::Step("impale-chance-share"))?;
+    let share = phases::pair(calc, share, one, Term::Step("impale-chance-capped"), true)?;
+    let crit = hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
+    let non_crit = hit::minus(calc, one, crit, Term::Step("non-crit-share"))?;
+    let from_hits = phases::product(calc, &[share, non_crit], Term::Step("impale-from-hits"))?;
+    let from_crits = phases::product(calc, &[share, crit], Term::Step("impale-from-crits"))?;
+    let impale_chance = phases::total(
+        calc,
+        &[from_hits, from_crits],
+        Term::Step("impale-chance-per-hit"),
+    )?;
+    // The stacks: the maximum (`ImpaleStacksMax` BASE x (1 + additional
+    // duration chance / 100), the latter unmapped).
+    let base_stacks = match data.character_constant(IMPALE_STACKS_STAT) {
+        Some(v) => {
+            #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+            let v = v as f64;
+            v
+        }
+        None => {
+            reasons
+                .indeterminate
+                .insert(crate::state::IndeterminateReason::MissingData {
+                    table: "character_constants",
+                    key: IMPALE_STACKS_STAT.to_owned(),
+                });
+            0.0
+        }
+    };
+    let base_stacks = phases::constant(calc, "impale-stacks-base", base_stacks)?;
+    let more_stacks = hit::sum_of(
+        calc,
+        Quantity::Poe1(Poe1Quantity::ImpaleStacksMax),
+        Op::Base,
+        &hit_cx,
+        Term::Step("impale-stacks-added"),
+        &mut reasons,
+    )?;
+    let stacks = phases::total(
+        calc,
+        &[base_stacks, more_stacks],
+        Term::Step("impale-stacks"),
+    )?;
+    // The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
+    // (PoB adds the crit pass first, 3415 to 3420).
+    let from_crit_pass = phases::product(
+        calc,
+        &[stored_crit, crit],
+        Term::Step("impale-stored-from-crits"),
+    )?;
+    let from_hit_pass = phases::product(
+        calc,
+        &[stored_hit, non_crit],
+        Term::Step("impale-stored-from-hits"),
+    )?;
+    let stored_hit = phases::total(
+        calc,
+        &[from_crit_pass, from_hit_pass],
+        Term::Step("impale-stored-hit"),
+    )?;
+    // `storedExpectedDamageModifier = (1 + inc / 100) x round(more, 2)`.
+    let effect = Quantity::Poe1(Poe1Quantity::ImpaleEffect);
+    let inc = hit::sum_of(
+        calc,
+        effect,
+        Op::Increased,
+        &hit_cx,
+        Term::Step("impale-effect-inc"),
+        &mut reasons,
+    )?;
+    let inc = hit::percent_of(calc, inc, Term::Step("impale-effect-share"))?;
+    let inc = phases::total(calc, &[one, inc], Term::Step("impale-effect-increased"))?;
+    let (_, more) = hit::modifiers_of(calc, effect, &hit_cx, &mut reasons)?;
+    let modifier = phases::product(calc, &[inc, more], Term::Step("impale-effect"))?;
+    let base = phases::constant(calc, "impale-stored-damage-base", IMPALE_STORED_DAMAGE_BASE)?;
+    let stored = phases::product(calc, &[base, modifier], Term::Step("impale-stored-damage"))?;
+    let hit_mod = phases::product(calc, &[stored, stacks], Term::Step("impale-hit-damage-mod"))?;
+    // The enemy's armour against the stored damage (`armourReductionF(armour,
+    // hitMod x stored hit)`), its physical damage reduction 0, at most the
+    // cap.
+    let raw = phases::product(calc, &[hit_mod, stored_hit], Term::Step("impale-raw"))?;
+    let resist = hit::impale_armour_reduction(calc, enemy, data, raw, &mut reasons)?;
+    // `impaleTaken`: the enemy's damage taken from hits, physical too.
+    let taken = hit::hit_damage_taken(calc, DamageType::Physical, &mut reasons)?;
+    let resist_share = hit::percent_of(calc, resist, Term::Step("impale-reduction-share"))?;
+    let through = hit::minus(calc, one, resist_share, Term::Step("impale-through"))?;
+    let mut factors = vec![hit_mod, through, impale_chance];
+    if let Some(t) = taken {
+        factors.push(t);
+    }
+    let damage_mod = phases::product(calc, &factors, Term::Step("impale-damage-modifier"))?;
+    let modifier = phases::total(calc, &[one, damage_mod], Term::Step("impale-modifier"))?;
+    // `ImpaleDPS = stored hit x (modifier - 1) x hit chance / 100 x 1`, then
+    // `x rate`.
+    let gain = hit::minus(calc, modifier, one, Term::Step("impale-gain"))?;
+    let hit_share = hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
+    let per_hit = phases::product(
+        calc,
+        &[stored_hit, gain, hit_share],
+        Term::Step("impale-per-hit"),
+    )?;
+    let dps = phases::product(calc, &[per_hit, hit.rate], Term::Result)?;
+    Ok((dps.value > 0.0).then_some((dps, reasons)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

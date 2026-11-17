@@ -2080,7 +2080,8 @@ mod tests {
             .chain(NO_EFFECT.iter().map(|r| r.0));
         // Checked rows: curses on you (`curse_effect_on_self_+%`, P3-8n) are
         // not the curses this module casts.
-        let checked = ["curse_effect_on_self_+%"];
+        // P6-2d: impale's effect is the impale's, not a buff's or an aura's.
+        let checked = ["curse_effect_on_self_+%", "impale_debuff_effect_+%"];
         for id in ids {
             for word in GUARDED_WORDS {
                 assert!(

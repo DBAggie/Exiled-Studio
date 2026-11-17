@@ -905,6 +905,20 @@ fn set_ailments(
             calc.set_derived(ailment.field(), phases::query(dps, reasons), deps);
         }
     }
+    // Impale (P6-2d): every impale's DPS, an attack's or a spell's hit.
+    if let Some((dps, mut reasons)) = super::ailment::impale(calc, hit, enemy, data)? {
+        reasons.extend(unvetted);
+        let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
+            &[Field::CritChance, Field::Speed, Field::HitChance]
+        } else {
+            &[Field::CritChance, Field::Speed]
+        };
+        calc.set_derived(
+            Field::Poe1(super::Poe1Field::ImpaleDps),
+            phases::query(dps, reasons),
+            deps,
+        );
+    }
     Ok(())
 }
 
@@ -1150,6 +1164,25 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         if any {
             calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
         }
+    }
+    // PoB combines a dual wielder's impales per hand only for double hits:
+    // not modelled yet (P6-2d).
+    let mut impales = false;
+    for hand in [&main, &off] {
+        let ailment_hit = super::ailment::AilmentHit {
+            flags,
+            sources: &hand.sources,
+            crit: hand.crit.0,
+            hit_chance: hand.hit_chance.0,
+            rate: hand.speed.0,
+        };
+        impales |= super::ailment::impale(calc, &ailment_hit, &enemy, input.data)?.is_some();
+    }
+    if impales {
+        calc.set_unsupported(
+            Field::Poe1(super::Poe1Field::ImpaleDps),
+            UnsupportedReason::NotComputed,
+        );
     }
     Ok(())
 }
@@ -2142,10 +2175,54 @@ fn enemy_resistance(
     phases::pair(calc, capped, floor, Term::Step("enemy-resistance"), false)
 }
 
+/// The enemy's armour reduction against `raw` physical damage, capped
+/// (impale's `impaleResist`, `CalcOffence.lua` 5489 to 5491, Phase 6):
+/// `min(max(0, 0 + 0 + armourReductionF(armour, raw)), cap)`, the enemy's
+/// physical damage reduction and impale's own 0 (nothing modelled gives
+/// them).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale_armour_reduction(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    raw: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    armour_reduction(calc, enemy, data, raw, reasons)
+}
+
+/// The enemy's damage taken from hits of type `t` (impale's `impaleTaken`,
+/// `CalcOffence.lua` 5495 to 5497, Phase 6): `(1 + inc / 100) x more` in a
+/// hit's context, `None` when nothing modelled changes it.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn hit_damage_taken(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    if !phases::has(calc, all) && !phases::has(calc, typed) {
+        return Ok(None);
+    }
+    let cx = calc.context(Flags::HIT);
+    let [inc, more_all, more_typed] = taken_parts(calc, &cx, t, reasons)?;
+    let more = phases::product(calc, &[more_all, more_typed], Term::More)?;
+    Ok(Some(phases::product(
+        calc,
+        &[inc, more],
+        Term::Step("impale-damage-taken"),
+    )?))
+}
+
 /// The share of a physical hit the enemy's armour lets through (module
 /// docs, step 3): `1 - min(max(0, armourReductionF(armour, average)),
 /// cap) / 100`.
-fn armour_effect(
+fn armour_reduction(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
@@ -2194,7 +2271,18 @@ fn armour_effect(
         Quantity::Poe1(Poe1Quantity::MaximumPhysicalDamageReduction),
         cap,
     )?;
-    let reduction = phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)?;
+    phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)
+}
+
+/// `1 - armour_reduction / 100` (module docs, step 3).
+fn armour_effect(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    average: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let reduction = armour_reduction(calc, enemy, data, average, reasons)?;
     let share = percent(calc, reduction, Term::Step("reduction-share"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     difference(calc, one, share, Term::Step("enemy-effect"))
@@ -2330,6 +2418,10 @@ pub(super) struct HitSources {
     pub(super) bases: [Option<[Valued; 2]>; 5],
     /// The conversion table, when the hit converts.
     pub(super) conversion: Option<Conversion>,
+    /// The physical part's average before the enemy (PoB's
+    /// `damageTypeHitAvg`), from non-crits and from crits, for impale's
+    /// stored hit (Phase 6).
+    pub(super) physical: [Option<Valued>; 2],
 }
 
 /// PoB's `buildConversionTable` (`CalcOffence.lua` 1878 to 1921) over
@@ -2706,6 +2798,7 @@ fn passes(
     let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;
+    let mut physical_avg: [Option<Valued>; 2] = [None; 2];
     let mut hits = Vec::new();
     let mut crits = Vec::new();
     let mut physical = false;
@@ -2831,6 +2924,11 @@ fn passes(
             let lo = quotient(calc, lo, two, Term::Step("half-min"))?;
             let hi = quotient(calc, hi, two, Term::Step("half-max"))?;
             let average = phases::total(calc, &[lo, hi], Term::Step("average"))?;
+            if ty == DamageType::Physical
+                && let Some(slot) = physical_avg.get_mut(usize::from(crit))
+            {
+                *slot = Some(average);
+            }
             let effect = match effect {
                 Some(e) => e,
                 None => armour_effect(calc, enemy, data, average, reasons)?,
@@ -2855,7 +2953,15 @@ fn passes(
     }
     let hit = phases::total(calc, &hits, Term::Step("hit"))?;
     let crit = phases::total(calc, &crits, Term::Step("crit-hit"))?;
-    Ok((hit, crit, HitSources { bases, conversion }))
+    Ok((
+        hit,
+        crit,
+        HitSources {
+            bases,
+            conversion,
+            physical: physical_avg,
+        },
+    ))
 }
 
 #[cfg(test)]

@@ -68,4 +68,5 @@ export const OFFENCE = new Set([
   'ignite-dps',
   'bleed-dps',
   'poison-dps',
+  'poe1.impale-dps',
 ])

@@ -89,6 +89,7 @@ const FIRST = [
   'ignite-dps',
   'bleed-dps',
   'poison-dps',
+  'poe1.impale-dps',
   'average-damage',
   'hit-speed',
   'crit-chance',

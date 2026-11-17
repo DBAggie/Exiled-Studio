@@ -264,6 +264,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1708: `ImpaleChance` BASE with
+    // `KeywordFlag.Attack` (P6-2d).
+    (
+        "attacks_impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1017: `Damage` INC with `KeywordFlag.Ailment`
     // (P6-2b).
     (
@@ -716,6 +728,40 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `SkillStatMap.lua` 1717: `ImpaleEffect` INC (P6-2d).
+    (
+        "impale_debuff_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleEffect),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1711: `ImpaleChance` BASE (P6-2d).
+    (
+        "impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB: `ImpaleStacksMax` BASE (the character template's stat, also on
+    // items; P6-2d).
+    (
+        "impaled_debuff_number_of_reflected_hits",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleStacksMax),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "lightning_critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, SK_LIGHTNING, NONE)],
@@ -900,6 +946,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_minimum_base_physical_damage",
         &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1714: `ImpaleChance` BASE with
+    // `KeywordFlag.Spell` (P6-2d).
+    (
+        "spells_impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_SPELL,
+            NONE,
+        )],
+    ),
     (
         "support_attack_skills_elemental_damage_+%_final",
         &[(
@@ -966,6 +1024,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Poe1(
                 Poe1Quantity::AilmentChance(..)
                     | Poe1Quantity::CannotInflict(..)
+                    | Poe1Quantity::ImpaleChance
+                    | Poe1Quantity::ImpaleEffect
+                    | Poe1Quantity::ImpaleStacksMax
                     | Poe1Quantity::AilmentDuration
                     | Poe1Quantity::AilmentFaster
                     | Poe1Quantity::AilmentSlower

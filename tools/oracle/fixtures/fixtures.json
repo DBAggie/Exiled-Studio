@@ -1471,6 +1471,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "IgniteDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Ice Nova with Elemental Overload, added fire damage, a 40% chance to ignite, and more crit chance: ignites are never from crits (no critical DoT multiplier) and the keystone's 40% more elemental damage reaches the ignite (P6-2b review)."
+    },
+    {
+      "id": "smite-impale-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-impale-templar.xml",
+      "sha256": "bb9e8ae2411894303844e2625836ad9d1fd7f4260cf77b6dfdda52d64a2cac16",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "ImpaleDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet, a 40% chance to impale, and 30% increased impale effect against 3000 armour: every impale (the default, the maximum), the stored physical hit, the enemy's armour against it; equal to PoB but for the weapon's rate (Q11, DIV-0088 to DIV-0090) (P6-2d)."
     }
   ]
 }
