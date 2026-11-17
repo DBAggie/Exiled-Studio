@@ -1039,6 +1039,11 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (ids, findings) = p.minion_domain();
+        duplicates(report, super::poe1::MINIONS, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_DANGLING_REF", at, detail);
+        }
         let (bases, findings) = p.flask_domain();
         duplicates(report, super::poe1::FLASKS, bases.iter().copied());
         for base in bases.iter().filter(|x| !known.contains(*x)) {

@@ -30,6 +30,9 @@
 //!   base's node layout, the small passives a jewel can grant, the notables
 //!   and keystones it can add, and the tree's cluster sockets
 //!   ([`ClusterJewels`]).
+//! - `poe1/minions.json`: every monster variety and the monster types they
+//!   use (`MonsterVarieties`, `MonsterTypes`, Phase 6 P6-7a; [`Minions`]):
+//!   the data a minion or a spectre is computed from.
 //! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
 //!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
 //!   applies an active flask's buff).
@@ -58,6 +61,85 @@ pub const TREE_FLAVOUR: &str = "poe1/tree_flavour.json";
 pub const CLUSTER_JEWELS: &str = "poe1/cluster_jewels.json";
 /// Flask bases.
 pub const FLASKS: &str = "poe1/flasks.json";
+/// Monster varieties and types (minions, spectres).
+pub const MINIONS: &str = "poe1/minions.json";
+
+/// A monster type's values a minion reads (`MonsterTypes`, P6-7a), as PoB's
+/// minion exporter reads them (`src/Export/Scripts/minions.lua`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MinionType {
+    /// ID.
+    pub id: String,
+    /// Accuracy multiplier, percent.
+    pub accuracy: i64,
+    /// Armour multiplier, percent.
+    pub armour: i64,
+    /// Evasion multiplier, percent.
+    pub evasion: i64,
+    /// Energy shield multiplier, percent (PoB: `0.4 x value / 100`).
+    pub energy_shield: i64,
+    /// Damage spread, percent.
+    pub damage_spread: i64,
+    /// Fire, cold, lightning, and chaos resistances (`MonsterResistances`,
+    /// the merciless columns PoB reads).
+    pub resistances: [i64; 4],
+    /// The first alternate life scaling.
+    pub alt_life1: bool,
+    /// The second alternate life scaling.
+    pub alt_life2: bool,
+    /// Its base damage ignores attack speed.
+    pub damage_ignores_attack_speed: bool,
+    /// The game marks it a player's minion.
+    pub player_minion: bool,
+}
+
+/// A monster variety (`MonsterVarieties`, P6-7a), in the table's order.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MinionVariety {
+    /// ID (`Metadata/Monsters/...`): the key PoB's spectres use.
+    pub id: String,
+    /// The name.
+    pub name: String,
+    /// The monster type's ID.
+    pub monster_type: String,
+    /// Its tags' IDs.
+    pub tags: Vec<String>,
+    /// Damage multiplier, percent.
+    pub damage: i64,
+    /// Life multiplier, percent.
+    pub life: i64,
+    /// Attack duration, milliseconds.
+    pub attack_time: i64,
+    /// Maximum attack distance.
+    pub attack_range: i64,
+    /// The main hand's item class ID, if any.
+    #[serde(default)]
+    pub main_hand: Option<String>,
+    /// The off hand's item class ID, if any.
+    #[serde(default)]
+    pub off_hand: Option<String>,
+    /// Its granted effects' IDs (its skills), in order.
+    pub skills: Vec<String>,
+    /// Its mods' IDs, in order.
+    pub mods: Vec<String>,
+    /// Its special mods' IDs, in order.
+    pub special_mods: Vec<String>,
+    /// Its object type (`BaseMonsterTypeIndex`), whose `.ot` file holds
+    /// more stats (not carried).
+    pub object_type: String,
+}
+
+/// `poe1/minions.json`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Minions {
+    /// Monster types, in the table's order.
+    pub types: Vec<MinionType>,
+    /// Monster varieties, in the table's order.
+    pub varieties: Vec<MinionVariety>,
+}
 
 /// A flask base (`Flasks`, P6-4b), in the table's order. PoB v2.67.2
 /// exports its `flask` base data from the same row
@@ -467,6 +549,8 @@ pub struct Poe1Section {
     pub cluster_jewels: Option<ClusterJewels>,
     /// Flask bases (`None` when the file is absent).
     pub flasks: Option<Vec<Flask>>,
+    /// Monster varieties and types (`None` when the file is absent).
+    pub minions: Option<Minions>,
 }
 
 impl Poe1Section {
@@ -486,6 +570,25 @@ impl Poe1Section {
             }
         }
         out
+    }
+
+    /// The minions' domain checks for the validator: the varieties' IDs
+    /// (each must be unique) and the varieties whose type is not in the
+    /// file.
+    pub(super) fn minion_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let Some(m) = &self.minions else {
+            return (Vec::new(), Vec::new());
+        };
+        let types: std::collections::BTreeSet<&str> =
+            m.types.iter().map(|t| t.id.as_str()).collect();
+        let ids = m.varieties.iter().map(|v| v.id.as_str()).collect();
+        let bad = m
+            .varieties
+            .iter()
+            .filter(|v| !v.monster_type.is_empty() && !types.contains(v.monster_type.as_str()))
+            .map(|v| (format!("{MINIONS}:{}", v.id), "a type not in the file"))
+            .collect();
+        (ids, bad)
     }
 
     /// The flasks' domain checks for the validator: each row's base, and
@@ -737,6 +840,11 @@ impl Poe1Section {
             },
             flasks: if listed(FLASKS) {
                 Some(json(source, FLASKS)?)
+            } else {
+                None
+            },
+            minions: if listed(MINIONS) {
+                Some(json(source, MINIONS)?)
             } else {
                 None
             },

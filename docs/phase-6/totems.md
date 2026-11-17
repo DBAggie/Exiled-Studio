@@ -40,6 +40,8 @@ PoB v2.67.2 computes a totem's skill as the skill's own hit and DoT, per totem: 
 
 The engine now computes a trap's or mine's **spell** this way (`hit::cast_rate`), with one thrown and no throwing speed (none is mapped). The hit keeps the reason `trap-mine-data` (`hit::TRAP_MINE_REASON`): throw counts, trap and mine speed, cooldowns, and `KeywordFlag.Trap` and `Mine` mods are not read. A trap's or mine's **attack** and DoT stay not computed.
 
+The rate ignores trap and mine throwing speed: the Trap and Mine supports' speed at higher gem levels, Advanced Traps, and tree and gear speed. Those stats are unmapped, so a build with them is `Partial` through `unmapped-stat` as well as the reason; the sweep's equal builds hold only at the base values. (P6-6e review, applied in P6-7a.)
+
 **Brands** stay not computed: their activation rate, attached count, and duration are their own model.
 
 **Sweep:** 33 trap and mine builds against the oracle.

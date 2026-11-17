@@ -985,6 +985,32 @@ fn socket_cap_mutations_should_each_give_their_code() {
     }
 }
 
+/// Monster varieties (P6-7a): each mutation gives its code alone.
+#[test]
+fn minion_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/minions.json";
+    let cases: [(&str, Edit, &str); 2] = [
+        (
+            "variety twice",
+            |v| {
+                let first = v["varieties"][0].clone();
+                v["varieties"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown type",
+            |v| v["varieties"][0]["monster_type"] = json!("NoSuchType"),
+            "BUNDLE_DANGLING_REF",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
 /// Flask bases (P6-4b): each mutation gives its code alone.
 #[test]
 fn flask_mutations_should_each_give_their_code() {
