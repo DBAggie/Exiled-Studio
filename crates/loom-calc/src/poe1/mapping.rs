@@ -1161,6 +1161,18 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
+    // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
+    // keyword, `UsingShield` (as the staff row).
+    (
+        "attack_ailment_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+            states::USING_SHIELD,
+        )],
+    ),
     // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
     // ModParser.lua 1785), from the config (`poe1::conditions`).
@@ -1227,6 +1239,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
         ],
     ),
+    // P6-11a: "+#% Chance to Block Attack Damage while Dual Wielding or
+    // holding a Shield": `BlockChance` BASE, `DualWielding` or `UsingShield`
+    // (PoB's `varList`); two rows, never both (a shield is no weapon).
+    (
+        "dual_wield_or_shield_block_%",
+        &[
+            (BLOCK, Op::Base, NONE, states::DUAL_WIELDING),
+            (BLOCK, Op::Base, NONE, states::USING_SHIELD),
+        ],
+    ),
     (
         "global_critical_strike_chance_+%_while_holding_staff",
         &[(
@@ -1269,6 +1291,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::AT_CLOSE_RANGE,
         )],
     ),
+    // P6-11a: "#% increased Physical Attack Damage while holding a Shield":
+    // `PhysicalDamage` INC with `ModFlag.Attack`, `UsingShield`.
+    (
+        "physical_attack_damage_+%_while_holding_a_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK.union(Flags::PHYSICAL),
+            states::USING_SHIELD,
+        )],
+    ),
     // P3-8n: "Physical Damage with Staves": `PhysicalDamage` INC with
     // `ModFlag.Staff` and `ModFlag.Hit` (939), which only an attack with a
     // staff in the main hand has (a staff is two-handed).
@@ -1294,9 +1327,35 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::MAIN_HAND_WEAPON,
         )],
     ),
+    // P6-11a: "+#% Elemental Resistances while holding a Shield":
+    // `ElementalResist` BASE, `UsingShield`.
+    (
+        "resist_all_elements_+%_while_holding_shield",
+        &[
+            (FIRE, Op::Base, NONE, states::USING_SHIELD),
+            (COLD, Op::Base, NONE, states::USING_SHIELD),
+            (LIGHTNING, Op::Base, NONE, states::USING_SHIELD),
+        ],
+    ),
+    // P6-11a: "+#% Chance to Block Attack Damage while holding a Shield":
+    // `BlockChance` BASE, `UsingShield`.
+    (
+        "shield_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_SHIELD)],
+    ),
     (
         "shield_spell_block_%",
         &[(SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD)],
+    ),
+    // P6-11a: "+#% chance to Block Spell Damage while holding a Staff or
+    // Shield": `SpellBlockChance` BASE, `UsingStaff` or `UsingShield`; two
+    // rows, never both (a staff is two-handed).
+    (
+        "spell_block_chance_%_while_holding_staff_or_shield",
+        &[
+            (SPELL_BLOCK, Op::Base, NONE, states::USING_STAFF),
+            (SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD),
+        ],
     ),
     (
         "spell_block_with_staff_%",
@@ -3482,6 +3541,7 @@ mod tests {
                         states::USING_SHIELD,
                         states::MAIN_HAND_WEAPON,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+                        states::DUAL_WIELDING,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -3630,6 +3690,47 @@ mod tests {
                 )],
             ),
         );
+        // P6-11a: the shield and dual wielding rows.
+        let dual = |q: Quantity, op: Op, all: Flags| (q, op, all, states::DUAL_WIELDING);
+        expected.extend([
+            (
+                "attack_ailment_damage_+%_while_holding_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+                )],
+            ),
+            (
+                "dual_wield_or_shield_block_%",
+                vec![dual(BLOCK, Op::Base, NONE), shield(BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "physical_attack_damage_+%_while_holding_a_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK.union(Flags::PHYSICAL),
+                )],
+            ),
+            (
+                "resist_all_elements_+%_while_holding_shield",
+                vec![
+                    shield(FIRE, Op::Base, NONE),
+                    shield(COLD, Op::Base, NONE),
+                    shield(LIGHTNING, Op::Base, NONE),
+                ],
+            ),
+            ("shield_block_%", vec![shield(BLOCK, Op::Base, NONE)]),
+            (
+                "spell_block_chance_%_while_holding_staff_or_shield",
+                vec![
+                    staff(SPELL_BLOCK, Op::Base, NONE),
+                    shield(SPELL_BLOCK, Op::Base, NONE),
+                ],
+            ),
+        ]);
+        expected.sort_by(|a, b| a.0.cmp(b.0));
         assert_eq!(STATE_ROWS.len(), expected.len());
         for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {
             assert_eq!(id, want_id);

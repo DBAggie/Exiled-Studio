@@ -39,6 +39,9 @@ pub const USING_STAFF: &str = "UsingStaff";
 /// The off hand holds a shield (PoB's `UsingShield`).
 pub const USING_SHIELD: &str = "UsingShield";
 
+/// Both hands hold a weapon (PoB's `DualWielding`; P6-11a).
+pub const DUAL_WIELDING: &str = "DualWielding";
+
 /// The main hand holds a weapon (P3-8n): PoB gives an attack with it
 /// `ModFlag.Weapon` (`CalcActiveSkill.lua` 209: the weapon's type is not
 /// `None`), which "with Weapons" modifiers need. Not a PoB condition.
@@ -86,10 +89,18 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         Held::Empty | Held::Shield | Held::Other => Some(false),
         Held::Unknown => None,
     };
+    // PoB: `DualWielding` when both hands hold a weapon (`CalcSetup.lua`,
+    // the weapon types of both hands; a shield is not a weapon).
+    let dual = match (&hands.main_hand, &hands.off_hand) {
+        (Held::Unknown, _) | (_, Held::Unknown) => None,
+        (Held::Weapon(_), Held::Weapon(_)) => Some(true),
+        _ => Some(false),
+    };
     for (key, value) in [
         (USING_STAFF, staff),
         (USING_SHIELD, shield),
         (MAIN_HAND_WEAPON, weapon),
+        (DUAL_WIELDING, dual),
     ] {
         if let Some(v) = value {
             out.insert(ConditionKey::new(key), v);

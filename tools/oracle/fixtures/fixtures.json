@@ -1503,6 +1503,16 @@
       "description": "Smite with a Rusted Hatchet and five active flasks (magic Granite with its own effect and Armour during Effect, Ruby, magic Silver with its own effect, Diamond, Basalt), with flasks and magic utility flasks at increased effect: each buff scaled as PoB's ScaleAddList, Silver's Onslaught with flask effect (P6-4b)."
     },
     {
+      "id": "smite-shield-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-shield-templar.xml",
+      "sha256": "ca67de490bbbc8eb73295aa9bf22cbeb3dc2649a8d4377bff75105404ba5c543",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and a Splintered Tower Shield, and lines that hold while holding a shield (attack and spell block, elemental resistances, physical attack damage) or while dual wielding or holding a shield (P6-11a)."
+    },
+    {
       "id": "ice-nova-ignite-overload-witch.xml",
       "tier": "mechanic",
       "source": "local",
