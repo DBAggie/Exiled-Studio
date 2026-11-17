@@ -73,7 +73,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #151 (base `feat/p6-5-channel-vaal`)
 ## P6-6e: traps, mines, brands
 - [x] Trap and mine spells computed with PoB's throwing and laying time (`trap-mine-data` reason); brands, trap and mine attacks left not computed; the P6-6d review (`totem-data` reason, tests, module docs); `docs/phase-6/totems.md`
-- [ ] Open PR (base `feat/p6-6d-totems-traps`)
+- [x] Open PR: #152 (base `feat/p6-6d-totems-traps`)
 ## P6-7a: minion data
 ## P6-7b: minion actor, auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
