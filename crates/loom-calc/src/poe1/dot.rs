@@ -300,29 +300,66 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
 /// `dotCfg.flags` is `skillCfg.flags` with `Dot` (`CalcOffence.lua` 5649),
 /// and `skillCfg.flags` holds `weapon1Flags or weapon2Flags`
 /// (`CalcActiveSkill.lua` 455); its keyword flags keep `KeywordFlag.Bow`
-/// (406). The main hand's: a weapon's flags, `Unarmed` for an empty hand
-/// (PoB's `weaponTypeInfo["None"]`, `CalcActiveSkill.lua` 297 to 299, with
-/// no `Weapon` flag); none for a skill that is not an attack or another
-/// item (a skill its main hand cannot use is disabled in PoB, and
-/// `weapon2Flags` stands in only when the main hand gives none: a forced
-/// off hand, not modelled). PoB's `dotFromAttack` skills without the
-/// `Attack` type are not read (P6-11c review).
-/// PoB also strips `KeywordFlag.Hit` from a DoT that is a hit, which the
-/// engine's one `HIT` flag (`ModFlag.Hit`) does not tell apart: a "Hits
-/// and Ailments" line would reach such a DoT (no vetted skill has one).
-fn attack_weapon_flags(input: &crate::input::CalcInput<'_>, skill: &MainSkill<'_>) -> Flags {
+/// (406). The main hand's flags ([`main_hand_dot_flags`]); none for a
+/// skill that is not an attack. PoB's `dotFromAttack` skills without the
+/// `Attack` type are not read. PoB also strips `KeywordFlag.Hit` from a DoT
+/// that is a hit, which the engine's one `HIT` flag (`ModFlag.Hit`) does
+/// not tell apart: a "Hits and Ailments" line would reach such a DoT (no
+/// vetted skill has one).
+fn attack_weapon_flags(
+    input: &crate::input::CalcInput<'_>,
+    skill: &MainSkill<'_>,
+    source: &Source,
+    reasons: &mut Reasons,
+) -> Flags {
     if !skill.types.contains("Attack") {
         return Flags::NONE;
     }
-    let hands = super::collect::hands(input);
-    match &hands.main_hand {
-        super::collect::Held::Empty => Flags::UNARMED,
-        super::collect::Held::Weapon(class) => match hit::weapon_type_flags(class) {
-            Some(flags) if flags.contains(Flags::BOW) => flags | Flags::KEYWORD_BOW,
-            Some(flags) => flags,
-            None => Flags::NONE,
+    let usable = |class: &str| {
+        skill.active.is_none_or(|a| {
+            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
+        })
+    };
+    match main_hand_dot_flags(&super::collect::hands(input).main_hand, usable) {
+        Ok(flags) => flags,
+        Err(what) => {
+            reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what,
+            });
+            Flags::NONE
+        }
+    }
+}
+
+/// An attack's main-hand flags for its DoT (P6-11d review), as PoB's
+/// `getWeaponFlags` (`CalcActiveSkill.lua` 192 to 223):
+/// - a weapon the skill can use: its flags ([`hit::weapon_type_flags`]),
+///   with `KeywordFlag.Bow` for a bow;
+/// - an empty hand: `Unarmed` (`weaponTypeInfo["None"]`, no `Weapon`
+///   flag) when the skill takes any weapon or lists `Unarmed`;
+/// - a hand the skill cannot use: PoB gives no main-hand flags and, unless
+///   the off hand serves (`weapon1Flags or weapon2Flags`, not modelled),
+///   disables the skill: `Err("weapon-types")`, a reason;
+/// - a base the engine does not know, or a weapon class without PoB flags:
+///   `Err("weapon-flags")`, a reason;
+/// - a shield or another item (never PoB's `weaponData1`): no flags.
+fn main_hand_dot_flags(
+    held: &super::collect::Held,
+    usable: impl Fn(&str) -> bool,
+) -> Result<Flags, &'static str> {
+    use super::collect::Held;
+    match held {
+        Held::Empty if usable("Unarmed") => Ok(Flags::UNARMED),
+        Held::Empty => Err("weapon-types"),
+        Held::Weapon(class) if !usable(class) => Err("weapon-types"),
+        Held::Weapon(class) => match hit::weapon_type_flags(class) {
+            Some(flags) if flags.contains(Flags::BOW) => Ok(flags | Flags::KEYWORD_BOW),
+            Some(flags) => Ok(flags),
+            None => Err("weapon-flags"),
         },
-        _ => Flags::NONE,
+        Held::Unknown => Err("weapon-flags"),
+        Held::Shield | Held::Other => Ok(Flags::NONE),
     }
 }
 
@@ -495,7 +532,8 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         }
     }
     let enemy = super::enemy::enemy(input.build, input.data);
-    let flags = dot_flags(&skill, pob, &instance.stats) | attack_weapon_flags(&input, &skill);
+    let flags = dot_flags(&skill, pob, &instance.stats)
+        | attack_weapon_flags(&input, &skill, &source, &mut reasons);
     let mut totals = Vec::new();
     for (i, t) in hit::TYPES.into_iter().enumerate() {
         let Some(Some(base)) = bases.get(i).copied() else {
@@ -558,6 +596,32 @@ fn dot_multiplier(
 
 #[cfg(test)]
 mod tests {
+
+    /// An attack DoT's main-hand flags (P6-11d review): each `Held` case.
+    #[test]
+    fn main_hand_dot_flags_should_follow_pobs_weapon_flags() {
+        use super::super::collect::Held;
+        let any = |_: &str| true;
+        let axes = |c: &str| c == "One Hand Axe";
+        let w = |c: &str| Held::Weapon(c.to_owned());
+        assert_eq!(main_hand_dot_flags(&Held::Empty, any), Ok(Flags::UNARMED));
+        assert_eq!(main_hand_dot_flags(&Held::Empty, axes), Err("weapon-types"));
+        assert_eq!(
+            main_hand_dot_flags(&w("Bow"), any),
+            Ok(hit::weapon_type_flags("Bow").unwrap_or(Flags::NONE) | Flags::KEYWORD_BOW)
+        );
+        assert_eq!(
+            main_hand_dot_flags(&w("One Hand Axe"), axes),
+            hit::weapon_type_flags("One Hand Axe").ok_or("none")
+        );
+        assert_eq!(main_hand_dot_flags(&w("Bow"), axes), Err("weapon-types"));
+        assert_eq!(main_hand_dot_flags(&w("Shield"), any), Err("weapon-flags"));
+        assert_eq!(
+            main_hand_dot_flags(&Held::Unknown, any),
+            Err("weapon-flags")
+        );
+        assert_eq!(main_hand_dot_flags(&Held::Shield, any), Ok(Flags::NONE));
+    }
     use super::*;
 
     fn stats(rows: &[(&str, i64)]) -> Vec<(String, i64)> {

@@ -1241,7 +1241,24 @@ fn intimidating_cry_uptime_should_read_the_combined_speed_when_dual_wielding() {
     assert_eq!(rate, value(&plain, Field::Speed));
     let tick = 1.0 / 0.033;
     let cooldown = math::ceil(8.0 * tick) / tick;
-    let uptime = ((2.0 / rate) / (cooldown + 0.8)).min(1.0) * 100.0;
+    let uptime_at = |rate: f64| ((2.0 / rate) / (cooldown + 0.8)).min(1.0) * 100.0;
+    let uptime = uptime_at(rate);
+    // Each hand's own rate gives another uptime, none capped: a per-hand
+    // uptime would not give one factor (P6-11d review).
+    let siege = [("Weapon 1", "Test Siege Axe")];
+    for own in [
+        value(
+            &run(&build("Smite", Some("1"), &AXE, &OPEN), &AXE),
+            Field::Speed,
+        ),
+        value(
+            &run(&build("Smite", Some("1"), &siege, &OPEN), &siege),
+            Field::Speed,
+        ),
+    ] {
+        assert_ne!(own, rate);
+        assert!(uptime_at(own) < 100.0);
+    }
     assert!(uptime < 100.0);
     let expected = value(&plain, Field::AverageDamage) * (1.0 + uptime / 100.0);
     let got = value(&r, Field::AverageDamage);

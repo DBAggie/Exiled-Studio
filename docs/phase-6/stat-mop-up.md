@@ -143,3 +143,26 @@ The first batch of skill stats (P6-6a: `poe1::skill_no_output` and kin) is in `d
   - `intimidating_cry_uptime_should_read_the_combined_speed_when_dual_wielding`: the uptime reads the hands' combined speed, so both hands' damage takes one factor.
 - **Not tested end to end:** the elemental penetration line (`reduce_enemy_elemental_resistance_with_weapons_%`). It has a table test only.
 - **Evidence** (`local/p6/p6-11d` against `local/p6/p6-11c`): no value or state changed in the public builds or the corpus. Public `calc-parity`: 157 builds, 109 expected differences, 0 unexpected, no unused entry. Both runs were byte-identical.
+
+## P6-11e: the P6-11d review
+
+**An attack DoT's main hand follows PoB's `getWeaponFlags`** (`dot::main_hand_dot_flags`, `CalcActiveSkill.lua` 192 to 223):
+
+| Main hand | Flags |
+|---|---|
+| A weapon the skill can use | The weapon's flags; `KeywordFlag.Bow` for a bow |
+| Empty | `Unarmed`, if the skill takes any weapon or lists `Unarmed` |
+| A hand the skill cannot use | Reason `weapon-types` (PoB disables the skill unless the off hand serves, which is not modelled) |
+| A base the engine does not know, or a class without PoB flags | Reason `weapon-flags` |
+| A shield or another item | None (never PoB's `weaponData1`) |
+
+P6-11d gave `Unarmed` and a weapon's flags without the skill's weapon check, and no flags, without a reason, for an unknown base.
+
+**Tests:**
+- `main_hand_dot_flags_should_follow_pobs_weapon_flags` covers each case.
+- The dual-wield Intimidating Cry test also checks that each hand's own rate differs from the combined rate, and that no hand's uptime is capped. A per-hand uptime would then fail it.
+
+**Evidence** (`local/p6/p6-11e` against `local/p6/p6-11d`):
+- No value or state changed in the public builds or the corpus.
+- Public `calc-parity`: 157 builds, 109 expected differences, 0 unexpected, no unused entry.
+- Both runs were byte-identical.

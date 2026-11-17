@@ -103,4 +103,6 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11c PR #160 (base `feat/p6-11b-stat-batch`)
 - [x] P6-11d: the P6-11c review (arrow keyword from the active gem only, an attack DoT's main-hand flags with `Unarmed`, weapon-row and dual-wield Intimidating Cry tests); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11d PR #161 (base `feat/p6-11c-weapon-review`)
+- [x] P6-11e: the P6-11d review (an attack DoT's main hand as PoB's `getWeaponFlags`, with the skill's weapon check and reasons; tests); `docs/phase-6/stat-mop-up.md`
+- [ ] P6-11e PR (base `feat/p6-11d-arrow-review`)
 ## P6-12: combined and full DPS; report
