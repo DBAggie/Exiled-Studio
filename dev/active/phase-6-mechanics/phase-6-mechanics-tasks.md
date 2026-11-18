@@ -66,6 +66,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] PoB's weapon rule for melee and projectile; `PobSkill::own_stats` (generator, regenerated table) in the hit and DoT vetting; explicit DoT key lists; tests; `docs/phase-6/skill-data.md`, "P6-6c"
 - [x] Open PR: #149 (base `feat/p6-6b-skill-data`)
 ## P6-5: channelling and Vaal skills
+- [x] Channelled skills computed (no tick cap; stages and release left to the vetting rule); Vaal skills checked by the sweep; the P6-6c review (`weapon_flags`, melee over projectile for spells and DoT); `docs/phase-6/channelling.md`
+- [x] Open PR: #150 (base `feat/p6-6c-skill-review`)
 ## P6-6: totems, traps, mines, brands
 ## P6-7a: minion data
 ## P6-7b: minion actor, auras and buffs on it, minion defences
