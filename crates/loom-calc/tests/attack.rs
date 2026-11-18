@@ -737,7 +737,8 @@ fn only_attacks_with_a_usable_main_hand_weapon_should_be_computed() {
 /// Phase 6, P6-2a: two different weapons, one with local accuracy. Each
 /// hand's pass reads its own weapon's accuracy (PoB's `MainHandAttack` and
 /// `OffHandAttack` conditions), and the hit chance and average damage are
-/// the two hands' averaged (`combineStat` `AVERAGE` and `DPS`); an off-hand
+/// the two hands' averaged (`combineStat` `AVERAGE` and `DPS`), the hit DPS
+/// their product with the combined speed (P6-11b); an off-hand
 /// weapon the skill cannot use disables the skill.
 #[test]
 fn dual_wielding_should_combine_each_hands_own_pass() {
@@ -764,6 +765,16 @@ fn dual_wielding_should_combine_each_hands_own_pass() {
         let expected = (value(&main, field) + value(&off, field)) / 2.0;
         assert_eq!(value(&dual, field), expected, "{field}");
     }
+    // Each hand's DPS reads the combined speed (`CalcOffence.lua` 3712,
+    // `globalOutput.Speed`; P6-11b): the hit DPS is the combined average
+    // times the combined speed, not the hands' own DPS averaged.
+    let (average, speed) = (
+        value(&dual, Field::AverageDamage),
+        value(&dual, Field::Speed),
+    );
+    assert_eq!(value(&dual, Field::HitDps), average * speed);
+    let own = (value(&main, Field::HitDps) + value(&off, Field::HitDps)) / 2.0;
+    assert_ne!(value(&dual, Field::HitDps), own);
     // A mace the skill cannot use in the off hand: not computed.
     let mace = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Mace")];
     let r = run(&build("Smite", Some("1"), &mace, &OPEN), &mace);

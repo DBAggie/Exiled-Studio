@@ -1513,6 +1513,26 @@
       "description": "Smite with a Rusted Hatchet and a Splintered Tower Shield, and lines that hold while holding a shield (attack and spell block, elemental resistances, physical attack damage) or while dual wielding or holding a shield (P6-11a)."
     },
     {
+      "id": "smite-axe-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-axe-lines-templar.xml",
+      "sha256": "999e0e274aaed3c90ca73ce44fa11dd2dd7e37f47a622986f8ac394764ed8247",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and lines by weapon type: axe, one-handed, and melee lines apply; bow, sword, two-handed, and wand lines do not (P6-11b)."
+    },
+    {
+      "id": "smite-dual-wield-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-dual-wield-lines-templar.xml",
+      "sha256": "0364259c1b00b0d7a5a4c9bf6878e29d14b6c30a45e0e8caa2b1cd859b4dcad4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite dual wielding a Rusted Hatchet and a Rusted Sword, with dual wielding lines and lines of one hand's weapon type (P6-11b)."
+    },
+    {
       "id": "ice-nova-ignite-overload-witch.xml",
       "tier": "mechanic",
       "source": "local",

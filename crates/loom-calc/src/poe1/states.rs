@@ -9,14 +9,16 @@
 //!   is `Staff`).
 //!
 //! **The engine** settles only the conditions a mapping row reads
-//! ([`USING_STAFF`], [`USING_SHIELD`]), each from the hands of the weapon
-//! set in use ([`collect::hands`]): a hand holding an item whose base is
-//! not known leaves its condition unsettled, so an effect that needs it is
-//! `unmodelled-condition` (a reason), never a guess. Any other condition
-//! stays unsettled, as before P3-8f: `OffHandIsEmpty`, `Unarmed`,
-//! `UsingMeleeWeapon`, `UsingOneHandedWeapon`, `UsingTwoHandedWeapon`,
-//! `DualWielding`, the other weapon types, and Necromantic Aegis's
-//! shield; an effect that needs one is a reason.
+//! ([`USING_STAFF`], [`USING_SHIELD`], [`DUAL_WIELDING`] (P6-11a),
+//! [`USING_WAND`] (P6-11b), and
+//! the engine's own [`MAIN_HAND_WEAPON`]), each from the hands of the
+//! weapon set in use ([`collect::hands`]): a hand holding an item whose
+//! base is not known leaves its condition unsettled, so an effect that
+//! needs it is `unmodelled-condition` (a reason), never a guess. Any other
+//! condition stays unsettled, as before P3-8f: `OffHandIsEmpty`,
+//! `Unarmed`, `UsingMeleeWeapon`, `UsingOneHandedWeapon`,
+//! `UsingTwoHandedWeapon`, the other weapon types, and Necromantic
+//! Aegis's shield; an effect that needs one is a reason.
 //!
 //! Differences on purpose: PoB also sets `Using<flag>` from the off hand's
 //! weapon type (`CalcPerform.lua` 187 to 190), but a staff cannot be held
@@ -39,7 +41,12 @@ pub const USING_STAFF: &str = "UsingStaff";
 /// The off hand holds a shield (PoB's `UsingShield`).
 pub const USING_SHIELD: &str = "UsingShield";
 
-/// Both hands hold a weapon (PoB's `DualWielding`; P6-11a).
+/// A hand holds a wand (PoB's `UsingWand`, from either hand's weapon
+/// type, `CalcPerform.lua` 187 to 190; P6-11b).
+pub const USING_WAND: &str = "UsingWand";
+
+/// Both hands hold a weapon (PoB's `DualWielding`; P6-11a):
+/// [`collect::Hands::dual_wielding`].
 pub const DUAL_WIELDING: &str = "DualWielding";
 
 /// The main hand holds a weapon (P3-8n): PoB gives an attack with it
@@ -89,18 +96,14 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         Held::Empty | Held::Shield | Held::Other => Some(false),
         Held::Unknown => None,
     };
-    // PoB: `DualWielding` when both hands hold a weapon (`CalcSetup.lua`,
-    // the weapon types of both hands; a shield is not a weapon).
-    let dual = match (&hands.main_hand, &hands.off_hand) {
-        (Held::Unknown, _) | (_, Held::Unknown) => None,
-        (Held::Weapon(_), Held::Weapon(_)) => Some(true),
-        _ => Some(false),
-    };
+    let dual = hands.dual_wielding();
+    let wand = using_wand(&hands);
     for (key, value) in [
         (USING_STAFF, staff),
         (USING_SHIELD, shield),
         (MAIN_HAND_WEAPON, weapon),
         (DUAL_WIELDING, dual),
+        (USING_WAND, wand),
     ] {
         if let Some(v) = value {
             out.insert(ConditionKey::new(key), v);
@@ -114,6 +117,22 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         out.insert(ConditionKey::new(NO_LIFE_MODIFIERS_ON_BODY_ARMOUR), v);
     }
     out
+}
+
+/// PoB's `UsingWand` (`CalcPerform.lua` 187 to 190, either hand's weapon
+/// type): a wand in a hand settles it true; else an unknown hand leaves it
+/// unsettled.
+fn using_wand(hands: &collect::Hands) -> Option<bool> {
+    let is_wand = |held: &Held| match held {
+        Held::Weapon(class) => Some(class == "Wand"),
+        Held::Empty | Held::Shield | Held::Other => Some(false),
+        Held::Unknown => None,
+    };
+    match (is_wand(&hands.main_hand), is_wand(&hands.off_hand)) {
+        (Some(true), _) | (_, Some(true)) => Some(true),
+        (Some(false), Some(false)) => Some(false),
+        _ => None,
+    }
 }
 
 /// Whether an allocated node or a chosen mastery effect carries
@@ -284,6 +303,51 @@ mod tests {
         );
         // No line: no Life Modifier.
         assert_eq!(tagless(&BTreeSet::new(), &none, &mods), Some(true));
+    }
+
+    /// `DualWielding` (P6-11a review): a weapon in each hand; a shield or
+    /// an empty hand is not one; an unknown base or an empty main hand
+    /// with an off-hand weapon (PoB's unarmed data) is unsettled.
+    #[test]
+    fn dual_wielding_should_be_settled_only_when_certain() {
+        let weapon = || Held::Weapon("One Hand Axe".to_owned());
+        let dual = |main_hand, off_hand| {
+            collect::Hands {
+                main_hand,
+                off_hand,
+                ..collect::Hands::default()
+            }
+            .dual_wielding()
+        };
+        assert_eq!(dual(weapon(), weapon()), Some(true));
+        assert_eq!(dual(weapon(), Held::Shield), Some(false));
+        assert_eq!(dual(weapon(), Held::Empty), Some(false));
+        assert_eq!(dual(weapon(), Held::Other), Some(false));
+        assert_eq!(dual(Held::Empty, Held::Empty), Some(false));
+        assert_eq!(dual(weapon(), Held::Unknown), None);
+        assert_eq!(dual(Held::Unknown, Held::Shield), None);
+        assert_eq!(dual(Held::Empty, weapon()), None);
+    }
+
+    /// `UsingWand` (P6-11b): a wand in either hand settles it; otherwise
+    /// an unknown hand leaves it unsettled.
+    #[test]
+    fn using_wand_should_read_either_hand() {
+        let wand = || Held::Weapon("Wand".to_owned());
+        let axe = || Held::Weapon("One Hand Axe".to_owned());
+        let using = |main_hand, off_hand| {
+            let hands = collect::Hands {
+                main_hand,
+                off_hand,
+                ..collect::Hands::default()
+            };
+            using_wand(&hands)
+        };
+        assert_eq!(using(wand(), Held::Empty), Some(true));
+        assert_eq!(using(axe(), wand()), Some(true));
+        assert_eq!(using(wand(), Held::Unknown), Some(true));
+        assert_eq!(using(axe(), Held::Shield), Some(false));
+        assert_eq!(using(axe(), Held::Unknown), None);
     }
 
     #[test]

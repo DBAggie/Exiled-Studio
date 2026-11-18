@@ -936,6 +936,24 @@ pub enum Held {
     Unknown,
 }
 
+impl Hands {
+    /// PoB's `DualWielding` (`CalcPerform.lua` 216: both hands have weapon
+    /// data; P6-11a review): a weapon in each hand. An empty main hand with
+    /// a weapon in the off hand is `DualWielding` in PoB (its unarmed
+    /// weapon data, `CalcSetup.lua` 1462), but the engine has no unarmed
+    /// attack: unsettled, as is a hand whose base is not known. Hollow Palm
+    /// Technique and "Counts as Dual Wielding" items are not modelled
+    /// (their stats are reasons).
+    #[must_use]
+    pub fn dual_wielding(&self) -> Option<bool> {
+        match (&self.main_hand, &self.off_hand) {
+            (Held::Unknown, _) | (_, Held::Unknown) | (Held::Empty, Held::Weapon(_)) => None,
+            (Held::Weapon(_), Held::Weapon(_)) => Some(true),
+            _ => Some(false),
+        }
+    }
+}
+
 impl Held {
     fn of(base: Option<ItemBase>) -> Self {
         match base {
@@ -1190,16 +1208,19 @@ fn armour_slot(
 }
 
 /// The inherent bonuses of dual wielding (Phase 6; PoB's `CalcSetup.lua`
-/// 533 and 535, `Condition:DualWielding`: a weapon in each hand): attacks'
-/// `Speed` MORE by the character template's
-/// `dual_wield_inherent_attack_speed_+%_final`, and `BlockChance` BASE by
-/// its `inherent_block_while_dual_wielding_%`. PoB's doubled and removed
-/// variants come from stats this engine does not map (each a reason).
+/// 533 and 535, `Condition:DualWielding`): attacks' `Speed` MORE by the
+/// character template's `dual_wield_inherent_attack_speed_+%_final`, and
+/// `BlockChance` BASE by its `inherent_block_while_dual_wielding_%`, each
+/// on the settled [`super::states::DUAL_WIELDING`] (one definition,
+/// [`Hands::dual_wielding`]; unsettled, the effect is a reason). PoB's
+/// doubled and removed variants come from stats this engine does not map
+/// (each a reason).
 fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
-    let hands = hands(input);
-    if hands.main.is_none() || hands.off.is_none() {
+    let dual = hands(input).dual_wielding();
+    if dual == Some(false) {
         return;
     }
+    let state = crate::condition::ConditionKey::new(super::states::DUAL_WIELDING);
     for (stat, quantity, op, all) in [
         (
             "dual_wield_inherent_attack_speed_+%_final",
@@ -1220,9 +1241,15 @@ fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                 quantity,
                 op,
                 value: value as f64,
-                conditions: Conditions::none().with_all(all),
+                conditions: Conditions::none()
+                    .with_all(all)
+                    .with_state(state.clone(), true),
                 source: Source::Rule("dual-wielding"),
             }),
+            // Unsettled and no value: nothing to read. With the data's
+            // value, an unsettled state is a reason where the effect is
+            // queried (the speed and block fields), not on every field.
+            None if dual.is_none() => {}
             None => ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "character_constants",
                 key: stat.to_owned(),
