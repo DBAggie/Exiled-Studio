@@ -17,7 +17,8 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
 use crate::poe1::ailment::Ailment;
 use crate::poe1::{
-    ArmourSlot, Defence, PieceValue, Poe1Quantity, Pool, WeaponValue, conditions, states,
+    ArmourSlot, Defence, LeechSource, PieceValue, Poe1Quantity, Pool, WeaponValue, conditions,
+    states,
 };
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -476,6 +477,64 @@ pub const HIT_ROWS: &[HitRow] = &[
             1.0,
             NONE,
             Flags::IGNITE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Spell Damage Leeched as Energy Shield" (`DamageEnergyShieldLeech` BASE).
+    (
+        "base_energy_shield_leech_from_spell_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::EnergyShield,
+                LeechSource::Any,
+            )),
+            Op::Base,
+            100.0,
+            Flags::SPELL,
+            NONE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Attack Damage Leeched as Life" (`DamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_attack_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Life, LeechSource::Any)),
+            Op::Base,
+            100.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Spell Damage Leeched as Life" (`DamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_spell_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Life, LeechSource::Any)),
+            Op::Base,
+            100.0,
+            Flags::SPELL,
+            NONE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Attack Damage Leeched as Mana" (`DamageManaLeech` BASE).
+    (
+        "base_mana_leech_from_attack_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Mana, LeechSource::Any)),
+            Op::Base,
+            100.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Spell Damage Leeched as Mana" (`DamageManaLeech` BASE).
+    (
+        "base_mana_leech_from_spell_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Mana, LeechSource::Any)),
+            Op::Base,
+            100.0,
+            Flags::SPELL,
+            NONE,
         )],
     ),
     // P3-8n: "#% of Physical Damage Converted to Fire Damage"
@@ -1028,6 +1087,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-10b part 9: "#% of Physical Attack Damage Leeched as Life" (`PhysicalDamageLifeLeech` BASE).
+    (
+        "life_leech_from_physical_attack_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            100.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     (
         "lightning_critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, SK_LIGHTNING, NONE)],
@@ -1056,6 +1129,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             Flags::MACE.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-10b part 9: "#% of Physical Attack Damage Leeched as Mana" (`PhysicalDamageManaLeech` BASE).
+    (
+        "mana_leech_from_physical_attack_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Mana,
+                LeechSource::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            100.0,
+            Flags::ATTACK,
             NONE,
         )],
     ),
@@ -1768,6 +1855,11 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::HybridLifeCost
                     | Poe1Quantity::ManaCostAsLifeCost
                     | Poe1Quantity::ManaCostAsEnergyShieldCost
+                    // The hit's leech (P6-10b part 9).
+                    | Poe1Quantity::DamageLeech(..)
+                    | Poe1Quantity::LeechRate(_)
+                    | Poe1Quantity::InstantLeech(_)
+                    | Poe1Quantity::CannotLeech(_)
                     // "Deal no ... Damage" (P6-7c2, Brutality's).
                     | Poe1Quantity::DealNo(..)
                     // P6-11j.
@@ -2382,6 +2474,24 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 9: "Cannot Leech Life" (`CannotLeechLife` FLAG).
+    (
+        "base_cannot_leech_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CannotLeech(Pool::Life)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // P6-10b part 9: "Cannot Leech Mana" (`CannotLeechMana` FLAG).
+    (
+        "base_cannot_leech_mana",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CannotLeech(Pool::Mana)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
     // P6-10b: "#% increased Cost of Skills" (`Cost` INC).
@@ -2393,6 +2503,42 @@ pub const ROWS: &[Row] = &[
     (
         "base_dexterity_and_intelligence",
         &[(DEX, Op::Base, 1.0), (INT, Op::Base, 1.0)],
+    ),
+    // P6-10b part 9: "#% of Cold Damage Leeched as Energy Shield" (`ColdDamageEnergyShieldLeech` BASE).
+    (
+        "base_energy_shield_leech_from_cold_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::EnergyShield,
+                LeechSource::Type(DamageType::Cold),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Fire Damage Leeched as Energy Shield" (`FireDamageEnergyShieldLeech` BASE).
+    (
+        "base_energy_shield_leech_from_fire_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::EnergyShield,
+                LeechSource::Type(DamageType::Fire),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Lightning Damage Leeched as Energy Shield" (`LightningDamageEnergyShieldLeech` BASE).
+    (
+        "base_energy_shield_leech_from_lightning_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::EnergyShield,
+                LeechSource::Type(DamageType::Lightning),
+            )),
+            Op::Base,
+            0.01,
+        )],
     ),
     // P6-10b: "Regenerate # Energy Shield per second" (`EnergyShieldRegen`
     // BASE, the stat per minute).
@@ -2421,6 +2567,78 @@ pub const ROWS: &[Row] = &[
     (
         "base_life_cost_+%",
         &[(Quantity::Poe1(Poe1Quantity::LifeCost), Op::Increased, 1.0)],
+    ),
+    // P6-10b part 9: "#% of Chaos Damage Leeched as Life" (`ChaosDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_chaos_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Chaos),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Cold Damage Leeched as Life" (`ColdDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_cold_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Cold),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Elemental Damage Leeched as Life" (`ElementalDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_elemental_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Elemental,
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Fire Damage Leeched as Life" (`FireDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_fire_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Fire),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Lightning Damage Leeched as Life" (`LightningDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_lightning_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Lightning),
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% of Physical Damage Leeched as Life" (`PhysicalDamageLifeLeech` BASE).
+    (
+        "base_life_leech_from_physical_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            0.01,
+        )],
     ),
     // P6-10b: "Regenerate # Life per second" (`LifeRegen` BASE, the stat per minute).
     (
@@ -2452,6 +2670,18 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::ManaCostEfficiency),
             Op::Increased,
             1.0,
+        )],
+    ),
+    // P6-10b part 9: "#% of Lightning Damage Leeched as Mana" (`LightningDamageManaLeech` BASE).
+    (
+        "base_mana_leech_from_lightning_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Mana,
+                LeechSource::Type(DamageType::Lightning),
+            )),
+            Op::Base,
+            0.01,
         )],
     ),
     // P6-10b: "Regenerate # Mana per second" (`ManaRegen` BASE).
@@ -2627,6 +2857,27 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 9: "#% of Damage Leeched as Energy Shield" (`DamageEnergyShieldLeech` BASE).
+    (
+        "energy_shield_leech_from_any_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::EnergyShield,
+                LeechSource::Any,
+            )),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% increased total Recovery per second from Energy Shield Leech" (`EnergyShieldLeechRate` INC).
+    (
+        "energy_shield_leech_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRate(Pool::EnergyShield)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P6-10b: "#% increased Energy Shield Recharge Rate"
     // (`EnergyShieldRecharge` INC).
     (
@@ -2723,6 +2974,66 @@ pub const ROWS: &[Row] = &[
         "hierophant_mana_cost_+%_final",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
     ),
+    // P6-10b part 9: "#% of Chaos Damage Leeched as Life" (`ChaosDamageLifeLeech` BASE).
+    (
+        "horrible_ugly_life_leech_from_chaos_damage_perhundredthousand",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Chaos),
+            )),
+            Op::Base,
+            0.001,
+        )],
+    ),
+    // P6-10b part 9: "#% of Cold Damage Leeched as Life" (`ColdDamageLifeLeech` BASE).
+    (
+        "horrible_ugly_life_leech_from_cold_damage_perhundredthousand",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Cold),
+            )),
+            Op::Base,
+            0.001,
+        )],
+    ),
+    // P6-10b part 9: "#% of Fire Damage Leeched as Life" (`FireDamageLifeLeech` BASE).
+    (
+        "horrible_ugly_life_leech_from_fire_damage_perhundredthousand",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Fire),
+            )),
+            Op::Base,
+            0.001,
+        )],
+    ),
+    // P6-10b part 9: "#% of Lightning Damage Leeched as Life" (`LightningDamageLifeLeech` BASE).
+    (
+        "horrible_ugly_life_leech_from_lightning_damage_perhundredthousand",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Lightning),
+            )),
+            Op::Base,
+            0.001,
+        )],
+    ),
+    // P6-10b part 9: "#% of Physical Damage Leeched as Life" (`PhysicalDamageLifeLeech` BASE).
+    (
+        "horrible_ugly_life_leech_from_physical_damage_perhundredthousand",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(
+                Pool::Life,
+                LeechSource::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            0.001,
+        )],
+    ),
     // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
     // Resistances" (the enemy's `ElementalResist` BASE while ignited or
     // chilled, 4054; `poe1::damage_taken`).
@@ -2741,6 +3052,67 @@ pub const ROWS: &[Row] = &[
     (
         "kill_enemy_on_hit_if_under_10%_life",
         &[(Quantity::Poe1(Poe1Quantity::CullingStrike), Op::Flag, 1.0)],
+    ),
+    // P6-10b part 9: "#% of Leech is Instant" (`InstantEnergyShieldLeech` BASE,
+    // `InstantManaLeech` BASE, `InstantLifeLeech` BASE).
+    (
+        "leech_%_is_instant",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::InstantLeech(Pool::EnergyShield)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::InstantLeech(Pool::Mana)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::InstantLeech(Pool::Life)),
+                Op::Base,
+                1.0,
+            ),
+        ],
+    ),
+    // P6-10b part 9: "#% of Damage Leeched as Life" (`DamageLifeLeech` BASE).
+    (
+        "life_leech_from_any_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Life, LeechSource::Any)),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% increased total Recovery per second from Life Leech" (`LifeLeechRate` INC).
+    (
+        "life_leech_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRate(Pool::Life)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 9: "#% increased total Recovery per second from Life, Mana, or Energy Shield Leech" (`LifeLeechRate` INC, `ManaLeechRate` INC, `EnergyShieldLeechRate` INC).
+    (
+        "life_mana_es_leech_speed_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRate(Pool::Life)),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRate(Pool::Mana)),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRate(Pool::EnergyShield)),
+                Op::Increased,
+                1.0,
+            ),
+        ],
     ),
     // P6-10b: "#% increased Life Recovery rate" (`LifeRecoveryRate` INC).
     (
@@ -2780,6 +3152,24 @@ pub const ROWS: &[Row] = &[
         "magic_utility_flask_effect_+%",
         &[(
             Quantity::Poe1(Poe1Quantity::MagicUtilityFlaskEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 9: "#% of Damage Leeched as Mana" (`DamageManaLeech` BASE).
+    (
+        "mana_leech_from_any_damage_permyriad",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageLeech(Pool::Mana, LeechSource::Any)),
+            Op::Base,
+            0.01,
+        )],
+    ),
+    // P6-10b part 9: "#% increased total Recovery per second from Mana Leech" (`ManaLeechRate` INC).
+    (
+        "mana_leech_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRate(Pool::Mana)),
             Op::Increased,
             1.0,
         )],
@@ -3176,10 +3566,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
-    (
-        "base_energy_shield_leech_from_spell_damage_permyriad",
-        "leech",
-    ),
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
     // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
     ("base_is_projectile", "skill type marker"),
@@ -3189,10 +3575,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_life_gain_per_target", "recovery"),
     // P6-11g: "Gain # Life per Enemy Killed" (`LifeOnKill` BASE).
     ("base_life_gained_on_enemy_death", "recovery"),
-    // P6-11g: "#% of Attack Damage Leeched as Life" (`DamageLifeLeech` BASE).
-    ("base_life_leech_from_attack_damage_permyriad", "leech"),
-    // P6-11g: "#% of Attack Damage Leeched as Mana" (`DamageManaLeech` BASE).
-    ("base_mana_leech_from_attack_damage_permyriad", "leech"),
     // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
     // counts fortification only while Fortified (`buffFortification`, a named
     // condition), and then only damage taken when hit and modifiers per
@@ -3394,8 +3776,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("keystone_mana_shield", "keystone-defence"),
     // P6-11f: Unwavering Stance (the keystone node: cannot evade attacks, cannot be stunned): evade chance and stun, no slice field.
     ("keystone_unwavering_stance", "evade"),
-    // P6-11g: "#% of Leech is Instant" (`Instant<Pool>Leech` BASE).
-    ("leech_%_is_instant", "leech"),
     (
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
         "flask",

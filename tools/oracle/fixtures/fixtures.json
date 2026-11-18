@@ -2071,6 +2071,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-10b part 8: Smite with \"Attack Skills Cost Life instead of 40% of Mana Cost\": the attack's life share. Speed, the DPS fields, and the costs per second carry the Q11 attack rate (DIV-0273 to DIV-0278)."
+    },
+    {
+      "id": "leech-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/leech-ice-nova-witch.xml",
+      "sha256": "e9e135e7686ddf6a4d74cee97d8a02a67d900a1416375739ca40685050ea3daa",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "FullDPS", "Int", "Life", "LifeCost", "LifeLeechRate", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaLeechRate", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b part 9: Ice Nova with 2% of Elemental Damage leeched as Life, 1% of Damage leeched as Mana, and 30% increased life leech recovery: each pass's leech against the enemy, its instances at the cast rate, the leech rates."
+    },
+    {
+      "id": "leech-instant-cap-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/leech-instant-cap-ice-nova-witch.xml",
+      "sha256": "0576b945b4dff7e8bce5459d7261d2507ad5d03a14c44097b23cf99adf7867e2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "FullDPS", "Int", "Life", "LifeCost", "LifeLeechRate", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b part 9: Ice Nova with 12% of Damage leeched as Life and 25% of Leech is Instant: the crit pass's leech held to the instance cap, the instant share at the cast rate."
     }
   ]
 }

@@ -302,7 +302,7 @@ fn per_minute_constant(
 }
 
 /// The pool's recovery rate modifier, `(1 + inc / 100) x more`.
-fn recovery_rate(
+pub(super) fn recovery_rate(
     calc: &mut Calc<'_>,
     pool: Pool,
     reasons: &mut Reasons,

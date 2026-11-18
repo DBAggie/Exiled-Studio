@@ -33,8 +33,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use loom_calc::poe1::Poe1Quantity;
 use loom_calc::poe1::gems::{self, BuffStat, Kind};
+use loom_calc::poe1::{LeechSource, Poe1Quantity, Pool};
 use loom_calc::{Flags, Op, Quantity};
 use serde_json::{Value, json};
 
@@ -631,6 +631,19 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
         Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
+        // P6-10b part 9: leech.
+        Quantity::Poe1(Poe1Quantity::DamageLeech(p, source)) => {
+            let pool = match p {
+                Pool::Life => "Life",
+                Pool::Mana => "Mana",
+                Pool::EnergyShield => "EnergyShield",
+            };
+            match source {
+                LeechSource::Any => format!("Damage{pool}Leech"),
+                LeechSource::Type(t) => format!("{}Damage{pool}Leech", title(t.name())),
+                LeechSource::Elemental => format!("ElementalDamage{pool}Leech"),
+            }
+        }
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();

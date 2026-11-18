@@ -296,7 +296,7 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
   - the line for all three rates.
 - **Skill stat map:** PoB's skill stat map reads the life and energy shield instance stats as the rate (`SkillStatMap.lua` 482 to 487), but its item lines read them as the instance (`ModParser.lua` 563 to 565). No public build has the gem form.
 - **Not modelled:** the conditioned caps (a crit or savage hit recently, Defiance, Zealotry, maximum rage), the doubled caps, and a parent's or party member's percent. Each is an unmapped stat, so a reason.
-- **Not yet ported:** the leech itself (the instances, the rate, `LifeLeechGainRate`).
+- **The leech itself** is part 9.
 
 ### Evidence
 
@@ -345,5 +345,42 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Moved in partial builds:**
   - RF Chieftain's damage over time and Elemental Hit's full DPS gain Lifetap's 20% more: both builds configure the buff.
   - Four partial builds' mana costs moved toward PoB's.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,764 tests and clippy pass.
+
+## Part 9: the leech rates
+
+**What PoB does** (`CalcOffence.lua` 3296 to 3667, 3981 to 4005), for life, energy shield, and mana:
+- **Per pass:** in each hit pass (crits and non-crits), each damage type's average against the enemy (after `effMult`) times its leech percent / 100.
+  - The percent is `Sum(BASE, "DamageLeech", "Damage<Pool>Leech", "<Type>Damage<Pool>Leech", "ElementalDamage<Pool>Leech")`; `DamageLeech` is life's and mana's alone.
+  - Nothing is leeched with `CannotLeech<Pool>`.
+  - Each pass's total is held to the pool's instance cap, then weighted by the crit chance.
+- **The instant share:** `Instant<Pool>Leech`, held between 0 and 100, is taken out of the leech per hit.
+- **Instances:** `duration = leech / pool / LeechRateBase` (0.02), and `instances = duration x hitRate`, where `hitRate = HitChance / 100 x Speed`.
+- **The rate:** `instanceRate = pool x 0.02 x (1 + inc / 100) x more` of `<Pool>LeechRate`, and `rate = instances x instanceRate`.
+- **The result:** `<Pool>LeechRate = instant x hitRate + min(rate, Max<Pool>LeechRate) x <Pool>RecoveryRateMod`.
+
+**The engine** (`leech::rates`, from the hit phase; slice revision 17):
+- **The per-type values:** the hit's passes keep each type's value against the enemy (`HitSources::against`).
+- **Which hits:** a spell's or a one-handed attack's hit gets a rate for each pool it leeches (`life-leech-rate`, `energy-shield-leech-rate`, `mana-leech-rate`).
+  - A dual wielder's leech is `NotComputed`: PoB combines the hands (`combineStat`).
+  - A minion's hit sets none.
+- **The quantities:** `DamageLeech(pool, source)` (`LeechSource` is any damage, a type, or elemental), `LeechRate`, `InstantLeech`, and `CannotLeech`, all skill quantities.
+- **The rows:** 31 rows generated from PoB's own parse of each leech stat's line (`ModParser`, with its flags: attack or spell hits are hit rows), plus "#% of Leech is Instant".
+  - Three of them were `NoEffect` rows: the attack and spell damage leech lines and the instant line.
+  - Blood Rage's leech is now its buff's row (`gems`, checked by `gem_effects`, whose names gained `Damage<Pool>Leech`).
+- **Not modelled:** Ghost Reaver, Immortal Ambition, leech conditioned on a crit or on an enemy's state, the enemy's own leech lines, and totems', traps', and mines' leech to you. Each is an unmapped stat, so a reason.
+
+### Evidence
+
+- **Fixtures:** two new mechanic fixtures, each rate equal to PoB's:
+  - `leech-ice-nova-witch.xml`: life 27.02, mana 10.39.
+  - `leech-instant-cap-ice-nova-witch.xml`: life 123.25, the crit pass held to the instance cap.
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 8,405.
+  - Ice Nova Elementalist's energy shield leech and Blood Rage's Smite leech equal PoB's.
+  - Three Smite builds' life leech carries their registered Q11 attack rate: DIV-0279 to DIV-0281, `game-truth`.
+  - Builds whose hit is not computed, or whose leech comes from an unmapped line, have no field (`not-computed` against PoB's value).
+  - No other field's value or state moved.
+- **Data parity:** `uncategorized` 353, `gem_effects` 0 differences.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,764 tests and clippy pass.

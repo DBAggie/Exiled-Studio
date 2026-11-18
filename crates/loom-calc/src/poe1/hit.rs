@@ -1129,6 +1129,10 @@ fn set_ailments(
     data: &dyn CalcData,
     unvetted: &Reasons,
 ) -> Result<(), CalcError> {
+    // The hit's leech (P6-10b part 9): the character's own.
+    if calc.actor() == crate::engine::Actor::Player {
+        super::leech::rates(calc, hit, unvetted)?;
+    }
     for ailment in super::ailment::Ailment::ALL {
         if let Some((dps, mut reasons)) = super::ailment::damaging(calc, hit, enemy, data, ailment)?
         {
@@ -1462,6 +1466,22 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
         }
         if any {
             calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
+        }
+    }
+    // PoB combines a dual wielder's leech per hand (`combineStat`, 3877 to
+    // 3891): not modelled yet (P6-10b part 9).
+    if calc.actor() == crate::engine::Actor::Player {
+        for pool in super::leech::POOLS {
+            let mut leeches = false;
+            for (hand, flags) in [(&main, flags), (&off, off_flags)] {
+                leeches |= super::leech::leeches(calc, &hand.sources, flags, pool)?;
+            }
+            if leeches {
+                calc.set_unsupported(
+                    Field::Poe1(super::Poe1Field::LeechRate(pool)),
+                    UnsupportedReason::NotComputed,
+                );
+            }
         }
     }
     // PoB combines a dual wielder's impales per hand only for double hits:
@@ -3055,6 +3075,10 @@ pub(super) struct HitSources {
     /// `damageTypeHitAvg`), from non-crits and from crits, for impale's
     /// stored hit (Phase 6).
     pub(super) physical: [Option<Valued>; 2],
+    /// Each type's average against the enemy (PoB's `damageTypeHitAvg`
+    /// after `effMult`), from non-crits and from crits, for leech (P6-10b
+    /// part 9).
+    pub(super) against: [Vec<(DamageType, Valued)>; 2],
 }
 
 /// PoB's `buildConversionTable` (`CalcOffence.lua` 1878 to 1921) over
@@ -3441,6 +3465,7 @@ fn passes(
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;
     let mut physical_avg: [Option<Valued>; 2] = [None; 2];
+    let mut leech_parts: [Vec<(DamageType, Valued)>; 2] = [Vec::new(), Vec::new()];
     let mut hits = Vec::new();
     let mut crits = Vec::new();
     let mut physical = false;
@@ -3583,6 +3608,7 @@ fn passes(
                 None => effect,
             };
             let against = phases::product(calc, &[average, effect], Term::Step("against-enemy"))?;
+            leech_parts[usize::from(crit)].push((ty, against));
             if crit {
                 crits.push(against);
             } else {
@@ -3602,6 +3628,7 @@ fn passes(
             bases,
             conversion,
             physical: physical_avg,
+            against: leech_parts,
         },
     ))
 }

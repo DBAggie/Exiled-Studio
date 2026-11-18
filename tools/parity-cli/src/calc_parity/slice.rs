@@ -28,8 +28,9 @@ pub const FORMAT: u32 = 1;
 /// reduction (P6-10b part 5); revision 13 the mana cost per second
 /// (P6-10b part 6); revision 14 the full damage per second (P6-12 part 2);
 /// revision 15 the leech caps (P6-10b part 7); revision 16 the life and
-/// energy shield costs (P6-10b part 8).
-pub const REVISION: u32 = 16;
+/// energy shield costs (P6-10b part 8); revision 17 the leech rates (P6-10b
+/// part 9).
+pub const REVISION: u32 = 17;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -133,7 +134,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 32] = [
+pub const PRESENT_NAMES: [(&str, &str); 35] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -206,6 +207,10 @@ pub const PRESENT_NAMES: [(&str, &str); 32] = [
     ("ESCost", "poe1.energy-shield-cost"),
     ("LifePerSecondCost", "poe1.life-per-second-cost"),
     ("ESPerSecondCost", "poe1.energy-shield-per-second-cost"),
+    // Revision 17 (P6-10b part 9): the leech rates, when the hit leeches.
+    ("LifeLeechRate", "poe1.life-leech-rate"),
+    ("EnergyShieldLeechRate", "poe1.energy-shield-leech-rate"),
+    ("ManaLeechRate", "poe1.mana-leech-rate"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

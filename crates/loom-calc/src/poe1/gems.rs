@@ -115,7 +115,7 @@ use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
 use super::skill_modifiers::{self, Totals};
 use super::sockets;
-use super::{Poe1Quantity, Pool, ReservationKind};
+use super::{LeechSource, Poe1Quantity, Pool, ReservationKind};
 use crate::condition::{ConditionKey, Flags};
 use crate::ingest::Ingest;
 use crate::input::{CalcData, CalcInput, Resource};
@@ -426,9 +426,20 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "base_physical_damage_%_of_maximum_life_to_deal_per_minute",
                     BuffStat::NoSlice("degeneration"),
                 ),
+                // P6-10b part 9: `PhysicalDamageLifeLeech` BASE with attacks,
+                // the hit's leech (`poe1::leech`).
                 (
                     "life_leech_from_physical_attack_damage_permyriad",
-                    BuffStat::NoSlice("leech"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::DamageLeech(
+                            Pool::Life,
+                            LeechSource::Type(DamageType::Physical),
+                        )),
+                        Op::Base,
+                        100.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
                 ),
             ],
         },

@@ -357,6 +357,20 @@ pub enum Poe1Quantity {
     /// The largest recovery of one leech of a pool, percent of the pool
     /// (PoB's `Max<Pool>LeechInstance`; P6-10b part 7): read by [`leech`].
     LeechInstanceMax(Pool),
+    /// Damage leeched as a pool, percent (PoB's `Damage<Pool>Leech`,
+    /// `<Type>Damage<Pool>Leech`, `ElementalDamage<Pool>Leech`, and
+    /// `DamageLeech` for life and mana; P6-10b part 9): `Base`, read by
+    /// [`leech`] in the hit's context.
+    DamageLeech(Pool, LeechSource),
+    /// A pool's leech rate (PoB's `<Pool>LeechRate`; P6-10b part 9):
+    /// `Increased` and `More`.
+    LeechRate(Pool),
+    /// The percent of a pool's leech that is instant (PoB's
+    /// `Instant<Pool>Leech`; P6-10b part 9): `Base`.
+    InstantLeech(Pool),
+    /// The skill cannot leech the pool (PoB's `CannotLeech<Pool>`; P6-10b
+    /// part 9): a `Flag`.
+    CannotLeech(Pool),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -479,6 +493,30 @@ pub enum Pool {
     Mana,
     /// Energy shield (regeneration only; P6-10b).
     EnergyShield,
+}
+
+/// What damage a leech line reads (P6-10b part 9): all of it, one type's,
+/// or the elemental types'.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LeechSource {
+    /// Any damage (PoB's `Damage<Pool>Leech`, and `DamageLeech`).
+    Any,
+    /// One type's damage (PoB's `<Type>Damage<Pool>Leech`).
+    Type(DamageType),
+    /// Fire, cold, and lightning damage (PoB's `ElementalDamage<Pool>Leech`).
+    Elemental,
+}
+
+impl LeechSource {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Any => "any",
+            Self::Type(t) => t.name(),
+            Self::Elemental => "elemental",
+        }
+    }
 }
 
 impl Pool {
@@ -647,6 +685,12 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RecoveryRate(p) => write!(f, "recovery-rate.{}", p.name()),
             Self::LeechRateMax(p) => write!(f, "leech-rate-max.{}", p.name()),
             Self::LeechInstanceMax(p) => write!(f, "leech-instance-max.{}", p.name()),
+            Self::DamageLeech(p, source) => {
+                write!(f, "damage-leech.{}.{}", p.name(), source.name())
+            }
+            Self::LeechRate(p) => write!(f, "leech-rate.{}", p.name()),
+            Self::InstantLeech(p) => write!(f, "instant-leech.{}", p.name()),
+            Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
             Self::ZealotsOath => f.write_str("zealots-oath"),
@@ -935,6 +979,9 @@ pub enum Poe1Field {
     /// The main skill's energy shield cost per second (PoB's
     /// `ESPerSecondCost`; P6-10b part 8).
     EnergyShieldPerSecondCost,
+    /// The main skill's leech of a pool per second (PoB's `<Pool>LeechRate`;
+    /// P6-10b part 9). Present when the skill's hit leeches the pool.
+    LeechRate(Pool),
 }
 
 impl Poe1Field {
@@ -970,6 +1017,11 @@ impl Poe1Field {
             Self::EnergyShieldCost => "energy-shield-cost",
             Self::LifePerSecondCost => "life-per-second-cost",
             Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
+            Self::LeechRate(p) => match p {
+                Pool::Life => "life-leech-rate",
+                Pool::Mana => "mana-leech-rate",
+                Pool::EnergyShield => "energy-shield-leech-rate",
+            },
             Self::CombinedDps => "combined-dps",
             Self::BaseDamageReduction(t) => match t {
                 DamageType::Physical => "base-physical-damage-reduction",
