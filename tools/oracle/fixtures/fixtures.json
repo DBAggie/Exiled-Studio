@@ -1831,6 +1831,16 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7c2: Raise Zombie supported by Minion Damage, Minion Speed, Melee Physical Damage, and Brutality: the summoning skill's supports on the zombie's skill (Melee Physical Damage's and Brutality's more physical damage, Brutality's no elemental or chaos damage) and their minion modifiers (Minion Damage's more damage)."
+    },
+    {
+      "id": "smite-blocked-recently-no-effect-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-blocked-recently-no-effect-templar.xml",
+      "sha256": "9adb08161f2282841969a1c797b27099fdd75aa34c3f777cccf3d52c451bd0fb",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-11g: \"+# Armour if you've Blocked Recently\" with the config's Blocked an Attack Recently (BlockedRecently set by any of its three checks), and lines that reach no slice field (Q11 DIV-0125, DIV-0126)."
     }
   ]
 }

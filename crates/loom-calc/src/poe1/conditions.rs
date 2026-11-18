@@ -12,6 +12,10 @@
 //! - `conditionShockedEnemyRecently`: `ShockedEnemyRecently` (1340);
 //! - `conditionShatteredEnemyRecently`: `ShatteredEnemyRecently` (1331);
 //! - `conditionAtCloseRange`: `AtCloseRange` (1765);
+//! - `conditionBlockedRecently`, `conditionBlockedAttackRecently`,
+//!   `conditionBlockedSpellRecently`: `BlockedRecently`, set by any of the
+//!   three (1410 to 1420; P6-11g), and the last two's own
+//!   `BlockedAttackRecently` and `BlockedSpellRecently`;
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
 //! - `conditionEnemyLowLife`: the enemy's `LowLife` (1777; P6-9e, read by
 //!   Punishment's hex, `gems::SKILLS`);
@@ -48,6 +52,8 @@ pub const SHOCKED_ENEMY_RECENTLY: &str = "ShockedEnemyRecently";
 pub const SHATTERED_ENEMY_RECENTLY: &str = "ShatteredEnemyRecently";
 /// "at Close Range".
 pub const AT_CLOSE_RANGE: &str = "AtCloseRange";
+/// "if you've Blocked Recently" (P6-11g).
+pub const BLOCKED_RECENTLY: &str = "BlockedRecently";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
@@ -61,10 +67,16 @@ pub const CRIT_RECENTLY: &str = "CritRecently";
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
 /// The check inputs and the condition each sets (module docs), sorted by
-/// input (a test checks).
+/// input (a test checks); an input may set several, and several inputs
+/// one: the condition holds when any of its inputs is on (P6-11g).
 pub const CHECKS: &[(&str, &str)] = &[
     ("buffArcaneSurge", ARCANE_SURGE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
+    ("conditionBlockedAttackRecently", "BlockedAttackRecently"),
+    ("conditionBlockedAttackRecently", BLOCKED_RECENTLY),
+    ("conditionBlockedRecently", BLOCKED_RECENTLY),
+    ("conditionBlockedSpellRecently", BLOCKED_RECENTLY),
+    ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
     ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
@@ -94,6 +106,7 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
 /// The conditions the config settles (module docs), into `out`.
 pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     let set = super::collect::active_config(input.build);
+    let mut seen: BTreeMap<&str, Option<bool>> = BTreeMap::new();
     for &(name, condition) in CHECKS {
         let mut value = check(set, name);
         if condition == ENEMY_RARE_OR_UNIQUE
@@ -110,8 +123,23 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 value = Some(true);
             }
         }
-        if let Some(v) = value {
-            out.insert(ConditionKey::new(condition), v);
+        // Any of a condition's inputs on sets it; an unreadable input leaves
+        // it unsettled unless another sets it (P6-11g).
+        let key = ConditionKey::new(condition);
+        let merged = match (seen.get(condition).copied(), value) {
+            (None, v) => v,
+            (Some(Some(true)), _) | (_, Some(true)) => Some(true),
+            (Some(None), _) | (_, None) => None,
+            (Some(Some(false)), Some(false)) => Some(false),
+        };
+        seen.insert(condition, merged);
+        match merged {
+            Some(v) => {
+                out.insert(key, v);
+            }
+            None => {
+                out.remove(&key);
+            }
         }
     }
 }
@@ -122,7 +150,7 @@ mod tests {
 
     #[test]
     fn the_checks_should_be_sorted_and_apart_from_the_named_only_inputs() {
-        assert!(CHECKS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(CHECKS.windows(2).all(|w| w[0] < w[1]));
         for (input, _) in CHECKS {
             assert!(!super::super::config::named_only(input), "{input}");
         }

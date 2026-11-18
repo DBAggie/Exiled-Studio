@@ -1777,6 +1777,17 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // P6-11g: "+# Armour if you've Blocked Recently": `Armour` BASE,
+    // `BlockedRecently` (the config's three blocked checks).
+    (
+        "X_armour_if_you_have_blocked_recently",
+        &[(
+            Quantity::Armour,
+            Op::Base,
+            NONE,
+            conditions::BLOCKED_RECENTLY,
+        )],
+    ),
     // P6-11b: "+#% Chance to Block Attack Damage while wielding a Staff":
     // `BlockChance` BASE, `UsingStaff` (as `staff_block_%`).
     (
@@ -2568,9 +2579,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
+    // P6-11g: "#% additional Physical Damage Reduction" (`PhysicalDamageReduction` BASE): the damage you take; no slice field.
+    (
+        "base_additional_physical_damage_reduction_%",
+        "damage-reduction",
+    ),
     ("base_aura_area_of_effect_+%", "area"),
     ("base_avoid_freeze_%", "ailment-on-self"),
     ("base_avoid_projectiles_%_chance", "avoidance"),
+    // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
+    ("base_avoid_stun_%", "stun"),
     ("base_chance_to_freeze_%", "freeze"),
     // P3-8n: a passive's "#% chance to Shock" (`EnemyShockChance` BASE): as
     // the skill's chance below, never the enemy's shock in the hit.
@@ -2580,6 +2598,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
+    // P6-11g: "#% increased Cost of Skills" (`Cost` INC): no slice field.
+    ("base_cost_+%", "mana-cost"),
     (
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
@@ -2587,6 +2607,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
     // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
     ("base_is_projectile", "skill type marker"),
+    // P6-11g: "#% increased Rarity of Items found" (`LootRarity` INC).
+    ("base_item_found_rarity_+%", "item-rarity"),
+    // P6-11g: "Gain # Life per Enemy Hit with Attacks" (`LifeOnHit` BASE): no recovery field.
+    ("base_life_gain_per_target", "recovery"),
+    // P6-11g: "Gain # Life per Enemy Killed" (`LifeOnKill` BASE).
+    ("base_life_gained_on_enemy_death", "recovery"),
+    // P6-11g: "#% of Attack Damage Leeched as Life" (`DamageLifeLeech` BASE).
+    ("base_life_leech_from_attack_damage_permyriad", "leech"),
+    // P6-11g: "Regenerate # Life per second" (`LifeRegen` BASE): no regeneration field (P6-10b).
+    ("base_life_regeneration_rate_per_minute", "regeneration"),
+    // P6-11g: "#% of Attack Damage Leeched as Mana" (`DamageManaLeech` BASE).
+    ("base_mana_leech_from_attack_damage_permyriad", "leech"),
+    // P6-11g: "Regenerate # Mana per second" (`ManaRegen` BASE).
+    ("base_mana_regeneration_rate_per_minute", "regeneration"),
     // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
     // counts fortification only while Fortified (`buffFortification`, a named
     // condition), and then only damage taken when hit and modifiers per
@@ -2608,6 +2642,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
     // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
     ("base_skill_area_of_effect_+%", "area"),
+    // P6-11g: "Skills Cost Life instead of #% of Mana Cost" (`HybridManaAndLifeCost_Life` BASE): costs, no slice field.
+    ("base_skill_cost_life_instead_of_mana_%", "mana-cost"),
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
     ("base_skill_effect_duration", "skill-duration"),
@@ -2700,6 +2736,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11f: "#% increased Endurance Charge Duration": the charges come from the config; no slice field.
     ("endurance_charge_duration_+%", "charge-duration"),
+    // P6-11g: "#% chance to gain an Endurance Charge on Kill while holding a Shield": PoB does not parse it; the charges come from the config.
+    (
+        "endurance_charge_on_kill_percent_chance_while_holding_shield",
+        "charge-gain-chance",
+    ),
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
         "enemy-speed",
@@ -2708,6 +2749,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
+    // P6-11g: "#% faster start of Energy Shield Recharge" (`EnergyShieldRechargeFaster` INC).
+    ("energy_shield_delay_-%", "recharge"),
+    // P6-11g: "#% increased Energy Shield Recharge Rate" (`EnergyShieldRecharge` INC).
+    ("energy_shield_recharge_rate_+%", "recharge"),
     (
         "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
         "regeneration",
@@ -2722,6 +2767,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
     ("gloves_freeze_proliferation_radius", "freeze"),
+    // P6-11g: "Ignites you inflict spread to other Enemies within # metre": PoB does not parse it.
+    ("gloves_ignite_proliferation_radius", "area"),
     // P6-7b3b: "Golems are Immune to Elemental Damage": PoB's parser does
     // not read the line (no mod), so it reaches none of PoB's outputs; no
     // minion field reads damage taken.
@@ -2733,6 +2780,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ([`NO_EFFECT_DEPENDS_ON`]).
     ("hierophant_mana_cost_+%_final", "mana-cost"),
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
+    ("keystone_divine_shield", "keystone-defence"),
+    // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
+    ("keystone_mana_shield", "keystone-defence"),
     // P6-11f: Unwavering Stance (the keystone node: cannot evade attacks, cannot be stunned): evade chance and stun, no slice field.
     ("keystone_unwavering_stance", "evade"),
     // Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua` 5066): it
@@ -2741,6 +2792,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // the hit, its rate, or `TotalDPS` (P3-12f, the Smite builds' custom
     // line).
     ("kill_enemy_on_hit_if_under_10%_life", "culling"),
+    // P6-11g: "#% of Leech is Instant" (`Instant<Pool>Leech` BASE).
+    ("leech_%_is_instant", "leech"),
     (
         "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
         "regeneration",
@@ -2754,6 +2807,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "life_regeneration_per_minute_%_per_fortification",
         "regeneration",
     ),
+    // P6-11g: "Regenerate # Life per second for each 1% Uncapped Fire Resistance" (`LifeRegen` BASE per stat).
+    (
+        "life_regeneration_per_minute_per_1%_uncapped_fire_damage_resistance",
+        "regeneration",
+    ),
+    // P6-11g: "#% increased Life Regeneration rate" (`LifeRegen` INC).
+    ("life_regeneration_rate_+%", "regeneration"),
     ("life_regeneration_rate_per_minute_%", "regeneration"),
     (
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
@@ -2774,9 +2834,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // Its effect on the sockets' order is `poe1::sockets`' (a reason).
     ("local_has_X_abyss_sockets", "sockets"),
+    // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
+    ("local_has_X_sockets", "sockets"),
     (
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
+    ),
+    // P6-11g: "Gain # Mana per Enemy Hit with Attacks" (`ManaOnHit` BASE).
+    ("mana_gain_per_target", "recovery"),
+    // P6-11g: "Gain # Mana per Enemy Hit with Attacks if you've used a Mana Flask in the past 10 seconds" (`ManaOnHit` BASE).
+    (
+        "mana_gained_on_attack_hit_if_used_mana_flask_in_past_10_seconds",
+        "recovery",
     ),
     ("mana_regeneration_rate_+%", "regeneration"),
     (
@@ -2798,6 +2867,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "movement_speed_+%_while_on_burning_ground",
         "movement-speed",
     ),
+    // P6-11g: "#% increased Movement Speed per Frenzy Charge" (`MovementSpeed` INC per charge).
+    ("movement_velocity_+%_per_frenzy_charge", "movement-speed"),
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
@@ -2836,6 +2907,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("rage_loss_delay_ms", "rage-duration"),
+    // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
+    ("recover_%_maximum_life_on_kill", "recovery"),
+    // P6-11g: "Recover # Energy Shield when you Block Spell Damage" (`EnergyShieldOnSpellBlock` BASE).
+    ("recover_x_energy_shield_on_spell_block", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
     ("regenerate_energy_shield_instead_of_life", "regeneration"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
@@ -4330,6 +4405,17 @@ mod tests {
         let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
         let config = |q: Quantity, op: Op, all: Flags, c: &'static str| (q, op, all, c);
         let expected = [
+            // P6-11g: "+# Armour if you've Blocked Recently" (PoB's
+            // `Armour` BASE, `Condition` `BlockedRecently`).
+            (
+                "X_armour_if_you_have_blocked_recently",
+                vec![config(
+                    Quantity::Armour,
+                    Op::Base,
+                    NONE,
+                    conditions::BLOCKED_RECENTLY,
+                )],
+            ),
             (
                 "critical_strike_chance_against_enemies_on_full_life_+%",
                 vec![config(

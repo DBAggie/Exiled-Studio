@@ -77,9 +77,11 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   line 514); read by the skill stat map of the gems that grant it.
 /// - `bloodSandStance` moved to [`super::gems`] in the Phase 3 close-out
 ///   (Flesh and Stone's Blood Stance row reads it).
-/// - `conditionBeenHitRecently`, `conditionBlockedRecently`,
-///   `conditionChilledEnemyRecently`, `conditionFullLife`: the condition of
-///   that name (lines 1375, 1421, 1339, 174); the calc modules read them
+/// - `conditionBeenHitRecently`, `conditionChilledEnemyRecently`,
+///   `conditionFullLife`: the condition of that name (lines 1375, 1339,
+///   174; the blocked-recently checks moved to [`super::conditions`] in
+///   P6-11g, as "+# Armour if you've Blocked Recently" reads them); the
+///   calc modules read them
 ///   only through modifiers
 ///   or flags a modifier sets (`CalcDefence.lua` 707, 723: maximum block
 ///   if not blocked recently, from a stat); `FullLife` is set by Chaos
@@ -274,21 +276,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],
     ),
     ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
-    (
-        "conditionBlockedAttackRecently",
-        &[
-            "Condition:BlockedAttackRecently",
-            "Condition:BlockedRecently",
-        ],
-    ),
-    ("conditionBlockedRecently", &["Condition:BlockedRecently"]),
-    (
-        "conditionBlockedSpellRecently",
-        &[
-            "Condition:BlockedSpellRecently",
-            "Condition:BlockedRecently",
-        ],
-    ),
     (
         "conditionCastSpellRecently",
         &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],

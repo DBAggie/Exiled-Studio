@@ -487,10 +487,14 @@ mod tests {
         "chance_to_gain_power_charge_when_block_%",
         // A charge's duration (P6-11f): the count comes from the config.
         "endurance_charge_duration_+%",
+        // A chance to gain a charge (P6-11g): PoB does not parse it.
+        "endurance_charge_on_kill_percent_chance_while_holding_shield",
         "gain_power_charge_for_each_second_channeling_spell",
         // Regeneration per charge: not a slice field.
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
         "mana_regeneration_rate_+%_per_power_charge",
+        // Movement speed per charge (P6-11g): not a slice field.
+        "movement_velocity_+%_per_frenzy_charge",
         // A skill's constant stat no stat map reads (P6-6a): not a charge
         // count.
         "skill_can_add_multiple_charges_per_action",

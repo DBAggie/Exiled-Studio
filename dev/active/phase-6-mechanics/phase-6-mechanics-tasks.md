@@ -130,4 +130,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11e: the P6-11d review (an attack DoT's main hand as PoB's `getWeaponFlags`, with the skill's weapon check and reasons; tests); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11e PR #162 (base `feat/p6-11d-arrow-review`)
 - [x] P6-11f: block per 5% (`BlockPer5`, PoB's `PerStat`), evasion per frenzy charge, eight `NoEffect` rows; fixture `ice-nova-block-per-5-witch.xml`; `docs/phase-6/stat-mop-up.md`, "P6-11f" (PR #167)
+- [x] P6-11g: `BlockedRecently` from any of its three checks (`conditions::CHECKS` with several inputs per condition), the armour if Blocked Recently row, 26 `NoEffect` rows (regeneration, leech, recovery, recharge, costs, keystones without a field); fixture `smite-blocked-recently-no-effect-templar.xml` (Q11 DIV-0125, DIV-0126); `docs/phase-6/stat-mop-up.md`, "P6-11g"
 ## P6-12: combined and full DPS; report

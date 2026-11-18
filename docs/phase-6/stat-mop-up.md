@@ -206,3 +206,31 @@ These two were P6-11a's "left as reasons".
 - **Public `calc-parity`:** 175 builds, 112 expected differences, 0 unexpected.
 - **Corpus:** 13 values moved toward PoB, none away.
 
+## P6-11g: armour if Blocked Recently, and the most common lines that reach no field
+
+The batch takes the most common unmapped stats of the public builds and the corpus (`local/p6/unmapped_7c2.txt`), each checked against PoB's parse of its game text (`local/p6/parse2`).
+
+**A condition several inputs set:** PoB sets `BlockedRecently` from any of three checks (`ConfigOptions.lua` 1410 to 1420): blocked recently, blocked an attack recently (which also sets `BlockedAttackRecently`), and blocked a spell recently (`BlockedSpellRecently`). `conditions::CHECKS` now lets one input set several conditions and several inputs set one. `settle` gives a condition `true` when any of its inputs is on, unsettled when an input is unreadable and none is on, else `false`. The three inputs left `config::NAMED_ONLY`.
+
+**Row:** "+# Armour if you've Blocked Recently" (`X_armour_if_you_have_blocked_recently`): PoB's `Armour` BASE with `Condition` `BlockedRecently`, a state row. The block stats conditioned on not having blocked recently stay reasons (`config`'s guard list), as before.
+
+**`NoEffect`** (each PoB parse named; no slice field reads them):
+- regeneration: life and mana per second, life regeneration rate, life per uncapped fire resistance;
+- leech: life and mana from attack damage, instant leech;
+- recovery: life and mana per enemy hit, life per kill, life on kill, energy shield on spell block, mana on hit after a mana flask;
+- energy shield recharge rate and delay;
+- costs: skill costs, life instead of mana cost;
+- additional physical damage reduction (the damage you take);
+- Mind Over Matter and Divine Shield (their keystones change damage taken and recovery only);
+- item rarity, avoid stun, sockets, movement speed per frenzy charge;
+- two lines PoB does not parse: the Endurance Charge on kill with a shield, and the ignite spread radius.
+
+The recovery, regeneration, and leech rows hold only until P6-10b adds those fields. That step must map them.
+
+**Left as reasons:** Glancing Blows (block doubled), chance to ignore the enemy's physical damage reduction, skill effect duration (warcry uptime), additional projectiles, aura effect on self (a guarded word), damage per aura or herald, and the life thresholds (they move `LowLife` and `FullLife`).
+
+**Evidence:**
+- **Fixture:** `smite-blocked-recently-no-effect-templar.xml`. Armour is 300, from the line through "Blocked an Attack Recently", as in PoB. Every no-effect line leaves the fields equal to PoB, apart from the Q11 speed: DIV-0125 and DIV-0126.
+- **Public `calc-parity`:** 185 builds, 125 expected differences, 0 unexpected; `Complete` fields 3,514. 3 armour values moved, all toward PoB (1 now equal).
+- **Corpus:** 0 unexpected. 3 armour values moved, all toward PoB (2 now equal).
+- Both runs are byte-identical.

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11g): Smite (level 20) with a normal Siege Axe, "+# Armour if you've Blocked Recently" with the config's "Blocked an Attack Recently" (which implies Blocked Recently), and lines that reach no slice field (regeneration, leech, recovery, costs, recharge, rarity, stun).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionBlockedAttackRecently" boolean="true"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+300 Armour if you've Blocked Recently
+Regenerate 20 Life per second
+15% increased Life Regeneration rate
+1% of Attack Damage Leeched as Life
+Gain 5 Life per Enemy Hit with Attacks
+Recover 3% of Life on Kill
+10% increased Cost of Skills
+20% increased Energy Shield Recharge Rate
+15% increased Rarity of Items found
+20% chance to Avoid being Stunned
+5% additional Physical Damage Reduction
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
