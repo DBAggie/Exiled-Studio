@@ -179,12 +179,11 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   (other gems, reasons).
 /// - `conditionLeeching`: `Condition:Leeching` (line 1068); no calc module
 ///   reads it.
-/// - `conditionEnemyBleeding`, `conditionEnemyLowLife`,
-///   `conditionEnemyPoisoned`: the enemy's `Condition:Bleeding`,
-///   `Condition:LowLife`, `Condition:Poisoned` (lines 1786, 1777, 1798); no
+/// - `conditionEnemyBleeding`, `conditionEnemyPoisoned`: the enemy's
+///   `Condition:Bleeding`, `Condition:Poisoned` (lines 1786, 1798); no
 ///   calc module reads them on the enemy (`CalcSetup.lua` 73 sets
-///   `Poisoned` from poison stacks; `CalcPerform.lua` 1605 reads the
-///   player's `LowLife`, for flasks).
+///   `Poisoned` from poison stacks). `conditionEnemyLowLife` left this
+///   list in P6-9e: Punishment's hex reads it (`conditions::CHECKS`).
 /// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
 ///   (not a slice field).
@@ -322,7 +321,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["enemy Condition:Debilitated"],
     ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
-    ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
     ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
     (
         "conditionEnemyMalignantMadness",

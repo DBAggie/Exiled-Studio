@@ -13,6 +13,8 @@
 //! - `conditionShatteredEnemyRecently`: `ShatteredEnemyRecently` (1331);
 //! - `conditionAtCloseRange`: `AtCloseRange` (1765);
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
+//! - `conditionEnemyLowLife`: the enemy's `LowLife` (1777; P6-9e, read by
+//!   Punishment's hex, `gems::SKILLS`);
 //! - `conditionEnemyRareOrUnique`: the enemy's `RareOrUnique` (2057), which
 //!   the `Boss`, `Pinnacle`, and `Uber` boss kinds also set (2095, 2129,
 //!   2162; the kind as [`super::enemy`] reads it, PoB's default
@@ -48,6 +50,8 @@ pub const SHATTERED_ENEMY_RECENTLY: &str = "ShatteredEnemyRecently";
 pub const AT_CLOSE_RANGE: &str = "AtCloseRange";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
+/// The enemy is on low life: the enemy's `LowLife` (P6-9e).
+pub const ENEMY_LOW_LIFE: &str = "Enemy:LowLife";
 /// "against Unique Enemies": the enemy's `RareOrUnique`.
 pub const ENEMY_RARE_OR_UNIQUE: &str = "Enemy:RareOrUnique";
 /// "if you've dealt a Critical Strike Recently" (PoB's `CritRecently`,
@@ -63,6 +67,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
+    ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),

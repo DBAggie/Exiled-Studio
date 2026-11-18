@@ -187,14 +187,14 @@ const DEBUFF_FORBIDDEN: &[&str] = &[
     "Trigger",
     "Warcry",
 ];
-/// Types a curse skill may not have (close-out): a mark, an aura curse, a
-/// curse a totem, trap, or minion casts.
+/// Types a curse skill may not have (close-out): an aura curse, a curse a
+/// totem, trap, or minion casts. A mark is modelled with PoB's mark rule
+/// (`gems::curse_slots`, P6-9e).
 const CURSE_FORBIDDEN: &[&str] = &[
     "Aura",
     "Brand",
     "CreatesMinion",
     "HasReservation",
-    "Mark",
     "Minion",
     "SummonsTotem",
     "Totem",
@@ -223,9 +223,18 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // The offerings buff minions alone (P6-9e).
+    ("BoneOffering", "Minion"),
     ("Convocation", "Minion"),
+    ("FleshOffering", "Minion"),
     ("HeraldOfPurity", "CreatesMinion"),
     ("HeraldOfPurity", "Minion"),
+    // P6-9e: their minions' skills have no `GlobalEffect` mod
+    // (`tools/oracle/data/minion_skill_globals.py`).
+    ("SummonCarrionGolem", "CreatesMinion"),
+    ("SummonCarrionGolem", "Minion"),
+    ("SummonChaosGolem", "CreatesMinion"),
+    ("SummonChaosGolem", "Minion"),
     ("SummonFlameGolem", "CreatesMinion"),
     ("SummonFlameGolem", "Minion"),
     ("SummonIceGolem", "CreatesMinion"),
@@ -258,6 +267,8 @@ const ALLOWED_MINIONS: &[&str] = &[
     "RaiseZombie",
     "RaiseZombieAltX",
     "RaiseZombieAltY",
+    "SummonCarrionGolem",
+    "SummonChaosGolem",
     "SummonFlameGolem",
     "SummonHolyRelicAltX",
     "SummonIceGolem",
@@ -280,7 +291,12 @@ const ALLOWED_MINIONS: &[&str] = &[
 const EXTRA_BUFFS: &[(&str, &str)] = &[
     ("FleshAndStone", "AuraDebuff Flesh and Stone"),
     ("FleshAndStone", "Buff Flesh and Stone"),
-    // A warcry's `UsesWarcryPower` flag is a `Buff` of its name.
+    // Pride's mods are an `AuraDebuff` on the enemy (P6-9e), scaled as an
+    // aura's, as Flesh and Stone's Blood Stance row.
+    ("Pride", "AuraDebuff Pride"),
+    // A warcry's `UsesWarcryPower` flag is a `Buff` of its name; General's
+    // Cry has no other global mod (P6-9e).
+    ("GeneralsCry", "Buff General's Cry"),
     ("EnduringCry", "Buff Enduring Cry"),
     ("EnduringCry", "Warcry Enduring Cry"),
     ("IntimidatingCry", "Buff Intimidating Cry"),
@@ -305,6 +321,14 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // another skill only its buff acts.
     ("RighteousFire", "RFESMultiplier"),
     ("RighteousFire", "RFLifeMultiplier"),
+    // Molten Shell's reflected fire damage (P6-9e): its own hit's data.
+    ("MoltenShell", "moltenShellReflect"),
+    ("VaalMoltenShell", "moltenShellReflect"),
+    // A Vaal skill's soul gain prevention duration (P6-9e): no slice field.
+    ("VaalMoltenShell", "skillEffectAppliesToSoulGainPrevention"),
+    // Tempest Shield's counterattack trigger on block (P6-9e): a `SkillData`
+    // for attack skills (`SkillType` 2) it triggers, none of its own.
+    ("TempestShield", "chanceToTriggerCounterattackOnBlock"),
 ];
 
 /// Types a modelled support may not add.
@@ -333,12 +357,22 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 const NO_SLICE_NAMES: &[&str] = &[
     "AreaOfEffect",
     "ArcaneSurgeManaRegen",
+    // Summon Carrion Golem's and Summon Chaos Golem's (P6-9e).
+    "Condition:HaveCarrionGolem",
+    "Condition:HaveChaosGolem",
     "Condition:HaveColdGolem",
     "Condition:HaveFireGolem",
     "Condition:HaveLightningGolem",
     "Condition:HavePhysicalGolem",
     "DamageTakenWhenHit",
     "Dummy",
+    // Steelskin's bleed avoidance and the guards' absorption (P6-9e).
+    "AvoidBleed",
+    "GuardAbsorbLimit",
+    "GuardAbsorbRate",
+    "Multiplier:GuardAbsorbMax",
+    // Summon Carrion Golem's added damage for your other minions (P6-9e).
+    "MinionModifier",
     // A skill effect duration (Malevolence's, P6-9d).
     "Duration",
     // Purity of Elements' immunity (P6-9): no slice field reads it.
@@ -359,6 +393,8 @@ const NO_SLICE_NAMES: &[&str] = &[
     "SelfElementalAilmentDuration",
     "SelfFreezeChance",
     "SelfFreezeDuration",
+    // Tempest Shield's shock immunity (P6-9e).
+    "ShockImmune",
     "UsesWarcryPower",
     "takenFromStoneGolemBeforeYou",
 ];
@@ -377,6 +413,13 @@ const ENEMY_NO_SLICE_NAMES: &[&str] = &[
     "SelfShockChance",
     "SelfShockDuration",
     "TemporalChainsActionSpeed",
+    // The marks' on-kill and on-hit gains and Sniper's Mark's split
+    // (P6-9e): no slice field.
+    "SelfLifeOnHit",
+    "SelfLifeOnKill",
+    "SelfManaOnHit",
+    "SelfManaOnKill",
+    "SelfSplitCount",
 ];
 
 /// The `GlobalEffect` tag's fields a slice row may have: any other
@@ -498,6 +541,16 @@ fn pob_name(q: Quantity) -> String {
     match q {
         Quantity::Accuracy => "Accuracy".into(),
         Quantity::CritChance => "CritChance".into(),
+        Quantity::CritMultiplier => "CritMultiplier".into(),
+        Quantity::BlockChance => "BlockChance".into(),
+        Quantity::DotMultiplier => "DotMultiplier".into(),
+        // Punishment's (P6-9e).
+        Quantity::Poe1(Poe1Quantity::EnemyDamageTaken) => "DamageTaken".into(),
+        // The marks' rows on the enemy (P6-9e).
+        Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken) => "ProjectileDamageTaken".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
+            "PhysicalDamageReduction".into()
+        }
         Quantity::Speed => "Speed".into(),
         Quantity::EnergyShield => "EnergyShield".into(),
         Quantity::Armour => "Armour".into(),
@@ -515,6 +568,7 @@ fn pob_name(q: Quantity) -> String {
             format!("{}DamageTaken", title(t.name()))
         }
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) => "ArcaneSurgeCastSpeed".into(),
+        Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();
@@ -605,6 +659,17 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
                 json!({ "stat": "LifeUnreserved", "threshold": 2, "type": "StatThreshold" })
             ),
         ),
+        BuffStat::MinionOnly(rows) => (rows, String::new()),
+        BuffStat::WhenState { var, rows, .. } => (
+            rows,
+            format!(" tags {}", json!({ "type": "Condition", "var": var })),
+        ),
+        BuffStat::ConfigIs {
+            condition, rows, ..
+        } => (
+            rows,
+            format!(" tags global {}", json!({ "modCond": condition })),
+        ),
         BuffStat::NoSlice(_) | BuffStat::Gated(_) => return Vec::new(),
     };
     if let Some(one) = collapse(rows) {
@@ -653,6 +718,10 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
                 None if elemental_duration => ("SelfElementalAilmentDuration".to_owned(), all),
                 None => match (q, enemy) {
                     (Quantity::AddedDamage(..), true) => (format!("Self{}", pob_name(q)), all),
+                    // Assassin's Mark (P6-9e).
+                    (Quantity::CritChance | Quantity::CritMultiplier, true) => {
+                        (format!("Self{}", pob_name(q)), all)
+                    }
                     (Quantity::Poe1(Poe1Quantity::AilmentChance(a)), true) => {
                         (format!("Self{}Chance", title(a.name())), all)
                     }
@@ -850,7 +919,10 @@ fn check_one(
             BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
             | BuffStat::Threshold(_)
-            | BuffStat::LifeThreshold(_) => {}
+            | BuffStat::LifeThreshold(_)
+            | BuffStat::WhenState { .. }
+            | BuffStat::MinionOnly(_)
+            | BuffStat::ConfigIs { .. } => {}
         }
     }
     // Rows.

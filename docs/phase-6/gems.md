@@ -153,6 +153,63 @@ Each of these is in `gem_effects`' `ALLOWED_MINIONS`, the list of skills whose m
 - **Fixture:** `ice-nova-herald-of-thunder-enlighten-witch.xml` (Herald of Thunder and Purity of Ice with Enlighten 3, and Hatred). All 22 computed fields are `Complete` and equal to PoB, reservation included.
 - **Corpus:** 8 values moved toward PoB and 5 away. Three builds' unreserved mana went further below PoB's: the newly modelled reserving skills add reservation that PoB lowers with modifiers the engine does not read yet (those fields stay `Partial`). The fixture shows the skills' own reservation equal to PoB.
 
+## P6-9e: marks, Pride, Punishment, guards, offerings, two golems, and supports
+
+**Marks** (Assassin's, Sniper's, and Poacher's Mark) are curses typed `Mark`. PoB puts them in the same curse slots as hexes, with one extra rule (`CalcPerform.lua` 3162 to 3212, "Currently assume only 1 mark is possible"):
+- while a mark holds a slot, no other mark takes one, even a free one;
+- a mark replaced by a curse of higher priority frees the rule.
+
+`gems::curse_slots` ports this. Tests: `curse_slots_should_hold_one_mark`, `curse_slots_should_free_the_mark_rule_when_a_mark_is_replaced`.
+
+| Skill | Rows |
+|---|---|
+| Assassin's Mark | the enemy's `SelfCritChance` (stat / 100) and `SelfCritMultiplier` BASE: a hit adds them to its crit chance's base and its extra damage (`CalcOffence.lua` 3015, 3125), so they are the character's `CritChance` and `CritMultiplier` sums, as Despair's added damage is |
+| Sniper's Mark | the enemy's `ProjectileDamageTaken` INC: new `Poe1Quantity::EnemyProjectileDamageTaken`, which only a hit with the projectile flag adds to `takenInc` (3482); damage over time never reads it (a damage-over-time context can carry the projectile flag, so a conditioned `EnemyDamageTaken` row would be wrong) |
+| Poacher's Mark | the enemy's `PhysicalDamageReduction` BASE: new `Poe1Quantity::EnemyPhysicalDamageReduction`, added to the armour reduction of a physical hit before its floor at 0 (3434) and alone for physical damage over time (4457); and added physical damage taken with `ModFlag.Hit` |
+
+**Pride** is an `AuraDebuff` on the enemy. Its two stats are chosen by PoB's `modCond`, which only the config sets: `PrideMaxEffect` from `prideEffect` = `MAX` (`ConfigOptions.lua` 566), else `PrideMinEffect` (`CalcSetup.lua` 539). `CalcActiveSkill.lua` 806 drops a mod whose `modCond` fails. The new `BuffStat::ConfigIs` reads the list input; `prideEffect` is now one of `gems::is_input`'s inputs. Pride is scaled as an aura, as Flesh and Stone is. Its `DebuffEffect` term is a reason (`DEPENDS_ON`).
+
+**Punishment**'s damage taken applies while the enemy is on low life (a `Condition` tag on the mod). The new `BuffStat::WhenState` carries the state into the curse's rows. `conditionEnemyLowLife` moved from `config::NAMED_ONLY` to `conditions::CHECKS` (`Enemy:LowLife`).
+
+**Guards** (`EffectType::Guard`): Molten Shell, Vaal Molten Shell, Steelskin. PoB's guard slots (`CalcPerform.lua` 3256 to 3275):
+- Vaal Molten Shell alone;
+- else every Vaal guard and one other.
+
+With two or more non-Vaal guards, PoB keeps the first in its table's iteration order, which is not defined. So none of them applies and each is an `unmodelled-skill` `guard-slot` reason (`gems::guard_pick`, test `guard_pick_should_follow_pobs_slots`). PoB scales a guard by the character's buff effect alone, with no gem stat.
+
+**Tempest Shield:** spell block and shock immunity. A skill typed `RequiresShield` is disabled without a shield in the off hand (`CalcActiveSkill.lua` 269 to 273): no buff, and its supports' buffs neither. It still reserves, because PoB's reservation loop (1939) does not check `disable`. The fixture without a shield shows the reservation equal to PoB. An unknown off hand is a `requires-shield` reason.
+
+**Offerings** (Bone and Flesh Offering): `buffNotPlayer` with `buffMinions`. The new `BuffStat::MinionOnly` adds rows in `minion_buffs` only. `offering_spells_effect_+%` joins `OWN_EFFECT_STATS` (PoB's `BuffEffect` INC on the skill).
+
+**Golems:** Summon Chaos Golem (chaos resistance, damage over time multiplier) and Summon Carrion Golem. The Carrion Golem's added damage goes to your other minions, which compute no hit yet (P6-7c); its stats are `NoSlice("minion-buff")` until then. Neither golem's minion skills have a `GlobalEffect` mod.
+
+**General's Cry:** a warcry whose only global mod is its warcry power flag. Its mirage warriors act only for a skill it triggers (P6-8b).
+
+**Supports:** 17 plain supports, classified by `classify_gems.py` (no global or blocked mod):
+- Awakened Empower, Cruelty, Deadly Ailments, Endurance Charge on Melee Stun, Fire Penetration, Fist of War;
+- Greater Chain, Greater Multiple Projectiles, Greater Multistrike, Greater Volley, Ignite Proliferation, Impale;
+- Invert the Rules, Melee Splash, Multistrike, Overexertion, Trap and Mine Damage.
+
+**Not yet, with why:**
+- Battlemage's, Ancestral, Infernal, and Seismic Cry: their rows (crit chance, resistances, conversion, armour) scale with warcry power, which is not modelled.
+- Arrogance and Eternal Blessing: reservation as life, and aura effect.
+- Cast when Damage Taken, Mirage Archer, Manaforged Arrows, Mark on Hit: triggers (P6-8a, P6-8b).
+- Summon Skitterbots: its aura chills, and its minions' level is the character's (a data run).
+- Herald of the Hive, Blood and Sand, banners, brands, Phase Run, Berserk, Frost Shield, Vaal auras, Wave of Conviction, Flame Surge, Cyclone, and others: each has its own buff or data.
+
+**Evidence:**
+- **`gem_effects`:** 1,476 values compared, 0 differences.
+- **Fixtures (7), all equal to PoB or registered (Q11, DIV-0114 to DIV-0122):**
+  - `ice-nova-marks-witch.xml`;
+  - `burning-arrow-snipers-mark-templar.xml`;
+  - `smite-poachers-mark-pride-punishment-templar.xml`;
+  - `smite-pride-initial-templar.xml`;
+  - `ice-nova-guard-shield-golem-witch.xml`;
+  - `ice-nova-tempest-shield-no-shield-witch.xml`;
+  - `minion-raise-zombie-offerings-witch.xml`: the minion's block and speed are not slice fields, so this one only shows that the character gets none of the offerings' buffs.
+- **Public:** 182 builds, 121 expected differences, 0 unexpected; `Complete` fields 3,330 (3,168 before, plus the 7 fixtures). 34 values of the other builds moved: 33 toward PoB, 1 away (unreserved mana, below).
+- **Corpus:** 0 unexpected. 32 values moved: 29 toward PoB (7 now equal), 3 away. The three away are unreserved mana, as in P6-9d: the newly modelled reserving skills add reservation that PoB lowers with modifiers the engine does not read yet (those fields stay `Partial`).
+
 ## The review of P6-7b3b to P6-9c (code-architecture-reviewer, no blockers)
 
 Applied:

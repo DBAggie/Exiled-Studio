@@ -1741,6 +1741,76 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-11f: Ice Nova with a Splintered Tower Shield and custom lines: block per 5% shield block, spell block per 5% attack block (PoB PerStat), evasion per frenzy charge (three charges), and lines that reach no slice field."
+    },
+    {
+      "id": "ice-nova-marks-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-marks-witch.xml",
+      "sha256": "acb56e98f6e9716aec167cb8ac74108a6b1f1cfbe1d205386cede7527a87affe",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-9e: Assassin's Mark, Sniper's Mark, and Despair with one additional curse: PoB's mark rule (one mark holds a slot; the second takes none), the mark's crit chance and multiplier on the hit, Despair in the other slot."
+    },
+    {
+      "id": "burning-arrow-snipers-mark-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/burning-arrow-snipers-mark-templar.xml",
+      "sha256": "4da6323829be18501e93fe5e7a2d1b8edc3fec2e41ca23f864bbae0d60c29dae",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9e: Sniper's Mark's projectile damage taken on the projectile hit, not its ignite (Q11 DIV-0120 to DIV-0122)."
+    },
+    {
+      "id": "smite-poachers-mark-pride-punishment-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-poachers-mark-pride-punishment-templar.xml",
+      "sha256": "5ffad1393302007639e71fd4a8d9f3f86f17314ad33750913184d98be6a2c99a",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9e: Poacher's Mark (the enemy's physical damage reduction with its armour, added physical damage taken), Pride at its maximum effect, Punishment with the enemy on low life (Q11 DIV-0114 to DIV-0116)."
+    },
+    {
+      "id": "smite-pride-initial-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-pride-initial-templar.xml",
+      "sha256": "9fb05338db7ff2b13e17ea34c6555dbf534151dea37d502f49f7828753ea5c45",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9e: Pride at its initial effect, PoB's PrideMinEffect stat (Q11 DIV-0117 to DIV-0119)."
+    },
+    {
+      "id": "ice-nova-guard-shield-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-guard-shield-golem-witch.xml",
+      "sha256": "28c7765bcb66f7c3b824844d53e69aef2fb043bfe7ef6c8a05e28f04b333c700",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-9e: Tempest Shield with a shield, Molten Shell (a guard), Summon Chaos Golem: spell block, armour, chaos resistance, reservation."
+    },
+    {
+      "id": "ice-nova-tempest-shield-no-shield-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-tempest-shield-no-shield-witch.xml",
+      "sha256": "1508440f01125e6422fee1ff62d78cc26a64926de7f23558079c799ad1174b3c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-9e: Tempest Shield without a shield: PoB disables its buff but still reserves its mana."
+    },
+    {
+      "id": "minion-raise-zombie-offerings-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-raise-zombie-offerings-witch.xml",
+      "sha256": "704203c979daf6a8034fef45e77ed3199ec2ed0811bc8e4b990446007376885b",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9e: Bone Offering and Flesh Offering with Raise Zombie: none of their buffs reaches the character (its block and spell block); the minion's block and speed are not slice fields."
     }
   ]
 }

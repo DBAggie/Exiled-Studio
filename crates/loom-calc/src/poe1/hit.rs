@@ -2337,7 +2337,18 @@ pub(super) fn dot_enemy_effect(
             let share = percent(calc, resist, Term::Step("resistance-share"))?;
             difference(calc, one, share, Term::Step("enemy-effect"))?
         }
-        None => one,
+        // Physical: `min(max(0, PhysicalDamageReduction), cap)` (4457),
+        // 1 when nothing gives the enemy any.
+        None => match enemy_physical_reduction(calc, reasons)? {
+            Some(pdr) => {
+                let zero = phases::constant(calc, "no-negative-reduction", 0.0)?;
+                let reduction = phases::pair(calc, zero, pdr, Term::Step("reduction"), false)?;
+                let reduction = reduction_capped(calc, data, reduction, reasons)?;
+                let share = percent(calc, reduction, Term::Step("reduction-share"))?;
+                difference(calc, one, share, Term::Step("enemy-effect"))?
+            }
+            None => one,
+        },
     };
     enemy_reasons(enemy, false, reasons);
     let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
@@ -2348,7 +2359,7 @@ pub(super) fn dot_enemy_effect(
     // `effMult = (1 - resist / 100) x (1 + takenInc / 100) x takenMore`, in
     // PoB's order; `takenInc` one sum of the names, `takenMore` their
     // product.
-    let [inc, more_all, more_typed] = taken_parts(calc, cx, t, reasons)?;
+    let [inc, more_all, more_typed] = taken_parts(calc, cx, t, None, reasons)?;
     let taken_more = phases::product(calc, &[more_all, more_typed], Term::More)?;
     phases::product(
         calc,
@@ -2358,12 +2369,14 @@ pub(super) fn dot_enemy_effect(
 }
 
 /// The enemy's damage taken of type `t` in parts (P3-8m; shared by hits
-/// and damage over time): `1 + (inc + typeInc) / 100`, PoB's `takenInc` as
-/// one sum, then the more of each name.
+/// and damage over time): `1 + (inc + typeInc + extra) / 100`, PoB's
+/// `takenInc` as one sum (`extra`: a projectile hit's
+/// [`projectile_taken`]), then the more of each name.
 fn taken_parts(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
     t: DamageType,
+    extra: Option<Valued>,
     reasons: &mut Reasons,
 ) -> Result<[Valued; 3], CalcError> {
     let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
@@ -2384,7 +2397,9 @@ fn taken_parts(
         Term::Step("enemy-type-damage-taken-increased"),
         reasons,
     )?;
-    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
+    let mut terms = vec![inc_all, inc_typed];
+    terms.extend(extra);
+    let sum = phases::total(calc, &terms, Term::Step("increased-sum"))?;
     let inc = phases::factor(calc, sum, Term::Increased)?;
     let more_all = more(calc, all, cx, reasons)?;
     let more_typed = more(calc, typed, cx, reasons)?;
@@ -2516,7 +2531,7 @@ pub(super) fn hit_damage_taken(
         return Ok(None);
     }
     let cx = calc.context(Flags::HIT);
-    let [inc, more_all, more_typed] = taken_parts(calc, &cx, t, reasons)?;
+    let [inc, more_all, more_typed] = taken_parts(calc, &cx, t, None, reasons)?;
     let more = phases::product(calc, &[more_all, more_typed], Term::More)?;
     Ok(Some(phases::product(
         calc,
@@ -2525,9 +2540,62 @@ pub(super) fn hit_damage_taken(
     )?))
 }
 
+/// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
+/// BASE on the enemy, read with no skill config; Poacher's Mark, P6-9e),
+/// `None` when nothing gives it any.
+fn enemy_physical_reduction(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction);
+    if !phases::has(calc, q) {
+        return Ok(None);
+    }
+    let cx = calc.context(Flags::NONE);
+    Ok(Some(sum_in(
+        calc,
+        q,
+        Op::Base,
+        &cx,
+        Term::Step("enemy-physical-damage-reduction"),
+        reasons,
+    )?))
+}
+
+/// `min(reduction, cap)`, the cap the monster template's
+/// (`data.misc.EnemyPhysicalDamageReductionCap`).
+fn reduction_capped(
+    calc: &mut Calc<'_>,
+    data: &dyn CalcData,
+    reduction: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let cap = if let Some(v) = data.monster_constant(ENEMY_MAX_REDUCTION_STAT) {
+        #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+        let v = v as f64;
+        v
+    } else {
+        reasons
+            .indeterminate
+            .insert(IndeterminateReason::MissingData {
+                table: "object_templates",
+                key: ENEMY_MAX_REDUCTION_STAT.to_owned(),
+            });
+        0.0
+    };
+    let cap = leaf(
+        calc,
+        Source::Enemy,
+        Quantity::Poe1(Poe1Quantity::MaximumPhysicalDamageReduction),
+        cap,
+    )?;
+    phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)
+}
+
 /// The share of a physical hit the enemy's armour lets through (module
-/// docs, step 3): `1 - min(max(0, armourReductionF(armour, average)),
-/// cap) / 100`.
+/// docs, step 3): `1 - min(max(0, pdr + armourReductionF(armour,
+/// average)), cap) / 100`, `pdr` the enemy's physical damage reduction
+/// ([`enemy_physical_reduction`]).
 fn armour_reduction(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
@@ -2556,28 +2624,13 @@ fn armour_reduction(
         let hundred = phases::constant(calc, "hundred", 100.0)?;
         phases::product(calc, &[share, hundred], Term::Step("armour-reduction"))?
     };
+    let reduction = match enemy_physical_reduction(calc, reasons)? {
+        Some(pdr) => phases::total(calc, &[pdr, reduction], Term::Step("with-enemy-reduction"))?,
+        None => reduction,
+    };
     let zero = phases::constant(calc, "no-negative-reduction", 0.0)?;
     let reduction = phases::pair(calc, zero, reduction, Term::Step("reduction"), false)?;
-    let cap = if let Some(v) = data.monster_constant(ENEMY_MAX_REDUCTION_STAT) {
-        #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
-        let v = v as f64;
-        v
-    } else {
-        reasons
-            .indeterminate
-            .insert(IndeterminateReason::MissingData {
-                table: "object_templates",
-                key: ENEMY_MAX_REDUCTION_STAT.to_owned(),
-            });
-        0.0
-    };
-    let cap = leaf(
-        calc,
-        Source::Enemy,
-        Quantity::Poe1(Poe1Quantity::MaximumPhysicalDamageReduction),
-        cap,
-    )?;
-    phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)
+    reduction_capped(calc, data, reduction, reasons)
 }
 
 /// `1 - armour_reduction / 100` (module docs, step 3).
@@ -2604,15 +2657,32 @@ fn enemy_damage_taken(
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     let quantity = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
-    if !calc
-        .store()
-        .effects()
-        .iter()
-        .any(|e| e.quantity == quantity)
+    let projectile = projectile_taken(calc, cx, reasons)?;
+    if projectile.is_none()
+        && !calc
+            .store()
+            .effects()
+            .iter()
+            .any(|e| e.quantity == quantity)
     {
         return Ok(None);
     }
-    let (inc, more) = modifiers(calc, quantity, cx, reasons)?;
+    let (inc, more) = match projectile {
+        None => modifiers(calc, quantity, cx, reasons)?,
+        Some(p) => {
+            let inc = sum_in(
+                calc,
+                quantity,
+                Op::Increased,
+                cx,
+                Term::Step("enemy-damage-taken-increased"),
+                reasons,
+            )?;
+            let sum = phases::total(calc, &[inc, p], Term::Step("increased-sum"))?;
+            let inc = phases::factor(calc, sum, Term::Increased)?;
+            (inc, more(calc, quantity, cx, reasons)?)
+        }
+    };
     Ok(Some(phases::product(
         calc,
         &[inc, more],
@@ -2631,8 +2701,34 @@ fn type_damage_taken(
     t: DamageType,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let parts = taken_parts(calc, cx, t, reasons)?;
+    let projectile = projectile_taken(calc, cx, reasons)?;
+    let parts = taken_parts(calc, cx, t, projectile, reasons)?;
     phases::product(calc, &parts, Term::Step("enemy-damage-taken"))
+}
+
+/// The enemy's projectile damage taken a projectile hit adds to its
+/// `takenInc` (PoB's `ProjectileDamageTaken` INC on the enemy, read with no
+/// skill config when `skillFlags.projectile`, `CalcOffence.lua` 3482 to
+/// 3484; never by damage over time; Sniper's Mark, P6-9e): `None` for a
+/// hit without the projectile flag or when nothing gives it.
+fn projectile_taken(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken);
+    if !cx.flags.contains(Flags::PROJECTILE) || !phases::has(calc, q) {
+        return Ok(None);
+    }
+    let none = calc.context(Flags::NONE);
+    Ok(Some(sum_in(
+        calc,
+        q,
+        Op::Increased,
+        &none,
+        Term::Step("enemy-projectile-damage-taken"),
+        reasons,
+    )?))
 }
 
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type

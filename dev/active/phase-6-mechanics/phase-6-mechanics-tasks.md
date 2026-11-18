@@ -111,7 +111,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-9c: summoning skills inert for the character (20, each minion's skills checked in PoB's export: no `GlobalEffect`), six minion supports; `gem_effects` 1,110 values, 0 differences; minion sweep 109 `Complete` minion fields (80 before Vaal Summon Skeletons' level registered); fixtures: four minion builds and Vaal Summon Skeletons with DIV-0111 to DIV-0113; `docs/phase-6/gems.md`, "P6-9c"
 - [x] P6-9d: skills with their own data (16 inert), Hatred, Herald of Thunder, Malevolence, Enduring Cry; `gem_effects` 1,237 values, 0 differences; fixture with Enlighten; `docs/phase-6/gems.md`, "P6-9d"
 - [x] The review of P6-7b3b to P6-9c applied (`ModStore::more_rounded` in every phase, the minion's unread totals, unsettled minion-only values, conditional gem minion modifiers, the export scripts committed); `docs/phase-6/gems.md`, "The review"
-- [ ] P6-9 remaining: marks (mark slot rule), Tempest Shield (shield check), Pride (`modCond`), General's and Battlemage's Cry, offerings, Bone and Carrion golems
+- [x] P6-9e: marks (PoB's mark rule; `EnemyProjectileDamageTaken`, `EnemyPhysicalDamageReduction`), Pride (`BuffStat::ConfigIs`), Punishment (`BuffStat::WhenState`, `conditionEnemyLowLife` settled), guards (`EffectType::Guard`, PoB's guard slots), Tempest Shield (disabled without a shield, still reserves), offerings (`BuffStat::MinionOnly`), Chaos and Carrion golems, General's Cry, 17 plain supports; `gem_effects` 1,476 values, 0 differences; 7 fixtures (Q11 DIV-0114 to DIV-0122); `docs/phase-6/gems.md`, "P6-9e"
+- [ ] P6-9 remaining: warcry power (Battlemage's, Ancestral, Infernal, Seismic Cry), Arrogance and Eternal Blessing (reservation as life), Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 ## P6-10b: recovery and defence outputs
 ## P6-11: stat mop-up (batches)

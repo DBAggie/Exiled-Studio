@@ -60,6 +60,13 @@
 //!   scaled by buff effect (the golems' buff effect for a golem, and the
 //!   gems' own `BuffEffect` and `AuraEffect` stats: [`OWN_EFFECT_STATS`]),
 //!   and, for an aura, the non-curse aura effect.
+//!   A guard (`EffectType::Guard`, P6-9e) is a buff that takes PoB's guard
+//!   slots (`CalcPerform.lua` 3256 to 3275): Vaal Molten Shell alone, else
+//!   every Vaal guard and one other; with two or more other guards PoB's
+//!   pick follows its table order, so none applies and each is an
+//!   `unmodelled-skill` `guard-slot` reason. A buff stat only minions get
+//!   (`buffNotPlayer`, the offerings: [`BuffStat::MinionOnly`]) acts in
+//!   [`minion_buffs`] alone.
 //! - [`Kind::Debuff`]: its rows on the enemy, merged per name (Frost Bomb's
 //!   exposure, [`Poe1Quantity::SkillExposure`], which [`super::exposure`]
 //!   compares with the others).
@@ -69,8 +76,10 @@
 //!   in the skill list's order, each takes the first free slot of the
 //!   limit (`EnemyCurseLimit`: 1, plus [`Poe1Quantity::CurseLimit`]), or
 //!   replaces a curse of its name or of a lower priority
-//!   ([`curse_priority`], PoB's `determineCursePriority`). A mark is not
-//!   modelled.
+//!   ([`curse_priority`], PoB's `determineCursePriority`). A mark (a curse
+//!   skill typed `Mark`, P6-9e) takes a slot as a hex does, but once a
+//!   mark holds a slot no other mark takes one (PoB: "Currently assume
+//!   only 1 mark is possible"); a mark that loses its slot frees the rule.
 //! - [`Kind::Warcry`]: its buff rows (none reaches a slice field), and
 //!   Rallying Cry's exerted-attack effect only when no ally is configured
 //!   (`multiplierNearbyAlly`): otherwise a reason.
@@ -187,6 +196,9 @@ pub enum EffectType {
     Aura,
     /// A buff (`buff.type == "Buff"`).
     Buff,
+    /// A guard (`buff.type == "Guard"`, P6-9e): a buff in PoB's guard slots
+    /// (module docs).
+    Guard,
 }
 
 impl EffectType {
@@ -196,6 +208,7 @@ impl EffectType {
         match self {
             Self::Aura => "Aura",
             Self::Buff => "Buff",
+            Self::Guard => "Guard",
         }
     }
 }
@@ -235,6 +248,38 @@ pub enum BuffStat {
     /// `StatThreshold` tag on Righteous Fire's own buff, Phase 6): the rows
     /// carry the state [`LIFE_THRESHOLD`], which the hit sets.
     LifeThreshold(&'static [HitEffect]),
+    /// Applies to minions alone (the skill's `buffNotPlayer` with
+    /// `buffMinions`: the offerings, P6-9e): [`minion_buffs`] adds the
+    /// rows, the character's buffs skip them.
+    MinionOnly(&'static [HitEffect]),
+    /// Applies while a named condition holds (PoB's `Condition` tag on the
+    /// mod; Punishment's enemy `LowLife`, P6-9e): the rows carry the state
+    /// `state`, which [`super::conditions`] settles from the config.
+    WhenState {
+        /// The state's key.
+        state: &'static str,
+        /// PoB's condition name (`var`).
+        var: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
+    /// Applies only when the config list `input` is `value` (`equal`) or
+    /// is not (PoB's `modCond`, a condition the config alone sets: Pride's
+    /// `PrideMaxEffect` from `prideEffect`, `ConfigOptions.lua` 566, and
+    /// `PrideMinEffect` otherwise, `CalcSetup.lua` 539; `CalcActiveSkill.lua`
+    /// 806 drops a mod whose `modCond` fails; P6-9e).
+    ConfigIs {
+        /// The config list.
+        input: &'static str,
+        /// The value it is compared with.
+        value: &'static str,
+        /// Whether the rows apply when the input equals `value`.
+        equal: bool,
+        /// PoB's `modCond`.
+        condition: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
 }
 
 /// The state of [`BuffStat::Threshold`] rows.
@@ -329,6 +374,28 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Assassin's Mark (P6-9e): PoB's `SelfCritChance` and
+    // `SelfCritMultiplier` BASE on the enemy, which a hit adds to its crit
+    // chance's base and its extra damage (`CalcOffence.lua` 3015, 3125): the
+    // character's sums, as Despair's added damage.
+    (
+        "AssassinsMark",
+        Kind::Curse {
+            name: "Assassin's Mark",
+            stats: &[
+                (
+                    "enemy_additional_critical_strike_chance_against_self",
+                    BuffStat::Rows(&[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)]),
+                ),
+                (
+                    "enemy_additional_critical_strike_multiplier_against_self",
+                    BuffStat::Rows(&[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)]),
+                ),
+                ("life_granted_when_killed", BuffStat::NoSlice("on-kill")),
+                ("mana_granted_when_killed", BuffStat::NoSlice("on-kill")),
+            ],
+        },
+    ),
     ("Autoexertion", Kind::Inert),
     // Automation reserves and triggers the skill it supports
     // (`SupportAutomation`); nothing of its own reaches the character
@@ -356,6 +423,30 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 (
                     "life_leech_from_physical_attack_damage_permyriad",
                     BuffStat::NoSlice("leech"),
+                ),
+            ],
+        },
+    ),
+    // Bone Offering (P6-9e): its buff goes to minions alone (`buffNotPlayer`).
+    (
+        "BoneOffering",
+        Kind::Buff {
+            name: "Bone Offering",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "base_spell_block_%",
+                    BuffStat::MinionOnly(&[(
+                        Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "monster_base_block_%",
+                    BuffStat::MinionOnly(&[(Quantity::BlockChance, Op::Base, 1.0, NONE, NONE)]),
                 ),
             ],
         },
@@ -651,6 +742,37 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Flesh Offering (P6-9e): its buff goes to minions alone (`buffNotPlayer`).
+    (
+        "FleshOffering",
+        Kind::Buff {
+            name: "Flesh Offering",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "attack_speed_+%_granted_from_skill",
+                    BuffStat::MinionOnly(&[(
+                        Quantity::Speed,
+                        Op::Increased,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                ("base_movement_velocity_+%", BuffStat::NoSlice("movement")),
+                (
+                    "cast_speed_+%_granted_from_skill",
+                    BuffStat::MinionOnly(&[(
+                        Quantity::Speed,
+                        Op::Increased,
+                        1.0,
+                        Flags::CAST,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     ("FreezingPulse", Kind::Inert),
     ("Frenzy", Kind::Inert),
     (
@@ -695,6 +817,18 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("Frostblink", Kind::Inert),
     ("FrostblinkAltX", Kind::Inert),
     ("GemDetonateMines", Kind::Inert),
+    // General's Cry (P6-9e): its mirage warriors act only for a skill it
+    // triggers (P6-8b); as another skill only its warcry power flag.
+    (
+        "GeneralsCry",
+        Kind::Warcry {
+            name: "General's Cry",
+            stats: &[(
+                "warcry_count_power_from_enemies",
+                BuffStat::NoSlice("warcry-power"),
+            )],
+        },
+    ),
     (
         "Grace",
         Kind::Buff {
@@ -915,7 +1049,79 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Molten Shell (P6-9e): a guard (module docs).
+    (
+        "MoltenShell",
+        Kind::Buff {
+            name: "Molten Shell",
+            effect: EffectType::Guard,
+            stats: &[
+                (
+                    "base_physical_damage_reduction_rating",
+                    BuffStat::Rows(&[(Quantity::Armour, Op::Base, 1.0, NONE, NONE)]),
+                ),
+                (
+                    "molten_shell_damage_absorb_limit_%_of_armour",
+                    BuffStat::NoSlice("guard"),
+                ),
+                ("molten_shell_damage_absorbed_%", BuffStat::NoSlice("guard")),
+                (
+                    "molten_shell_max_damage_absorbed",
+                    BuffStat::NoSlice("guard"),
+                ),
+            ],
+        },
+    ),
     ("OrbOfStorms", Kind::Inert),
+    // Poacher's Mark (P6-9e): the enemy's physical damage reduction and
+    // added physical damage taken (PoB's `SelfPhysicalMin`/`Max` with
+    // `ModFlag.Hit`, summed into the hit's added damage as Despair's).
+    (
+        "PoachersMark",
+        Kind::Curse {
+            name: "Poacher's Mark",
+            stats: &[
+                (
+                    "base_additional_physical_damage_reduction_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "life_granted_when_hit_by_attacks",
+                    BuffStat::NoSlice("on-hit"),
+                ),
+                (
+                    "mana_granted_when_hit_by_attacks",
+                    BuffStat::NoSlice("on-hit"),
+                ),
+                (
+                    "maximum_added_physical_damage_taken",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Physical, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::HIT,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "minimum_added_physical_damage_taken",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Physical, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::HIT,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     ("PoisonousConcoctionAltX", Kind::Inert),
     ("Portal", Kind::Inert),
     (
@@ -933,6 +1139,76 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     BuffStat::Rows(&[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)]),
                 ),
             ],
+        },
+    ),
+    // Pride (P6-9e): PoB's `AuraDebuff` on the enemy, its stat by the
+    // config's `prideEffect` (`modCond`), scaled as an aura (its
+    // `DebuffEffect` term is a reason, [`DEPENDS_ON`]), as Flesh and Stone.
+    (
+        "Pride",
+        Kind::Buff {
+            name: "Pride",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "physical_damage_aura_nearby_enemies_physical_damage_taken_+%",
+                    BuffStat::ConfigIs {
+                        input: PRIDE_INPUT,
+                        value: "MAX",
+                        equal: false,
+                        condition: "PrideMinEffect",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(
+                                DamageType::Physical,
+                            )),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
+                ),
+                (
+                    "physical_damage_aura_nearby_enemies_physical_damage_taken_+%_max",
+                    BuffStat::ConfigIs {
+                        input: PRIDE_INPUT,
+                        value: "MAX",
+                        equal: true,
+                        condition: "PrideMaxEffect",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(
+                                DamageType::Physical,
+                            )),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
+                ),
+            ],
+        },
+    ),
+    // Punishment (P6-9e): the enemy's damage taken while it is on low life
+    // (PoB's `Condition` `LowLife` on the enemy, from the config).
+    (
+        "Punishment",
+        Kind::Curse {
+            name: "Punishment",
+            stats: &[(
+                "damage_taken_+%_on_low_life",
+                BuffStat::WhenState {
+                    state: super::conditions::ENEMY_LOW_LIFE,
+                    var: "LowLife",
+                    rows: &[(
+                        Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )],
+                },
+            )],
         },
     ),
     (
@@ -1061,6 +1337,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Steelskin (P6-9e): a guard (module docs); nothing reaches a slice
+    // field, but it takes the non-Vaal guard slot.
+    (
+        "QuickGuard",
+        Kind::Buff {
+            name: "Steelskin",
+            effect: EffectType::Guard,
+            stats: &[
+                ("", BuffStat::NoSlice("ailment-on-self")),
+                (
+                    "quick_guard_damage_absorb_limit",
+                    BuffStat::NoSlice("guard"),
+                ),
+                ("quick_guard_damage_absorbed_%", BuffStat::NoSlice("guard")),
+            ],
+        },
+    ),
     ("RaiseZombie", Kind::Inert),
     ("RaiseZombieAltX", Kind::Inert),
     ("RaiseZombieAltY", Kind::Inert),
@@ -1131,10 +1424,78 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("SearingBond", Kind::Inert),
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
+    // Sniper's Mark (P6-9e): projectile hits only ([`super::hit`]).
+    (
+        "SnipersMark",
+        Kind::Curse {
+            name: "Sniper's Mark",
+            stats: &[
+                (
+                    "projectile_damage_taken_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "projectiles_hitting_self_split_into_x",
+                    BuffStat::NoSlice("projectile-split"),
+                ),
+            ],
+        },
+    ),
     ("SpectralShieldThrow", Kind::Inert),
     ("Spellslinger", Kind::Inert),
     ("StaticStrike", Kind::Inert),
     ("StormRain", Kind::Inert),
+    // Summon Carrion Golem (P6-9e): its buff's added damage goes to your
+    // other minions (`MinionModifier`); no minion hit is computed yet
+    // (P6-7c).
+    (
+        "SummonCarrionGolem",
+        Kind::Buff {
+            name: "Summon Carrion Golem",
+            effect: EffectType::Buff,
+            stats: &[
+                ("", GOLEM_CONDITION),
+                (
+                    "bone_golem_grants_minion_maximum_added_physical_damage",
+                    BuffStat::NoSlice("minion-buff"),
+                ),
+                (
+                    "bone_golem_grants_minion_minimum_added_physical_damage",
+                    BuffStat::NoSlice("minion-buff"),
+                ),
+            ],
+        },
+    ),
+    (
+        "SummonChaosGolem",
+        Kind::Buff {
+            name: "Summon Chaos Golem",
+            effect: EffectType::Buff,
+            stats: &[
+                ("", GOLEM_CONDITION),
+                (
+                    "chaos_golem_grants_chaos_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Resistance(DamageType::Chaos),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "chaos_golem_grants_dot_multiplier_+",
+                    BuffStat::Rows(&[(Quantity::DotMultiplier, Op::Base, 1.0, NONE, NONE)]),
+                ),
+            ],
+        },
+    ),
     (
         "SummonFlameGolem",
         Kind::Buff {
@@ -1238,6 +1599,30 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // Shockwave Support's own attack (`SupportBluntWeaponShockwave`): it
     // hits on its own when triggered; nothing reaches the character.
     ("SupportBluntWeaponShockwave", Kind::Inert),
+    // Tempest Shield (P6-9e): disabled without a shield ([`one_skill`]).
+    (
+        "TempestShield",
+        Kind::Buff {
+            name: "Tempest Shield",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "shield_spell_block_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "skill_display_buff_grants_shock_immunity",
+                    BuffStat::NoSlice("ailment-on-self"),
+                ),
+            ],
+        },
+    ),
     (
         "TemporalChains",
         Kind::Curse {
@@ -1264,6 +1649,29 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("VaalDetonateDead", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
+    // Vaal Molten Shell (P6-9e): a guard that takes every guard slot.
+    (
+        "VaalMoltenShell",
+        Kind::Buff {
+            name: "Vaal Molten Shell",
+            effect: EffectType::Guard,
+            stats: &[
+                (
+                    "base_physical_damage_reduction_rating",
+                    BuffStat::Rows(&[(Quantity::Armour, Op::Base, 1.0, NONE, NONE)]),
+                ),
+                (
+                    "molten_shell_damage_absorb_limit_%_of_armour",
+                    BuffStat::NoSlice("guard"),
+                ),
+                ("molten_shell_damage_absorbed_%", BuffStat::NoSlice("guard")),
+                (
+                    "molten_shell_max_damage_absorbed",
+                    BuffStat::NoSlice("guard"),
+                ),
+            ],
+        },
+    ),
     ("VaalSummonSkeletons", Kind::Inert),
     (
         "Vitality",
@@ -1411,6 +1819,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportAutomation", &[]),
     ("SupportAwakenedBrutality", &[]),
     ("SupportAwakenedControlledDestruction", &[]),
+    // P6-9e
+    ("SupportAwakenedEmpower", &[]),
     ("SupportAwakenedGreaterMultipleProjectiles", &[]),
     ("SupportAwakenedMeleePhysicalDamage", &[]),
     ("SupportAwakenedMinionDamage", &[]),
@@ -1424,27 +1834,38 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportConcentratedEffect", &[]),
     ("SupportControlledDestruction", &[]),
     ("SupportCooldownRecovery", &[]),
+    ("SupportCruelty", &[]),
     ("SupportCullingStrike", &[]),
     ("SupportDamageOnFullLife", &[]),
+    ("SupportDeadlyAilments", &[]),
     ("SupportEfficacy", &[]),
     ("SupportElementalArmy", &[]),
     ("SupportElementalDamageWithAttacks", &[]),
     ("SupportElementalFocus", &[]),
     ("SupportElementalProliferation", &[]),
     ("SupportEmpower", &[]),
+    ("SupportEnduranceChargeOnMeleeStun", &[]),
     ("SupportEnhance", &[]),
     ("SupportEnlighten", &[]),
     ("SupportFasterAttacks", &[]),
     ("SupportFasterCasting", &[]),
     ("SupportFeedingFrenzy", &[]),
+    ("SupportFirePenetration", &[]),
+    ("SupportFistofWar", &[]),
     ("SupportFocusedBallista", &[]),
     ("SupportFortify", &[]),
+    ("SupportGreaterChain", &[]),
+    ("SupportGreaterMultipleProjectiles", &[]),
+    ("SupportGreaterMultistrike", &[]),
+    ("SupportGreaterVolley", &[]),
     ("SupportGuardiansBlessing", &[]),
     ("SupportGuardiansBlessingMinion", &[]),
     ("SupportHextouch", &[]),
     ("SupportHypothermia", &[]),
     ("SupportIceBite", &[]),
+    ("SupportIgniteProliferation", &[]),
     ("SupportImmolate", &[]),
+    ("SupportImpale", &[]),
     ("SupportIncreasedAreaOfEffect", &[]),
     ("SupportIncreasedCriticalDamage", &[]),
     ("SupportIncreasedCriticalStrikes", &[]),
@@ -1458,9 +1879,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ),
     ("SupportInspiration", &[]),
     ("SupportIntensify", &[]),
+    ("SupportInvertTheRules", &[]),
     ("SupportLifetap", &[]),
     ("SupportMeatShield", &[]),
     ("SupportMeleePhysicalDamage", &[]),
+    ("SupportMeleeSplash", &[]),
     ("SupportMinionDamage", &[]),
     ("SupportMinionLife", &[]),
     ("SupportMinionPact", &[]),
@@ -1473,6 +1896,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
         )],
     ),
     ("SupportMultipleTotems", &[]),
+    ("SupportMultistrike", &[]),
+    ("SupportOverexertion", &[]),
     ("SupportPierce", &[]),
     ("SupportPowerChargeOnCritical", &[]),
     ("SupportPredator", &[]),
@@ -1497,6 +1922,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ),
     ("SupportSwiftAffliction", &[]),
     ("SupportSwiftAssembly", &[]),
+    ("SupportTrapAndMineDamage", &[]),
     ("SupportTrinity", &[]),
     ("SupportUnleash", &[]),
     ("SupportUrgentOrders", &[]),
@@ -1517,10 +1943,14 @@ pub const OWN_CURSE_EFFECT_STAT: &str = "curse_effect_+%";
 
 /// A gem's own stats that scale the buff of the skill it is part of
 /// (PoB's `SkillStatMap.lua`: `golem_buff_effect_+%` 2089 is `BuffEffect`
-/// INC, `aura_effect_+%` is `AuraEffect` INC), and whether only an aura
+/// INC, `aura_effect_+%` is `AuraEffect` INC, `offering_spells_effect_+%`
+/// is `BuffEffect` INC, the offerings', P6-9e), and whether only an aura
 /// reads it.
-pub const OWN_EFFECT_STATS: &[(&str, bool)] =
-    &[("aura_effect_+%", true), ("golem_buff_effect_+%", false)];
+pub const OWN_EFFECT_STATS: &[(&str, bool)] = &[
+    ("aura_effect_+%", true),
+    ("golem_buff_effect_+%", false),
+    ("offering_spells_effect_+%", false),
+];
 
 /// Stats that must stay `Unmapped` while buffs act at
 /// [`skill_modifiers`]' scale alone and reservation with its terms alone
@@ -1726,11 +2156,20 @@ fn intimidating_terms(
 pub const NEARBY_ALLY_INPUT: &str = "multiplierNearbyAlly";
 /// The config input of the stance (`ConfigOptions.lua` 643).
 pub const STANCE_INPUT: &str = "bloodSandStance";
+/// The config list of Pride's effect (`ConfigOptions.lua` 566: `MIN` or
+/// `MAX`; P6-9e).
+pub const PRIDE_INPUT: &str = "prideEffect";
 
 /// The config inputs this module reads.
 #[must_use]
 pub fn is_input(name: &str) -> bool {
-    [WRATH_INPUT, "flameWallAddedDamage", STANCE_INPUT].contains(&name)
+    [
+        WRATH_INPUT,
+        "flameWallAddedDamage",
+        STANCE_INPUT,
+        PRIDE_INPUT,
+    ]
+    .contains(&name)
 }
 
 /// Whether an Arcane Surge Support applies to a skill of the active set
@@ -1845,9 +2284,12 @@ type Merged = BTreeMap<
 struct CurseApplied {
     name: &'static str,
     source: Source,
-    rows: Vec<(f64, HitEffect)>,
+    /// Each row's value, row, and the state it needs (P6-9e).
+    rows: Vec<(f64, HitEffect, Option<&'static str>)>,
     /// PoB's `determineCursePriority` ([`curse_priority`]).
     priority: i64,
+    /// PoB's `isMark`: the skill is typed `Mark` (P6-9e).
+    mark: bool,
 }
 
 /// PoB's base curse priorities (`Modules/Data.lua` 322 to 335,
@@ -1906,14 +2348,19 @@ fn curse_priority(name: &str, gem: usize, slot: Option<&str>, aura: bool) -> i64
     base + socket + slot + if aura { 20000 } else { 0 }
 }
 
-/// PoB's curse slots (`CalcPerform.lua` 3155 to 3212, no mark): the
-/// indexes of `curses` (in the skill list's order) that hold the
-/// `limit` slots.
+/// PoB's curse slots (`CalcPerform.lua` 3155 to 3212): the indexes of
+/// `curses` (in the skill list's order) that hold the `limit` slots. While
+/// a mark holds a slot, another mark takes none (`markSlotted`).
 fn curse_slots(curses: &[CurseApplied], limit: usize) -> Vec<usize> {
     let mut slots: Vec<Option<usize>> = vec![None; limit];
+    let mut mark_slotted = false;
     for (c, curse) in curses.iter().enumerate() {
         let mut slot = None;
         for (i, held) in slots.iter().enumerate() {
+            if curse.mark && mark_slotted {
+                slot = None;
+                break;
+            }
             match held {
                 None => {
                     slot = Some(i);
@@ -1928,7 +2375,13 @@ fn curse_slots(curses: &[CurseApplied], limit: usize) -> Vec<usize> {
             }
         }
         if let Some(i) = slot {
+            if slots[i].is_some_and(|h| curses[h].mark) {
+                mark_slotted = false;
+            }
             slots[i] = Some(c);
+            if curse.mark {
+                mark_slotted = true;
+            }
         }
     }
     slots.into_iter().flatten().collect()
@@ -1939,6 +2392,8 @@ fn curse_slots(curses: &[CurseApplied], limit: usize) -> Vec<usize> {
 struct Collected {
     merged: Merged,
     curses: Vec<CurseApplied>,
+    /// The guard buffs by name, each with its first skill (P6-9e).
+    guards: BTreeMap<&'static str, Source>,
     /// The levels of the Summon Lightning Golem skills, each with its gem
     /// (Wrath, [`wrath`]).
     lightning_golems: Vec<(Source, i64)>,
@@ -2033,6 +2488,50 @@ pub fn gems(
     apply(input, config, totals, collected, ingest);
 }
 
+/// PoB's guard slots (`CalcPerform.lua` 3256 to 3275; module docs): the
+/// guard names that apply. Two or more non-Vaal guards: PoB keeps the
+/// first of its table order, which the engine does not know, so none of
+/// them applies and each is a `guard-slot` reason.
+fn guard_slots(
+    guards: &BTreeMap<&'static str, Source>,
+    ingest: &mut Ingest<'_>,
+) -> BTreeSet<&'static str> {
+    let (kept, unknown) = guard_pick(guards.keys().copied());
+    for name in unknown {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: guards[name].clone(),
+            what: "guard-slot",
+        });
+    }
+    kept
+}
+
+/// [`guard_slots`]' choice: the guards that apply, and those whose slot
+/// PoB's table order decides.
+fn guard_pick(
+    names: impl Iterator<Item = &'static str>,
+) -> (BTreeSet<&'static str>, Vec<&'static str>) {
+    const VAAL_MOLTEN_SHELL: &str = "Vaal Molten Shell";
+    let names: BTreeSet<&'static str> = names.collect();
+    if names.contains(VAAL_MOLTEN_SHELL) {
+        return (BTreeSet::from([VAAL_MOLTEN_SHELL]), Vec::new());
+    }
+    let mut kept = BTreeSet::new();
+    let mut other = Vec::new();
+    for name in names {
+        if name.starts_with("Vaal") {
+            kept.insert(name);
+        } else {
+            other.push(name);
+        }
+    }
+    if let [one] = other.as_slice() {
+        kept.insert(*one);
+        other.clear();
+    }
+    (kept, other)
+}
+
 /// Applies what the skills collected: buffs and debuffs in name order,
 /// each stat in ID order, each row in order; then the curses; then Wrath.
 fn apply(
@@ -2045,10 +2544,14 @@ fn apply(
     let Collected {
         mut merged,
         curses,
+        guards,
         lightning_golems,
         rallying_cry,
         ..
     } = collected;
+    // Guards: PoB's slots (module docs).
+    let kept = guard_slots(&guards, ingest);
+    merged.retain(|(name, ..), _| !guards.contains_key(name) || kept.contains(name));
     // Lightning Golem's Wrath (module docs): merged as an aura of its name.
     wrath(
         input,
@@ -2102,12 +2605,16 @@ fn apply(
             if !held.contains(&i) {
                 continue;
             }
-            for (value, (quantity, op, _, all, any)) in c.rows {
+            for (value, (quantity, op, _, all, any), state) in c.rows {
+                let mut conditions = Conditions::none().with_all(all).with_any(any);
+                if let Some(key) = state {
+                    conditions = conditions.with_state(ConditionKey::new(key), true);
+                }
                 ingest.effect(Effect {
                     quantity,
                     op,
                     value,
-                    conditions: Conditions::none().with_all(all).with_any(any),
+                    conditions,
                     source: c.source.clone(),
                 });
             }
@@ -2248,6 +2755,7 @@ pub fn minion_buffs(
                         stats,
                         scale,
                         config,
+                        true,
                         &mut merged,
                         ingest,
                     );
@@ -2323,6 +2831,29 @@ fn one_skill(
     if kind != Kind::Inert || supports_rows || reserves(&s.types) {
         socket_reasons(g, s, ingest);
     }
+    // A skill that requires a shield is disabled without one in the off
+    // hand (`CalcActiveSkill.lua` 269 to 273): no buff, its supports' none
+    // (`CalcPerform.lua` 2227 skips a disabled skill's buffs), but it still
+    // reserves (the reservation loop, 1939, does not check; P6-9e).
+    if s.types.contains("RequiresShield") {
+        let disabled = match super::collect::hands(input).off_hand {
+            super::collect::Held::Shield => false,
+            super::collect::Held::Unknown => {
+                ingest.reason(UnsupportedReason::UnmodelledSkill {
+                    source: active_source.clone(),
+                    what: "requires-shield",
+                });
+                true
+            }
+            super::collect::Held::Empty
+            | super::collect::Held::Weapon(_)
+            | super::collect::Held::Other => true,
+        };
+        if disabled {
+            reservation(s, &active_source, totals, ingest);
+            return;
+        }
+    }
     if s.active_gem.effect.id == WRATH_GOLEM {
         collected
             .lightning_golems
@@ -2375,7 +2906,20 @@ fn one_skill(
             stats,
         } => {
             let aura = effect == EffectType::Aura;
-            let scale = totals.buff_scale(aura, &s.types, own_effect(input, s, aura));
+            // PoB's guard scale reads the character's modifiers alone
+            // (`modStore` the `modDB`): no gem's own effect stat.
+            let own = if effect == EffectType::Guard {
+                0.0
+            } else {
+                own_effect(input, s, aura)
+            };
+            let scale = totals.buff_scale(aura, &s.types, own);
+            if effect == EffectType::Guard {
+                collected
+                    .guards
+                    .entry(name)
+                    .or_insert_with(|| active_source.clone());
+            }
             add_rows(
                 input,
                 g,
@@ -2384,6 +2928,7 @@ fn one_skill(
                 stats,
                 scale,
                 config,
+                false,
                 &mut collected.merged,
                 ingest,
             );
@@ -2398,6 +2943,7 @@ fn one_skill(
                 stats,
                 1.0,
                 config,
+                false,
                 &mut collected.merged,
                 ingest,
             );
@@ -2413,6 +2959,7 @@ fn one_skill(
                 stats,
                 1.0,
                 config,
+                false,
                 &mut collected.merged,
                 ingest,
             );
@@ -2447,10 +2994,10 @@ fn one_skill(
             } else {
                 let mut rows = Vec::new();
                 for (stat, value) in &instance.stats {
-                    let Some(&(_, BuffStat::Rows(effects))) =
-                        stats.iter().find(|(id, _)| id == stat)
-                    else {
-                        continue;
+                    let (effects, state) = match stats.iter().find(|(id, _)| id == stat) {
+                        Some(&(_, BuffStat::Rows(effects))) => (effects, None),
+                        Some(&(_, BuffStat::WhenState { state, rows, .. })) => (rows, Some(state)),
+                        _ => continue,
                     };
                     #[expect(
                         clippy::cast_precision_loss,
@@ -2462,6 +3009,7 @@ fn one_skill(
                         rows.push((
                             skill_modifiers::scale(quantity, op, value / divisor, scale),
                             row,
+                            state,
                         ));
                     }
                 }
@@ -2475,6 +3023,7 @@ fn one_skill(
                         slot,
                         s.types.contains("Aura"),
                     ),
+                    mark: s.types.contains("Mark"),
                 });
             }
         }
@@ -2518,6 +3067,7 @@ fn supports_global(
             table,
             scale,
             config,
+            false,
             &mut collected.merged,
             ingest,
         );
@@ -2545,6 +3095,7 @@ fn add_rows(
     table: &'static [(&'static str, BuffStat)],
     scale: f64,
     config: Option<&ConfigSet>,
+    for_minion: bool,
     merged: &mut Merged,
     ingest: &mut Ingest<'_>,
 ) {
@@ -2596,6 +3147,36 @@ fn add_rows(
             }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
+            BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
+            BuffStat::MinionOnly(rows) => {
+                if !for_minion {
+                    continue;
+                }
+                (rows, None)
+            }
+            BuffStat::ConfigIs {
+                input: list,
+                value: wanted,
+                equal,
+                rows,
+                ..
+            } => {
+                let is = match config.and_then(|set| last_input(set, list, ConfigInputKind::Input))
+                {
+                    None => false,
+                    Some(ConfigValue::String(s)) => s == wanted,
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: list.to_owned(),
+                        });
+                        continue;
+                    }
+                };
+                if is != equal {
+                    continue;
+                }
+                (rows, None)
+            }
         };
         #[expect(
             clippy::cast_precision_loss,
@@ -2913,7 +3494,10 @@ mod tests {
                 | BuffStat::WhenInput { rows: e, .. }
                 | BuffStat::BloodStance(e)
                 | BuffStat::Threshold(e)
-                | BuffStat::LifeThreshold(e) => e,
+                | BuffStat::LifeThreshold(e)
+                | BuffStat::WhenState { rows: e, .. }
+                | BuffStat::MinionOnly(e)
+                | BuffStat::ConfigIs { rows: e, .. } => e,
                 BuffStat::NoSlice(_) | BuffStat::Gated(_) => &[],
             };
             for e in effects {
@@ -2935,6 +3519,8 @@ mod tests {
                         | Poe1Quantity::EnemyTypeDamageTaken(_)
                         | Poe1Quantity::EnemyDamageTaken
                         | Poe1Quantity::EnemyAilmentDuration
+                        | Poe1Quantity::EnemyProjectileDamageTaken
+                        | Poe1Quantity::EnemyPhysicalDamageReduction
                 )
             )
         };
@@ -2947,10 +3533,15 @@ mod tests {
                             // PoB sums the enemy's `SelfChaosMin` and kin
                             // and its `Self<Ailment>Chance` into the hit's
                             // added damage and ailment chance (P6-9b):
-                            // the character's quantities, the same sum.
+                            // the character's quantities, the same sum;
+                            // and its `SelfCritChance` and
+                            // `SelfCritMultiplier` into the hit's crit
+                            // (P6-9e, Assassin's Mark).
                             let summed = matches!(
                                 row.0,
                                 Quantity::AddedDamage(..)
+                                    | Quantity::CritChance
+                                    | Quantity::CritMultiplier
                                     | Quantity::Poe1(Poe1Quantity::AilmentChance(_))
                             );
                             assert!(enemy(row.0) || summed, "{id} {stat}");
@@ -3055,6 +3646,69 @@ mod tests {
         assert!(is_input(WRATH_INPUT));
         assert!(is_input("flameWallAddedDamage"));
         assert!(is_input(STANCE_INPUT));
+        assert!(is_input(PRIDE_INPUT));
         assert!(!is_input("buffOnslaught"));
+    }
+
+    fn curse(name: &'static str, priority: i64, mark: bool) -> CurseApplied {
+        CurseApplied {
+            name,
+            source: Source::Character,
+            rows: Vec::new(),
+            priority,
+            mark,
+        }
+    }
+
+    /// PoB's mark rule (P6-9e): a second mark takes no slot while one is
+    /// held, even a free one.
+    #[test]
+    fn curse_slots_should_hold_one_mark() {
+        let curses = [
+            curse("Despair", 8, false),
+            curse("Assassin's Mark", 11, true),
+            curse("Sniper's Mark", 12, true),
+        ];
+        assert_eq!(curse_slots(&curses, 3), vec![0, 1]);
+    }
+
+    /// A mark that loses its slot to a curse of higher priority frees the
+    /// rule for a later mark, which still needs a slot of its own.
+    #[test]
+    fn curse_slots_should_free_the_mark_rule_when_a_mark_is_replaced() {
+        let curses = [
+            curse("Assassin's Mark", 11, true),
+            curse("Elemental Weakness", 20004, false),
+            curse("Sniper's Mark", 12, true),
+        ];
+        assert_eq!(curse_slots(&curses, 1), vec![1]);
+        assert_eq!(curse_slots(&curses, 2), vec![0, 1]);
+        // A later mark of a higher priority replaces the curse that took
+        // the first mark's slot.
+        let curses = [
+            curse("Assassin's Mark", 11, true),
+            curse("Elemental Weakness", 20004, false),
+            curse("Sniper's Mark", 30012, true),
+        ];
+        assert_eq!(curse_slots(&curses, 1), vec![2]);
+    }
+
+    /// PoB's guard slots (P6-9e): Vaal Molten Shell alone; else the Vaal
+    /// guards and one other; two others are PoB's table order's choice.
+    #[test]
+    fn guard_pick_should_follow_pobs_slots() {
+        let pick = |n: &[&'static str]| guard_pick(n.iter().copied());
+        assert_eq!(
+            pick(&["Molten Shell", "Vaal Molten Shell", "Steelskin"]),
+            (BTreeSet::from(["Vaal Molten Shell"]), Vec::new())
+        );
+        assert_eq!(
+            pick(&["Molten Shell"]),
+            (BTreeSet::from(["Molten Shell"]), Vec::new())
+        );
+        assert_eq!(
+            pick(&["Molten Shell", "Steelskin"]),
+            (BTreeSet::new(), vec!["Molten Shell", "Steelskin"])
+        );
     }
 }

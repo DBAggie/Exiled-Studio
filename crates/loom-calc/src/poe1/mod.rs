@@ -165,6 +165,15 @@ pub enum Poe1Quantity {
     /// attack block per 5% chance to block on the equipped shield
     /// (`ShieldBlockChance`).
     BlockPer5(bool),
+    /// The enemy's projectile damage taken (PoB's `ProjectileDamageTaken`
+    /// INC on the enemy; Sniper's Mark, P6-9e): `Increased`, read only by a
+    /// projectile hit ([`hit`]).
+    EnemyProjectileDamageTaken,
+    /// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
+    /// BASE on the enemy; Poacher's Mark, P6-9e): `Base`, added to the
+    /// armour reduction of a physical hit, and alone for physical damage
+    /// over time ([`hit`]).
+    EnemyPhysicalDamageReduction,
     /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
     /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
     CurseLimit,
@@ -484,6 +493,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
+            Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
+            Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
             Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
             Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
             Self::MinionToYou(value, percent) => {
