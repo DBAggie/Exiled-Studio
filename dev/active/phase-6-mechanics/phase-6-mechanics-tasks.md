@@ -92,6 +92,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b1 PR #163 (base `feat/p6-11e-dot-weapon`)
 - [x] P6-7b1b: the P6-7b1 review (monster base excluded, `can_use` test and docs, validator dangling and empty entries, one difference without `object_stats`, generator sort and split, export guard, docs); `docs/phase-6/minions.md`, "The P6-7b1 review"
 - [x] P6-7b1b PR #164 (base `feat/p6-7b1-minion-data`)
+- [ ] P6-7b3a (next, base `feat/p6-7b1b-review`), with the #164 review's minors (no blockers, no should-fix): a comment in `compare_minion_mods` for an absent `object_stats` with no PoB mod lists; import `BTreeSet` in `poe1.rs` `minion_object_findings`; note in `docs/phase-6/minions.md` that a bundle schema bump for `minions.json` would go with `deny_unknown_fields`
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
