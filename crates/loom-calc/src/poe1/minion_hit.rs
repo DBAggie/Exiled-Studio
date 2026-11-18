@@ -52,10 +52,12 @@ pub const VETTED: &[&str] = &["Melee", "SumonRagingSpiritMelee"];
 
 /// The minion spells the engine computes (P6-7c3), by granted effect ID,
 /// each a plain self-cast spell in PoB's data (a test checks them: PoB's
-/// `spell` flag, no totem flag, [`hit::pob_vetted`], no cooldown, a cast
-/// time) whose own stats the mapping reads (none `unmapped-stat`): the
-/// Flame Golem's Immolate (`Data/Skills/minion.lua` 104).
-pub const VETTED_SPELLS: &[&str] = &["FireElementalFlameRedSummoned"];
+/// `spell` flag, no totem flag, [`hit::pob_vetted`]; `spell` checks one
+/// level and a cast time) whose own stats the mapping reads (none
+/// `unmapped-stat`): the Flame Golem's Immolate (`Data/Skills/minion.lua`
+/// 104) and the Lightning Golem's Storm Orb (390; its cooldown caps its
+/// rate, P6-7c3b).
+pub const VETTED_SPELLS: &[&str] = &["FireElementalFlameRedSummoned", "LightningGolemArcSummoned"];
 
 /// The source of the minion skill's own stats (P6-7c3): its skill list,
 /// as the summoning skill's supports are ([`super::minion_actor`]).
@@ -277,13 +279,11 @@ fn spell<'d>(
         .and_then(|a| data.active_skill(a));
     let types = active.map_or_else(Default::default, |a| a.types.iter().cloned().collect());
     let level = skill::stat_set_level(effect, 1, data)?;
-    // A cooldown or no cast time: not the self-cast spell path. More than
-    // one level: PoB's level is the highest the minion's level reaches,
-    // not read here.
-    if effect.levels.len() != 1
-        || effect.cast_time <= 0
-        || skill::effect_level(effect, 1)?.cooldown != 0
-    {
+    // No cast time: not the self-cast spell path. More than one level:
+    // PoB's level is the highest the minion's level reaches, not read
+    // here.
+    let level_row = skill::effect_level(effect, 1)?;
+    if effect.levels.len() != 1 || effect.cast_time <= 0 {
         return None;
     }
     let (part, _) = hit::pob_part(id, 1)?;
@@ -307,6 +307,8 @@ fn spell<'d>(
         group: summon.group.saturating_sub(1),
         level,
         cast_time: effect.cast_time,
+        cooldown: level_row.cooldown,
+        stored_uses: level_row.stored_uses,
         area: part.area,
         projectile: part.projectile,
         melee: part.melee,

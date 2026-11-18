@@ -1941,6 +1941,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-11k: a Twig Spirit Shield with increased energy shield and defences from the equipped shield, and Discipline with increased effect of your auras on you: EnergyShield and its recharge."
+    },
+    {
+      "id": "minion-summon-lightning-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-lightning-golem-witch.xml",
+      "sha256": "87c248495475cfca54375b1ad3623fefbbb5a3bd1015be8e447ecc5f698aa65e",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7c3b: Summon Lightning Golem (level 20): its Storm Orb, a minion spell at the golem's level whose 8 second cooldown (two stored uses, so not rounded to a server tick) caps its rate at 0.125."
     }
   ]
 }

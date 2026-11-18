@@ -91,8 +91,9 @@
 //! or brand ([`NOT_SELF_CAST`]; channelled skills since P6-5, totems since
 //! P6-6d, `Partial` through [`TOTEM_REASON`]; traps and mines since P6-6e,
 //! `Partial` through [`TRAP_MINE_REASON`], their attacks and DoT not
-//! computed), without a
-//! cooldown, with a cast time; or an attack
+//! computed), with a cast time (a cooldown caps the rate since P6-7c3b,
+//! [`cooldown_limit`]; a trap's or a mine's cooldown is not modelled); or
+//! an attack
 //! that is none of those but an attack, without a cooldown, with a weapon
 //! in the main hand of a class the skill can use and no weapon in the off
 //! hand (dual wielding is not modelled); in an enabled group. Every other
@@ -379,6 +380,10 @@ pub struct SpellSkill<'d> {
     pub level: &'d StatSetLevel,
     /// Cast time, milliseconds.
     pub cast_time: i64,
+    /// The level's cooldown, milliseconds (0: none; P6-7c3b).
+    pub cooldown: i64,
+    /// The level's stored uses (0: none).
+    pub stored_uses: i64,
     /// Whether its hits are area damage (PoB's flags and part, else
     /// `is_area_damage`).
     pub area: bool,
@@ -498,7 +503,11 @@ pub fn spell_skill<'d>(
     }
     let effect = skill.effect();
     let gem = skill.active_gem;
-    if effect.cast_time <= 0 || skill::effect_level(effect, gem.level)?.cooldown != 0 {
+    let level_row = skill::effect_level(effect, gem.level)?;
+    // A cooldown caps the rate (P6-7c3b, [`cast_rate`]); a trap's or a
+    // mine's cooldown is PoB's trap cooldown, not modelled.
+    if effect.cast_time <= 0 || (level_row.cooldown != 0 && (has("Trapped") || has("RemoteMined")))
+    {
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
@@ -535,6 +544,8 @@ pub fn spell_skill<'d>(
         group,
         level,
         cast_time: effect.cast_time,
+        cooldown: level_row.cooldown,
+        stored_uses: level_row.stored_uses,
         area: part.area,
         projectile: part.projectile,
         melee: part.melee,
@@ -2081,13 +2092,64 @@ fn cast_rate(
         Quantity::Poe1(Poe1Quantity::CastTime),
         seconds,
     )?;
+    let limit = cooldown_limit(calc, spell)?;
     rate(
         calc,
         cast_time,
         cx,
         !spell.skill.types.contains("Channel"),
         !spell.skill.types.contains("SummonsTotem"),
+        limit,
     )
+}
+
+/// The rate a cooldown allows (P6-7c3b): PoB's `calcSkillCooldown`
+/// (`CalcOffence.lua` 274 to 288), the level's cooldown, rounded up to a
+/// server tick (`ceil(cooldown x tick rate) / tick rate`) unless the skill
+/// stores more than one use; then `Speed = min(Speed, 1 / Cooldown x
+/// Repeats)` (2357 to 2360). No cooldown recovery, added cooldown, or
+/// additional use stat is mapped (each is unmapped, a reason), and the
+/// repeat count is 1 (module docs). `None` without a cooldown.
+fn cooldown_limit(
+    calc: &mut Calc<'_>,
+    spell: &SpellSkill<'_>,
+) -> Result<Option<Valued>, CalcError> {
+    if spell.cooldown == 0 {
+        return Ok(None);
+    }
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "a cooldown in milliseconds, exact as f64"
+    )]
+    let seconds = spell.cooldown as f64 / 1000.0;
+    let cooldown = phases::constant(calc, "skill-cooldown", seconds)?;
+    let cooldown = if spell.stored_uses > 1 {
+        cooldown
+    } else {
+        let tick_rate = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+        let ticks = phases::product(calc, &[cooldown, tick_rate], Term::Step("cooldown-ticks"))?;
+        let value = crate::math::ceil(ticks.value);
+        let node = calc.graph_mut().push(
+            Node::Ceil {
+                term: Term::Step("cooldown-ticks-up"),
+                of: ticks.node,
+            },
+            value,
+        )?;
+        quotient(
+            calc,
+            Valued { node, value },
+            tick_rate,
+            Term::Step("cooldown-rounded"),
+        )?
+    };
+    let one = phases::constant(calc, "one", 1.0)?;
+    Ok(Some(quotient(
+        calc,
+        one,
+        cooldown,
+        Term::Step("cooldown-rate"),
+    )?))
 }
 
 /// Attack rate (module docs, step 6): the weapon's rate times the skill's
@@ -2121,16 +2183,19 @@ fn attack_rate(
         cx,
         !attack.skill.types.contains("Channel"),
         !attack.skill.types.contains("SummonsTotem"),
+        None,
     )
 }
 
-/// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`.
+/// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`,
+/// with a cooldown's `limit` taken before the tick cap.
 fn rate(
     calc: &mut Calc<'_>,
     base_time: Valued,
     cx: &QueryContext,
     capped: bool,
     self_cast: bool,
+    limit: Option<Valued>,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
@@ -2145,6 +2210,10 @@ fn rate(
         action_speed(calc, rate, &mut reasons)?
     } else {
         rate
+    };
+    let rate = match limit {
+        Some(limit) => phases::pair(calc, rate, limit, Term::Step("cooldown-capped"), true)?,
+        None => rate,
     };
     // A channelled skill's rate is not capped (`CalcOffence.lua` 2366; P6-5).
     if !capped {

@@ -474,7 +474,7 @@ A minion's spell runs through the character's spell path (`hit::spell_hit`) unde
 - `monster_penalty_against_minions_damage_+%_final_vs_player_minions` and `spell_maximum_action_distance_+%`: no row in PoB's stat map, so `NoEffect`.
 
 **Not computed yet** (each still `unmodelled-skill` `minion-skill`):
-- the Lightning Golem's Storm Orb (a cooldown);
+- the Lightning Golem's Storm Orb (a cooldown; part 3b below);
 - the Holy Relic's Nova (triggered, PoB's average);
 - the Carrion Golem's combo attack (its own stat map);
 - the Reaper's skills.
@@ -491,6 +491,27 @@ A minion's spell runs through the character's spell path (`hit::spell_hit`) unde
   - `effectiveness_should_follow_pobs_formula_at_the_actors_level` (Immolate at levels 1, 68, and 90);
   - `vetted_minion_spells_should_be_plain_spells`;
   - the workspace's tests and clippy pass.
+
+## P6-7c, part 3b: a spell's cooldown
+
+**What PoB does** (`CalcOffence.lua`):
+- **The cooldown** (`calcSkillCooldown`, 274 to 288): `(cooldown + added) / CooldownRecovery`, rounded up to a server tick (`ceil(cooldown x tick rate) / tick rate`), unless the skill stores more than one use or has additional uses.
+- **The cap** (2357 to 2360): `Speed = min(Speed, 1 / Cooldown x Repeats)`, after action speed and before the tick cap.
+
+**The engine:**
+- **`hit::cooldown_limit`:** the level's cooldown, rounded as PoB does, caps the spell's rate (`rate`'s new `limit`).
+- **Not mapped:** no cooldown recovery, added cooldown, or additional use stat (each stays unmapped, a reason), and the repeat count is 1 (the hit's module docs).
+- **Which spells:** a self-cast spell with a cooldown is now computed, the character's too (`spell_skill`). A trap's or a mine's cooldown is PoB's trap cooldown, not modelled, so those stay not computed.
+- **Minion spells:** `minion_hit::VETTED_SPELLS` gains the Lightning Golem's Storm Orb (8 s, two stored uses, so not rounded).
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run13`): every Lightning Golem minion offence value equals PoB's, the speed 0.125 and the DPS 9.957 included. The plain build is `Complete`, the alternate-quality one `partial` for its gem. No other sweep document changed; 0 unexpected.
+- **New fixture:** `minion-summon-lightning-golem-witch.xml`, 39 targets.
+- **Skill sweep** (`local/p6/sweep`, 376 builds): no document changed. Its 31 unexpected differences are the same with the binary before this step.
+- **Public `calc-parity` on `b-ot`:** 196 builds, 172 expected, 0 unexpected; `Complete` fields 5,209. No other document changed.
+- **Corpus:** no document changed; 0 unexpected.
+- **Tests:** `a_spells_cooldown_should_cap_its_rate` (3 s rounded to a tick) replaces the test that a cooldown spell is not computed. The workspace's tests and clippy pass.
 
 ## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
 

@@ -671,9 +671,29 @@ fn a_configured_resistance_above_the_maximum_should_raise_it() {
     );
 }
 
+/// A spell's cooldown caps its rate (P6-7c3b): PoB's `calcSkillCooldown`
+/// rounds 3 s up to a server tick (no stored uses), `ceil(3 x (1 /
+/// 0.033)) / (1 / 0.033)`, and `Speed = min(cast rate, 1 / cooldown)`.
+/// Its hit is `IceNova`'s.
 #[test]
-fn only_a_self_cast_spell_without_cooldown_should_be_computed() {
-    for main in ["TestStrike", "TestCooldownNova"] {
+fn a_spells_cooldown_should_cap_its_rate() {
+    let r = run(&build(vec![group(&["TestCooldownNova"])]));
+    let tick_rate = 1.0 / 0.033;
+    let cooldown = (3.0_f64 * tick_rate).ceil() / tick_rate;
+    assert_eq!(
+        value(&r, Field::Speed).to_bits(),
+        (1.0 / cooldown).to_bits()
+    );
+    let nova = run(&build(vec![group(&["IceNova"])]));
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        value(&nova, Field::AverageDamage).to_bits()
+    );
+}
+
+#[test]
+fn only_a_self_cast_spell_should_be_computed() {
+    for main in ["TestStrike"] {
         let b = build(vec![group(&[main])]);
         assert!(
             spell_skill(&b, &Data::new(), &GemLevels::none()).is_none(),
