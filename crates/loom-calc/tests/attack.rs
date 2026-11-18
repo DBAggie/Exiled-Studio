@@ -1205,3 +1205,45 @@ fn intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate() {
     let got = value(&r, Field::AverageDamage);
     assert!((got - expected).abs() < 1e-9 * expected, "{got} {expected}");
 }
+
+/// Dual wielding (P6-11c review): the uptime reads `globalOutput.Speed`,
+/// the hands' combined speed (`CalcOffence.lua` 2444 before 2598), for
+/// both hands' damage, so the combined average is the plain one times one
+/// uptime factor from the combined speed.
+#[test]
+fn intimidating_cry_uptime_should_read_the_combined_speed_when_dual_wielding() {
+    let both = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Siege Axe")];
+    let plain = run(&build("Smite", Some("1"), &both, &OPEN), &both);
+    let mut b = build("Smite", Some("1"), &both, &OPEN);
+    let mut cry = SocketGroup {
+        label: None,
+        enabled: true,
+        slot: None,
+        main_active_skill: None,
+        gems: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    cry.gems.push(Gem {
+        gem: Some(GemId::new("Test/Gems/IntimidatingCry")),
+        skill: Some(SkillId::new("IntimidatingCry")),
+        name: None,
+        level: Sourced::new(1),
+        quality: Sourced::new(0),
+        enabled: true,
+        attributes: Vec::new(),
+    });
+    for set in b.skills.sets.typed_mut() {
+        set.groups.push(cry.clone());
+    }
+    let r = run(&b, &both);
+    assert!(partial(&r, Field::AverageDamage).is_empty());
+    let rate = value(&r, Field::Speed);
+    assert_eq!(rate, value(&plain, Field::Speed));
+    let tick = 1.0 / 0.033;
+    let cooldown = math::ceil(8.0 * tick) / tick;
+    let uptime = ((2.0 / rate) / (cooldown + 0.8)).min(1.0) * 100.0;
+    assert!(uptime < 100.0);
+    let expected = value(&plain, Field::AverageDamage) * (1.0 + uptime / 100.0);
+    let got = value(&r, Field::AverageDamage);
+    assert!((got - expected).abs() < 1e-9 * expected, "{got} {expected}");
+}

@@ -323,8 +323,10 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 pub const DOUBLE_HITS_STAT: &str = "skill_double_hits_when_dual_wielding";
 
 /// PoB's `skillFlag = "arrow"` (`SkillStatMap.lua` 1341): the skill's
-/// keyword `KeywordFlag.Arrow` (`CalcActiveSkill.lua` 412; P6-11c), from a
-/// stat of any of its gems.
+/// keyword `KeywordFlag.Arrow` (`CalcActiveSkill.lua` 412; P6-11c), from the
+/// active gem's own stats only (PoB reads `skillFlag` entries of the active
+/// effect's stat map, 341 to 346; a support's flags come from `addFlags`;
+/// P6-11c review).
 pub const ARROW_STAT: &str = "skill_can_fire_arrows";
 
 /// PoB's damage types in its conversion order (`dmgTypeList`), the order
@@ -610,9 +612,10 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
                 .iter()
                 .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
         });
-    let arrow = skill::instances(&skill, data)
+    let arrow = skill::instance(effect, gem.level, gem.quality, data)
+        .stats
         .iter()
-        .any(|i| i.stats.iter().any(|(s, v)| s == ARROW_STAT && *v != 0));
+        .any(|(s, v)| s == ARROW_STAT && *v != 0);
     // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
     // is 1 (P6-6b: PoB's parts and flags from its skill data).
     let wanted = main_group

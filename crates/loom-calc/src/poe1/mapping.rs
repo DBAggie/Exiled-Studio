@@ -3434,6 +3434,92 @@ mod tests {
         }
     }
 
+    /// The weapon-type rows (P6-11b, P6-11c): each with PoB's weapon
+    /// `ModFlag`s and keyword flags as `Data/ModCache.lua` gives them.
+    #[test]
+    fn weapon_type_stats_should_map_as_pob_reads_them() {
+        let all = |f: Flags| Conditions::none().with_all(f);
+        let inc = |q: Quantity, f: Flags| vec![(q, Op::Increased, 1.0, all(f))];
+        let hit_or_ailment = |f: Flags| {
+            vec![(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                Conditions::none()
+                    .with_all(f)
+                    .with_any(Flags::HIT.union(Flags::AILMENT)),
+            )]
+        };
+        // `flags=131076`: Bow, Hit; `131077`: with Attack.
+        assert_eq!(
+            hit("bow_damage_+%"),
+            inc(Quantity::Damage, Flags::BOW | Flags::HIT)
+        );
+        assert_eq!(
+            hit("bow_attack_speed_+%"),
+            inc(Quantity::Speed, Flags::BOW | Flags::HIT | Flags::ATTACK)
+        );
+        // `keywordFlags=1024` (Bow), with `flags=8` (Dot).
+        assert_eq!(
+            hit("damage_over_time_+%_with_bow_skills"),
+            inc(Quantity::Damage, Flags::DOT | Flags::KEYWORD_BOW)
+        );
+        // `flags=603979781`: Weapon2H, WeaponMelee, Hit, Attack.
+        assert_eq!(
+            hit("two_handed_melee_attack_speed_+%"),
+            inc(
+                Quantity::Speed,
+                Flags::WEAPON_2H | Flags::WEAPON_MELEE | Flags::HIT | Flags::ATTACK
+            )
+        );
+        // `flags=67110912`: WeaponMelee, Ailment.
+        assert_eq!(
+            hit("melee_weapon_ailment_damage_+%"),
+            inc(Quantity::Damage, Flags::WEAPON_MELEE | Flags::AILMENT)
+        );
+        // `flags=8388608, keywordFlags=786432`: Wand; Hit or Ailment.
+        assert_eq!(
+            hit("wand_hit_and_ailment_damage_+%"),
+            hit_or_ailment(Flags::WAND)
+        );
+        assert_eq!(
+            hit("wand_damage_+%"),
+            inc(Quantity::Damage, Flags::WAND | Flags::HIT)
+        );
+        // The staff lines on the weapon flag (P6-11c review).
+        assert_eq!(
+            hit("physical_staff_damage_+%"),
+            inc(
+                Quantity::Damage,
+                Flags::PHYSICAL | Flags::STAFF | Flags::HIT
+            )
+        );
+        assert_eq!(
+            hit("staff_ailment_damage_+%"),
+            inc(Quantity::Damage, Flags::STAFF | Flags::AILMENT)
+        );
+        // `flags=8192`: Weapon.
+        let pen = |t| (Quantity::Penetration(t), Op::Base, 1.0, all(Flags::WEAPON));
+        assert_eq!(
+            hit("reduce_enemy_fire_resistance_with_weapons_%"),
+            [pen(FIRE_T)]
+        );
+        assert_eq!(
+            hit("reduce_enemy_elemental_resistance_with_weapons_%"),
+            [pen(FIRE_T), pen(COLD_T), pen(LIGHTNING_T)]
+        );
+        // Added damage "with Wand Attacks": Wand, Hit.
+        assert_eq!(
+            hit("attack_minimum_added_lightning_damage_with_wand"),
+            [(
+                added(LIGHTNING_T, MIN),
+                Op::Base,
+                1.0,
+                all(Flags::WAND | Flags::HIT)
+            )]
+        );
+    }
+
     #[test]
     fn hit_stats_should_map_as_pob_reads_them() {
         let none = Conditions::none;
