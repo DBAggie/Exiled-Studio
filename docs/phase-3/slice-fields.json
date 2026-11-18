@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 10,
+  "revision": 11,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 11 (Phase 6, P6-7c3d): the minion's ignite, bleeding, poison, impale, and combined damage per second (Minion.IgniteDPS, Minion.BleedDPS, Minion.TotalPoisonDPS, Minion.ImpaleDPS, Minion.CombinedDPS), applies minion-present: compared where our result has the field or the oracle's minion value is not 0.",
     "Revision 10 (Phase 6, P6-12): the main skill's combined damage per second (CombinedDPS), applies present: our result has it whenever the build has a main skill.",
     "Revision 9 (Phase 6, P6-10b): the main skill's mana cost (ManaCost), applies present: our result always has it.",
     "Revision 8 (Phase 6, P6-10b): the movement speed modifier and the effective one with action speed (MovementSpeedMod, EffectiveMovementSpeedMod), applies present: our result always has them.",
@@ -189,7 +190,12 @@
     {"id": "Minion.HitChance", "group": "minion", "pob_key": "HitChance", "pob_path": ["Minion", "HitChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.CritChance", "group": "minion", "pob_key": "CritChance", "pob_path": ["Minion", "CritChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.CritMultiplier", "group": "minion", "pob_key": "CritMultiplier", "pob_path": ["Minion", "CritMultiplier"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
-    {"id": "Minion.TotalDPS", "group": "minion", "pob_key": "TotalDPS", "pob_path": ["Minion", "TotalDPS"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."}
+    {"id": "Minion.TotalDPS", "group": "minion", "pob_key": "TotalDPS", "pob_path": ["Minion", "TotalDPS"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.IgniteDPS", "group": "minion", "pob_key": "IgniteDPS", "pob_path": ["Minion", "IgniteDPS"], "applies": "minion-present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c3d): the minion's main skill's ignite."},
+    {"id": "Minion.BleedDPS", "group": "minion", "pob_key": "BleedDPS", "pob_path": ["Minion", "BleedDPS"], "applies": "minion-present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c3d): the minion's main skill's bleeding."},
+    {"id": "Minion.TotalPoisonDPS", "group": "minion", "pob_key": "TotalPoisonDPS", "pob_path": ["Minion", "TotalPoisonDPS"], "applies": "minion-present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c3d): the minion's main skill's poison."},
+    {"id": "Minion.ImpaleDPS", "group": "minion", "pob_key": "ImpaleDPS", "pob_path": ["Minion", "ImpaleDPS"], "applies": "minion-present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c3d): the minion's main skill's impale."},
+    {"id": "Minion.CombinedDPS", "group": "minion", "pob_key": "CombinedDPS", "pob_path": ["Minion", "CombinedDPS"], "applies": "minion-present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c3d): the minion's combined damage per second, as the character's."}
   ],
   "not_in_slice": [
     {"what": "ailments, minions, CombinedDPS beyond hit DPS (Phase 6 adds CombinedDPS in revision 10)", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},

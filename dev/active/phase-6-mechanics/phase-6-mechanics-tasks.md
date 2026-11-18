@@ -107,6 +107,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7c3a: the minion's spells (`skill::instance_for_actor`, PoB's effectiveness at the minion's level; `minion_hit::VETTED_SPELLS`: the Flame Golem's Immolate; damage effectiveness 1; `active_skill_cast_speed_+%_final`); `minion-summon-flame-golem-witch.xml` retargeted, every minion offence value equal to PoB; `docs/phase-6/minions.md`, "P6-7c, part 3a"
 - [x] P6-7c3b: a spell's cooldown caps its rate (`hit::cooldown_limit`, the character's spells too); the Lightning Golem's Storm Orb; fixture `minion-summon-lightning-golem-witch.xml`; `docs/phase-6/minions.md`, "P6-7c, part 3b"
 - [x] P6-7c3c: a minion attack's own stat map (`minion_hit::OWN_STATS`, `minion_actor::OwnSkillMapping`): the Carrion Golem's combo attack, every value equal to PoB; `docs/phase-6/minions.md`, "P6-7c, part 3c"
+- [x] P6-7c3d: the minion's ignite, bleeding, poison, impale, and combined DPS (slice revision 11, `applies: minion-present`; `combined::combine` under the minion actor; the monster template's critical ailment DoT multiplier); DIV-0174; 15 minion fixtures retargeted; `docs/phase-6/minions.md`, "P6-7c, part 3d"
 - [ ] P6-7c3 rest: triggered minion skills (the relic's Nova), stat-mapped attacks (the Carrion Golem's), the minion's ailments and damage over time, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages

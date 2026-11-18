@@ -57,6 +57,19 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let Ok(skill) = super::skill::main_skill(input.build, input.data, &levels) else {
         return Ok(());
     };
+    combine(calc, &skill)
+}
+
+/// The combined damage per second of `skill` from the fields the actor
+/// computed (the character's main skill, or the minion's under the minion
+/// actor, P6-7c3d: every field is then the minion's copy).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn combine(
+    calc: &mut Calc<'_>,
+    skill: &super::skill::MainSkill<'_>,
+) -> Result<(), CalcError> {
     let field = Field::Poe1(Poe1Field::CombinedDps);
     let value_of = |calc: &Calc<'_>, f: Field| {
         calc.field(f).and_then(|r| {

@@ -536,6 +536,29 @@ Its level also has `baseMultiplier = 1.6`. Its damage effectiveness of 1.6 is re
 - **Public and corpus:** no document changed (neither has a Carrion Golem); 0 unexpected.
 - **Tests:** `own_stats_should_be_pobs_stat_map_entries`; the workspace's tests and clippy pass.
 
+## P6-7c, part 3d: the minion's ailments and combined damage per second
+
+**What PoB does:** `calcs.offence` for the minion (`CalcPerform.lua` 3737) writes the minion's ignite, bleeding, poison, impale, and `CombinedDPS` as the character's. From the minion's crits its DoT multiplier gains the monster template's `critical_ailment_dot_multiplier_+` (30; `initMinionModDB`, 1147), not the character's 50 (`CalcSetup.lua` 502). Its other constants come from `initModDB` as the character's (impale's stack count included).
+
+**The engine:**
+- **The ailment fields:** the minion's ignite, bleeding, poison, and impale are no longer set not computed after its hit. Its own damage over time and hit speed still are.
+- **Crits:** `ailment` takes the critical ailment DoT multiplier by actor.
+- **`combined::combine`:** split out of the combined phase. It runs under the minion actor after the minion's hit, with the minion's skill, so it reads the minion's copies.
+- **Slice revision 11:** `Minion.IgniteDPS`, `Minion.BleedDPS`, `Minion.TotalPoisonDPS`, `Minion.ImpaleDPS`, and `Minion.CombinedDPS`, with the new `applies: minion-present` (compared where our field exists or PoB's minion value is not 0). `calc-parity`'s three rules are now one function, `applies`, with a test.
+- **Found on the way:** the minion's ignite used the character's +50; PoB's 37.709 (the Flame Golem) and 56.755 (the Raging Spirit) are now ours.
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run15`): 0 unexpected.
+  - The Flame Golem's and the Raging Spirit's ignite equal PoB's.
+  - Every `Minion.CombinedDPS` of a computed minion hit equals PoB's, except where its fields are `partial` (an unmodelled skill or gem, an unmapped stat), and Vaal Summon Skeletons'.
+  - Vaal Summon Skeletons' combined DPS carries its registered minion level: **DIV-0174**, `game-truth`, as DIV-0124.
+- **Public `calc-parity` on `b-ot`:** 196 builds, 173 expected, 0 unexpected; `Complete` fields 5,225 (5,209 before).
+  - 15 minion fixtures are retargeted. Each gained its newly complete fields (the minion's combined DPS and ignite, and the character's recovery, movement, cost, and combined fields) and lost none; every target is met.
+  - Vaal Summon Skeletons' registered minion life, armour, and evasion stay targets.
+- **Corpus:** no document changed; 0 unexpected.
+- **Tests:** `applies_should_follow_each_rule`; the slice revision in `calc-parity`'s report test; the workspace's tests (1,761) and clippy pass.
+
 ## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
 
 Applied:

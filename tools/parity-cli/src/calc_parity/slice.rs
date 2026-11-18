@@ -22,8 +22,10 @@ pub const FORMAT: u32 = 1;
 /// regeneration (P6-10b); revision 7 energy shield regeneration and
 /// recharge (P6-10b); revision 8 movement speed (P6-10b); revision 9 the
 /// main skill's mana cost (P6-10b); revision 10 the combined damage per
-/// second (P6-12).
-pub const REVISION: u32 = 10;
+/// second (P6-12); revision 11 the minion's ignite, bleeding, poison,
+/// impale, and combined damage per second (P6-7c3d,
+/// `applies: minion-present`).
+pub const REVISION: u32 = 11;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -31,7 +33,7 @@ pub const REVISION: u32 = 10;
 /// computes; every one is compared when the oracle's `main_output` has a
 /// `Minion` table or our result has the field (`applies: minion`), so a
 /// minion value of 0 is compared, not skipped.
-pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
+pub const MINION_NAMES: [(&str, [&str; 2], &str); 19] = [
     ("Minion.Life", ["Minion", "Life"], "minion.life"),
     (
         "Minion.EnergyShield",
@@ -83,6 +85,44 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
         "minion.crit-multiplier",
     ),
     ("Minion.TotalDPS", ["Minion", "TotalDPS"], "minion.hit-dps"),
+    // Revision 11 (P6-7c3d): `applies: minion-present` ([`MINION_PRESENT`]).
+    (
+        "Minion.IgniteDPS",
+        ["Minion", "IgniteDPS"],
+        "minion.ignite-dps",
+    ),
+    (
+        "Minion.BleedDPS",
+        ["Minion", "BleedDPS"],
+        "minion.bleed-dps",
+    ),
+    (
+        "Minion.TotalPoisonDPS",
+        ["Minion", "TotalPoisonDPS"],
+        "minion.poison-dps",
+    ),
+    (
+        "Minion.ImpaleDPS",
+        ["Minion", "ImpaleDPS"],
+        "minion.impale-dps",
+    ),
+    (
+        "Minion.CombinedDPS",
+        ["Minion", "CombinedDPS"],
+        "minion.poe1.combined-dps",
+    ),
+];
+
+/// The minion fields compared only where either side has the mechanic
+/// (slice revision 11, `applies: minion-present`): our field, or the
+/// oracle's minion value other than 0, as `applies: present` for the
+/// character's.
+pub const MINION_PRESENT: [&str; 5] = [
+    "Minion.IgniteDPS",
+    "Minion.BleedDPS",
+    "Minion.TotalPoisonDPS",
+    "Minion.ImpaleDPS",
+    "Minion.CombinedDPS",
 ];
 
 /// The Phase 6 fields (slice revision 3; Phase 6 plan, decision 2): PoB's
@@ -425,7 +465,12 @@ impl SliceFile {
             let minion = MINION_NAMES.iter().find(|(id, _, _)| *id == f.id);
             match minion {
                 Some((_, path, _)) => {
-                    if f.applies != "minion"
+                    let applies = if MINION_PRESENT.contains(&f.id.as_str()) {
+                        "minion-present"
+                    } else {
+                        "minion"
+                    };
+                    if f.applies != applies
                         || f.pob_path.as_deref().is_none_or(|p| p != path.as_slice())
                         || f.breakdown.is_some()
                     {
@@ -435,7 +480,7 @@ impl SliceFile {
                         );
                     }
                 }
-                None if f.applies == "minion" || f.pob_path.is_some() => {
+                None if f.applies.starts_with("minion") || f.pob_path.is_some() => {
                     return bad("only a minion field has a PoB path".to_owned());
                 }
                 None => {}

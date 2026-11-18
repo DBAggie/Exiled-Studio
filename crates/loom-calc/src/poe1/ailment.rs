@@ -523,8 +523,19 @@ pub(super) fn damaging(
     )?;
     // From crits, the character template's `critical_ailment_dot_multiplier_+`
     // too (PoB's `DotMultiplier` BASE with `Condition:CriticalStrike`,
-    // `CalcSetup.lua` 502; the crit sub-pass).
-    let crit_bonus = match data.character_constant(CRIT_AILMENT_DOT_MULTIPLIER) {
+    // `CalcSetup.lua` 502; the crit sub-pass); a minion's is the monster
+    // template's (`initMinionModDB`, `CalcPerform.lua` 1147; P6-7c3d).
+    let (constant, table) = match calc.actor() {
+        crate::engine::Actor::Player => (
+            data.character_constant(CRIT_AILMENT_DOT_MULTIPLIER),
+            "character_constants",
+        ),
+        crate::engine::Actor::Minion => (
+            data.monster_constant(CRIT_AILMENT_DOT_MULTIPLIER),
+            "monster_constants",
+        ),
+    };
+    let crit_bonus = match constant {
         Some(_) if never_from_crit.is_some() => 0.0,
         Some(v) => {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -535,7 +546,7 @@ pub(super) fn damaging(
             reasons
                 .indeterminate
                 .insert(crate::state::IndeterminateReason::MissingData {
-                    table: "character_constants",
+                    table,
                     key: CRIT_AILMENT_DOT_MULTIPLIER.to_owned(),
                 });
             0.0

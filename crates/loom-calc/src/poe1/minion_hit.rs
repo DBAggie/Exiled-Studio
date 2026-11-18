@@ -127,15 +127,10 @@ pub const FIELDS: [MinionField; 6] = [
 ];
 
 /// The minion's fields the attack path writes that the slice does not
-/// compare yet: not computed (P6-7c review), never an unchecked value.
-const UNVALIDATED: [MinionField; 6] = [
-    MinionField::HitSpeed,
-    MinionField::DotDps,
-    MinionField::IgniteDps,
-    MinionField::BleedDps,
-    MinionField::PoisonDps,
-    MinionField::ImpaleDps,
-];
+/// compare yet: not computed (P6-7c review), never an unchecked value. The
+/// minion's ignite, bleeding, poison, and impale joined the slice in
+/// revision 11 (P6-7c3d).
+const UNVALIDATED: [MinionField; 2] = [MinionField::HitSpeed, MinionField::DotDps];
 
 /// The phase: the minion's main skill's hit (module docs).
 ///
@@ -184,14 +179,20 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                     MinionSkill::Attack(attack) => hit::attack_hit(c, attack)?,
                     MinionSkill::Spell(spell) => hit::spell_hit(c, spell)?,
                 }
-                // Fields the slice does not compare yet (the minion's
-                // ailments): not computed until they are (P6-7c review).
+                // Fields the slice does not compare yet: not computed until
+                // they are (P6-7c review).
                 for field in UNVALIDATED {
                     if c.field(Field::Minion(field)).is_some() {
                         c.set_unsupported(Field::Minion(field), UnsupportedReason::NotComputed);
                     }
                 }
-                Ok(())
+                // The minion's combined damage per second (P6-7c3d), as
+                // the character's from the minion's copies.
+                let main = match &skill {
+                    MinionSkill::Attack(attack) => &attack.skill,
+                    MinionSkill::Spell(spell) => &spell.skill,
+                };
+                super::combined::combine(c, main)
             })
             .unwrap_or(Ok(())),
         Err(reason) => {
