@@ -830,7 +830,6 @@ fn items_beyond_their_lines_should_be_reasons() {
         ("Ring 3", false, Some("unmodelled-item")),
         // No belt, so no abyssal socket: PoB empties the slot (close-out).
         ("Belt Abyssal Socket 1", false, None),
-        ("Flask 1", true, Some("unmodelled-item")),
         ("Flask 1", false, None),
         ("Weapon 1 Swap", false, None),
         ("Amulet", false, None),
@@ -841,6 +840,15 @@ fn items_beyond_their_lines_should_be_reasons() {
             None => assert_eq!(state(&r, Field::Life), StateKind::Complete, "{slot}"),
         }
     }
+    // An active flask acts through its base's data (P6-4b): data without
+    // the flask table leaves the build `Indeterminate` (`missing-data`),
+    // never a value without the flask.
+    let r = run(&with_items(
+        witch(1),
+        vec![plain()],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
 }
 
 #[test]

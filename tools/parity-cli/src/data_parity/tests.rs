@@ -28,7 +28,8 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 10,
+        "format": 11,
+        "flasks": {},
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -357,9 +358,15 @@ fn rows_on_one_side_should_be_listed() {
         .iter()
         .map(|b| (b.table, b.key.as_str()))
         .collect();
+    // The synthetic flask (P6-4b) is on the bundle's side only: the export
+    // has no flasks.
     assert_eq!(
         only,
-        [("skills", "TestStrike"), ("skills", "TestBolt:level.2")]
+        [
+            ("skills", "TestStrike"),
+            ("skills", "TestBolt:level.2"),
+            ("flasks", "Plain Test Ring")
+        ]
     );
     let skills = &comparison.tables["skills"];
     assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 2));

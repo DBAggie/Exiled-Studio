@@ -98,6 +98,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // After the items: "Allocates <notable>" (P3-8n).
     granted_passives(input, spec, ingest);
     config(build, ingest);
+    // After every source of flask effect (P6-4b), before Onslaught.
+    super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
@@ -725,6 +727,11 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
 /// Whether a slot is in use for the item set's weapon set (PoB's
 /// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
 /// slots to set 1, every other slot to both.
+/// Whether `slot` is a flask slot (PoB's `Flask 1` to `Flask 5`).
+pub(super) fn is_flask_slot(slot: &str) -> bool {
+    slot_kind(slot) == SlotKind::Flask
+}
+
 pub(super) fn slot_in_use(slot: &str, second_set: bool) -> bool {
     if slot.contains("Swap") {
         second_set
@@ -818,12 +825,8 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 what,
             };
             match slot_kind(slot) {
-                SlotKind::Flask => {
-                    if attribute(&entry.attributes, "active") == Some("true") {
-                        ingest.reason(unmodelled("active-flask"));
-                    }
-                    continue;
-                }
+                // An active flask acts through `poe1::flasks` (P6-4b).
+                SlotKind::Flask => continue,
                 SlotKind::Abyssal => match abyssal_active(build, set, slot) {
                     // Its lines act as any jewel's (close-out).
                     Some(true) => {}
@@ -1756,6 +1759,33 @@ mod tests {
         assert_eq!(slot_kind("Helmet"), SlotKind::Properties);
         assert_eq!(slot_kind("Weapon 1 Swap"), SlotKind::Properties);
         assert_eq!(slot_kind("Flask 3"), SlotKind::Flask);
+    }
+
+    /// P6-4a review: the inputs P6-4a classified change no field, as an
+    /// input and as a placeholder.
+    #[test]
+    fn classified_inputs_should_have_no_effect() {
+        use loom_domain::{ConfigInput, ConfigValue};
+        for name in [
+            "igniteMode",
+            "buffFortify",
+            "enemyDamageType",
+            "DisableEHPGainOnBlock",
+            "conditionHitRecently",
+            "multiplierWitheredStackCount",
+            "buffElusive",
+        ] {
+            for kind in [ConfigInputKind::Input, ConfigInputKind::Placeholder] {
+                let input = ConfigInput {
+                    name: name.to_owned(),
+                    value: ConfigValue::Boolean(true),
+                    kind,
+                    lines: Vec::new(),
+                    attributes: Vec::new(),
+                };
+                assert_eq!(input_use(&input), InputUse::NoEffect, "{name}");
+            }
+        }
         assert_eq!(slot_kind("Belt Abyssal Socket 1"), SlotKind::Abyssal);
         assert_eq!(slot_kind("Ring 3"), SlotKind::Other);
         assert_eq!(slot_kind("Graft 1"), SlotKind::Other);

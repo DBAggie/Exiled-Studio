@@ -189,27 +189,33 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
 ///   (not a slice field).
 ///
-/// Added in P6-4a, every remaining input of the public builds and the
-/// corpus whose `apply` (`ConfigOptions.lua`) sets only `Condition:` and
-/// `Multiplier:` names, checked as in P3-12g against every calc module
-/// (`local` script output in `docs/phase-6/config-inputs.md`):
+/// Added in P6-4a (59 inputs), every remaining input of the public builds
+/// and the corpus whose `apply` (`ConfigOptions.lua`) sets only
+/// `Condition:` and `Multiplier:` names, checked as in P3-12g against
+/// every calc module (each name searched for in `CalcSetup`, `CalcPerform`,
+/// `CalcOffence`, `CalcDefence`, `CalcActiveSkill`, `CalcTriggers`,
+/// `CalcMirages`, `Calcs`, `CalcTools`, `ModStore`, `ModDB`, `ModList`;
+/// `docs/phase-6/config-inputs.md`). No name is one the engine settles (a
+/// test), so a modifier that reads one stays a reason:
 /// - no calc module reads the names: the corpse, warcry, totem, mine,
 ///   channelling, blocking, hit, kill, and impale conditions and counts;
 ///   the enemy's `Burning`, `Hindered`, `Taunted`, `ChampionIntimidate`,
 ///   and presence time; Focused, Gale Force, Soul Eater (its speed needs
 ///   `Condition:CanHaveSoulEater`, set only by modifiers), Resonance,
-///   Otherworldly Pressure, Infusion, Magmatic Strikes, Plague Bearer, Pride's maximum
-///   effect (Pride is not a modelled gem), Perforate's spikes, Raise
-///   Spiders, Meat Shield, Arcane Cloak, Cyclone, and the summoned minion
-///   and nearby rare count overrides;
+///   Otherworldly Pressure, Infusion, Magmatic Strikes, Plague Bearer,
+///   Pride's maximum effect (Pride is not a modelled gem), Perforate's
+///   spikes, Raise Spiders, Meat Shield, Arcane Cloak, Cyclone, and the
+///   nearby rare count;
 /// - calc modules set them from the build too (`condList` in
 ///   `CalcPerform.lua` 242 to 276: `AttackedRecently`, `HitRecently`,
 ///   `HitSpellRecently`, `Channelling`, `SummonedTotemRecently`,
 ///   `TotemsHitRecently`, `DetonatedMinesRecently`; the enemy's `Cursed`
-///   3303; `UsingFlask` from active flasks 1735) and read them only
-///   through modifiers;
+///   3303; `UsingFlask` from active flasks 1735; the summoned minion
+///   count 1459, read at 1469 to set `OnlyMinion`, a condition) and read
+///   them only through modifiers;
 /// - read only outside the slice: `LowLife` (a flask's instant recovery,
-///   1605), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
+///   1605; the input itself in `CalcDefence.lua` 2216 and 2238, the life
+///   pools of the defence estimate), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
 ///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
 ///   with a support that is not modelled), the enemy's `Debilitated` and
 ///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
@@ -218,6 +224,12 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   enemy's `Withered` stacks (`ChaosDamageTaken` only with
 ///   `WitherEffectStack`, 812 to 815, which only unmapped stats and gems
 ///   that are not modelled give).
+///
+/// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
+/// `defaultState = true` options: PoB saves such an input only when it
+/// differs from the default (`ConfigTab.lua` 895, 919), so an absent one
+/// is on. Nothing settles their names; settling one must read absent as
+/// true ([`DEFAULT_ON`]).
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "DetonatedMinesRecently",
@@ -678,6 +690,10 @@ pub fn named_only(input: &str) -> bool {
         .is_ok()
 }
 
+/// The [`NAMED_ONLY`] inputs whose option is `defaultState = true`
+/// (`ConfigOptions.lua` 1475, 1555): absent is on in PoB, sorted.
+pub const DEFAULT_ON: &[&str] = &["conditionChampionIntimidate", "conditionSacrificeMinion"];
+
 /// Inputs PoB v2.67.2 neither defines (`Modules/ConfigOptions.lua`) nor
 /// reads (`configInput`, `input`, in any module), sorted (P6-4a): saved by
 /// other versions of PoB, they change nothing in v2.67.2. `buffFortify`
@@ -769,6 +785,45 @@ mod tests {
     /// Fortification (P3-12e): every reader of its names is a modifier,
     /// and no mapped stat reads or changes it (the `NoEffect` rows that
     /// name it are listed and reach no slice field).
+    /// No name a [`NAMED_ONLY`] input sets is a condition the engine
+    /// settles (P6-4a review): a settled condition the config sets would be
+    /// left at the engine's value, so such an input would need its effect.
+    #[test]
+    fn no_named_only_name_should_be_settled() {
+        use crate::poe1::{conditions, gems, keystones, mapping, states};
+        let mut settled: Vec<&str> = conditions::CHECKS.iter().map(|(_, c)| *c).collect();
+        settled.extend([
+            states::USING_STAFF,
+            states::USING_SHIELD,
+            states::MAIN_HAND_WEAPON,
+            states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+            keystones::CRIT_IN_PAST_8_SEC,
+            gems::STAT_THRESHOLD,
+            gems::LIFE_THRESHOLD,
+        ]);
+        for (_, rows) in mapping::STATE_ROWS {
+            settled.extend(rows.iter().map(|r| r.3.trim_start_matches('!')));
+        }
+        for (input, names) in NAMED_ONLY {
+            for name in *names {
+                // `Condition:X` is `X`; the enemy's is `Enemy:X`.
+                let key = if let Some(rest) = name.strip_prefix("enemy Condition:") {
+                    format!("Enemy:{rest}")
+                } else {
+                    name.trim_start_matches("Condition:").to_owned()
+                };
+                assert!(
+                    !settled.contains(&key.as_str()),
+                    "{input}: {name} is settled by the engine"
+                );
+            }
+        }
+        for input in DEFAULT_ON {
+            assert!(named_only(input), "{input}");
+        }
+        assert!(DEFAULT_ON.windows(2).all(|w| w[0] < w[1]));
+    }
+
     #[test]
     fn no_mapped_stat_should_read_fortification() {
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};

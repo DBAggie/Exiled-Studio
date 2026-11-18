@@ -30,6 +30,9 @@
 //!   base's node layout, the small passives a jewel can grant, the notables
 //!   and keystones it can add, and the tree's cluster sockets
 //!   ([`ClusterJewels`]).
+//! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
+//!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
+//!   applies an active flask's buff).
 
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +56,34 @@ pub const SOCKET_CAPS: &str = "poe1/socket_caps.json";
 pub const TREE_FLAVOUR: &str = "poe1/tree_flavour.json";
 /// Cluster jewels.
 pub const CLUSTER_JEWELS: &str = "poe1/cluster_jewels.json";
+/// Flask bases.
+pub const FLASKS: &str = "poe1/flasks.json";
+
+/// A flask base (`Flasks`, P6-4b), in the table's order. PoB v2.67.2
+/// exports its `flask` base data from the same row
+/// (`src/Export/Scripts/bases.lua` 247 to 270).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Flask {
+    /// The base item's ID (`BaseItemTypes.Id`).
+    pub base: String,
+    /// The base item's name, as builds write it.
+    pub name: String,
+    /// Life recovered per use (`LifePerUse`; 0 for none).
+    pub life: i64,
+    /// Mana recovered per use (`ManaPerUse`; 0 for none).
+    pub mana: i64,
+    /// The duration in tenths of a second (`RecoveryTime`).
+    pub duration: i64,
+    /// The buff's ID (`BuffDefinitions.Id`), when the flask has one.
+    #[serde(default)]
+    pub buff: Option<String>,
+    /// The buff's stats (`(stat, value)`): its `StatsKeys` with
+    /// `BuffStatValues` in order, then its `GrantedFlags` at 1, as PoB's
+    /// exporter reads them.
+    #[serde(default)]
+    pub stats: Vec<(String, i64)>,
+}
 
 /// What a socketed cluster jewel adds to the tree (module docs), from the
 /// game's `PassiveTreeExpansionJewelSizes`, `PassiveTreeExpansionJewels`,
@@ -434,11 +465,14 @@ pub struct Poe1Section {
     pub tree_flavour: Option<TreeFlavour>,
     /// Cluster jewels (`None` when the file is absent).
     pub cluster_jewels: Option<ClusterJewels>,
+    /// Flask bases (`None` when the file is absent).
+    pub flasks: Option<Vec<Flask>>,
 }
 
 impl Poe1Section {
-    /// The stats the section's build choices (the pantheon's souls) name,
-    /// each with the row it is on: the validator checks each is a stat.
+    /// The stats the section's build choices (the pantheon's souls) and
+    /// flask buffs name, each with the row it is on: the validator checks
+    /// each is a stat.
     pub(super) fn choice_stats(&self) -> Vec<(String, &str)> {
         let mut out = Vec::new();
         for g in self.pantheons.iter().flatten() {
@@ -446,7 +480,44 @@ impl Poe1Section {
                 out.push((format!("{PANTHEONS}:{}", g.id), s.as_str()));
             }
         }
+        for f in self.flasks.iter().flatten() {
+            for (s, _) in &f.stats {
+                out.push((format!("{FLASKS}:{}", f.base), s.as_str()));
+            }
+        }
         out
+    }
+
+    /// The flasks' domain checks for the validator: each row's base, and
+    /// the rows whose values are out of range (a negative recovery or
+    /// duration, a name missing, or stats without a buff).
+    pub(super) fn flask_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let rows = self.flasks.as_deref().unwrap_or_default();
+        let bases = rows.iter().map(|r| r.base.as_str()).collect();
+        let bad = rows
+            .iter()
+            .filter(|r| {
+                r.life < 0
+                    || r.mana < 0
+                    || r.duration < 0
+                    || r.name.is_empty()
+                    || (r.buff.is_none() && !r.stats.is_empty())
+            })
+            .map(|r| {
+                (
+                    format!("{FLASKS}:{}", r.base),
+                    "a negative recovery or duration, no name, or stats without a buff",
+                )
+            })
+            .collect();
+        (bases, bad)
+    }
+
+    /// The first flask base named `name` (builds name a base, and the
+    /// game's legacy rows repeat a name), if the file has one.
+    #[must_use]
+    pub fn flask_named(&self, name: &str) -> Option<&Flask> {
+        self.flasks.iter().flatten().find(|f| f.name == name)
     }
 
     /// The pantheon's domain checks for the validator: the file, its IDs
@@ -661,6 +732,11 @@ impl Poe1Section {
             },
             cluster_jewels: if listed(CLUSTER_JEWELS) {
                 Some(json(source, CLUSTER_JEWELS)?)
+            } else {
+                None
+            },
+            flasks: if listed(FLASKS) {
+                Some(json(source, FLASKS)?)
             } else {
                 None
             },

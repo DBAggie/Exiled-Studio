@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 10
+local FORMAT = 11
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -318,6 +318,21 @@ for name, base in pairs(data.itemBases) do
 	}
 end
 
+-- Every flask base (data.itemBases[name].flask, format 11, Phase 6 P6-4b):
+-- the recovery, duration, and buff lines PoB's exporter wrote
+-- (src/Export/Scripts/bases.lua 247 to 270).
+local flasks = {}
+for name, base in pairs(data.itemBases) do
+	if type(base.flask) == "table" then
+		flasks[name] = {
+			life = base.flask.life,
+			mana = base.flask.mana,
+			duration = base.flask.duration,
+			buff = list(base.flask.buff),
+		}
+	end
+end
+
 ---------------------------------------------------------------------------
 -- Item mods (format 6, UX sprint B-2): the affix name and level of each
 -- mod PoB keys by the game's mod ID, from the files Modules/Data.lua loads
@@ -519,6 +534,7 @@ local document = {
 	gems = gems,
 	bases = bases,
 	base_requirements = baseRequirements,
+	flasks = flasks,
 	mods = itemMods,
 	monster_tables = monsterTables,
 	game_constants = copyMap(data.gameConstants),

@@ -13,16 +13,16 @@ The recount is from the P6-2d evidence (`local/p6/p6-2d`, public and corpus). 10
    - Adrenaline: 100% increased damage, and 25% increased attack speed and cast speed.
 
    The effect stats are unmapped (`TAILWIND_DEPENDS_ON`, and `buff_effect_on_self_+%` in `DEPENDS_ON`), so they stay reasons and the constants hold. Adrenaline's movement speed and physical damage reduction are not slice fields.
-2. **61 inputs that only set names** (`config::NAMED_ONLY`, now 88 entries). An input's `apply` sets `Condition:` or `Multiplier:` names that only modifiers read. A mapped modifier reads a named condition only through a settled state, and the store makes an unsettled one `unmodelled-condition`. The inputs fall in three groups:
+2. **59 inputs that only set names** (`config::NAMED_ONLY`, now 89 entries). An input's `apply` sets `Condition:` or `Multiplier:` names that only modifiers read. A mapped modifier reads a named condition only through a settled state, and the store makes an unsettled one `unmodelled-condition`. The inputs fall in three groups:
    - **No calc module reads the names:**
      - the corpse, warcry, totem, mine, channelling, blocking, hit, kill, and impale conditions and counts;
      - the enemy's Burning, Hindered, Taunted, Champion's Intimidate, and presence time;
      - Focused, Gale Force, Soul Eater (its speed needs `CanHaveSoulEater`, which only modifiers set), Resonance, Otherworldly Pressure, Infusion, Magmatic Strikes, Plague Bearer, and Pride's maximum effect (Pride is not a modelled gem);
      - Perforate, Raise Spiders, Meat Shield, Arcane Cloak, and Cyclone;
-     - the summoned minion and nearby rare counts.
-   - **The calc modules also set them from the build, and read them only through modifiers:** `condList` in `CalcPerform.lua` 242 to 276, the enemy's `Cursed` (3303), and `UsingFlask` from active flasks (1735).
+     - the nearby rare count.
+   - **The calc modules also set them from the build, and read them only through modifiers:** `condList` in `CalcPerform.lua` 242 to 276, the enemy's `Cursed` (3303), `UsingFlask` from active flasks (1735), and the summoned minion count (1459; read at 1469 only to set `OnlyMinion`, a condition).
    - **Read only outside the slice:**
-     - `LowLife`: a flask's instant recovery;
+     - `LowLife`: a flask's instant recovery, and the input itself in the defence estimate's life pools (`CalcDefence.lua` 2216, 2238);
      - Lifetap: flask recovery;
      - Elusive: avoidance and movement speed; Nightblade's crit needs a support that is not modelled;
      - the enemy's Debilitated and Malignant Madness: the enemy's damage and speed;
@@ -42,7 +42,12 @@ The recount is from the P6-2d evidence (`local/p6/p6-2d`, public and corpus). 10
 | `buffAlchemistsGenius` (flask effect), `conditionUsingFlask`'s flask source | P6-4b |
 | The enemy's brittle, scorch, and sap (and their grounds), crushed, frozen, moving (bleed's more damage, `CalcSetup.lua` 537), Ensnare, covered in ash; Elemental Equilibrium's inputs; mana burn; `presetBossSkills`; `bandit` with a value PoB reads otherwise | P6-11 |
 
-After this step, 37 distinct inputs remain reasons, in 26 builds.
+After this step, 36 distinct inputs remain reasons, in 26 builds.
+
+**Guards** (P6-4a review, applied in P6-4b):
+- A test checks that no name a `NAMED_ONLY` input sets is a condition the engine settles (the config checks, the weapon states, the thresholds, the state rows).
+- Another test checks that the classified inputs give `NoEffect` through `collect::input_use`, as an input and as a placeholder.
+- `config::DEFAULT_ON` lists the two `defaultState = true` options (Champion's Intimidate, Sacrifice Minion). PoB saves them only when off, so settling either must read absent as on.
 
 ## Evidence
 

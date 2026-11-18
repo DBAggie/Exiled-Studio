@@ -1493,6 +1493,16 @@
       "description": "Smite with a Rusted Hatchet and the Tailwind and Adrenaline checks on: 8% increased action speed, 100% increased damage, 25% increased attack speed (P6-4a)."
     },
     {
+      "id": "smite-flasks-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-flasks-templar.xml",
+      "sha256": "901d6c795d3453255f2193070f93e5f7d3b70ef42808969cfa08a5f9743ff727",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and five active flasks (magic Granite with its own effect and Armour during Effect, Ruby, magic Silver with its own effect, Diamond, Basalt), with flasks and magic utility flasks at increased effect: each buff scaled as PoB's ScaleAddList, Silver's Onslaught with flask effect (P6-4b)."
+    },
+    {
       "id": "ice-nova-ignite-overload-witch.xml",
       "tier": "mechanic",
       "source": "local",

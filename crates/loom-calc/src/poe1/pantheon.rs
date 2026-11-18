@@ -44,11 +44,21 @@ use crate::state::{IndeterminateReason, UnsupportedReason};
 pub trait Poe1Data {
     /// The pantheon's gods; `None` when the data has no such table.
     fn pantheons(&self) -> Option<&[Pantheon]>;
+
+    /// The flask bases (P6-4b, [`super::flasks`]); `None` (the default)
+    /// when the data has no such table.
+    fn flasks(&self) -> Option<&[loom_data::bundle::poe1::Flask]> {
+        None
+    }
 }
 
 impl Poe1Data for Bundle {
     fn pantheons(&self) -> Option<&[Pantheon]> {
         self.poe1.as_ref()?.pantheons.as_deref()
+    }
+
+    fn flasks(&self) -> Option<&[loom_data::bundle::poe1::Flask]> {
+        self.poe1.as_ref()?.flasks.as_deref()
     }
 }
 

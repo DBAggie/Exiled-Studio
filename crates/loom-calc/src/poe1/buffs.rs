@@ -345,7 +345,11 @@ mod tests {
     fn no_mapped_stat_should_grant_or_change_onslaught() {
         assert!(DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
         let names = |id: &str| {
-            (id.contains("onslaught") && id != ONSLAUGHT_STAT)
+            (id.contains("onslaught")
+                && id != ONSLAUGHT_STAT
+                // Silver Flask's buff flag: its flask effect is
+                // `poe1::flasks`' (P6-4b).
+                && id != crate::poe1::flasks::SILVER_STAT)
                 || id.contains("tailwind")
                 || id.contains("adrenaline")
         };

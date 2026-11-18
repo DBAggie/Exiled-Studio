@@ -22,6 +22,7 @@ mod data_parity;
 mod divergence;
 mod dto_hashes;
 mod extract;
+mod flasks;
 mod flavour;
 mod grafts;
 mod item_tags;
