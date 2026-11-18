@@ -72,8 +72,18 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Totems' hit and DoT computed per totem, the player's action speed for self-cast skills only; the P6-5 review (release skills unvetted, Vaal wording, test placement); `docs/phase-6/totems.md`
 - [x] Open PR: #151 (base `feat/p6-5-channel-vaal`)
 ## P6-6e: traps, mines, brands
+- [x] Trap and mine spells computed with PoB's throwing and laying time (`trap-mine-data` reason); brands, trap and mine attacks left not computed; the P6-6d review (`totem-data` reason, tests, module docs); `docs/phase-6/totems.md`
+- [x] Open PR: #152 (base `feat/p6-6d-totems-traps`)
 ## P6-7a: minion data
-## P6-7b: minion actor, auras and buffs on it, minion defences
+- [x] `poe1/minions.json` (converter, loader, validator, synthetic row); data-parity `minions` (export format 12; 5,959 values, 1 rule); evidence bundle `local/p6/packs/b-minions`; the P6-6e review (docs); `docs/phase-6/minions.md`
+- [x] Open PR: #153 (base `feat/p6-6e-traps-mines-brands`)
+- [ ] Maintainer: the next data run ships `poe1/minions.json`
+## P6-7a2: the P6-7a review
+- [x] Converter strict on IDs and types; validator (duplicate types, empty fields, negatives, skill references); PoB's rod key; `MinionType::life_scaling`; `pob_data.lua` stops on duplicates; start cost measured (+40 ms); `docs/phase-6/minions.md`
+- [x] Open PR: #154 (base `feat/p6-7a-minion-data`)
+## P6-7b: minion actor (plan: `p6-7b-minion-actor-plan.md`, reviewed by plan-reviewer)
+- [x] Plan written and reviewed; split into b1 (data, blocked on the maintainer's depot download of the `.ot` bundles), b2 (actor in the core and parity tool, no value change), b3a, b3b, b4
+- [x] Plan PR: #155 (base `feat/p6-7a2-minion-review`), auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages

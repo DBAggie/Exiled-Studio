@@ -29,6 +29,7 @@ mod item_tags;
 mod jewel_radii;
 mod load_statdesc;
 mod lookup;
+mod minions;
 mod mod_filter;
 mod oracle;
 mod oracle_compare;

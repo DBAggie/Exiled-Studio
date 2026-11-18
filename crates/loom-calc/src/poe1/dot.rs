@@ -25,8 +25,9 @@
 //! Not modelled, each a reason or `NotComputed`: stacking DoT (`DotCanStack`,
 //! speed times duration), burning, caustic, and Corrupting Blood ground
 //! (PoB writes them to their own outputs), auras' effect on their DoT,
-//! brands' attached count, and every kind the hit leaves out (triggered,
-//! totems, traps, mines, minions, channelling).
+//! brands' attached count, and every kind the hit leaves out
+//! ([`NOT_COMPUTED_KINDS`]: triggered, traps, mines, minions, brands).
+//! Totems' DoT is `Partial` through [`super::hit::TOTEM_REASON`].
 
 use loom_domain::Build;
 
@@ -141,9 +142,9 @@ pub const DOT_FUNCTIONS_NOT_PORTED: [&str; 3] = [
     "WaveOfConvictionAltY",
 ];
 
-/// Skill types whose DoT this phase leaves not computed (the kinds the hit
-/// leaves out, [`hit::NOT_SELF_CAST`] but spells' and attacks' own).
-const NOT_COMPUTED_KINDS: [&str; 6] = [
+/// Skill types whose DoT this phase leaves not computed: the kinds the
+/// hit leaves out ([`hit::NOT_PLAIN_ATTACK`]; a test keeps them equal).
+pub const NOT_COMPUTED_KINDS: [&str; 6] = [
     "Triggered",
     "Trapped",
     "RemoteMined",
@@ -356,6 +357,12 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "pob-skill-data",
+        });
+    }
+    if skill.types.contains("SummonsTotem") {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: super::hit::TOTEM_REASON,
         });
     }
     if skill.types.contains("Aura") {

@@ -406,6 +406,7 @@ pub fn compare(
     compare_bosses(&mut out, properties, export, bosses);
     compare_pantheons(&mut out, bundle, export)?;
     compare_flasks(&mut out, bundle, export)?;
+    compare_minions(&mut out, bundle, export);
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
@@ -1341,6 +1342,188 @@ fn compare_flasks(out: &mut Comparison, bundle: &Bundle, export: &Export) -> Res
         out.check(T, name, "buff", json!(lines), json!(theirs));
     }
     Ok(())
+}
+
+/// PoB's minion exporter's weapon names by item class
+/// (`src/Export/Scripts/minions.lua`, `itemClassMap`).
+const MINION_WEAPONS: [(&str, &str); 16] = [
+    ("Bow", "Bow"),
+    ("Claw", "Claw"),
+    ("Dagger", "Dagger"),
+    // PoB's key is "Fishing Rod", which no item class ID matches (the
+    // game's is `FishingRod`): its exporter writes no weapon for a rod.
+    ("Fishing Rod", "Fishing Rod"),
+    ("One Hand Axe", "One Handed Axe"),
+    ("One Hand Mace", "One Handed Mace"),
+    ("One Hand Sword", "One Handed Sword"),
+    ("Sceptre", "One Handed Mace"),
+    ("Shield", "Shield"),
+    ("Staff", "Staff"),
+    ("Thrusting One Hand Sword", "One Handed Sword"),
+    ("Two Hand Axe", "Two Handed Axe"),
+    ("Two Hand Mace", "Two Handed Mace"),
+    ("Two Hand Sword", "Two Handed Sword"),
+    ("Unarmed", "None"),
+    ("Wand", "Wand"),
+];
+
+/// The mods PoB's exporter turns into `damageFixup` (`minions.lua`).
+const DAMAGE_FIXUPS: [(&str, f64); 3] = [
+    ("MonsterSpeedAndDamageFixupSmall", 0.11),
+    ("MonsterSpeedAndDamageFixupLarge", 0.22),
+    ("MonsterSpeedAndDamageFixupComplete", 0.33),
+];
+
+/// `minions` (P6-7a): PoB's minions and spectres (`data.minions`) against
+/// the bundle's monster varieties (`poe1/minions.json`), by the variety's
+/// ID, in PoB's form (`minions.lua`'s `#emit`): the name; life, damage, and
+/// accuracy over 100; energy shield `0.4 x value / 100` and armour and
+/// evasion over 100, absent at 0; the merciless resistances; damage spread
+/// over 100; attack time over 1000; attack range; the life scaling; base
+/// damage ignoring attack speed; the weapon types; the damage fixup from
+/// the mods; the tags. The skill list is compared as a prefix: PoB adds
+/// skills its template names (`#monster ... <skills>`, `#skill`). PoB's mod
+/// list is not compared: it adds the object type's `.ot` stats, which the
+/// bundle does not carry. Only PoB's minions are compared (the bundle holds
+/// every variety); a minion on PoB's side only is a difference.
+fn compare_minions(out: &mut Comparison, bundle: &Bundle, export: &Export) {
+    const T: &str = "minions";
+    let Some(m) = bundle.poe1.as_ref().and_then(|p| p.minions.as_ref()) else {
+        for id in export.minions.keys() {
+            out.pob_only(T, id);
+        }
+        return;
+    };
+    let types: BTreeMap<&str, &loom_data::bundle::poe1::MinionType> =
+        m.types.iter().map(|t| (t.id.as_str(), t)).collect();
+    let varieties: BTreeMap<&str, &loom_data::bundle::poe1::MinionVariety> =
+        m.varieties.iter().map(|v| (v.id.as_str(), v)).collect();
+    #[expect(clippy::cast_precision_loss, reason = "small integers")]
+    let over = |v: i64, d: f64| num(v as f64 / d);
+    let opt = |v: i64, f: f64| if v == 0 { Value::Null } else { num(f) };
+    for (id, pob) in &export.minions {
+        let (Some(v), Some(ty)) = (
+            varieties.get(id.as_str()),
+            varieties
+                .get(id.as_str())
+                .and_then(|v| types.get(v.monster_type.as_str())),
+        ) else {
+            out.pob_only(T, id);
+            continue;
+        };
+        let k = id.as_str();
+        out.check(T, k, "name", json!(v.name), json!(pob.name));
+        out.check(T, k, "life", over(v.life, 100.0), num(pob.life));
+        #[expect(clippy::cast_precision_loss, reason = "small integers")]
+        let es = opt(ty.energy_shield, 0.4 * ty.energy_shield as f64 / 100.0);
+        out.check(T, k, "energyShield", es, json!(pob.energy_shield.map(num)));
+        #[expect(clippy::cast_precision_loss, reason = "small integers")]
+        let (arm, eva) = (
+            opt(ty.armour, ty.armour as f64 / 100.0),
+            opt(ty.evasion, ty.evasion as f64 / 100.0),
+        );
+        out.check(T, k, "armour", arm, json!(pob.armour.map(num)));
+        out.check(T, k, "evasion", eva, json!(pob.evasion.map(num)));
+        out.check(
+            T,
+            k,
+            "resists",
+            json!(ty.resistances.map(int)),
+            json!([
+                num(pob.fire_resist),
+                num(pob.cold_resist),
+                num(pob.lightning_resist),
+                num(pob.chaos_resist)
+            ]),
+        );
+        out.check(T, k, "damage", over(v.damage, 100.0), num(pob.damage));
+        out.check(
+            T,
+            k,
+            "damageSpread",
+            over(ty.damage_spread, 100.0),
+            num(pob.damage_spread),
+        );
+        out.check(
+            T,
+            k,
+            "attackTime",
+            over(v.attack_time, 1000.0),
+            num(pob.attack_time),
+        );
+        out.check(
+            T,
+            k,
+            "attackRange",
+            int(v.attack_range),
+            num(pob.attack_range),
+        );
+        out.check(
+            T,
+            k,
+            "accuracy",
+            over(ty.accuracy, 100.0),
+            num(pob.accuracy),
+        );
+        let scaling = ty.life_scaling().map(|s| match s {
+            loom_data::bundle::poe1::LifeScaling::AltLife1 => "AltLife1",
+            loom_data::bundle::poe1::LifeScaling::AltLife2 => "AltLife2",
+        });
+        out.check(T, k, "lifeScaling", json!(scaling), json!(pob.life_scaling));
+        out.check(
+            T,
+            k,
+            "baseDamageIgnoresAttackSpeed",
+            json!(ty.damage_ignores_attack_speed),
+            json!(pob.base_damage_ignores_attack_speed),
+        );
+        let weapon = |c: &Option<String>| {
+            c.as_deref()
+                .and_then(|c| MINION_WEAPONS.iter().find(|(id, _)| *id == c))
+                .map(|(_, n)| *n)
+        };
+        out.check(
+            T,
+            k,
+            "weaponType1",
+            json!(weapon(&v.main_hand)),
+            json!(pob.weapon_type1),
+        );
+        out.check(
+            T,
+            k,
+            "weaponType2",
+            json!(weapon(&v.off_hand)),
+            json!(pob.weapon_type2),
+        );
+        let fixup = v
+            .mods
+            .iter()
+            .filter_map(|m| DAMAGE_FIXUPS.iter().find(|(id, _)| id == m))
+            .map(|(_, f)| num(*f))
+            .next_back();
+        out.check(
+            T,
+            k,
+            "damageFixup",
+            json!(fixup),
+            json!(pob.damage_fixup.map(num)),
+        );
+        out.check(T, k, "monsterTags", json!(v.tags), json!(pob.monster_tags));
+        let prefix = pob.skill_list.len() >= v.skills.len()
+            && pob.skill_list[..v.skills.len()] == v.skills[..];
+        out.check(
+            T,
+            k,
+            "skillList",
+            json!(v.skills),
+            json!(if prefix {
+                &pob.skill_list[..v.skills.len()]
+            } else {
+                &pob.skill_list[..]
+            }),
+        );
+    }
 }
 
 fn compare_monster_levels(out: &mut Comparison, properties: &PropertyTables, export: &Export) {

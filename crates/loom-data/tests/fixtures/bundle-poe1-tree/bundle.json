@@ -177,6 +177,11 @@
    "size": 219
   },
   {
+   "path": "poe1/minions.json",
+   "sha256": "68167720f7ab181a1efb1ca4c31622ac19cb5b0979ecfaafa633289dfb28bc21",
+   "size": 702
+  },
+  {
    "path": "poe1/pantheons.json",
    "sha256": "5c256f7cd586ee9d6812659661134bb052299fc5be11f7f676f34e989b582a73",
    "size": 512

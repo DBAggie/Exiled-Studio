@@ -87,8 +87,12 @@
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit
 //! (PoB's `skillFlags.hit`: a `Damage` or `Projectile` type), cast by the
-//! player: not an attack, channelled, triggered, a totem, trap, mine,
-//! minion, or brand, without a cooldown, with a cast time; or an attack
+//! player, a totem, a trap, or a mine: not an attack, triggered, a minion,
+//! or brand ([`NOT_SELF_CAST`]; channelled skills since P6-5, totems since
+//! P6-6d, `Partial` through [`TOTEM_REASON`]; traps and mines since P6-6e,
+//! `Partial` through [`TRAP_MINE_REASON`], their attacks and DoT not
+//! computed), without a
+//! cooldown, with a cast time; or an attack
 //! that is none of those but an attack, without a cooldown, with a weapon
 //! in the main hand of a class the skill can use and no weapon in the off
 //! hand (dual wielding is not modelled); in an enabled group. Every other
@@ -137,15 +141,7 @@ use crate::store::Effect;
 /// skill, without the server tick cap on their rate (`CalcOffence.lua`
 /// 2366); their stages and release are skill data and tagged stat map
 /// entries, which leave a skill unvetted ([`pob_vetted`]).
-pub const NOT_SELF_CAST: [&str; 7] = [
-    "Attack",
-    "Triggered",
-    "Trapped",
-    "RemoteMined",
-    "Minion",
-    "CreatesMinion",
-    "Brand",
-];
+pub const NOT_SELF_CAST: [&str; 5] = ["Attack", "Triggered", "Minion", "CreatesMinion", "Brand"];
 
 /// Skill types that make an attack something other than a plain attack
 /// with the weapon in hand ([`NOT_SELF_CAST`] but `Attack`).
@@ -171,6 +167,24 @@ pub struct SkillPart {
     /// The part's hits are projectiles (P6-6b).
     pub projectile: bool,
 }
+
+/// The reason a totem's skill keeps (P6-6d review): PoB reads totem data
+/// the engine does not (placement time and duration, `totemFireOnce`,
+/// `KeywordFlag.Totem` mods, the totem count for ring overrides), and
+/// some of it can come from stats that are inert elsewhere. A test keeps
+/// every vetted totem skill `Partial` through it.
+pub const TOTEM_REASON: &str = "totem-data";
+
+/// The reason a trap's or a mine's spell keeps (P6-6e): PoB reads its throw
+/// count, trap and mine speed, cooldown, and keyword mods, which the engine
+/// does not.
+pub const TRAP_MINE_REASON: &str = "trap-mine-data";
+
+/// PoB's base trap throwing time and mine laying time, seconds
+/// (`CalcSetup.lua` 55, 56).
+const TRAP_THROWING_TIME: f64 = 0.6;
+/// See [`TRAP_THROWING_TIME`].
+const MINE_LAYING_TIME: f64 = 0.3;
 
 /// `SkillData` keys of PoB's base mods that only label or size what PoB
 /// shows (the area's radius and its labels), read into no slice field
@@ -946,6 +960,18 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
             what: "pob-skill-data",
         });
     }
+    if spell.skill.types.contains("SummonsTotem") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: spell.source(),
+            what: TOTEM_REASON,
+        });
+    }
+    if spell.skill.types.contains("Trapped") || spell.skill.types.contains("RemoteMined") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: spell.source(),
+            what: TRAP_MINE_REASON,
+        });
+    }
 
     let skill_base = skill_crit_base(calc, spell.source(), spell.level)?;
     let (crit, mut crit_reasons) = crit_chance(calc, skill_base, None, &cx)?;
@@ -1193,6 +1219,12 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: "pob-skill-data",
+        });
+    }
+    if attack.skill.types.contains("SummonsTotem") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: TOTEM_REASON,
         });
     }
     // PoB takes a main-hand attack's base crit from the weapon alone
@@ -1870,6 +1902,36 @@ fn cast_rate(
         reason = "cast times are small integers, exact as f64"
     )]
     let seconds = spell.cast_time as f64 / 1000.0;
+    // A trap's or a mine's spell (P6-6e): PoB replaces its time with the
+    // throwing or laying time (`skillData.timeOverride`, `CalcOffence.lua`
+    // 1223 to 1337, 2208): `1 / min(1 / base x action speed, tick rate)`,
+    // a mine's when it is both (PoB's mine path sets the time), one
+    // thrown (throw counts and trap or mine speed are not read: the
+    // reason). Cast speed does not reach it.
+    let mine = spell.skill.types.contains("RemoteMined");
+    if mine || spell.skill.types.contains("Trapped") {
+        let base = if mine {
+            MINE_LAYING_TIME
+        } else {
+            TRAP_THROWING_TIME
+        };
+        let base = phases::constant(
+            calc,
+            if mine {
+                "mine-laying-time"
+            } else {
+                "trap-throwing-time"
+            },
+            base,
+        )?;
+        let one = phases::constant(calc, "one", 1.0)?;
+        let speed = quotient(calc, one, base, Term::Step("throwing-speed"))?;
+        let mut reasons = Reasons::new();
+        let speed = action_speed(calc, speed, &mut reasons)?;
+        let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+        let value = phases::pair(calc, speed, cap, Term::Result, true)?;
+        return Ok((value, reasons));
+    }
     let cast_time = leaf(
         calc,
         spell.source(),
@@ -3122,7 +3184,34 @@ mod tests {
         for t in NOT_SELF_CAST.iter().chain(&NOT_PLAIN_ATTACK) {
             assert!(t.chars().all(|c| c.is_ascii_alphabetic()), "{t}");
         }
-        assert_eq!(&NOT_SELF_CAST[1..], &NOT_PLAIN_ATTACK[..]);
+        // Spells by traps and mines are computed (P6-6e); attacks by them
+        // are not: the attack list is the spell list's but `Attack`, plus
+        // the two.
+        let mut spells: Vec<&str> = NOT_SELF_CAST[1..].to_vec();
+        spells.extend(["Trapped", "RemoteMined"]);
+        spells.sort_unstable();
+        let mut attacks = NOT_PLAIN_ATTACK.to_vec();
+        attacks.sort_unstable();
+        assert_eq!(spells, attacks);
+        // The DoT leaves out the same kinds (P6-6d review).
+        assert_eq!(
+            &super::super::dot::NOT_COMPUTED_KINDS[..],
+            &NOT_PLAIN_ATTACK[..]
+        );
+    }
+
+    /// Every vetted totem skill would be `Complete` but for
+    /// [`TOTEM_REASON`] (P6-6d review): the reason is what keeps PoB's
+    /// totem data, which the engine does not read, from a wrong value.
+    #[test]
+    fn vetted_totem_skills_should_be_known() {
+        let vetted: Vec<&str> = super::super::pob_skills::SKILLS
+            .iter()
+            .filter(|s| s.flag("totem") && pob_vetted(s.id, 0))
+            .map(|s| s.id)
+            .collect();
+        assert!(vetted.contains(&"HolyFlameTotem"), "{vetted:?}");
+        assert!(vetted.contains(&"SiegeBallistaAltY"), "{vetted:?}");
     }
 
     /// PoB's parts and flags (P6-6b): Smite's two parts as its data writes

@@ -115,6 +115,9 @@ The flask bases (`poe1/flasks.json`, `docs/phase-6/flasks.md`) against PoB's `fl
 
 On the flask evidence bundle: 48 flasks, 192 values, 0 differences.
 
+## P6-7a: table `minions` (monster varieties, export format 12)
+PoB's minions and spectres against the bundle's monster varieties (`poe1/minions.json`, `docs/phase-6/minions.md`), by variety ID, in PoB's form. On the minion evidence bundle: 332 minions, 5,959 values. The one difference is `GuardianRelicAll`, which PoB writes by hand: rule `minions-pob-written`.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

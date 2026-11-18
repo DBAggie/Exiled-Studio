@@ -53,8 +53,8 @@ use crate::extract::{Extract, Read, Table};
 use crate::item_tags::{self, ItemTags};
 use crate::lookup::{LookupReport, TableLookup};
 use crate::{
-    cluster_jewels, flasks, flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2,
-    properties, tree_flavour,
+    cluster_jewels, flasks, flavour, grafts, jewel_radii, minions, mod_filter, pantheons, poe1,
+    poe2, properties, tree_flavour,
 };
 
 mod base_properties;
@@ -902,6 +902,16 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(gods.len()),
             );
             pantheon_summary = Some(summary);
+        }
+        if let Some(m) = minions::rows(read)? {
+            let n = m.varieties.len();
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::MINIONS,
+                to_json(&m)?,
+                Some(n),
+            );
         }
         if let Some(flasks) = flasks::rows(read)? {
             put(
