@@ -114,7 +114,7 @@ use super::gem_levels::GemLevels;
 use super::keystones;
 use super::phases::{self, Valued};
 use super::skill::{self, MainSkill};
-use super::{Poe1Quantity, WeaponValue};
+use super::{Hand, Poe1Quantity, WeaponValue};
 use crate::condition::{Applies, ConditionKey, Flags, QueryContext};
 use crate::engine::Calc;
 use crate::error::CalcError;
@@ -200,6 +200,11 @@ pub const SKILL_PARTS: [(&str, &[SkillPart]); 1] = [(
     ],
 )];
 
+/// "Hits with both weapons" while dual wielding (PoB's
+/// `doubleHitsWhenDualWielding`): read from the skill's gems by
+/// [`attack_skill`], so the mapping gives it no effect.
+pub const DOUBLE_HITS_STAT: &str = "skill_double_hits_when_dual_wielding";
+
 /// PoB's damage types in its conversion order (`dmgTypeList`), the order
 /// it sums each pass in.
 pub(super) const TYPES: [DamageType; 5] = [
@@ -279,6 +284,12 @@ pub struct AttackSkill<'d> {
     pub attack_speed_multiplier: i64,
     /// The weapon in the main hand.
     pub weapon: ItemId,
+    /// The weapon in the off hand when the skill attacks with it too
+    /// (Phase 6, dual wielding: PoB's `weapon2Attack`).
+    pub off_weapon: Option<ItemId>,
+    /// The skill hits with both weapons at once (PoB's skill data
+    /// `doubleHitsWhenDualWielding`); else it alternates.
+    pub double_hits: bool,
     /// The skill part computed.
     pub part: SkillPart,
     /// Whether PoB's parts of the skill are known ([`SKILL_PARTS`]); if
@@ -396,18 +407,42 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
     let hands = collect::hands(input);
-    if hands.off_hand_weapon {
-        return None;
-    }
-    let (weapon, base) = hands.main?;
+    let (weapon, base) = hands.main.clone()?;
     // PoB disables a skill its weapon cannot use (`weaponTypes`); the game
     // lists the classes per active skill (none: any weapon).
-    if let Some(active) = skill.active
-        && !active.weapon_classes.is_empty()
-        && !active.weapon_classes.contains(&base.class)
-    {
+    let usable = |class: &str| {
+        skill.active.is_none_or(|a| {
+            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
+        })
+    };
+    if !usable(&base.class) {
         return None;
     }
+    // The off hand (Phase 6, `CalcActiveSkill.lua` 318 to 335): a weapon
+    // the skill can use attacks too; one it cannot use disables the skill
+    // (PoB: "Off Hand weapon is not usable with this skill"), so the attack
+    // is not computed. An item there whose base is not known leaves it not
+    // computed too. The skill types that require dual wielding or two
+    // different weapon types, and supports' weapon types, are not checked:
+    // only vetted attacks are `Complete` (`VETTED_ATTACKS`), and none has
+    // them.
+    let off_weapon = match hands.off {
+        Some((id, off)) if usable(&off.class) => Some(id),
+        Some(_) => return None,
+        None if hands.off_hand_weapon => return None,
+        None => None,
+    };
+    // PoB's `doubleHitsWhenDualWielding`: the skill's data (Swordstorm's)
+    // or the stat `skill_double_hits_when_dual_wielding` of the skill or a
+    // support (`SkillStatMap.lua` 291).
+    let double_hits = super::pob_skill::skill(&effect.id)
+        .and_then(|p| p.skill_data("doubleHitsWhenDualWielding"))
+        .is_some_and(super::pob_skill::Value::truthy)
+        || skill::instances(&skill, data).iter().any(|i| {
+            i.stats
+                .iter()
+                .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
+        });
     let parts = SKILL_PARTS
         .iter()
         .find(|(id, _)| *id == effect.id)
@@ -441,6 +476,8 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         level,
         attack_speed_multiplier: level_row.attack_speed_multiplier,
         weapon,
+        off_weapon,
+        double_hits,
         part,
         known_parts,
     })
@@ -878,37 +915,33 @@ fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), Ca
     Ok(())
 }
 
-/// An attack's hit with the weapon in the main hand (module docs).
-fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
+/// One hand's attack pass (module docs; Phase 6: PoB's `passList`, one
+/// pass per hand): its chance to hit, crit chance and multiplier, rate, and
+/// average damage, each with its reasons.
+struct HandHit {
+    hit_chance: (Valued, Reasons),
+    crit: (Valued, Reasons),
+    multiplier: (Valued, Reasons),
+    speed: (Valued, Reasons),
+    average: (Valued, Reasons),
+}
+
+/// One hand's pass (module docs, steps 4 to 9) with the weapon `item` in
+/// `hand`.
+fn hand_hit(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    hand: Hand,
+    item: ItemId,
+    flags: Flags,
+    enemy: &Enemy,
+    unvetted: &Reasons,
+) -> Result<HandHit, CalcError> {
     let input = *calc.input();
-    let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::ATTACK | Flags::HIT | attack.skill.keyword_flags();
-    if attack.part.melee {
-        flags = flags | Flags::MELEE;
-    }
-    if attack.part.area {
-        flags = flags | Flags::AREA;
-    }
     let cx = calc.context(flags);
-    let mut unvetted = Reasons::new();
-    let id = attack.skill.effect().id.as_str();
-    if !VETTED_ATTACKS.contains(&id) || !attack.known_parts {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: attack.source(),
-            what: "pob-skill-data",
-        });
-    }
-    // PoB takes a main-hand attack's base crit from the weapon alone
-    // (`source.CritChance`); a level's own attack crit chance is read only
-    // for the off hand.
-    if attack.level.attack_crit_chance != 0 {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: attack.source(),
-            what: "skill-crit-chance",
-        });
-    }
+    let mut unvetted = unvetted.clone();
     let mut weapon_reasons = Reasons::new();
-    let weapon = weapon_data(calc, attack.weapon, &mut weapon_reasons)?;
+    let weapon = weapon_data(calc, item, hand, &mut weapon_reasons)?;
     unvetted.extend(&weapon_reasons);
 
     // Chance to hit (step 9).
@@ -920,30 +953,16 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     let hit_chance = match flag_on(calc, cannot_be_evaded, &cx, &mut hit_reasons)? {
         Some(flag) => by_flag(calc, flag, "hits-cannot-be-evaded", 100.0)?,
         None => {
-            enemy_reasons(&enemy, true, &mut hit_reasons);
-            let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
-            accuracy_hit_chance(calc, &enemy, accuracy, &cx, &mut hit_reasons)?
+            enemy_reasons(enemy, true, &mut hit_reasons);
+            let accuracy = accuracy(calc, &cx, hand, &mut hit_reasons)?;
+            accuracy_hit_chance(calc, enemy, accuracy, &cx, &mut hit_reasons)?
         }
     };
-    calc.set_derived(
-        Field::HitChance,
-        phases::query(hit_chance, hit_reasons),
-        &[Field::Dexterity],
-    );
 
     let (crit, mut crit_reasons) = crit_chance(calc, weapon.crit, Some(hit_chance), &cx)?;
     crit_reasons.extend(&unvetted);
-    calc.set_derived(
-        Field::CritChance,
-        phases::query(crit, crit_reasons),
-        &[Field::HitChance],
-    );
     let (multiplier, mut multiplier_reasons) = crit_multiplier(calc, input.data, &cx)?;
     multiplier_reasons.extend(&unvetted);
-    calc.set(
-        Field::CritMultiplier,
-        phases::query(multiplier, multiplier_reasons),
-    );
 
     let mut reasons = unvetted.clone();
     // `strDmgBonus = m_floor(Str / 5)` (no mapped stat changes the ratio or
@@ -969,11 +988,160 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         crit_recently: crit.value != 0.0,
         exert_uptime,
     };
-    let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
+    let (hit, crit_hit) = passes(calc, &shape, enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, Some(hit_chance))?;
+    Ok(HandHit {
+        hit_chance: (hit_chance, hit_reasons),
+        crit: (crit, crit_reasons),
+        multiplier: (multiplier, multiplier_reasons),
+        speed: (speed, speed_reasons),
+        average: (average, reasons),
+    })
+}
+
+/// An attack's hit (module docs): with the weapon in the main hand, and
+/// with the off hand's too when dual wielding (Phase 6).
+fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
+    let input = *calc.input();
+    let enemy = enemy::enemy(input.build, input.data);
+    let mut flags = Flags::ATTACK | Flags::HIT | attack.skill.keyword_flags();
+    if attack.part.melee {
+        flags = flags | Flags::MELEE;
+    }
+    if attack.part.area {
+        flags = flags | Flags::AREA;
+    }
+    let mut unvetted = Reasons::new();
+    let id = attack.skill.effect().id.as_str();
+    if !VETTED_ATTACKS.contains(&id) || !attack.known_parts {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "pob-skill-data",
+        });
+    }
+    // PoB takes a main-hand attack's base crit from the weapon alone
+    // (`source.CritChance`); a level's own attack crit chance replaces the
+    // off hand's weapon crit (`skillData.CritChance`), which is not
+    // modelled: a reason for either hand.
+    if attack.level.attack_crit_chance != 0 {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "skill-crit-chance",
+        });
+    }
+    let main = hand_hit(
+        calc,
+        attack,
+        Hand::Main,
+        attack.weapon,
+        flags,
+        &enemy,
+        &unvetted,
+    )?;
+    let Some(off_item) = attack.off_weapon else {
+        let HandHit {
+            hit_chance,
+            crit,
+            multiplier,
+            speed,
+            average,
+        } = main;
+        calc.set_derived(
+            Field::HitChance,
+            phases::query(hit_chance.0, hit_chance.1),
+            &[Field::Dexterity],
+        );
+        calc.set_derived(
+            Field::CritChance,
+            phases::query(crit.0, crit.1),
+            &[Field::HitChance],
+        );
+        calc.set(
+            Field::CritMultiplier,
+            phases::query(multiplier.0, multiplier.1),
+        );
+        calc.set_derived(
+            Field::AverageDamage,
+            phases::query(average.0, average.1),
+            &[
+                Field::CritChance,
+                Field::CritMultiplier,
+                Field::HitChance,
+                Field::Strength,
+            ],
+        );
+        calc.set(Field::Speed, phases::query(speed.0, speed.1));
+        return hit_dps(calc, average.0, speed.0);
+    };
+    let off = hand_hit(calc, attack, Hand::Off, off_item, flags, &enemy, &unvetted)?;
+    dual_wield(calc, attack, &main, &off)
+}
+
+/// Both hands' passes combined (Phase 6; PoB's `combineStat`,
+/// `CalcOffence.lua` 2003 to 2108, 2441 to 2445, 3869 to 3875): chance to
+/// hit, crit chance, and crit multiplier `AVERAGE`; speed the harmonic mean
+/// (0 when a hand's is 0); average damage and hit DPS `DPS` (the hands'
+/// sum, halved unless the skill hits with both at once).
+fn dual_wield(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    main: &HandHit,
+    off: &HandHit,
+) -> Result<(), CalcError> {
+    let two = phases::constant(calc, "two", 2.0)?;
+    let average_of = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
+        let sum = phases::total(calc, &[a, b], Term::Step("both-hands"))?;
+        quotient(calc, sum, two, Term::Result)
+    };
+    let joined = |a: &Reasons, b: &Reasons| {
+        let mut r = a.clone();
+        r.extend(b);
+        r
+    };
+    let hit_chance = average_of(calc, main.hit_chance.0, off.hit_chance.0)?;
+    calc.set_derived(
+        Field::HitChance,
+        phases::query(hit_chance, joined(&main.hit_chance.1, &off.hit_chance.1)),
+        &[Field::Dexterity],
+    );
+    let crit = average_of(calc, main.crit.0, off.crit.0)?;
+    calc.set_derived(
+        Field::CritChance,
+        phases::query(crit, joined(&main.crit.1, &off.crit.1)),
+        &[Field::HitChance],
+    );
+    let multiplier = average_of(calc, main.multiplier.0, off.multiplier.0)?;
+    calc.set(
+        Field::CritMultiplier,
+        phases::query(multiplier, joined(&main.multiplier.1, &off.multiplier.1)),
+    );
+    // `HARMONICMEAN`: `2 / (1 / main + 1 / off)`, 0 when either is 0.
+    let speed = if main.speed.0.value == 0.0 || off.speed.0.value == 0.0 {
+        phases::constant(calc, "no-speed", 0.0)?
+    } else {
+        let one = phases::constant(calc, "one", 1.0)?;
+        let a = quotient(calc, one, main.speed.0, Term::Step("main-hand-time"))?;
+        let b = quotient(calc, one, off.speed.0, Term::Step("off-hand-time"))?;
+        let sum = phases::total(calc, &[a, b], Term::Step("both-hands-time"))?;
+        quotient(calc, two, sum, Term::Result)?
+    };
+    calc.set(
+        Field::Speed,
+        phases::query(speed, joined(&main.speed.1, &off.speed.1)),
+    );
+    // `DPS`: `(main + off)`, halved unless the skill hits with both.
+    let dps_mode = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
+        let sum = phases::total(calc, &[a, b], Term::Step("both-hands"))?;
+        if attack.double_hits {
+            Ok(sum)
+        } else {
+            quotient(calc, sum, two, Term::Result)
+        }
+    };
+    let average = dps_mode(calc, main.average.0, off.average.0)?;
     calc.set_derived(
         Field::AverageDamage,
-        phases::query(average, reasons),
+        phases::query(average, joined(&main.average.1, &off.average.1)),
         &[
             Field::CritChance,
             Field::CritMultiplier,
@@ -981,9 +1149,24 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             Field::Strength,
         ],
     );
-
-    calc.set(Field::Speed, phases::query(speed, speed_reasons));
-    hit_dps(calc, average, speed)
+    // Each hand's `TotalDPS = AverageDamage x Speed x 1 x 1`, then `DPS`.
+    let main_dps = phases::product(
+        calc,
+        &[main.average.0, main.speed.0],
+        Term::Step("main-hand-dps"),
+    )?;
+    let off_dps = phases::product(
+        calc,
+        &[off.average.0, off.speed.0],
+        Term::Step("off-hand-dps"),
+    )?;
+    let dps = dps_mode(calc, main_dps, off_dps)?;
+    calc.set_derived(
+        Field::HitDps,
+        phases::query(dps, Reasons::new()),
+        &[Field::AverageDamage, Field::Speed],
+    );
+    Ok(())
 }
 
 /// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
@@ -1055,13 +1238,14 @@ pub(super) struct WeaponData {
     pub(super) crit: Valued,
 }
 
-/// The weapon in the main hand's values (module docs, step 8).
+/// The values of the weapon in `hand` (module docs, step 8).
 pub(super) fn weapon_data(
     calc: &mut Calc<'_>,
     item: ItemId,
+    hand: Hand,
     reasons: &mut Reasons,
 ) -> Result<WeaponData, CalcError> {
-    let weapon = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+    let weapon = |v| hand.weapon(v);
     let cx = calc.context(Flags::NONE);
     // "No Physical Damage" (PoB: the weapon's physical damage removed) is
     // not modelled; the canonical increased physical damage line carries
@@ -1074,7 +1258,7 @@ pub(super) fn weapon_data(
     if no_physical {
         reasons.partial.insert(UnsupportedReason::UnmodelledItem {
             item,
-            slot: "Weapon 1".to_owned(),
+            slot: hand.slot().to_owned(),
             what: "no-physical-damage",
         });
     }
@@ -1182,6 +1366,7 @@ pub(super) fn weapon_data(
 fn accuracy(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
+    hand: Hand,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
     let input = *calc.input();
@@ -1234,6 +1419,19 @@ fn accuracy(
         Term::Step("accuracy-base-effects"),
         reasons,
     )?);
+    // The hand's weapon's own accuracy (its `MainHandAttack` or
+    // `OffHandAttack` condition), only when it has some.
+    let local = hand.weapon(WeaponValue::Accuracy);
+    if phases::has(calc, local) {
+        terms.push(sum_in(
+            calc,
+            local,
+            Op::Base,
+            cx,
+            Term::Step("weapon-accuracy"),
+            reasons,
+        )?);
+    }
     let base = phases::total(calc, &terms, Term::Base)?;
     let (inc, more) = modifiers(calc, Quantity::Accuracy, cx, reasons)?;
     let raw = phases::product(calc, &[base, inc, more], Term::Step("accuracy-unrounded"))?;

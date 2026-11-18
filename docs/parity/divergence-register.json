@@ -1432,6 +1432,65 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-13",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0072",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. While dual wielding each hand's rate is the game's, and the combined speed is their harmonic mean as in PoB. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.3787288135593219,
+      "successor_value": 1.3780397936624909,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite dual wielding a Rusted Hatchet (667 ms) and a Driftwood Club (714 ms) (P6-2a): every other field equals PoB's, including the hit chance, crit, and average damage of both hands combined; the difference is each hand's rate, 1000 / 667 and 1000 / 714 against PoB's 1.5 and 1.4, before the harmonic mean"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0073",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. While dual wielding the hit DPS is the hands' DPS halved, each hand's from its own rate, as in PoB. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 90.9723810965307,
+      "successor_value": 90.9599908306003,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "The fixture's average damage equals PoB's; the hit DPS differs only through each hand's rate (DIV-0072)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-17",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0074",
+      "mechanic": "PoB's TotalDPS breakdown while dual wielding prints the combined average damage times the combined speed (CalcOffence.lua breakdown.TotalDPS, written from output.AverageDamage and output.Speed), while its TotalDPS is each hand's DPS combined (combineStat \"DPS\", 3874); the engine's graph holds the per-hand terms, so the breakdown's rate term has no node.",
+      "fixture": "smite-dual-wield-templar.xml",
+      "field": "/breakdowns/TotalDPS/1",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "1.38",
+      "successor_value": null,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcOffence.lua 3869 to 3875: TotalDPS = combineStat(\"TotalDPS\", \"DPS\"), the hands' sum halved; the breakdown's lines print output.AverageDamage and output.Speed, the combined values, which PoB never multiplies (the printed total is TotalDPS)",
+        "docs/phase-6/dual-wield.md: the engine computes TotalDPS as PoB does (the hands' DPS combined); PoB's breakdown display multiplies two combined values it never multiplies itself, so its rate line has no counterpart"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::dual_wielding_should_combine_each_hands_own_pass",
+      "added": "2026-11-17",
+      "status": "accepted"
     }
   ]
 }

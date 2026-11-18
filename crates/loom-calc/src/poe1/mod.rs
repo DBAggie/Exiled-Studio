@@ -77,6 +77,9 @@ pub enum Poe1Quantity {
     CastTime,
     /// A value of the weapon in the main hand (its local properties).
     Weapon(WeaponValue),
+    /// A value of the weapon in the off hand (its local properties; Phase
+    /// 6, dual wielding).
+    OffHandWeapon(WeaponValue),
     /// The skill's own conversion of one damage type to another, percent
     /// (PoB's `Skill<From>DamageConvertTo<To>`, which takes precedence over
     /// other conversion).
@@ -291,6 +294,35 @@ impl ReservationKind {
     }
 }
 
+/// A hand that holds a weapon (Phase 6, dual wielding).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Hand {
+    /// The main hand (`Weapon 1`).
+    Main,
+    /// The off hand (`Weapon 2`).
+    Off,
+}
+
+impl Hand {
+    /// The quantity of a value of the weapon in this hand.
+    #[must_use]
+    pub const fn weapon(self, value: WeaponValue) -> crate::quantity::Quantity {
+        crate::quantity::Quantity::Poe1(match self {
+            Self::Main => Poe1Quantity::Weapon(value),
+            Self::Off => Poe1Quantity::OffHandWeapon(value),
+        })
+    }
+
+    /// PoB's slot name.
+    #[must_use]
+    pub const fn slot(self) -> &'static str {
+        match self {
+            Self::Main => "Weapon 1",
+            Self::Off => "Weapon 2",
+        }
+    }
+}
+
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
 /// branch of `BuildModListForSlotNum`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -316,6 +348,11 @@ pub enum WeaponValue {
     /// `AlternateQualityWeapon`, P3-8n): a `Flag`; the weapon's physical
     /// damage then ignores its quality.
     AlternateQuality,
+    /// The weapon's local "+# to Accuracy Rating" (`Base`; Phase 6): PoB's
+    /// `Accuracy` BASE with the hand's `MainHandAttack` or `OffHandAttack`
+    /// condition (`Classes/Item.lua` 2282 to 2288), so each hand's pass
+    /// reads only its own weapon's ([`hit`]).
+    Accuracy,
     /// "Grants #% increased Elemental Damage per 2% Quality" (P3-8n):
     /// `Base`; `collect` turns it into the character's elemental damage
     /// times `floor(quality / 2)`.
@@ -333,6 +370,7 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::Accuracy => f.write_str("accuracy"),
         }
     }
 }
@@ -352,6 +390,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BaseDamageMultiplier => f.write_str("base-damage-multiplier"),
             Self::CastTime => f.write_str("cast-time"),
             Self::Weapon(value) => write!(f, "weapon.{value}"),
+            Self::OffHandWeapon(value) => write!(f, "off-hand-weapon.{value}"),
             Self::SkillConversion(from, to) => {
                 write!(f, "skill-conversion.{}.{}", from.name(), to.name())
             }

@@ -742,6 +742,7 @@ impl StatMapping for SkillMapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if SKILL_FLAGS.contains(&stat.as_str())
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
+            || stat.as_str() == super::hit::DOUBLE_HITS_STAT
         {
             return StatMap::NoEffect;
         }
@@ -2154,10 +2155,9 @@ impl StatMapping for PieceMapping {
 /// increased Critical Strike Chance"); "No Physical Damage" (the game's
 /// `local_weapon_no_physical_damage`, 0 on the canonical increased physical
 /// damage line; not 0 is a reason, `hit::weapon_data`); and "+# to
-/// Accuracy Rating" as the
-/// character's `Accuracy` BASE for main-hand attacks (its
-/// `MainHandAttack` condition holds for every attack the engine computes,
-/// which use the main hand alone).
+/// Accuracy Rating" as the weapon's own accuracy (PoB: `Accuracy` BASE with
+/// the hand's `MainHandAttack` or `OffHandAttack` condition), which only that
+/// hand's attack pass reads (Phase 6, dual wielding).
 type WeaponRow = (&'static str, &'static [(Quantity, Op)]);
 
 const fn weapon(value: WeaponValue) -> Quantity {
@@ -2167,7 +2167,10 @@ const fn weapon(value: WeaponValue) -> Quantity {
 /// The local stats of weapons (`stat_descriptions.txt`, each with `local`
 /// set in the stats table).
 pub const WEAPON_ROWS: &[WeaponRow] = &[
-    ("local_accuracy_rating", &[(Quantity::Accuracy, Op::Base)]),
+    (
+        "local_accuracy_rating",
+        &[(weapon(WeaponValue::Accuracy), Op::Base)],
+    ),
     (
         "local_attack_speed_+%",
         &[(weapon(WeaponValue::AttackSpeed), Op::Increased)],
@@ -2266,6 +2269,31 @@ impl StatMapping for WeaponMapping {
                 })
                 .collect(),
         )
+    }
+}
+
+/// The mapping of a weapon in the off hand's lines (Phase 6, dual
+/// wielding): [`WeaponMapping`]'s, each weapon value on the off hand's
+/// weapon ([`super::Hand::Off`]).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OffHandWeaponMapping;
+
+impl StatMapping for OffHandWeaponMapping {
+    fn map(&self, stat: &StatId) -> StatMap {
+        match WeaponMapping.map(stat) {
+            StatMap::Effects(effects) => StatMap::Effects(
+                effects
+                    .into_iter()
+                    .map(|mut e| {
+                        if let Quantity::Poe1(Poe1Quantity::Weapon(v)) = e.quantity {
+                            e.quantity = super::Hand::Off.weapon(v);
+                        }
+                        e
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
     }
 }
 
@@ -2967,7 +2995,7 @@ mod tests {
         );
         assert_eq!(
             local("local_accuracy_rating"),
-            [(Quantity::Accuracy, Op::Base, 1.0)]
+            [(weapon(WeaponValue::Accuracy), Op::Base, 1.0)]
         );
         // Other lines are the game's.
         assert_eq!(
