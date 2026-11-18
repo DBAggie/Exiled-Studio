@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-2b review): Ice Nova (level 20) with
+     Elemental Overload (node 22088, as ice-nova-elemental-overload-witch.xml),
+     added fire damage, and a chance to ignite: ignites are never from crits
+     (the chance on a crit is the chance on a hit, no critical DoT
+     multiplier), and the keystone's 40% more elemental damage reaches the
+     ignite (PoB's Hit or Ailment keyword). Original; not from PoB or the
+     corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes="54447,57264,37569,36542,4397,7938,14021,55332,22088"/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				Adds 40 to 80 Fire Damage to Spells
+40% chance to Ignite
++60% to Critical Strike Chance
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

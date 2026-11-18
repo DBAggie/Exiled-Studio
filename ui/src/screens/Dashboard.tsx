@@ -87,6 +87,8 @@ const FIRST = [
   'hit-dps',
   'dot-dps',
   'ignite-dps',
+  'bleed-dps',
+  'poison-dps',
   'average-damage',
   'hit-speed',
   'crit-chance',

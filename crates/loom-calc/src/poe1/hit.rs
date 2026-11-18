@@ -878,26 +878,32 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         hit_chance: spell_hit_chance,
         rate: speed,
     };
-    set_ignite(calc, &ailment_hit, &enemy, input.data, &unvetted)
+    set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)
 }
 
 /// The main skill's ignite from one hit pass (Phase 6, [`super::ailment`]):
 /// the field only when the hit ignites, with the hit's skill reasons; it
 /// reads the crit chance and rate.
-fn set_ignite(
+fn set_ailments(
     calc: &mut Calc<'_>,
     hit: &super::ailment::AilmentHit<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
     unvetted: &Reasons,
 ) -> Result<(), CalcError> {
-    if let Some((dps, mut reasons)) = super::ailment::ignite(calc, hit, enemy, data)? {
-        reasons.extend(unvetted);
-        calc.set_derived(
-            Field::IgniteDps,
-            phases::query(dps, reasons),
-            &[Field::CritChance, Field::Speed],
-        );
+    for ailment in super::ailment::Ailment::ALL {
+        if let Some((dps, mut reasons)) = super::ailment::damaging(calc, hit, enemy, data, ailment)?
+        {
+            reasons.extend(unvetted);
+            // The stacks read the hit chance too (attacks; a spell's is
+            // the constant 100, not a field).
+            let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
+                &[Field::CritChance, Field::Speed, Field::HitChance]
+            } else {
+                &[Field::CritChance, Field::Speed]
+            };
+            calc.set_derived(ailment.field(), phases::query(dps, reasons), deps);
+        }
     }
     Ok(())
 }
@@ -1120,22 +1126,30 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             hit_chance: hit_chance.0,
             rate: speed.0,
         };
-        return set_ignite(calc, &ailment_hit, &enemy, input.data, &unvetted);
+        return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
     let off = hand_hit(calc, attack, Hand::Off, off_item, flags, &enemy, &unvetted)?;
     dual_wield(calc, attack, &main, &off)?;
     // PoB computes each hand's ailments and combines them (`combineStat`
-    // `CHANCE_AILMENT`): not modelled yet. A dual-wielding attack that
-    // would ignite has the field, not computed (P6-2b).
-    let ailment_hit = super::ailment::AilmentHit {
-        flags,
-        sources: &main.sources,
-        crit: main.crit.0,
-        hit_chance: main.hit_chance.0,
-        rate: main.speed.0,
-    };
-    if super::ailment::ignite(calc, &ailment_hit, &enemy, input.data)?.is_some() {
-        calc.set_unsupported(Field::IgniteDps, UnsupportedReason::NotComputed);
+    // `CHANCE_AILMENT`, `CHANCE`): not modelled yet. A dual-wielding attack
+    // either of whose hands would inflict an ailment has its field, not
+    // computed (P6-2b, P6-2c).
+    for ailment in super::ailment::Ailment::ALL {
+        let mut any = false;
+        for hand in [&main, &off] {
+            let ailment_hit = super::ailment::AilmentHit {
+                flags,
+                sources: &hand.sources,
+                crit: hand.crit.0,
+                hit_chance: hand.hit_chance.0,
+                rate: hand.speed.0,
+            };
+            any |= super::ailment::damaging(calc, &ailment_hit, &enemy, input.data, ailment)?
+                .is_some();
+        }
+        if any {
+            calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
+        }
     }
     Ok(())
 }

@@ -265,6 +265,9 @@ pub enum Poe1Quantity {
     /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
     /// Phase 6): `Increased`.
     AilmentSlower,
+    /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
+    /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
+    CannotInflict(ailment::Ailment),
     /// The duration of ailments on the enemy (PoB's enemy
     /// `SelfIgniteDuration`, `SelfAilmentDuration`,
     /// `SelfElementalAilmentDuration`, by conditions; curses such as
@@ -486,6 +489,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AilmentEffect => f.write_str("ailment-effect"),
             Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
+            Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
         }
     }
 }

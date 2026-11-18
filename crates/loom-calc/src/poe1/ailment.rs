@@ -76,6 +76,19 @@ impl Ailment {
         }
     }
 
+    /// The field of the ailment's DPS.
+    #[must_use]
+    pub const fn field(self) -> crate::result::Field {
+        match self {
+            Self::Ignite => crate::result::Field::IgniteDps,
+            Self::Bleed => crate::result::Field::BleedDps,
+            Self::Poison => crate::result::Field::PoisonDps,
+        }
+    }
+
+    /// Every damaging ailment, in PoB's order (bleed, poison, ignite).
+    pub const ALL: [Self; 3] = [Self::Bleed, Self::Poison, Self::Ignite];
+
     /// The ailment's keyword flag.
     #[must_use]
     pub const fn flag(self) -> Flags {
@@ -92,6 +105,15 @@ impl Ailment {
 pub const IGNITE_PERCENT_BASE: f64 = 0.9;
 /// PoB's `data.misc.IgniteDurationBase` (`Modules/Data.lua` 261), seconds.
 pub const IGNITE_DURATION_BASE: f64 = 4.0;
+/// PoB's `data.misc.BleedPercentBase` (`Modules/Data.lua` 256): a bleed
+/// deals 70% of its source damage per second (`x 70 / 100`).
+pub const BLEED_PERCENT_BASE: f64 = 70.0;
+/// PoB's `data.misc.BleedDurationBase` (`Modules/Data.lua` 257), seconds.
+pub const BLEED_DURATION_BASE: f64 = 5.0;
+/// PoB's `data.misc.PoisonPercentBase` (`Modules/Data.lua` 258).
+pub const POISON_PERCENT_BASE: f64 = 0.30;
+/// PoB's `data.misc.PoisonDurationBase` (`Modules/Data.lua` 259), seconds.
+pub const POISON_DURATION_BASE: f64 = 2.0;
 
 /// The character template's damage over time multiplier of ailments from
 /// critical strikes (PoB's `data.characterConstants`).
@@ -124,7 +146,11 @@ pub(super) struct AilmentHit<'a> {
 /// The ailment's config (module docs, step 2) with the hit's settled crit
 /// state.
 fn ailment_context(calc: &Calc<'_>, hit: &AilmentHit<'_>, extra: Flags) -> QueryContext {
-    let flags = Flags::from_bits_and(hit.flags, KEYWORDS) | Flags::DOT | Flags::AILMENT | extra;
+    let mut flags = Flags::from_bits_and(hit.flags, KEYWORDS) | Flags::DOT | Flags::AILMENT | extra;
+    // `band(cfg.flags, ModFlag.Melee) ~= 0 and ModFlag.MeleeHit`.
+    if hit.flags.contains(Flags::MELEE) {
+        flags = flags | Flags::MELEE_HIT;
+    }
     calc.context(flags).with_state(
         ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
         hit.crit.value != 0.0,
@@ -142,39 +168,172 @@ fn modifier(
     phases::product(calc, &[inc, more], Term::Step("modifier"))
 }
 
-/// The main skill's ignite (module docs): its DPS with the reasons of what
-/// it read, or `None` when the hit cannot ignite (no fire damage, or no
-/// chance on hit and no crit).
+/// How an ailment's source damage meets the roll (PoB's three forms).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Roll {
+    /// Ignite: `(min + (max - min) x roll / 100) x mult`.
+    SourceThenMultiplier,
+    /// Bleed: `min x mult + (max x mult - min x mult) x roll / 100`.
+    MultiplierFirst,
+    /// Poison: `(min + max) / 2 x mult`, no roll.
+    Midpoint,
+}
+
+/// What differs between the damaging ailments (module docs).
+struct Spec {
+    /// The damage types whose hit damage the ailment deals, in PoB's order.
+    sources: &'static [DamageType],
+    /// The type that must be dealable (`canDeal`).
+    gate: DamageType,
+    /// The type of its damage over time (its DoT multiplier and the enemy's
+    /// resistance).
+    dot_type: DamageType,
+    /// Base duration, seconds.
+    duration_base: f64,
+    /// Ignite's crit always inflicts it; bleed's and poison's chance on a
+    /// crit is the chance on a hit (no mapped stat is crit only).
+    crit_always: bool,
+    /// The source and the roll.
+    roll: Roll,
+    /// The crit chance over the stacks (ignite, bleed) or the hit's
+    /// (poison).
+    crit_over_stacks: bool,
+    /// Only attacks inflict it (bleed).
+    attack_only: bool,
+}
+
+const fn spec(ailment: Ailment) -> Spec {
+    match ailment {
+        Ailment::Ignite => Spec {
+            sources: &[DamageType::Fire],
+            gate: DamageType::Fire,
+            dot_type: DamageType::Fire,
+            duration_base: IGNITE_DURATION_BASE,
+            crit_always: true,
+            roll: Roll::SourceThenMultiplier,
+            crit_over_stacks: true,
+            attack_only: false,
+        },
+        Ailment::Bleed => Spec {
+            sources: &[DamageType::Physical],
+            gate: DamageType::Physical,
+            dot_type: DamageType::Physical,
+            duration_base: BLEED_DURATION_BASE,
+            crit_always: false,
+            roll: Roll::MultiplierFirst,
+            crit_over_stacks: true,
+            attack_only: true,
+        },
+        // PoB sums chaos first, then the other types that can poison
+        // (physical always; lightning, cold, and fire with their flags, not
+        // modelled).
+        Ailment::Poison => Spec {
+            sources: &[DamageType::Chaos, DamageType::Physical],
+            gate: DamageType::Chaos,
+            dot_type: DamageType::Chaos,
+            duration_base: POISON_DURATION_BASE,
+            crit_always: false,
+            roll: Roll::Midpoint,
+            crit_over_stacks: false,
+            attack_only: false,
+        },
+    }
+}
+
+/// The hit's damage of `sources` recomputed in the ailment's config
+/// (`calcAilmentSourceDamage`: `calcDamage` times the share the type keeps
+/// after conversion), summed in PoB's order; `None` for a type the hit
+/// cannot deal.
+fn source_damage(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+    sources: &[DamageType],
+    cx: &QueryContext,
+    hit_cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<[Valued; 2], CalcError> {
+    let mut mins = Vec::new();
+    let mut maxes = Vec::new();
+    let mut zero = None;
+    for &t in sources {
+        let Some(index) = hit::TYPES.iter().position(|x| *x == t) else {
+            continue;
+        };
+        if hit::cannot_deal(calc, t, hit_cx, reasons)? {
+            continue;
+        }
+        let [min, max] = hit::calc_damage(
+            calc,
+            index,
+            Flags::NONE,
+            &hit.sources.bases,
+            hit.sources.conversion.as_ref(),
+            cx,
+            None,
+            reasons,
+            &mut zero,
+        )?;
+        let kept = hit
+            .sources
+            .conversion
+            .as_ref()
+            .and_then(|c| c.kept.get(index).copied().flatten());
+        let (min, max) = match kept {
+            Some(k) => (
+                phases::product(calc, &[min, k], Term::Step("ailment-source-min"))?,
+                phases::product(calc, &[max, k], Term::Step("ailment-source-max"))?,
+            ),
+            None => (min, max),
+        };
+        mins.push(min);
+        maxes.push(max);
+    }
+    if mins.len() == 1 {
+        return Ok([mins[0], maxes[0]]);
+    }
+    Ok([
+        phases::total(calc, &mins, Term::Step("ailment-sources-min"))?,
+        phases::total(calc, &maxes, Term::Step("ailment-sources-max"))?,
+    ])
+}
+
+/// A damaging ailment of the main skill's hit (module docs): its DPS (for
+/// poison, every poison's together, PoB's `TotalPoisonDPS`) with the
+/// reasons of what it read, or `None` when the hit does not inflict it.
 ///
 /// # Errors
 /// A graph error.
-pub(super) fn ignite(
+pub(super) fn damaging(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
+    ailment: Ailment,
 ) -> Result<Option<(Valued, Reasons)>, CalcError> {
+    let spec = spec(ailment);
     let mut reasons = Reasons::new();
-    let fire = DamageType::Fire;
-    let Some(fire_index) = hit::TYPES.iter().position(|t| *t == fire) else {
+    if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
         return Ok(None);
-    };
+    }
     let hit_cx = calc.context(hit.flags).with_state(
         ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
         hit.crit.value != 0.0,
     );
-    // `canDeal.Fire`.
-    if hit::cannot_deal(calc, fire, &hit_cx, &mut reasons)? {
+    // `canDeal.<Type>`, and "Cannot cause Bleeding" (`CannotBleed`) and kin.
+    if hit::cannot_deal(calc, spec.gate, &hit_cx, &mut reasons)? {
+        return Ok(None);
+    }
+    let cannot = Quantity::Poe1(Poe1Quantity::CannotInflict(ailment));
+    if hit::flag_of(calc, cannot, &hit_cx, &mut reasons)?.is_some() {
         return Ok(None);
     }
     // Step 1: the chances.
-    let chance_quantity = Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite));
     let on_hit = hit::sum_of(
         calc,
-        chance_quantity,
+        Quantity::Poe1(Poe1Quantity::AilmentChance(ailment)),
         Op::Base,
         &hit_cx,
-        Term::Step("ignite-chance-on-hit"),
+        Term::Step("ailment-chance-on-hit"),
         &mut reasons,
     )?;
     let hundred = phases::constant(calc, "hundred", 100.0)?;
@@ -182,10 +341,10 @@ pub(super) fn ignite(
         calc,
         on_hit,
         hundred,
-        Term::Step("ignite-chance-capped"),
+        Term::Step("ailment-chance-capped"),
         true,
     )?;
-    if on_hit.value == 0.0 && hit.crit.value == 0.0 {
+    if on_hit.value == 0.0 && (!spec.crit_always || hit.crit.value == 0.0) {
         return Ok(None);
     }
     // Elemental Overload's `AilmentsAreNeverFromCrit`: the chance on a crit
@@ -199,45 +358,24 @@ pub(super) fn ignite(
     )?;
     let on_crit = match never_from_crit {
         Some(_) => on_hit,
-        None => phases::constant(calc, "ignite-chance-on-crit", 100.0)?,
+        None if spec.crit_always => phases::constant(calc, "ailment-chance-on-crit", 100.0)?,
+        None => on_hit,
     };
     if on_hit.value == 0.0 && (on_crit.value == 0.0 || hit.crit.value == 0.0) {
         return Ok(None);
     }
 
-    // Step 5 first: no fire source, no ignite.
-    let cx = ailment_context(calc, hit, Flags::IGNITE | Flags::FIRE_DOT);
-    let mut zero = None;
-    let [min, max] = hit::calc_damage(
-        calc,
-        fire_index,
-        Flags::NONE,
-        &hit.sources.bases,
-        hit.sources.conversion.as_ref(),
-        &cx,
-        None,
-        &mut reasons,
-        &mut zero,
-    )?;
-    let kept = hit
-        .sources
-        .conversion
-        .as_ref()
-        .and_then(|c| c.kept.get(fire_index).copied().flatten());
-    let (min, max) = match kept {
-        Some(k) => (
-            phases::product(calc, &[min, k], Term::Step("ignite-source-min"))?,
-            phases::product(calc, &[max, k], Term::Step("ignite-source-max"))?,
-        ),
-        None => (min, max),
-    };
+    // Step 5 first: no source damage, no ailment.
+    let ailment_flags = ailment.flag() | Flags::dot_keyword(spec.dot_type);
+    let cx = ailment_context(calc, hit, ailment_flags);
+    let [min, max] = source_damage(calc, hit, spec.sources, &cx, &hit_cx, &mut reasons)?;
     if min.value == 0.0 && max.value == 0.0 {
         return Ok(None);
     }
 
     // Step 3: rate and duration (the rate in the hit's config, with the
-    // ignite's flag so only ignite's and every ailment's rows apply).
-    let rate_cx = calc.context(hit.flags | Flags::IGNITE);
+    // ailment's flag so only its and every ailment's rows apply).
+    let rate_cx = calc.context(hit.flags | ailment.flag());
     let faster = modifier(
         calc,
         Quantity::Poe1(Poe1Quantity::AilmentFaster),
@@ -250,7 +388,7 @@ pub(super) fn ignite(
         &rate_cx,
         &mut reasons,
     )?;
-    let rate_mod = hit::ratio(calc, faster, slower, Term::Step("ignite-rate-mod"))?;
+    let rate_mod = hit::ratio(calc, faster, slower, Term::Step("ailment-rate-mod"))?;
     // `calcLib.mod(skill, dotCfg, durations) x calcLib.mod(enemy, nil,
     // self durations)`.
     let duration_mod = modifier(
@@ -265,7 +403,7 @@ pub(super) fn ignite(
         phases::product(
             calc,
             &[duration_mod, on_enemy],
-            Term::Step("ignite-duration-mods"),
+            Term::Step("ailment-duration-mods"),
         )?
     } else {
         duration_mod
@@ -275,69 +413,69 @@ pub(super) fn ignite(
         calc,
         duration_mod,
         zero_value,
-        Term::Step("ignite-duration-mod"),
+        Term::Step("ailment-duration-mod"),
         false,
     )?;
-    let base_duration = phases::constant(calc, "ignite-duration-base", IGNITE_DURATION_BASE)?;
+    let base_duration = phases::constant(calc, "ailment-duration-base", spec.duration_base)?;
     let scaled = phases::product(
         calc,
         &[base_duration, duration_mod],
-        Term::Step("ignite-duration-scaled"),
+        Term::Step("ailment-duration-scaled"),
     )?;
-    let duration = hit::ratio(calc, scaled, rate_mod, Term::Step("ignite-duration"))?;
+    let duration = hit::ratio(calc, scaled, rate_mod, Term::Step("ailment-duration"))?;
 
     // Step 4: the chance per hit, the stacks, and the roll.
     let one = phases::constant(calc, "one", 1.0)?;
     let crit_share = hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
     let non_crit_share = hit::minus(calc, one, crit_share, Term::Step("non-crit-share"))?;
-    let on_hit_share = hit::percent_of(calc, on_hit, Term::Step("ignite-on-hit-share"))?;
+    let on_hit_share = hit::percent_of(calc, on_hit, Term::Step("ailment-on-hit-share"))?;
     let from_hits = phases::product(
         calc,
         &[on_hit_share, non_crit_share],
-        Term::Step("ignite-chance-from-hits"),
+        Term::Step("ailment-chance-from-hits"),
     )?;
-    let on_crit_share = hit::percent_of(calc, on_crit, Term::Step("ignite-on-crit-share"))?;
+    let on_crit_share = hit::percent_of(calc, on_crit, Term::Step("ailment-on-crit-share"))?;
     let from_crits = phases::product(
         calc,
         &[on_crit_share, hit.crit],
-        Term::Step("ignite-chance-from-crits-scaled"),
+        Term::Step("ailment-chance-from-crits-scaled"),
     )?;
-    let from_crits = hit::percent_of(calc, from_crits, Term::Step("ignite-chance-from-crits"))?;
-    let chance = phases::total(calc, &[from_hits, from_crits], Term::Step("ignite-chance"))?;
+    let from_crits = hit::percent_of(calc, from_crits, Term::Step("ailment-chance-from-crits"))?;
+    let chance = phases::total(calc, &[from_hits, from_crits], Term::Step("ailment-chance"))?;
     let hit_share = hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
     let stacks = phases::product(
         calc,
         &[hit_share, chance],
-        Term::Step("ignite-applications"),
+        Term::Step("ailment-applications"),
     )?;
     let stacks = phases::product(
         calc,
         &[stacks, duration, hit.rate],
-        Term::Step("ignite-stacks"),
+        Term::Step("ailment-stacks"),
     )?;
-    let roll = if stacks.value > 1.0 {
+    let roll = if spec.roll != Roll::Midpoint && stacks.value > 1.0 {
         // `(stacks - (maxStacks - 1) / 2) / (stacks + 1) x 100`, one stack.
-        let plus_one = phases::total(calc, &[stacks, one], Term::Step("ignite-stacks-plus-one"))?;
-        let share = hit::ratio(calc, stacks, plus_one, Term::Step("ignite-roll-share"))?;
-        phases::product(calc, &[share, hundred], Term::Step("ignite-roll"))?
+        let plus_one = phases::total(calc, &[stacks, one], Term::Step("ailment-stacks-plus-one"))?;
+        let share = hit::ratio(calc, stacks, plus_one, Term::Step("ailment-roll-share"))?;
+        phases::product(calc, &[share, hundred], Term::Step("ailment-roll"))?
     } else {
-        phases::constant(calc, "ignite-roll-middle", 50.0)?
+        phases::constant(calc, "ailment-roll-middle", 50.0)?
     };
 
-    // Step 5: the source damage at the roll, times the DoT multiplier (fire
-    // type, so the fire DoT multiplier applies).
-    let mult_cx = ailment_context(calc, hit, Flags::IGNITE | Flags::FIRE_DOT | Flags::FIRE);
+    // Step 5: the DoT multipliers (the type's own too), from hits and from
+    // crits.
+    let mult_cx = ailment_context(calc, hit, ailment_flags | Flags::damage(spec.dot_type));
     let mult = hit::sum_of(
         calc,
         Quantity::DotMultiplier,
         Op::Base,
         &mult_cx,
-        Term::Step("ignite-dot-multiplier"),
+        Term::Step("ailment-dot-multiplier"),
         &mut reasons,
     )?;
     // From crits, the character template's `critical_ailment_dot_multiplier_+`
     // too (PoB's `DotMultiplier` BASE with `Condition:CriticalStrike`,
-    // `CalcSetup.lua` 502; the crit sub-pass, `CritIgniteDotMulti`).
+    // `CalcSetup.lua` 502; the crit sub-pass).
     let crit_bonus = match data.character_constant(CRIT_AILMENT_DOT_MULTIPLIER) {
         Some(_) if never_from_crit.is_some() => 0.0,
         Some(v) => {
@@ -359,93 +497,168 @@ pub(super) fn ignite(
     let crit_mult = phases::total(
         calc,
         &[mult, crit_bonus],
-        Term::Step("ignite-crit-dot-multiplier"),
+        Term::Step("ailment-crit-dot-multiplier"),
     )?;
     let crit_mult = phases::factor(
         calc,
         crit_mult,
-        Term::Step("ignite-crit-dot-multiplier-factor"),
+        Term::Step("ailment-crit-dot-multiplier-factor"),
     )?;
-    let mult = phases::factor(calc, mult, Term::Step("ignite-dot-multiplier-factor"))?;
-    let spread = hit::minus(calc, max, min, Term::Step("ignite-source-spread"))?;
-    let spread = phases::product(calc, &[spread, roll], Term::Step("ignite-spread-rolled"))?;
-    let spread = hit::percent_of(calc, spread, Term::Step("ignite-spread-share"))?;
-    let rolled = phases::total(calc, &[min, spread], Term::Step("ignite-source-rolled"))?;
-    let source = phases::product(calc, &[rolled, mult], Term::Step("ignite-source"))?;
-    let crit_source =
-        phases::product(calc, &[rolled, crit_mult], Term::Step("ignite-crit-source"))?;
+    let mult = phases::factor(calc, mult, Term::Step("ailment-dot-multiplier-factor"))?;
+    let (source, crit_source) = match spec.roll {
+        Roll::SourceThenMultiplier => {
+            let spread = hit::minus(calc, max, min, Term::Step("ailment-source-spread"))?;
+            let spread =
+                phases::product(calc, &[spread, roll], Term::Step("ailment-spread-rolled"))?;
+            let spread = hit::percent_of(calc, spread, Term::Step("ailment-spread-share"))?;
+            let rolled = phases::total(calc, &[min, spread], Term::Step("ailment-source-rolled"))?;
+            (
+                phases::product(calc, &[rolled, mult], Term::Step("ailment-source"))?,
+                phases::product(
+                    calc,
+                    &[rolled, crit_mult],
+                    Term::Step("ailment-crit-source"),
+                )?,
+            )
+        }
+        Roll::MultiplierFirst => {
+            let at = |calc: &mut Calc<'_>, m: Valued| -> Result<Valued, CalcError> {
+                let lo = phases::product(calc, &[min, m], Term::Step("ailment-source-min-scaled"))?;
+                let hi = phases::product(calc, &[max, m], Term::Step("ailment-source-max-scaled"))?;
+                let spread = hit::minus(calc, hi, lo, Term::Step("ailment-source-spread"))?;
+                let spread =
+                    phases::product(calc, &[spread, roll], Term::Step("ailment-spread-rolled"))?;
+                let spread = hit::percent_of(calc, spread, Term::Step("ailment-spread-share"))?;
+                phases::total(calc, &[lo, spread], Term::Step("ailment-source"))
+            };
+            (at(calc, mult)?, at(calc, crit_mult)?)
+        }
+        Roll::Midpoint => {
+            let sum = phases::total(calc, &[min, max], Term::Step("ailment-source-sum"))?;
+            let two = phases::constant(calc, "two", 2.0)?;
+            let middle = hit::ratio(calc, sum, two, Term::Step("ailment-source-middle"))?;
+            (
+                phases::product(calc, &[middle, mult], Term::Step("ailment-source"))?,
+                phases::product(
+                    calc,
+                    &[middle, crit_mult],
+                    Term::Step("ailment-crit-source"),
+                )?,
+            )
+        }
+    };
 
-    // Step 6: the crit chance over the stacks, then the weighted base.
-    let exponent = phases::pair(calc, one, stacks, Term::Step("ignite-crit-exponent"), false)?;
-    let survives = hit::power_of(
-        calc,
-        non_crit_share,
-        exponent,
-        Term::Step("no-crit-over-stacks"),
-    )?;
-    let any_crit = hit::minus(calc, one, survives, Term::Step("crit-over-stacks"))?;
-    let ailment_crit =
-        phases::product(calc, &[hundred, any_crit], Term::Step("ignite-crit-chance"))?;
-    let ailment_crit_share = hit::percent_of(calc, ailment_crit, Term::Step("ignite-crit-share"))?;
+    // Step 6: the crit chance the ailments see, then the weighted base.
+    let ailment_crit = if spec.crit_over_stacks {
+        let exponent = phases::pair(
+            calc,
+            one,
+            stacks,
+            Term::Step("ailment-crit-exponent"),
+            false,
+        )?;
+        let survives = hit::power_of(
+            calc,
+            non_crit_share,
+            exponent,
+            Term::Step("no-crit-over-stacks"),
+        )?;
+        let any_crit = hit::minus(calc, one, survives, Term::Step("crit-over-stacks"))?;
+        phases::product(
+            calc,
+            &[hundred, any_crit],
+            Term::Step("ailment-crit-chance"),
+        )?
+    } else {
+        hit.crit
+    };
+    let ailment_crit_share = hit::percent_of(calc, ailment_crit, Term::Step("ailment-crit-share"))?;
     let ailment_non_crit = hit::minus(
         calc,
         one,
         ailment_crit_share,
-        Term::Step("ignite-non-crit-share"),
+        Term::Step("ailment-non-crit-share"),
     )?;
     let chance_from_hit = phases::product(
         calc,
         &[on_hit, ailment_non_crit],
-        Term::Step("ignite-weight-hits"),
+        Term::Step("ailment-weight-hits"),
     )?;
     let chance_from_crit = phases::product(
         calc,
         &[on_crit, ailment_crit],
-        Term::Step("ignite-weight-crits-scaled"),
+        Term::Step("ailment-weight-crits-scaled"),
     )?;
     let chance_from_crit =
-        hit::percent_of(calc, chance_from_crit, Term::Step("ignite-weight-crits"))?;
+        hit::percent_of(calc, chance_from_crit, Term::Step("ailment-weight-crits"))?;
     let weights = phases::total(
         calc,
         &[chance_from_hit, chance_from_crit],
-        Term::Step("ignite-weights"),
+        Term::Step("ailment-weights"),
     )?;
     let base_hit = phases::product(
         calc,
         &[source, chance_from_hit],
-        Term::Step("ignite-base-hits-scaled"),
+        Term::Step("ailment-base-hits-scaled"),
     )?;
-    let base_hit = hit::ratio(calc, base_hit, weights, Term::Step("ignite-base-hits"))?;
+    let base_hit = hit::ratio(calc, base_hit, weights, Term::Step("ailment-base-hits"))?;
     let base_crit = phases::product(
         calc,
         &[crit_source, chance_from_crit],
-        Term::Step("ignite-base-crits-scaled"),
+        Term::Step("ailment-base-crits-scaled"),
     )?;
-    let base_crit = hit::ratio(calc, base_crit, weights, Term::Step("ignite-base-crits"))?;
+    let base_crit = hit::ratio(calc, base_crit, weights, Term::Step("ailment-base-crits"))?;
     let base = phases::total(
         calc,
         &[base_hit, base_crit],
-        Term::Step("ignite-base-weighted"),
+        Term::Step("ailment-base-weighted"),
     )?;
-    let percent = phases::constant(calc, "ignite-percent-base", IGNITE_PERCENT_BASE)?;
-    let base = phases::product(calc, &[base, percent], Term::Base)?;
+    // Ignite and poison `x percent`; bleed `x 70 / 100`.
+    let base = match ailment {
+        Ailment::Ignite => {
+            let percent = phases::constant(calc, "ignite-percent-base", IGNITE_PERCENT_BASE)?;
+            phases::product(calc, &[base, percent], Term::Base)?
+        }
+        Ailment::Poison => {
+            let percent = phases::constant(calc, "poison-percent-base", POISON_PERCENT_BASE)?;
+            phases::product(calc, &[base, percent], Term::Base)?
+        }
+        Ailment::Bleed => {
+            let percent = phases::constant(calc, "bleed-percent-base", BLEED_PERCENT_BASE)?;
+            let scaled =
+                phases::product(calc, &[base, percent], Term::Step("bleed-percent-scaled"))?;
+            hit::percent_of(calc, scaled, Term::Base)?
+        }
+    };
 
-    // Step 7: effect, rate, active ignites, the enemy.
+    // Step 7: effect, rate, the active ailments, the enemy.
     let effect = modifier(
         calc,
         Quantity::Poe1(Poe1Quantity::AilmentEffect),
         &cx,
         &mut reasons,
     )?;
-    let active = phases::pair(calc, stacks, one, Term::Step("active-ignites"), true)?;
-    let enemy_effect = hit::dot_enemy_effect(calc, enemy, data, fire, &cx, &mut reasons)?;
-    let dps = phases::product(
-        calc,
-        &[base, effect, rate_mod, active, enemy_effect],
-        Term::Step("ignite-dps"),
-    )?;
+    let enemy_effect = hit::dot_enemy_effect(calc, enemy, data, spec.dot_type, &cx, &mut reasons)?;
     let cap = phases::constant(calc, "dot-dps-cap", super::dot::DOT_DPS_CAP)?;
-    let dps = phases::pair(calc, dps, cap, Term::Result, true)?;
+    let dps = if ailment == Ailment::Poison {
+        // One poison's DPS, capped; then every poison's, capped.
+        let single = phases::product(
+            calc,
+            &[base, effect, rate_mod, enemy_effect],
+            Term::Step("poison-single-dps"),
+        )?;
+        let single = phases::pair(calc, single, cap, Term::Step("poison-single-capped"), true)?;
+        let total = phases::product(calc, &[single, stacks], Term::Step("poison-dps"))?;
+        phases::pair(calc, total, cap, Term::Result, true)?
+    } else {
+        let active = phases::pair(calc, stacks, one, Term::Step("active-ailments"), true)?;
+        let dps = phases::product(
+            calc,
+            &[base, effect, rate_mod, active, enemy_effect],
+            Term::Step("ailment-dps"),
+        )?;
+        phases::pair(calc, dps, cap, Term::Result, true)?
+    };
     Ok((dps.value > 0.0).then_some((dps, reasons)))
 }
 

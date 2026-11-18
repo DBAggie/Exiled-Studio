@@ -90,6 +90,9 @@ impl Flags {
     /// 6): unlike [`Self::SPELL`] (`ModFlag.Spell`), a spell's ailments and
     /// damage over time keep it.
     pub const KEYWORD_SPELL: Self = Self(1 << 28);
+    /// An ailment from a melee hit (PoB's `ModFlag.MeleeHit`, which an
+    /// ailment's config gets when its hit is melee; Phase 6).
+    pub const MELEE_HIT: Self = Self(1 << 29);
 
     /// The raw bits.
     #[must_use]
