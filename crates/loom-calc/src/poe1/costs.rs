@@ -238,6 +238,53 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let zero = phases::constant(calc, "no-negative-cost", 0.0)?;
     let cost = phases::pair(calc, cost, zero, Term::Result, false)?;
     calc.set_derived(field, phases::query(cost, reasons), &[]);
+    per_second(calc, &skill, cost, &source)
+}
+
+/// The mana cost per second (P6-10b part 6; PoB's `ManaPerSecondCost`,
+/// `CalcOffence.lua` 5794 to 5825): for a cost above 0, the cost times
+/// the skill's `Speed` (its repeat count 1, the hit's module docs). A
+/// trap's, a mine's, or a totem's (their throwing, laying, or placement
+/// speed) is not modelled and leaves the field unsupported; Eldritch
+/// Battery's energy shield cost instead is an unmapped stat, so a reason.
+/// No field without a cost or a computed `Speed`.
+fn per_second(
+    calc: &mut Calc<'_>,
+    skill: &super::skill::MainSkill<'_>,
+    cost: Valued,
+    source: &Source,
+) -> Result<(), CalcError> {
+    let field = Field::Poe1(Poe1Field::ManaPerSecondCost);
+    if cost.value <= 0.0 {
+        return Ok(());
+    }
+    if ["Trapped", "RemoteMined", "SummonsTotem"]
+        .iter()
+        .any(|t| skill.types.contains(*t))
+    {
+        calc.set_unsupported(
+            field,
+            UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what: "cost-per-second",
+            },
+        );
+        return Ok(());
+    }
+    let Some(speed) = calc.field(Field::Speed).and_then(|r| {
+        Some(Valued {
+            node: r.node?,
+            value: r.value?,
+        })
+    }) else {
+        return Ok(());
+    };
+    let value = phases::product(calc, &[cost, speed], Term::Result)?;
+    calc.set_derived(
+        field,
+        phases::query(value, Reasons::new()),
+        &[Field::Poe1(Poe1Field::ManaCost), Field::Speed],
+    );
     Ok(())
 }
 

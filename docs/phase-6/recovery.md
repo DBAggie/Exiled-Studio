@@ -255,3 +255,26 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Minion sweep:** 0 unexpected. **Skill sweep:** the same 32 unexpected as before.
 - **Goldens:** `synthetic-poe1.calc.json` and `poe1-empty.json` regenerated. Only the five new fields were added (`indeterminate` in the synthetic bundle, which has no Scion).
 - **Tests:** the field counts (`engine`, `calc_run`, the DTO) and the test data's charge and maximum constants; the workspace's 1,763 tests and clippy pass.
+
+## Part 6: the mana cost per second
+
+**What PoB does** (`CalcOffence.lua` 5794 to 5825): for an upfront cost above 0, `<Resource>PerSecondCost = <Resource>Cost x useSpeed`.
+- `useSpeed` is the skill's `Speed` (`1 / Cooldown` when the speed is 0) divided by its repeats.
+- A trap's, a mine's, or a totem's is its throwing, laying, or placement speed.
+- Eldritch Battery moves the mana cost to energy shield.
+
+**The engine** (`costs::per_second`; slice revision 13):
+- **The field:** `mana-per-second-cost` is the mana cost times `Speed`, with both as its dependencies. It exists only when there is a cost and a computed speed.
+- **Repeats** are 1 (the hit's module docs).
+- **Traps, mines, and totems:** the field is unsupported (`cost-per-second`).
+- **Eldritch Battery** is an unmapped stat, so a reason.
+- **Not yet ported:** the life and energy shield costs, and the costs per second of channelled skills, which PoB writes for a few builds (Boneshatter's, Cyclone's, Lacerate's life costs).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 205 builds, 231 expected, 0 unexpected; `Complete` fields 6,485.
+  - The field equals PoB's in 85 builds.
+  - In 44 builds it carries the registered Q11 attack rate, as the cost equals PoB's and `Speed` is registered: DIV-0189 to DIV-0232, `game-truth`. The register tool adds an entry only where the build's `Speed` entry exists.
+  - 11 are `partial` or `indeterminate` with their reasons, 22 not computed.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,763 tests and clippy pass.

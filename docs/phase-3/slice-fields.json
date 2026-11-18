@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 12,
+  "revision": 13,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 13 (Phase 6, P6-10b part 6): the main skill's mana cost per second (ManaPerSecondCost), applies present: our result has it with a cost and a computed speed.",
     "Revision 12 (Phase 6, P6-10b part 5): each damage type's base damage reduction (BasePhysicalDamageReduction, BaseFireDamageReduction, BaseColdDamageReduction, BaseLightningDamageReduction, BaseChaosDamageReduction), applies present: our result always has them.",
     "Revision 11 (Phase 6, P6-7c3d): the minion's ignite, bleeding, poison, impale, and combined damage per second (Minion.IgniteDPS, Minion.BleedDPS, Minion.TotalPoisonDPS, Minion.ImpaleDPS, Minion.CombinedDPS), applies minion-present: compared where our result has the field or the oracle's minion value is not 0.",
     "Revision 10 (Phase 6, P6-12): the main skill's combined damage per second (CombinedDPS), applies present: our result has it whenever the build has a main skill.",
@@ -174,6 +175,7 @@
     {"id": "BaseColdDamageReduction", "group": "defence", "pob_key": "BaseColdDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base cold damage reduction from modifiers and endurance charges, at most the character's maximum."},
     {"id": "BaseLightningDamageReduction", "group": "defence", "pob_key": "BaseLightningDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base lightning damage reduction from modifiers and endurance charges, at most the character's maximum."},
     {"id": "BaseChaosDamageReduction", "group": "defence", "pob_key": "BaseChaosDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base chaos damage reduction from modifiers and endurance charges, at most the character's maximum."},
+    {"id": "ManaPerSecondCost", "group": "offence", "pob_key": "ManaPerSecondCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 6): the mana cost times the skill's speed."},
     {"id": "Minion.Life", "group": "minion", "pob_key": "Life", "pob_path": ["Minion", "Life"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.EnergyShield", "group": "minion", "pob_key": "EnergyShield", "pob_path": ["Minion", "EnergyShield"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.Armour", "group": "minion", "pob_key": "Armour", "pob_path": ["Minion", "Armour"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},

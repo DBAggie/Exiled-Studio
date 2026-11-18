@@ -857,6 +857,9 @@ pub enum Poe1Field {
     EffectiveMovementSpeedMod,
     /// The main skill's mana cost (PoB's `ManaCost`; P6-10b).
     ManaCost,
+    /// The main skill's mana cost per second (PoB's `ManaPerSecondCost`;
+    /// P6-10b part 6). Present only with a cost and a computed speed.
+    ManaPerSecondCost,
     /// The main skill's combined damage per second (PoB's `CombinedDPS`;
     /// P6-12): the hit's, impale's, and the damage over time's, culled.
     CombinedDps,
@@ -881,6 +884,7 @@ impl Poe1Field {
             Self::MovementSpeedMod => "movement-speed",
             Self::EffectiveMovementSpeedMod => "effective-movement-speed",
             Self::ManaCost => "mana-cost",
+            Self::ManaPerSecondCost => "mana-per-second-cost",
             Self::CombinedDps => "combined-dps",
             Self::BaseDamageReduction(t) => match t {
                 DamageType::Physical => "base-physical-damage-reduction",
