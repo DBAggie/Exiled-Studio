@@ -170,6 +170,10 @@ pub enum Poe1Quantity {
     /// INC on the enemy; Sniper's Mark, P6-9e): `Increased`, read only by a
     /// projectile hit ([`hit`]).
     EnemyProjectileDamageTaken,
+    /// A hit's chance to ignore the enemy's physical damage reduction (PoB's
+    /// `ChanceToIgnoreEnemyPhysicalDamageReduction`; P6-11j): `Base`, read
+    /// by a hit's armour ([`hit`]).
+    IgnorePdrChance,
     /// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
     /// BASE on the enemy; Poacher's Mark, P6-9e): `Base`, added to the
     /// armour reduction of a physical hit, and alone for physical damage
@@ -501,6 +505,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
+            Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
             Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
             Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),

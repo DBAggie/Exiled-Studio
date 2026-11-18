@@ -1672,6 +1672,7 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)
         || super::gems::is_input(&input.name)
+        || input.name == super::hit::PDR_MODE_INPUT
     {
         return InputUse::Applied;
     }

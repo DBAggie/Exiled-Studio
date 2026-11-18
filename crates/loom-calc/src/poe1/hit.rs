@@ -2675,9 +2675,80 @@ fn armour_effect(
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
     let reduction = armour_reduction(calc, enemy, data, average, reasons)?;
+    let reduction = ignore_reduction(calc, reduction, reasons)?;
     let share = percent(calc, reduction, Term::Step("reduction-share"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     difference(calc, one, share, Term::Step("enemy-effect"))
+}
+
+/// The config list of how a chance to ignore the enemy's physical damage
+/// reduction counts (`ConfigOptions.lua` 955: `MIN`, `AVERAGE`, `MAX`;
+/// `AVERAGE` by default).
+pub const PDR_MODE_INPUT: &str = "ChanceToIgnoreEnemyPhysicalDamageReductionMode";
+
+/// A hit's chance to ignore the enemy's physical damage reduction
+/// (`CalcOffence.lua` 3423 to 3435; P6-11j): the chance, at most 100; with
+/// a chance between 0 and 100 the config's `MAX` counts it 100 and `MIN`
+/// 0; at 100 the reduction is 0, else a positive reduction times `1 -
+/// chance / 100`. Not modelled, so reasons where they appear: the partial
+/// ignore and the flag that ignores it, unmapped stats.
+fn ignore_reduction(
+    calc: &mut Calc<'_>,
+    reduction: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::IgnorePdrChance);
+    if !phases::has(calc, q) {
+        return Ok(reduction);
+    }
+    let cx = calc.context(Flags::NONE);
+    let chance = sum_in(
+        calc,
+        q,
+        Op::Base,
+        &cx,
+        Term::Step("ignore-reduction-chance"),
+        reasons,
+    )?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let chance = phases::pair(calc, chance, hundred, Term::Step("chance-capped"), true)?;
+    let chance = if chance.value > 0.0 && chance.value < 100.0 {
+        let set = super::collect::active_config(calc.input().build);
+        match set.and_then(|s| {
+            super::config::last_input(s, PDR_MODE_INPUT, loom_domain::ConfigInputKind::Input)
+        }) {
+            Some(loom_domain::ConfigValue::String(m)) if m == "MAX" => {
+                phases::constant(calc, "ignore-reduction-mode-max", 100.0)?
+            }
+            Some(loom_domain::ConfigValue::String(m)) if m == "MIN" => {
+                phases::constant(calc, "ignore-reduction-mode-min", 0.0)?
+            }
+            None => chance,
+            Some(loom_domain::ConfigValue::String(m)) if m == "AVERAGE" => chance,
+            Some(_) => {
+                reasons.partial.insert(UnsupportedReason::UnmodelledConfig {
+                    input: PDR_MODE_INPUT.to_owned(),
+                });
+                chance
+            }
+        }
+    } else {
+        chance
+    };
+    if chance.value >= 100.0 {
+        return phases::constant(calc, "reduction-ignored", 0.0);
+    }
+    if reduction.value <= 0.0 {
+        return Ok(reduction);
+    }
+    let share = percent(calc, chance, Term::Step("ignore-share"))?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let kept = difference(calc, one, share, Term::Step("reduction-kept"))?;
+    phases::product(
+        calc,
+        &[reduction, kept],
+        Term::Step("reduction-after-ignore"),
+    )
 }
 
 /// The enemy's damage taken, `(1 + inc / 100) x more` of its

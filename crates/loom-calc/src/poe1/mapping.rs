@@ -927,6 +927,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11j: "Hits have #% chance to ignore Enemy Physical Damage
+    // Reduction" (`ChanceToIgnoreEnemyPhysicalDamageReduction` BASE).
+    (
+        "hits_ignore_enemy_monster_physical_damage_reduction_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::IgnorePdrChance),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1129: `EnemyIgniteDuration` INC (P6-2b).
     (
         "ignite_duration_+%",
@@ -1681,6 +1693,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ArcaneSurgeCastSpeed
                     // "Deal no ... Damage" (P6-7c2, Brutality's).
                     | Poe1Quantity::DealNo(..)
+                    // P6-11j.
+                    | Poe1Quantity::IgnorePdrChance
             )
     )
 }
