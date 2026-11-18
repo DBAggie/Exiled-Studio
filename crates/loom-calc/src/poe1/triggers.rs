@@ -379,10 +379,12 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
             continue;
         }
         let b = skill::with_main_skill(input.build, *g, *a);
+        let mut options = input.options.clone();
+        options.nested = true;
         let sub = crate::input::CalcInput {
             build: &b,
             data: input.data,
-            options: input.options,
+            options: &options,
         };
         let Ok(result) = crate::calculate(&sub) else {
             return unsupported("trigger-source");

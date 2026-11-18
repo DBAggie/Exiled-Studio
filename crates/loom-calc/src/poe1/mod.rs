@@ -26,6 +26,7 @@ pub mod dot;
 pub mod enemy;
 pub mod exposure;
 pub mod flasks;
+pub mod full_dps;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
@@ -866,6 +867,9 @@ pub enum Poe1Field {
     /// A damage type's base damage reduction, percent (PoB's
     /// `Base<Type>DamageReduction`; P6-10b part 5).
     BaseDamageReduction(DamageType),
+    /// The build's full damage per second (PoB's `FullDPS`; P6-12 part 2):
+    /// the skills included in it, each computed as the main skill.
+    FullDps,
 }
 
 impl Poe1Field {
@@ -885,6 +889,7 @@ impl Poe1Field {
             Self::EffectiveMovementSpeedMod => "effective-movement-speed",
             Self::ManaCost => "mana-cost",
             Self::ManaPerSecondCost => "mana-per-second-cost",
+            Self::FullDps => "full-dps",
             Self::CombinedDps => "combined-dps",
             Self::BaseDamageReduction(t) => match t {
                 DamageType::Physical => "base-physical-damage-reduction",
@@ -1075,7 +1080,8 @@ mod tests {
                 "dot",
                 "costs",
                 "combined",
-                "minion-hit"
+                "minion-hit",
+                "full-dps"
             ]
         );
         assert_eq!(

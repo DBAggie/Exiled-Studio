@@ -124,6 +124,7 @@ fn mirage(
         damage_more: damage,
         speed_more: speed,
     });
+    options.nested = true;
     let sub = crate::input::CalcInput {
         build: input.build,
         data: input.data,

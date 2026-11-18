@@ -42,3 +42,31 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
 - `CombinedDPS` now equals PoB's in 97 builds: both Righteous Fire fixtures and the summoning skills' builds (PoB's 0) joined.
 - 0 unexpected; no other value moved; `Complete` fields 5,158. A unit test covers `has_hit`.
 
+
+## Part 2: full damage per second
+
+**What PoB does** (`Modules/Calcs.lua` 176 to 386, `calcFullDPS`): each active skill of a group marked `includeInFullDPS` is computed as the main skill, with its count (the group's `groupCount`, else the gem's `count`, else 1). `FullDPS` then adds up, in order:
+- each skill's `TotalDPS` times its count, and its minion's `TotalDPS` times its count;
+- the largest ignite and the largest bleeding;
+- poison and impale, each times the count;
+- damage over time (times the count when it stacks);
+- the result times the largest cull multiplier.
+
+**The engine** (`poe1::full_dps`, phase `full-dps`; slice revision 14):
+- **Each included skill** is computed with `calculate` on a copy of the build with that skill as the main one. The copy is marked `CalcOptions::nested`, so it computes no full DPS of its own. Trigger sources and mirage copies are nested too.
+- **The field:** `full-dps`. A build without a skill set has none.
+- **The cull multiplier** is read from each skill's combined DPS over its parts.
+- **Reasons:** each field read carries its own. A hitting skill whose hit is not computed is `full-dps-skill`. A count above 1 with damage over time is `full-dps-dot-stack` (`DotCanStack` is not known). A Vaal skill is `full-dps-vaal`: PoB counts a Vaal gem's two effects by its `enableGlobal` flags, which the engine does not read yet.
+- **Not modelled:** mirages' own share (PoB adds the mirage's output separately), ground damage over time, corrupting blood, decay, and the skills PoB counts once by a config condition.
+- **Performance:** each included skill is a full calculation. `calc-run`'s total for the 205 public builds went from 0.35 s to 1.26 s, about 6 ms a build (the Phase 5 budgets are re-checked in the report).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 205 builds, 271 expected, 0 unexpected.
+  - `FullDPS` equals PoB's in 97 builds.
+  - 40 carry the registered Q11 attack rate: DIV-0233 to DIV-0272.
+    - Each is a build whose `Speed` is registered.
+    - `trigger-comk-no-kill-templar.xml` is the exception: its Ice Nova is self-cast and equal, but the group's Smite counts in full DPS with the Q11 rate.
+  - 38 are `partial` or `indeterminate`, with their reasons.
+- **Corpus:** 0 unexpected.
+- **Tests:** the phase order; the workspace's 1,763 tests and clippy pass. The goldens are unchanged, as the synthetic build has no skill set.

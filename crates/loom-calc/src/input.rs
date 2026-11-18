@@ -601,6 +601,10 @@ pub struct CalcOptions {
     /// `calcs.copyActiveSkill`, `CalcMirages.lua` 37 to 52). A host leaves
     /// it `None`.
     pub mirage: Option<MirageUse>,
+    /// A sub-calculation of the engine's own (P6-12: a trigger's source, a
+    /// mirage's copy, a skill of the full damage per second): it computes
+    /// no full damage per second itself. A host leaves it `false`.
+    pub nested: bool,
 }
 
 /// What a mirage changes in its copy of the main skill (P6-8b): Mirage

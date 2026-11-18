@@ -26,8 +26,8 @@ pub const FORMAT: u32 = 1;
 /// impale, and combined damage per second (P6-7c3d,
 /// `applies: minion-present`); revision 12 each damage type's base damage
 /// reduction (P6-10b part 5); revision 13 the mana cost per second
-/// (P6-10b part 6).
-pub const REVISION: u32 = 13;
+/// (P6-10b part 6); revision 14 the full damage per second (P6-12 part 2).
+pub const REVISION: u32 = 14;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -131,7 +131,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 20] = [
+pub const PRESENT_NAMES: [(&str, &str); 21] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -177,6 +177,9 @@ pub const PRESENT_NAMES: [(&str, &str); 20] = [
     // Revision 13 (P6-10b part 6): the mana cost per second; our result has
     // it with a cost and a computed speed.
     ("ManaPerSecondCost", "poe1.mana-per-second-cost"),
+    // Revision 14 (P6-12 part 2): the build's full damage per second; our
+    // result always has it.
+    ("FullDPS", "poe1.full-dps"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),
