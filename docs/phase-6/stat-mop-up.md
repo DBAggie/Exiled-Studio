@@ -312,3 +312,26 @@ Two kinds of line, each checked against PoB's parse (`local/p6/parse2`):
 - **Tests:** the state rows' test lists the row. Workspace tests, clippy, and the real-bundle tests pass.
   - `loom-persistence`'s file round trip failed once on a Windows rename (access denied) and passed three reruns; it is unrelated to this step.
 
+
+## P6-11m
+
+The 21 most frequent globally unmapped stats that PoB reads into no slice field (each line rendered and parsed by PoB, `local/p6/parse2/m11_*`) are now `NoEffect` rows:
+- **Minion counts:** zombies, skeletons.
+- **Endurance charge gains:** PoB leaves them unparsed, or reads a partial maximum with leftover text. The count comes from the config.
+- **Flasks:** a flask's amount recovered and recovery rate, charges on crit or on consuming a corpse, taunt on use.
+- **Enemy debuffs and the enemy's damage:** Malediction on enemies ignited during a flask, the enemy's own conversion.
+- **Pierce, reflect, a mark's transfer** (unparsed).
+- **Recovery on block:** life, and energy shield from armour.
+- **Lucky spell suppression:** PoB reads it only into the effective chance (`CalcDefence.lua` 1134).
+- **Minion duration.**
+
+**Left unmapped on purpose:**
+- Lines that reach a slice field: Onslaught on kill, the attack and brand damage lines whose flags the parse does not show, the herald and aura multipliers, Wither's effect, the conversions, the hit's inverted resistances.
+- Leech and the life thresholds (P6-10b's planned outputs).
+- Timeless jewels (P6-10a).
+
+**Evidence** (`local/p6/p6-11m/`):
+- **Public and corpus:** no value moved and no state changed (those builds keep other reasons).
+- **Reasons:** the global unmapped (build, stat) pairs went from 418 to 407.
+- 0 unexpected.
+- **Tests:** the charge guard lists the five charge rows.

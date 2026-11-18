@@ -3062,10 +3062,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // condition), and then only damage taken when hit and modifiers per
     // fortification read the count ([`NO_EFFECT_DEPENDS_ON`]).
     ("base_max_fortification", "fortification"),
+    // P6-11m: minion duration (`Duration` INC for minion skills): no slice
+    // field reads a minion's duration.
+    ("base_minion_duration_+%", "skill-duration"),
     // P3-8n: "Maximum # Summoned Golems" (`ActiveGolemLimit`): only golem
     // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
     // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
     ("base_number_of_golems_allowed", "golems"),
+    // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
+    ("base_number_of_skeletons_allowed", "minion-count"),
+    // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
+    ("base_number_of_zombies_allowed", "minion-count"),
     // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.
     ("base_projectile_speed_+%", "projectile-speed"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
@@ -3132,6 +3139,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ground-creation-chance",
     ),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    // P6-11m: a chance to gain an endurance charge when hit (unparsed).
+    ("chance_to_gain_endurance_charge_when_hit_%", "charge-gain"),
     (
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
@@ -3182,10 +3191,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11f: "#% increased Endurance Charge Duration": the charges come from the config; no slice field.
     ("endurance_charge_duration_+%", "charge-duration"),
+    // P6-11m: a chance to gain an endurance charge on kill (PoB: unparsed).
+    ("endurance_charge_on_kill_%", "charge-gain"),
     // P6-11g: "#% chance to gain an Endurance Charge on Kill while holding a Shield": PoB does not parse it; the charges come from the config.
     (
         "endurance_charge_on_kill_percent_chance_while_holding_shield",
         "charge-gain-chance",
+    ),
+    // P6-11m: the enemy's own damage converted (`EnemyModifier`): what
+    // you take; no slice field.
+    (
+        "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
+        "enemy-damage",
     ),
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
@@ -3195,8 +3212,27 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
+    // P6-11m: energy shield recovered on block (`EnergyShieldOnBlock`).
+    (
+        "energy_shield_%_of_armour_rating_gained_on_block",
+        "recovery-on-block",
+    ),
+    // P6-11m: "#% increased Flask Recovery rate" (`FlaskRecoveryRate`).
+    ("flask_recovery_speed_+%", "flask"),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
+    // P6-11m: endurance charges per second if hit recently (unparsed).
+    (
+        "gain_endurance_charge_per_second_if_have_been_hit_recently",
+        "charge-gain",
+    ),
+    // P6-11m: a chance to gain maximum endurance charges (PoB reads only a
+    // partial `EnduranceChargesMax` with leftover text; charges come from
+    // the config).
+    (
+        "gain_maximum_endurance_charges_on_endurance_charge_gained_%_chance",
+        "charge-gain",
+    ),
     (
         "gain_power_charge_for_each_second_channeling_spell",
         "charge-gain-chance",
@@ -3234,10 +3270,29 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // "Gems Socketed always have the Quality bonus from Socket Colour":
     // its effect is the gems' quality, `poe1::sockets` (P3-12i).
     ("local_can_socket_gems_ignoring_colour", "sockets"),
+    // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
+    ("local_flask_amount_to_recover_+%", "flask"),
+    // P6-11m: flask charges on consuming a corpse (unparsed).
+    (
+        "local_flask_gain_X_charges_on_consuming_ignited_corpse",
+        "flask",
+    ),
+    // P6-11m: Malediction on enemies ignited during a flask's effect
+    // (`HasMalediction` on the enemy: its damage and regeneration).
+    (
+        "local_flask_ignited_enemies_during_effect_have_malediction",
+        "enemy-debuff",
+    ),
+    // P6-11m: a flask's recovery rate (`FlaskRecoveryRate`).
+    ("local_flask_recovery_speed_+%", "flask"),
+    // P6-11m: a flask's taunt on use (unparsed).
+    ("local_flask_taunt_enemies_on_use_radius", "flask"),
     // Its effect on the sockets' order is `poe1::sockets`' (a reason).
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
     ("local_has_X_sockets", "sockets"),
+    // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
+    ("local_recharge_on_crit_%", "flask"),
     // P6-8a: the gems a trigger support supports; PoB has no row.
     (
         "local_support_gem_max_skill_level_requirement_to_support",
@@ -3285,6 +3340,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("physical_damage_taken_%_as_fire", "damage-taken"),
     ("physical_damage_taken_%_as_lightning", "damage-taken"),
+    // P6-11m: reflected physical damage (unparsed).
+    ("physical_damage_to_return_to_melee_attacker", "reflect"),
+    // P6-11m: pierce (`PierceCount`), as `always_pierce`.
+    ("projectile_base_number_of_targets_to_pierce", "pierce"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
     (
         "quality_display_active_skill_area_damage_quality_negated_from_gem",
@@ -3293,6 +3352,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("rage_loss_delay_ms", "rage-duration"),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
+    // P6-11m: life recovered on block (`LifeOnBlock`): no slice field.
+    ("recover_%_of_maximum_life_on_block", "recovery-on-block"),
     // P6-11g: "Recover # Energy Shield when you Block Spell Damage" (`EnergyShieldOnSpellBlock` BASE).
     ("recover_x_energy_shield_on_spell_block", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
@@ -3325,6 +3386,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
+    // P6-11m: lucky suppression (`SpellSuppressionChanceIsLucky`): PoB
+    // reads it only into the effective chance (`CalcDefence.lua` 1134),
+    // not `SpellSuppressionChance`.
+    ("spell_suppression_chance_is_lucky", "effective-suppression"),
     // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
     ("spell_uncastable_if_triggerable", "trigger"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
@@ -3375,6 +3440,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
+    ),
+    // P6-11m: a mark's transfer on death (unparsed).
+    (
+        "your_marks_transfer_to_nearby_enemies_on_death_%_chance",
+        "mark-transfer",
     ),
 ];
 

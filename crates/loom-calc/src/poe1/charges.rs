@@ -518,6 +518,16 @@ mod tests {
         "endurance_charge_duration_+%",
         // A chance to gain a charge (P6-11g): PoB does not parse it.
         "endurance_charge_on_kill_percent_chance_while_holding_shield",
+        // P6-11m: chances and rates to gain endurance charges; PoB does not
+        // parse them, or reads only a partial maximum with leftover text.
+        // The count comes from the config.
+        "chance_to_gain_endurance_charge_when_hit_%",
+        "endurance_charge_on_kill_%",
+        "gain_endurance_charge_per_second_if_have_been_hit_recently",
+        "gain_maximum_endurance_charges_on_endurance_charge_gained_%_chance",
+        // P6-11m: a flask charge (`recharge` is not a charge word; this
+        // names flask "charges").
+        "local_flask_gain_X_charges_on_consuming_ignited_corpse",
         "gain_power_charge_for_each_second_channeling_spell",
         // Regeneration per charge: not a slice field.
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
