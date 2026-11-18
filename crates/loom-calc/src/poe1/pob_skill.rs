@@ -115,6 +115,10 @@ pub struct PobSkill {
     pub minions: &'static [&'static str],
     /// PoB's `addMinionList` (a support's minions), in PoB's order.
     pub add_minions: &'static [&'static str],
+    /// The stats its stat map sends to the skill's minion (a
+    /// `MinionModifier` mod: "Minions have #% more Life"), sorted
+    /// (P6-7b3a).
+    pub minion_stats: &'static [&'static str],
 }
 
 impl PobSkill {

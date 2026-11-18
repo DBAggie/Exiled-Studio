@@ -2287,6 +2287,18 @@ pub const ROWS: &[Row] = &[
     // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
     // Resistances" (the enemy's `ElementalResist` BASE while ignited or
     // chilled, 4054; `poe1::damage_taken`).
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    (
+        "golem_immunity_to_elemental_damage",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
+    (
+        "golem_maximum_life_+%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
     (
         "ignites_and_chill_apply_elemental_resistance_+",
         &[(
@@ -2323,6 +2335,18 @@ pub const ROWS: &[Row] = &[
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
     // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
     // hash; `collect` adds the node.
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    (
+        "minion_life_regeneration_rate_per_minute_%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
+    (
+        "minion_maximum_life_+%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
     (
         "mod_granted_passive_hash",
         &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],
@@ -2640,8 +2664,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("gloves_freeze_proliferation_radius", "freeze"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
-    ("golem_immunity_to_elemental_damage", "minion-defence"),
-    ("golem_maximum_life_+%", "minion-defence"),
     // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
     // cost; the stats that add damage from it stay unmapped
     // ([`NO_EFFECT_DEPENDS_ON`]).
@@ -2703,11 +2725,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
     ("melee_attack_number_of_spirit_strikes", "targeting"),
-    (
-        "minion_life_regeneration_rate_per_minute_%",
-        "minion-defence",
-    ),
-    ("minion_maximum_life_+%", "minion-defence"),
     ("movement_speed_+%_per_nearby_enemy", "movement-speed"),
     (
         "movement_speed_+%_while_on_burning_ground",

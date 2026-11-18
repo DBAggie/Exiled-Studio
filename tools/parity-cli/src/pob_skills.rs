@@ -111,6 +111,25 @@ pub fn generate(export: &Value) -> Result<String, String> {
         };
         let minions = ordered("minions");
         let add_minions = ordered("add_minions");
+        // The stats PoB's stat map sends to the skill's minion (a
+        // `MinionModifier` mod; P6-7b3a), sorted.
+        let mut minion_stats: Vec<String> = skill
+            .get("mods")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter(|m| {
+                m.get("mods").and_then(Value::as_array).is_some_and(|mods| {
+                    mods.iter()
+                        .any(|x| x.get("name").and_then(Value::as_str) == Some("MinionModifier"))
+                })
+            })
+            .filter_map(|m| m.get("stat").and_then(Value::as_str))
+            .filter(|s| !s.is_empty())
+            .map(str::to_owned)
+            .collect();
+        minion_stats.sort();
+        minion_stats.dedup();
         let parts: Vec<String> = skill
             .get("parts")
             .and_then(Value::as_array)
@@ -213,6 +232,7 @@ pub fn generate(export: &Value) -> Result<String, String> {
             && own_stats.is_empty()
             && minions.is_empty()
             && add_minions.is_empty()
+            && minion_stats.is_empty()
         {
             continue;
         }
@@ -226,6 +246,7 @@ pub fn generate(export: &Value) -> Result<String, String> {
         let _ = writeln!(out, "        own_stats: &[{}],", list(&own_stats));
         let _ = writeln!(out, "        minions: &[{}],", list(&minions));
         let _ = writeln!(out, "        add_minions: &[{}],", list(&add_minions));
+        let _ = writeln!(out, "        minion_stats: &[{}],", list(&minion_stats));
         let _ = writeln!(out, "    }},");
     }
     out.push_str("];\n");

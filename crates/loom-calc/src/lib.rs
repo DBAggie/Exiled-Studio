@@ -44,9 +44,9 @@ pub use ingest::{EffectTemplate, Ingest, ItemLines, StatMap, StatMapping, TypedM
 pub use input::{
     ActiveSkill, ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions,
     CharacterBase, ClusterPassive, EffectLevel, GemEffect, GrantedEffect, ItemBase, LineValues,
-    MONSTER_TEMPLATE, MonsterDefences, MonsterStats, PackNode, PackStats, PassiveState, Range,
-    ResolvedPassives, Scaling, SkillChoice, SkillGem, StatAmount, StatSet, StatSetLevel,
-    WeaponBase,
+    MONSTER_TEMPLATE, MonsterDefences, MonsterLife, MonsterStats, PackNode, PackStats,
+    PassiveState, Range, ResolvedPassives, Scaling, SkillChoice, SkillGem, StatAmount, StatSet,
+    StatSetLevel, WeaponBase,
 };
 pub use poe1::item_values::{ItemValues, WeaponValues, item_values};
 pub use quantity::{Bound, DamageType, Op, Quantity};

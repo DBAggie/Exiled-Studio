@@ -258,7 +258,10 @@ impl<'m> Ingest<'m> {
             }
             StatMap::Effects(t) => t,
         };
-        let Some(value) = settle(&line.value) else {
+        // A flag's value is not read (P6-7b3a): an unsettled range on a stat
+        // whose every effect is a flag still sets it.
+        let flags_only = templates.iter().all(|t| t.op == Op::Flag);
+        let Some(value) = settle(&line.value).or(flags_only.then_some(1.0)) else {
             self.reasons
                 .indeterminate
                 .insert(IndeterminateReason::UnsettledValue {

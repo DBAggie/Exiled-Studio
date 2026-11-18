@@ -155,7 +155,7 @@ The data step of the minion actor (`dev/active/phase-6-mechanics/p6-7b-minion-ac
 - **The skill table:** `pob_skills.rs` gains each skill's `minions` and `add_minions` lists, in PoB's order (the first is the default). A test checks that every name a skill lists is in the minion table. Spectres are variety IDs (P6-7c). The exception is `GuardianRelicAll`, which PoB writes by hand (`Minions.txt` 183).
 - **Determinism:** both tables regenerate byte-identical.
 
-**Bundle versions:** `minions.json` changed shape additively. A bundle without `object_stats` still loads, with the stats unknown. `Minions` refuses unknown fields, though, so an application built after P6-7a and before P6-7b1 would refuse the new file. No released application reads `minions.json` (0.9.0 predates P6-7a), so no bundle schema change is needed.
+**Bundle versions:** `minions.json` changed shape additively. A bundle without `object_stats` still loads, with the stats unknown. `Minions` refuses unknown fields, though, so an application built after P6-7a and before P6-7b1 would refuse the new file. No released application reads `minions.json` (0.9.0 predates P6-7a), so no bundle schema change is needed. Should one be wanted later, it goes with `Minions`' `deny_unknown_fields` (#164 review).
 
 ### `data-parity`, table `minion_mods` (export format 13)
 
@@ -195,3 +195,68 @@ The code-architecture-reviewer found no blockers in #163. Applied:
 - **Docs:** the bundle versions note and the decimal-value wording above.
 
 **Evidence:** both tables and the PoB export regenerate byte-identical, and `b-ot` has no findings. No calculation value or state changed (`local/p6/p6-7b1b` against `p6-7b1`).
+
+## P6-7b3a: the minion's base values and fields
+
+The engine computes the main skill's minion (`loom_calc::poe1::minion_actor`) as PoB v2.67.2 computes `env.minion`, with the minion fields of slice revision 4: life, energy shield, armour, evasion, the four resistances, and attack block. Block is computed but not compared, since the slice has no minion block field.
+
+### Which minion
+
+- **The list:** the skill's `minionList` and the minions its supports add (`CalcActiveSkill.lua` 658 to 700).
+- **The choice:** the gem's `skillMinion` when it is in the list, else the first. A gem keeps its untyped attributes, so no build schema change was needed.
+- **The variety:** PoB's name maps to it through `pob_minions.rs` (P6-7b1).
+- **Not computed:** these minions' fields are `Unsupported`, each with an `unmodelled-skill` reason:
+  - `minion-list`: a skill that makes minions without a list (Raise Spectre picks from the build's spectre library, P6-7c);
+  - `minion-data`: a minion PoB writes by hand, or one the data lacks;
+  - `minion-items`: a minion with items (Animate Weapon, Animate Guardian, Blink Arrow, Mirror Arrow);
+  - `hostile-minion`;
+  - `minion-level`: a level PoB takes from the enemy, the character, or a level requirement.
+
+### Level
+
+PoB uses `skillData.minionLevel`, else the gem level's level requirement, clamped to 1 to 100. The bundle does not carry level requirements, so the game's `base_display_minion_actor_level` stat is read instead (stat-ID first).
+
+It equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem levels. The 39 others are all Vaal Summon Skeletons', where the game's stat is lower: 88 at gem level 20, against PoB's 90. The sweep shows the effect on life, armour, and evasion. Those fields are `Partial` (the gem's minion stat), so no register entry is needed yet. One is needed once they are `Complete` (P6-7b3b).
+
+Skills without the stat (Dominating Blow, Herald of Agony, Holy Strike, Summon Skitterbots, item-granted Raise Spiders) give `minion-level`.
+
+### Base values and mod list
+
+- **Base values** follow `initMinionModDB`:
+  - life is `floor(table x life)` on the ally table, or the AltLife tables;
+  - energy shield is `floor(ally table x life x 0.4 x ES / 100)`;
+  - armour and evasion are `round(table x (multiplier or 1))`, PoB's `or 1`, a `pob-derivation`;
+  - the merciless resistances;
+  - the character constants' maximums.
+
+  The multipliers are read as PoB's exporter wrote them (Lua's `tostring`, 14 significant digits).
+- **The mod list:** the variety's mods (first-to-sixth and later stats, lowest value), its special mods, and its `.ot` stats, through `MinionMapping`. That mapping holds the 29 stats PoB's stat map turns into mods on the skills' minions.
+  - Five reach a minion field: `base_maximum_energy_shield`, `physical_damage_reduction_rating_+%`, `set_maximum_life_is_one` (a life override), `monster_base_block_%`, and `block_while_dual_wielding_%` (a minion never dual wields).
+  - The other 24 are P6-7c's (damage, speed, immunities).
+  - Every other stat is a comment in PoB, with no effect.
+- **Template extras:** `TEMPLATE_MODS` reads the seven `#mod` extras of `Minions.txt`: `Life MORE 698` applies, `Condition:FullLife` is a minion state, and the rest are P6-7c's. A test checks that every one is read.
+- **The life field:** PoB's `override or max(round(base x inc x more), 1)`.
+
+### Reasons until P6-7b3b and P6-7b4
+
+Every minion field carries:
+- **the character's reasons:** an unmapped "Minions have ..." line, and the main gem's own `unmodelled-gem`;
+- **`minion-modifier`**, from three sources:
+  - each stat of the main skill's gems (active and supports) that PoB's stat map sends to the minion (`PobSkill::minion_stats`, generated: 77 skills);
+  - the four mapping rows that were `NoEffect` (`minion_maximum_life_+%`, `minion_life_regeneration_rate_per_minute_%`, `golem_maximum_life_+%`, `golem_immunity_to_elemental_damage`). They now map to the flag `Poe1Quantity::MinionPending`, which no character field reads. A flag's value is never read, so an unsettled range on a flag-only stat now sets it instead of giving `unsettled-value`. Only Forged Frostbearer's custom lines met that case, and its states are back to P6-7b1's.
+- **`minion-buffs`:** each other enabled group whose active skill is an aura, or a buff PoB applies to minions (`buffMinions`, `buffAllies`).
+
+### Evidence
+
+- **The sweep:** one Witch level 90 build per summoning gem (gem level 20), plus Summon Skeletons with `skillMinion` set to the caster: 52 builds in all (`local/p6/minion-fx`, PoB's outputs `local/p6/mfx-oracle`).
+  - 0 unexpected differences.
+  - 32 minion fields are `Complete`, all equal to PoB.
+  - Every `Partial` field equals PoB's value except seven, each explained by its reason: Herald of Purity, Raise Zombie, Raging Spirit of Enormity, and Stone Golem of Safeguarding through the gem's minion life stat, and Vaal Summon Skeletons through the level.
+  - The plan's gate (N `Complete` minion fields with zero differences) is met with N = 32.
+- **Fixtures:** four of the sweep are mechanic fixtures, those with fields to target: Flame Golem, Stone Golem, Stone Golem of Safeguarding, and Herald of Purity. The other builds have no `Complete` field yet (the main gem's reason reaches every field).
+- **The corpus build with a minion** matches PoB on energy shield, evasion, and chaos resistance. Its life, armour, and elemental resistances differ through the character's minion modifiers, which are reasons.
+- **Calculation:**
+  - On the flask bundle (no minion data), against P6-7b1: no value changed. The three public and one corpus minion builds gain minion fields, `Unsupported` with `minion-data`.
+  - On `b-ot`: public `calc-parity` has 161 builds, 109 expected differences, and 0 unexpected; the corpus has 0 unexpected.
+  - Both runs are byte-identical.
+- **Evidence bundle:** from P6-7b3a on, the evidence bundle is `local/p6/packs/b-ot`. The minion fixtures' targets need its `.ot` stats.

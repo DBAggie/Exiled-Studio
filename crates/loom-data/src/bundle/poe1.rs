@@ -38,6 +38,8 @@
 //!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
 //!   applies an active flask's buff).
 
+use std::collections::BTreeSet;
+
 use serde::{Deserialize, Serialize};
 
 use super::{BundleError, BundleSource, Manifest, json};
@@ -689,8 +691,7 @@ impl Poe1Section {
         let Some(m) = &self.minions else {
             return (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         };
-        let types: std::collections::BTreeSet<&str> =
-            m.types.iter().map(|t| t.id.as_str()).collect();
+        let types: BTreeSet<&str> = m.types.iter().map(|t| t.id.as_str()).collect();
         let ids = m.varieties.iter().map(|v| v.id.as_str()).collect();
         let type_ids = m.types.iter().map(|t| t.id.as_str()).collect();
         let dangling = m
@@ -739,8 +740,7 @@ impl Poe1Section {
         let Some(m) = &self.minions else {
             return (Vec::new(), Vec::new());
         };
-        let named: std::collections::BTreeSet<&str> =
-            m.varieties.iter().map(|v| v.object_type.as_str()).collect();
+        let named: BTreeSet<&str> = m.varieties.iter().map(|v| v.object_type.as_str()).collect();
         let mut dangling = Vec::new();
         let mut empty = Vec::new();
         for o in m.object_stats.iter().flatten() {
