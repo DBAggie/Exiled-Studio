@@ -121,12 +121,15 @@ pub fn rows(read: Read<'_>) -> Result<Option<Minions>, String> {
     );
     let mut out = Vec::new();
     for r in &v.rows {
-        let id = Table::text(r, v_id).unwrap_or_default().to_owned();
+        let id = Table::text(r, v_id)
+            .filter(|s| !s.is_empty())
+            .ok_or("MonsterVarieties: a row has no ID")?
+            .to_owned();
         let at = |what: &str| format!("{id}: {what}");
-        let monster_type = match key(r, v_type) {
-            Some(k) => id_of(&types, k, &at("type"))?,
-            None => String::new(),
-        };
+        // Every variety has a type (P6-7a review: a missing one fails).
+        let monster_type = key(r, v_type)
+            .ok_or_else(|| at("no type"))
+            .and_then(|k| id_of(&types, k, &at("type")))?;
         let class = |col: usize| -> Result<Option<String>, String> {
             key(r, col)
                 .map(|k| id_of(&classes, k, &at("item class")))

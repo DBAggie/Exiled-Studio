@@ -94,6 +94,30 @@ pub struct MinionType {
     pub player_minion: bool,
 }
 
+/// A monster's life scaling (PoB's `lifeScaling`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LifeScaling {
+    /// `AltLife1`.
+    AltLife1,
+    /// `AltLife2`.
+    AltLife2,
+}
+
+impl MinionType {
+    /// The life scaling PoB reads (`minions.lua` writes `AltLife1`, then
+    /// `AltLife2` over it: the second wins).
+    #[must_use]
+    pub fn life_scaling(&self) -> Option<LifeScaling> {
+        if self.alt_life2 {
+            Some(LifeScaling::AltLife2)
+        } else if self.alt_life1 {
+            Some(LifeScaling::AltLife1)
+        } else {
+            None
+        }
+    }
+}
+
 /// A monster variety (`MonsterVarieties`, P6-7a), in the table's order.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -572,23 +596,67 @@ impl Poe1Section {
         out
     }
 
-    /// The minions' domain checks for the validator: the varieties' IDs
-    /// (each must be unique) and the varieties whose type is not in the
-    /// file.
-    pub(super) fn minion_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+    /// The minions' domain checks for the validator (P6-7a review): the
+    /// varieties' and the types' IDs (each must be unique), the varieties
+    /// whose type is not in the file (dangling), and the rows out of range
+    /// (an empty ID, name, or type; a negative multiplier, attack time, or
+    /// range: the game has varieties at 0, never below).
+    #[expect(clippy::type_complexity, reason = "the validator's three lists")]
+    pub(super) fn minion_domain(
+        &self,
+    ) -> (
+        Vec<&str>,
+        Vec<&str>,
+        Vec<(String, &'static str)>,
+        Vec<(String, &'static str)>,
+    ) {
         let Some(m) = &self.minions else {
-            return (Vec::new(), Vec::new());
+            return (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         };
         let types: std::collections::BTreeSet<&str> =
             m.types.iter().map(|t| t.id.as_str()).collect();
         let ids = m.varieties.iter().map(|v| v.id.as_str()).collect();
+        let type_ids = m.types.iter().map(|t| t.id.as_str()).collect();
+        let dangling = m
+            .varieties
+            .iter()
+            .filter(|v| !types.contains(v.monster_type.as_str()))
+            .map(|v| (format!("{MINIONS}:{}", v.id), "a type not in the file"))
+            .collect();
         let bad = m
             .varieties
             .iter()
-            .filter(|v| !v.monster_type.is_empty() && !types.contains(v.monster_type.as_str()))
-            .map(|v| (format!("{MINIONS}:{}", v.id), "a type not in the file"))
+            .filter(|v| {
+                v.id.is_empty()
+                    || v.name.is_empty()
+                    || v.monster_type.is_empty()
+                    || v.life < 0
+                    || v.damage < 0
+                    || v.attack_time < 0
+                    || v.attack_range < 0
+            })
+            .map(|v| {
+                (
+                    format!("{MINIONS}:{}", v.id),
+                    "an empty ID, name, or type, or a negative value",
+                )
+            })
             .collect();
-        (ids, bad)
+        (ids, type_ids, dangling, bad)
+    }
+
+    /// The minions' skills (granted effects), each with its variety, for
+    /// the validator's reference check.
+    pub(super) fn minion_skills(&self) -> Vec<(String, &str)> {
+        self.minions
+            .iter()
+            .flat_map(|m| &m.varieties)
+            .flat_map(|v| {
+                v.skills
+                    .iter()
+                    .map(move |s| (format!("{MINIONS}:{}", v.id), s.as_str()))
+            })
+            .collect()
     }
 
     /// The flasks' domain checks for the validator: each row's base, and
