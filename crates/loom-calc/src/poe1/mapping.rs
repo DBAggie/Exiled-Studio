@@ -2284,13 +2284,10 @@ pub const ROWS: &[Row] = &[
             (Quantity::Evasion, Op::Increased, 1.0),
         ],
     ),
-    // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
-    // Resistances" (the enemy's `ElementalResist` BASE while ignited or
-    // chilled, 4054; `poe1::damage_taken`).
     // P6-7b3a: a minion modifier PoB applies to the minion; read only
     // by the minion step, as a reason, until P6-7b3b.
-    // P6-7b3a: a minion modifier PoB applies to the minion; read only
-    // by the minion step, as a reason, until P6-7b3b.
+    // (`golem_*` stats are reasons for every minion type until P6-7b3b
+    // adds the type filter.)
     (
         "golem_immunity_to_elemental_damage",
         &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
@@ -2299,6 +2296,9 @@ pub const ROWS: &[Row] = &[
         "golem_maximum_life_+%",
         &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
     ),
+    // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
+    // Resistances" (the enemy's `ElementalResist` BASE while ignited or
+    // chilled, 4054; `poe1::damage_taken`).
     (
         "ignites_and_chill_apply_elemental_resistance_+",
         &[(
@@ -2333,10 +2333,6 @@ pub const ROWS: &[Row] = &[
     ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
-    // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
-    // hash; `collect` adds the node.
-    // P6-7b3a: a minion modifier PoB applies to the minion; read only
-    // by the minion step, as a reason, until P6-7b3b.
     // P6-7b3a: a minion modifier PoB applies to the minion; read only
     // by the minion step, as a reason, until P6-7b3b.
     (
@@ -2347,6 +2343,8 @@ pub const ROWS: &[Row] = &[
         "minion_maximum_life_+%",
         &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
     ),
+    // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
+    // hash; `collect` adds the node.
     (
         "mod_granted_passive_hash",
         &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],

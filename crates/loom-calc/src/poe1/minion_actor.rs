@@ -92,16 +92,25 @@ pub const MOD_RULE: &str = "minion-mod";
 /// The source of PoB's template extras (`#mod`).
 pub const TEMPLATE_RULE: &str = "minion-template";
 
-/// The skills whose minion takes items (PoB's `minionHasItemSet` and
-/// `minionUses`, `Data/Skills/act_dex.lua` 190, 390, 494, `act_str.lua`
-/// 474, 561): its defences come from them, not modelled.
-const ITEM_SKILLS: [&str; 6] = [
-    "AnimateWeapon",
-    "AnimateWeaponAltX",
-    "AnimateWeaponAltY",
-    "VaalAnimateWeapon",
+/// The skills whose minion takes items: every skill PoB v2.67.2 gives
+/// `minionHasItemSet` or `minionUses` (`Data/Skills/act_dex.lua` 190, 390,
+/// 494; `act_str.lua` 474, 561, 6225; `other.lua` 77, 2552; `glove.lua`
+/// 1198, 1236, 1274, 1312), sorted. Its defences come from them, not
+/// modelled. Animate Weapon of Ranged Arms (`AnimateWeaponAltX`) takes the
+/// character's weapon through [`ITEM_SKILL_DATA`] (P6-7b3a review).
+const ITEM_SKILLS: [&str; 12] = [
     "AnimateGuardian",
     "AnimateGuardianAltX",
+    "AnimateGuardiansWeapon",
+    "AnimateWeapon",
+    "AnimateWeaponAltY",
+    "EnchantmentOfReflectionWhenHit",
+    "EnchantmentOfReflectionWhenHit2",
+    "EnchantmentOfReflectionWhenHit3",
+    "EnchantmentOfReflectionWhenHit4",
+    "HolyStrike",
+    "ManifestDancingDervishes",
+    "VaalAnimateWeapon",
 ];
 
 /// PoB's skill data keys that give the minion the character's weapon
@@ -141,6 +150,25 @@ pub fn minion(
     player: &ModStore,
 ) -> Option<Result<ActorState, UnsupportedReason>> {
     let build = input.build;
+    // A build without any minion skill gem pays no more than this scan.
+    let any_minion_gem = skill::active_groups(build).ok()?.iter().any(|g| {
+        g.gems.typed().any(|gem| {
+            skill::gem_effects(gem, input.data)
+                .unwrap_or_default()
+                .iter()
+                .any(|e| {
+                    pob_skill::skill(&e.id)
+                        .is_some_and(|p| !p.minions.is_empty() || !p.add_minions.is_empty())
+                        || e.active_skill
+                            .as_deref()
+                            .and_then(|id| input.data.active_skill(id))
+                            .is_some_and(|a| a.types.iter().any(|t| t == "CreatesMinion"))
+                })
+        })
+    });
+    if !any_minion_gem {
+        return None;
+    }
     let levels = GemLevels::from_effects(player.effects());
     let skill = skill::main_skill(build, input.data, &levels).ok()?;
     let group_index = skill.group.checked_sub(1)?;
@@ -199,7 +227,9 @@ fn collect(
     own: bool,
 ) -> Result<ActorState, UnsupportedReason> {
     let data = input.data;
-    if ITEM_SKILLS.contains(&skill.effect().id.as_str())
+    if ITEM_SKILLS
+        .binary_search(&skill.effect().id.as_str())
+        .is_ok()
         || pob.is_some_and(|p| {
             ITEM_SKILL_DATA
                 .iter()
@@ -283,6 +313,54 @@ fn base(quantity: Quantity, op: Op, value: f64) -> Effect {
     }
 }
 
+/// The minion's base life, energy shield, armour, and evasion.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct BaseNumbers {
+    life: f64,
+    /// `None` when the type has no energy shield (PoB writes none).
+    energy_shield: Option<f64>,
+    armour: f64,
+    evasion: f64,
+}
+
+/// The base numbers (module docs) from the level's table rows: `life`
+/// percent is the variety's, `armour` PoB's armour table value, `evasion`
+/// the evasion table's; `None` for an `AltLife1` type without its column.
+fn base_numbers(
+    life: i64,
+    ty: &MinionType,
+    lives: crate::input::MonsterLife,
+    armour: f64,
+    evasion: i64,
+) -> Option<BaseNumbers> {
+    #[expect(clippy::cast_precision_loss, reason = "game integers, exact as f64")]
+    let f = |v: i64| v as f64;
+    let life_mult = lua_number(f(life) / 100.0);
+    let table = match ty.life_scaling() {
+        Some(LifeScaling::AltLife1) => lives.alt1?,
+        Some(LifeScaling::AltLife2) => lives.alt2,
+        None => lives.ally,
+    };
+    // The ally table even for an AltLife type (`initMinionModDB` 1127).
+    let energy_shield = (ty.energy_shield != 0).then(|| {
+        let es = lua_number(0.4 * f(ty.energy_shield) / 100.0);
+        math::floor(f(lives.ally) * life_mult * es)
+    });
+    let or_one = |v: i64| {
+        if v == 0 {
+            1.0
+        } else {
+            lua_number(f(v) / 100.0)
+        }
+    };
+    Some(BaseNumbers {
+        life: math::floor(f(table) * life_mult),
+        energy_shield,
+        armour: math::round_half_up(armour * or_one(ty.armour)),
+        evasion: math::round_half_up(f(evasion) * or_one(ty.evasion)),
+    })
+}
+
 /// The base values (module docs); `None` when the data lacks a table row.
 fn base_values(
     input: &CalcInput<'_>,
@@ -292,47 +370,21 @@ fn base_values(
     ingest: &mut Ingest<'_>,
 ) -> Option<()> {
     let data = input.data;
-    let lives = data.monster_life(level)?;
+    let n = base_numbers(
+        variety.life,
+        ty,
+        data.monster_life(level)?,
+        super::enemy::monster_armour(data, level)?,
+        data.monster_level(level)?.evasion,
+    )?;
+    ingest.effect(base(Quantity::Life, Op::Base, n.life));
+    if let Some(es) = n.energy_shield {
+        ingest.effect(base(Quantity::EnergyShield, Op::Base, es));
+    }
+    ingest.effect(base(Quantity::Armour, Op::Base, n.armour));
+    ingest.effect(base(Quantity::Evasion, Op::Base, n.evasion));
     #[expect(clippy::cast_precision_loss, reason = "game integers, exact as f64")]
     let f = |v: i64| v as f64;
-    let life_mult = lua_number(f(variety.life) / 100.0);
-    let table = match ty.life_scaling() {
-        Some(LifeScaling::AltLife1) => lives.alt1?,
-        Some(LifeScaling::AltLife2) => lives.alt2,
-        None => lives.ally,
-    };
-    ingest.effect(base(
-        Quantity::Life,
-        Op::Base,
-        math::floor(f(table) * life_mult),
-    ));
-    if ty.energy_shield != 0 {
-        let es = lua_number(0.4 * f(ty.energy_shield) / 100.0);
-        ingest.effect(base(
-            Quantity::EnergyShield,
-            Op::Base,
-            math::floor(f(lives.ally) * life_mult * es),
-        ));
-    }
-    let or_one = |v: i64| {
-        if v == 0 {
-            1.0
-        } else {
-            lua_number(f(v) / 100.0)
-        }
-    };
-    let armour = super::enemy::monster_armour(data, level)?;
-    ingest.effect(base(
-        Quantity::Armour,
-        Op::Base,
-        math::round_half_up(armour * or_one(ty.armour)),
-    ));
-    let evasion = data.monster_level(level)?.evasion;
-    ingest.effect(base(
-        Quantity::Evasion,
-        Op::Base,
-        math::round_half_up(f(evasion) * or_one(ty.evasion)),
-    ));
     for (t, value) in phases::RESISTANCES.iter().zip(ty.resistances) {
         ingest.effect(base(Quantity::Resistance(*t), Op::Base, f(value)));
     }
@@ -627,9 +679,15 @@ pub const FIELDS: [MinionField; 9] = [
 ///   that PoB's stat map sends to the minion
 ///   ([`PobSkill::minion_stats`]: the gem's "Minions have #% more Life"):
 ///   `minion-modifier`, with the gem as source;
-/// - each other enabled group whose active skill is an aura, or a buff PoB
-///   applies to minions (`skillData.buffMinions`, `buffAllies`;
-///   `CalcPerform.lua` 2282 and 2427): `minion-buffs`.
+/// - each other enabled gem (in any group, the main one included) whose
+///   active skill is an aura, or a buff PoB applies to minions
+///   (`skillData.buffMinions`, `buffAllies`; `CalcPerform.lua` 2282 and
+///   2427): `minion-buffs`.
+///
+/// PoB also adds the skill's `extraSkillModList` to the minion
+/// (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines.
+/// The engine maps none of them, so each is already an `unmapped-stat`
+/// reason of the character, which every minion field carries.
 fn deferred_reasons(
     input: &CalcInput<'_>,
     player: &ModStore,
@@ -668,11 +726,14 @@ fn deferred_reasons(
         return out;
     };
     for (index, group) in groups.iter().enumerate() {
-        if index + 1 == skill.group || !group.enabled {
+        if !group.enabled {
             continue;
         }
+        let main = index + 1 == skill.group;
         for (gem_index, gem) in group.gems.typed().enumerate() {
-            if !gem.enabled {
+            // The main group's other active skills (an aura linked beside
+            // the summon gem) reach the minion too (P6-7b3a review).
+            if !gem.enabled || (main && gem_index == skill.active_gem.gem) {
                 continue;
             }
             for effect in skill::gem_effects(gem, input.data).unwrap_or_default() {
@@ -797,6 +858,73 @@ mod tests {
                     x.text
                 );
             }
+        }
+    }
+
+    fn ty(es: i64, armour: i64, evasion: i64, alt1: bool, alt2: bool) -> MinionType {
+        MinionType {
+            id: "T".to_owned(),
+            accuracy: 100,
+            armour,
+            evasion,
+            energy_shield: es,
+            damage_spread: 20,
+            resistances: [40, 40, 40, 20],
+            alt_life1: alt1,
+            alt_life2: alt2,
+            damage_ignores_attack_speed: false,
+            player_minion: true,
+        }
+    }
+
+    /// `initMinionModDB`: life on the ally table (or an AltLife one),
+    /// floored; energy shield on the ally table, only for a type with some;
+    /// armour and evasion rounded, the whole table for a zero multiplier.
+    #[test]
+    fn base_numbers_should_follow_init_minion_mod_db() {
+        let lives = crate::input::MonsterLife {
+            life: 1000,
+            ally: 400,
+            alt1: Some(300),
+            alt2: 200,
+        };
+        // Life 1.05: floor(400 x 1.05) = 420; no ES; `or 1`.
+        let n = base_numbers(105, &ty(0, 0, 0, false, false), lives, 1001.0, 501).unwrap();
+        assert_eq!(n.life, 420.0);
+        assert_eq!(n.energy_shield, None);
+        assert_eq!((n.armour, n.evasion), (1001.0, 501.0));
+        // ES 50 (0.2): floor(400 x 1.05 x 0.2) = 84; armour x 0.5 rounds
+        // half up; evasion x 0.33.
+        let n = base_numbers(105, &ty(50, 50, 33, false, false), lives, 1001.0, 501).unwrap();
+        assert_eq!(n.energy_shield, Some(84.0));
+        assert_eq!(n.armour, 501.0);
+        assert_eq!(n.evasion, 165.0);
+        // AltLife1 and AltLife2 (the second wins); ES stays on the ally table.
+        let n = base_numbers(100, &ty(50, 0, 0, true, false), lives, 1.0, 1).unwrap();
+        assert_eq!((n.life, n.energy_shield), (300.0, Some(80.0)));
+        let n = base_numbers(100, &ty(0, 0, 0, true, true), lives, 1.0, 1).unwrap();
+        assert_eq!(n.life, 200.0);
+        let no_alt1 = crate::input::MonsterLife {
+            alt1: None,
+            ..lives
+        };
+        assert_eq!(
+            base_numbers(100, &ty(0, 0, 0, true, false), no_alt1, 1.0, 1),
+            None
+        );
+    }
+
+    /// The item skills are sorted (searched) and hold Holy Strike and the
+    /// enchantments (P6-7b3a review).
+    #[test]
+    fn item_skills_should_be_pobs_and_sorted() {
+        assert!(ITEM_SKILLS.windows(2).all(|w| matches!(w, [a, b] if a < b)));
+        for id in [
+            "HolyStrike",
+            "AnimateGuardiansWeapon",
+            "ManifestDancingDervishes",
+        ] {
+            assert!(ITEM_SKILLS.binary_search(&id).is_ok(), "{id}");
         }
     }
 

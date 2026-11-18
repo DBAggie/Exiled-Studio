@@ -87,9 +87,9 @@ pub trait CalcData {
     /// The game's monster stats at a level (`DefaultMonsterStats`).
     fn monster_level(&self, level: i64) -> Option<MonsterStats>;
 
-    /// A mod's stats in row order, each with its lowest value (P6-7b3a, a
-    /// minion's mod list); `None` (the default) when the data has no such
-    /// mod.
+    /// A mod's first six stats in row order (PoB's exporter's), each with
+    /// its lowest value (P6-7b3a, a minion's mod list); `None` (the
+    /// default) when the data has no such mod.
     fn mod_stats(&self, id: &str) -> Option<Vec<(String, i64)>> {
         let _ = id;
         None
@@ -425,7 +425,15 @@ impl CalcData for Bundle {
         self.mods
             .iter()
             .find(|m| m.id == id)
-            .map(|m| m.stats.iter().map(|s| (s.stat.clone(), s.min)).collect())
+            // PoB's exporter reads the first six (`minions.lua` 228; the
+            // data-parity rule `minion-mods-six-stat-slots`).
+            .map(|m| {
+                m.stats
+                    .iter()
+                    .take(6)
+                    .map(|s| (s.stat.clone(), s.min))
+                    .collect()
+            })
     }
 
     fn monster_life(&self, level: i64) -> Option<MonsterLife> {

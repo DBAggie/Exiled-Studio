@@ -260,3 +260,27 @@ Every minion field carries:
   - On `b-ot`: public `calc-parity` has 161 builds, 109 expected differences, and 0 unexpected; the corpus has 0 unexpected.
   - Both runs are byte-identical.
 - **Evidence bundle:** from P6-7b3a on, the evidence bundle is `local/p6/packs/b-ot`. The minion fixtures' targets need its `.ot` stats.
+
+## The P6-7b3a review (P6-7b3a2)
+
+The code-architecture-reviewer found no blockers in #165. Applied:
+- **Item skills:** the list now holds all 12 skills PoB gives `minionHasItemSet` or `minionUses`. That adds Holy Strike, Animate Guardian's Weapon, Manifest Dancing Dervishes, and the four Enchantments of Reflection. Animate Weapon of Ranged Arms still comes through `minionUseMainHandWeapon`. The list is sorted and tested.
+- **`minion-buffs`:** this reason now also covers the main group's other active gems, such as an aura linked beside the summon gem. Before the fix, such a minion's fields could have been `Complete` and wrong.
+- **`extraSkillModList`:** PoB adds it to the minion (`initMinionModDB` 1149 to 1151). Its "Socketed Gems have ..." lines are mapped by no engine row, so each is already an `unmapped-stat` reason of the character, which every minion field carries. This is now documented in `deferred_reasons`.
+- **The base arithmetic:** it is now a pure function, `base_numbers`, with a test of:
+  - floor and round;
+  - `or 1`;
+  - the AltLife tables, where the second wins;
+  - energy shield on the ally table, and only for a type with some.
+- **`Ingest`:** a test covers the flag-only change. An unsettled range on a mapping that is empty, or that mixes a flag with another operation, is still a reason.
+- **`CalcData::mod_stats`:** it reads a mod's first six stats, as PoB's exporter does.
+- **Startup cost:** a build with no minion skill gem now returns before the minion work.
+- **Mapping comments:** the misplaced comments in `ROWS` are restored, and the golem rows note that they are reasons for every minion type until P6-7b3b.
+- **Left for later, with a reason:**
+  - Vaal Summon Skeletons' level divergence gets its register entry with P6-7b3b, once its fields can be `Complete` (task added).
+  - The life override has no unit test, because `minion_life` needs a whole calculation. No fixture minion has `set_maximum_life_is_one` with `Complete` fields yet; P6-7b3b's fixtures add one.
+  - `MINION_STATS`' completeness is checked by the data-parity table `minion_mods`, not by a unit test: the stats live in the bundle.
+
+**Evidence:**
+- **The sweep:** only Holy Strike changed, its reason now `minion-items` instead of `minion-level`. There are still 0 unexpected differences.
+- **Public and corpus on `b-ot`:** no value or state changed. There are 0 unexpected differences, and both runs are byte-identical.
