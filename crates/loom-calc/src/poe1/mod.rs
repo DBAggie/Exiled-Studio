@@ -32,6 +32,7 @@ pub mod gems;
 pub mod hit;
 pub mod item_values;
 pub mod keystones;
+pub mod leech;
 pub mod mapping;
 pub mod minion_actor;
 pub mod minion_hit;
@@ -324,6 +325,13 @@ pub enum Poe1Quantity {
     /// A damage type's base damage reduction, percent (PoB's
     /// `<Type>DamageReduction` BASE; P6-10b part 5): read by [`reduction`].
     DamageReduction(DamageType),
+    /// The largest total recovery per second from a pool's leech, percent
+    /// of the pool (PoB's `Max<Pool>LeechRate`; P6-10b part 7): `Base`,
+    /// `Increased`, and `More`, read by [`leech`].
+    LeechRateMax(Pool),
+    /// The largest recovery of one leech of a pool, percent of the pool
+    /// (PoB's `Max<Pool>LeechInstance`; P6-10b part 7): read by [`leech`].
+    LeechInstanceMax(Pool),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -612,6 +620,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Regen(p) => write!(f, "regen.{}", p.name()),
             Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),
             Self::RecoveryRate(p) => write!(f, "recovery-rate.{}", p.name()),
+            Self::LeechRateMax(p) => write!(f, "leech-rate-max.{}", p.name()),
+            Self::LeechInstanceMax(p) => write!(f, "leech-instance-max.{}", p.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
             Self::ZealotsOath => f.write_str("zealots-oath"),
@@ -870,6 +880,15 @@ pub enum Poe1Field {
     /// The build's full damage per second (PoB's `FullDPS`; P6-12 part 2):
     /// the skills included in it, each computed as the main skill.
     FullDps,
+    /// The largest total recovery per second from a pool's leech (PoB's
+    /// `Max<Pool>LeechRate`; P6-10b part 7). Present with the pool.
+    MaxLeechRate(Pool),
+    /// The largest recovery of one leech of a pool (PoB's
+    /// `Max<Pool>LeechInstance`; P6-10b part 7). Present with the pool.
+    MaxLeechInstance(Pool),
+    /// Life's leech rate cap in percent of life (PoB's
+    /// `MaxLifeLeechRatePercent`; P6-10b part 7). Always present.
+    MaxLifeLeechRatePercent,
 }
 
 impl Poe1Field {
@@ -890,6 +909,17 @@ impl Poe1Field {
             Self::ManaCost => "mana-cost",
             Self::ManaPerSecondCost => "mana-per-second-cost",
             Self::FullDps => "full-dps",
+            Self::MaxLeechRate(p) => match p {
+                Pool::Life => "max-life-leech-rate",
+                Pool::Mana => "max-mana-leech-rate",
+                Pool::EnergyShield => "max-energy-shield-leech-rate",
+            },
+            Self::MaxLeechInstance(p) => match p {
+                Pool::Life => "max-life-leech-instance",
+                Pool::Mana => "max-mana-leech-instance",
+                Pool::EnergyShield => "max-energy-shield-leech-instance",
+            },
+            Self::MaxLifeLeechRatePercent => "max-life-leech-rate-percent",
             Self::CombinedDps => "combined-dps",
             Self::BaseDamageReduction(t) => match t {
                 DamageType::Physical => "base-physical-damage-reduction",
@@ -1074,6 +1104,7 @@ mod tests {
                 "unreserved",
                 "damage-reduction",
                 "regeneration",
+                "leech",
                 "movement",
                 "minion",
                 "hit",

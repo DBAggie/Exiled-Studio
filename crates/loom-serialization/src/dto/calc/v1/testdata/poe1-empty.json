@@ -787,7 +787,7 @@
       {
         "field": "poe1.movement-speed",
         "value": 1.0,
-        "node": 308,
+        "node": 362,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -819,7 +819,7 @@
       {
         "field": "poe1.effective-movement-speed",
         "value": 1.0,
-        "node": 313,
+        "node": 367,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -1039,6 +1039,272 @@
             "missing-data": {
               "table": "character_constants",
               "key": "maximum_physical_damage_reduction_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-life-leech-rate",
+        "value": 0.0,
+        "node": 313,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_life_leech_rate_%_per_minute"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-mana-leech-rate",
+        "value": 0.0,
+        "node": 349,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_mana_leech_rate_%_per_minute"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-energy-shield-leech-rate",
+        "value": 0.0,
+        "node": 331,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_energy_shield_leech_rate_%_per_minute"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-life-leech-instance",
+        "value": 0.0,
+        "node": 322,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_life_leech_amount_per_leech_%_max_life"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-mana-leech-instance",
+        "value": 0.0,
+        "node": 358,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_mana_leech_amount_per_leech_%_max_mana"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-energy-shield-leech-instance",
+        "value": 0.0,
+        "node": 340,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_energy_shield_leech_amount_per_leech_%_max_energy_shield"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.max-life-leech-rate-percent",
+        "value": 0.0,
+        "node": 310,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_life_leech_rate_%_per_minute"
             }
           }
         ]
@@ -3407,6 +3673,19 @@
       },
       {
         "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          305
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
         "term": "step.increased-sum",
         "value": 0.0
       },
@@ -3414,7 +3693,396 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          305
+          307
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          306,
+          308,
+          309
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          50,
+          310
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          311,
+          312
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          314
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          316
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          315,
+          317,
+          318
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          50,
+          319
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          320,
+          321
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          323
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          325
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          324,
+          326,
+          327
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          174,
+          328
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          329,
+          330
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          332
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          334
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          333,
+          335,
+          336
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          174,
+          337
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          338,
+          339
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          341
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          343
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          342,
+          344,
+          345
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          64,
+          346
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          347,
+          348
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.modifiers",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          350
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          352
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.cap-percent",
+        "children": [
+          351,
+          353,
+          354
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          64,
+          355
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          356,
+          357
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          359
         ],
         "value": 1.0
       },
@@ -3427,8 +4095,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          306,
-          307
+          360,
+          361
         ],
         "value": 1.0
       },
@@ -3441,7 +4109,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          309
+          363
         ],
         "value": 1.0
       },
@@ -3457,8 +4125,8 @@
         "kind": "max",
         "term": "step.action-speed",
         "children": [
-          310,
-          311
+          364,
+          365
         ],
         "value": 1.0
       },
@@ -3466,8 +4134,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          308,
-          312
+          362,
+          366
         ],
         "value": 1.0
       }

@@ -8,7 +8,7 @@
 //! `loom_calc::poe1::phases`); the mechanic fixtures check the same
 //! against the oracle (`docs/phase-3/character-fields.md`).
 
-use loom_calc::poe1::{Poe1Data, Poe1Field};
+use loom_calc::poe1::{Poe1Data, Poe1Field, Pool};
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
     Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveState, Range,
@@ -168,6 +168,14 @@ impl CalcData for Data {
             "energy_shield_recharge_rate_per_minute_%" => Some(2000),
             // The largest damage reduction (P6-10b part 5).
             "maximum_physical_damage_reduction_%" => Some(90),
+            // The leech caps (P6-10b part 7).
+            "maximum_life_leech_rate_%_per_minute" | "maximum_mana_leech_rate_%_per_minute" => {
+                Some(1200)
+            }
+            "maximum_energy_shield_leech_rate_%_per_minute" => Some(600),
+            "maximum_life_leech_amount_per_leech_%_max_life"
+            | "maximum_mana_leech_amount_per_leech_%_max_mana"
+            | "maximum_energy_shield_leech_amount_per_leech_%_max_energy_shield" => Some(10),
             _ => None,
         }
     }
@@ -460,6 +468,21 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         (Field::Poe1(Poe1Field::EnergyShieldRegen), 0.0),
         (Field::Poe1(Poe1Field::EnergyShieldRecharge), 0.0),
         (Field::Poe1(Poe1Field::EnergyShieldRechargeDelay), 2.0),
+        // P6-10b part 7: life's rate cap 1200 / 60 = 20% of 1125, its
+        // instance cap 10%; mana's the same of 590; energy shield's 0.
+        (Field::Poe1(Poe1Field::MaxLifeLeechRatePercent), 20.0),
+        (Field::Poe1(Poe1Field::MaxLeechRate(Pool::Life)), 225.0),
+        (Field::Poe1(Poe1Field::MaxLeechInstance(Pool::Life)), 112.5),
+        (Field::Poe1(Poe1Field::MaxLeechRate(Pool::Mana)), 118.0),
+        (Field::Poe1(Poe1Field::MaxLeechInstance(Pool::Mana)), 59.0),
+        (
+            Field::Poe1(Poe1Field::MaxLeechRate(Pool::EnergyShield)),
+            0.0,
+        ),
+        (
+            Field::Poe1(Poe1Field::MaxLeechInstance(Pool::EnergyShield)),
+            0.0,
+        ),
     ];
     for (field, v) in expect {
         assert_eq!(value(&r, field), v, "{field}");

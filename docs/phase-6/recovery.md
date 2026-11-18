@@ -278,3 +278,31 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
   - 11 are `partial` or `indeterminate` with their reasons, 22 not computed.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,763 tests and clippy pass.
+
+## Part 7: the leech caps
+
+**What PoB does** (`CalcDefence.lua` 1201 to 1233): for life, energy shield, and mana:
+- **The rate cap's percent** is `calcLib.val(Max<Pool>LeechRate)`: the `Base` sum times `(1 + inc / 100) x more`.
+  - The base is the character's (`CalcSetup.lua` 46, 47, 51): life's and mana's constants `maximum_<pool>_leech_rate_%_per_minute` (1,200) / 60, so 20%; energy shield's 10, which equals its constant (600) / 60.
+- **The caps:** `Max<Pool>LeechRate = pool x percent / 100`; life's percent is its own output, `MaxLifeLeechRatePercent`.
+- **The instance cap** works the same from `Max<Pool>LeechInstance`, whose base is the constant `maximum_<pool>_leech_amount_per_leech_%_max_<pool>` (10).
+
+**The engine** (`poe1::leech`, phase `leech` after regeneration; slice revision 15):
+- **The fields:** `max-life-leech-rate`, `max-life-leech-instance`, and the same for mana and energy shield. Each is present with its pool and depends on it. `max-life-leech-rate-percent` is always present.
+- **Arithmetic:** each is computed in PoB's order, `pool x percent / 100`, so its floating point matches PoB's.
+- **The stats:** seven rows (`LeechRateMax`, `LeechInstanceMax`, `Increased`):
+  - the three pools' "Maximum total Recovery per second from Leech";
+  - the three pools' "Maximum Recovery per Leech";
+  - the line for all three rates.
+- **Skill stat map:** PoB's skill stat map reads the life and energy shield instance stats as the rate (`SkillStatMap.lua` 482 to 487), but its item lines read them as the instance (`ModParser.lua` 563 to 565). No public build has the gem form.
+- **Not modelled:** the conditioned caps (a crit or savage hit recently, Defiance, Zealotry, maximum rage), the doubled caps, and a parent's or party member's percent. Each is an unmapped stat, so a reason.
+- **Not yet ported:** the leech itself (the instances, the rate, `LifeLeechGainRate`).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 205 builds, 271 expected, 0 unexpected; `Complete` fields 7,861.
+  - Each of the seven fields equals PoB's in 177 builds.
+  - 21 are `partial` and 6 `indeterminate`. In every partial build that PoB also computes, the cap divided by its pool equals PoB's: the differences are the pools' own.
+  - No other field's value or state moved.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,763 tests and clippy pass. The bare Witch's test checks all seven values.

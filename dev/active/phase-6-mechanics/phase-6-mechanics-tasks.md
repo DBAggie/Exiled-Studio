@@ -136,7 +136,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] The review of P6-10b parts 1 to 4 applied (cost efficiency more and clamp order, Zealot's Oath keeping life's reasons, shared marker and action speed helpers, tests); `docs/phase-6/recovery.md`, "The review of parts 1 to 4"
 - [x] P6-10b part 5: base damage reduction (`poe1::reduction`, slice revision 12; endurance charges, Adrenaline, the stationary row, `REDUCTION_REASONS`); 850 values equal to PoB; `docs/phase-6/recovery.md`, "Part 5"
 - [x] P6-10b part 6: the mana cost per second (`costs::per_second`, slice revision 13); 85 equal to PoB, 44 Q11 (DIV-0189 to DIV-0232); `docs/phase-6/recovery.md`, "Part 6"
-- [ ] P6-10b further parts: leech, degeneration (D7), the reduction against a hit, maximum hit and EHP, life and energy shield costs
+- [x] P6-10b part 7: the leech caps (`poe1::leech`, slice revision 15; seven `Increased` rows); each field equal to PoB in 177 builds; `docs/phase-6/recovery.md`, "Part 7"
+- [ ] P6-10b further parts: leech (the instances and rate), degeneration (D7), the reduction against a hit, maximum hit and EHP, life and energy shield costs
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)

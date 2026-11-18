@@ -875,7 +875,7 @@ fn run_should_write_the_report_and_refuse_an_existing_folder() {
     let written: Value =
         serde_json::from_slice(&std::fs::read(c.request.out.join("report.json")).unwrap()).unwrap();
     assert_eq!(written["status"], "no_difference");
-    assert_eq!(written["slice"]["revision"], 14);
+    assert_eq!(written["slice"]["revision"], 15);
     assert!(report.summary_markdown().starts_with("# calc-parity"));
     assert!(run(&c.request).unwrap_err().contains("already exists"));
 }

@@ -2768,8 +2768,93 @@ pub const ROWS: &[Row] = &[
         "maximum_energy_shield_+%",
         &[(Quantity::EnergyShield, Op::Increased, 1.0)],
     ),
+    // P6-10b part 7: "#% increased Maximum Recovery per Energy Shield Leech"
+    // (`MaxEnergyShieldLeechInstance` INC; PoB's skill map reads the life and
+    // energy shield stats as the rate, items' lines as the instance).
+    (
+        "maximum_energy_shield_leech_amount_per_leech_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechInstanceMax(Pool::EnergyShield)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 7: "#% increased Maximum total Energy Shield Recovery per second from Leech"
+    // (`MaxEnergyShieldLeechRate` INC).
+    (
+        "maximum_energy_shield_leech_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::EnergyShield)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 7: "#% increased Maximum total Life, Mana and Energy Shield
+    // Recovery per second from Leech" (the three `Max<Pool>LeechRate` INC).
+    (
+        "maximum_leech_rate_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Life)),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Mana)),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::EnergyShield)),
+                Op::Increased,
+                1.0,
+            ),
+        ],
+    ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
+    // P6-10b part 7: "#% increased Maximum Recovery per Life Leech"
+    // (`MaxLifeLeechInstance` INC; PoB's skill map reads the life and
+    // energy shield stats as the rate, items' lines as the instance).
+    (
+        "maximum_life_leech_amount_per_leech_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechInstanceMax(Pool::Life)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 7: "#% increased Maximum total Life Recovery per second from Leech"
+    // (`MaxLifeLeechRate` INC).
+    (
+        "maximum_life_leech_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Life)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
+    // P6-10b part 7: "#% increased Maximum Recovery per Mana Leech"
+    // (`MaxManaLeechInstance` INC; PoB's skill map reads the life and
+    // energy shield stats as the rate, items' lines as the instance).
+    (
+        "maximum_mana_leech_amount_per_leech_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechInstanceMax(Pool::Mana)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 7: "#% increased Maximum total Mana Recovery per second from Leech"
+    // (`MaxManaLeechRate` INC).
+    (
+        "maximum_mana_leech_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Mana)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
     // hash; `collect` adds the node.
     (
