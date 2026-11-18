@@ -114,6 +114,8 @@ pub enum PerCharge {
     CritChance,
     /// Critical strike multiplier (`CritMultiplier` BASE).
     CritMultiplier,
+    /// Increased evasion rating (`Evasion` INC; P6-11f).
+    Evasion,
 }
 
 impl PerCharge {
@@ -125,6 +127,7 @@ impl PerCharge {
             Self::SpellDamage => "per.spell-damage",
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
+            Self::Evasion => "per.evasion",
         }
     }
 
@@ -137,6 +140,7 @@ impl PerCharge {
             Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL),
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
+            Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
         }
     }
 }
@@ -188,6 +192,11 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "damage_+%_per_power_charge",
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::Damage),
+    ),
+    (
+        "evasion_rating_+%_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::Evasion),
     ),
     (
         "max_endurance_charges",
@@ -476,6 +485,8 @@ mod tests {
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",
         "chance_to_gain_power_charge_when_block_%",
+        // A charge's duration (P6-11f): the count comes from the config.
+        "endurance_charge_duration_+%",
         "gain_power_charge_for_each_second_channeling_spell",
         // Regeneration per charge: not a slice field.
         "life_regeneration_rate_per_minute_%_per_endurance_charge",

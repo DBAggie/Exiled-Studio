@@ -2207,6 +2207,17 @@ pub const ROWS: &[Row] = &[
         &[(STR, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
     ("block_chance_+%", &[(BLOCK, Op::Increased, 1.0)]),
+    // P6-11f: "+#% Chance to Block Attack Damage per 5% Chance to Block on
+    // Equipped Shield" (`BlockChance` BASE, `PerStat` `ShieldBlockChance`
+    // `div = 5`); `phases` reads it.
+    (
+        "chance_to_block_attack_damage_per_5%_chance_to_block_on_equipped_shield_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockPer5(false)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "cold_and_chaos_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
@@ -2368,6 +2379,13 @@ pub const ROWS: &[Row] = &[
         "silver_flask_display_onslaught",
         &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
     ),
+    // P6-11f: "+#% Chance to Block Spell Damage per 5% Chance to Block
+    // Attack Damage" (`SpellBlockChance` BASE, `PerStat` `BlockChance`
+    // `div = 5`); `phases` reads it.
+    (
+        "spell_block_%_per_5_attack_block",
+        &[(Quantity::Poe1(Poe1Quantity::BlockPer5(true)), Op::Base, 1.0)],
+    ),
     // Stibnite Flask's buff, "20% more Evasion Rating" in PoB's base data:
     // `Evasion` MORE (P6-4b).
     (
@@ -2499,6 +2517,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("avoid_ailments_%_from_crit", "ailment-on-self"),
+    // P6-11f: "#% chance to Avoid Elemental Ailments" (`AvoidElementalAilments` BASE): no slice field.
+    ("avoid_all_elemental_status_%", "ailment-on-self"),
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
@@ -2531,6 +2551,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
     // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
     ("base_number_of_golems_allowed", "golems"),
+    // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.
+    ("base_projectile_speed_+%", "projectile-speed"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
     // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
     // own copy is read by PoB's skill stat map as the enemy's
@@ -2546,7 +2568,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     ("base_stun_recovery_+%", "stun"),
+    // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
+    ("block_recovery_+%", "block-recovery"),
     ("cannot_be_blinded", "blind-on-self"),
+    // P6-11f: "Corrupted Blood cannot be inflicted on you" (`CorruptedBloodImmune`): no slice field.
+    ("cannot_be_inflicted_by_corrupted_blood", "ailment-on-self"),
     ("cannot_be_poisoned_if_x_poisons_on_you", "ailment-on-self"),
     (
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -2626,6 +2652,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "elemental_resistance_cannot_be_lowered_by_curses",
         "curse-on-self",
     ),
+    // P6-11f: "#% increased Endurance Charge Duration": the charges come from the config; no slice field.
+    ("endurance_charge_duration_+%", "charge-duration"),
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
         "enemy-speed",
@@ -2659,6 +2687,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ([`NO_EFFECT_DEPENDS_ON`]).
     ("hierophant_mana_cost_+%_final", "mana-cost"),
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    // P6-11f: Unwavering Stance (the keystone node: cannot evade attacks, cannot be stunned): evade chance and stun, no slice field.
+    ("keystone_unwavering_stance", "evade"),
     // Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua` 5066): it
     // reaches only `CullMultiplier`, which scales `CullingDPS` and
     // `CombinedDPS` (`CalcOffence.lua` 3332 to 3339, 6289 to 6292), not
@@ -2715,6 +2745,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
     ("melee_attack_number_of_spirit_strikes", "targeting"),
+    // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
+    ("melee_range_+", "range"),
     ("movement_speed_+%_per_nearby_enemy", "movement-speed"),
     (
         "movement_speed_+%_while_on_burning_ground",
@@ -2785,6 +2817,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("skill_override_pvp_scaling_time_ms", "display"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
+    // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
+    ("stun_threshold_+%", "stun"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
     // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
     // regeneration); its cast speed and spell damage are `poe1::buffs`.

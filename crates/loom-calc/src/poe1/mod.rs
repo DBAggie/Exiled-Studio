@@ -159,6 +159,12 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
+    /// Block chance per 5% of another block chance (PoB's `PerStat` tag
+    /// with `div = 5`; P6-11f): `Base`, read by [`phases`]. `true`: spell
+    /// block per 5% chance to block attack damage (`BlockChance`); `false`:
+    /// attack block per 5% chance to block on the equipped shield
+    /// (`ShieldBlockChance`).
+    BlockPer5(bool),
     /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
     /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
     CurseLimit,
@@ -478,6 +484,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
+            Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
+            Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }

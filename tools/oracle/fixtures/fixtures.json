@@ -1731,6 +1731,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-9d: Ice Nova with Herald of Thunder and Purity of Ice supported by Enlighten, and Hatred: added lightning damage to spells, and the reservation with Enlighten's cost multiplier."
+    },
+    {
+      "id": "ice-nova-block-per-5-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-block-per-5-witch.xml",
+      "sha256": "af82e69d295526a0e0c508f94fe02a33b6bb918ec8805d10e45a4a3e1bfc57ba",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-11f: Ice Nova with a Splintered Tower Shield and custom lines: block per 5% shield block, spell block per 5% attack block (PoB PerStat), evasion per frenzy charge (three charges), and lines that reach no slice field."
     }
   ]
 }

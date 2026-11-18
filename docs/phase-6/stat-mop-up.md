@@ -175,3 +175,34 @@ The #162 review's minor findings, applied with P6-7b1:
 - **The field state, confirmed:** a `weapon-types` or `weapon-flags` reason makes the DoT field `Partial` through `Reasons::into_state`, or `Indeterminate` with the reason kept when a value is also unsettled.
 - **Test order:** the DoT test module's `use super::*;` now comes first.
 - **No value or state changed** (`docs/phase-6/minions.md`, "P6-7b1", Evidence).
+
+## P6-11f: block per 5%, evasion per frenzy charge, and lines that reach no field
+
+**Rows** (each as PoB reads the game's text; `local/p6/parse2` renders the line from the bundle's stat descriptions and runs PoB's `modLib.parseMod`):
+- `chance_to_block_attack_damage_per_5%_chance_to_block_on_equipped_shield_+%`: `BlockChance` BASE, `PerStat` `ShieldBlockChance` `div = 5`;
+- `spell_block_%_per_5_attack_block`: `SpellBlockChance` BASE, `PerStat` `BlockChance` `div = 5`;
+- `evasion_rating_+%_per_frenzy_charge`: `Evasion` INC, `Multiplier` `FrenzyCharge` (`charges::PerCharge::Evasion`).
+
+The two per-5% lines are `Poe1Quantity::BlockPer5`. `phases` reads them as PoB's `PerStat`: `floor(stat / 5) x value`, an extra base term.
+- Attack block reads the shield's own block.
+- Spell block reads the final attack block.
+- The block chances are whole numbers, so PoB's `+ 0.0001` never changes the floor.
+
+These two were P6-11a's "left as reasons".
+
+**`NoEffect`** (no slice field reads them):
+- stun threshold, projectile speed, block recovery, melee strike range;
+- endurance charge duration (the count comes from the config);
+- avoid elemental ailments, corrupted blood immunity;
+- Unwavering Stance (the evade chance and stun).
+
+**Left as reasons:**
+- "+# Armour if you've Blocked Recently": three PoB inputs set `BlockedRecently`, a condition the engine does not settle yet.
+- Glancing Blows: PoB applies its keystone node's mods.
+- Additional physical damage reduction and the recovery stats: P6-10b.
+
+**Evidence:**
+- **Fixture:** `ice-nova-block-per-5-witch.xml`. Block is 36 (the shield's 24 plus 3 x 4), spell block 28 (4 x 7), and evasion 46 with three frenzy charges. All 22 computed fields are `Complete` and equal to PoB.
+- **Public `calc-parity`:** 175 builds, 112 expected differences, 0 unexpected.
+- **Corpus:** 13 values moved toward PoB, none away.
+

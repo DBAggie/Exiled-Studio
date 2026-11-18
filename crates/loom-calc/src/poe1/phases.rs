@@ -615,7 +615,47 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         modifier_reasons,
     } = attack_block(calc, shield, reasons)?;
     calc.set(Field::BlockChance, query(value, reasons));
-    spell_block(calc, inc, more, &modifier_reasons)
+    spell_block(calc, value, inc, more, &modifier_reasons)
+}
+
+/// PoB's `PerStat` tag with `div = 5` (P6-11f): `floor(stat / 5 +
+/// 0.0001) x sum(BlockPer5(spell))`, as an extra base term, or `None` when
+/// no such effect applies.
+fn per_5(
+    calc: &mut Calc<'_>,
+    stat: Valued,
+    spell: bool,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::BlockPer5(spell));
+    if !has(calc, q) {
+        return Ok(None);
+    }
+    let per = sum(calc, q, Op::Base, Term::Step("per-5-effects"), reasons)?;
+    let five = constant(calc, "per-5", 5.0)?;
+    // The block chances are whole numbers (rounded, floored), so PoB's
+    // `+ 0.0001` never changes the floor.
+    let value = crate::math::floor(stat.value / 5.0);
+    let node = calc.graph_mut().push(
+        Node::Quotient {
+            term: Term::Step("per-5-ratio"),
+            a: stat.node,
+            b: five.node,
+        },
+        stat.value / 5.0,
+    )?;
+    let count = calc.graph_mut().push(
+        Node::Floor {
+            term: Term::Step("per-5-count"),
+            of: node,
+        },
+        value,
+    )?;
+    Ok(Some(product(
+        calc,
+        &[Valued { node: count, value }, per],
+        Term::Step("per-5"),
+    )?))
 }
 
 /// Attack block's value and its shared modifier ([`attack_block`]).
@@ -643,6 +683,12 @@ pub(super) fn attack_block(
     let cx = calc.context(Flags::NONE);
     let mut base_terms = Vec::new();
     base_terms.extend(shield);
+    // "per 5% Chance to Block on Equipped Shield" (P6-11f).
+    if let Some(shield) = shield
+        && let Some(term) = per_5(calc, shield, false, &mut reasons)?
+    {
+        base_terms.push(term);
+    }
     base_terms.push(sum(
         calc,
         Quantity::BlockChance,
@@ -691,18 +737,24 @@ pub(super) fn attack_block(
 /// attack block's increases and more.
 fn spell_block(
     calc: &mut Calc<'_>,
+    attack_block: Valued,
     inc: Valued,
     more: Valued,
     modifier_reasons: &Reasons,
 ) -> Result<(), CalcError> {
     let mut reasons = Reasons::new();
-    let base = sum(
+    let mut base = sum(
         calc,
         Quantity::Poe1(Poe1Quantity::SpellBlockChance),
         Op::Base,
         Term::Base,
         &mut reasons,
     )?;
+    // "per 5% Chance to Block Attack Damage" (P6-11f): PoB's `PerStat` of
+    // the final attack block.
+    if let Some(term) = per_5(calc, attack_block, true, &mut reasons)? {
+        base = total(calc, &[base, term], Term::Base)?;
+    }
     reasons.extend(modifier_reasons);
     let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
     let rounded = round(calc, raw, Term::Step("total"))?;
