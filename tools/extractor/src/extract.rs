@@ -40,6 +40,7 @@ use sha2::{Digest, Sha256};
 use crate::dat::{RowSizeMismatch, Value, read_table};
 use crate::install::{BundleHashes, INDEX_PATH, hex};
 use crate::itemtype::{self, ItemTypeManifest};
+use crate::monstertemplate;
 use crate::psg::{self, GraphManifest};
 use crate::schema::{
     Column, ColumnKind, Game, ScalarType, Schema, TableSchema, VENDORED_COMMIT, VENDORED_SHA256,
@@ -220,7 +221,8 @@ pub fn roots(game: Game) -> Vec<&'static str> {
 /// 3: `passive_skill_graphs` added (PR A6b).
 /// 4: `item_types` added (Spike B PR B4x).
 /// 5: `object_templates` added (Phase 3 PR P3-1b).
-pub const MANIFEST_FORMAT: u32 = 5;
+/// 6: `monster_templates` added (Phase 6 P6-7b1).
+pub const MANIFEST_FORMAT: u32 = 6;
 
 /// Manifest file name inside the output directory.
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -456,6 +458,7 @@ pub struct Extraction<'s> {
     graphs: psg::Collection,
     item_types: itemtype::Collection,
     object_templates: itemtype::Collection,
+    monster_templates: monstertemplate::Collection,
 }
 
 impl<'s> Extraction<'s> {
@@ -471,6 +474,7 @@ impl<'s> Extraction<'s> {
             graphs: psg::Collection::new(game),
             item_types: itemtype::Collection::new(itemtype::ITEM_TYPES),
             object_templates: itemtype::Collection::new(itemtype::OBJECT_TEMPLATES),
+            monster_templates: monstertemplate::Collection::new(),
         }
     }
 
@@ -494,6 +498,9 @@ impl<'s> Extraction<'s> {
         }
         if itemtype::is_object_template(path) {
             return self.object_templates.add(path, bytes);
+        }
+        if monstertemplate::is_monster_template(path) {
+            return self.monster_templates.add(path, bytes);
         }
         let unplanned = || ExtractError::Unplanned {
             path: path.to_owned(),
@@ -548,6 +555,7 @@ impl<'s> Extraction<'s> {
             graphs,
             item_types,
             object_templates,
+            monster_templates,
         } = self;
         let rows_of: BTreeMap<String, usize> = added
             .iter()
@@ -712,6 +720,23 @@ impl<'s> Extraction<'s> {
         }
         files.extend(template_files);
 
+        let (monster_files, monster_templates) = monster_templates.finish();
+        for entry in monster_templates.files.values() {
+            if let Some(path) = &entry.output
+                && let Some(bytes) = monster_files.get(path)
+            {
+                // A monster template's "rows" are the lines kept.
+                file_entries.insert(
+                    path.clone(),
+                    OutputFile {
+                        rows: entry.extends.unwrap_or_default() + entry.stats.unwrap_or_default(),
+                        sha256: hex(&Sha256::digest(bytes)),
+                    },
+                );
+            }
+        }
+        files.extend(monster_files);
+
         let manifest = Manifest {
             bundles: inputs
                 .bundles
@@ -728,6 +753,7 @@ impl<'s> Extraction<'s> {
                 sha256: hex(&inputs.index_sha256),
             },
             item_types,
+            monster_templates,
             object_templates,
             passive_skill_graphs,
             schema: SchemaInput {
@@ -1024,6 +1050,9 @@ pub struct Manifest {
     pub index: IndexInput,
     /// Item type files (`*.it`) and the `extends` chain checks.
     pub item_types: ItemTypeManifest,
+    /// Monster templates (`Metadata/Monsters/**.ot`, read as PoB reads
+    /// them: [`monstertemplate`]), format 6.
+    pub monster_templates: monstertemplate::MonsterTemplateManifest,
     /// Object templates (`*.ot`, [`itemtype::OBJECT_TEMPLATES`]), format 5.
     pub object_templates: ItemTypeManifest,
     /// Passive skill graph files and their counts.
@@ -1066,6 +1095,7 @@ impl Manifest {
         problems.extend(self.passive_skill_graphs.problems());
         problems.extend(self.item_types.problems());
         problems.extend(self.object_templates.problems());
+        problems.extend(self.monster_templates.problems());
         for (name, table) in &self.tables {
             if table.status == Status::Failed || (table.root && table.status != Status::Ok) {
                 problems.push(format!("{name}: {:?}", table.status));
@@ -1321,9 +1351,22 @@ mod tests {
         text.encode_utf16().flat_map(u16::to_le_bytes).collect()
     }
 
+    const MONSTER_PATH: &str = "metadata/monsters/zombie.ot";
+
+    /// A monster template (UTF-16LE with BOM): two `extends` lines and a
+    /// stats block, beside a script block the item type grammar rejects.
+    fn monster_file() -> Vec<u8> {
+        let text = "\u{feff}version 3\r\nextends \"Metadata/Monsters/Monster\"\r\n\
+                    extends \"Metadata/Monsters/Base\"\r\n\r\nStats\r\n{\r\n\
+                    \tset_item_drop_slots = 0\r\n}\r\nLife\r\n{\r\n\
+                    \ton_death = { RemoveEffects(); }\r\n}\r\n";
+        text.encode_utf16().flat_map(u16::to_le_bytes).collect()
+    }
+
     /// Extracts `tables` plus [`stat_file`], [`GRAPH_FILE`], [`item_file`],
-    /// and [`template_file`], so the run has the stat descriptions, the
-    /// graph, the item type, and the object template it needs.
+    /// [`template_file`], and [`monster_file`], so the run has the stat
+    /// descriptions, the graph, the item type, and the object and monster
+    /// templates it needs.
     fn extract(schema: &Schema, tables: &[(&str, &[u8])]) -> Output {
         let mut extraction = Extraction::new(Plan::new(schema, Game::Poe1, &["root"]));
         for (path, bytes) in tables {
@@ -1333,6 +1376,7 @@ mod tests {
         extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
         extraction.add(ITEM_PATH, &item_file()).unwrap();
         extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
+        extraction.add(MONSTER_PATH, &monster_file()).unwrap();
         extraction.finish(inputs())
     }
 
@@ -1462,7 +1506,7 @@ mod tests {
                 (out.files, out.manifest.to_json().unwrap())
             })
             .collect();
-        assert_eq!(outputs[0].0.len(), 8);
+        assert_eq!(outputs[0].0.len(), 9);
         let manifest = String::from_utf8(outputs[0].1.clone()).unwrap();
         assert!(manifest.contains("\"stat_descriptions/b/other.txt.json\""));
         assert!(!manifest.contains("missing-include"));
@@ -1614,6 +1658,18 @@ mod tests {
 }
 "
         );
+        let monster_json = &out.files["monster_templates/metadata/monsters/zombie.ot.json"];
+        assert_eq!(
+            monster_json.as_slice(),
+            b"{
+\"lines\": [
+{\"extends\":\"Metadata/Monsters/Monster\"},
+{\"extends\":\"Metadata/Monsters/Base\"},
+{\"stat\":{\"key\":\"set_item_drop_slots\",\"value\":\"0\"}}
+]
+}
+"
+        );
         let graph_json = &out.files["passive_skill_graphs/metadata/passiveskillgraph.psg.json"];
         assert_eq!(
             graph_json.as_slice(),
@@ -1631,6 +1687,8 @@ mod tests {
             .replace("{item_src}", &hex(&Sha256::digest(item_file())))
             .replace("{ot_sha}", &hex(&Sha256::digest(ot_json)))
             .replace("{ot_src}", &hex(&Sha256::digest(template_file())))
+            .replace("{mt_sha}", &hex(&Sha256::digest(monster_json)))
+            .replace("{mt_src}", &hex(&Sha256::digest(monster_file())))
             .replace("{graph_sha}", &hex(&Sha256::digest(graph_json)))
             .replace("{graph_src}", &hex(&Sha256::digest(GRAPH_FILE)))
             .replace("{root_sha}", &root_sha)
@@ -1666,6 +1724,10 @@ mod tests {
       "rows": 1,
       "sha256": "{item_sha}"
     },
+    "monster_templates/metadata/monsters/zombie.ot.json": {
+      "rows": 3,
+      "sha256": "{mt_sha}"
+    },
     "object_templates/metadata/characters/character.ot.json": {
       "rows": 2,
       "sha256": "{ot_sha}"
@@ -1687,7 +1749,7 @@ mod tests {
       "sha256": "{root_sha}"
     }
   },
-  "format": 5,
+  "format": 6,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -1706,6 +1768,20 @@ mod tests {
         "output": "item_types/metadata/items/item.it.json",
         "source": "metadata/items/item.it",
         "source_sha256": "{item_src}",
+        "status": "ok"
+      }
+    }
+  },
+  "monster_templates": {
+    "dir": "monster_templates",
+    "files": {
+      "metadata/monsters/zombie.ot": {
+        "error": null,
+        "extends": 2,
+        "output": "monster_templates/metadata/monsters/zombie.ot.json",
+        "source": "metadata/monsters/zombie.ot",
+        "source_sha256": "{mt_src}",
+        "stats": 1,
         "status": "ok"
       }
     }
@@ -1928,6 +2004,7 @@ mod tests {
             out.files.keys().collect::<Vec<_>>(),
             [
                 "item_types/metadata/items/item.it.json",
+                "monster_templates/metadata/monsters/zombie.ot.json",
                 "object_templates/metadata/characters/character.ot.json",
                 "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
                 "stat_descriptions/stat_descriptions.txt.json",
@@ -1946,6 +2023,7 @@ mod tests {
         extraction.add(GRAPH_PATH, &GRAPH_FILE[..10]).unwrap();
         extraction.add(ITEM_PATH, &item_file()).unwrap();
         extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
+        extraction.add(MONSTER_PATH, &monster_file()).unwrap();
         let out = extraction.finish(inputs());
         assert_eq!(out.manifest.problems(), [format!("{GRAPH_PATH}: Failed")]);
         assert!(
@@ -1964,6 +2042,7 @@ mod tests {
             extraction.add(STAT_PATH, &stat_file()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
+            extraction.add(MONSTER_PATH, &monster_file()).unwrap();
             for (path, bytes) in extra {
                 extraction.add(path, bytes).unwrap();
             }
@@ -2066,6 +2145,7 @@ mod tests {
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             extraction.add(ITEM_PATH, &item_file()).unwrap();
             extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
+            extraction.add(MONSTER_PATH, &monster_file()).unwrap();
             let problems = extraction.finish(inputs()).manifest.problems();
             // Child's keys point into Missing, which has no schema: unchecked.
             assert_eq!(problems, expected);
@@ -2081,6 +2161,7 @@ mod tests {
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             extraction.add(ITEM_PATH, &item_file()).unwrap();
             extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
+            extraction.add(MONSTER_PATH, &monster_file()).unwrap();
             for (path, bytes) in files {
                 extraction.add(path, bytes).unwrap();
             }

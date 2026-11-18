@@ -738,6 +738,53 @@
         "v2.67.2:src/Export/Minions/Minions.txt:183"
       ],
       "count": 1
+    },
+    {
+      "id": "minion-mods-pob-written",
+      "category": "pob-derivation",
+      "table": "minion_mods",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "GuardianRelicAll"
+      ],
+      "evidence": "PoB writes this minion by hand in its template (Export/Minions/Minions.txt 183, not a #monster directive): the combined Guardian relic, no game monster variety, so it has no game mod list (P6-7b1).",
+      "sources": [
+        "v2.67.2:src/Export/Minions/Minions.txt:183"
+      ],
+      "count": 1
+    },
+    {
+      "id": "minion-mods-six-stat-slots",
+      "category": "pob-derivation",
+      "table": "minion_mods",
+      "fields": [
+        "modList"
+      ],
+      "keys": [
+        "Metadata/Monsters/BoneGolem/BoneGolem",
+        "Metadata/Monsters/ChaosElemental/ChaosElementalSummoned",
+        "Metadata/Monsters/ElderTentacle/ElderTentacleMinionLargePlayer",
+        "Metadata/Monsters/FireElemental/FireElementalSummoned",
+        "Metadata/Monsters/IceElemental/IceElementalSummoned",
+        "Metadata/Monsters/LightningGolem/LightningGolemSummoned",
+        "Metadata/Monsters/LivingLightning/LivingLightningSummoned",
+        "Metadata/Monsters/Skitterbot/AbyssCurseBot",
+        "Metadata/Monsters/Skitterbot/AbyssDebuffBot",
+        "Metadata/Monsters/Skitterbot/SkitterbotCold",
+        "Metadata/Monsters/Skitterbot/SkitterbotFire",
+        "Metadata/Monsters/Skitterbot/SkitterbotLightning",
+        "Metadata/Monsters/SpiderPlated/SpiderPlatedUnholyEmerge",
+        "Metadata/Monsters/SummonedPhantasm/SummonedPhantasmPenanceMark",
+        "Metadata/Monsters/SummonedReaper/SummonedReaper",
+        "Metadata/Monsters/SummonedSkull/SummonedSkull"
+      ],
+      "evidence": "PoB's exporter reads a mod's first six stats only (for i = 1, 6); the game's Mods rows have eight stat slots, and CannotBeAugmented's seventh is monster_no_talismans = 1, which PoB leaves out. Every other line, the .ot stats included, matches (P6-7b1).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/minions.lua:228"
+      ],
+      "count": 16
     }
   ]
 }

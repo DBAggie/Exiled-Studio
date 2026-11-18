@@ -88,6 +88,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b2 PR: #156 (base `feat/p6-7b-plan`)
 - [x] P6-7b2b: the P6-7b2 review (`with_actor` refuses a missing minion, skill sources per actor, engine tests)
 - [x] P6-7b2b PR: #157 (base `feat/p6-7b2-actor`), auras and buffs on it, minion defences
+- [x] P6-7b1 (after the maintainer's depot download, 2026-11-17): the extractor reads every monster `.ot` as PoB does (`monstertemplate.rs`, manifest format 6, 7,176 files); `poe1/minions.json` `object_stats` (3,265 object types, chains resolved as PoB, `values` and `unread` kept, validator); export format 13 (`minion_mods`, `minion_templates`); data-parity table `minion_mods` (332 lists, 17 differences, 2 rules); generated `pob_minions.rs` (331 minions) and the skills' minion lists; evidence bundle `local/p6/packs/b-ot`; the P6-11e review (`MainSkill::can_use`, test fixes); `docs/phase-6/minions.md`, "P6-7b1"
+- [x] P6-7b1 PR #163 (base `feat/p6-11e-dot-weapon`)
+- [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages

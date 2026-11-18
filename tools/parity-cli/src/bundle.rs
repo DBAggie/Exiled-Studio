@@ -903,7 +903,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
             );
             pantheon_summary = Some(summary);
         }
-        if let Some(m) = minions::rows(read)? {
+        if let Some(m) = minions::rows(read, &raw)? {
             let n = m.varieties.len();
             put(
                 &mut files,

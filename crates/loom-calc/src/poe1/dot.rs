@@ -315,12 +315,9 @@ fn attack_weapon_flags(
     if !skill.types.contains("Attack") {
         return Flags::NONE;
     }
-    let usable = |class: &str| {
-        skill.active.is_none_or(|a| {
-            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
-        })
-    };
-    match main_hand_dot_flags(&super::collect::hands(input).main_hand, usable) {
+    match main_hand_dot_flags(&super::collect::hands(input).main_hand, |c| {
+        skill.can_use(c)
+    }) {
         Ok(flags) => flags,
         Err(what) => {
             reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
@@ -596,8 +593,15 @@ fn dot_multiplier(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     /// An attack DoT's main-hand flags (P6-11d review): each `Held` case.
+    /// A shield is never `Held::Weapon`: the hands read it as `Held::Shield`
+    /// (an armour base with block), which gives no flags, as PoB's
+    /// `weaponData1` never holds one; shield skills (Shield Crush, Spectral
+    /// Shield Throw) need a shield through their types, not the main hand's
+    /// flags. A `weapon-types` reason makes the DoT field `Partial`
+    /// (`Reasons::into_state`).
     #[test]
     fn main_hand_dot_flags_should_follow_pobs_weapon_flags() {
         use super::super::collect::Held;
@@ -615,14 +619,17 @@ mod tests {
             hit::weapon_type_flags("One Hand Axe").ok_or("none")
         );
         assert_eq!(main_hand_dot_flags(&w("Bow"), axes), Err("weapon-types"));
-        assert_eq!(main_hand_dot_flags(&w("Shield"), any), Err("weapon-flags"));
+        // A weapon class without PoB flags.
+        assert_eq!(
+            main_hand_dot_flags(&w("Fishing Net"), any),
+            Err("weapon-flags")
+        );
         assert_eq!(
             main_hand_dot_flags(&Held::Unknown, any),
             Err("weapon-flags")
         );
         assert_eq!(main_hand_dot_flags(&Held::Shield, any), Ok(Flags::NONE));
     }
-    use super::*;
 
     fn stats(rows: &[(&str, i64)]) -> Vec<(String, i64)> {
         rows.iter().map(|(s, v)| ((*s).to_owned(), *v)).collect()

@@ -32,6 +32,9 @@ pub mod keystones;
 pub mod mapping;
 pub mod minions;
 pub mod pantheon;
+pub mod pob_minion;
+#[rustfmt::skip]
+pub mod pob_minions;
 pub mod pob_skill;
 #[rustfmt::skip]
 pub mod pob_skills;

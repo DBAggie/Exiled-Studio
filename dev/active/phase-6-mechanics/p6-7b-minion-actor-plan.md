@@ -41,7 +41,7 @@ Phase 6, step P6-7b (plan decision 7: minions are a second actor in the shared c
 
 ## Steps (each its own stacked PR with evidence)
 
-### P6-7b1: data (blocked on the maintainer's data run)
+### P6-7b1: data (done: `docs/phase-6/minions.md`, "P6-7b1")
 
 - **The `.ot` stats.** The extractor reads every `metadata/monsters/**.ot` (`itemtype::is_object_template`).
   - **Bundle:** the stats resolved per object type path, deduplicated, in `poe1/minions.json` (not per variety).

@@ -172,7 +172,14 @@ const USAGE: &str = "usage:
       Write PoB v2.67.2's hand-written skill data (base flags, parts, base
       mods, skill function names) from the PoB data export (format 10) as
       the Rust table crates/loom-calc/src/poe1/pob_skills.rs (Phase 6 plan,
-      decision 5). Exit 0 when written.
+      decision 5); from format 13, each skill's minion lists. Exit 0 when
+      written.
+  loom-parity-cli pob-minions <pob-data.json> --out <file.rs>
+      Write what PoB v2.67.2's minion templates (Export/Minions/*.txt) add
+      to each game variety (the variety, #limit, #hostile, extra skills,
+      #mod extras by line) from the PoB data export (format 13) as the Rust
+      table crates/loom-calc/src/poe1/pob_minions.rs (P6-7b1). Exit 0 when
+      written.
   loom-parity-cli custom-lines <bundle-dir> <pob-parse.json> --out <dir>
       Read every custom modifier line of <pob-parse.json> (the output of
       tools/oracle/data/pob_parse_lines.lua: each line with PoB v2.67.2's
@@ -1630,7 +1637,10 @@ fn main() -> ExitCode {
             tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
         }
         [cmd, export, flag, out] if cmd == "pob-skills" && flag == "--out" => {
-            pob_skills::run(Path::new(export), Path::new(out))
+            pob_skills::run(Path::new(export), Path::new(out), false)
+        }
+        [cmd, export, flag, out] if cmd == "pob-minions" && flag == "--out" => {
+            pob_skills::run(Path::new(export), Path::new(out), true)
         }
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),

@@ -166,3 +166,12 @@ P6-11d gave `Unarmed` and a weapon's flags without the skill's weapon check, and
 - No value or state changed in the public builds or the corpus.
 - Public `calc-parity`: 157 builds, 109 expected differences, 0 unexpected, no unused entry.
 - Both runs were byte-identical.
+
+## The P6-11e review (in P6-7b1's PR)
+
+The #162 review's minor findings, applied with P6-7b1:
+- **One weapon check:** `MainSkill::can_use` is now shared by the hit (`hit.rs`) and the attack DoT (`dot.rs`). Its docs name what is not modelled: a support's own `weaponTypes` (PoB disables the support, not the skill) and `countsAsAll1H` (Varunastra). The main hand's own class decides.
+- **The impossible case is gone:** the DoT test's `Held::Weapon("Shield")` case is replaced by a weapon class without PoB flags. The hands read a shield as `Held::Shield` (an armour base with block), which gives no flags. Shield skills need a shield through their types, not the main hand's flags.
+- **The field state, confirmed:** a `weapon-types` or `weapon-flags` reason makes the DoT field `Partial` through `Reasons::into_state`, or `Indeterminate` with the reason kept when a value is also unsettled.
+- **Test order:** the DoT test module's `use super::*;` now comes first.
+- **No value or state changed** (`docs/phase-6/minions.md`, "P6-7b1", Evidence).

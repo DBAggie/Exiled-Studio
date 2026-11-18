@@ -576,13 +576,9 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     let level = skill::stat_set_level(effect, gem.level, data)?;
     let hands = collect::hands(input);
     let (weapon, base) = hands.main.clone()?;
-    // PoB disables a skill its weapon cannot use (`weaponTypes`); the game
-    // lists the classes per active skill (none: any weapon).
-    let usable = |class: &str| {
-        skill.active.is_none_or(|a| {
-            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
-        })
-    };
+    // PoB disables a skill its weapon cannot use (`weaponTypes`,
+    // [`MainSkill::can_use`]).
+    let usable = |class: &str| skill.can_use(class);
     if !usable(&base.class) {
         return None;
     }
