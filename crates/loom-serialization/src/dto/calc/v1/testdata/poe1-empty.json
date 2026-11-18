@@ -787,7 +787,7 @@
       {
         "field": "poe1.movement-speed",
         "value": 1.0,
-        "node": 279,
+        "node": 277,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -2997,6 +2997,15 @@
         "value": 1.0
       },
       {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          275,
+          276
+        ],
+        "value": 1.0
+      },
+      {
         "kind": "sum",
         "term": "step.increased-sum",
         "value": 0.0
@@ -3005,16 +3014,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          277
-        ],
-        "value": 1.0
-      },
-      {
-        "kind": "product",
-        "term": "result",
-        "children": [
-          275,
-          276
+          278
         ],
         "value": 1.0
       },
@@ -3030,7 +3030,7 @@
         "kind": "max",
         "term": "step.action-speed",
         "children": [
-          278,
+          279,
           280
         ],
         "value": 1.0
@@ -3039,7 +3039,7 @@
         "kind": "product",
         "term": "result",
         "children": [
-          279,
+          277,
           281
         ],
         "value": 1.0

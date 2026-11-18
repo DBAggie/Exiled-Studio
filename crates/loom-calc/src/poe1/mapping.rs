@@ -3432,30 +3432,28 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
     ),
 ];
 
+/// The field-scoped reason marker `stat` maps to, if any (P6-10b):
+/// [`COST_REASONS`], [`MOVEMENT_REASONS`], or [`REGEN_REASONS`], each a
+/// `Flag` only that field's phase reads.
+#[must_use]
+pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
+    if let Ok(i) = COST_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::CostReason(COST_REASONS[i]));
+    }
+    if let Ok(i) = MOVEMENT_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::MovementReason(MOVEMENT_REASONS[i]));
+    }
+    REGEN_REASONS
+        .binary_search_by(|(id, _)| (*id).cmp(stat))
+        .ok()
+        .map(|i| Poe1Quantity::RegenReason(REGEN_REASONS[i].1, REGEN_REASONS[i].0))
+}
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
-        if let Ok(i) = COST_REASONS.binary_search(&stat.as_str()) {
+        if let Some(q) = field_marker(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
-                quantity: Quantity::Poe1(Poe1Quantity::CostReason(COST_REASONS[i])),
-                op: Op::Flag,
-                scale: 1.0,
-                divisor: 1.0,
-                conditions: Conditions::none(),
-            }]);
-        }
-        if let Ok(i) = MOVEMENT_REASONS.binary_search(&stat.as_str()) {
-            return StatMap::Effects(vec![EffectTemplate {
-                quantity: Quantity::Poe1(Poe1Quantity::MovementReason(MOVEMENT_REASONS[i])),
-                op: Op::Flag,
-                scale: 1.0,
-                divisor: 1.0,
-                conditions: Conditions::none(),
-            }]);
-        }
-        if let Ok(i) = REGEN_REASONS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
-            let (id, pool) = REGEN_REASONS[i];
-            return StatMap::Effects(vec![EffectTemplate {
-                quantity: Quantity::Poe1(Poe1Quantity::RegenReason(pool, id)),
+                quantity: Quantity::Poe1(q),
                 op: Op::Flag,
                 scale: 1.0,
                 divisor: 1.0,
@@ -3947,6 +3945,34 @@ mod tests {
         assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(MOVEMENT_REASONS.windows(2).all(|w| w[0] < w[1]));
         assert!(COST_REASONS.windows(2).all(|w| w[0] < w[1]));
+        // Each marker stat maps to its own field's marker, and to nothing
+        // else: the three tables are disjoint (P6-10b review).
+        for stat in COST_REASONS {
+            assert_eq!(
+                field_marker(stat),
+                Some(Poe1Quantity::CostReason(stat)),
+                "{stat}"
+            );
+        }
+        for stat in MOVEMENT_REASONS {
+            assert_eq!(
+                field_marker(stat),
+                Some(Poe1Quantity::MovementReason(stat)),
+                "{stat}"
+            );
+            assert!(!COST_REASONS.contains(stat), "{stat}");
+        }
+        for (stat, pool) in REGEN_REASONS {
+            assert_eq!(
+                field_marker(stat),
+                Some(Poe1Quantity::RegenReason(*pool, stat)),
+                "{stat}"
+            );
+            assert!(
+                !COST_REASONS.contains(stat) && !MOVEMENT_REASONS.contains(stat),
+                "{stat}"
+            );
+        }
         for (stat, _) in HIT_ROWS {
             assert!(
                 ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err()

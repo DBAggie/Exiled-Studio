@@ -21,9 +21,14 @@
 //! stats are unmapped, reasons): `round(energy shield x base x (1 + inc /
 //! 100) x more x EnergyShieldRecoveryRateMod)` of `EnergyShieldRecharge`,
 //! the base the character constant `energy_shield_recharge_rate_per_minute_%`
-//! / 60 / 100 (`Data.lua` 248, which PoB's table keeps over line 249's
-//! 0.33: its outputs are the constant's); the delay `2 / (1 + inc / 100)`
-//! of `EnergyShieldRechargeFaster` (`data.misc.EnergyShieldRechargeDelay`).
+//! / 60 / 100, 2000 / 6000 (`Data.lua` 248). Line 249 sets the same key
+//! to 0.33, but under LuaJIT a table constructor's constant entries fill a
+//! template first and its computed ones are stored after, so 248's value
+//! is the one PoB uses: its outputs are the constant's (980 energy shield
+//! recharges 327, where 0.33 would give 323; `evasion-es-shadow.xml`).
+//! The delay is `2 / (1 + inc / 100)` of `EnergyShieldRechargeFaster`
+//! (`data.misc.EnergyShieldRechargeDelay`). PoB's `EnergyShieldRecharge`
+//! override has no mapped stat: its stat stays an `unmapped-stat` reason.
 //!
 //! Not modelled, so reasons where they appear (each source an unmapped
 //! stat or a gem's reason): no regeneration (`No<Pool>Regen`,
@@ -39,8 +44,7 @@ use crate::error::CalcError;
 use crate::graph::{Node, Term};
 use crate::quantity::{Op, Quantity};
 use crate::result::Field;
-use crate::state::{IndeterminateReason, Reasons, UnsupportedReason};
-use loom_domain::StatId;
+use crate::state::{IndeterminateReason, Reasons};
 
 /// The character constant of mana's base regeneration, percent per minute.
 pub const MANA_BASE_STAT: &str = "mana_regeneration_rate_per_minute_%";
@@ -65,8 +69,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             .value
             > 0.0
     };
-    // Life's flat and percent sums under Zealot's Oath, for energy shield.
-    let mut moved: Vec<(Valued, Valued)> = Vec::new();
+    // Life's flat and percent sums under Zealot's Oath, with life's reasons,
+    // for energy shield. The pools run in PoB's order (mana, life, energy
+    // shield), so life's sums are in before energy shield reads them.
+    let mut moved: Vec<(Valued, Valued, Reasons)> = Vec::new();
     for (pool, field, pool_field) in [
         (Pool::Mana, Poe1Field::ManaRegen, Field::Mana),
         (Pool::Life, Poe1Field::LifeRegen, Field::Life),
@@ -141,7 +147,8 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         }
         if pool == Pool::EnergyShield {
             // Zealot's Oath: life's sums, each when above 0.
-            for (flat, percent) in moved.drain(..) {
+            for (flat, percent, life) in moved.drain(..) {
+                reasons.extend(&life);
                 if flat.value > 0.0 {
                     flat_terms.push(flat);
                 }
@@ -153,7 +160,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let flat = phases::total(calc, &flat_terms, Term::Step("flat-sum"))?;
         let percent = phases::total(calc, &percent_terms, Term::Step("percent-sum"))?;
         if pool == Pool::Life && zealots_oath {
-            moved.push((flat, percent));
+            moved.push((flat, percent, reasons.clone()));
             let zero = phases::constant(calc, "zealots-oath", 0.0)?;
             calc.set_derived(
                 Field::Poe1(field),
@@ -196,22 +203,25 @@ fn recharge(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         return Ok(());
     };
     let es = Valued { node, value };
-    let mut reasons = Reasons::new();
-    for (quantities, reason) in calc.store().elsewhere() {
-        if quantities.iter().any(|q| {
+    let mut reasons = phases::marker_reasons(
+        calc,
+        |_| None,
+        |q| {
             matches!(
                 q,
                 Quantity::Poe1(
                     Poe1Quantity::EnergyShieldRecharge
-                        | Poe1Quantity::EnergyShieldRechargeFaster
                         | Poe1Quantity::RecoveryRate(Pool::EnergyShield)
                 )
             )
-        }) {
-            reasons.indeterminate.insert(reason.clone());
-        }
-    }
-    let mut delay_reasons = reasons.clone();
+        },
+    );
+    // The delay reads only the faster start.
+    let mut delay_reasons = phases::marker_reasons(
+        calc,
+        |_| None,
+        |q| q == Quantity::Poe1(Poe1Quantity::EnergyShieldRechargeFaster),
+    );
     let mut factors = vec![es];
     if let Some(base) = per_minute_constant(calc, RECHARGE_BASE_STAT, &mut reasons)? {
         factors.push(base);
@@ -256,23 +266,14 @@ fn recharge(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// The pool's regeneration reasons (module docs): stats it does not model,
 /// and its stats' unsettled values.
 fn pool_reasons(calc: &Calc<'_>, pool: Pool) -> Reasons {
-    let mut reasons = Reasons::new();
-    for e in calc.store().effects() {
-        if let Quantity::Poe1(Poe1Quantity::RegenReason(p, stat)) = e.quantity
-            && p == pool
-        {
-            reasons.partial.insert(UnsupportedReason::UnmappedStat {
-                stat: StatId::new(stat),
-                source: e.source.clone(),
-            });
-        }
-    }
-    for (quantities, reason) in calc.store().elsewhere() {
-        if quantities.iter().any(|q| reads(*q, pool)) {
-            reasons.indeterminate.insert(reason.clone());
-        }
-    }
-    reasons
+    phases::marker_reasons(
+        calc,
+        |q| match q {
+            Quantity::Poe1(Poe1Quantity::RegenReason(p, stat)) if p == pool => Some(stat),
+            _ => None,
+        },
+        |q| reads(q, pool),
+    )
 }
 
 /// A character constant in percent per minute as a fraction per second,

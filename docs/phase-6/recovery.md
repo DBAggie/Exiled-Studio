@@ -173,3 +173,30 @@ One new field: `mana-cost`, PoB's `ManaCost` (slice revision 9, applies present,
 - **Corpus:** 0 unexpected, no value moved, no state changed.
 - **data-parity:** `gem_effects` 1,473 values, 0 differences; uncategorized 353, unchanged.
 - **Real-bundle tests** pass; the reservation stats test accepts a field's reason marker. The workspace tests and clippy pass.
+
+## The review of parts 1 to 4
+
+The code-architecture-reviewer read the four parts against PoB's Lua. It found nothing critical. Its findings and what changed:
+
+- **Cost efficiency read its MORE multipliers.** PoB's `calcLib.mod` is `(1 + inc / 100) x more`; the cost read only the increase. It now multiplies both names' more.
+- **The cost's clamp order.** PoB holds `cost / efficiency` at 0 or above before it adds the total; the engine clamped only at the end. It now clamps after the division, as PoB. An efficiency at or below 0 leaves the field unsupported (`cost-efficiency`), where PoB would divide by it.
+- **Zealot's Oath kept life's reasons.** Life's flat and percent sums moved to energy shield without their reasons, so a life regeneration stat the engine does not model left energy shield's regeneration looking complete (ADR-015). They now travel together.
+- **Cost inputs with no stat.** PoB's `<Resource>CostBase` (Archmage, Frostmage), `Base<Resource>CostOverride`, and `HasNoCost` have no mapped stat, so their stats stay `unmapped-stat` reasons on every field; the module docs say so. The movement speed override and the recharge override are named likewise.
+- **Shared code:**
+  - `phases::marker_reasons` reads every field's markers and unsettled values, used by `regen`, `movement`, and `costs`;
+  - `mapping::field_marker` maps a stat to its marker, with a test that the three tables are disjoint;
+  - `hit::action_speed_modifier` is the one action speed modifier, which the hit's rate and the effective movement speed share.
+- **The recharge delay's reasons** are the faster start's alone, not energy shield's recovery rate.
+- **`Data.lua`'s two recharge bases.** Lines 248 and 249 set one key. Under LuaJIT a table constructor's constant entries fill a template first and its computed ones are stored after, so line 248's constant is the value PoB uses. Its outputs show it: 980 energy shield recharges 327, where 0.33 would give 323. The docs now say this.
+- **Tests:**
+  - Zealot's Oath moving life's regeneration and its reasons;
+  - a field marker being that field's reason alone;
+  - movement speed with action speed and its floor at 0;
+  - the cost's rounding direction;
+  - which quantities each field reads.
+
+**Evidence** (`local/p6/p6-10b-rv/`):
+- Public and corpus `calc-parity` are unchanged: 194 builds, 0 unexpected, 4,990 `Complete`; no value moved, no state changed.
+- The synthetic golden's graph nodes moved (the efficiency's more, the clamp); its values, states, and reasons are unchanged.
+- Workspace tests, clippy, and the real-bundle tests pass.
+

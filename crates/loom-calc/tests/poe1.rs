@@ -2484,3 +2484,109 @@ fn a_granted_passive_should_read_the_tree_packs_stats() {
     let r = run_with(&b, &options);
     assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
 }
+
+/// A level 90 Witch with `stats` as one enabled block of resolved custom
+/// lines (P6-10b review tests).
+fn witch_with(stats: &[(&str, i64)]) -> CalcResult {
+    use loom_domain::{CustomModifierBlock, CustomModifierLine};
+    let mut b = witch(90);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![CustomModifierBlock {
+            title: None,
+            enabled: true,
+            text: String::new(),
+            lines: stats
+                .iter()
+                .map(|(id, v)| CustomModifierLine {
+                    text: (*id).to_owned(),
+                    resolution: LineResolution::Resolved {
+                        result: Resolved::Stats(vec![stat(id, *v)]),
+                        adapted: None,
+                    },
+                })
+                .collect(),
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    run(&b)
+}
+
+/// Zealot's Oath (P6-10b): life regenerates nothing and its flat
+/// regeneration is energy shield's; life's reasons go with it (review).
+#[test]
+fn zealots_oath_should_move_life_regeneration_and_its_reasons() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    let es_regen = Field::Poe1(Poe1Field::EnergyShieldRegen);
+    // 600 per minute: 10 life per second.
+    let flat = ("base_life_regeneration_rate_per_minute", 600);
+    let es = ("base_maximum_energy_shield", 100);
+    let r = witch_with(&[flat, es]);
+    assert_eq!(value_of(&r, life_regen), 10.0);
+    assert_eq!(value_of(&r, es_regen), 0.0);
+    assert_eq!(state(&r, es_regen), StateKind::Complete);
+
+    let oath = ("regenerate_energy_shield_instead_of_life", 1);
+    let r = witch_with(&[flat, es, oath]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(value_of(&r, es_regen), 10.0);
+    assert_eq!(state(&r, es_regen), StateKind::Complete);
+
+    // A life regeneration stat the engine does not model: life's reason,
+    // carried to energy shield; no other field's.
+    let per_level = ("life_regeneration_rate_per_minute_per_level", 1);
+    let r = witch_with(&[flat, es, oath, per_level]);
+    assert_eq!(state(&r, life_regen), StateKind::Partial);
+    assert_eq!(state(&r, es_regen), StateKind::Partial);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(
+        state(&r, Field::Poe1(Poe1Field::ManaRegen)),
+        StateKind::Complete
+    );
+}
+
+/// A field's reason marker reaches that field alone (P6-10b review).
+#[test]
+fn a_field_marker_should_be_that_fields_reason_only() {
+    let r = witch_with(&[("ignore_armour_movement_penalties", 1)]);
+    for field in [
+        Poe1Field::MovementSpeedMod,
+        Poe1Field::EffectiveMovementSpeedMod,
+    ] {
+        assert_eq!(
+            state(&r, Field::Poe1(field)),
+            StateKind::Partial,
+            "{field:?}"
+        );
+    }
+    for field in [
+        Field::Life,
+        Field::Mana,
+        Field::Poe1(Poe1Field::LifeRegen),
+        Field::Poe1(Poe1Field::ManaRegen),
+    ] {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+}
+
+/// Movement speed (P6-10b): `(1 + inc / 100) x more`, and the effective
+/// one times the action speed modifier, never below 0.
+#[test]
+fn movement_speed_should_follow_pob() {
+    let movement = Field::Poe1(Poe1Field::MovementSpeedMod);
+    let effective = Field::Poe1(Poe1Field::EffectiveMovementSpeedMod);
+    let r = witch_with(&[]);
+    assert_eq!(value_of(&r, movement), 1.0);
+    assert_eq!(value_of(&r, effective), 1.0);
+    // 20% increased movement speed, 10% reduced action speed.
+    let r = witch_with(&[("base_movement_velocity_+%", 20), ("action_speed_-%", 10)]);
+    assert_eq!(value_of(&r, movement), 1.2);
+    assert_eq!(value_of(&r, effective), 1.2 * 0.9);
+    assert_eq!(state(&r, effective), StateKind::Complete);
+    // 150% reduced action speed: the modifier stops at 0.
+    let r = witch_with(&[("action_speed_-%", 150)]);
+    assert_eq!(value_of(&r, effective), 0.0);
+}

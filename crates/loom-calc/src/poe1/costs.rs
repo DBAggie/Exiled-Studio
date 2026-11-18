@@ -10,15 +10,20 @@
 //! - then `(1 + inc / 100)`, `inc` the `INC` sum of `ManaCost` and `Cost`,
 //!   rounded up when `inc` is below 0 and down otherwise; the `ManaCost`
 //!   more, then the `Cost` more, each rounded up below 1 and down
-//!   otherwise; divided by the cost efficiency, `calcLib.mod` of
-//!   `ManaCostEfficiency` and `CostEfficiency`; plus the total, the `BASE`
-//!   sum of `ManaCost` and `Cost`; never below 0.
+//!   otherwise ([`rounded`]); divided by the cost efficiency,
+//!   `calcLib.mod` of `ManaCostEfficiency` and `CostEfficiency` (`(1 +
+//!   inc / 100) x more`), held at 0 or above; plus the total, the `BASE`
+//!   sum of `ManaCost` and `Cost`; never below 0. An efficiency at or
+//!   below 0 leaves the field unsupported.
 //!
 //! Not modelled, so reasons on this field only
 //! ([`super::mapping::COST_REASONS`] and the skill's own data): a cost in
 //! another resource (life, energy shield, rage, percentages, per second),
 //! skills whose reservation becomes their cost, costs paid in life or
-//! energy shield instead, and conditional or socketed cost lines.
+//! energy shield instead, and conditional or socketed cost lines. PoB's
+//! `<Resource>CostBase` (Archmage's and Frostmage's base cost from mana),
+//! `Base<Resource>CostOverride`, and `HasNoCost` have no mapped stat: their
+//! stats stay `unmapped-stat` reasons (every field's).
 
 use super::phases::{self, Valued};
 use super::{Poe1Field, Poe1Quantity};
@@ -30,7 +35,6 @@ use crate::quantity::{Op, Quantity};
 use crate::result::Field;
 use crate::source::Source;
 use crate::state::{Reasons, UnsupportedReason};
-use loom_domain::StatId;
 
 /// The cost phase (module docs).
 ///
@@ -58,20 +62,14 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         );
         return Ok(());
     };
-    let mut reasons = Reasons::new();
-    for e in calc.store().effects() {
-        if let Quantity::Poe1(Poe1Quantity::CostReason(stat)) = e.quantity {
-            reasons.partial.insert(UnsupportedReason::UnmappedStat {
-                stat: StatId::new(stat),
-                source: e.source.clone(),
-            });
-        }
-    }
-    for (quantities, reason) in calc.store().elsewhere() {
-        if quantities.iter().any(|q| is_cost(*q)) {
-            reasons.indeterminate.insert(reason.clone());
-        }
-    }
+    let mut reasons = phases::marker_reasons(
+        calc,
+        |q| match q {
+            Quantity::Poe1(Poe1Quantity::CostReason(stat)) => Some(stat),
+            _ => None,
+        },
+        is_cost,
+    );
     let mut amount = 0;
     for c in &level.costs {
         if c.resource == "Mana" {
@@ -157,7 +155,36 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     )?;
     let eff = phases::total(calc, &[eff_mana, eff_any], Term::Step("efficiency"))?;
     let eff_part = phases::product(calc, &[eff, hundredth], Term::Step("efficiency-part"))?;
-    let eff_factor = phases::total(calc, &[one, eff_part], Term::Step("efficiency-factor"))?;
+    let eff_inc = phases::total(calc, &[one, eff_part], Term::Step("efficiency-increased"))?;
+    let eff_more_mana = more(
+        calc,
+        mana(Poe1Quantity::ManaCostEfficiency),
+        flags,
+        &mut reasons,
+    )?;
+    let eff_more_any = more(
+        calc,
+        mana(Poe1Quantity::CostEfficiency),
+        flags,
+        &mut reasons,
+    )?;
+    let eff_factor = phases::product(
+        calc,
+        &[eff_inc, eff_more_mana, eff_more_any],
+        Term::Step("efficiency-factor"),
+    )?;
+    // An efficiency at or below 0: PoB divides by it (a cost no build
+    // reaches); the field says so rather than giving infinity.
+    if eff_factor.value <= 0.0 {
+        calc.set_unsupported(
+            field,
+            UnsupportedReason::UnmodelledSkill {
+                source,
+                what: "cost-efficiency",
+            },
+        );
+        return Ok(());
+    }
     let value = cost.value / eff_factor.value;
     let node = calc.graph_mut().push(
         Node::Quotient {
@@ -167,7 +194,15 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         },
         value,
     )?;
-    cost = Valued { node, value };
+    // `max(0, cost / efficiency)` before the total (`CalcOffence.lua` 1779).
+    let zero = phases::constant(calc, "no-negative-cost", 0.0)?;
+    cost = phases::pair(
+        calc,
+        Valued { node, value },
+        zero,
+        Term::Step("after-efficiency-not-negative"),
+        false,
+    )?;
     let total_mana = sum(
         calc,
         mana(Poe1Quantity::ManaCost),
@@ -246,13 +281,11 @@ fn more(
 /// `ceil(x)` when `up`, else `floor(x)`, never below 0 (PoB's `m_max(0,
 /// m_ceil(..))` and `m_max(0, m_floor(..))`).
 fn round(calc: &mut Calc<'_>, x: Valued, up: bool, term: Term) -> Result<Valued, CalcError> {
-    let (value, node) = if up {
-        (crate::math::ceil(x.value), Node::Ceil { term, of: x.node })
+    let value = rounded(x.value, up);
+    let node = if up {
+        Node::Ceil { term, of: x.node }
     } else {
-        (
-            crate::math::floor(x.value),
-            Node::Floor { term, of: x.node },
-        )
+        Node::Floor { term, of: x.node }
     };
     let node = calc.graph_mut().push(node, value)?;
     let zero = phases::constant(calc, "no-negative-cost", 0.0)?;
@@ -263,4 +296,52 @@ fn round(calc: &mut Calc<'_>, x: Valued, up: bool, term: Term) -> Result<Valued,
         Term::Step("not-negative"),
         false,
     )
+}
+
+/// PoB's rounding of a cost step: `ceil` when `up` (a net reduction:
+/// increased below 0, a more below 1), else `floor`. The step is then
+/// held at 0 or above ([`round`]).
+#[must_use]
+pub fn rounded(x: f64, up: bool) -> f64 {
+    if up {
+        crate::math::ceil(x)
+    } else {
+        crate::math::floor(x)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A net reduction rounds up and an increase down, as PoB's
+    /// `m_ceil`/`m_floor` (`CalcOffence.lua` 1764 to 1777).
+    #[test]
+    fn a_cost_step_should_round_toward_the_base() {
+        // 23 x 0.88 = 20.24: reduced, so up to 21.
+        assert_eq!(rounded(23.0 * 0.88, true), 21.0);
+        // 23 x 1.1 = 25.3: increased, so down to 25.
+        assert_eq!(rounded(23.0 * 1.1, false), 25.0);
+        // A whole value stays.
+        assert_eq!(rounded(20.0, true), 20.0);
+        assert_eq!(rounded(20.0, false), 20.0);
+    }
+
+    /// Every cost quantity, and only those, is the field's to read
+    /// (unsettled values reach it alone).
+    #[test]
+    fn the_cost_should_read_its_quantities_only() {
+        for q in [
+            Poe1Quantity::ManaCost,
+            Poe1Quantity::Cost,
+            Poe1Quantity::ManaCostNoMult,
+            Poe1Quantity::ManaCostEfficiency,
+            Poe1Quantity::CostEfficiency,
+            Poe1Quantity::CostReason("x"),
+        ] {
+            assert!(is_cost(Quantity::Poe1(q)), "{q}");
+        }
+        assert!(!is_cost(Quantity::Poe1(Poe1Quantity::MovementSpeed)));
+        assert!(!is_cost(Quantity::Damage));
+    }
 }

@@ -2158,15 +2158,30 @@ fn action_speed(
     rate: Valued,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let quantity = Quantity::Poe1(Poe1Quantity::ActionSpeed);
-    if !phases::has(calc, quantity) {
+    if !phases::has(calc, Quantity::Poe1(Poe1Quantity::ActionSpeed)) {
         return Ok(rate);
     }
-    let cx = calc.context(Flags::NONE);
-    let modifier = increased(calc, quantity, &cx, reasons)?;
-    let zero = phases::constant(calc, "no-minimum-action-speed", 0.0)?;
-    let modifier = phases::pair(calc, modifier, zero, Term::Step("action-speed"), false)?;
+    let modifier = action_speed_modifier(calc, reasons)?;
     phases::product(calc, &[rate, modifier], Term::Step("action-speed-scaled"))
+}
+
+/// PoB's `calcs.actionSpeedMod` as the engine reads it (module docs of
+/// [`action_speed`]): `max(0, 1 + ActionSpeed INC / 100)`, the character's,
+/// with no skill flag. The hit's rate and the effective movement speed
+/// ([`super::movement`]) share it.
+pub(super) fn action_speed_modifier(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let cx = calc.context(Flags::NONE);
+    let modifier = increased(
+        calc,
+        Quantity::Poe1(Poe1Quantity::ActionSpeed),
+        &cx,
+        reasons,
+    )?;
+    let zero = phases::constant(calc, "no-minimum-action-speed", 0.0)?;
+    phases::pair(calc, modifier, zero, Term::Step("action-speed"), false)
 }
 
 /// PoB's `ScaledDamageEffect` from double damage (`CalcOffence.lua` 3196

@@ -421,6 +421,35 @@ pub(super) fn sum(
     })
 }
 
+/// A field's own reasons (P6-10b, review): each effect `marker` names as a
+/// field-scoped reason marker (its stat) is an `unmapped-stat` reason, and
+/// each unsettled value on a quantity `reads` accepts
+/// ([`crate::store::ModStore::elsewhere`]) is an indeterminate one. The
+/// regeneration, movement, and cost fields read their markers through it.
+pub(super) fn marker_reasons(
+    calc: &Calc<'_>,
+    marker: impl Fn(Quantity) -> Option<&'static str>,
+    reads: impl Fn(Quantity) -> bool,
+) -> Reasons {
+    let mut reasons = Reasons::new();
+    for e in calc.store().effects() {
+        if let Some(stat) = marker(e.quantity) {
+            reasons
+                .partial
+                .insert(crate::state::UnsupportedReason::UnmappedStat {
+                    stat: loom_domain::StatId::new(stat),
+                    source: e.source.clone(),
+                });
+        }
+    }
+    for (quantities, reason) in calc.store().elsewhere() {
+        if quantities.iter().any(|q| reads(*q)) {
+            reasons.indeterminate.insert(reason.clone());
+        }
+    }
+    reasons
+}
+
 /// Whether the store holds any effect on `quantity`.
 pub(super) fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
     calc.store()
