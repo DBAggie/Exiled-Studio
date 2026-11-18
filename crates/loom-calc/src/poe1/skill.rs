@@ -136,17 +136,120 @@ pub struct MainSkill<'d> {
     pub types: BTreeSet<String>,
 }
 
+/// PoB's weapon type for a game item class: its exporter's
+/// `weaponClassMap` (`Export/Scripts/skills.lua` 15 to 31) for a skill's
+/// list, and the item bases' `type` for a held weapon (a Warstaff is a
+/// `Staff`, a Rune Dagger a `Dagger`). None: a class PoB has no weapon type
+/// for (a shield, a quiver).
+fn pob_weapon_type(class: &str) -> Option<&'static str> {
+    Some(match class {
+        "Claw" => "Claw",
+        "Dagger" | "Rune Dagger" => "Dagger",
+        "Wand" => "Wand",
+        "One Hand Sword" => "One Handed Sword",
+        "Thrusting One Hand Sword" => "Thrusting One Handed Sword",
+        "One Hand Axe" => "One Handed Axe",
+        "One Hand Mace" => "One Handed Mace",
+        "Bow" => "Bow",
+        "Fishing Rod" => "Fishing Rod",
+        "Staff" | "Warstaff" => "Staff",
+        "Two Hand Sword" => "Two Handed Sword",
+        "Two Hand Axe" => "Two Handed Axe",
+        "Two Hand Mace" => "Two Handed Mace",
+        "Sceptre" => "Sceptre",
+        "Unarmed" => "None",
+        _ => return None,
+    })
+}
+
 /// [`MainSkill::can_use`] for an active skill row (none: not restricted).
+/// PoB's list keeps only the classes its exporter maps, so a list of other
+/// classes (Shield Crush's `Shield`) restricts nothing; a held class
+/// without a PoB type is not checked (`getWeaponFlags` finds no info).
 fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
-    active
-        .is_none_or(|a| a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class))
+    let Some(held) = pob_weapon_type(class) else {
+        return true;
+    };
+    let Some(active) = active else { return true };
+    let mut listed = active
+        .weapon_classes
+        .iter()
+        .filter_map(|c| pob_weapon_type(c))
+        .peekable();
+    listed.peek().is_none() || listed.any(|t| t == held)
+}
+
+/// [`MainSkill::disabled_by_hands`] for an active skill row and its types.
+fn disabled_by_hands(
+    active: Option<&ActiveSkill>,
+    types: &BTreeSet<String>,
+    hands: &super::collect::Hands,
+) -> Result<bool, &'static str> {
+    use super::collect::Held;
+    let has = |t: &str| types.contains(t);
+    let restricted = active.is_some_and(|a| {
+        a.weapon_classes
+            .iter()
+            .any(|c| pob_weapon_type(c).is_some())
+    });
+    if has("RequiresShield") {
+        match hands.off_hand {
+            Held::Shield => {}
+            Held::Unknown => return Err("requires-shield"),
+            Held::Empty | Held::Weapon(_) | Held::Other => return Ok(true),
+        }
+    }
+    let dual_only = has("DualWieldOnly");
+    // The main hand: PoB's `weaponData1` is the weapon, or the class's
+    // unarmed data (type `None`, the game's `Unarmed`) for an empty hand.
+    let main = match &hands.main_hand {
+        Held::Empty => Some("Unarmed"),
+        Held::Weapon(class) => Some(class.as_str()),
+        Held::Unknown if restricted || dual_only => return Err("weapon-flags"),
+        Held::Unknown | Held::Shield | Held::Other => None,
+    };
+    match main {
+        Some(class) if !can_use(active, class) => return Ok(true),
+        None if dual_only => return Ok(true),
+        _ => {}
+    }
+    // The off hand: PoB's `weaponData2` is `{}` (no weapon info) for an
+    // empty hand or an item that is not a weapon, which never disables.
+    match &hands.off_hand {
+        Held::Weapon(class) if !can_use(active, class) => Ok(true),
+        Held::Weapon(class) => Ok(has("DualWieldRequiresDifferentTypes") && main == Some(class)),
+        Held::Unknown if restricted || dual_only => Err("weapon-flags"),
+        Held::Unknown => Ok(false),
+        Held::Empty | Held::Shield | Held::Other => Ok(dual_only),
+    }
 }
 
 impl<'d> MainSkill<'d> {
+    /// Whether PoB disables the skill for what the hands hold
+    /// (`CalcActiveSkill.lua` 269 to 334): it requires a shield and the off
+    /// hand holds none; the main hand's weapon, or `Unarmed` for an empty
+    /// hand, is not one it can use; the off hand holds a weapon it cannot
+    /// use; it is `DualWieldOnly` without a weapon in each hand, or
+    /// `DualWieldRequiresDifferentTypes` with one class in both. PoB then
+    /// computes no offence for it (`CalcOffence.lua` 339). `Err`: a hand's
+    /// base is not known, so the answer is not either.
+    ///
+    /// Not modelled, as in [`Self::can_use`]: supports' weapon types,
+    /// `countsAsAll1H`, Hollow Palm Technique's unarmed off hand, and
+    /// item-granted skills tied to their weapon (`forceSourceWeapon`).
+    ///
+    /// # Errors
+    /// `"requires-shield"` or `"weapon-flags"`: a hand's base is not known.
+    pub fn disabled_by_hands(&self, hands: &super::collect::Hands) -> Result<bool, &'static str> {
+        disabled_by_hands(self.active, &self.types, hands)
+    }
+
     /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
     /// `CalcActiveSkill.lua` 192 to 223; P6-11e review): the game lists the
     /// classes per active skill (none: any weapon; `Unarmed` for an empty
-    /// hand). A skill without an active skill row is not restricted.
+    /// hand), compared as PoB's weapon types (`pob_weapon_type`: a list
+    /// of classes PoB does not map restricts nothing). A skill without an
+    /// active skill row is not restricted.
     ///
     /// Not modelled: a support's own `weaponTypes` (PoB adds each applied
     /// support's list, 287 to 291, and the weapon must be in every list),
@@ -886,5 +989,111 @@ mod tests {
         assert!(can_use(Some(&axes), "One Hand Axe"));
         assert!(can_use(Some(&axes), "Unarmed"));
         assert!(!can_use(Some(&axes), "Bow"));
+        // Classes PoB's exporter does not map restrict nothing.
+        let shields = active(&["Shield"]);
+        assert!(can_use(Some(&shields), "One Hand Sword"));
+        assert!(can_use(Some(&shields), "Unarmed"));
+        // A Warstaff is PoB's Staff.
+        let staves = active(&["Staff"]);
+        assert!(can_use(Some(&staves), "Warstaff"));
+        assert!(can_use(Some(&active(&["Warstaff"])), "Staff"));
+        assert!(!can_use(Some(&staves), "Bow"));
+    }
+
+    /// PoB's disabled skill (`CalcActiveSkill.lua` 269 to 334): an empty
+    /// main hand is `Unarmed`, an empty off hand never disables, and a
+    /// hand whose base is not known leaves the answer open for a skill
+    /// that lists weapon classes.
+    #[test]
+    fn disabled_by_hands_should_follow_pobs_weapon_checks() {
+        use super::super::collect::{Hands, Held};
+        let types = |t: &[&str]| t.iter().map(|s| (*s).to_owned()).collect::<BTreeSet<_>>();
+        let hands = |main: Held, off: Held| Hands {
+            main_hand: main,
+            off_hand: off,
+            ..Hands::default()
+        };
+        let weapon = |c: &str| Held::Weapon(c.to_owned());
+        let swords = active(&["One Hand Sword"]);
+        let attack = types(&["Attack"]);
+        let check =
+            |a: Option<&ActiveSkill>, t: &BTreeSet<String>, h: &Hands| disabled_by_hands(a, t, h);
+        // Unarmed is not among its classes: disabled (Holy Strike).
+        assert_eq!(
+            check(Some(&swords), &attack, &hands(Held::Empty, Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), Held::Empty)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), weapon("Bow"))
+            ),
+            Ok(true)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), Held::Shield)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(Some(&swords), &attack, &hands(Held::Unknown, Held::Empty)),
+            Err("weapon-flags")
+        );
+        // No classes: any hand, an unknown one too.
+        assert_eq!(
+            check(
+                Some(&active(&[])),
+                &attack,
+                &hands(Held::Unknown, Held::Empty)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(None, &types(&["Spell"]), &hands(Held::Empty, Held::Empty)),
+            Ok(false)
+        );
+        let shield = types(&["Attack", "RequiresShield"]);
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Shield)),
+            Ok(false)
+        );
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Unknown)),
+            Err("requires-shield")
+        );
+        let dual = types(&["Attack", "DualWieldOnly"]);
+        assert_eq!(
+            check(None, &dual, &hands(weapon("Claw"), Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &dual, &hands(weapon("Claw"), weapon("Claw"))),
+            Ok(false)
+        );
+        let different = types(&["Attack", "DualWieldRequiresDifferentTypes"]);
+        assert_eq!(
+            check(None, &different, &hands(weapon("Claw"), weapon("Claw"))),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &different, &hands(weapon("Claw"), weapon("Dagger"))),
+            Ok(false)
+        );
     }
 }

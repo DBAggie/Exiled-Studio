@@ -200,3 +200,31 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - The synthetic golden's graph nodes moved (the efficiency's more, the clamp); its values, states, and reasons are unchanged.
 - Workspace tests, clippy, and the real-bundle tests pass.
 
+## A disabled skill's cost; PoB's weapon types (P6-12 follow-up)
+
+**Found by the minion sweep** (`local/p6/minion-fx`, 52 builds): `minion-holy-strike-witch.xml` gave a mana cost of 10 where PoB writes none, the sweep's one unexpected difference.
+
+**Why PoB writes no cost:**
+- PoB disables a skill the hands cannot use (`CalcActiveSkill.lua` 269 to 334):
+  - it requires a shield and the off hand holds none;
+  - the main hand's weapon type is not in the skill's `weaponTypes`, an empty hand being the class's unarmed data, type `None`;
+  - the off hand holds a weapon it cannot use (an empty off hand is `{}` and never disables);
+  - it is `DualWieldOnly` without two weapons, or `DualWieldRequiresDifferentTypes` with one type twice.
+- Its offence then returns at once (`CalcOffence.lua` 339), so it has no cost and no other offence output.
+- Holy Strike takes maces, staves, and sceptres, and the witch is unarmed. Blink Arrow and Mirror Arrow need a bow.
+
+**The engine:**
+- `MainSkill::disabled_by_hands` follows those checks. The cost phase leaves `mana-cost` not computed for a disabled skill. A hand whose base is not known leaves it unsupported with a reason.
+- The hit already returned nothing for a skill its main hand cannot use.
+
+**Found on the way: PoB's weapon types.** PoB's exporter keeps only the item classes its `weaponClassMap` names (`Export/Scripts/skills.lua` 15 to 31, 234 to 246).
+- Shield Crush lists only `Shield` in the game, so PoB gives it no `weaponTypes`: it takes any weapon.
+- A held Warstaff is PoB's `Staff`, and a Rune Dagger its `Dagger`.
+- `can_use` now compares by PoB's type (`skill::pob_weapon_type`). Before this, Shield Crush with a sword was never computed.
+
+**Evidence** (`local/p6/p6-12c/`):
+- **Minion sweep:** 0 unexpected (1 before). Eight mana costs became not computed, each where PoB writes none (Holy Strike, one Animate Weapon variant, Blink Arrow and Mirror Arrow and their variants).
+- **Public `calc-parity`:** documents byte-identical to before. 195 builds, 172 expected, 0 unexpected, 5,158 `Complete`.
+- **Corpus:** four Shield Crush builds' hits are now computed. Every new value is `partial` or `indeterminate`, with Shield Crush's added damage per 15 shield armour and evasion among the reasons. No mana cost moved; 0 unexpected.
+- **Tests:** `disabled_by_hands_should_follow_pobs_weapon_checks` and the extended `can_use` test; 1,756 workspace tests and clippy pass.
+

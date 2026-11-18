@@ -40,5 +40,5 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
 
 **The skill without a hit** (a follow-up commit; `local/p6/p6-12b/`):
 - `CombinedDPS` now equals PoB's in 97 builds: both Righteous Fire fixtures and the summoning skills' builds (PoB's 0) joined.
-- 0 unexpected; no other value moved. A unit test covers `has_hit`.
+- 0 unexpected; no other value moved; `Complete` fields 5,158. A unit test covers `has_hit`.
 

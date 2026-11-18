@@ -52,6 +52,19 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         group: skill.group,
         gem: skill.active_gem.gem,
     };
+    // A skill PoB disables for the weapons held has no offence output, its
+    // cost included (`CalcOffence.lua` 339).
+    match skill.disabled_by_hands(&super::collect::hands(&input)) {
+        Ok(false) => {}
+        Ok(true) => {
+            calc.set_unsupported(field, UnsupportedReason::NotComputed);
+            return Ok(());
+        }
+        Err(what) => {
+            calc.set_unsupported(field, UnsupportedReason::UnmodelledSkill { source, what });
+            return Ok(());
+        }
+    }
     let Some(level) = super::skill::effect_level(skill.effect(), skill.active_gem.level) else {
         calc.set_unsupported(
             field,
