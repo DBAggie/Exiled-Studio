@@ -134,7 +134,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-10b part 3: movement speed (`poe1::movement`, fields `movement-speed` and `effective-movement-speed`, slice revision 8), the armour bases' movement penalty, Onslaught's and Adrenaline's movement speed, `mapping::MOVEMENT_REASONS`; fixture `ice-nova-movement-speed-witch.xml`; every movement value equal to PoB; `docs/phase-6/recovery.md`, "Part 3"
 - [x] P6-10b part 4: the main skill's mana cost (`poe1::costs`, field `mana-cost`, slice revision 9; `mapping::COST_REASONS`); fixture `ice-nova-mana-cost-witch.xml`; every mana cost equal to PoB; `docs/phase-6/recovery.md`, "Part 4"
 - [x] The review of P6-10b parts 1 to 4 applied (cost efficiency more and clamp order, Zealot's Oath keeping life's reasons, shared marker and action speed helpers, tests); `docs/phase-6/recovery.md`, "The review of parts 1 to 4"
-- [ ] P6-10b further parts: leech, degeneration (D7), physical damage reduction, maximum hit and EHP, other costs (life, energy shield, per second)
+- [x] P6-10b part 5: base damage reduction (`poe1::reduction`, slice revision 12; endurance charges, Adrenaline, the stationary row, `REDUCTION_REASONS`); 850 values equal to PoB; `docs/phase-6/recovery.md`, "Part 5"
+- [ ] P6-10b further parts: leech, degeneration (D7), the reduction against a hit, maximum hit and EHP, other costs (life, energy shield, per second)
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)

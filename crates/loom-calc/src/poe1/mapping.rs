@@ -1817,6 +1817,7 @@ impl StatMapping for SkillMapping {
                                 | Poe1Quantity::RegenReason(..)
                                 | Poe1Quantity::CostReason(_)
                                 | Poe1Quantity::HitReason(_)
+                                | Poe1Quantity::ReductionReason(_)
                         )
                     )
                 }) =>
@@ -2202,6 +2203,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             super::triggers::TRIGGERED_DAMAGE,
         )],
     ),
+    // P6-10b part 5: "#% additional Physical Damage Reduction while
+    // stationary" (`PhysicalDamageReduction` BASE, `Stationary`).
+    (
+        "while_stationary_gain_additional_physical_damage_reduction_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageReduction(DamageType::Physical)),
+            Op::Base,
+            NONE,
+            conditions::STATIONARY,
+        )],
+    ),
 ];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
@@ -2329,6 +2341,16 @@ pub const ROWS: &[Row] = &[
     (
         "basalt_flask_armour_+%_final",
         &[(Quantity::Armour, Op::More, 1.0)],
+    ),
+    // P6-10b part 5: "#% additional Physical Damage Reduction"
+    // (`PhysicalDamageReduction` BASE), read by `poe1::reduction`.
+    (
+        "base_additional_physical_damage_reduction_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageReduction(DamageType::Physical)),
+            Op::Base,
+            1.0,
+        )],
     ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
@@ -3004,11 +3026,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
-    // P6-11g: "#% additional Physical Damage Reduction" (`PhysicalDamageReduction` BASE): the damage you take; no slice field.
-    (
-        "base_additional_physical_damage_reduction_%",
-        "damage-reduction",
-    ),
     ("base_aura_area_of_effect_+%", "area"),
     ("base_avoid_freeze_%", "ailment-on-self"),
     ("base_avoid_projectiles_%_chance", "avoidance"),
@@ -3266,18 +3283,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "physical_damage_over_time_taken_+%_while_moving",
         "damage-taken",
     ),
-    (
-        "physical_damage_reduction_%_if_only_one_enemy_nearby",
-        "damage-reduction",
-    ),
-    (
-        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
-        "damage-reduction",
-    ),
-    (
-        "physical_damage_reduction_%_per_nearby_enemy",
-        "damage-reduction",
-    ),
     ("physical_damage_taken_%_as_fire", "damage-taken"),
     ("physical_damage_taken_%_as_lightning", "damage-taken"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
@@ -3367,10 +3372,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("unaffected_by_burning_ground", "ground-on-self"),
     ("visual_hit_effect_elemental_is_holy", "display"),
-    (
-        "while_stationary_gain_additional_physical_damage_reduction_%",
-        "damage-reduction",
-    ),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
@@ -3592,6 +3593,18 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
     ),
 ];
 
+/// Stats that change the base damage reduction in a way the engine does not
+/// model, sorted (P6-10b part 5): PoB's `PhysicalDamageReduction` BASE per
+/// nearby enemy, per hit taken recently, and with only one enemy nearby
+/// (`ModParser.lua`; multipliers and a condition the engine does not
+/// settle). A field marker ([`field_marker`]) read by
+/// [`super::reduction`] alone.
+pub const REDUCTION_REASONS: &[&str] = &[
+    "physical_damage_reduction_%_if_only_one_enemy_nearby",
+    "physical_damage_reduction_%_per_hit_you_have_taken_recently",
+    "physical_damage_reduction_%_per_nearby_enemy",
+];
+
 /// Stats that change a hit's rate or DPS in a way the engine does not model,
 /// sorted (P6-8a): PoB's `showAverage` (`SkillStatMap.lua` 136), which
 /// reports the average hit instead of DPS for a skill that is not
@@ -3605,6 +3618,9 @@ pub const HIT_REASONS: &[&str] = &["base_skill_show_average_damage_instead_of_dp
 /// `Flag` only that field's phase reads.
 #[must_use]
 pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
+    if let Ok(i) = REDUCTION_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::ReductionReason(REDUCTION_REASONS[i]));
+    }
     if let Ok(i) = HIT_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::HitReason(HIT_REASONS[i]));
     }
@@ -5196,6 +5212,16 @@ mod tests {
                     staff(SPELL_BLOCK, Op::Base, NONE),
                     shield(SPELL_BLOCK, Op::Base, NONE),
                 ],
+            ),
+            // P6-10b part 5: the stationary physical damage reduction.
+            (
+                "while_stationary_gain_additional_physical_damage_reduction_%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::DamageReduction(DamageType::Physical)),
+                    Op::Base,
+                    NONE,
+                    conditions::STATIONARY,
+                )],
             ),
             // P6-8a part 2: Cast while Channelling's triggered damage.
             (

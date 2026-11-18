@@ -38,6 +38,7 @@ pub mod minions;
 pub mod movement;
 pub mod pantheon;
 pub mod pob_minion;
+pub mod reduction;
 pub mod regen;
 #[rustfmt::skip]
 pub mod pob_minions;
@@ -319,6 +320,17 @@ pub enum Poe1Quantity {
     /// A stat that changes the cost in a way the engine does not model
     /// (P6-10b; [`mapping::COST_REASONS`]): a `Flag` only [`costs`] reads.
     CostReason(&'static str),
+    /// A damage type's base damage reduction, percent (PoB's
+    /// `<Type>DamageReduction` BASE; P6-10b part 5): read by [`reduction`].
+    DamageReduction(DamageType),
+    /// The elemental types' base damage reduction, percent (PoB's
+    /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
+    /// [`reduction`] for fire, cold, and lightning.
+    ElementalDamageReduction,
+    /// A stat that changes the damage reduction in a way the engine does
+    /// not model (P6-10b part 5; [`mapping::REDUCTION_REASONS`]): a `Flag`
+    /// only [`reduction`] reads.
+    ReductionReason(&'static str),
     /// A stat that changes a hit's rate or DPS in a way the engine does not
     /// model unless a trigger sets the rate (P6-8a; [`mapping::HIT_REASONS`]):
     /// a `Flag` only [`hit`] reads.
@@ -645,6 +657,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CostEfficiency => f.write_str("cost-efficiency"),
             Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),
             Self::HitReason(stat) => write!(f, "hit-reason.{stat}"),
+            Self::DamageReduction(t) => write!(f, "damage-reduction.{}", t.name()),
+            Self::ElementalDamageReduction => f.write_str("elemental-damage-reduction"),
+            Self::ReductionReason(stat) => write!(f, "reduction-reason.{stat}"),
             Self::DoubleDamageChance => f.write_str("double-damage-chance"),
             Self::Conversion(from, to) => {
                 write!(f, "conversion.{}.{}", from.name(), to.name())
@@ -845,6 +860,9 @@ pub enum Poe1Field {
     /// The main skill's combined damage per second (PoB's `CombinedDPS`;
     /// P6-12): the hit's, impale's, and the damage over time's, culled.
     CombinedDps,
+    /// A damage type's base damage reduction, percent (PoB's
+    /// `Base<Type>DamageReduction`; P6-10b part 5).
+    BaseDamageReduction(DamageType),
 }
 
 impl Poe1Field {
@@ -864,6 +882,13 @@ impl Poe1Field {
             Self::EffectiveMovementSpeedMod => "effective-movement-speed",
             Self::ManaCost => "mana-cost",
             Self::CombinedDps => "combined-dps",
+            Self::BaseDamageReduction(t) => match t {
+                DamageType::Physical => "base-physical-damage-reduction",
+                DamageType::Fire => "base-fire-damage-reduction",
+                DamageType::Cold => "base-cold-damage-reduction",
+                DamageType::Lightning => "base-lightning-damage-reduction",
+                DamageType::Chaos => "base-chaos-damage-reduction",
+            },
         }
     }
 }
@@ -1038,6 +1063,7 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
+                "damage-reduction",
                 "regeneration",
                 "movement",
                 "minion",

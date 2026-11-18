@@ -435,7 +435,10 @@ impl CalcData for Data {
             "critical_strike_chance_+%_per_power_charge" => Some(50),
             "base_attack_speed_+%_per_frenzy_charge"
             | "base_cast_speed_+%_per_frenzy_charge"
-            | "object_inherent_damage_+%_final_per_frenzy_charge" => Some(4),
+            | "object_inherent_damage_+%_final_per_frenzy_charge"
+            | "physical_damage_reduction_%_per_endurance_charge"
+            | "elemental_damage_reduction_%_per_endurance_charge" => Some(4),
+            "maximum_physical_damage_reduction_%" => Some(90),
             _ => None,
         }
     }

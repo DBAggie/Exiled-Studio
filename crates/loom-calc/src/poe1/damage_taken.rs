@@ -828,7 +828,6 @@ mod tests {
         "elemental_damage_taken_+%_if_been_hit_recently",
         "elemental_damage_taken_+%_if_not_hit_recently",
         "physical_damage_over_time_taken_+%_while_moving",
-        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
         "shocked_effect_on_self_+%",
     ];
 

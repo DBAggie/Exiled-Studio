@@ -52,8 +52,8 @@
 //!   (TailwindEffectOnSelf + BuffEffectOnSelf) / 100))`;
 //! - Adrenaline (740 to 746): `Damage` INC `floor(100 x effect)`, `Speed`
 //!   INC `floor(25 x effect)` for attacks and for casts, the effect `1 +
-//!   BuffEffectOnSelf / 100`; its movement speed and physical damage
-//!   reduction are not slice fields.
+//!   BuffEffectOnSelf / 100`; its movement speed (P6-10b) and its
+//!   `PhysicalDamageReduction` BASE `floor(10 x effect)` (P6-10b part 5).
 //!
 //! The effect stats are unmapped ([`TAILWIND_DEPENDS_ON`], [`DEPENDS_ON`]'s
 //! `buff_effect_on_self_+%`), so the constants. Other sources of either
@@ -128,6 +128,9 @@ pub const ADRENALINE_DAMAGE: f64 = 100.0;
 
 /// Adrenaline's increased attack and cast speed (743, 744).
 pub const ADRENALINE_SPEED: f64 = 25.0;
+
+/// Adrenaline's additional physical damage reduction (746; P6-10b part 5).
+pub const ADRENALINE_REDUCTION: f64 = 10.0;
 
 /// Whether this module handles `input` (Arcane Surge's check is
 /// [`super::conditions`]').
@@ -235,7 +238,7 @@ fn constant_buff(
     set: Option<&ConfigSet>,
     ingest: &mut Ingest<'_>,
     input: &str,
-    effects: &[(Quantity, f64, Flags)],
+    effects: &[(Quantity, Op, f64, Flags)],
 ) {
     match check(set, input) {
         Ok(false) => {}
@@ -243,10 +246,10 @@ fn constant_buff(
             input: input.to_owned(),
         }),
         Ok(true) => {
-            for &(quantity, value, flags) in effects {
+            for &(quantity, op, value, flags) in effects {
                 ingest.effect(Effect {
                     quantity,
-                    op: Op::Increased,
+                    op,
                     value,
                     conditions: Conditions::none().with_all(flags),
                     source: Source::Config {
@@ -388,6 +391,7 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         TAILWIND_INPUT,
         &[(
             Quantity::Poe1(Poe1Quantity::ActionSpeed),
+            Op::Increased,
             TAILWIND_ACTION_SPEED,
             Flags::NONE,
         )],
@@ -397,13 +401,38 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         ingest,
         ADRENALINE_INPUT,
         &[
-            (Quantity::Damage, ADRENALINE_DAMAGE, Flags::NONE),
-            (Quantity::Speed, ADRENALINE_SPEED, Flags::ATTACK),
-            (Quantity::Speed, ADRENALINE_SPEED, Flags::CAST),
+            (
+                Quantity::Damage,
+                Op::Increased,
+                ADRENALINE_DAMAGE,
+                Flags::NONE,
+            ),
+            (
+                Quantity::Speed,
+                Op::Increased,
+                ADRENALINE_SPEED,
+                Flags::ATTACK,
+            ),
+            (
+                Quantity::Speed,
+                Op::Increased,
+                ADRENALINE_SPEED,
+                Flags::CAST,
+            ),
             // Its movement speed (`CalcPerform.lua` 745; P6-10b).
             (
                 Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                Op::Increased,
                 ADRENALINE_SPEED,
+                Flags::NONE,
+            ),
+            // Its physical damage reduction (746; P6-10b part 5).
+            (
+                Quantity::Poe1(Poe1Quantity::DamageReduction(
+                    crate::quantity::DamageType::Physical,
+                )),
+                Op::Base,
+                ADRENALINE_REDUCTION,
                 Flags::NONE,
             ),
         ],

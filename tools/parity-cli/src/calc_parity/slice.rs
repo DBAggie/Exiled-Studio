@@ -24,8 +24,9 @@ pub const FORMAT: u32 = 1;
 /// main skill's mana cost (P6-10b); revision 10 the combined damage per
 /// second (P6-12); revision 11 the minion's ignite, bleeding, poison,
 /// impale, and combined damage per second (P6-7c3d,
-/// `applies: minion-present`).
-pub const REVISION: u32 = 11;
+/// `applies: minion-present`); revision 12 each damage type's base damage
+/// reduction (P6-10b part 5).
+pub const REVISION: u32 = 12;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -129,7 +130,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 14] = [
+pub const PRESENT_NAMES: [(&str, &str); 19] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -156,6 +157,22 @@ pub const PRESENT_NAMES: [(&str, &str); 14] = [
     // Revision 10 (P6-12): the main skill's combined damage per second;
     // our result has it whenever the build has a main skill.
     ("CombinedDPS", "poe1.combined-dps"),
+    // Revision 12 (P6-10b part 5): each damage type's base damage
+    // reduction; our result always has them.
+    (
+        "BasePhysicalDamageReduction",
+        "poe1.base-physical-damage-reduction",
+    ),
+    ("BaseFireDamageReduction", "poe1.base-fire-damage-reduction"),
+    ("BaseColdDamageReduction", "poe1.base-cold-damage-reduction"),
+    (
+        "BaseLightningDamageReduction",
+        "poe1.base-lightning-damage-reduction",
+    ),
+    (
+        "BaseChaosDamageReduction",
+        "poe1.base-chaos-damage-reduction",
+    ),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

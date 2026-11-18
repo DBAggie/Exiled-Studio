@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 11,
+  "revision": 12,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 12 (Phase 6, P6-10b part 5): each damage type's base damage reduction (BasePhysicalDamageReduction, BaseFireDamageReduction, BaseColdDamageReduction, BaseLightningDamageReduction, BaseChaosDamageReduction), applies present: our result always has them.",
     "Revision 11 (Phase 6, P6-7c3d): the minion's ignite, bleeding, poison, impale, and combined damage per second (Minion.IgniteDPS, Minion.BleedDPS, Minion.TotalPoisonDPS, Minion.ImpaleDPS, Minion.CombinedDPS), applies minion-present: compared where our result has the field or the oracle's minion value is not 0.",
     "Revision 10 (Phase 6, P6-12): the main skill's combined damage per second (CombinedDPS), applies present: our result has it whenever the build has a main skill.",
     "Revision 9 (Phase 6, P6-10b): the main skill's mana cost (ManaCost), applies present: our result always has it.",
@@ -168,6 +169,11 @@
     {"id": "BleedDPS", "group": "dot", "pob_key": "BleedDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): the main skill's bleeding (attacks). Our result has the field only when its attack bleeds."},
     {"id": "TotalPoisonDPS", "group": "dot", "pob_key": "TotalPoisonDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): every poison of the main skill together. Our result has the field only when its hit poisons."},
     {"id": "ImpaleDPS", "group": "dot", "pob_key": "ImpaleDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2d): the main skill's impales. Our result has the field only when its hit impales."},
+    {"id": "BasePhysicalDamageReduction", "group": "defence", "pob_key": "BasePhysicalDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base physical damage reduction from modifiers and endurance charges, at most the character's maximum."},
+    {"id": "BaseFireDamageReduction", "group": "defence", "pob_key": "BaseFireDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base fire damage reduction from modifiers and endurance charges, at most the character's maximum."},
+    {"id": "BaseColdDamageReduction", "group": "defence", "pob_key": "BaseColdDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base cold damage reduction from modifiers and endurance charges, at most the character's maximum."},
+    {"id": "BaseLightningDamageReduction", "group": "defence", "pob_key": "BaseLightningDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base lightning damage reduction from modifiers and endurance charges, at most the character's maximum."},
+    {"id": "BaseChaosDamageReduction", "group": "defence", "pob_key": "BaseChaosDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base chaos damage reduction from modifiers and endurance charges, at most the character's maximum."},
     {"id": "Minion.Life", "group": "minion", "pob_key": "Life", "pob_path": ["Minion", "Life"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.EnergyShield", "group": "minion", "pob_key": "EnergyShield", "pob_path": ["Minion", "EnergyShield"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.Armour", "group": "minion", "pob_key": "Armour", "pob_path": ["Minion", "Armour"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},

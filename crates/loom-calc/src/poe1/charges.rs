@@ -19,7 +19,7 @@
 //!   `Speed` INC `base_cast_speed_+%_per_frenzy_charge`, `Damage` MORE
 //!   `object_inherent_damage_+%_final_per_frenzy_charge`;
 //!   `PhysicalDamageReduction` and `ElementalDamageReduction` BASE per
-//!   endurance charge, which no slice field reads (damage taken).
+//!   endurance charge (P6-10b part 5: [`super::reduction`]).
 //!
 //! The engine has no multipliers: each effect is one effect valued per
 //! charge times the count. The count is PoB's (P3-8d):
@@ -294,13 +294,29 @@ pub const CHARGES: &[Charge] = &[
             ),
         ],
     },
-    // Physical and elemental damage reduction only: no slice field.
+    // Physical and elemental damage reduction (`CalcSetup.lua` 515 and
+    // 516; P6-10b part 5, read by `poe1::reduction`).
     Charge {
         kind: ChargeKind::Endurance,
         use_input: "useEnduranceCharges",
         override_input: "overrideEnduranceCharges",
         max_stat: "max_endurance_charges",
-        effects: &[],
+        effects: &[
+            (
+                "physical_damage_reduction_%_per_endurance_charge",
+                Quantity::Poe1(Poe1Quantity::DamageReduction(
+                    crate::quantity::DamageType::Physical,
+                )),
+                Op::Base,
+                Flags::NONE,
+            ),
+            (
+                "elemental_damage_reduction_%_per_endurance_charge",
+                Quantity::Poe1(Poe1Quantity::ElementalDamageReduction),
+                Op::Base,
+                Flags::NONE,
+            ),
+        ],
     },
 ];
 

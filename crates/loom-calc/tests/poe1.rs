@@ -166,6 +166,8 @@ impl CalcData for Data {
             "mana_regeneration_rate_per_minute_%" => Some(105),
             // 33.3% of energy shield per second (P6-10b).
             "energy_shield_recharge_rate_per_minute_%" => Some(2000),
+            // The largest damage reduction (P6-10b part 5).
+            "maximum_physical_damage_reduction_%" => Some(90),
             _ => None,
         }
     }

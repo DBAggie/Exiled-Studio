@@ -4395,7 +4395,7 @@
       {
         "field": "poe1.life-regen",
         "value": 0.0,
-        "node": 232,
+        "node": 263,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4637,7 +4637,7 @@
       {
         "field": "poe1.mana-regen",
         "value": 0.0,
-        "node": 212,
+        "node": 243,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4885,7 +4885,7 @@
       {
         "field": "poe1.energy-shield-regen",
         "value": 0.0,
-        "node": 252,
+        "node": 283,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5127,7 +5127,7 @@
       {
         "field": "poe1.energy-shield-recharge",
         "value": 0.0,
-        "node": 261,
+        "node": 292,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5375,7 +5375,7 @@
       {
         "field": "poe1.energy-shield-recharge-delay",
         "value": 2.0,
-        "node": 266,
+        "node": 297,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5617,7 +5617,7 @@
       {
         "field": "poe1.movement-speed",
         "value": 1.0,
-        "node": 270,
+        "node": 301,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5859,7 +5859,7 @@
       {
         "field": "poe1.effective-movement-speed",
         "value": 1.0,
-        "node": 275,
+        "node": 306,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -6102,6 +6102,1246 @@
         "field": "poe1.mana-cost",
         "state": "unsupported",
         "reason": "not-computed"
+      },
+      {
+        "field": "poe1.base-physical-damage-reduction",
+        "value": 0.0,
+        "node": 196,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_physical_damage_reduction_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.base-fire-damage-reduction",
+        "value": 0.0,
+        "node": 217,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_physical_damage_reduction_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.base-cold-damage-reduction",
+        "value": 0.0,
+        "node": 210,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_physical_damage_reduction_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.base-lightning-damage-reduction",
+        "value": 0.0,
+        "node": 203,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_physical_damage_reduction_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.base-chaos-damage-reduction",
+        "value": 0.0,
+        "node": 222,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_physical_damage_reduction_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
       }
     ],
     "graph": [
@@ -7581,6 +8821,243 @@
         "value": 0.0
       },
       {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-reduction"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.reduction-at-least-0",
+        "children": [
+          192,
+          193
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "damage-reduction-max"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          194,
+          195
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-sum",
+        "children": [
+          197,
+          198
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-reduction"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.reduction-at-least-0",
+        "children": [
+          199,
+          200
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "damage-reduction-max"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          201,
+          202
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-sum",
+        "children": [
+          204,
+          205
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-reduction"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.reduction-at-least-0",
+        "children": [
+          206,
+          207
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "damage-reduction-max"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          208,
+          209
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-sum",
+        "children": [
+          211,
+          212
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-reduction"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.reduction-at-least-0",
+        "children": [
+          213,
+          214
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "damage-reduction-max"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          215,
+          216
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.reduction-base",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-reduction"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.reduction-at-least-0",
+        "children": [
+          218,
+          219
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "damage-reduction-max"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          220,
+          221
+        ],
+        "value": 0.0
+      },
+      {
         "kind": "any",
         "term": "step.flag",
         "value": 0.0
@@ -7599,7 +9076,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          193
+          224
         ],
         "value": 0.0
       },
@@ -7607,7 +9084,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          194
+          225
         ],
         "value": 0.0
       },
@@ -7624,8 +9101,8 @@
         "term": "step.percent-of-pool",
         "children": [
           57,
-          196,
-          197
+          227,
+          228
         ],
         "value": 0.0
       },
@@ -7633,8 +9110,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          195,
-          198
+          226,
+          229
         ],
         "value": 0.0
       },
@@ -7647,7 +9124,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          200
+          231
         ],
         "value": 1.0
       },
@@ -7660,9 +9137,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          199,
-          201,
-          202
+          230,
+          232,
+          233
         ],
         "value": 0.0
       },
@@ -7675,7 +9152,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          204
+          235
         ],
         "value": 1.0
       },
@@ -7688,8 +9165,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          205,
-          206
+          236,
+          237
         ],
         "value": 1.0
       },
@@ -7697,8 +9174,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          203,
-          207
+          234,
+          238
         ],
         "value": 0.0
       },
@@ -7714,8 +9191,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          208,
-          209
+          239,
+          240
         ],
         "value": 0.0
       },
@@ -7723,7 +9200,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          210
+          241
         ],
         "value": 0.0
       },
@@ -7731,8 +9208,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          211,
-          209
+          242,
+          240
         ],
         "value": 0.0
       },
@@ -7750,7 +9227,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          213
+          244
         ],
         "value": 0.0
       },
@@ -7758,7 +9235,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          214
+          245
         ],
         "value": 0.0
       },
@@ -7775,8 +9252,8 @@
         "term": "step.percent-of-pool",
         "children": [
           45,
-          216,
-          217
+          247,
+          248
         ],
         "value": 0.0
       },
@@ -7784,8 +9261,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          215,
-          218
+          246,
+          249
         ],
         "value": 0.0
       },
@@ -7798,7 +9275,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          220
+          251
         ],
         "value": 1.0
       },
@@ -7811,9 +9288,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          219,
-          221,
-          222
+          250,
+          252,
+          253
         ],
         "value": 0.0
       },
@@ -7826,7 +9303,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          224
+          255
         ],
         "value": 1.0
       },
@@ -7839,8 +9316,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          225,
-          226
+          256,
+          257
         ],
         "value": 1.0
       },
@@ -7848,8 +9325,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          223,
-          227
+          254,
+          258
         ],
         "value": 0.0
       },
@@ -7865,8 +9342,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          228,
-          229
+          259,
+          260
         ],
         "value": 0.0
       },
@@ -7874,7 +9351,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          230
+          261
         ],
         "value": 0.0
       },
@@ -7882,8 +9359,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          231,
-          229
+          262,
+          260
         ],
         "value": 0.0
       },
@@ -7901,7 +9378,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          233
+          264
         ],
         "value": 0.0
       },
@@ -7909,7 +9386,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          234
+          265
         ],
         "value": 0.0
       },
@@ -7926,8 +9403,8 @@
         "term": "step.percent-of-pool",
         "children": [
           167,
-          236,
-          237
+          267,
+          268
         ],
         "value": 0.0
       },
@@ -7935,8 +9412,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          235,
-          238
+          266,
+          269
         ],
         "value": 0.0
       },
@@ -7949,7 +9426,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          240
+          271
         ],
         "value": 1.0
       },
@@ -7962,9 +9439,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          239,
-          241,
-          242
+          270,
+          272,
+          273
         ],
         "value": 0.0
       },
@@ -7977,7 +9454,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          244
+          275
         ],
         "value": 1.0
       },
@@ -7990,8 +9467,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          245,
-          246
+          276,
+          277
         ],
         "value": 1.0
       },
@@ -7999,8 +9476,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          243,
-          247
+          274,
+          278
         ],
         "value": 0.0
       },
@@ -8016,8 +9493,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          248,
-          249
+          279,
+          280
         ],
         "value": 0.0
       },
@@ -8025,7 +9502,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          250
+          281
         ],
         "value": 0.0
       },
@@ -8033,8 +9510,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          251,
-          249
+          282,
+          280
         ],
         "value": 0.0
       },
@@ -8047,7 +9524,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          253
+          284
         ],
         "value": 1.0
       },
@@ -8065,7 +9542,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          256
+          287
         ],
         "value": 1.0
       },
@@ -8078,8 +9555,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          257,
-          258
+          288,
+          289
         ],
         "value": 1.0
       },
@@ -8088,9 +9565,9 @@
         "term": "step.unrounded",
         "children": [
           167,
-          254,
-          255,
-          259
+          285,
+          286,
+          290
         ],
         "value": 0.0
       },
@@ -8098,7 +9575,7 @@
         "kind": "round-half-up",
         "term": "result",
         "children": [
-          260
+          291
         ],
         "value": 0.0
       },
@@ -8119,7 +9596,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          263
+          294
         ],
         "value": 1.0
       },
@@ -8132,8 +9609,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          262,
-          264
+          293,
+          295
         ],
         "value": 2.0
       },
@@ -8146,7 +9623,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          267
+          298
         ],
         "value": 1.0
       },
@@ -8159,8 +9636,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          268,
-          269
+          299,
+          300
         ],
         "value": 1.0
       },
@@ -8173,7 +9650,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          271
+          302
         ],
         "value": 1.0
       },
@@ -8189,8 +9666,8 @@
         "kind": "max",
         "term": "step.action-speed",
         "children": [
-          272,
-          273
+          303,
+          304
         ],
         "value": 1.0
       },
@@ -8198,8 +9675,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          270,
-          274
+          301,
+          305
         ],
         "value": 1.0
       }

@@ -228,3 +228,30 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Corpus:** four Shield Crush builds' hits are now computed. Every new value is `partial` or `indeterminate`, with Shield Crush's added damage per 15 shield armour and evasion among the reasons. No mana cost moved; 0 unexpected.
 - **Tests:** `disabled_by_hands_should_follow_pobs_weapon_checks` and the extended `can_use` test; 1,756 workspace tests and clippy pass.
 
+
+## Part 5: base damage reduction
+
+**What PoB does** (`CalcDefence.lua` 1496 to 1501): `Base<Type>DamageReduction = min(max(0, <Type>DamageReduction BASE (+ ElementalDamageReduction BASE for fire, cold, and lightning)), DamageReductionMax)`.
+- `DamageReductionMax` is the character constant `maximum_physical_damage_reduction_%` (90), unless a modifier overrides it.
+- Endurance charges give `PhysicalDamageReduction` and `ElementalDamageReduction` BASE each (`CalcSetup.lua` 515 and 516).
+- Adrenaline gives `PhysicalDamageReduction` BASE `floor(10 x effect)` (`CalcPerform.lua` 746).
+
+**The engine** (`poe1::reduction`, phase `damage-reduction`; slice revision 12):
+- **Fields:** `base-<type>-damage-reduction` for the five types (`Poe1Field::BaseDamageReduction`), always present.
+- **Sources:**
+  - `base_additional_physical_damage_reduction_%`, a row (it was `NoEffect`, reaching no slice field);
+  - the stationary physical reduction, a state row on `Stationary`;
+  - the endurance charges' per-charge effects (`charges::CHARGES`);
+  - Adrenaline's 10 (`buffs`).
+- **Reasons on these fields only** (`mapping::REDUCTION_REASONS`, field markers): physical damage reduction per nearby enemy, per hit taken recently, and with one enemy nearby. These were `NoEffect` rows. Under plan decision 9 they can no longer be, now that a slice field reads them.
+- **Not computed:** the reduction against a hit (PoB's `<Type>DamageReduction` with armour, the enemy's hit, and overwhelm; the EHP part), and the `WhenHit` variants.
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 205 builds, 187 expected, 0 unexpected; `Complete` fields 6,356 (5,506 before; the 850 new reduction fields that are `Complete` equal PoB's).
+  - Of the reduction fields, 24 `partial` ones differ from PoB, each with its reasons.
+  - No other value or state moved.
+- **Corpus:** 0 unexpected; no other value moved.
+- **Minion sweep:** 0 unexpected. **Skill sweep:** the same 32 unexpected as before.
+- **Goldens:** `synthetic-poe1.calc.json` and `poe1-empty.json` regenerated. Only the five new fields were added (`indeterminate` in the synthetic bundle, which has no Scion).
+- **Tests:** the field counts (`engine`, `calc_run`, the DTO) and the test data's charge and maximum constants; the workspace's 1,763 tests and clippy pass.

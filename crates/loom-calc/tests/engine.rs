@@ -360,16 +360,18 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
     // The slice's 24, the regeneration and recharge fields (P6-10b: life,
     // mana, energy shield, its recharge and delay), present whenever their
     // pool is, and the two movement speed fields and the mana cost
-    // (P6-10b), always.
-    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 8);
-    assert_eq!(r.fields.len(), 32, "docs/phase-3/slice-fields.json");
+    // (P6-10b), always, and the five base damage reductions (P6-10b part
+    // 5), always.
+    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 13);
+    assert_eq!(r.fields.len(), 37, "docs/phase-3/slice-fields.json");
     let computed: Vec<_> = r
         .fields
         .iter()
         .filter(|(_, f)| f.value.is_some())
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
-    assert_eq!(computed.len(), 24, "{computed:?}");
+    // The five base damage reductions (P6-10b part 5) are computed too.
+    assert_eq!(computed.len(), 29, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons
