@@ -101,3 +101,16 @@ The plan's step b2 (`dev/active/phase-6-mechanics/p6-7b-minion-actor-plan.md`) c
 - **Corpus:** no unexpected difference (not computed +8).
 - **Tests:** the slice file's revision and fields, and the nested lookup and its pointer.
 - **Not run locally:** the instruction-count bench runs in CI.
+
+**The P6-7b2 review (code-architecture-reviewer), applied in P6-7b2b:**
+- `Calc::with_actor` returns `None` for the minion when there is none, so a minion step never falls back to the character's store.
+- The computed skill's sources are per actor (`ActorState::skill_sources`).
+- `global()` is documented as the current actor's own reasons. The result's build-wide reasons are the character's; a minion's reach the result through its fields.
+- Engine tests cover the refusal, the actor restored, states, skill sources, and reasons apart, and a minion field's reasons from both actors. Further tests cover the minion fields' names and order.
+
+For b3a:
+- A defence phase reused for the minion must write `Field::Minion(..)`, never the character's field.
+- `MINION_NAMES` gains block when b3a emits it.
+- A minion field the oracle lacks while ours has it needs a test.
+
+Not changed: the commit trailer's model name, which follows the session's attribution instruction.

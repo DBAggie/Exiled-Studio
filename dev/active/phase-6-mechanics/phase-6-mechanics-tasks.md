@@ -85,7 +85,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Plan written and reviewed; split into b1 (data, blocked on the maintainer's depot download of the `.ot` bundles), b2 (actor in the core and parity tool, no value change), b3a, b3b, b4
 - [x] Plan PR: #155 (base `feat/p6-7a2-minion-review`)
 - [x] P6-7b2: `Actor`, `ActorState`, `Calc` per actor; `Field::Minion`; slice revision 4 (`pob_path`, `MINION_NAMES`, `applies: minion`); every document byte-identical
-- [x] P6-7b2 PR: #156 (base `feat/p6-7b-plan`), auras and buffs on it, minion defences
+- [x] P6-7b2 PR: #156 (base `feat/p6-7b-plan`)
+- [x] P6-7b2b: the P6-7b2 review (`with_actor` refuses a missing minion, skill sources per actor, engine tests)
+- [x] P6-7b2b PR: #157 (base `feat/p6-7b2-actor`), auras and buffs on it, minion defences
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages
