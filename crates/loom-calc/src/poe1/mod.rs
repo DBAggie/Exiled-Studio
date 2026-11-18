@@ -182,6 +182,10 @@ pub enum Poe1Quantity {
     /// game's per-minute stats on a state row, which has no scale; P6-10b):
     /// `Base`, read by [`regen`] divided by 60.
     RegenPercentPerMinute(Pool),
+    /// A pool's flat regeneration per minute (a state row's per-minute
+    /// stat, which has no scale; P6-10b): `Base`, read by [`regen`] divided
+    /// by 60.
+    RegenPerMinute(Pool),
     /// A stat that changes a pool's regeneration in a way the engine does
     /// not model (P6-10b; [`mapping::REGEN_REASONS`]): a `Flag` only
     /// [`regen`] reads, as that field's `unmapped-stat` reason, so the
@@ -190,6 +194,15 @@ pub enum Poe1Quantity {
     /// A pool's recovery rate (PoB's `<Pool>RecoveryRate`; P6-10b):
     /// `Increased` and `More`, read by [`regen`].
     RecoveryRate(Pool),
+    /// Energy shield's recharge rate (PoB's `EnergyShieldRecharge`; P6-10b):
+    /// `Increased` and `More`, read by [`regen`].
+    EnergyShieldRecharge,
+    /// The faster start of energy shield's recharge (PoB's
+    /// `EnergyShieldRechargeFaster`; P6-10b): `Increased`, read by [`regen`].
+    EnergyShieldRechargeFaster,
+    /// Zealot's Oath (PoB's `ZealotsOath`; P6-10b): a `Flag`, read by
+    /// [`regen`].
+    ZealotsOath,
     /// "You have Consecrated Ground around you while stationary" (PoB's
     /// `Condition:OnConsecratedGround` with `Condition:Stationary`; P6-10b):
     /// a `Flag`, read by [`buffs`].
@@ -365,13 +378,16 @@ pub enum Poe1Quantity {
     IntimidatingCry(gems::WarcryValue),
 }
 
-/// A pool a skill reserves.
+/// A pool: one a skill reserves (life or mana), or one that regenerates
+/// (P6-10b: energy shield too).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pool {
     /// Life.
     Life,
     /// Mana.
     Mana,
+    /// Energy shield (regeneration only; P6-10b).
+    EnergyShield,
 }
 
 impl Pool {
@@ -381,6 +397,7 @@ impl Pool {
         match self {
             Self::Life => "life",
             Self::Mana => "mana",
+            Self::EnergyShield => "energy-shield",
         }
     }
 }
@@ -537,7 +554,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Regen(p) => write!(f, "regen.{}", p.name()),
             Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),
             Self::RecoveryRate(p) => write!(f, "recovery-rate.{}", p.name()),
+            Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
+            Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
+            Self::ZealotsOath => f.write_str("zealots-oath"),
             Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
+            Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
             Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
             Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
@@ -748,6 +769,15 @@ pub enum Poe1Field {
     LifeRegen,
     /// Mana regenerated per second (PoB's `ManaRegen`; P6-10b).
     ManaRegen,
+    /// Energy shield regenerated per second (PoB's `EnergyShieldRegen`;
+    /// P6-10b).
+    EnergyShieldRegen,
+    /// Energy shield recharged per second (PoB's `EnergyShieldRecharge`;
+    /// P6-10b).
+    EnergyShieldRecharge,
+    /// Seconds before energy shield starts to recharge (PoB's
+    /// `EnergyShieldRechargeDelay`; P6-10b).
+    EnergyShieldRechargeDelay,
 }
 
 impl Poe1Field {
@@ -760,6 +790,9 @@ impl Poe1Field {
             Self::ImpaleDps => "impale-dps",
             Self::LifeRegen => "life-regen",
             Self::ManaRegen => "mana-regen",
+            Self::EnergyShieldRegen => "energy-shield-regen",
+            Self::EnergyShieldRecharge => "energy-shield-recharge",
+            Self::EnergyShieldRechargeDelay => "energy-shield-recharge-delay",
         }
     }
 }

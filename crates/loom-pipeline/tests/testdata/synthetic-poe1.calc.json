@@ -4395,7 +4395,7 @@
       {
         "field": "poe1.life-regen",
         "value": 0.0,
-        "node": 229,
+        "node": 232,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4637,7 +4637,7 @@
       {
         "field": "poe1.mana-regen",
         "value": 0.0,
-        "node": 210,
+        "node": 212,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4866,6 +4866,738 @@
             "missing-data": {
               "table": "character_constants",
               "key": "mana_regeneration_rate_per_minute_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.energy-shield-regen",
+        "value": 0.0,
+        "node": 252,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.energy-shield-recharge",
+        "value": 0.0,
+        "node": 261,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "energy_shield_recharge_rate_per_minute_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.energy-shield-recharge-delay",
+        "value": 2.0,
+        "node": 266,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
             }
           },
           {
@@ -6360,21 +7092,34 @@
         "value": 0.0
       },
       {
+        "kind": "any",
+        "term": "step.flag",
+        "value": 0.0
+      },
+      {
         "kind": "sum",
         "term": "step.flat",
         "value": 0.0
       },
       {
         "kind": "sum",
+        "term": "step.percent",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          192
+          193
         ],
         "value": 0.0
       },
       {
         "kind": "sum",
-        "term": "step.percent",
+        "term": "step.percent-sum",
+        "children": [
+          194
+        ],
         "value": 0.0
       },
       {
@@ -6390,8 +7135,8 @@
         "term": "step.percent-of-pool",
         "children": [
           57,
-          194,
-          195
+          196,
+          197
         ],
         "value": 0.0
       },
@@ -6399,8 +7144,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          193,
-          196
+          195,
+          198
         ],
         "value": 0.0
       },
@@ -6413,7 +7158,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          198
+          200
         ],
         "value": 1.0
       },
@@ -6426,9 +7171,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          197,
           199,
-          200
+          201,
+          202
         ],
         "value": 0.0
       },
@@ -6441,7 +7186,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          202
+          204
         ],
         "value": 1.0
       },
@@ -6454,8 +7199,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          203,
-          204
+          205,
+          206
         ],
         "value": 1.0
       },
@@ -6463,8 +7208,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          201,
-          205
+          203,
+          207
         ],
         "value": 0.0
       },
@@ -6480,8 +7225,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          206,
-          207
+          208,
+          209
         ],
         "value": 0.0
       },
@@ -6489,7 +7234,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          208
+          210
         ],
         "value": 0.0
       },
@@ -6497,8 +7242,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          209,
-          207
+          211,
+          209
         ],
         "value": 0.0
       },
@@ -6509,15 +7254,23 @@
       },
       {
         "kind": "sum",
+        "term": "step.percent",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          211
+          213
         ],
         "value": 0.0
       },
       {
         "kind": "sum",
-        "term": "step.percent",
+        "term": "step.percent-sum",
+        "children": [
+          214
+        ],
         "value": 0.0
       },
       {
@@ -6533,8 +7286,8 @@
         "term": "step.percent-of-pool",
         "children": [
           45,
-          213,
-          214
+          216,
+          217
         ],
         "value": 0.0
       },
@@ -6542,8 +7295,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          212,
-          215
+          215,
+          218
         ],
         "value": 0.0
       },
@@ -6556,7 +7309,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          217
+          220
         ],
         "value": 1.0
       },
@@ -6569,9 +7322,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          216,
-          218,
-          219
+          219,
+          221,
+          222
         ],
         "value": 0.0
       },
@@ -6584,7 +7337,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          221
+          224
         ],
         "value": 1.0
       },
@@ -6597,8 +7350,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          222,
-          223
+          225,
+          226
         ],
         "value": 1.0
       },
@@ -6606,8 +7359,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          220,
-          224
+          223,
+          227
         ],
         "value": 0.0
       },
@@ -6623,8 +7376,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          225,
-          226
+          228,
+          229
         ],
         "value": 0.0
       },
@@ -6632,7 +7385,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          227
+          230
         ],
         "value": 0.0
       },
@@ -6640,10 +7393,260 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          228,
-          226
+          231,
+          229
         ],
         "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.percent",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat-sum",
+        "children": [
+          233
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.percent-sum",
+        "children": [
+          234
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 0.01
+      },
+      {
+        "kind": "product",
+        "term": "step.percent-of-pool",
+        "children": [
+          167,
+          236,
+          237
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          235,
+          238
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          240
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.regeneration",
+        "children": [
+          239,
+          241,
+          242
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          244
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.recovery-rate",
+        "children": [
+          245,
+          246
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          243,
+          247
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "ten"
+          }
+        },
+        "value": 10.0
+      },
+      {
+        "kind": "product",
+        "term": "step.round-scaled",
+        "children": [
+          248,
+          249
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.round-whole",
+        "children": [
+          250
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          251,
+          249
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          253
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          256
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.recovery-rate",
+        "children": [
+          257,
+          258
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          167,
+          254,
+          255,
+          259
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "result",
+        "children": [
+          260
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "recharge-delay"
+          }
+        },
+        "value": 2.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          263
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          262,
+          264
+        ],
+        "value": 2.0
       }
     ]
   }

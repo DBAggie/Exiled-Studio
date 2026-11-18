@@ -222,6 +222,8 @@ impl Totals {
         let own = match pool {
             Pool::Life => self.life_efficiency,
             Pool::Mana => self.mana_efficiency,
+            // No skill reserves energy shield.
+            Pool::EnergyShield => 0.0,
         };
         ReservationTerms {
             inc: self.reserved,

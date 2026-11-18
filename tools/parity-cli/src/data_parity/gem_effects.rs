@@ -573,6 +573,7 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
         Quantity::Poe1(Poe1Quantity::RegenPercent(p)) => format!("{}RegenPercent", title(p.name())),
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
+        Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();

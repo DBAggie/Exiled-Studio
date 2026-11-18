@@ -164,6 +164,8 @@ impl CalcData for Data {
             "base_evasion_rating" => Some(15),
             // 1.75% of mana per second (P6-10b).
             "mana_regeneration_rate_per_minute_%" => Some(105),
+            // 33.3% of energy shield per second (P6-10b).
+            "energy_shield_recharge_rate_per_minute_%" => Some(2000),
             _ => None,
         }
     }
@@ -451,6 +453,11 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         // PoB's round to one decimal.
         (Field::Poe1(Poe1Field::LifeRegen), 0.0),
         (Field::Poe1(Poe1Field::ManaRegen), 10.3),
+        // P6-10b: no energy shield, so nothing regenerates or recharges; the
+        // recharge delay is the base 2 seconds.
+        (Field::Poe1(Poe1Field::EnergyShieldRegen), 0.0),
+        (Field::Poe1(Poe1Field::EnergyShieldRecharge), 0.0),
+        (Field::Poe1(Poe1Field::EnergyShieldRechargeDelay), 2.0),
     ];
     for (field, v) in expect {
         assert_eq!(value(&r, field), v, "{field}");

@@ -65,6 +65,15 @@ pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 pub const ENEMY_LOW_LIFE: &str = "Enemy:LowLife";
 /// "against Unique Enemies": the enemy's `RareOrUnique`.
 pub const ENEMY_RARE_OR_UNIQUE: &str = "Enemy:RareOrUnique";
+/// "while a Rare or Unique Enemy is Nearby" (P6-10b; PoB's enemy
+/// `ActorCondition` on either `NearbyRareOrUniqueEnemy` or `RareOrUnique`,
+/// `ModParser.lua` 1776): the enemy's [`ENEMY_RARE_OR_UNIQUE`], or the
+/// config's count of nearby rare or unique enemies at least 1
+/// (`ConfigOptions.lua` 1231).
+pub const ENEMY_RARE_OR_UNIQUE_NEARBY: &str = "Enemy:RareOrUniqueNearby";
+
+/// The config's count of nearby rare or unique enemies.
+pub const NEARBY_RARE_OR_UNIQUE_INPUT: &str = "multiplierNearbyRareOrUniqueEnemies";
 /// "if you've dealt a Critical Strike Recently" (PoB's `CritRecently`,
 /// from `conditionCritRecently`, `ConfigOptions.lua` 1240; close-out).
 pub const CRIT_RECENTLY: &str = "CritRecently";
@@ -164,6 +173,23 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             }
             None => {}
         }
+    }
+    // A rare or unique enemy nearby (P6-10b): either condition; a count of
+    // another type leaves it unsettled unless the enemy is rare or unique.
+    let rare = seen.get(ENEMY_RARE_OR_UNIQUE).copied().flatten();
+    let nearby =
+        match set.and_then(|s| last(s, NEARBY_RARE_OR_UNIQUE_INPUT, ConfigInputKind::Input)) {
+            None => Some(false),
+            Some(ConfigValue::Number(n)) => Some(n.value().0 >= 1.0),
+            Some(_) => None,
+        };
+    let either = match (rare, nearby) {
+        (Some(true), _) | (_, Some(true)) => Some(true),
+        (Some(false), Some(false)) => Some(false),
+        _ => None,
+    };
+    if let Some(v) = either {
+        out.insert(ConditionKey::new(ENEMY_RARE_OR_UNIQUE_NEARBY), v);
     }
 }
 

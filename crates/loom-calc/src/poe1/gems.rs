@@ -577,9 +577,16 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "base_maximum_energy_shield",
                     BuffStat::Rows(&[(Quantity::EnergyShield, Op::Base, 1.0, NONE, NONE)]),
                 ),
+                // P6-10b: a field now.
                 (
                     "energy_shield_recharge_rate_+%",
-                    BuffStat::NoSlice("recharge"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },

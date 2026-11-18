@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 6,
+  "revision": 7,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 7 (Phase 6, P6-10b): energy shield regeneration and recharge per second and the recharge delay in seconds (EnergyShieldRegen, EnergyShieldRecharge, EnergyShieldRechargeDelay), applies present: our result has them whenever energy shield is computed.",
     "Revision 6 (Phase 6, P6-10b): life and mana regeneration per second (LifeRegen, ManaRegen), applies present: our result has them whenever the pool is computed.",
     "Revision 5 (Phase 6, P6-7c): the minion's main skill's hit (AverageDamage, Speed, HitChance, CritChance, CritMultiplier, TotalDPS under output.Minion), applies minion as revision 4's.",
     "Revision 4 (Phase 6, P6-7b2): the minion's fields (group minion), each with its nested PoB path under main_output (pob_path, output.Minion) and applies minion: calc-parity compares every one when the oracle has a Minion table or our result has the field, value only (the oracle writes no minion breakdown).",
@@ -173,6 +174,9 @@
     {"id": "Minion.ChaosResist", "group": "minion", "pob_key": "ChaosResist", "pob_path": ["Minion", "ChaosResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "LifeRegen", "group": "recovery", "pob_key": "LifeRegen", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): life regenerated per second (PoB rounds to one decimal)."},
     {"id": "ManaRegen", "group": "recovery", "pob_key": "ManaRegen", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): mana regenerated per second (PoB rounds to one decimal)."},
+    {"id": "EnergyShieldRegen", "group": "recovery", "pob_key": "EnergyShieldRegen", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): energy shield regenerated per second (PoB rounds to one decimal)."},
+    {"id": "EnergyShieldRecharge", "group": "recovery", "pob_key": "EnergyShieldRecharge", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): energy shield recharged per second (PoB rounds to a whole number)."},
+    {"id": "EnergyShieldRechargeDelay", "group": "recovery", "pob_key": "EnergyShieldRechargeDelay", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): seconds before energy shield starts to recharge."},
     {"id": "Minion.AverageDamage", "group": "minion", "pob_key": "AverageDamage", "pob_path": ["Minion", "AverageDamage"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.Speed", "group": "minion", "pob_key": "Speed", "pob_path": ["Minion", "Speed"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.HitChance", "group": "minion", "pob_key": "HitChance", "pob_path": ["Minion", "HitChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},

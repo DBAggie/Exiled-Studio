@@ -1951,6 +1951,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             (BLOCK, Op::Base, NONE, states::USING_SHIELD),
         ],
     ),
+    // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
+    // Enemy is Nearby" (`EnergyShieldRegen` BASE, the stat per minute; PoB's
+    // enemy `ActorCondition` on `NearbyRareOrUniqueEnemy` or `RareOrUnique`).
+    (
+        "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPerMinute(Pool::EnergyShield)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
+        )],
+    ),
     (
         "global_critical_strike_chance_+%_while_holding_staff",
         &[(
@@ -1971,15 +1983,23 @@ pub const STATE_ROWS: &[StateRow] = &[
     ),
     // P6-10b: "#% increased Recovery rate of Life and Energy Shield if
     // you've stopped taking Damage Over Time Recently" (`LifeRecoveryRate`
-    // and `EnergyShieldRecoveryRate` INC; the second reaches no field).
+    // and `EnergyShieldRecoveryRate` INC).
     (
         "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
-        &[(
-            Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
-            Op::Increased,
-            NONE,
-            conditions::STOPPED_TAKING_DOT_RECENTLY,
-        )],
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
+                Op::Increased,
+                NONE,
+                conditions::STOPPED_TAKING_DOT_RECENTLY,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::EnergyShield)),
+                Op::Increased,
+                NONE,
+                conditions::STOPPED_TAKING_DOT_RECENTLY,
+            ),
+        ],
     ),
     // P6-10b: "Regenerate #% of Life per second while stationary" (the
     // Soul of Shakari's; `LifeRegenPercent` BASE, `Stationary`), per minute.
@@ -2230,6 +2250,26 @@ pub const ROWS: &[Row] = &[
         "base_dexterity_and_intelligence",
         &[(DEX, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
+    // P6-10b: "Regenerate # Energy Shield per second" (`EnergyShieldRegen`
+    // BASE, the stat per minute).
+    (
+        "base_energy_shield_regeneration_rate_per_minute",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::EnergyShield)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
+    ),
+    // P6-10b: "Regenerate #% of Energy Shield per second"
+    // (`EnergyShieldRegenPercent` BASE, the stat per minute).
+    (
+        "base_energy_shield_regeneration_rate_per_minute_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::EnergyShield)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
+    ),
     ("base_evasion_rating", &[(Quantity::Evasion, Op::Base, 1.0)]),
     ("base_fire_damage_resistance_%", &[(FIRE, Op::Base, 1.0)]),
     ("base_intelligence", &[(INT, Op::Base, 1.0)]),
@@ -2375,6 +2415,56 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
+    // P6-10b: "#% faster start of Energy Shield Recharge"
+    // (`EnergyShieldRechargeFaster` INC).
+    (
+        "energy_shield_delay_-%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldRechargeFaster),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Energy Shield Recharge Rate"
+    // (`EnergyShieldRecharge` INC).
+    (
+        "energy_shield_recharge_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Energy Shield Recovery rate"
+    // (`EnergyShieldRecoveryRate` INC).
+    (
+        "energy_shield_recovery_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::EnergyShield)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Energy Shield Regeneration rate"
+    // (`EnergyShieldRegen` INC).
+    (
+        "energy_shield_regeneration_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::EnergyShield)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "Regenerate # Energy Shield per second" (`EnergyShieldRegen`
+    // BASE).
+    (
+        "energy_shield_regeneration_rate_per_second",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::EnergyShield)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "evasion_and_physical_damage_reduction_rating_+%",
         &[
@@ -2543,6 +2633,12 @@ pub const ROWS: &[Row] = &[
     (
         "physical_damage_reduction_rating_+%",
         &[(Quantity::Armour, Op::Increased, 1.0)],
+    ),
+    // P6-10b: Zealot's Oath (PoB's `ZealotsOath` flag, `CalcDefence.lua`
+    // 1250): life's regeneration is energy shield's.
+    (
+        "regenerate_energy_shield_instead_of_life",
+        &[(Quantity::Poe1(Poe1Quantity::ZealotsOath), Op::Flag, 1.0)],
     ),
     (
         "resist_all_%",
@@ -2871,14 +2967,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
-    // P6-11g: "#% faster start of Energy Shield Recharge" (`EnergyShieldRechargeFaster` INC).
-    ("energy_shield_delay_-%", "recharge"),
-    // P6-11g: "#% increased Energy Shield Recharge Rate" (`EnergyShieldRecharge` INC).
-    ("energy_shield_recharge_rate_+%", "recharge"),
-    (
-        "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
-        "regeneration",
-    ),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
     (
@@ -3206,8 +3294,8 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
 /// regeneration field's reason alone. PoB's text for each
 /// (`ModParser.lua`): life per fortification stack, per uncapped fire
 /// resistance (`PerStat`), per endurance charge, per level, per power
-/// charge, per spell block chance, with exposure inflicted recently, and
-/// life regeneration applying to energy shield instead.
+/// charge, per spell block chance, with exposure inflicted recently;
+/// energy shield per nearby corpse.
 pub const REGEN_REASONS: &[(&str, Pool)] = &[
     // Per fortification stack: fortification is named only
     // (`config::NAMED_ONLY`), so this stays a reason, now on the field.
@@ -3233,7 +3321,12 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
         "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
         Pool::Mana,
     ),
-    ("regenerate_energy_shield_instead_of_life", Pool::Life),
+    // "For each nearby corpse, you and nearby Allies Regenerate #% of Energy
+    // Shield per second" (PoB's `ExtraAura` per `NearbyCorpse`).
+    (
+        "necromancer_energy_shield_regeneration_rate_per_minute_%_for_you_and_allies_per_nearby_corpse",
+        Pool::EnergyShield,
+    ),
 ];
 
 impl StatMapping for Poe1Mapping {
@@ -3382,8 +3475,11 @@ impl StatMapping for Poe1Mapping {
                 Poe1Quantity::Regen(_)
                 | Poe1Quantity::RegenPercent(_)
                 | Poe1Quantity::RegenPercentPerMinute(_)
+                | Poe1Quantity::RegenPerMinute(_)
                 | Poe1Quantity::RecoveryRate(_)
-                | Poe1Quantity::RegenReason(..),
+                | Poe1Quantity::RegenReason(..)
+                | Poe1Quantity::EnergyShieldRecharge
+                | Poe1Quantity::EnergyShieldRechargeFaster,
             ) => true,
             _ => false,
         }
@@ -3723,6 +3819,8 @@ mod tests {
         assert!(HIT_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(LOCAL_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(NO_EFFECT.windows(2).all(|w| w[0].0 < w[1].0));
+        // A binary search reads it (P6-10b).
+        assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
         for (stat, _) in HIT_ROWS {
             assert!(
                 ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err()
@@ -4526,6 +4624,7 @@ mod tests {
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                         states::DUAL_WIELDING,
                         conditions::STATIONARY,
+                        conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -4538,15 +4637,33 @@ mod tests {
         let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
         let config = |q: Quantity, op: Op, all: Flags, c: &'static str| (q, op, all, c);
         let expected = [
+            // P6-10b: energy shield regeneration near a rare or unique enemy.
+            (
+                "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RegenPerMinute(Pool::EnergyShield)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
+                )],
+            ),
             // P6-10b: the Soul of Arakaali's recovery rate.
             (
                 "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
-                vec![config(
-                    Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
-                    Op::Increased,
-                    NONE,
-                    conditions::STOPPED_TAKING_DOT_RECENTLY,
-                )],
+                vec![
+                    config(
+                        Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
+                        Op::Increased,
+                        NONE,
+                        conditions::STOPPED_TAKING_DOT_RECENTLY,
+                    ),
+                    config(
+                        Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::EnergyShield)),
+                        Op::Increased,
+                        NONE,
+                        conditions::STOPPED_TAKING_DOT_RECENTLY,
+                    ),
+                ],
             ),
             // P6-10b: the Soul of Shakari's regeneration while stationary.
             (

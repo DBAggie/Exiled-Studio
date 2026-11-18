@@ -1891,6 +1891,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-10b: Arcane Surge from the config: its 30% increased mana regeneration (and cast speed)."
+    },
+    {
+      "id": "ice-nova-energy-shield-recovery-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-energy-shield-recovery-witch.xml",
+      "sha256": "3b52e92a81ea27b3f8c0fcb77aceeac7e199d07e93ccc8512d69c29b407883d5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: energy shield with its recharge rate, recovery rate, and faster start of recharge: EnergyShieldRecharge (PoB rounds to a whole number) and EnergyShieldRechargeDelay."
+    },
+    {
+      "id": "ice-nova-zealots-oath-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-zealots-oath-witch.xml",
+      "sha256": "7b8f3f5c23a5007d326bcbca9d08106a11b28c7d457c0597edf7a8cde3d4fbcf",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: Zealot's Oath with Vitality and life regeneration lines: LifeRegen 0, life's flat and percent regeneration on energy shield (EnergyShieldRegen)."
     }
   ]
 }
