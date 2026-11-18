@@ -51,6 +51,7 @@ pub mod skill_no_output;
 pub mod sockets;
 pub mod stacks;
 pub mod states;
+pub mod triggers;
 
 pub use mapping::Poe1Mapping;
 pub use pantheon::Poe1Data;
@@ -318,6 +319,10 @@ pub enum Poe1Quantity {
     /// A stat that changes the cost in a way the engine does not model
     /// (P6-10b; [`mapping::COST_REASONS`]): a `Flag` only [`costs`] reads.
     CostReason(&'static str),
+    /// A stat that changes a hit's rate or DPS in a way the engine does not
+    /// model unless a trigger sets the rate (P6-8a; [`mapping::HIT_REASONS`]):
+    /// a `Flag` only [`hit`] reads.
+    HitReason(&'static str),
     /// A chance to deal double damage, percent (PoB's `DoubleDamageChance`,
     /// P3-8n): `Base`; a hit's damage is scaled by `1 + min(chance, 100) /
     /// 100` ([`hit`]).
@@ -639,6 +644,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ManaCostEfficiency => f.write_str("mana-cost-efficiency"),
             Self::CostEfficiency => f.write_str("cost-efficiency"),
             Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),
+            Self::HitReason(stat) => write!(f, "hit-reason.{stat}"),
             Self::DoubleDamageChance => f.write_str("double-damage-chance"),
             Self::Conversion(from, to) => {
                 write!(f, "conversion.{}.{}", from.name(), to.name())

@@ -810,6 +810,10 @@ mod tests {
         // "Hits always Shock", P3-8k).
         "all_damage_can_shock",
         "always_shock",
+        // P6-8a: Cast when Damage Taken's chance and threshold (the
+        // trigger's, `poe1::triggers`), not the enemy's damage taken.
+        "cast_on_damage_taken_%",
+        "cast_on_damage_taken_threshold",
         "base_chance_to_shock_%",
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
@@ -847,6 +851,9 @@ mod tests {
         let read_here = [
             "consecrated_ground_enemy_damage_taken_+%",
             "chance_to_freeze_shock_ignite_%",
+            // P6-8a: Cast when Damage Taken's own less damage on the spell it
+            // triggers; "damage taken" names the trigger, not the enemy.
+            "cast_on_damage_taken_damage_+%_final",
         ];
         for id in ids {
             assert!(

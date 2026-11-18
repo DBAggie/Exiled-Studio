@@ -617,6 +617,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // PoB `Data/Skills/sup_str.lua` 1158 (Cast when Damage Taken's own
+    // stat map): `Damage` MORE (P6-8a).
+    (
+        "cast_on_damage_taken_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
     // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
     // skills"; `ModParser.lua` 754, 1052); likewise below.
@@ -1394,6 +1400,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_brutality_physical_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::PHYSICAL, NONE)],
     ),
+    // PoB `Data/Skills/sup_dex.lua` 597 (Cast On Critical Strike's
+    // triggered part): `Damage` MORE with `ModFlag.Spell` (P6-8a).
+    (
+        "support_cast_on_crit_spell_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
     (
         "support_controlled_destruction_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
@@ -1792,6 +1804,7 @@ impl StatMapping for SkillMapping {
                             Poe1Quantity::MovementReason(_)
                                 | Poe1Quantity::RegenReason(..)
                                 | Poe1Quantity::CostReason(_)
+                                | Poe1Quantity::HitReason(_)
                         )
                     )
                 }) =>
@@ -3051,6 +3064,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ailment-on-self",
     ),
     ("cannot_have_life_leeched_from", "leech"),
+    // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
+    ("cast_linked_spells_on_attack_crit_%", "trigger"),
+    // P6-8a: Cast when Damage Taken's chance; PoB's stat map has no row.
+    ("cast_on_damage_taken_%", "trigger"),
+    // P6-8a: read by `poe1::triggers` (`triggeredByDamageTaken`).
+    ("cast_on_damage_taken_threshold", "trigger"),
+    // P6-8a: PoB's `triggeredByCoc` and `triggerOnCrit`, which
+    // `poe1::triggers` reads from the support.
+    ("cast_spell_on_linked_attack_crit", "trigger"),
     (
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
@@ -3162,6 +3184,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
     ("local_has_X_sockets", "sockets"),
+    // P6-8a: the gems a trigger support supports; PoB has no row.
+    (
+        "local_support_gem_max_skill_level_requirement_to_support",
+        "support-limit",
+    ),
     (
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
@@ -3254,6 +3281,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
+    // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
+    ("spell_uncastable_if_triggerable", "trigger"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
     ("stun_threshold_+%", "stun"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
@@ -3278,6 +3307,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("take_half_area_damage_from_hit_%_chance", "damage-taken"),
+    // P6-8a: PvP scaling; PoB has no row.
+    (
+        "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
+        "pvp",
+    ),
     ("unaffected_by_burning_ground", "ground-on-self"),
     ("visual_hit_effect_elemental_is_holy", "display"),
     (
@@ -3505,11 +3539,22 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
     ),
 ];
 
+/// Stats that change a hit's rate or DPS in a way the engine does not model,
+/// sorted (P6-8a): PoB's `showAverage` (`SkillStatMap.lua` 136), which
+/// reports the average hit instead of DPS for a skill that is not
+/// triggered; a trigger's rate turns it off (`CalcOffence.lua` 2227). A
+/// field marker ([`field_marker`]) the hit reads onto its speed unless a
+/// ported trigger sets the rate, not a reason on every field.
+pub const HIT_REASONS: &[&str] = &["base_skill_show_average_damage_instead_of_dps"];
+
 /// The field-scoped reason marker `stat` maps to, if any (P6-10b):
 /// [`COST_REASONS`], [`MOVEMENT_REASONS`], or [`REGEN_REASONS`], each a
 /// `Flag` only that field's phase reads.
 #[must_use]
 pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
+    if let Ok(i) = HIT_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::HitReason(HIT_REASONS[i]));
+    }
     if let Ok(i) = COST_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::CostReason(COST_REASONS[i]));
     }

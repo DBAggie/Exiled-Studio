@@ -3496,6 +3496,126 @@
       "test": "crates/loom-calc/src/poe1/minion_actor.rs::tests::the_level_should_be_the_games_stat_clamped",
       "added": "2026-11-18",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0175",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-ice-nova-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.005553924168724954,
+      "successor_value": 0.00555114859442774,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-ice-nova-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0176",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-ice-nova-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 4.659060286248265,
+      "successor_value": 4.656731920288121,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-ice-nova-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0177",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-ice-nova-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 4.659060286248265,
+      "successor_value": 4.656731920288121,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-ice-nova-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0178",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-two-spells-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.005529907882059101,
+      "successor_value": 0.005527144309904149,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-two-spells-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0179",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-two-spells-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 4.63891357123582,
+      "successor_value": 4.636595273599021,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-two-spells-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0180",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "trigger-coc-two-spells-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 4.63891357123582,
+      "successor_value": 4.636595273599021,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture trigger-coc-two-spells-templar.xml (P6-8a): the trigger rate is PoB's simulation (CalcTriggers.lua 87 to 133) from Smite's attack rate, which is the registered Q11 difference (1.2743628 against PoB's 1.275); with PoB's 1.275 the engine's simulation gives PoB's value to the bit (local/p6 coc_sim.py), so the trigger rate, TotalDPS, and CombinedDPS carry the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
+      "added": "2026-11-18",
+      "status": "accepted"
     }
   ]
 }

@@ -695,6 +695,57 @@ pub fn main_skill<'d>(
     })
 }
 
+/// A copy of `build` whose main skill is the active skill `active` of the
+/// group `group` (both 1-based, as PoB's `mainSocketGroup` and
+/// `mainActiveSkill`), in the active skill set (P6-8a: a trigger's source
+/// skill, which PoB computes as its own skill, `calcs.buildActiveSkill`).
+#[must_use]
+pub fn with_main_skill(build: &Build, group: usize, active: usize) -> Build {
+    let mut b = build.clone();
+    b.character.main_socket_group = u32::try_from(group).ok().map(loom_domain::Sourced::new);
+    let active_id = b.skills.active;
+    let set = match active_id.filter(|id| b.skills.sets.typed().any(|s| s.id == *id)) {
+        Some(id) => b.skills.sets.typed_mut().find(|s| s.id == id),
+        None => b.skills.sets.typed_mut().next(),
+    };
+    if let Some(g) = set.and_then(|s| s.groups.typed_mut().nth(group.wrapping_sub(1))) {
+        g.main_active_skill = u32::try_from(active).ok().map(loom_domain::Sourced::new);
+    }
+    b
+}
+
+/// Every active skill of the active skill set's enabled groups, in PoB's
+/// `activeSkillList` order (group by group, each group's active skills in
+/// order): the group and the active skill's index (both 1-based) and the
+/// skill as [`main_skill`] picks it (P6-8a: trigger sources and the skills
+/// a trigger triggers). A group whose pick is uncertain is left out.
+#[must_use]
+pub fn active_skills<'d>(
+    build: &Build,
+    data: &'d dyn CalcData,
+    levels: &GemLevels,
+) -> Vec<(usize, usize, MainSkill<'d>)> {
+    let Ok(groups) = active_groups(build) else {
+        return Vec::new();
+    };
+    let all = socket_matches(build, &groups, data);
+    let mut out = Vec::new();
+    for (i, group) in groups.iter().enumerate() {
+        if !group.enabled {
+            continue;
+        }
+        let matches: &[SocketMatch] = all.get(i).map_or(&[], Vec::as_slice);
+        let (actives, _) = group_effects(group, matches, data, levels);
+        for a in 1..=actives.len() {
+            let b = with_main_skill(build, i + 1, a);
+            if let Ok(skill) = main_skill(&b, data, levels) {
+                out.push((i + 1, a, skill));
+            }
+        }
+    }
+    out
+}
+
 /// One active effect of a socket group with the supports that apply to it
 /// (P3-12h: every group's skills, not only the main one's).
 #[derive(Debug, Clone)]

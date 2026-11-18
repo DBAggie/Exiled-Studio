@@ -360,6 +360,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("AnimateGuardianAltX", Kind::Inert),
     ("AnimateWeapon", Kind::Inert),
     ("AnimateWeaponAltY", Kind::Inert),
+    // P6-8a: Cast On Critical Strike's second spell
+    ("Arc", Kind::Inert),
     (
         "ArcticArmour",
         Kind::Buff {
@@ -1471,6 +1473,45 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("SearingBond", Kind::Inert),
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
+    // Smite's aura (P6-8a: Smite beside the main skill, as Cast On Critical
+    // Strike's source): `LightningMin` and `LightningMax` BASE as a
+    // `GlobalEffect` aura without flags, and `EnemyShockChance`
+    // (`Data/Skills/act_str.lua` 10325 to 10334; their `AffectedByVaalSmite`
+    // condition is off without Vaal Smite). As the main skill its aura acts
+    // through the hit's mapping (P3-8l). Its other stats act on Smite alone.
+    (
+        "Smite",
+        Kind::Buff {
+            name: "Smite",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_chance_to_shock_%_from_skill",
+                    BuffStat::NoSlice("ailment-chance"),
+                ),
+                (
+                    "maximum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "minimum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     // Sniper's Mark (P6-9e): projectile hits only ([`super::hit`]).
     (
         "SnipersMark",
@@ -1889,6 +1930,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ),
     ("SupportAutomation", &[]),
     ("SupportAwakenedBrutality", &[]),
+    ("SupportAwakenedCastOnCriticalStrike", &[]),
     ("SupportAwakenedControlledDestruction", &[]),
     // P6-9e
     ("SupportAwakenedEmpower", &[]),
@@ -1900,6 +1942,13 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportBarrage", &[]),
     ("SupportBrutality", &[]),
     ("SupportBurningDamage", &[]),
+    // Cast On Critical Strike's two parts (P6-8a; the awakened gem's attack
+    // part is `SupportAwakenedCastOnCriticalStrike`) and Cast when Damage
+    // Taken: no global stat; the trigger reads theirs (`poe1::triggers`).
+    ("SupportCastOnCritTriggered", &[]),
+    ("SupportCastOnCritTriggeredPlus", &[]),
+    ("SupportCastOnCriticalStrike", &[]),
+    ("SupportCastWhenDamageTaken", &[]),
     ("SupportChanceToBleed", &[]),
     ("SupportCombustion", &[]),
     ("SupportConcentratedEffect", &[]),

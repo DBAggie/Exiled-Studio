@@ -108,8 +108,10 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7c3b: a spell's cooldown caps its rate (`hit::cooldown_limit`, the character's spells too); the Lightning Golem's Storm Orb; fixture `minion-summon-lightning-golem-witch.xml`; `docs/phase-6/minions.md`, "P6-7c, part 3b"
 - [x] P6-7c3c: a minion attack's own stat map (`minion_hit::OWN_STATS`, `minion_actor::OwnSkillMapping`): the Carrion Golem's combo attack, every value equal to PoB; `docs/phase-6/minions.md`, "P6-7c, part 3c"
 - [x] P6-7c3d: the minion's ignite, bleeding, poison, impale, and combined DPS (slice revision 11, `applies: minion-present`; `combined::combine` under the minion actor; the monster template's critical ailment DoT multiplier); DIV-0174; 15 minion fixtures retargeted; `docs/phase-6/minions.md`, "P6-7c, part 3d"
-- [ ] P6-7c3 rest: triggered minion skills (the relic's Nova), stat-mapped attacks (the Carrion Golem's), the minion's ailments and damage over time, spectres
+- [ ] P6-7c3 rest: the relic's Nova (P6-8a, data), the minion's damage over time, spectres
 ## P6-8a: triggers
+- [x] P6-8a part 1: the shared handler (`poe1::triggers`: sources computed as their own skills, cooldown cap, trigger chance, PoB's rotation simulation), Cast On Critical Strike, Cast when Damage Taken, Cast when Stunned; `showAverage` a hit-scoped marker; Smite's aura and Arc as other gems; four fixtures; DIV-0175 to DIV-0180; `docs/phase-6/triggers.md`
+- [ ] P6-8a further configs: Cast while Channelling, Cast on Melee Kill, Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; the Holy Relic's Nova (data: skill level requirements)
 ## P6-8b: mirages
 ## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)
 - [x] Order change (decision without the maintainer, D10): P6-9 before P6-7c, since every minion build's fields carry the summoning gem's `unmodelled-gem` until P6-9 models it, so P6-7c's minion hit fields could not be shown `Complete`

@@ -1951,6 +1951,46 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CombinedDPS", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7c3b: Summon Lightning Golem (level 20): its Storm Orb, a minion spell at the golem's level whose 8 second cooldown (two stored uses, so not rounded to a server tick) caps its rate at 0.125."
+    },
+    {
+      "id": "trigger-coc-ice-nova-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-coc-ice-nova-templar.xml",
+      "sha256": "d186ad570ab1fb4e36c36680500a7c297abdb0c71f9e237b8f4648a6c8bc676f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-8a: Smite with Cast On Critical Strike and Ice Nova, Ice Nova the main skill: the trigger rate from Smite's attack rate, hit chance, and crit chance through PoB's rotation simulation, Smite's aura on the spell. Speed, TotalDPS, and CombinedDPS carry Smite's Q11 attack rate (DIV-0175 to DIV-0177)."
+    },
+    {
+      "id": "trigger-coc-two-spells-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-coc-two-spells-templar.xml",
+      "sha256": "76d088c268db8f3a3bd1daea507dce14082e8f851148ba94e732d5719370a6cc",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-8a: Cast On Critical Strike with Ice Nova and Arc: two spells share the triggers (PoB's rotation). Speed, TotalDPS, and CombinedDPS carry Smite's Q11 attack rate (DIV-0178 to DIV-0180)."
+    },
+    {
+      "id": "trigger-coc-no-attack-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-coc-no-attack-templar.xml",
+      "sha256": "6cbfa928c3b28714ddd8e325d0dbf037c411a750cda4a5e85afbe66774c7d3fa",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-8a: Cast On Critical Strike and Ice Nova without an attack: no source, so PoB reports the spell as self-cast."
+    },
+    {
+      "id": "trigger-cwdt-ice-nova-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-cwdt-ice-nova-templar.xml",
+      "sha256": "adf42d278cc84ace6d226652e9510c27c6d34dc74378d72a1bfdbddde77841b0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-8a: Cast when Damage Taken and Ice Nova: a global trigger at its 0.25 s cooldown rounded to a server tick, and its less damage."
     }
   ]
 }

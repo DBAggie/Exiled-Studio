@@ -326,6 +326,21 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("VaalMoltenShell", "moltenShellReflect"),
     // A Vaal skill's soul gain prevention duration (P6-9e): no slice field.
     ("VaalMoltenShell", "skillEffectAppliesToSoulGainPrevention"),
+    // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
+    // their stats (the chance on crit, the threshold, the triggered marks).
+    (
+        "SupportAwakenedCastOnCriticalStrike",
+        "chanceToTriggerOnCrit",
+    ),
+    ("SupportCastOnCritTriggered", "triggerOnCrit"),
+    ("SupportCastOnCritTriggered", "triggered"),
+    ("SupportCastOnCritTriggered", "triggeredByCoc"),
+    ("SupportCastOnCritTriggeredPlus", "triggerOnCrit"),
+    ("SupportCastOnCritTriggeredPlus", "triggered"),
+    ("SupportCastOnCritTriggeredPlus", "triggeredByCoc"),
+    ("SupportCastOnCriticalStrike", "chanceToTriggerOnCrit"),
+    ("SupportCastWhenDamageTaken", "triggered"),
+    ("SupportCastWhenDamageTaken", "triggeredByDamageTaken"),
     // Tempest Shield's counterattack trigger on block (P6-9e): a `SkillData`
     // for attack skills (`SkillType` 2) it triggers, none of its own.
     ("TempestShield", "chanceToTriggerCounterattackOnBlock"),
@@ -366,6 +381,9 @@ const NO_SLICE_NAMES: &[&str] = &[
     "Condition:HavePhysicalGolem",
     "DamageTakenWhenHit",
     "Dummy",
+    // Smite's aura's shock chance (P6-8a): the engine applies shock only
+    // from a guaranteed source, never a chance (`base_chance_to_shock_%`).
+    "EnemyShockChance",
     // Steelskin's bleed avoidance and the guards' absorption (P6-9e).
     "AvoidBleed",
     "GuardAbsorbLimit",
@@ -435,6 +453,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // Automation triggers the skill it supports (close-out): the skill's
     // own kind says what it does.
     ("SupportAutomation", "Triggered"),
+    // The trigger supports the engine ports (P6-8a, `poe1::triggers`): the
+    // trigger sets the supported spell's rate.
+    ("SupportCastOnCritTriggered", "Triggered"),
+    ("SupportCastOnCritTriggeredPlus", "Triggered"),
+    ("SupportCastWhenDamageTaken", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
@@ -456,6 +479,14 @@ fn ailment_max(name: &str) -> bool {
         ]
         .iter()
         .any(|a| name == format!("{a}Max"))
+}
+
+/// PoB's negated `AffectedByVaalSmite` condition (Smite's aura).
+fn is_not_vaal_smite(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("Condition")
+        && t.get("var").and_then(Value::as_str) == Some("AffectedByVaalSmite")
+        && t.get("neg") == Some(&Value::Bool(true))
+        && t.len() == 3
 }
 
 /// PoB's tag for a `notMinionStat` mod: the actor has no parent.
@@ -499,6 +530,10 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         // `notMinionStat`'s tag (`ActorCondition` `parent`, negated): the
         // mod is not a minion's; every row here is the character's.
         .filter(|t| !is_not_minion(t))
+        // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
+        // Vaal Smite has no entry in the engine's tables, so a build with it
+        // carries an `unmodelled-gem` reason and the condition is off.
+        .filter(|t| !is_not_vaal_smite(t))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
     if let Some(g) = m.global_effect() {

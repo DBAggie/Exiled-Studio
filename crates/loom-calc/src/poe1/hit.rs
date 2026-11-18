@@ -495,9 +495,14 @@ pub fn spell_skill<'d>(
         return None;
     }
     let has = |t: &str| skill.types.contains(t);
+    // A triggered spell is computed when the engine ports its trigger
+    // (P6-8a, [`super::triggers`]): its rate is the trigger's.
+    let triggered = super::triggers::computable(&skill);
     if !has("Spell")
         || !(has("Damage") || has("Projectile"))
-        || NOT_SELF_CAST.iter().any(|t| has(t))
+        || NOT_SELF_CAST
+            .iter()
+            .any(|t| has(t) && !(*t == "Triggered" && triggered))
     {
         return None;
     }
@@ -1079,7 +1084,20 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         &[Field::CritChance, Field::CritMultiplier],
     );
 
-    let (speed, mut speed_reasons) = cast_rate(calc, spell, &cx)?;
+    // A trigger's rate replaces the cast rate (P6-8a; `CalcOffence.lua`
+    // 2223 to 2227); without a source PoB reports the skill as self-cast.
+    let (speed, mut speed_reasons) =
+        match super::triggers::rate(calc, &spell.skill, &spell.source()) {
+            super::triggers::Outcome::SelfCast => cast_rate(calc, spell, &cx)?,
+            super::triggers::Outcome::Rate(value, reasons) => (
+                phases::constant(calc, "skill-trigger-rate", value)?,
+                reasons,
+            ),
+            super::triggers::Outcome::Unsupported(reason) => {
+                calc.set_unsupported(Field::Speed, reason);
+                return Ok(());
+            }
+        };
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
     hit_dps(calc, average, speed)?;
@@ -2197,7 +2215,17 @@ fn rate(
     self_cast: bool,
     limit: Option<Valued>,
 ) -> Result<(Valued, Reasons), CalcError> {
-    let mut reasons = Reasons::new();
+    // Stats that change the rate or DPS a way not modelled (PoB's
+    // `showAverage`), read here: a trigger's rate never reaches this
+    // function (P6-8a, [`super::mapping::HIT_REASONS`]).
+    let mut reasons = phases::marker_reasons(
+        calc,
+        |q| match q {
+            Quantity::Poe1(Poe1Quantity::HitReason(stat)) => Some(stat),
+            _ => None,
+        },
+        |_| false,
+    );
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
     let modifier = phases::product(calc, &[inc, more], Term::Step("modifier"))?;
     let modifier = round_2(calc, modifier, Term::Step("modifier-rounded"))?;
