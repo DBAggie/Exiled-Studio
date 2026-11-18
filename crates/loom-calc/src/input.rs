@@ -103,6 +103,15 @@ pub trait CalcData {
         None
     }
 
+    /// The game's minion damage at a level (`DefaultMonsterStats`'s
+    /// `MinionDamage`, PoB's `monsterAllyDamageTable`; P6-7c), the stored
+    /// single-precision number widened as PoB's table holds it; `None` (the
+    /// default) when the data has no such row.
+    fn monster_ally_damage(&self, level: i64) -> Option<f64> {
+        let _ = level;
+        None
+    }
+
     /// A monster type's armour and evasion multipliers, percent.
     fn monster_type(&self, id: &str) -> Option<MonsterDefences>;
 
@@ -448,6 +457,15 @@ impl CalcData for Bundle {
             alt1: row.alt_life_1,
             alt2: row.alt_life_2,
         })
+    }
+
+    fn monster_ally_damage(&self, level: i64) -> Option<f64> {
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(f64::from(row.ally_damage))
     }
 
     fn monster_type(&self, id: &str) -> Option<MonsterDefences> {

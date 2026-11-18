@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 4,
+  "revision": 5,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 5 (Phase 6, P6-7c): the minion's main skill's hit (AverageDamage, Speed, HitChance, CritChance, CritMultiplier, TotalDPS under output.Minion), applies minion as revision 4's.",
     "Revision 4 (Phase 6, P6-7b2): the minion's fields (group minion), each with its nested PoB path under main_output (pob_path, output.Minion) and applies minion: calc-parity compares every one when the oracle has a Minion table or our result has the field, value only (the oracle writes no minion breakdown).",
     "Revision 3 (Phase 6, P6-1): fields with applies present. Our result has such a field only when it applies to the build (the engine sets it); calc-parity compares it when our result has it or the oracle's value is a number other than 0, and leaves it out otherwise, so builds without the mechanic count no such field.",
     "Phase 3 plan, decision 4 (Q3, Q6). The calc computes these fields for the character and the main skill; calc-parity (P3-5) compares the Complete ones with each field's rule and the ten breakdowns term by term.",
@@ -168,7 +169,13 @@
     {"id": "Minion.FireResist", "group": "minion", "pob_key": "FireResist", "pob_path": ["Minion", "FireResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.ColdResist", "group": "minion", "pob_key": "ColdResist", "pob_path": ["Minion", "ColdResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.LightningResist", "group": "minion", "pob_key": "LightningResist", "pob_path": ["Minion", "LightningResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
-    {"id": "Minion.ChaosResist", "group": "minion", "pob_key": "ChaosResist", "pob_path": ["Minion", "ChaosResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."}
+    {"id": "Minion.ChaosResist", "group": "minion", "pob_key": "ChaosResist", "pob_path": ["Minion", "ChaosResist"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
+    {"id": "Minion.AverageDamage", "group": "minion", "pob_key": "AverageDamage", "pob_path": ["Minion", "AverageDamage"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.Speed", "group": "minion", "pob_key": "Speed", "pob_path": ["Minion", "Speed"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.HitChance", "group": "minion", "pob_key": "HitChance", "pob_path": ["Minion", "HitChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.CritChance", "group": "minion", "pob_key": "CritChance", "pob_path": ["Minion", "CritChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.CritMultiplier", "group": "minion", "pob_key": "CritMultiplier", "pob_path": ["Minion", "CritMultiplier"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
+    {"id": "Minion.TotalDPS", "group": "minion", "pob_key": "TotalDPS", "pob_path": ["Minion", "TotalDPS"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."}
   ],
   "not_in_slice": [
     {"what": "ailments, minions, CombinedDPS beyond hit DPS", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},

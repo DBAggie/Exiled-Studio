@@ -1579,7 +1579,7 @@
       "path": "mechanic/minion-summon-stone-golem-witch.xml",
       "sha256": "1657ce800e438a4b7b7bc6c0109e7ee5a2ca109b8288662ee04be5954939e6d4",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7b3a: Summon Stone Golem (level 20): a type with armour and evasion multipliers."
     },
     {
@@ -1589,7 +1589,7 @@
       "path": "mechanic/minion-summon-stone-golem-alt-y-witch.xml",
       "sha256": "d291a639bf46fe09ca517f5dff536d313819e7fb2672524f7e2363f4d5516f2c",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7b3a: Summon Stone Golem of Safeguarding: the gem's minion life stat (50% less life), applied to the minion since P6-7b3b."
     },
     {
@@ -1609,7 +1609,7 @@
       "path": "mechanic/minion-summon-stone-golem-golem-lines-witch.xml",
       "sha256": "c7c15a26b31d7873e021a87ed711f24b489c065dfe4fcd0ea10e1caaab5b9d7a",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7b3b: Summon Stone Golem with golem lines (life, armour) and two minion more-life lines: the character's minion modifiers on a golem, and PoB's more multiplier rounded to two decimals."
     },
     {
@@ -1619,7 +1619,7 @@
       "path": "mechanic/minion-summon-stone-golem-discipline-witch.xml",
       "sha256": "08625c9d0a2025bf492f8418270005607de15194638601bc91618179a0f80dbb",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7b4: Summon Stone Golem with Discipline in another group and 15% increased effect of non-curse auras: the character's aura on the minion, scaled as on the character."
     },
     {
@@ -1699,7 +1699,7 @@
       "path": "mechanic/minion-raise-zombie-witch.xml",
       "sha256": "6761130964862417576f7ec9fcbdc1a3d64a56997a0bad4cbcc62818a9228cd9",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-9c: Raise Zombie (level 20), modelled as inert for the character: the zombie life, armour, evasion, and resistances."
     },
     {
@@ -1709,7 +1709,7 @@
       "path": "mechanic/minion-summon-skeletons-witch.xml",
       "sha256": "1b6dda9a3c1868e8da37e47cbd16663d2c5c3ca475398f0154ce4311e3b7e9d6",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-9c: Summon Skeletons (level 20), modelled as inert for the character: the skeleton life and defences."
     },
     {
@@ -1719,7 +1719,7 @@
       "path": "mechanic/minion-summon-raging-spirit-witch.xml",
       "sha256": "7ce5277381e5112bf733105644898eba9dd3fc718ea3ff0dcc99d32e1c88bb00",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-9c: Summon Raging Spirit (level 20), modelled as inert for the character: the spirit life and defences."
     },
     {
@@ -1809,8 +1809,18 @@
       "path": "mechanic/minion-raise-zombie-offerings-witch.xml",
       "sha256": "704203c979daf6a8034fef45e77ed3199ec2ed0811bc8e4b990446007376885b",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "P6-9e: Bone Offering and Flesh Offering with Raise Zombie: none of their buffs reaches the character (its block and spell block); the minion's block and speed are not slice fields."
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9e: Bone Offering and Flesh Offering with Raise Zombie: none of their buffs reaches the character (its block and spell block); the minion's block is not a slice field. P6-7c: Flesh Offering's attack speed reaches the zombie's hit."
+    },
+    {
+      "id": "minion-raise-zombie-damage-speed-lines-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-raise-zombie-damage-speed-lines-witch.xml",
+      "sha256": "43e7589f516f13bf63cf0f5f32471d4237476f3cc1ad2d7bfd81b65a4ee9b8c6",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7c: Raise Zombie with the character's minion damage and speed lines: the zombie's hit (its monster weapon, damage, attack speed with PoB's rounding, crit, the enemy's armour)."
     }
   ]
 }

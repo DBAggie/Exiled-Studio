@@ -1292,7 +1292,7 @@ fn hand_hit(
 
 /// An attack's hit (module docs): with the weapon in the main hand, and
 /// with the off hand's too when dual wielding (Phase 6).
-fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
+pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
     let mut flags =
@@ -1675,6 +1675,33 @@ pub(super) fn weapon_data(
     // doubles, `66700 / 58` is 1150). PoB instead rounds: `round(round(1000 /
     // time, 2) x (1 + inc / 100), 2)`. A reduction of 100% or more gives a
     // rate of 0 or below, as PoB's formula does; no reason is added.
+    // A minion's weapon: PoB's rate `1 / attackTime` as is (P6-7c; no local
+    // modifier reaches it).
+    let own_rate = weapon(WeaponValue::AttackRate);
+    if calc
+        .store()
+        .effects()
+        .iter()
+        .any(|e| e.quantity == own_rate)
+    {
+        let rate = sum_in(
+            calc,
+            own_rate,
+            Op::Base,
+            &cx,
+            Term::Step("weapon-rate"),
+            reasons,
+        )?;
+        let crit = sum_in(
+            calc,
+            weapon(WeaponValue::CritChance),
+            Op::Base,
+            &cx,
+            Term::Step("weapon-crit"),
+            reasons,
+        )?;
+        return Ok(WeaponData { damage, rate, crit });
+    }
     let time = sum_in(
         calc,
         weapon(WeaponValue::AttackTime),
@@ -1948,7 +1975,13 @@ fn crit_multiplier(
         return Ok((by_flag(calc, flag, "no-extra-crit-damage", 1.0)?, reasons));
     }
     let mut terms = Vec::new();
-    match data.character_constant(CRIT_MULTIPLIER_STAT) {
+    // A minion's base is the monster template's (`initMinionModDB`,
+    // `CalcPerform.lua` 1146; P6-7c), the character's the character's.
+    let base = match calc.actor() {
+        crate::engine::Actor::Player => data.character_constant(CRIT_MULTIPLIER_STAT),
+        crate::engine::Actor::Minion => data.monster_constant(CRIT_MULTIPLIER_STAT),
+    };
+    match base {
         Some(base) => {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
             let extra = (base - 100) as f64;

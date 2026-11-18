@@ -17,16 +17,17 @@ pub const FORMAT: u32 = 1;
 /// to every breakdown term and `node` to slot rows (P3-5); revision 3
 /// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`;
 /// revision 4 added the minion's fields ([`MINION_NAMES`], P6-7b2), each
-/// with a nested PoB path (`pob_path`) and `applies: minion`.
-pub const REVISION: u32 = 4;
+/// with a nested PoB path (`pob_path`) and `applies: minion`; revision 5
+/// added the minion's main skill's hit (P6-7c).
+pub const REVISION: u32 = 5;
 
-/// The minion's fields (slice revision 4; Phase 6 P6-7b2): our id, PoB's
+/// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
 /// result has them only when the main skill has a minion the engine
 /// computes; every one is compared when the oracle's `main_output` has a
 /// `Minion` table or our result has the field (`applies: minion`), so a
 /// minion value of 0 is compared, not skipped.
-pub const MINION_NAMES: [(&str, [&str; 2], &str); 8] = [
+pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
     ("Minion.Life", ["Minion", "Life"], "minion.life"),
     (
         "Minion.EnergyShield",
@@ -55,6 +56,29 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 8] = [
         ["Minion", "ChaosResist"],
         "minion.resistance.chaos",
     ),
+    // Revision 5 (P6-7c): the minion's main skill's hit.
+    (
+        "Minion.AverageDamage",
+        ["Minion", "AverageDamage"],
+        "minion.average-damage",
+    ),
+    ("Minion.Speed", ["Minion", "Speed"], "minion.speed"),
+    (
+        "Minion.HitChance",
+        ["Minion", "HitChance"],
+        "minion.hit-chance",
+    ),
+    (
+        "Minion.CritChance",
+        ["Minion", "CritChance"],
+        "minion.crit-chance",
+    ),
+    (
+        "Minion.CritMultiplier",
+        ["Minion", "CritMultiplier"],
+        "minion.crit-multiplier",
+    ),
+    ("Minion.TotalDPS", ["Minion", "TotalDPS"], "minion.hit-dps"),
 ];
 
 /// The Phase 6 fields (slice revision 3; Phase 6 plan, decision 2): PoB's

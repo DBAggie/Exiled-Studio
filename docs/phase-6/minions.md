@@ -367,3 +367,53 @@ The minion's scale is `(1 + inc / 100) x more`, from the skill's `AuraEffect` an
 - **Public `calc-parity` on `b-ot`:** 163 builds, 109 expected differences, 0 unexpected. No document but the new fixture's changed.
 - **Corpus:** unchanged, 0 unexpected.
 - Both runs are byte-identical.
+
+## P6-7c, part 1: the minion's hit
+
+PoB computes the minion's main skill with its own offence code: `calcs.offence(env, env.minion, env.minion.mainSkill)` (`CalcPerform.lua` 3737). The engine does the same. Under the minion actor, `Calc` writes and reads each field as the minion's copy (`Field::for_minion`, `Calc::with_actor`), so the character's attack path (`hit::attack_hit`) computes the minion's hit unchanged (`poe1::minion_hit`).
+
+**What PoB does:**
+- **The minion's skills** (`CalcActiveSkill.lua` 870 to 922): its `skillList` (the variety's skills, then the template's), each PoB's data has, at level 1, with the summoning skill's supports. The main one is the gem's `skillMinionSkill` (1-based, clamped), else the first; PoB's default attack when the list is empty.
+- **Its weapon** (719 to 752):
+  - `damage = monsterAllyDamageTable[level] x damage`, times `attackTime` unless the type's damage ignores attack speed;
+  - `PhysicalMin = round(damage x (1 - damageSpread))` and `PhysicalMax = round(damage x (1 + damageSpread))`;
+  - `AttackRate = 1 / attackTime`, `CritChance = 5`;
+  - its type is the variety's main-hand class through the exporter's class map (`minions.lua` 76 to 93), else `None` (unarmed); the off hand holds nothing.
+- **`damageFixup`** (488 to 490; the exporter, `minions.lua` 185 to 191): `Damage` MORE `-100 x fixup` and `Speed` MORE `100 x fixup` for attacks, from a `MonsterSpeedAndDamageFixup*` mod.
+- **`initMinionModDB`** (`CalcPerform.lua` 1141 to 1146): `CannotBeEvaded`, and `CritMultiplier` BASE of the monster template's `base_critical_strike_multiplier - 100`.
+- **The enemy is shared:** one `enemyDB`, so the character's curses, debuffs, exposure, and the configured enemy conditions reach the minion's hits.
+
+**The engine:**
+- `minion_actor::collect`:
+  - the minion's main skill (`ActorState::skill`) and its weapon class (`ActorState::weapon`);
+  - its monster weapon as the weapon quantities an item gives the character, from the variety, the type, and the new `CalcData::monster_ally_damage`. The table's single-precision number is widened as PoB's table holds it; the multipliers are the exporter's (`lua_number`). The rate is the new `WeaponValue::AttackRate`, PoB's `1 / attackTime` as is: the item path's millisecond rate differs from it by one ulp;
+  - `damageFixup` and `CannotBeEvaded`;
+  - the enemy's effects (every effect on an enemy quantity, and every effect of a curse or debuff skill) and the configured `Enemy:` conditions, copied from the character's.
+- `hit::crit_multiplier` takes the monster template's base for the minion.
+- `MinionValue::on_minion` gives damage and attack and cast speed with their flags, so the character's "Minions deal #% increased Damage" and kin, and the main skill's gems' minion stats, reach the minion's hit.
+- The minion's own monster mods that reach its hit now have PoB's mods (`MINION_STATS`):
+  - `active_skill_attack_speed_+%_final`;
+  - added physical damage to attacks, and to the main hand's weapon;
+  - the three physical conversions;
+  - `dual_wield_inherent_attack_speed_+%_final` (the minion never dual wields).
+
+  Until this step they had no effect, which was right while the minion had only defence fields.
+- The minion's strength, dexterity, and intelligence are computed from its own store (none but the character's minion modifiers give it any), as its hit reads them.
+
+**Computed:** a minion skill of `minion_hit::VETTED` (PoB's default attack `Melee`, the Raging Spirit's `SumonRagingSpiritMelee`: plain attacks in PoB's data, a test), when the summoning skill has no support. Otherwise the minion's offence fields are `unmodelled-skill`:
+- `minion-skill`: any other minion skill (the golems' and relics' spells, the Reaper's);
+- `minion-skill-support`: PoB applies the summoning skill's supports to the minion's skills, which the engine does not yet;
+- `minion-weapon`: a weapon class PoB has no flags for.
+
+**Slice revision 5:** `Minion.AverageDamage`, `Minion.Speed`, `Minion.HitChance`, `Minion.CritChance`, `Minion.CritMultiplier`, `Minion.TotalDPS` (PoB's `output.Minion`). The result gains the minion's copies of the offence fields and its attributes (`MinionField`, additive).
+
+### Evidence
+
+- **The sweep (52 builds):** 10 builds' minion hits computed, 58 offence values equal to PoB, 2 registered. Vaal Summon Skeletons' damage follows its minion level, 68 against PoB's 70: DIV-0123 and DIV-0124, `game-truth`, as DIV-0111 to DIV-0113. Minion fields equal to PoB: 175 (109 before). 0 unexpected.
+  - The Raging Spirit first showed `Complete` but differed. Its monster mods (conversion to fire, added physical damage, attack speed MORE 40) had no effect, and nothing marked them a reason. Fixed with their PoB mods above. The other `Later` rows reach no minion field: damage taken, immunities, stun, leech, regeneration, and charges.
+- **Fixture:** `minion-raise-zombie-damage-speed-lines-witch.xml`: the character's minion damage and speed lines, with all 14 minion fields equal to PoB. Nine minion fixtures are retargeted to their hit fields.
+- **Public `calc-parity` on `b-ot`:** 183 builds, 123 expected differences, 0 unexpected. `Complete` fields: 3,447. No value of another build moved.
+- **Corpus:** 0 unexpected, no value moved.
+- Both runs are byte-identical.
+
+**Next (P6-7c, part 2):** the summoning skill's supports on the minion's skills; more minion skills (spells, slams); damage over time and ailments of the minion (the copies exist: `MinionField::IgniteDps` and kin); spectres.

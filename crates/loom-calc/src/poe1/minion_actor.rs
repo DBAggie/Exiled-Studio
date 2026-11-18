@@ -101,13 +101,13 @@ use super::phases::{self, Valued};
 use super::pob_minion::{self, PobMinion};
 use super::pob_skill::{self, PobSkill};
 use super::{Defence, Poe1Quantity, gem_levels::GemLevels, skill, states};
-use crate::condition::{ConditionKey, Conditions};
+use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::engine::{Actor, ActorState, Calc};
 use crate::error::CalcError;
 use crate::ingest::{EffectTemplate, Ingest, StatMap, StatMapping};
 use crate::input::CalcInput;
 use crate::math;
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::result::{Field, MinionField};
 use crate::source::Source;
 use crate::state::{Reasons, UnsupportedReason};
@@ -308,6 +308,27 @@ fn collect(
     mod_list(input, minions, variety, &mut ingest);
     let mut states = std::collections::BTreeMap::new();
     template_mods(template, &mut ingest, &mut states);
+    // The minion's own hit (P6-7c, [`super::minion_hit`]): its main skill,
+    // its monster weapon, and PoB's offence mods of `initMinionModDB`.
+    let own_skill = minion_skill(input, skill, variety, template);
+    if own_skill.is_some() {
+        weapon(input, variety, ty, level, &mut ingest);
+    }
+    ingest.effect(base(
+        Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
+        Op::Flag,
+        1.0,
+    ));
+    // The enemy is shared (PoB's one `enemyDB`): its modifiers and the
+    // configured enemy conditions reach the minion's hits too.
+    enemy_effects(input, player, &mut ingest);
+    let mut settled = std::collections::BTreeMap::new();
+    super::conditions::settle(input, &mut settled);
+    for (key, value) in settled {
+        if key.as_str().starts_with(ENEMY_STATE) {
+            states.insert(key, value);
+        }
+    }
     // The minion holds no weapon (PoB's `weaponData2` is empty without
     // items): it never dual wields.
     states.insert(ConditionKey::new(states::DUAL_WIELDING), false);
@@ -317,7 +338,214 @@ fn collect(
         global,
         states,
         skill_sources: std::collections::BTreeSet::new(),
+        skill: own_skill,
+        weapon: variety
+            .main_hand
+            .as_deref()
+            .and_then(weapon_class)
+            .map(str::to_owned),
     })
+}
+
+/// The weapon class of a minion's main hand as PoB's exporter keeps it
+/// (`itemClassMap`, `Export/Scripts/minions.lua` 76 to 93, then
+/// `weaponTypeInfo`): the item class whose flags
+/// [`super::hit::weapon_type_flags`] gives; `None` (unarmed) for a class
+/// the map leaves out or maps to `None`.
+fn weapon_class(game_class: &str) -> Option<&'static str> {
+    Some(match game_class {
+        "Claw" => "Claw",
+        "Dagger" => "Dagger",
+        "Wand" => "Wand",
+        "One Hand Sword" | "Thrusting One Hand Sword" => "One Hand Sword",
+        "One Hand Axe" => "One Hand Axe",
+        "One Hand Mace" | "Sceptre" => "One Hand Mace",
+        "Bow" => "Bow",
+        "Fishing Rod" => "FishingRod",
+        "Staff" => "Staff",
+        "Two Hand Sword" => "Two Hand Sword",
+        "Two Hand Axe" => "Two Hand Axe",
+        "Two Hand Mace" => "Two Hand Mace",
+        "Shield" => "Shield",
+        _ => return None,
+    })
+}
+
+/// The prefix of the enemy's conditions ([`super::conditions`]).
+const ENEMY_STATE: &str = "Enemy:";
+
+/// The source of the minion's monster weapon (P6-7c).
+pub const WEAPON_RULE: &str = "minion-weapon";
+
+/// The minion's main skill (`CalcActiveSkill.lua` 873 to 922): its skill
+/// list (the variety's skills, then the template's, each PoB's data has),
+/// the gem's `skillMinionSkill` (1-based, clamped) or the first; PoB's
+/// default attack when the list is empty.
+fn minion_skill(
+    input: &CalcInput<'_>,
+    summon: &skill::MainSkill<'_>,
+    variety: &MinionVariety,
+    template: &PobMinion,
+) -> Option<String> {
+    let list: Vec<&str> = variety
+        .skills
+        .iter()
+        .map(String::as_str)
+        .chain(template.skills.iter().copied())
+        .filter(|id| pob_skill::skill(id).is_some())
+        .collect();
+    if list.is_empty() {
+        return Some("Melee".to_owned());
+    }
+    let wanted = skill::active_groups(input.build)
+        .ok()
+        .and_then(|groups| groups.get(summon.group.checked_sub(1)?).copied())
+        .and_then(|g| g.gems.typed().nth(summon.active_gem.gem))
+        .and_then(|g| skill::attribute(&g.attributes, "skillMinionSkill"))
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(1);
+    let index = wanted.clamp(1, list.len()) - 1;
+    list.get(index).map(|s| (*s).to_owned())
+}
+
+/// PoB's `damageFixup` of the exporter (`minions.lua` 185 to 191): a
+/// variety mod's ID and its fixup.
+const DAMAGE_FIXUPS: [(&str, f64); 3] = [
+    ("MonsterSpeedAndDamageFixupSmall", 0.11),
+    ("MonsterSpeedAndDamageFixupLarge", 0.22),
+    ("MonsterSpeedAndDamageFixupComplete", 0.33),
+];
+
+/// The minion's monster weapon (`CalcActiveSkill.lua` 719 to 752, module
+/// docs of [`super::minion_hit`]), as the weapon quantities an item gives
+/// the character, and PoB's `damageFixup` (488 to 490: `Damage` MORE
+/// `-100 x fixup` and `Speed` MORE `100 x fixup` for attacks). The
+/// multipliers are the numbers PoB's exporter wrote ([`lua_number`]); the
+/// table's value is the game's single-precision number, as PoB's.
+fn weapon(
+    input: &CalcInput<'_>,
+    variety: &MinionVariety,
+    ty: &MinionType,
+    level: i64,
+    ingest: &mut Ingest<'_>,
+) {
+    use super::{Hand, WeaponValue};
+    let source = Source::Rule(WEAPON_RULE);
+    let effect = |quantity, op, value, all| Effect {
+        quantity,
+        op,
+        value,
+        conditions: Conditions::none().with_all(all),
+        source: source.clone(),
+    };
+    let Some(table) = input.data.monster_ally_damage(level) else {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "minion-weapon",
+        });
+        return;
+    };
+    #[expect(clippy::cast_precision_loss, reason = "game integers, exact as f64")]
+    let f = |v: i64| v as f64;
+    let damage_multiplier = lua_number(f(variety.damage) / 100.0);
+    let attack_time = lua_number(f(variety.attack_time) / 1000.0);
+    let spread = lua_number(f(ty.damage_spread) / 100.0);
+    let mut damage = table * damage_multiplier;
+    if !ty.damage_ignores_attack_speed {
+        damage *= attack_time;
+    }
+    let weapon = |v| Hand::Main.weapon(v);
+    let none = crate::condition::Flags::NONE;
+    for (bound, value) in [
+        (
+            crate::quantity::Bound::Min,
+            math::round_half_up(damage * (1.0 - spread)),
+        ),
+        (
+            crate::quantity::Bound::Max,
+            math::round_half_up(damage * (1.0 + spread)),
+        ),
+    ] {
+        if value != 0.0 {
+            ingest.effect(effect(
+                weapon(WeaponValue::Damage(DamageType::Physical, bound)),
+                Op::Base,
+                value,
+                none,
+            ));
+        }
+    }
+    if attack_time > 0.0 {
+        ingest.effect(effect(
+            weapon(WeaponValue::AttackRate),
+            Op::Base,
+            1.0 / attack_time,
+            none,
+        ));
+    }
+    ingest.effect(effect(weapon(WeaponValue::CritChance), Op::Base, 5.0, none));
+    for (id, fixup) in DAMAGE_FIXUPS {
+        if variety.mods.iter().any(|m| m == id) {
+            let attack = crate::condition::Flags::ATTACK;
+            ingest.effect(effect(Quantity::Damage, Op::More, -100.0 * fixup, attack));
+            ingest.effect(effect(Quantity::Speed, Op::More, 100.0 * fixup, attack));
+        }
+    }
+}
+
+/// The enemy's modifiers the character's skills and the config gave (the
+/// enemy is shared: PoB's curses, debuffs, exposure, and configured enemy
+/// conditions reach the minion's hits; P6-7c): every effect on an enemy
+/// quantity, and every effect of a curse or debuff skill (a curse's rows
+/// on the character's added damage and crit are the enemy's `Self...` mods
+/// in PoB, [`super::gems`]), copied with their sources.
+fn enemy_effects(input: &CalcInput<'_>, player: &ModStore, ingest: &mut Ingest<'_>) {
+    let groups = skill::active_groups(input.build).ok();
+    let enemy_skill = |source: &Source| -> bool {
+        let Source::Gem { group, gem } = source else {
+            return false;
+        };
+        let Some(g) = groups.as_ref().and_then(|gs| gs.get(*group)) else {
+            return false;
+        };
+        let Some(gem) = g.gems.typed().nth(*gem) else {
+            return false;
+        };
+        skill::gem_effects(gem, input.data)
+            .unwrap_or_default()
+            .iter()
+            .any(|e| {
+                matches!(
+                    super::gems::kind(&e.id),
+                    Some(super::gems::Kind::Curse { .. } | super::gems::Kind::Debuff { .. })
+                )
+            })
+    };
+    for e in player.effects() {
+        if is_enemy_quantity(e.quantity) || enemy_skill(&e.source) {
+            ingest.effect(e.clone());
+        }
+    }
+}
+
+/// A quantity of the enemy's (the shared enemy, P6-7c).
+const fn is_enemy_quantity(q: Quantity) -> bool {
+    matches!(
+        q,
+        Quantity::Poe1(
+            Poe1Quantity::EnemyDamageTaken
+                | Poe1Quantity::EnemyTypeDamageTaken(_)
+                | Poe1Quantity::EnemyResistance(_)
+                | Poe1Quantity::SkillExposure(_)
+                | Poe1Quantity::EnemyEvasion
+                | Poe1Quantity::EnemyAilmentDuration
+                | Poe1Quantity::EnemyPhysicalDamageReduction
+                | Poe1Quantity::EnemyProjectileDamageTaken
+                | Poe1Quantity::ChillDamageTaken(_)
+                | Poe1Quantity::ConsecratedGroundDamageTaken
+                | Poe1Quantity::ChillSecondsDamageTaken
+        )
+    )
 }
 
 /// The minion's level (module docs), clamped to 1 to 100; `None` when PoB
@@ -563,13 +791,17 @@ fn template_mods(
     }
 }
 
+/// No flag on a minion stat's effect.
+const NO_FLAGS: Flags = Flags::NONE;
+
 /// How a monster stat reads on a minion ([`MinionMapping`]).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MinionStat {
-    /// An effect a minion field reads.
-    Effect(Quantity, Op, Option<&'static str>),
-    /// PoB maps it to a mod no minion field reads (damage, speed, damage
-    /// taken, immunities, charges): P6-7c's.
+    /// An effect a minion field reads: its quantity, op, the flags of PoB's
+    /// mod (P6-7c: the minion's hit reads them), and the state it needs.
+    Effect(Quantity, Op, Flags, Option<&'static str>),
+    /// PoB maps it to a mod no minion field reads (damage taken by the
+    /// minion, immunities, stun, leech, regeneration, charges).
     Later,
 }
 
@@ -577,58 +809,134 @@ pub enum MinionStat {
 /// skill stat map; `Data/Minions.lua`'s `mod(...)` lines), sorted, and how
 /// they read; every other stat is a comment in PoB, with no effect.
 pub const MINION_STATS: [(&str, MinionStat); 29] = [
-    ("active_skill_attack_speed_+%_final", MinionStat::Later),
-    ("attack_maximum_added_physical_damage", MinionStat::Later),
-    ("attack_minimum_added_physical_damage", MinionStat::Later),
+    // P6-7c, the minion's hit (PoB `SkillStatMap.lua`): `Speed` MORE with
+    // `ModFlag.Attack` (1567).
+    (
+        "active_skill_attack_speed_+%_final",
+        MinionStat::Effect(Quantity::Speed, Op::More, Flags::ATTACK, None),
+    ),
+    // `PhysicalMax` BASE with `KeywordFlag.Attack` (1600), as the
+    // character's row.
+    (
+        "attack_maximum_added_physical_damage",
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Max),
+            Op::Base,
+            Flags::ATTACK,
+            None,
+        ),
+    ),
+    (
+        "attack_minimum_added_physical_damage",
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Min),
+            Op::Base,
+            Flags::ATTACK,
+            None,
+        ),
+    ),
     ("base_block_%_damage_taken", MinionStat::Later),
     ("base_cannot_be_damaged", MinionStat::Later),
     ("base_cannot_be_stunned", MinionStat::Later),
     (
         "base_maximum_energy_shield",
-        MinionStat::Effect(Quantity::EnergyShield, Op::Base, None),
+        MinionStat::Effect(Quantity::EnergyShield, Op::Base, NO_FLAGS, None),
     ),
+    // `PhysicalDamageConvertToChaos` BASE.
     (
         "base_physical_damage_%_to_convert_to_chaos",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Chaos,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
+    // `PhysicalDamageConvertToCold` BASE.
     (
         "base_physical_damage_%_to_convert_to_cold",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Cold,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
+    // `PhysicalDamageConvertToFire` BASE.
     (
         "base_physical_damage_%_to_convert_to_fire",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Fire,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
     (
         "block_while_dual_wielding_%",
-        MinionStat::Effect(Quantity::BlockChance, Op::Base, Some(states::DUAL_WIELDING)),
+        MinionStat::Effect(
+            Quantity::BlockChance,
+            Op::Base,
+            NO_FLAGS,
+            Some(states::DUAL_WIELDING),
+        ),
     ),
     ("cannot_be_knocked_back", MinionStat::Later),
+    // `Speed` MORE with `ModFlag.Attack` while dual wielding (1570): the
+    // minion never dual wields.
     (
         "dual_wield_inherent_attack_speed_+%_final",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Speed,
+            Op::More,
+            Flags::ATTACK,
+            Some(states::DUAL_WIELDING),
+        ),
     ),
     (
         "life_leech_from_physical_attack_damage_permyriad",
         MinionStat::Later,
     ),
     ("life_regeneration_rate_per_minute_%", MinionStat::Later),
+    // `PhysicalMax` BASE with `ModFlag.Weapon` and `KeywordFlag.Attack`
+    // (1609): a minion with a weapon type.
     (
         "main_hand_local_maximum_added_physical_damage",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Max),
+            Op::Base,
+            Flags::WEAPON.union(Flags::ATTACK),
+            None,
+        ),
     ),
+    // `PhysicalMin` BASE with `ModFlag.Weapon` and `KeywordFlag.Attack`
+    // (1609): a minion with a weapon type.
     (
         "main_hand_local_minimum_added_physical_damage",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Min),
+            Op::Base,
+            Flags::WEAPON.union(Flags::ATTACK),
+            None,
+        ),
     ),
     (
         "monster_base_block_%",
-        MinionStat::Effect(Quantity::BlockChance, Op::Base, None),
+        MinionStat::Effect(Quantity::BlockChance, Op::Base, NO_FLAGS, None),
     ),
     ("monster_inherent_damage_taken_+%_final", MinionStat::Later),
     (
         "physical_damage_reduction_rating_+%",
-        MinionStat::Effect(Quantity::Armour, Op::Increased, None),
+        MinionStat::Effect(Quantity::Armour, Op::Increased, NO_FLAGS, None),
     ),
     ("set_base_avoid_projectiles_%_chance", MinionStat::Later),
     ("set_base_cannot_be_damaged", MinionStat::Later),
@@ -642,7 +950,7 @@ pub const MINION_STATS: [(&str, MinionStat); 29] = [
     ("set_max_power_charges", MinionStat::Later),
     (
         "set_maximum_life_is_one",
-        MinionStat::Effect(Quantity::Life, Op::Override, None),
+        MinionStat::Effect(Quantity::Life, Op::Override, NO_FLAGS, None),
     ),
     ("stun_threshold_+%", MinionStat::Later),
 ];
@@ -657,10 +965,11 @@ impl StatMapping for MinionMapping {
     fn map(&self, stat: &StatId) -> StatMap {
         match MINION_STATS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
             Ok(i) => match MINION_STATS.get(i).map(|(_, s)| *s) {
-                Some(MinionStat::Effect(quantity, op, state)) => {
+                Some(MinionStat::Effect(quantity, op, flags, state)) => {
                     let conditions = state.map_or_else(Conditions::none, |key| {
                         Conditions::none().with_state(ConditionKey::new(key), true)
                     });
+                    let conditions = conditions.with_all(flags);
                     StatMap::Effects(vec![EffectTemplate {
                         quantity,
                         op,
@@ -729,7 +1038,7 @@ fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mu
         if matches!(e.source, Source::Gem { group, .. } if group == main_group) {
             continue;
         }
-        let Some(quantity) = on_minion(golem, e.quantity) else {
+        let Some((quantity, flags)) = on_minion(golem, e.quantity) else {
             continue;
         };
         if e.conditions != Conditions::none() {
@@ -743,7 +1052,7 @@ fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mu
             quantity,
             op: e.op,
             value: e.value,
-            conditions: Conditions::none(),
+            conditions: Conditions::none().with_all(flags),
             source: e.source.clone(),
         });
     }
@@ -760,10 +1069,11 @@ fn applies_to(golem: bool, quantity: Quantity) -> bool {
     }
 }
 
-/// The minion's quantity of a minion modifier of the character, when the
-/// minion reads it: a [`Poe1Quantity::GolemMinion`] one only for a golem
-/// skill (`golem`: the main skill has the `Golem` type).
-fn on_minion(golem: bool, quantity: Quantity) -> Option<Quantity> {
+/// The minion's quantity of a minion modifier of the character, with the
+/// flags its effects take on, when the minion reads it: a
+/// [`Poe1Quantity::GolemMinion`] one only for a golem skill (`golem`: the
+/// main skill has the `Golem` type).
+fn on_minion(golem: bool, quantity: Quantity) -> Option<(Quantity, crate::condition::Flags)> {
     match quantity {
         Quantity::Poe1(Poe1Quantity::Minion(v)) => v.on_minion(),
         Quantity::Poe1(Poe1Quantity::GolemMinion(v)) if golem => v.on_minion(),
@@ -837,7 +1147,7 @@ fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &m
                 continue;
             };
             for t in templates {
-                let Some(quantity) = on_minion(golem, t.quantity) else {
+                let Some((quantity, flags)) = on_minion(golem, t.quantity) else {
                     continue;
                 };
                 // As for the character's (`minion_modifiers`): a
@@ -856,7 +1166,7 @@ fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &m
                     quantity,
                     op: t.op,
                     value,
-                    conditions: Conditions::none(),
+                    conditions: Conditions::none().with_all(flags),
                     source: source.clone(),
                 });
             }
@@ -920,20 +1230,29 @@ mod tests {
     fn on_minion_should_filter_golem_modifiers() {
         let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
         let golem = |v| Quantity::Poe1(Poe1Quantity::GolemMinion(v));
+        let none = crate::condition::Flags::NONE;
         assert_eq!(
             on_minion(false, minion(MinionValue::Life)),
-            Some(Quantity::Life)
+            Some((Quantity::Life, none))
         );
         assert_eq!(on_minion(false, golem(MinionValue::Life)), None);
         assert_eq!(
             on_minion(true, golem(MinionValue::Life)),
-            Some(Quantity::Life)
+            Some((Quantity::Life, none))
         );
         assert_eq!(
             on_minion(true, golem(MinionValue::Resistance(DamageType::Cold))),
-            Some(Quantity::Resistance(DamageType::Cold))
+            Some((Quantity::Resistance(DamageType::Cold), none))
         );
-        assert_eq!(on_minion(true, minion(MinionValue::Damage)), None);
+        // P6-7c: damage and speeds reach the minion's hit.
+        assert_eq!(
+            on_minion(true, minion(MinionValue::Damage)),
+            Some((Quantity::Damage, none))
+        );
+        assert_eq!(
+            on_minion(false, minion(MinionValue::AttackSpeed)),
+            Some((Quantity::Speed, crate::condition::Flags::ATTACK))
+        );
         assert_eq!(on_minion(true, minion(MinionValue::LifeRegen)), None);
         assert_eq!(on_minion(true, Quantity::Life), None);
     }
@@ -1115,5 +1434,33 @@ mod tests {
             ),
             None
         );
+    }
+
+    /// PoB's exporter's class map (`minions.lua` 76 to 93): a class it
+    /// leaves out is an empty hand.
+    #[test]
+    fn weapon_class_should_follow_pobs_class_map() {
+        assert_eq!(
+            weapon_class("Thrusting One Hand Sword"),
+            Some("One Hand Sword")
+        );
+        assert_eq!(weapon_class("Sceptre"), Some("One Hand Mace"));
+        assert_eq!(weapon_class("Staff"), Some("Staff"));
+        assert_eq!(weapon_class("Unarmed"), None);
+        assert_eq!(weapon_class("Warstaff"), None);
+        for class in [
+            "Claw",
+            "Dagger",
+            "Wand",
+            "One Hand Sword",
+            "Bow",
+            "Two Hand Axe",
+        ] {
+            let ours = weapon_class(class).expect(class);
+            assert!(
+                super::super::hit::weapon_type_flags(ours).is_some(),
+                "{class}"
+            );
+        }
     }
 }

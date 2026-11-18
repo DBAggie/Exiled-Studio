@@ -152,27 +152,26 @@ impl MinionValue {
         }
     }
 
-    /// The minion's quantity the kind adds to (P6-7b3b); `None` for a kind
-    /// no minion field reads yet (damage and speeds are P6-7c's;
-    /// regeneration, movement speed, and cooldown recovery are no field).
+    /// The minion's quantity the kind adds to (P6-7b3b), and the flags its
+    /// effects take on (P6-7c: damage, attack and cast speed, PoB's
+    /// `Damage` and `Speed` with `ModFlag.Attack` or `ModFlag.Cast`); `None`
+    /// for a kind no minion field reads (regeneration, movement speed, and
+    /// cooldown recovery).
     #[must_use]
-    pub const fn on_minion(self) -> Option<Quantity> {
-        match self {
-            Self::Life => Some(Quantity::Life),
-            Self::EnergyShield => Some(Quantity::EnergyShield),
-            Self::Armour => Some(Quantity::Armour),
-            Self::Evasion => Some(Quantity::Evasion),
-            Self::Resistance(t) => Some(Quantity::Resistance(t)),
-            Self::MaximumResistance(t) => Some(Quantity::MaximumResistance(t)),
-            Self::BlockChance => Some(Quantity::BlockChance),
-            Self::SpellBlockChance => Some(Quantity::Poe1(Poe1Quantity::SpellBlockChance)),
-            Self::Damage
-            | Self::AttackSpeed
-            | Self::CastSpeed
-            | Self::LifeRegen
-            | Self::MovementSpeed
-            | Self::CooldownRecovery => None,
-        }
+    pub const fn on_minion(self) -> Option<(Quantity, Flags)> {
+        let q = match self {
+            Self::Life => Quantity::Life,
+            Self::EnergyShield => Quantity::EnergyShield,
+            Self::Armour => Quantity::Armour,
+            Self::Evasion => Quantity::Evasion,
+            Self::Resistance(t) => Quantity::Resistance(t),
+            Self::MaximumResistance(t) => Quantity::MaximumResistance(t),
+            Self::BlockChance => Quantity::BlockChance,
+            Self::SpellBlockChance => Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+            Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
+            Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
+        };
+        Some((q, Flags::NONE))
     }
 }
 
@@ -670,14 +669,13 @@ mod tests {
                     assert_eq!(op, Op::Flag, "{stat}");
                     continue;
                 };
-                let redirected = MinionValue::REDIRECTED.contains(&v);
                 let no_field = matches!(
                     v,
                     MinionValue::LifeRegen
                         | MinionValue::MovementSpeed
                         | MinionValue::CooldownRecovery
                 );
-                assert_eq!(v.on_minion().is_none(), redirected || no_field, "{stat}");
+                assert_eq!(v.on_minion().is_none(), no_field, "{stat}");
                 assert!(matches!(op, Op::Increased | Op::More | Op::Base), "{stat}");
             }
         }

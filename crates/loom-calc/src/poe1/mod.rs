@@ -31,6 +31,7 @@ pub mod item_values;
 pub mod keystones;
 pub mod mapping;
 pub mod minion_actor;
+pub mod minion_hit;
 pub mod minions;
 pub mod pantheon;
 pub mod pob_minion;
@@ -411,6 +412,11 @@ pub enum WeaponValue {
     Damage(DamageType, Bound),
     /// Attack time, milliseconds (the base's).
     AttackTime,
+    /// A weapon's base attack rate, uses per second, when it has no attack
+    /// time in milliseconds (a minion's weapon from its monster data: PoB's
+    /// `AttackRate = 1 / attackTime`, `CalcActiveSkill.lua` 747; P6-7c):
+    /// `Base`, read by [`hit`] instead of [`Self::AttackTime`].
+    AttackRate,
     /// Local attack speed (`Increased`).
     AttackSpeed,
     /// Critical strike chance, percent: `Base` is the base's and the local
@@ -442,6 +448,7 @@ impl core::fmt::Display for WeaponValue {
         match self {
             Self::Damage(t, b) => write!(f, "damage.{}.{}", t.name(), b.name()),
             Self::AttackTime => f.write_str("attack-time"),
+            Self::AttackRate => f.write_str("attack-rate"),
             Self::AttackSpeed => f.write_str("attack-speed"),
             Self::CritChance => f.write_str("crit-chance"),
             Self::Quality => f.write_str("quality"),
@@ -883,7 +890,8 @@ mod tests {
                 "unreserved",
                 "minion",
                 "hit",
-                "dot"
+                "dot",
+                "minion-hit"
             ]
         );
         assert_eq!(

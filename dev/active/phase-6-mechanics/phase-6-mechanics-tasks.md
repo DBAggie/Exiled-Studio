@@ -102,6 +102,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b4: the character's auras and buffs on the minion (`gems::minion_buffs`, `Totals::from_effects`; `deferred_reasons` removed); fixture `minion-summon-stone-golem-discipline-witch.xml`; `docs/phase-6/minions.md`, "P6-7b4"
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
+- [x] P6-7c1: the minion's hit (`poe1::minion_hit`, `Field::for_minion` under the minion actor, the monster weapon with `CalcData::monster_ally_damage` and `WeaponValue::AttackRate`, `damageFixup`, `CannotBeEvaded`, the minion crit multiplier base, the shared enemy's effects and conditions, `on_minion` damage and speeds, the minion's offence monster mods); slice revision 5 (six minion hit fields); sweep: 10 minion hits, 58 equal to PoB, 2 registered (DIV-0123, DIV-0124); fixture `minion-raise-zombie-damage-speed-lines-witch.xml`, nine retargeted; `docs/phase-6/minions.md`, "P6-7c, part 1"
+- [ ] P6-7c2: the summoning skill's supports on the minion's skills, more minion skills (spells, slams), the minion's ailments and damage over time, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages
 ## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)

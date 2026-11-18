@@ -111,6 +111,14 @@ pub struct ActorState {
     /// The sources of its computed skill's own list
     /// ([`Calc::set_skill_sources`]; per actor, P6-7b2 review).
     pub skill_sources: std::collections::BTreeSet<Source>,
+    /// The granted effect of the actor's own main skill, when the ruleset
+    /// picks one at collection (a minion's, P6-7c); `None` for the
+    /// character, whose main skill is the build's.
+    pub skill: Option<String>,
+    /// The item class of the actor's own weapon when the ruleset gives it
+    /// one at collection (a minion's monster weapon type, P6-7c); `None`
+    /// for an empty hand or the character, whose weapons are items.
+    pub weapon: Option<String>,
 }
 
 /// The state phases work on. Store, reasons, and states are the current
@@ -245,10 +253,34 @@ impl<'a> Calc<'a> {
         r
     }
 
-    /// A field written by an earlier phase.
+    /// A field written by an earlier phase: while the current actor is the
+    /// minion, its copy of `field` ([`Field::for_minion`]).
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {
-        self.fields.get(&field)
+        self.fields.get(&self.actor_field(field)?)
+    }
+
+    /// The current actor's main skill picked at collection
+    /// ([`ActorState::skill`]).
+    #[must_use]
+    pub fn actor_skill(&self) -> Option<&str> {
+        self.current().skill.as_deref()
+    }
+
+    /// The current actor's own weapon class ([`ActorState::weapon`]).
+    #[must_use]
+    pub fn actor_weapon(&self) -> Option<&str> {
+        self.current().weapon.as_deref()
+    }
+
+    /// `field` as the current actor writes it: itself for the character,
+    /// its minion copy for the minion ([`Field::for_minion`]; P6-7c), `None`
+    /// when the minion has none.
+    fn actor_field(&self, field: Field) -> Option<Field> {
+        match self.actor {
+            Actor::Player => Some(field),
+            Actor::Minion => field.for_minion(),
+        }
     }
 
     /// Names the sources whose effects form the computed skill's own list
@@ -285,6 +317,10 @@ impl<'a> Calc<'a> {
     /// the query's reasons and the reasons that apply to every field. A
     /// later phase may replace the field.
     pub fn set(&mut self, field: Field, query: Query) {
+        let Some(field) = self.actor_field(field) else {
+            debug_assert!(false, "the minion has no copy of {field}");
+            return;
+        };
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         self.fields.insert(
@@ -301,6 +337,10 @@ impl<'a> Calc<'a> {
     /// `reason` (Phase 6: a field that applies but whose kind is not
     /// modelled).
     pub fn set_unsupported(&mut self, field: Field, reason: UnsupportedReason) {
+        let Some(field) = self.actor_field(field) else {
+            debug_assert!(false, "the minion has no copy of {field}");
+            return;
+        };
         self.fields.insert(field, FieldResult::unsupported(reason));
     }
 
@@ -310,9 +350,14 @@ impl<'a> Calc<'a> {
     /// computed (absent or `Unsupported`) makes the field `Unsupported`
     /// with `DependsOnNotComputed`, without a value.
     pub fn set_derived(&mut self, field: Field, query: Query, deps: &[Field]) {
+        let Some(field) = self.actor_field(field) else {
+            debug_assert!(false, "the minion has no copy of {field}");
+            return;
+        };
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         for dep in deps {
+            let dep = &self.actor_field(*dep).unwrap_or(*dep);
             match self.fields.get(dep).map(|f| &f.state) {
                 None | Some(FieldState::Unsupported(_)) => {
                     self.fields.insert(
@@ -380,6 +425,8 @@ pub(crate) fn collected<'a>(
             global,
             states,
             skill_sources: std::collections::BTreeSet::new(),
+            skill: None,
+            weapon: None,
         },
         minion,
         minion_problem,
@@ -535,6 +582,8 @@ mod tests {
             global,
             states: BTreeMap::new(),
             skill_sources: std::collections::BTreeSet::new(),
+            skill: None,
+            weapon: None,
         }
     }
 

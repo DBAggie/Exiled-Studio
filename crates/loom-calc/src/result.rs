@@ -91,6 +91,37 @@ pub enum MinionField {
     Resistance(DamageType),
     /// Chance to block attack damage.
     BlockChance,
+    /// Strength (P6-7c: the minion's hit reads it, as the character's).
+    Strength,
+    /// Dexterity (P6-7c).
+    Dexterity,
+    /// Intelligence (P6-7c).
+    Intelligence,
+    /// The minion's main skill's average damage per hit (P6-7c; PoB's
+    /// `output.Minion.AverageDamage`).
+    AverageDamage,
+    /// Its uses per second.
+    Speed,
+    /// Its hits per second, when they differ from its uses.
+    HitSpeed,
+    /// Its chance to hit.
+    HitChance,
+    /// Its critical strike chance.
+    CritChance,
+    /// Its critical strike multiplier.
+    CritMultiplier,
+    /// Its hit damage per second (PoB's `TotalDPS`).
+    HitDps,
+    /// Its own damage over time per second.
+    DotDps,
+    /// Its ignite damage per second.
+    IgniteDps,
+    /// Its bleeding damage per second.
+    BleedDps,
+    /// Its poisons' damage per second.
+    PoisonDps,
+    /// Its impale damage per second.
+    ImpaleDps,
 }
 
 impl MinionField {
@@ -104,7 +135,60 @@ impl MinionField {
             Self::Evasion => "evasion".to_owned(),
             Self::Resistance(t) => format!("resistance.{}", t.name()),
             Self::BlockChance => "block-chance".to_owned(),
+            Self::Strength => "strength".to_owned(),
+            Self::Dexterity => "dexterity".to_owned(),
+            Self::Intelligence => "intelligence".to_owned(),
+            Self::AverageDamage => "average-damage".to_owned(),
+            Self::Speed => "speed".to_owned(),
+            Self::HitSpeed => "hit-speed".to_owned(),
+            Self::HitChance => "hit-chance".to_owned(),
+            Self::CritChance => "crit-chance".to_owned(),
+            Self::CritMultiplier => "crit-multiplier".to_owned(),
+            Self::HitDps => "hit-dps".to_owned(),
+            Self::DotDps => "dot-dps".to_owned(),
+            Self::IgniteDps => "ignite-dps".to_owned(),
+            Self::BleedDps => "bleed-dps".to_owned(),
+            Self::PoisonDps => "poison-dps".to_owned(),
+            Self::ImpaleDps => "impale-dps".to_owned(),
         }
+    }
+}
+
+impl Field {
+    /// The minion's field a phase writing `self` writes while the current
+    /// actor is the minion (P6-7c: the character's phases compute the
+    /// minion's hit unchanged, [`crate::engine::Calc::with_actor`]); `None`
+    /// for a field the minion has no copy of. A minion field is itself.
+    #[must_use]
+    pub const fn for_minion(self) -> Option<Self> {
+        let m = match self {
+            Self::Minion(m) => m,
+            Self::Strength => MinionField::Strength,
+            Self::Dexterity => MinionField::Dexterity,
+            Self::Intelligence => MinionField::Intelligence,
+            Self::Life => MinionField::Life,
+            Self::EnergyShield => MinionField::EnergyShield,
+            Self::Armour => MinionField::Armour,
+            Self::Evasion => MinionField::Evasion,
+            Self::Resistance(t) => MinionField::Resistance(t),
+            Self::BlockChance => MinionField::BlockChance,
+            Self::AverageDamage => MinionField::AverageDamage,
+            Self::Speed => MinionField::Speed,
+            Self::HitSpeed => MinionField::HitSpeed,
+            Self::HitChance => MinionField::HitChance,
+            Self::CritChance => MinionField::CritChance,
+            Self::CritMultiplier => MinionField::CritMultiplier,
+            Self::HitDps => MinionField::HitDps,
+            Self::DotDps => MinionField::DotDps,
+            Self::IgniteDps => MinionField::IgniteDps,
+            Self::BleedDps => MinionField::BleedDps,
+            Self::PoisonDps => MinionField::PoisonDps,
+            Self::Poe1(crate::poe1::Poe1Field::ImpaleDps) => MinionField::ImpaleDps,
+            Self::Mana | Self::LifeUnreserved | Self::ManaUnreserved | Self::Poe1(_) => {
+                return None;
+            }
+        };
+        Some(Self::Minion(m))
     }
 }
 
@@ -221,6 +305,30 @@ mod tests {
             "resistance.chaos"
         );
         assert_eq!(Field::HitDps.to_string(), "hit-dps");
+        assert_eq!(
+            Field::Minion(MinionField::HitDps).to_string(),
+            "minion.hit-dps"
+        );
+    }
+
+    /// P6-7c: under the minion actor a phase writes the minion's copy of
+    /// an offence field; the character's own pools have none.
+    #[test]
+    fn for_minion_should_name_the_minions_copy() {
+        assert_eq!(
+            Field::HitDps.for_minion(),
+            Some(Field::Minion(MinionField::HitDps))
+        );
+        assert_eq!(
+            Field::Poe1(Poe1Field::ImpaleDps).for_minion(),
+            Some(Field::Minion(MinionField::ImpaleDps))
+        );
+        assert_eq!(
+            Field::Minion(MinionField::Life).for_minion(),
+            Some(Field::Minion(MinionField::Life))
+        );
+        assert_eq!(Field::Mana.for_minion(), None);
+        assert_eq!(Field::ManaUnreserved.for_minion(), None);
     }
 
     #[test]
