@@ -2331,6 +2331,12 @@ pub const ROWS: &[Row] = &[
         "mod_granted_passive_hash",
         &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],
     ),
+    // P6-9b: "You can apply an additional Curse" (`SkillStatMap.lua` 1317:
+    // `EnemyCurseLimit` BASE); `poe1::gems` reads it for the curse slots.
+    (
+        "number_of_additional_curses_allowed",
+        &[(Quantity::Poe1(Poe1Quantity::CurseLimit), Op::Base, 1.0)],
+    ),
     // P3-8n: "Enemies permanently take #% increased Damage for each second
     // they've ever been Chilled by you, up to a maximum of 10%" (3812;
     // `poe1::damage_taken`).

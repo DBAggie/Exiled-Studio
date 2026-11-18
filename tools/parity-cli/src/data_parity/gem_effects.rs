@@ -314,6 +314,20 @@ const NO_SLICE_NAMES: &[&str] = &[
     "takenFromStoneGolemBeforeYou",
 ];
 
+/// PoB mod names a curse's `NoSlice` stat may give besides
+/// [`NO_SLICE_NAMES`] (P6-9b): on the enemy they reach no slice field (its
+/// accuracy, damage, action speed, buff duration, shock and freeze).
+const ENEMY_NO_SLICE_NAMES: &[&str] = &[
+    "Accuracy",
+    "BuffExpireFaster",
+    "Damage",
+    "SelfFreezeChance",
+    "SelfFreezeDuration",
+    "SelfShockChance",
+    "SelfShockDuration",
+    "TemporalChainsActionSpeed",
+];
+
 /// The `GlobalEffect` tag's fields a slice row may have: any other
 /// (`effectCond`, `modCond`, `applyNotPlayer`, a stack variable, ...)
 /// makes PoB apply the mod only sometimes, which the engine does not model.
@@ -508,7 +522,7 @@ fn op_name(op: Op) -> &'static str {
 type Row = (Quantity, Op, f64, Flags, Flags);
 
 /// Our rows of a stat as PoB's mods, with the tags its variant stands for.
-fn variant_form(b: &BuffStat) -> Vec<String> {
+fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
     let (rows, suffix): (&[Row], String) = match b {
         BuffStat::Rows(r) => (r, String::new()),
         BuffStat::WhenInput {
@@ -541,7 +555,7 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
     if let Some(one) = collapse(rows) {
         return vec![one + &suffix];
     }
-    our_form(rows)
+    our_form(rows, enemy)
         .into_iter()
         .zip(rows)
         .map(|(f, row)| {
@@ -556,7 +570,10 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
         .collect()
 }
 
-fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
+/// `enemy`: the rows are a curse's or a debuff's on the enemy, whose added
+/// damage, ailment chances, and ailment durations PoB names `Self...`
+/// (P6-9b).
+fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<String> {
     effects
         .iter()
         .map(|&(q, op, divisor, all, any)| {
@@ -579,7 +596,23 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
             let (name, all) = match typed {
                 Some((f, t)) => (format!("{t}Damage"), all.without(f)),
                 None if elemental_duration => ("SelfElementalAilmentDuration".to_owned(), all),
-                None => (pob_name(q), all),
+                None => match (q, enemy) {
+                    (Quantity::AddedDamage(..), true) => (format!("Self{}", pob_name(q)), all),
+                    (Quantity::Poe1(Poe1Quantity::AilmentChance(a)), true) => {
+                        (format!("Self{}Chance", title(a.name())), all)
+                    }
+                    (Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration), true)
+                        if all == Flags::IGNITE || all == Flags::BLEED =>
+                    {
+                        let a = if all == Flags::IGNITE {
+                            "Ignite"
+                        } else {
+                            "Bleed"
+                        };
+                        (format!("Self{a}Duration"), Flags::NONE)
+                    }
+                    _ => (pob_name(q), all),
+                },
             };
             let kind = match op {
                 Op::Base => "BASE",
@@ -629,6 +662,16 @@ fn strings(items: impl IntoIterator<Item = String>) -> Value {
     Value::Array(items.into_iter().map(Value::String).collect())
 }
 
+/// What a checked table entry is (P6-9b): a support, an active skill on
+/// the character, or a curse or debuff on the enemy (whose rows PoB names
+/// `Self...`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Role {
+    Support,
+    OnCharacter,
+    OnEnemy,
+}
+
 fn check_one(
     out: &mut Comparison,
     id: &str,
@@ -636,8 +679,10 @@ fn check_one(
     stats: &[(&str, BuffStat)],
     buff: Option<(&str, &str)>,
     forbidden: &[&str],
-    support: bool,
+    role: Role,
 ) {
+    let support = role == Role::Support;
+    let enemy = role == Role::OnEnemy;
     let own_effect: Vec<&str> = gems::OWN_EFFECT_STATS.iter().map(|(s, _)| *s).collect();
     // Global stats.
     let pob_global: BTreeSet<String> = skill
@@ -704,7 +749,10 @@ fn check_one(
                 // act on itself (close-out: base mods share the stat "").
                 let bad: Vec<String> = mods()
                     .filter(|m| global(m).is_some())
-                    .filter(|m| !NO_SLICE_NAMES.contains(&m.name.as_str()))
+                    .filter(|m| {
+                        !NO_SLICE_NAMES.contains(&m.name.as_str())
+                            && !(enemy && ENEMY_NO_SLICE_NAMES.contains(&m.name.as_str()))
+                    })
                     .map(|m| m.name.clone())
                     .collect();
                 out.check(
@@ -744,7 +792,7 @@ fn check_one(
     }
     // Rows.
     for (stat, b) in stats {
-        let ours = variant_form(b);
+        let ours = variant_form(b, enemy);
         if ours.is_empty() {
             continue;
         }
@@ -875,7 +923,12 @@ pub fn compare_gem_effects(out: &mut Comparison, export: &Export, effects: &BTre
             Kind::Warcry { .. } => WARCRY_FORBIDDEN,
         };
         let buff = kind.buff().map(|(effect, name)| (name, effect));
-        check_one(out, id, skill, kind.stats(), buff, forbidden, false);
+        let role = if matches!(kind, Kind::Curse { .. } | Kind::Debuff { .. }) {
+            Role::OnEnemy
+        } else {
+            Role::OnCharacter
+        };
+        check_one(out, id, skill, kind.stats(), buff, forbidden, role);
     }
     for (id, stats) in gems::SUPPORTS {
         if !effects.contains(id) {
@@ -885,7 +938,15 @@ pub fn compare_gem_effects(out: &mut Comparison, export: &Export, effects: &BTre
             out.check(TABLE, id, "row", json!("present"), Value::Null);
             continue;
         };
-        check_one(out, id, skill, stats, None, SUPPORT_FORBIDDEN, true);
+        check_one(
+            out,
+            id,
+            skill,
+            stats,
+            None,
+            SUPPORT_FORBIDDEN,
+            Role::Support,
+        );
     }
 }
 
@@ -1015,13 +1076,16 @@ mod tests {
             "ColdMin"
         );
         assert_eq!(
-            our_form(&[(
-                Quantity::Speed,
-                Op::Increased,
-                1.0,
-                Flags::CAST,
-                Flags::NONE
-            )]),
+            our_form(
+                &[(
+                    Quantity::Speed,
+                    Op::Increased,
+                    1.0,
+                    Flags::CAST,
+                    Flags::NONE
+                )],
+                false
+            ),
             ["Speed INC [cast]"]
         );
         assert!(ailment_max("ShockMax"));

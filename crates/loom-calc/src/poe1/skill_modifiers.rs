@@ -252,7 +252,14 @@ impl Totals {
     /// (every MORE stat is a reason).
     #[must_use]
     pub fn curse_scale(&self) -> f64 {
-        1.0 + self.curse_effect / 100.0
+        self.curse_scale_with(0.0)
+    }
+
+    /// [`Self::curse_scale`] with the curse gem's own `CurseEffect` INC
+    /// (`own`, P6-9b).
+    #[must_use]
+    pub fn curse_scale_with(&self, own: f64) -> f64 {
+        1.0 + (self.curse_effect + own) / 100.0
     }
 }
 

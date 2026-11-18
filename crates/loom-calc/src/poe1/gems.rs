@@ -63,9 +63,14 @@
 //! - [`Kind::Debuff`]: its rows on the enemy, merged per name (Frost Bomb's
 //!   exposure, [`Poe1Quantity::SkillExposure`], which [`super::exposure`]
 //!   compares with the others).
-//! - [`Kind::Curse`]: its rows on the enemy, scaled by curse effect. With
-//!   one curse limit, a second hex is a reason (`curse-limit`): PoB's slot
-//!   priority is not modelled. A mark is not modelled.
+//! - [`Kind::Curse`]: its rows on the enemy, scaled by curse effect (the
+//!   character's and the gem's own `curse_effect_+%`, P6-9b). The curses
+//!   take PoB's slots ([`curse_slots`], `CalcPerform.lua` 3155 to 3212):
+//!   in the skill list's order, each takes the first free slot of the
+//!   limit (`EnemyCurseLimit`: 1, plus [`Poe1Quantity::CurseLimit`]), or
+//!   replaces a curse of its name or of a lower priority
+//!   ([`curse_priority`], PoB's `determineCursePriority`). A mark is not
+//!   modelled.
 //! - [`Kind::Warcry`]: its buff rows (none reaches a slice field), and
 //!   Rallying Cry's exerted-attack effect only when no ally is configured
 //!   (`multiplierNearbyAlly`): otherwise a reason.
@@ -361,6 +366,32 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    (
+        "Conductivity",
+        Kind::Curse {
+            name: "Conductivity",
+            stats: &[
+                (
+                    "base_lightning_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        enemy_res(DamageType::Lightning),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "base_self_shock_duration_-%",
+                    BuffStat::NoSlice("shock-duration"),
+                ),
+                (
+                    "chance_to_be_shocked_%",
+                    BuffStat::NoSlice("ailment-chance"),
+                ),
+            ],
+        },
+    ),
     // Convocation's buff goes to minions only (`buffNotPlayer`,
     // `Data/Skills/other.lua` 907): nothing reaches the character.
     (
@@ -372,6 +403,41 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 "base_life_regeneration_rate_per_minute",
                 BuffStat::NoSlice("minion-buff"),
             )],
+        },
+    ),
+    (
+        "Despair",
+        Kind::Curse {
+            name: "Despair",
+            stats: &[
+                (
+                    "base_chaos_damage_resistance_%",
+                    BuffStat::Rows(&[(enemy_res(DamageType::Chaos), Op::Base, 1.0, NONE, NONE)]),
+                ),
+                // PoB: the enemy's `SelfChaosMax` and `SelfChaosMin` BASE,
+                // summed into every hit's added damage (`CalcOffence.lua`
+                // 3263).
+                (
+                    "maximum_added_chaos_damage_taken",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Chaos, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "minimum_added_chaos_damage_taken",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Chaos, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
         },
     ),
     (
@@ -439,6 +505,24 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     (
+        "Enfeeble",
+        Kind::Curse {
+            name: "Enfeeble",
+            stats: &[
+                // The enemy's accuracy and damage: no slice field.
+                ("accuracy_rating_+%", BuffStat::NoSlice("enemy-offence")),
+                (
+                    "enfeeble_damage_+%_final",
+                    BuffStat::NoSlice("enemy-offence"),
+                ),
+                (
+                    "enfeeble_damage_+%_vs_rare_or_unique_final",
+                    BuffStat::NoSlice("enemy-offence"),
+                ),
+            ],
+        },
+    ),
+    (
         "FlameWall",
         Kind::Buff {
             name: "Flame Wall",
@@ -471,6 +555,43 @@ pub const SKILLS: &[(&str, Kind)] = &[
                             NONE,
                         )],
                     },
+                ),
+            ],
+        },
+    ),
+    (
+        "Flammability",
+        Kind::Curse {
+            name: "Flammability",
+            stats: &[
+                (
+                    "base_fire_damage_resistance_%",
+                    BuffStat::Rows(&[(enemy_res(DamageType::Fire), Op::Base, 1.0, NONE, NONE)]),
+                ),
+                // PoB: the enemy's `SelfIgniteDuration` INC, `mult = -1`.
+                (
+                    "base_self_ignite_duration_-%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration),
+                        Op::Increased,
+                        -1.0,
+                        Flags::IGNITE,
+                        NONE,
+                    )]),
+                ),
+                // PoB: the enemy's `SelfIgniteChance` BASE, added to every
+                // hit's chance to ignite (`CalcOffence.lua` 4108).
+                (
+                    "chance_to_be_ignited_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::AilmentChance(
+                            super::ailment::Ailment::Ignite,
+                        )),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -986,6 +1107,27 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // Shockwave Support's own attack (`SupportBluntWeaponShockwave`): it
     // hits on its own when triggered; nothing reaches the character.
     ("SupportBluntWeaponShockwave", Kind::Inert),
+    (
+        "TemporalChains",
+        Kind::Curse {
+            name: "Temporal Chains",
+            stats: &[
+                // The enemy's buffs and action speed: no slice field.
+                (
+                    "buff_time_passed_+%_other_than_temporal_chains",
+                    BuffStat::NoSlice("enemy-speed"),
+                ),
+                (
+                    "temporal_chains_action_speed_+%_final",
+                    BuffStat::NoSlice("enemy-speed"),
+                ),
+                (
+                    "temporal_chains_action_speed_+%_vs_rare_or_unique_final",
+                    BuffStat::NoSlice("enemy-speed"),
+                ),
+            ],
+        },
+    ),
     ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
     (
@@ -997,6 +1139,46 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 "base_life_regeneration_rate_per_minute",
                 BuffStat::NoSlice("regeneration"),
             )],
+        },
+    ),
+    (
+        "Vulnerability",
+        Kind::Curse {
+            name: "Vulnerability",
+            stats: &[
+                (
+                    "physical_damage_taken_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(DamageType::Physical)),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                // PoB: the enemy's `SelfBleedChance` BASE (4097) and
+                // `SelfBleedDuration` INC.
+                (
+                    "receive_bleeding_chance_%_when_hit_by_attack",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::AilmentChance(super::ailment::Ailment::Bleed)),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "self_bleed_duration_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration),
+                        Op::Increased,
+                        1.0,
+                        Flags::BLEED,
+                        NONE,
+                    )]),
+                ),
+            ],
         },
     ),
     (
@@ -1187,6 +1369,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
 /// type): Guardian's Blessing on an aura (`sup_str.lua` 2807).
 pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[("SupportGuardiansBlessing", "Aura")];
 
+/// A curse gem's own curse effect stat (Despair's, a hex's quality):
+/// PoB's `CurseEffect` INC on the skill's own list (P6-9b).
+pub const OWN_CURSE_EFFECT_STAT: &str = "curse_effect_+%";
+
 /// A gem's own stats that scale the buff of the skill it is part of
 /// (PoB's `SkillStatMap.lua`: `golem_buff_effect_+%` 2089 is `BuffEffect`
 /// INC, `aura_effect_+%` is `AuraEffect` INC), and whether only an aura
@@ -1214,7 +1400,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "base_skill_no_reservation",
     "buff_effect_on_self_+%",
     "herald_effect_on_self_+%",
-    "number_of_additional_curses_allowed",
     "skill_buff_effect_+%",
     "summoned_phantasms_grant_buff",
 ];
@@ -1519,6 +1704,92 @@ struct CurseApplied {
     name: &'static str,
     source: Source,
     rows: Vec<(f64, HitEffect)>,
+    /// PoB's `determineCursePriority` ([`curse_priority`]).
+    priority: i64,
+}
+
+/// PoB's base curse priorities (`Modules/Data.lua` 322 to 335,
+/// `data.cursePriority`), by curse name: a later hex replaces an earlier
+/// one of lower priority in a full slot.
+const CURSE_PRIORITY: &[(&str, i64)] = &[
+    ("Assassin's Mark", 11),
+    ("Conductivity", 7),
+    ("Despair", 8),
+    ("Elemental Weakness", 4),
+    ("Enfeeble", 2),
+    ("Flammability", 5),
+    ("Frostbite", 6),
+    ("Poacher's Mark", 13),
+    ("Punishment", 9),
+    ("Sniper's Mark", 12),
+    ("Temporal Chains", 1),
+    ("Vulnerability", 3),
+    ("Warlord's Mark", 10),
+];
+
+/// PoB's slot priorities (`data.cursePriority`): a gem socketed in that
+/// item slot's group.
+const CURSE_SLOT_PRIORITY: &[(&str, i64)] = &[
+    ("Amulet", 2000),
+    ("Body Armour", 5000),
+    ("Boots", 7000),
+    ("Gloves", 6000),
+    ("Helmet", 3000),
+    ("Ring 1", 8000),
+    ("Ring 2", 9000),
+    ("Ring 3", 10000),
+    ("Weapon 1", 1000),
+    ("Weapon 2", 4000),
+];
+
+/// PoB's `determineCursePriority` (`CalcPerform.lua` 563 to 593) for a
+/// curse of `name` from a gem at `gem` (0-based) of a group in `slot`:
+/// the curse's base priority, plus 100 per socket (the gem's position,
+/// at most 8), plus the slot's (a swap slot counts as its slot), plus
+/// 20000 from an aura. A group granted by an item (PoB's 11000) is not
+/// modelled here ([`gems`] skips it).
+fn curse_priority(name: &str, gem: usize, slot: Option<&str>, aura: bool) -> i64 {
+    let base = CURSE_PRIORITY
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map_or(0, |(_, p)| *p);
+    let socket = i64::try_from(gem.saturating_add(1).min(8)).unwrap_or(8) * 100;
+    let slot = slot.map_or(0, |s| {
+        let s = s.trim_end_matches(" Swap");
+        CURSE_SLOT_PRIORITY
+            .iter()
+            .find(|(n, _)| *n == s)
+            .map_or(0, |(_, p)| *p)
+    });
+    base + socket + slot + if aura { 20000 } else { 0 }
+}
+
+/// PoB's curse slots (`CalcPerform.lua` 3160 to 3212, no mark): the
+/// indexes of `curses` (in the skill list's order) that hold the
+/// `limit` slots.
+fn curse_slots(curses: &[CurseApplied], limit: usize) -> Vec<usize> {
+    let mut slots: Vec<Option<usize>> = vec![None; limit];
+    for (c, curse) in curses.iter().enumerate() {
+        let mut slot = None;
+        for (i, held) in slots.iter().enumerate() {
+            match held {
+                None => {
+                    slot = Some(i);
+                    break;
+                }
+                Some(h) if curses[*h].name == curse.name => {
+                    slot = (curses[*h].priority < curse.priority).then_some(i);
+                    break;
+                }
+                Some(h) if curses[*h].priority < curse.priority => slot = Some(i),
+                Some(_) => {}
+            }
+        }
+        if let Some(i) = slot {
+            slots[i] = Some(c);
+        }
+    }
+    slots.into_iter().flatten().collect()
 }
 
 /// What the skills of the set collect before they are applied.
@@ -1613,7 +1884,8 @@ pub fn gems(
                 supports_global(input, g, s, totals, config, &mut collected, ingest);
                 continue;
             }
-            one_skill(input, g, s, totals, config, &mut collected, ingest);
+            let place = GroupPlace { index: g, slot };
+            one_skill(input, place, s, totals, config, &mut collected, ingest);
         }
     }
     apply(input, config, totals, collected, ingest);
@@ -1657,9 +1929,19 @@ fn apply(
             source,
         });
     }
-    // Curses: one limit, one hex (module docs).
-    let names: BTreeSet<&str> = curses.iter().map(|c| c.name).collect();
-    if names.len() > 1 || curses.len() > names.len() {
+    // Curses: PoB's slots (module docs). The limit is 1 and the character's
+    // unconditional `CurseLimit` effects; a conditional one is a reason.
+    let mut limit = 1.0;
+    for e in ingest.effects() {
+        if e.quantity == Quantity::Poe1(Poe1Quantity::CurseLimit) {
+            if e.conditions == Conditions::none() {
+                limit += e.value;
+            } else {
+                limit = f64::NAN;
+            }
+        }
+    }
+    if limit.is_nan() {
         for c in &curses {
             ingest.reason(UnsupportedReason::UnmodelledSkill {
                 source: c.source.clone(),
@@ -1667,7 +1949,17 @@ fn apply(
             });
         }
     } else {
-        for c in curses {
+        #[expect(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "a small count of curses, at least 0"
+        )]
+        let limit = limit.max(0.0) as usize;
+        let held = curse_slots(&curses, limit);
+        for (i, c) in curses.into_iter().enumerate() {
+            if !held.contains(&i) {
+                continue;
+            }
             for (value, (quantity, op, _, all, any)) in c.rows {
                 ingest.effect(Effect {
                     quantity,
@@ -1837,16 +2129,25 @@ pub fn minion_buffs(
     }
 }
 
-/// One active skill of group `g` (module docs).
+/// Where a skill's group is: its index among the active set's groups
+/// (0-based) and its item slot (the curse priority reads it).
+#[derive(Debug, Clone, Copy)]
+struct GroupPlace<'a> {
+    index: usize,
+    slot: Option<&'a str>,
+}
+
+/// One active skill of the group at `place` (module docs).
 fn one_skill(
     input: &CalcInput<'_>,
-    g: usize,
+    place: GroupPlace<'_>,
     s: &GroupSkill<'_>,
     totals: &Totals,
     config: Option<&ConfigSet>,
     collected: &mut Collected,
     ingest: &mut Ingest<'_>,
 ) {
+    let GroupPlace { index: g, slot } = place;
     let source = |gem: usize| Source::Gem { group: g, gem };
     let active_source = source(s.active_gem.gem);
     let Some(kind) = kind(&s.active_gem.effect.id) else {
@@ -1975,13 +2276,25 @@ fn one_skill(
             );
         }
         Kind::Curse { name, stats } => {
-            let scale = totals.curse_scale();
             let instance = skill::instance(
                 s.active_gem.effect,
                 s.active_gem.level,
                 s.active_gem.quality,
                 input.data,
             );
+            // The gem's own curse effect (its `skillModList`'s `CurseEffect`
+            // INC, P6-9b).
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "stat values are small integers, exact as f64"
+            )]
+            let own: f64 = instance
+                .stats
+                .iter()
+                .filter(|(stat, _)| stat == OWN_CURSE_EFFECT_STAT)
+                .map(|(_, v)| *v as f64)
+                .sum();
+            let scale = totals.curse_scale_with(own);
             if !instance.problems.is_empty() {
                 for p in &instance.problems {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
@@ -2014,6 +2327,12 @@ fn one_skill(
                     name,
                     source: active_source.clone(),
                     rows,
+                    priority: curse_priority(
+                        name,
+                        s.active_gem.gem,
+                        slot,
+                        s.types.contains("Aura"),
+                    ),
                 });
             }
         }
@@ -2483,7 +2802,16 @@ mod tests {
                 for row in *rows {
                     match k {
                         Kind::Debuff { .. } | Kind::Curse { .. } => {
-                            assert!(enemy(row.0), "{id} {stat}");
+                            // PoB sums the enemy's `SelfChaosMin` and kin
+                            // and its `Self<Ailment>Chance` into the hit's
+                            // added damage and ailment chance (P6-9b):
+                            // the character's quantities, the same sum.
+                            let summed = matches!(
+                                row.0,
+                                Quantity::AddedDamage(..)
+                                    | Quantity::Poe1(Poe1Quantity::AilmentChance(_))
+                            );
+                            assert!(enemy(row.0) || summed, "{id} {stat}");
                         }
                         Kind::Buff { .. } | Kind::Warcry { .. } => {
                             assert!(!enemy(row.0), "{id} {stat}");

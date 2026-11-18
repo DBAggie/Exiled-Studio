@@ -107,6 +107,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)
 - [x] Order change (decision without the maintainer, D10): P6-9 before P6-7c, since every minion build's fields carry the summoning gem's `unmodelled-gem` until P6-9 models it, so P6-7c's minion hit fields could not be shown `Complete`
 - [x] P6-9a: 15 inert skills, 43 plain supports, nine auras (Anger, Wrath, Determination, Grace, the four Purities, Vitality); `gem_effects` 894 values, 0 differences; three aura fixtures; `docs/phase-6/gems.md`
+- [x] P6-9b: PoB's curse slots and priority, the curse limit stat, a hex's own curse effect, six hexes (Despair, Flammability, Vulnerability, Conductivity, Enfeeble, Temporal Chains); `gem_effects` 954 values, 0 differences; two curse fixtures; `docs/phase-6/gems.md`, "P6-9b"
 ## P6-10a: timeless jewels
 ## P6-10b: recovery and defence outputs
 ## P6-11: stat mop-up (batches)

@@ -159,6 +159,9 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
+    /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
+    /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
+    CurseLimit,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -474,6 +477,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
+            Self::CurseLimit => f.write_str("curse-limit"),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }
