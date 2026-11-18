@@ -12,7 +12,7 @@ use loom_calc::poe1::Poe1Mapping;
 use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS};
 use loom_calc::poe1::skill::{
     InstanceProblem, KEYWORD_TYPES, SkillProblem, group_skills, instance, instances, keyword_flags,
-    main_skill, type_expression,
+    main_skill, type_expression, unknown_gems,
 };
 use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
@@ -143,6 +143,35 @@ fn a_type_a_support_adds_should_give_its_keyword() {
     assert_eq!(m.keyword_flags(), Flags::SKILL_COLD);
 }
 
+/// Phase 6: a gem the data does not have is skipped, as PoB does
+/// (`CalcSetup.lua` 1649), and named as a gem the data lacks; a renamed
+/// `skillId` is found by the gem's name (`SkillsTab.lua` 1166 to 1174).
+#[test]
+fn an_unknown_gem_should_be_skipped_and_a_renamed_one_found_by_name() {
+    let data = bundle();
+    let unknown = gem(Some("Test/Gems/Nothing"), "Nothing", 1, 0);
+    let g = group(vec![unknown, bolt(1, 0), support()]);
+    assert_eq!(unknown_gems(&g, &data), [0]);
+    let b = build(vec![g], 1);
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
+    assert_eq!(m.effect().id, "TestBolt");
+    assert_eq!(m.supports.len(), 1);
+    // `skillId` no longer in the data: found by its name.
+    let mut renamed = gem(Some("Test/Gems/Bolt"), "OldBoltName", 1, 0);
+    renamed.name = Some("Test Bolt".to_owned());
+    let b = build(vec![group(vec![renamed.clone()])], 1);
+    assert_eq!(
+        main_skill(&b, &data, &GemLevels::none())
+            .unwrap()
+            .effect()
+            .id,
+        "TestBolt"
+    );
+    // A name the gem's variants do not have: the gem is unknown.
+    renamed.name = Some("Something Else".to_owned());
+    assert_eq!(unknown_gems(&group(vec![renamed]), &data), [0]);
+}
+
 #[test]
 fn the_main_group_should_be_clamped_and_a_missing_gem_named() {
     let data = bundle();
@@ -153,11 +182,10 @@ fn the_main_group_should_be_clamped_and_a_missing_gem_named() {
         vec![group(vec![gem(Some("Test/Gems/Nothing"), "Nothing", 1, 0)])],
         1,
     );
+    // A gem the data does not have grants nothing (PoB skips it).
     assert_eq!(
         main_skill(&b, &data, &GemLevels::none()).unwrap_err(),
-        SkillProblem::UnknownGem {
-            gem: "Test/Gems/Nothing".to_owned()
-        }
+        SkillProblem::NoActiveSkill
     );
     assert_eq!(
         main_skill(
@@ -396,8 +424,7 @@ fn gem_level_modifiers_should_raise_the_gems_they_match() {
         &[],
         &data,
         &all,
-    )
-    .unwrap();
+    );
     assert_eq!(skills[0].active_gem.level, 3);
     assert_eq!(skills[0].supports[0].level, 3);
     // Without modifiers, the levels the build writes.

@@ -87,6 +87,22 @@ pub trait CalcData {
     /// The game's monster stats at a level (`DefaultMonsterStats`).
     fn monster_level(&self, level: i64) -> Option<MonsterStats>;
 
+    /// A mod's first six stats in row order (PoB's exporter's), each with
+    /// its lowest value (P6-7b3a, a minion's mod list); `None` (the
+    /// default) when the data has no such mod.
+    fn mod_stats(&self, id: &str) -> Option<Vec<(String, i64)>> {
+        let _ = id;
+        None
+    }
+
+    /// The game's monster life columns at a level (`DefaultMonsterStats`;
+    /// P6-7b3a, a minion's base life); `None` (the default) when the data
+    /// has no such row.
+    fn monster_life(&self, level: i64) -> Option<MonsterLife> {
+        let _ = level;
+        None
+    }
+
     /// A monster type's armour and evasion multipliers, percent.
     fn monster_type(&self, id: &str) -> Option<MonsterDefences>;
 
@@ -153,6 +169,20 @@ pub struct MonsterStats {
     pub evasion: i64,
     /// Accuracy rating.
     pub accuracy: i64,
+}
+
+/// The monster life columns of a level ([`CalcData::monster_life`]), as
+/// PoB's tables name them (`src/Data/Misc.lua`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MonsterLife {
+    /// `monsterLifeTable` (`Life`).
+    pub life: i64,
+    /// `monsterAllyLifeTable` (`MinionLife`).
+    pub ally: i64,
+    /// `monsterLifeTable2` (`AltLife1`), when the data has the column.
+    pub alt1: Option<i64>,
+    /// `monsterLifeTable3` (`AltLife2`).
+    pub alt2: i64,
 }
 
 /// A monster type's defence multipliers, percent
@@ -388,6 +418,35 @@ impl CalcData for Bundle {
         (row.level == level).then_some(MonsterStats {
             evasion: row.evasion,
             accuracy: row.accuracy,
+        })
+    }
+
+    fn mod_stats(&self, id: &str) -> Option<Vec<(String, i64)>> {
+        self.mods
+            .iter()
+            .find(|m| m.id == id)
+            // PoB's exporter reads the first six (`minions.lua` 228; the
+            // data-parity rule `minion-mods-six-stat-slots`).
+            .map(|m| {
+                m.stats
+                    .iter()
+                    .take(6)
+                    .map(|s| (s.stat.clone(), s.min))
+                    .collect()
+            })
+    }
+
+    fn monster_life(&self, level: i64) -> Option<MonsterLife> {
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(MonsterLife {
+            life: row.life,
+            ally: row.ally_life,
+            alt1: row.alt_life_1,
+            alt2: row.alt_life_2,
         })
     }
 

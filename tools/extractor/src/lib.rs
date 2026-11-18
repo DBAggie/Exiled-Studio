@@ -16,6 +16,7 @@ pub mod hash;
 pub mod index;
 pub mod install;
 pub mod itemtype;
+pub mod monstertemplate;
 pub mod psg;
 mod reader;
 pub mod schema;

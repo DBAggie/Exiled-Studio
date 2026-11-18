@@ -1039,6 +1039,63 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (ids, type_ids, dangling, bad) = p.minion_domain();
+        duplicates(
+            report,
+            super::poe1::MINIONS,
+            ids.into_iter().chain(type_ids),
+        );
+        for (at, detail) in dangling {
+            report.add("BUNDLE_DANGLING_REF", at, detail);
+        }
+        for (at, detail) in bad {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let object_types = p.minion_object_types();
+        duplicates(report, super::poe1::MINIONS, object_types.iter().copied());
+        if !object_types.is_sorted() {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("{}:object_stats", super::poe1::MINIONS),
+                "object stats not sorted by object type",
+            );
+        }
+        let (unnamed, empty) = p.minion_object_findings();
+        for at in unnamed {
+            report.add("BUNDLE_DANGLING_REF", at, "an object type no variety names");
+        }
+        for at in empty {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                at,
+                "an object type entry with nothing to carry",
+            );
+        }
+        if let Some(sk) = &b.skills {
+            let effects: BTreeSet<&str> =
+                sk.granted_effects.iter().map(|g| g.id.as_str()).collect();
+            for (at, s) in p.minion_skills() {
+                if !effects.contains(s) {
+                    report.add(
+                        "BUNDLE_DANGLING_REF",
+                        at,
+                        format!("granted effect {s} does not exist"),
+                    );
+                }
+            }
+        }
+        let (bases, findings) = p.flask_domain();
+        duplicates(report, super::poe1::FLASKS, bases.iter().copied());
+        for base in bases.iter().filter(|x| !known.contains(*x)) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{}:{base}", super::poe1::FLASKS),
+                format!("base item {base} does not exist"),
+            );
+        }
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
         let (keys, empty, findings) = p.flavour_domain();
         if empty > 0 {
             report.add(

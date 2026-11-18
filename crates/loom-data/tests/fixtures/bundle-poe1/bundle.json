@@ -147,6 +147,11 @@
    "size": 142
   },
   {
+   "path": "poe1/flasks.json",
+   "sha256": "dadbc239fab8727a55a738ebbc2a2125fafd29524256c421e49329639fe5f281",
+   "size": 195
+  },
+  {
    "path": "poe1/grafts.json",
    "sha256": "2724bbcc0f4a54997746944b7df4039bc7f950ac98538461b5cbee95583dcb02",
    "size": 163
@@ -155,6 +160,11 @@
    "path": "poe1/jewel_radii.json",
    "sha256": "0446402c1aded95ddf69f25685871ae4dfeb748cc1d03ac0468390c676a04679",
    "size": 219
+  },
+  {
+   "path": "poe1/minions.json",
+   "sha256": "65998106378a545045e6e7035c1850b07e54953be6dfee2b3776fab62da4449c",
+   "size": 904
   },
   {
    "path": "poe1/pantheons.json",

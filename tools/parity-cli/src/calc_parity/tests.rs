@@ -875,7 +875,7 @@ fn run_should_write_the_report_and_refuse_an_existing_folder() {
     let written: Value =
         serde_json::from_slice(&std::fs::read(c.request.out.join("report.json")).unwrap()).unwrap();
     assert_eq!(written["status"], "no_difference");
-    assert_eq!(written["slice"]["revision"], 2);
+    assert_eq!(written["slice"]["revision"], 4);
     assert!(report.summary_markdown().starts_with("# calc-parity"));
     assert!(run(&c.request).unwrap_err().contains("already exists"));
 }
@@ -1165,4 +1165,27 @@ fn fixed_decimals_should_round_exact_ties_to_even() {
     assert_eq!(Format::Fixed(2).print(0.125), "0.12");
     assert_eq!(Format::Fixed(0).print(2.5), "2");
     assert_eq!(Format::Fixed(0).print(3.5), "4");
+}
+
+/// A minion field (slice revision 4, P6-7b2): its value under PoB's
+/// nested path, its pointer built per segment.
+#[test]
+fn a_nested_pob_path_should_find_the_minion_value() {
+    let f =
+        super::slice::SliceFile::read(include_bytes!("../../../../docs/phase-3/slice-fields.json"))
+            .unwrap()
+            .fields
+            .into_iter()
+            .find(|f| f.id == "Minion.Life")
+            .unwrap();
+    let main = serde_json::json!({"Life": 10, "Minion": {"Life": 345}});
+    assert_eq!(
+        super::oracle_value(&f, Some(&main)),
+        Some(&serde_json::json!(345))
+    );
+    assert_eq!(super::oracle_pointer(&f), "/main_output/Minion/Life");
+    assert_eq!(
+        super::oracle_value(&f, Some(&serde_json::json!({"Life": 10}))),
+        None
+    );
 }

@@ -87,8 +87,12 @@
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit
 //! (PoB's `skillFlags.hit`: a `Damage` or `Projectile` type), cast by the
-//! player: not an attack, channelled, triggered, a totem, trap, mine,
-//! minion, or brand, without a cooldown, with a cast time; or an attack
+//! player, a totem, a trap, or a mine: not an attack, triggered, a minion,
+//! or brand ([`NOT_SELF_CAST`]; channelled skills since P6-5, totems since
+//! P6-6d, `Partial` through [`TOTEM_REASON`]; traps and mines since P6-6e,
+//! `Partial` through [`TRAP_MINE_REASON`], their attacks and DoT not
+//! computed), without a
+//! cooldown, with a cast time; or an attack
 //! that is none of those but an attack, without a cooldown, with a weapon
 //! in the main hand of a class the skill can use and no weapon in the off
 //! hand (dual wielding is not modelled); in an enabled group. Every other
@@ -114,7 +118,7 @@ use super::gem_levels::GemLevels;
 use super::keystones;
 use super::phases::{self, Valued};
 use super::skill::{self, MainSkill};
-use super::{Poe1Quantity, WeaponValue};
+use super::{Hand, Poe1Quantity, WeaponValue};
 use crate::condition::{Applies, ConditionKey, Flags, QueryContext};
 use crate::engine::Calc;
 use crate::error::CalcError;
@@ -128,45 +132,27 @@ use crate::store::Effect;
 
 /// Skill types that make a spell something other than a plain self-cast
 /// hit: PoB computes their rate or damage another way (attacks with
-/// weapons, channelling stages, triggers, totems, traps, mines, minions,
-/// brands' activations).
-pub const NOT_SELF_CAST: [&str; 9] = [
-    "Attack",
-    "Channel",
-    "Triggered",
-    "SummonsTotem",
-    "Trapped",
-    "RemoteMined",
-    "Minion",
-    "CreatesMinion",
-    "Brand",
-];
+/// weapons, triggers, totems, traps, mines, minions, brands' activations).
+/// Totems' skills are plain hits since P6-6d: PoB computes a totem's hit
+/// as the skill's, per totem, with the totem's action speed (`1 +
+/// TotemActionSpeed INC / 100`, `CalcOffence.lua` 2346 to 2351) in place
+/// of the player's (no totem action speed stat is mapped: 1).
+/// Channelled skills are plain hits since P6-5: PoB computes them as any
+/// skill, without the server tick cap on their rate (`CalcOffence.lua`
+/// 2366); their stages and release are skill data and tagged stat map
+/// entries, which leave a skill unvetted ([`pob_vetted`]).
+pub const NOT_SELF_CAST: [&str; 5] = ["Attack", "Triggered", "Minion", "CreatesMinion", "Brand"];
 
 /// Skill types that make an attack something other than a plain attack
 /// with the weapon in hand ([`NOT_SELF_CAST`] but `Attack`).
-pub const NOT_PLAIN_ATTACK: [&str; 8] = [
-    "Channel",
+pub const NOT_PLAIN_ATTACK: [&str; 6] = [
     "Triggered",
-    "SummonsTotem",
     "Trapped",
     "RemoteMined",
     "Minion",
     "CreatesMinion",
     "Brand",
 ];
-
-/// The spells whose hit the oracle has checked (P3-9b's mechanic fixtures):
-/// another spell is computed but `Partial` (`unmodelled-skill`,
-/// `pob-skill-data`) until a PR adds its fixtures. PoB also computes a skill
-/// from its own skill data (parts, cast time overrides, skill functions,
-/// the hand-written `area` and `projectile` flags), which the game data
-/// does not carry.
-pub const VETTED_SPELLS: [&str; 1] = ["IceNova"];
-
-/// The attacks whose hit the oracle has checked (P3-10's mechanic
-/// fixtures); another attack is computed but `Partial` as for spells
-/// ([`VETTED_SPELLS`]).
-pub const VETTED_ATTACKS: [&str; 1] = ["Smite"];
 
 /// A part of a skill as PoB's skill data writes it (`parts`), with the
 /// flags it sets (`skillFlags.melee`, `skillFlags.area`).
@@ -178,27 +164,170 @@ pub struct SkillPart {
     pub melee: bool,
     /// The part's hits are area damage.
     pub area: bool,
+    /// The part's hits are projectiles (P6-6b).
+    pub projectile: bool,
 }
 
-/// The parts of the vetted attacks, from PoB v2.67.2's skill data
-/// (`Data/Skills/act_str.lua`, `skills["Smite"]`: `baseFlags` melee and
-/// area; part 1 "Melee Hit" `area = false`, part 2 "Area Hit" `area = true,
-/// melee = false`). The game data has no parts.
-pub const SKILL_PARTS: [(&str, &[SkillPart]); 1] = [(
-    "Smite",
-    &[
-        SkillPart {
-            name: "Melee Hit",
-            melee: true,
-            area: false,
-        },
-        SkillPart {
-            name: "Area Hit",
-            melee: false,
-            area: true,
-        },
-    ],
-)];
+/// The reason a totem's skill keeps (P6-6d review): PoB reads totem data
+/// the engine does not (placement time and duration, `totemFireOnce`,
+/// `KeywordFlag.Totem` mods, the totem count for ring overrides), and
+/// some of it can come from stats that are inert elsewhere. A test keeps
+/// every vetted totem skill `Partial` through it.
+pub const TOTEM_REASON: &str = "totem-data";
+
+/// The reason a trap's or a mine's spell keeps (P6-6e): PoB reads its throw
+/// count, trap and mine speed, cooldown, and keyword mods, which the engine
+/// does not.
+pub const TRAP_MINE_REASON: &str = "trap-mine-data";
+
+/// PoB's base trap throwing time and mine laying time, seconds
+/// (`CalcSetup.lua` 55, 56).
+const TRAP_THROWING_TIME: f64 = 0.6;
+/// See [`TRAP_THROWING_TIME`].
+const MINE_LAYING_TIME: f64 = 0.3;
+
+/// `SkillData` keys of PoB's base mods that only label or size what PoB
+/// shows (the area's radius and its labels), read into no slice field
+/// (P6-6b).
+pub const DISPLAY_SKILL_DATA: [&str; 5] = [
+    "radius",
+    "radiusLabel",
+    "radiusSecondary",
+    "radiusSecondaryLabel",
+    "radiusTertiaryLabel",
+];
+
+/// The fields of a PoB part the engine reads (P6-6b): its name and flags.
+const PART_FIELDS: [&str; 4] = ["area", "melee", "name", "projectile"];
+
+/// The main skill's part from PoB's skill data (P6-6b; the generated
+/// [`super::pob_skills`], v2.67.2's `Data/Skills/*.lua`): the base flags
+/// `area`, `melee`, `projectile` (`baseFlags`), each overridden by the part's
+/// own field, the part `m_min(#parts, skillPart or 1)` (`wanted`, 1-based).
+/// `None` when PoB has no data for the skill.
+#[must_use]
+pub fn pob_part(id: &str, wanted: usize) -> Option<(SkillPart, usize)> {
+    let pob = super::pob_skill::skill(id)?;
+    let mut part = SkillPart {
+        name: "",
+        melee: pob.flag("melee"),
+        area: pob.flag("area"),
+        projectile: pob.flag("projectile"),
+    };
+    if pob.parts.is_empty() {
+        return Some((part, 0));
+    }
+    let index = wanted.min(pob.parts.len()).max(1);
+    let p = pob.parts[index - 1];
+    part.name = p.name();
+    let truthy = |k: &str| p.get(k).map(super::pob_skill::Value::truthy);
+    part.melee = truthy("melee").unwrap_or(part.melee);
+    part.area = truthy("area").unwrap_or(part.area);
+    part.projectile = truthy("projectile").unwrap_or(part.projectile);
+    Some((part, index))
+}
+
+/// An attack's melee and projectile flags after its main-hand weapon of
+/// class `class` (`CalcActiveSkill.lua` 302 to 308; P6-6b review): a melee
+/// weapon clears the projectile flag, a ranged one (bow, wand: the
+/// classes PoB's `weaponTypeInfo` marks not melee) the melee flag.
+#[must_use]
+pub fn weapon_flags(class: &str, melee: bool, projectile: bool) -> (bool, bool) {
+    // Kept apart from [`weapon_type_flags`]: this one decides the part's
+    // melee and projectile flags, as PoB's `weaponTypeInfo.melee`.
+    let ranged = matches!(class, "Bow" | "Wand");
+    if !ranged && melee {
+        (true, false)
+    } else if ranged && projectile {
+        (false, true)
+    } else {
+        (melee, projectile)
+    }
+}
+
+/// The weapon flags of an attack with a weapon of item class `class`
+/// (P6-11b; PoB's `getWeaponFlags`, `CalcActiveSkill.lua` 192 to 223, with
+/// `data.weaponTypeInfo`, `Modules/Data.lua` 550): its type, `Weapon`,
+/// one- or two-handed, and melee or ranged. `None` for a class PoB has no
+/// weapon type of (the attack is not computed). A weapon that counts as
+/// all one-handed types (Varunastra) is not modelled: its line is an
+/// unmapped stat (a reason).
+#[must_use]
+pub fn weapon_type_flags(class: &str) -> Option<Flags> {
+    let (kind, one_hand, melee) = match class {
+        "Bow" => (Flags::BOW, false, false),
+        "Claw" => (Flags::CLAW, true, true),
+        "Dagger" | "Rune Dagger" => (Flags::DAGGER, true, true),
+        "Staff" | "Warstaff" => (Flags::STAFF, false, true),
+        "Wand" => (Flags::WAND, true, false),
+        "One Hand Axe" => (Flags::AXE, true, true),
+        "Two Hand Axe" => (Flags::AXE, false, true),
+        "One Hand Mace" | "Sceptre" => (Flags::MACE, true, true),
+        "Two Hand Mace" => (Flags::MACE, false, true),
+        "One Hand Sword" | "Thrusting One Hand Sword" => (Flags::SWORD, true, true),
+        "Two Hand Sword" => (Flags::SWORD, false, true),
+        "FishingRod" => (Flags::FISHING, false, true),
+        _ => return None,
+    };
+    let hands = if one_hand {
+        Flags::WEAPON_1H
+    } else {
+        Flags::WEAPON_2H
+    };
+    let range = if melee {
+        Flags::WEAPON_MELEE
+    } else {
+        Flags::WEAPON_RANGED
+    };
+    Some(kind | Flags::WEAPON | hands | range)
+}
+
+/// Whether the engine reads PoB's hand-written data of the skill that
+/// changes its hit (P6-6b): no skill functions, no stat of its stat map
+/// read under a tag ([`super::pob_skill::PobSkill::own_stats`], P6-6b
+/// review), no base mod but the display `SkillData`
+/// ([`DISPLAY_SKILL_DATA`], untagged), and, for part `index` (1-based; 0
+/// without parts), no field but a name and flags ([`PART_FIELDS`]). Else
+/// the hit is `Partial` (`unmodelled-skill`, `pob-skill-data`): PoB computes
+/// it from data the engine does not read. The skill sweep is the evidence
+/// (`docs/phase-6/skill-data.md`, "P6-6b").
+#[must_use]
+pub fn pob_vetted(id: &str, index: usize) -> bool {
+    let Some(pob) = super::pob_skill::skill(id) else {
+        return false;
+    };
+    if !pob.functions.is_empty() || !pob.own_stats.is_empty() {
+        return false;
+    }
+    // A channelled release skill: PoB sets its hit time outside its data
+    // (Snipe's `hitTimeMultiplier`, `CalcTriggers.lua` 1405 to 1418), which
+    // the engine does not read (P6-5 review).
+    if pob.flag("channelRelease") {
+        return false;
+    }
+    let display = |m: &super::pob_skill::PobBaseMod| {
+        m.name == "SkillData" && !m.tagged && m.key.is_some_and(|k| DISPLAY_SKILL_DATA.contains(&k))
+    };
+    if !pob.base_mods.iter().all(display) {
+        return false;
+    }
+    match index.checked_sub(1).and_then(|i| pob.parts.get(i)) {
+        Some(part) => part.values.iter().all(|(k, _)| PART_FIELDS.contains(k)),
+        None => true,
+    }
+}
+
+/// "Hits with both weapons" while dual wielding (PoB's
+/// `doubleHitsWhenDualWielding`): read from the skill's gems by
+/// [`attack_skill`], so the mapping gives it no effect.
+pub const DOUBLE_HITS_STAT: &str = "skill_double_hits_when_dual_wielding";
+
+/// PoB's `skillFlag = "arrow"` (`SkillStatMap.lua` 1341): the skill's
+/// keyword `KeywordFlag.Arrow` (`CalcActiveSkill.lua` 412; P6-11c), from the
+/// active gem's own stats only (PoB reads `skillFlag` entries of the active
+/// effect's stat map, 341 to 346; a support's flags come from `addFlags`;
+/// P6-11c review).
+pub const ARROW_STAT: &str = "skill_can_fire_arrows";
 
 /// PoB's damage types in its conversion order (`dmgTypeList`), the order
 /// it sums each pass in.
@@ -250,8 +379,16 @@ pub struct SpellSkill<'d> {
     pub level: &'d StatSetLevel,
     /// Cast time, milliseconds.
     pub cast_time: i64,
-    /// Whether its hits are area damage (`is_area_damage`).
+    /// Whether its hits are area damage (PoB's flags and part, else
+    /// `is_area_damage`).
     pub area: bool,
+    /// Whether its hits are projectiles (PoB's flags and part; P6-6b).
+    pub projectile: bool,
+    /// Whether its hits are melee (PoB's flags and part; P6-6c review).
+    pub melee: bool,
+    /// Whether the engine reads all of PoB's data of the skill
+    /// ([`pob_vetted`]).
+    pub vetted: bool,
 }
 
 impl SpellSkill<'_> {
@@ -279,11 +416,23 @@ pub struct AttackSkill<'d> {
     pub attack_speed_multiplier: i64,
     /// The weapon in the main hand.
     pub weapon: ItemId,
+    /// The main hand's weapon flags ([`weapon_type_flags`], P6-11b).
+    pub weapon_flags: Flags,
+    /// The weapon in the off hand when the skill attacks with it too
+    /// (Phase 6, dual wielding: PoB's `weapon2Attack`).
+    pub off_weapon: Option<ItemId>,
+    /// The off hand's weapon flags when it attacks (P6-11b).
+    pub off_weapon_flags: Flags,
+    /// The skill hits with both weapons at once (PoB's skill data
+    /// `doubleHitsWhenDualWielding`); else it alternates.
+    pub double_hits: bool,
+    /// The skill fires arrows ([`ARROW_STAT`]).
+    pub arrow: bool,
     /// The skill part computed.
     pub part: SkillPart,
-    /// Whether PoB's parts of the skill are known ([`SKILL_PARTS`]); if
-    /// not, the part's flags are the game's (`Melee` type,
-    /// `is_area_damage`).
+    /// Whether the engine reads all of PoB's data of the skill
+    /// ([`pob_vetted`]); without PoB's data, the part's flags are the
+    /// game's (`Melee` type, `is_area_damage`).
     pub known_parts: bool,
 }
 
@@ -353,13 +502,43 @@ pub fn spell_skill<'d>(
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
-    let area = is_area_damage(&skill, data);
+    // PoB's flags and part (P6-6b), else the game's area stat.
+    let wanted = skill::active_groups(build)
+        .ok()
+        .and_then(|groups| groups.get(group).cloned())
+        .and_then(|g| {
+            g.gems
+                .typed()
+                .nth(gem.gem)
+                .and_then(|x| skill::attribute(&x.attributes, "skillPart"))
+                .and_then(|v| v.parse::<usize>().ok())
+        })
+        .unwrap_or(1);
+    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
+        return None;
+    }
+    let (part, part_index, known) = match pob_part(&effect.id, wanted) {
+        Some((p, i)) => (p, i, true),
+        None => (
+            SkillPart {
+                name: "",
+                melee: false,
+                area: is_area_damage(&skill, data),
+                projectile: false,
+            },
+            0,
+            false,
+        ),
+    };
     Some(SpellSkill {
         skill,
         group,
         level,
         cast_time: effect.cast_time,
-        area,
+        area: part.area,
+        projectile: part.projectile,
+        melee: part.melee,
+        vetted: known && pob_vetted(&effect.id, part_index),
     })
 }
 
@@ -396,51 +575,84 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
     let hands = collect::hands(input);
-    if hands.off_hand_weapon {
+    let (weapon, base) = hands.main.clone()?;
+    // PoB disables a skill its weapon cannot use (`weaponTypes`,
+    // [`MainSkill::can_use`]).
+    let usable = |class: &str| skill.can_use(class);
+    if !usable(&base.class) {
         return None;
     }
-    let (weapon, base) = hands.main?;
-    // PoB disables a skill its weapon cannot use (`weaponTypes`); the game
-    // lists the classes per active skill (none: any weapon).
-    if let Some(active) = skill.active
-        && !active.weapon_classes.is_empty()
-        && !active.weapon_classes.contains(&base.class)
-    {
-        return None;
-    }
-    let parts = SKILL_PARTS
+    // The off hand (Phase 6, `CalcActiveSkill.lua` 318 to 335): a weapon
+    // the skill can use attacks too; one it cannot use disables the skill
+    // (PoB: "Off Hand weapon is not usable with this skill"), so the attack
+    // is not computed. An item there whose base is not known leaves it not
+    // computed too. The skill types that require dual wielding or two
+    // different weapon types, and supports' weapon types, are not checked:
+    // only vetted attacks are `Complete` (`VETTED_ATTACKS`), and none has
+    // them.
+    let main_flags = weapon_type_flags(&base.class)?;
+    let (off_weapon, off_weapon_flags) = match hands.off {
+        Some((id, off)) if usable(&off.class) => (Some(id), weapon_type_flags(&off.class)?),
+        Some(_) => return None,
+        None if hands.off_hand_weapon => return None,
+        None => (None, Flags::NONE),
+    };
+    // PoB's `doubleHitsWhenDualWielding`: the skill's data (Swordstorm's)
+    // or the stat `skill_double_hits_when_dual_wielding` of the skill or a
+    // support (`SkillStatMap.lua` 291).
+    let double_hits = super::pob_skill::skill(&effect.id)
+        .and_then(|p| p.skill_data("doubleHitsWhenDualWielding"))
+        .is_some_and(super::pob_skill::Value::truthy)
+        || skill::instances(&skill, data).iter().any(|i| {
+            i.stats
+                .iter()
+                .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
+        });
+    let arrow = skill::instance(effect, gem.level, gem.quality, data)
+        .stats
         .iter()
-        .find(|(id, _)| *id == effect.id)
-        .map(|(_, parts)| *parts);
-    let (part, known_parts) = match parts {
-        Some(parts) => {
-            // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing
-            // attribute is 1.
-            let wanted = main_group
-                .gems
-                .typed()
-                .nth(gem.gem)
-                .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
-                .and_then(|v| v.parse::<usize>().ok())
-                .unwrap_or(1)
-                .min(parts.len());
-            (*parts.get(wanted.checked_sub(1)?)?, true)
-        }
+        .any(|(s, v)| s == ARROW_STAT && *v != 0);
+    // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
+    // is 1 (P6-6b: PoB's parts and flags from its skill data).
+    let wanted = main_group
+        .gems
+        .typed()
+        .nth(gem.gem)
+        .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(1);
+    // Part 0: PoB would index a part that does not exist.
+    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
+        return None;
+    }
+    let (mut part, known_parts) = match pob_part(&effect.id, wanted) {
+        Some((p, index)) => (p, pob_vetted(&effect.id, index)),
         None => (
             SkillPart {
                 name: "",
                 melee: has("Melee"),
                 area: is_area_damage(&skill, data),
+                projectile: false,
             },
             false,
         ),
     };
+    // The main-hand weapon decides between melee and projectile
+    // (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears the
+    // projectile flag, a ranged one (bow, wand: not melee in PoB's
+    // `weaponTypeInfo`) the melee flag (P6-6b review).
+    (part.melee, part.projectile) = weapon_flags(&base.class, part.melee, part.projectile);
     Some(AttackSkill {
         skill,
         group,
         level,
         attack_speed_multiplier: level_row.attack_speed_multiplier,
         weapon,
+        weapon_flags: main_flags,
+        off_weapon,
+        off_weapon_flags,
+        double_hits,
+        arrow,
         part,
         known_parts,
     })
@@ -754,6 +966,9 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             life >= 2.0 && mana >= 1.0,
         );
     }
+    if let Some(life) = life {
+        calc.settle_state(ConditionKey::new(super::gems::LIFE_THRESHOLD), life >= 2.0);
+    }
     let skill = hit_skill(&input, &levels);
     if let Some(h) = &skill {
         let sources = std::iter::once(&h.skill().active_gem)
@@ -776,19 +991,41 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::SPELL | Flags::CAST | Flags::HIT | spell.skill.keyword_flags();
+    let mut flags = Flags::SPELL
+        | Flags::KEYWORD_SPELL
+        | Flags::CAST
+        | Flags::HIT
+        | spell.skill.keyword_flags();
     if spell.area {
         flags = flags | Flags::AREA;
+    }
+    // Melee, else projectile (`CalcActiveSkill.lua` 361 to 366).
+    if spell.melee {
+        flags = flags | Flags::MELEE;
+    } else if spell.projectile {
+        flags = flags | Flags::PROJECTILE;
     }
     let cx = calc.context(flags);
     // A spell PoB's oracle has not checked: PoB computes it from its own
     // skill data too (parts, cast time overrides, skill functions, flags),
     // which the game data does not carry.
     let mut unvetted = Reasons::new();
-    if !VETTED_SPELLS.contains(&spell.skill.effect().id.as_str()) {
+    if !spell.vetted {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
             what: "pob-skill-data",
+        });
+    }
+    if spell.skill.types.contains("SummonsTotem") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: spell.source(),
+            what: TOTEM_REASON,
+        });
+    }
+    if spell.skill.types.contains("Trapped") || spell.skill.types.contains("RemoteMined") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: spell.source(),
+            what: TRAP_MINE_REASON,
         });
     }
 
@@ -813,7 +1050,8 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         crit_recently: crit.value != 0.0,
         exert_uptime: None,
     };
-    let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
+    let (hit, crit_hit, sources) =
+        passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, None)?;
     calc.set_derived(
         Field::AverageDamage,
@@ -824,7 +1062,58 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
     let (speed, mut speed_reasons) = cast_rate(calc, spell, &cx)?;
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
-    hit_dps(calc, average, speed)
+    hit_dps(calc, average, speed)?;
+    let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
+    let ailment_hit = super::ailment::AilmentHit {
+        flags,
+        sources: &sources,
+        crit,
+        hit_chance: spell_hit_chance,
+        rate: speed,
+        skill: super::pob_skill::skill(&spell.skill.effect().id).map(|p| (p, spell.source())),
+    };
+    set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)
+}
+
+/// The main skill's ignite from one hit pass (Phase 6, [`super::ailment`]):
+/// the field only when the hit ignites, with the hit's skill reasons; it
+/// reads the crit chance and rate.
+fn set_ailments(
+    calc: &mut Calc<'_>,
+    hit: &super::ailment::AilmentHit<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    unvetted: &Reasons,
+) -> Result<(), CalcError> {
+    for ailment in super::ailment::Ailment::ALL {
+        if let Some((dps, mut reasons)) = super::ailment::damaging(calc, hit, enemy, data, ailment)?
+        {
+            reasons.extend(unvetted);
+            // The stacks read the hit chance too (attacks; a spell's is
+            // the constant 100, not a field).
+            let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
+                &[Field::CritChance, Field::Speed, Field::HitChance]
+            } else {
+                &[Field::CritChance, Field::Speed]
+            };
+            calc.set_derived(ailment.field(), phases::query(dps, reasons), deps);
+        }
+    }
+    // Impale (P6-2d): every impale's DPS, an attack's or a spell's hit.
+    if let Some((dps, mut reasons)) = super::ailment::impale(calc, hit, enemy, data)? {
+        reasons.extend(unvetted);
+        let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
+            &[Field::CritChance, Field::Speed, Field::HitChance]
+        } else {
+            &[Field::CritChance, Field::Speed]
+        };
+        calc.set_derived(
+            Field::Poe1(super::Poe1Field::ImpaleDps),
+            phases::query(dps, reasons),
+            deps,
+        );
+    }
+    Ok(())
 }
 
 /// `output.AverageHit = totalHitAvg x (1 - CritChance / 100) +
@@ -875,38 +1164,76 @@ fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), Ca
     Ok(())
 }
 
-/// An attack's hit with the weapon in the main hand (module docs).
-fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
-    let input = *calc.input();
-    let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::ATTACK | Flags::HIT | attack.skill.keyword_flags();
-    if attack.part.melee {
-        flags = flags | Flags::MELEE;
-    }
-    if attack.part.area {
-        flags = flags | Flags::AREA;
-    }
+/// One hand's attack pass (module docs; Phase 6: PoB's `passList`, one
+/// pass per hand): its chance to hit, crit chance and multiplier, rate, and
+/// average damage, each with its reasons.
+struct HandHit {
+    hit_chance: (Valued, Reasons),
+    crit: (Valued, Reasons),
+    multiplier: (Valued, Reasons),
+    speed: (Valued, Reasons),
+    average: (Valued, Reasons),
+    /// The pass's bases and conversion, for its ailments.
+    sources: HitSources,
+}
+
+/// One hand's weapon and rate, before its damage (P6-11c review: PoB
+/// combines the hands' speeds before either hand's damage, `CalcOffence.lua`
+/// 2444, which Intimidating Cry's uptime then reads).
+struct HandRate {
+    hand: Hand,
+    flags: Flags,
+    weapon: WeaponData,
+    /// The pass's reasons with the weapon's.
+    unvetted: Reasons,
+    speed: (Valued, Reasons),
+}
+
+/// One hand's weapon values and rate (module docs, step 8) with the
+/// weapon `item` in `hand`.
+fn hand_rate(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    hand: Hand,
+    item: ItemId,
+    flags: Flags,
+    unvetted: &Reasons,
+) -> Result<HandRate, CalcError> {
     let cx = calc.context(flags);
-    let mut unvetted = Reasons::new();
-    let id = attack.skill.effect().id.as_str();
-    if !VETTED_ATTACKS.contains(&id) || !attack.known_parts {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: attack.source(),
-            what: "pob-skill-data",
-        });
-    }
-    // PoB takes a main-hand attack's base crit from the weapon alone
-    // (`source.CritChance`); a level's own attack crit chance is read only
-    // for the off hand.
-    if attack.level.attack_crit_chance != 0 {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: attack.source(),
-            what: "skill-crit-chance",
-        });
-    }
+    let mut unvetted = unvetted.clone();
     let mut weapon_reasons = Reasons::new();
-    let weapon = weapon_data(calc, attack.weapon, &mut weapon_reasons)?;
+    let weapon = weapon_data(calc, item, hand, &mut weapon_reasons)?;
     unvetted.extend(&weapon_reasons);
+    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
+    speed_reasons.extend(&unvetted);
+    Ok(HandRate {
+        hand,
+        flags,
+        weapon,
+        unvetted,
+        speed: (speed, speed_reasons),
+    })
+}
+
+/// One hand's pass (module docs, steps 4 to 9) after its rate:
+/// `global_speed` is PoB's `globalOutput.Speed` (the hands' combined speed
+/// when dual wielding), which Intimidating Cry's uptime reads.
+fn hand_hit(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    rate: HandRate,
+    global_speed: Valued,
+    enemy: &Enemy,
+) -> Result<HandHit, CalcError> {
+    let input = *calc.input();
+    let HandRate {
+        hand,
+        flags,
+        weapon,
+        unvetted,
+        speed,
+    } = rate;
+    let cx = calc.context(flags);
 
     // Chance to hit (step 9).
     let mut hit_reasons = unvetted.clone();
@@ -917,30 +1244,16 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     let hit_chance = match flag_on(calc, cannot_be_evaded, &cx, &mut hit_reasons)? {
         Some(flag) => by_flag(calc, flag, "hits-cannot-be-evaded", 100.0)?,
         None => {
-            enemy_reasons(&enemy, true, &mut hit_reasons);
-            let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
-            accuracy_hit_chance(calc, &enemy, accuracy, &cx, &mut hit_reasons)?
+            enemy_reasons(enemy, true, &mut hit_reasons);
+            let accuracy = accuracy(calc, &cx, hand, &mut hit_reasons)?;
+            accuracy_hit_chance(calc, enemy, accuracy, &cx, &mut hit_reasons)?
         }
     };
-    calc.set_derived(
-        Field::HitChance,
-        phases::query(hit_chance, hit_reasons),
-        &[Field::Dexterity],
-    );
 
     let (crit, mut crit_reasons) = crit_chance(calc, weapon.crit, Some(hit_chance), &cx)?;
     crit_reasons.extend(&unvetted);
-    calc.set_derived(
-        Field::CritChance,
-        phases::query(crit, crit_reasons),
-        &[Field::HitChance],
-    );
     let (multiplier, mut multiplier_reasons) = crit_multiplier(calc, input.data, &cx)?;
     multiplier_reasons.extend(&unvetted);
-    calc.set(
-        Field::CritMultiplier,
-        phases::query(multiplier, multiplier_reasons),
-    );
 
     let mut reasons = unvetted.clone();
     // `strDmgBonus = m_floor(Str / 5)` (no mapped stat changes the ratio or
@@ -952,11 +1265,9 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         "strength-per-melee-damage",
         "strength-bonus",
     )?;
-    // The rate first, as PoB (`CalcOffence.lua`: speed before damage):
-    // Intimidating Cry's uptime reads it.
-    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
-    speed_reasons.extend(&unvetted);
-    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, speed, &mut reasons)?;
+    // The rate came first, as PoB (`CalcOffence.lua`: speed before
+    // damage): Intimidating Cry's uptime reads the global speed.
+    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, global_speed, &mut reasons)?;
     let shape = HitShape {
         source: attack.source(),
         level: attack.level,
@@ -966,11 +1277,245 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         crit_recently: crit.value != 0.0,
         exert_uptime,
     };
-    let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
+    let (hit, crit_hit, sources) =
+        passes(calc, &shape, enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, Some(hit_chance))?;
+    Ok(HandHit {
+        hit_chance: (hit_chance, hit_reasons),
+        crit: (crit, crit_reasons),
+        multiplier: (multiplier, multiplier_reasons),
+        speed,
+        average: (average, reasons),
+        sources,
+    })
+}
+
+/// An attack's hit (module docs): with the weapon in the main hand, and
+/// with the off hand's too when dual wielding (Phase 6).
+fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
+    let input = *calc.input();
+    let enemy = enemy::enemy(input.build, input.data);
+    let mut flags =
+        Flags::ATTACK | Flags::KEYWORD_ATTACK | Flags::HIT | attack.skill.keyword_flags();
+    // Melee, else projectile (`CalcActiveSkill.lua` 361 to 366; the
+    // weapon already cleared the other, [`attack_skill`]).
+    if attack.part.melee {
+        flags = flags | Flags::MELEE;
+    } else if attack.part.projectile {
+        flags = flags | Flags::PROJECTILE;
+    }
+    if attack.part.area {
+        flags = flags | Flags::AREA;
+    }
+    // `KeywordFlag.Bow` for an attack whose main hand holds a bow
+    // (`CalcActiveSkill.lua` 406: both hands' configs).
+    if attack.weapon_flags.contains(Flags::BOW) {
+        flags = flags | Flags::KEYWORD_BOW;
+    }
+    if attack.arrow {
+        flags = flags | Flags::KEYWORD_ARROW;
+    }
+    // Each hand's config adds its weapon's flags (`weapon1Cfg`,
+    // `weapon2Cfg`, `CalcActiveSkill.lua` 470 to 479; P6-11b).
+    let off_flags = flags | attack.off_weapon_flags;
+    let flags = flags | attack.weapon_flags;
+    let mut unvetted = Reasons::new();
+    let id = attack.skill.effect().id.as_str();
+    if !attack.known_parts {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "pob-skill-data",
+        });
+    }
+    if attack.skill.types.contains("SummonsTotem") {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: TOTEM_REASON,
+        });
+    }
+    // PoB takes a main-hand attack's base crit from the weapon alone
+    // (`source.CritChance`); a level's own attack crit chance replaces the
+    // off hand's weapon crit (`skillData.CritChance`), which is not
+    // modelled: a reason for either hand.
+    if attack.level.attack_crit_chance != 0 {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "skill-crit-chance",
+        });
+    }
+    let main_rate = hand_rate(calc, attack, Hand::Main, attack.weapon, flags, &unvetted)?;
+    let Some(off_item) = attack.off_weapon else {
+        let speed = main_rate.speed.0;
+        let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
+        let HandHit {
+            hit_chance,
+            crit,
+            multiplier,
+            speed,
+            average,
+            sources,
+        } = main;
+        calc.set_derived(
+            Field::HitChance,
+            phases::query(hit_chance.0, hit_chance.1),
+            &[Field::Dexterity],
+        );
+        calc.set_derived(
+            Field::CritChance,
+            phases::query(crit.0, crit.1),
+            &[Field::HitChance],
+        );
+        calc.set(
+            Field::CritMultiplier,
+            phases::query(multiplier.0, multiplier.1),
+        );
+        calc.set_derived(
+            Field::AverageDamage,
+            phases::query(average.0, average.1),
+            &[
+                Field::CritChance,
+                Field::CritMultiplier,
+                Field::HitChance,
+                Field::Strength,
+            ],
+        );
+        calc.set(Field::Speed, phases::query(speed.0, speed.1));
+        hit_dps(calc, average.0, speed.0)?;
+        let ailment_hit = super::ailment::AilmentHit {
+            flags,
+            sources: &sources,
+            crit: crit.0,
+            hit_chance: hit_chance.0,
+            rate: speed.0,
+            skill: super::pob_skill::skill(id).map(|p| (p, attack.source())),
+        };
+        return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
+    };
+    let off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
+    let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
+    let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
+    let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;
+    dual_wield(calc, attack, &main, &off, speed)?;
+    // PoB computes each hand's ailments and combines them (`combineStat`
+    // `CHANCE_AILMENT`, `CHANCE`): not modelled yet. A dual-wielding attack
+    // either of whose hands would inflict an ailment has its field, not
+    // computed (P6-2b, P6-2c).
+    for ailment in super::ailment::Ailment::ALL {
+        let mut any = false;
+        // Each pass's own flags (`band(cfg.flags, ModFlag.WeaponMask)`, the
+        // hand's config; P6-11b review).
+        for (hand, flags) in [(&main, flags), (&off, off_flags)] {
+            let ailment_hit = super::ailment::AilmentHit {
+                flags,
+                sources: &hand.sources,
+                crit: hand.crit.0,
+                hit_chance: hand.hit_chance.0,
+                rate: hand.speed.0,
+                skill: None,
+            };
+            any |= super::ailment::damaging(calc, &ailment_hit, &enemy, input.data, ailment)?
+                .is_some();
+        }
+        if any {
+            calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
+        }
+    }
+    // PoB combines a dual wielder's impales per hand only for double hits:
+    // not modelled yet (P6-2d).
+    let mut impales = false;
+    for (hand, flags) in [(&main, flags), (&off, off_flags)] {
+        let ailment_hit = super::ailment::AilmentHit {
+            flags,
+            sources: &hand.sources,
+            crit: hand.crit.0,
+            hit_chance: hand.hit_chance.0,
+            rate: hand.speed.0,
+            skill: None,
+        };
+        impales |= super::ailment::impale(calc, &ailment_hit, &enemy, input.data)?.is_some();
+    }
+    if impales {
+        calc.set_unsupported(
+            Field::Poe1(super::Poe1Field::ImpaleDps),
+            UnsupportedReason::NotComputed,
+        );
+    }
+    Ok(())
+}
+
+/// The hands' combined speed (PoB's `combineStat("Speed",
+/// "HARMONICMEAN")`, `CalcOffence.lua` 2444): `2 / (1 / main + 1 / off)`, 0
+/// when either is 0.
+fn combined_speed(calc: &mut Calc<'_>, main: Valued, off: Valued) -> Result<Valued, CalcError> {
+    if main.value == 0.0 || off.value == 0.0 {
+        return phases::constant(calc, "no-speed", 0.0);
+    }
+    let two = phases::constant(calc, "two", 2.0)?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let a = quotient(calc, one, main, Term::Step("main-hand-time"))?;
+    let b = quotient(calc, one, off, Term::Step("off-hand-time"))?;
+    let sum = phases::total(calc, &[a, b], Term::Step("both-hands-time"))?;
+    quotient(calc, two, sum, Term::Result)
+}
+
+/// Both hands' passes combined (Phase 6; PoB's `combineStat`,
+/// `CalcOffence.lua` 2003 to 2108, 2441 to 2445, 3869 to 3875): chance to
+/// hit, crit chance, and crit multiplier `AVERAGE`; speed the harmonic mean
+/// (0 when a hand's is 0); average damage `DPS` (the hands' sum, halved
+/// unless the skill hits with both at once); hit DPS the combined average
+/// times the combined speed (each hand's `TotalDPS` reads the combined
+/// speed, so `DPS` of them is that product).
+fn dual_wield(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    main: &HandHit,
+    off: &HandHit,
+    speed: Valued,
+) -> Result<(), CalcError> {
+    let two = phases::constant(calc, "two", 2.0)?;
+    let average_of = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
+        let sum = phases::total(calc, &[a, b], Term::Step("both-hands"))?;
+        quotient(calc, sum, two, Term::Result)
+    };
+    let joined = |a: &Reasons, b: &Reasons| {
+        let mut r = a.clone();
+        r.extend(b);
+        r
+    };
+    let hit_chance = average_of(calc, main.hit_chance.0, off.hit_chance.0)?;
+    calc.set_derived(
+        Field::HitChance,
+        phases::query(hit_chance, joined(&main.hit_chance.1, &off.hit_chance.1)),
+        &[Field::Dexterity],
+    );
+    let crit = average_of(calc, main.crit.0, off.crit.0)?;
+    calc.set_derived(
+        Field::CritChance,
+        phases::query(crit, joined(&main.crit.1, &off.crit.1)),
+        &[Field::HitChance],
+    );
+    let multiplier = average_of(calc, main.multiplier.0, off.multiplier.0)?;
+    calc.set(
+        Field::CritMultiplier,
+        phases::query(multiplier, joined(&main.multiplier.1, &off.multiplier.1)),
+    );
+    calc.set(
+        Field::Speed,
+        phases::query(speed, joined(&main.speed.1, &off.speed.1)),
+    );
+    // `DPS`: `(main + off)`, halved unless the skill hits with both.
+    let dps_mode = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
+        let sum = phases::total(calc, &[a, b], Term::Step("both-hands"))?;
+        if attack.double_hits {
+            Ok(sum)
+        } else {
+            quotient(calc, sum, two, Term::Result)
+        }
+    };
+    let average = dps_mode(calc, main.average.0, off.average.0)?;
     calc.set_derived(
         Field::AverageDamage,
-        phases::query(average, reasons),
+        phases::query(average, joined(&main.average.1, &off.average.1)),
         &[
             Field::CritChance,
             Field::CritMultiplier,
@@ -978,8 +1523,11 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
             Field::Strength,
         ],
     );
-
-    calc.set(Field::Speed, phases::query(speed, speed_reasons));
+    // Each hand's `TotalDPS = AverageDamage x globalOutput.Speed x 1 x 1`
+    // (`CalcOffence.lua` 3712: the combined speed, set before the passes'
+    // damage), then `DPS`: the combined average times the combined speed
+    // (P6-11b; P6-2a used each hand's own speed, which agreed only when
+    // the hands' speeds did).
     hit_dps(calc, average, speed)
 }
 
@@ -1052,13 +1600,14 @@ pub(super) struct WeaponData {
     pub(super) crit: Valued,
 }
 
-/// The weapon in the main hand's values (module docs, step 8).
+/// The values of the weapon in `hand` (module docs, step 8).
 pub(super) fn weapon_data(
     calc: &mut Calc<'_>,
     item: ItemId,
+    hand: Hand,
     reasons: &mut Reasons,
 ) -> Result<WeaponData, CalcError> {
-    let weapon = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+    let weapon = |v| hand.weapon(v);
     let cx = calc.context(Flags::NONE);
     // "No Physical Damage" (PoB: the weapon's physical damage removed) is
     // not modelled; the canonical increased physical damage line carries
@@ -1071,7 +1620,7 @@ pub(super) fn weapon_data(
     if no_physical {
         reasons.partial.insert(UnsupportedReason::UnmodelledItem {
             item,
-            slot: "Weapon 1".to_owned(),
+            slot: hand.slot().to_owned(),
             what: "no-physical-damage",
         });
     }
@@ -1179,6 +1728,7 @@ pub(super) fn weapon_data(
 fn accuracy(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
+    hand: Hand,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
     let input = *calc.input();
@@ -1231,6 +1781,19 @@ fn accuracy(
         Term::Step("accuracy-base-effects"),
         reasons,
     )?);
+    // The hand's weapon's own accuracy (its `MainHandAttack` or
+    // `OffHandAttack` condition), only when it has some.
+    let local = hand.weapon(WeaponValue::Accuracy);
+    if phases::has(calc, local) {
+        terms.push(sum_in(
+            calc,
+            local,
+            Op::Base,
+            cx,
+            Term::Step("weapon-accuracy"),
+            reasons,
+        )?);
+    }
     let base = phases::total(calc, &terms, Term::Base)?;
     let (inc, more) = modifiers(calc, Quantity::Accuracy, cx, reasons)?;
     let raw = phases::product(calc, &[base, inc, more], Term::Step("accuracy-unrounded"))?;
@@ -1440,13 +2003,49 @@ fn cast_rate(
         reason = "cast times are small integers, exact as f64"
     )]
     let seconds = spell.cast_time as f64 / 1000.0;
+    // A trap's or a mine's spell (P6-6e): PoB replaces its time with the
+    // throwing or laying time (`skillData.timeOverride`, `CalcOffence.lua`
+    // 1223 to 1337, 2208): `1 / min(1 / base x action speed, tick rate)`,
+    // a mine's when it is both (PoB's mine path sets the time), one
+    // thrown (throw counts and trap or mine speed are not read: the
+    // reason). Cast speed does not reach it.
+    let mine = spell.skill.types.contains("RemoteMined");
+    if mine || spell.skill.types.contains("Trapped") {
+        let base = if mine {
+            MINE_LAYING_TIME
+        } else {
+            TRAP_THROWING_TIME
+        };
+        let base = phases::constant(
+            calc,
+            if mine {
+                "mine-laying-time"
+            } else {
+                "trap-throwing-time"
+            },
+            base,
+        )?;
+        let one = phases::constant(calc, "one", 1.0)?;
+        let speed = quotient(calc, one, base, Term::Step("throwing-speed"))?;
+        let mut reasons = Reasons::new();
+        let speed = action_speed(calc, speed, &mut reasons)?;
+        let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+        let value = phases::pair(calc, speed, cap, Term::Result, true)?;
+        return Ok((value, reasons));
+    }
     let cast_time = leaf(
         calc,
         spell.source(),
         Quantity::Poe1(Poe1Quantity::CastTime),
         seconds,
     )?;
-    rate(calc, cast_time, cx)
+    rate(
+        calc,
+        cast_time,
+        cx,
+        !spell.skill.types.contains("Channel"),
+        !spell.skill.types.contains("SummonsTotem"),
+    )
 }
 
 /// Attack rate (module docs, step 6): the weapon's rate times the skill's
@@ -1474,7 +2073,13 @@ fn attack_rate(
     )?;
     let one = phases::constant(calc, "one", 1.0)?;
     let base_time = quotient(calc, one, skill_rate, Term::Step("attack-time"))?;
-    rate(calc, base_time, cx)
+    rate(
+        calc,
+        base_time,
+        cx,
+        !attack.skill.types.contains("Channel"),
+        !attack.skill.types.contains("SummonsTotem"),
+    )
 }
 
 /// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`.
@@ -1482,6 +2087,8 @@ fn rate(
     calc: &mut Calc<'_>,
     base_time: Valued,
     cx: &QueryContext,
+    capped: bool,
+    self_cast: bool,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
@@ -1490,7 +2097,17 @@ fn rate(
     let time = quotient(calc, base_time, modifier, Term::Step("time"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     let rate = quotient(calc, one, time, Term::Step("uncapped"))?;
-    let rate = action_speed(calc, rate, &mut reasons)?;
+    // The player's action speed reaches a self-cast skill only; a totem
+    // has its own (P6-6d, module docs of `NOT_SELF_CAST`).
+    let rate = if self_cast {
+        action_speed(calc, rate, &mut reasons)?
+    } else {
+        rate
+    };
+    // A channelled skill's rate is not capped (`CalcOffence.lua` 2366; P6-5).
+    if !capped {
+        return Ok((rate, reasons));
+    }
     let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
     let value = phases::pair(calc, rate, cap, Term::Result, true)?;
     Ok((value, reasons))
@@ -1568,11 +2185,240 @@ fn double_damage(
     )?))
 }
 
+/// `(1 + inc / 100)` and the more product of `quantity` in `cx` (for
+/// other phases; Phase 6).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn modifiers_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<(Valued, Valued), CalcError> {
+    modifiers(calc, quantity, cx, reasons)
+}
+
+/// The flag on `quantity` in `cx` when one applies (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn flag_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    flag_on(calc, quantity, cx, reasons)
+}
+
+/// `a / b` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn ratio(
+    calc: &mut Calc<'_>,
+    a: Valued,
+    b: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    quotient(calc, a, b, term)
+}
+
+/// `a - b` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn minus(
+    calc: &mut Calc<'_>,
+    a: Valued,
+    b: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    difference(calc, a, b, term)
+}
+
+/// `x / 100` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn percent_of(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+    percent(calc, x, term)
+}
+
+/// `base ^ exponent` with `term` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn power_of(
+    calc: &mut Calc<'_>,
+    base: Valued,
+    exponent: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
+    power(calc, base, exponent, term)
+}
+
+/// A leaf of the main skill's own value (Phase 6: a skill's base damage
+/// over time), as a `Base` contribution of `source`.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn skill_leaf(
+    calc: &mut Calc<'_>,
+    source: Source,
+    value: f64,
+) -> Result<Valued, CalcError> {
+    leaf(calc, source, Quantity::Damage, value)
+}
+
+/// Whether "Cannot deal <Type> Damage" holds for `t` in `cx` (PoB's
+/// `canDeal`, `DealNo<Type>`).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn cannot_deal(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<bool, CalcError> {
+    Ok(flag_on(calc, Quantity::Poe1(Poe1Quantity::DealNo(t)), cx, reasons)?.is_some())
+}
+
+/// `1 + inc / 100` and the more product of `Damage` in `cx` (a typed
+/// context reads the type's names too), as a hit's damage reads them.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn damage_modifiers(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<(Valued, Valued), CalcError> {
+    modifiers(calc, Quantity::Damage, cx, reasons)
+}
+
+/// The sum of `op` effects on `quantity` in `cx` (for other phases).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn sum_of(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    op: Op,
+    cx: &QueryContext,
+    term: Term,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    sum_in(calc, quantity, op, cx, term, reasons)
+}
+
+/// The enemy's effect on damage over time of type `t` (`CalcOffence.lua`
+/// 5698 to 5711): `(1 - resist / 100) x (1 + taken inc / 100) x taken
+/// more`, the resistance without penetration (`calcResistForType`), for
+/// physical the enemy's physical damage reduction (nothing modelled gives
+/// the enemy any: 0).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn dot_enemy_effect(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    t: DamageType,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let one = phases::constant(calc, "one", 1.0)?;
+    let effect = match resistance_index(t) {
+        Some(index) => {
+            let resist = enemy_resistance(calc, enemy, data, t, index, cx, reasons)?;
+            let share = percent(calc, resist, Term::Step("resistance-share"))?;
+            difference(calc, one, share, Term::Step("enemy-effect"))?
+        }
+        None => one,
+    };
+    enemy_reasons(enemy, false, reasons);
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    if !phases::has(calc, all) && !phases::has(calc, typed) {
+        return Ok(effect);
+    }
+    // `effMult = (1 - resist / 100) x (1 + takenInc / 100) x takenMore`, in
+    // PoB's order; `takenInc` one sum of the names, `takenMore` their
+    // product.
+    let [inc, more_all, more_typed] = taken_parts(calc, cx, t, reasons)?;
+    let taken_more = phases::product(calc, &[more_all, more_typed], Term::More)?;
+    phases::product(
+        calc,
+        &[effect, inc, taken_more],
+        Term::Step("effective-multiplier"),
+    )
+}
+
+/// The enemy's damage taken of type `t` in parts (P3-8m; shared by hits
+/// and damage over time): `1 + (inc + typeInc) / 100`, PoB's `takenInc` as
+/// one sum, then the more of each name.
+fn taken_parts(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<[Valued; 3], CalcError> {
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    let inc_all = sum_in(
+        calc,
+        all,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-damage-taken-increased"),
+        reasons,
+    )?;
+    let inc_typed = sum_in(
+        calc,
+        typed,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-type-damage-taken-increased"),
+        reasons,
+    )?;
+    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
+    let inc = phases::factor(calc, sum, Term::Increased)?;
+    let more_all = more(calc, all, cx, reasons)?;
+    let more_typed = more(calc, typed, cx, reasons)?;
+    Ok([inc, more_all, more_typed])
+}
+
 /// The enemy's resistance to `t` a hit meets (`calcResistForType`):
 /// `max(min(resist, max), -200)`, `max` the configured resistance when
 /// above the base maximum, at most 90; with the hit's penetration taken
 /// off: `resist - pen`.
 fn effective_resistance(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    t: DamageType,
+    index: usize,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let resist = enemy_resistance(calc, enemy, data, t, index, cx, reasons)?;
+    let pen = sum_in(
+        calc,
+        Quantity::Penetration(t),
+        Op::Base,
+        cx,
+        Term::Step("penetration"),
+        reasons,
+    )?;
+    difference(calc, resist, pen, Term::Step("effective-resistance"))
+}
+
+/// The enemy's resistance to `t` (`calcResistForType`), before
+/// penetration: `max(min(resist, max), -200)`.
+fn enemy_resistance(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
@@ -1632,22 +2478,57 @@ fn effective_resistance(
     let max = phases::pair(calc, max, cap, Term::Step("enemy-maximum"), true)?;
     let capped = phases::pair(calc, resist, max, Term::Step("enemy-capped"), true)?;
     let floor = phases::constant(calc, "resistance-floor", RESIST_FLOOR)?;
-    let resist = phases::pair(calc, capped, floor, Term::Step("enemy-resistance"), false)?;
-    let pen = sum_in(
+    phases::pair(calc, capped, floor, Term::Step("enemy-resistance"), false)
+}
+
+/// The enemy's armour reduction against `raw` physical damage, capped
+/// (impale's `impaleResist`, `CalcOffence.lua` 5489 to 5491, Phase 6):
+/// `min(max(0, 0 + 0 + armourReductionF(armour, raw)), cap)`, the enemy's
+/// physical damage reduction and impale's own 0 (nothing modelled gives
+/// them).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale_armour_reduction(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    raw: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    armour_reduction(calc, enemy, data, raw, reasons)
+}
+
+/// The enemy's damage taken from hits of type `t` (impale's `impaleTaken`,
+/// `CalcOffence.lua` 5495 to 5497, Phase 6): `(1 + inc / 100) x more` in a
+/// hit's context, `None` when nothing modelled changes it.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn hit_damage_taken(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    if !phases::has(calc, all) && !phases::has(calc, typed) {
+        return Ok(None);
+    }
+    let cx = calc.context(Flags::HIT);
+    let [inc, more_all, more_typed] = taken_parts(calc, &cx, t, reasons)?;
+    let more = phases::product(calc, &[more_all, more_typed], Term::More)?;
+    Ok(Some(phases::product(
         calc,
-        Quantity::Penetration(t),
-        Op::Base,
-        cx,
-        Term::Step("penetration"),
-        reasons,
-    )?;
-    difference(calc, resist, pen, Term::Step("effective-resistance"))
+        &[inc, more],
+        Term::Step("impale-damage-taken"),
+    )?))
 }
 
 /// The share of a physical hit the enemy's armour lets through (module
 /// docs, step 3): `1 - min(max(0, armourReductionF(armour, average)),
 /// cap) / 100`.
-fn armour_effect(
+fn armour_reduction(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
@@ -1696,7 +2577,18 @@ fn armour_effect(
         Quantity::Poe1(Poe1Quantity::MaximumPhysicalDamageReduction),
         cap,
     )?;
-    let reduction = phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)?;
+    phases::pair(calc, reduction, cap, Term::Step("reduction-capped"), true)
+}
+
+/// `1 - armour_reduction / 100` (module docs, step 3).
+fn armour_effect(
+    calc: &mut Calc<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+    average: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let reduction = armour_reduction(calc, enemy, data, average, reasons)?;
     let share = percent(calc, reduction, Term::Step("reduction-share"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     difference(calc, one, share, Term::Step("enemy-effect"))
@@ -1739,33 +2631,8 @@ fn type_damage_taken(
     t: DamageType,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
-    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
-    let inc_all = sum_in(
-        calc,
-        all,
-        Op::Increased,
-        cx,
-        Term::Step("enemy-damage-taken-increased"),
-        reasons,
-    )?;
-    let inc_typed = sum_in(
-        calc,
-        typed,
-        Op::Increased,
-        cx,
-        Term::Step("enemy-type-damage-taken-increased"),
-        reasons,
-    )?;
-    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
-    let inc = phases::factor(calc, sum, Term::Increased)?;
-    let more_all = more(calc, all, cx, reasons)?;
-    let more_typed = more(calc, typed, cx, reasons)?;
-    phases::product(
-        calc,
-        &[inc, more_all, more_typed],
-        Term::Step("enemy-damage-taken"),
-    )
+    let parts = taken_parts(calc, cx, t, reasons)?;
+    phases::product(calc, &parts, Term::Step("enemy-damage-taken"))
 }
 
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type
@@ -1844,9 +2711,23 @@ struct HitShape<'a> {
 /// The skill's conversion table (module docs, step 2), when it converts:
 /// `share[from][to]` the share of `from` converted to `to`, `kept[from]`
 /// the share `from` keeps (`conversionTable[type].mult`).
-struct Conversion {
+pub(super) struct Conversion {
     share: [[Option<Valued>; 5]; 5],
-    kept: [Option<Valued>; 5],
+    pub(super) kept: [Option<Valued>; 5],
+}
+
+/// What a hit's damage was computed from (Phase 6, for its ailments,
+/// which PoB recomputes in their own config, `calcAilmentSourceDamage`):
+/// each type's base damage and the conversion table.
+pub(super) struct HitSources {
+    /// Each type's `[min, max]` base, in [`TYPES`] order.
+    pub(super) bases: [Option<[Valued; 2]>; 5],
+    /// The conversion table, when the hit converts.
+    pub(super) conversion: Option<Conversion>,
+    /// The physical part's average before the enemy (PoB's
+    /// `damageTypeHitAvg`), from non-crits and from crits, for impale's
+    /// stored hit (Phase 6).
+    pub(super) physical: [Option<Valued>; 2],
 }
 
 /// PoB's `buildConversionTable` (`CalcOffence.lua` 1878 to 1921) over
@@ -2065,7 +2946,7 @@ fn conversion(
     clippy::too_many_arguments,
     reason = "the recursion carries PoB's arguments"
 )]
-fn calc_damage(
+pub(super) fn calc_damage(
     calc: &mut Calc<'_>,
     t: usize,
     extra: Flags,
@@ -2190,7 +3071,7 @@ fn passes(
     data: &dyn CalcData,
     multiplier: Valued,
     reasons: &mut Reasons,
-) -> Result<(Valued, Valued), CalcError> {
+) -> Result<(Valued, Valued, HitSources), CalcError> {
     let cx = calc.context(shape.flags).with_state(
         ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
         shape.crit_recently,
@@ -2223,6 +3104,7 @@ fn passes(
     let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;
+    let mut physical_avg: [Option<Valued>; 2] = [None; 2];
     let mut hits = Vec::new();
     let mut crits = Vec::new();
     let mut physical = false;
@@ -2348,6 +3230,11 @@ fn passes(
             let lo = quotient(calc, lo, two, Term::Step("half-min"))?;
             let hi = quotient(calc, hi, two, Term::Step("half-max"))?;
             let average = phases::total(calc, &[lo, hi], Term::Step("average"))?;
+            if ty == DamageType::Physical
+                && let Some(slot) = physical_avg.get_mut(usize::from(crit))
+            {
+                *slot = Some(average);
+            }
             let effect = match effect {
                 Some(e) => e,
                 None => armour_effect(calc, enemy, data, average, reasons)?,
@@ -2372,7 +3259,15 @@ fn passes(
     }
     let hit = phases::total(calc, &hits, Term::Step("hit"))?;
     let crit = phases::total(calc, &crits, Term::Step("crit-hit"))?;
-    Ok((hit, crit))
+    Ok((
+        hit,
+        crit,
+        HitSources {
+            bases,
+            conversion,
+            physical: physical_avg,
+        },
+    ))
 }
 
 #[cfg(test)]
@@ -2390,14 +3285,115 @@ mod tests {
         for t in NOT_SELF_CAST.iter().chain(&NOT_PLAIN_ATTACK) {
             assert!(t.chars().all(|c| c.is_ascii_alphabetic()), "{t}");
         }
-        assert_eq!(&NOT_SELF_CAST[1..], &NOT_PLAIN_ATTACK[..]);
+        // Spells by traps and mines are computed (P6-6e); attacks by them
+        // are not: the attack list is the spell list's but `Attack`, plus
+        // the two.
+        let mut spells: Vec<&str> = NOT_SELF_CAST[1..].to_vec();
+        spells.extend(["Trapped", "RemoteMined"]);
+        spells.sort_unstable();
+        let mut attacks = NOT_PLAIN_ATTACK.to_vec();
+        attacks.sort_unstable();
+        assert_eq!(spells, attacks);
+        // The DoT leaves out the same kinds (P6-6d review).
+        assert_eq!(
+            &super::super::dot::NOT_COMPUTED_KINDS[..],
+            &NOT_PLAIN_ATTACK[..]
+        );
     }
 
+    /// Every vetted totem skill would be `Complete` but for
+    /// [`TOTEM_REASON`] (P6-6d review): the reason is what keeps PoB's
+    /// totem data, which the engine does not read, from a wrong value.
     #[test]
-    fn skill_parts_should_be_vetted_attacks() {
-        for (id, parts) in SKILL_PARTS {
-            assert!(VETTED_ATTACKS.contains(&id), "{id}");
-            assert!(!parts.is_empty());
-        }
+    fn vetted_totem_skills_should_be_known() {
+        let vetted: Vec<&str> = super::super::pob_skills::SKILLS
+            .iter()
+            .filter(|s| s.flag("totem") && pob_vetted(s.id, 0))
+            .map(|s| s.id)
+            .collect();
+        assert!(vetted.contains(&"HolyFlameTotem"), "{vetted:?}");
+        assert!(vetted.contains(&"SiegeBallistaAltY"), "{vetted:?}");
+    }
+
+    /// PoB's parts and flags (P6-6b): Smite's two parts as its data writes
+    /// them, the rule's vetting, and a skill whose data the engine does not
+    /// read (Ice Spear's `preDamageFunc`).
+    #[test]
+    fn pob_parts_and_vetting_should_follow_pobs_skill_data() {
+        let (melee, i) = pob_part("Smite", 1).unwrap();
+        assert_eq!(
+            (melee.name, melee.melee, melee.area, i),
+            ("Melee Hit", true, false, 1)
+        );
+        let (area, i) = pob_part("Smite", 9).unwrap();
+        assert_eq!(
+            (area.name, area.melee, area.area, i),
+            ("Area Hit", false, true, 2)
+        );
+        assert!(pob_vetted("Smite", 1) && pob_vetted("Smite", 2));
+        let (nova, i) = pob_part("IceNova", 1).unwrap();
+        assert!(nova.area && !nova.projectile && i == 0);
+        assert!(pob_vetted("IceNova", 0));
+        let (knives, _) = pob_part("EtherealKnives", 1).unwrap();
+        assert!(knives.projectile && !knives.area);
+        assert!(!pob_vetted("IceSpear", 1));
+        assert!(pob_part("NoSuchSkill", 1).is_none());
+        assert!(!pob_vetted("NoSuchSkill", 0));
+        // A release skill, whose hit time PoB sets in Lua (Snipe,
+        // `CalcTriggers.lua` 1405 to 1418; P6-5 review).
+        assert!(!pob_vetted("Snipe", 0));
+        // Tagged stat map entries (P6-6b review): Conflagration's DoT in part
+        // 2 only, Animosity's per stack.
+        assert!(!pob_vetted("Conflagration", 0) && !pob_vetted("AnimosityUniqueSkill", 0));
+        // Both flags in PoB's data, and vetted: the default attack. The
+        // weapon picks one (`weapon_flags`).
+        let (melee, i) = pob_part("Melee", 1).unwrap();
+        assert!(melee.melee && melee.projectile && pob_vetted("Melee", i));
+    }
+
+    /// PoB's weapon rule (P6-6c review): a melee weapon keeps melee, a bow
+    /// or wand projectile; a flag the weapon does not clear stays.
+    #[test]
+    fn the_weapon_should_pick_melee_or_projectile() {
+        assert_eq!(weapon_flags("One Hand Axe", true, true), (true, false));
+        assert_eq!(weapon_flags("Bow", true, true), (false, true));
+        assert_eq!(weapon_flags("Wand", true, true), (false, true));
+        assert_eq!(weapon_flags("Claw", false, true), (false, true));
+        assert_eq!(weapon_flags("Wand", true, false), (true, false));
+        assert_eq!(weapon_flags("Staff", false, false), (false, false));
+    }
+
+    /// PoB's `getWeaponFlags` per item class (P6-11b): type, `Weapon`,
+    /// hands, and range; an unknown class has none.
+    #[test]
+    fn weapon_type_flags_should_follow_pobs_weapon_types() {
+        let f = |c| weapon_type_flags(c).expect(c);
+        let melee1 = Flags::WEAPON | Flags::WEAPON_1H | Flags::WEAPON_MELEE;
+        let melee2 = Flags::WEAPON | Flags::WEAPON_2H | Flags::WEAPON_MELEE;
+        assert_eq!(
+            f("Bow"),
+            Flags::BOW | Flags::WEAPON | Flags::WEAPON_2H | Flags::WEAPON_RANGED
+        );
+        assert_eq!(
+            f("Wand"),
+            Flags::WAND | Flags::WEAPON | Flags::WEAPON_1H | Flags::WEAPON_RANGED
+        );
+        assert_eq!(f("Claw"), Flags::CLAW | melee1);
+        assert_eq!(f("Rune Dagger"), Flags::DAGGER | melee1);
+        assert_eq!(f("Warstaff"), Flags::STAFF | melee2);
+        assert_eq!(f("Sceptre"), Flags::MACE | melee1);
+        assert_eq!(f("Two Hand Mace"), Flags::MACE | melee2);
+        assert_eq!(f("Thrusting One Hand Sword"), Flags::SWORD | melee1);
+        assert_eq!(f("Two Hand Axe"), Flags::AXE | melee2);
+        assert_eq!(f("FishingRod"), Flags::FISHING | melee2);
+        assert_eq!(weapon_type_flags("Shield"), None);
+        // An ailment keeps two-handed but not one-handed (PoB's
+        // `WeaponMask`, 0x2FFF0000).
+        let kept = |c| Flags::from_bits_and(f(c), Flags::AILMENT_WEAPON_MASK);
+        assert_eq!(
+            kept("Two Hand Axe"),
+            Flags::AXE | Flags::WEAPON_2H | Flags::WEAPON_MELEE
+        );
+        assert_eq!(kept("Claw"), Flags::CLAW | Flags::WEAPON_MELEE);
     }
 }

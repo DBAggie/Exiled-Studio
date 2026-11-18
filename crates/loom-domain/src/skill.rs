@@ -1,5 +1,6 @@
 //! Skill sets, socket groups, and gems.
 
+use crate::error::DomainError;
 use crate::id::{GemId, SkillId, SkillSetId, SlotId};
 use crate::opaque::{Attributes, Ordered};
 use crate::value::Sourced;
@@ -11,8 +12,43 @@ pub struct Skills {
     pub active: Option<SkillSetId>,
     /// The sets, with untyped content in place.
     pub sets: Ordered<SkillSet>,
+    /// How the build's format held the sets.
+    pub layout: SkillsLayout,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// How a build's format held its skill sets.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SkillsLayout {
+    /// Each set in its own element.
+    #[default]
+    Sets,
+    /// One set (ID 1, no title, no attributes) whose socket groups the
+    /// format held directly, with no set element (PoB's layout before skill
+    /// sets, which PoB loads into set 1).
+    Flat,
+}
+
+impl Skills {
+    /// Checks the layout: flat skills hold exactly one set, with ID 1, no
+    /// title, and no attributes, and no untyped content beside it.
+    ///
+    /// # Errors
+    /// [`DomainError::FlatSkillsLayout`] when they do not.
+    pub fn check_layout(&self) -> Result<(), DomainError> {
+        if self.layout == SkillsLayout::Sets {
+            return Ok(());
+        }
+        match self.sets.entries() {
+            [crate::opaque::Entry::Typed(set)]
+                if set.id == SkillSetId(1) && set.title.is_none() && set.attributes.is_empty() =>
+            {
+                Ok(())
+            }
+            _ => Err(DomainError::FlatSkillsLayout),
+        }
+    }
 }
 
 /// One skill set.

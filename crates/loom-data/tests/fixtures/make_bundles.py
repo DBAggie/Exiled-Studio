@@ -1045,6 +1045,16 @@ poe1["poe1/tree_flavour.json"] = {
     ],
     "ascendancies": [{"id": "TestChampion", "text": "A made-up quote.", "colour": "200,180,120"}],
 }
+# Phase 6 (P6-4b): a made-up flask base in the game's form, on the ring's
+# base row, with a buff of one made-up stat.
+poe1["poe1/flasks.json"] = [
+    {"base": "Test/Items/Ring1", "name": "Plain Test Ring", "life": 0, "mana": 0, "duration": 50, "buff": "test_buff", "stats": [["test_maximum_life", 10]]},
+]
+# Phase 6 (P6-7a): a made-up monster type and variety in the game's form.
+poe1["poe1/minions.json"] = {
+    "types": [{"id": "TestMonsterType", "accuracy": 100, "armour": 0, "evasion": 0, "energy_shield": 0, "damage_spread": 20, "resistances": [40, 40, 40, 20], "alt_life1": False, "alt_life2": False, "damage_ignores_attack_speed": False, "player_minion": True}],
+    "varieties": [{"id": "Test/Monsters/Minion1", "name": "Test Minion", "monster_type": "TestMonsterType", "tags": ["undead"], "damage": 100, "life": 100, "attack_time": 1000, "attack_range": 10, "main_hand": None, "off_hand": None, "skills": [], "mods": [], "special_mods": [], "object_type": "Test/Monsters/Minion"}],
+}
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))

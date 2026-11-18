@@ -6,7 +6,7 @@ use loom_domain::{
     ConfigInputKind, ConfigLayout, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock,
     CustomModifierLine, Game, GameSpecific, Gem, GemId, ItemId, JewelSocket, LineResolution,
     MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet,
-    SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
+    SkillSetId, Skills, SkillsLayout, SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
 };
 use roxmltree::{Node, NodeType};
 
@@ -314,7 +314,35 @@ fn sockets(n: Node<'_, '_>) -> Option<Ordered<JewelSocket>> {
     Some(out)
 }
 
+/// The `<Skills>` element. With `Skill` children and no `SkillSet` child,
+/// it is PoB's layout before skill sets: PoB loads each `Skill` into set 1
+/// (PoB v2.67.2, `Classes/SkillsTab.lua`, `Load`, lines 523 to 531), read
+/// here as one flat set (Phase 6). A mix of both layouts keeps its loose
+/// children untyped.
 fn skills_of(n: Node<'_, '_>) -> Option<Skills> {
+    let is_elem = |c: &Node<'_, '_>, name: &str| c.is_element() && c.tag_name().name() == name;
+    if children(n).any(|c| is_elem(&c, "Skill")) && !children(n).any(|c| is_elem(&c, "SkillSet")) {
+        let mut groups = Ordered::new();
+        for c in children(n) {
+            match group(c).filter(|_| is_elem(&c, "Skill")) {
+                Some(g) => groups.push(g),
+                None => groups.push_opaque(opaque(c)?),
+            }
+        }
+        let mut sets = Ordered::new();
+        sets.push(SkillSet {
+            id: SkillSetId(1),
+            title: None,
+            groups,
+            attributes: Attributes::new(),
+        });
+        return Some(Skills {
+            active: number_u32(n, "activeSkillSet")?.map(|s| SkillSetId(*s.value())),
+            sets,
+            layout: SkillsLayout::Flat,
+            attributes: rest(n, &["activeSkillSet"]),
+        });
+    }
     let mut sets = Ordered::new();
     for c in children(n) {
         match (c.tag_name().name(), c.is_element()) {
@@ -328,6 +356,7 @@ fn skills_of(n: Node<'_, '_>) -> Option<Skills> {
     Some(Skills {
         active: number_u32(n, "activeSkillSet")?.map(|s| SkillSetId(*s.value())),
         sets,
+        layout: SkillsLayout::Sets,
         attributes: rest(n, &["activeSkillSet"]),
     })
 }

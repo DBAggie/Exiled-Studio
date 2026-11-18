@@ -576,6 +576,30 @@ fn compare_raw(oracle: &Value, ours: &calc_dto::Document, slice: &SliceFile) -> 
         }
     }
     for f in &slice.fields {
+        // A minion field (`applies: minion`, slice revision 4) counts when
+        // the oracle has a minion or ours has the field: a value of 0 is
+        // compared (P6-7b2).
+        if f.applies == "minion" {
+            let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
+            let oracle_has = main
+                .and_then(|m| m.get("Minion"))
+                .is_some_and(Value::is_object);
+            if !ours_has && !oracle_has {
+                continue;
+            }
+        }
+        // A Phase 6 field (`applies: present`) counts only where either side
+        // has the mechanic: our field, or the oracle's value other than 0.
+        if f.applies == "present" {
+            let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
+            let oracle_has = main
+                .and_then(|m| m.get(&f.pob_key))
+                .and_then(Value::as_f64)
+                .is_some_and(|v| v != 0.0);
+            if !ours_has && !oracle_has {
+                continue;
+            }
+        }
         raw.fields.push(compare_field(f, main, &ours));
         let Some(spec) = &f.breakdown else { continue };
         let not_compared = |reason: String| BreakdownComparison {
@@ -601,13 +625,37 @@ fn compare_raw(oracle: &Value, ours: &calc_dto::Document, slice: &SliceFile) -> 
     raw
 }
 
+/// The oracle's value of `f` in `main`: its nested PoB path (revision 4)
+/// or its key.
+fn oracle_value<'v>(f: &SliceField, main: Option<&'v Value>) -> Option<&'v Value> {
+    match &f.pob_path {
+        Some(path) => path.iter().try_fold(main?, |v, k| v.get(k)),
+        None => main?.get(&f.pob_key),
+    }
+}
+
+/// `f`'s JSON pointer under `/main_output`, built per segment.
+fn oracle_pointer(f: &SliceField) -> String {
+    match &f.pob_path {
+        Some(path) => {
+            let mut p = "/main_output".to_owned();
+            for k in path {
+                p.push('/');
+                p.push_str(&divergence::pointer_escape(k));
+            }
+            p
+        }
+        None => format!("/main_output/{}", divergence::pointer_escape(&f.pob_key)),
+    }
+}
+
 fn compare_field(f: &SliceField, main: Option<&Value>, ours: &Ours<'_>) -> FieldComparison {
     let name = SliceFile::our_name(&f.id).unwrap_or("");
-    let oracle = main.and_then(|m| m.get(&f.pob_key)).cloned();
+    let oracle = oracle_value(f, main).cloned();
     let mut out = FieldComparison {
         field: f.id.clone(),
         ours: name,
-        pointer: format!("/main_output/{}", divergence::pointer_escape(&f.pob_key)),
+        pointer: oracle_pointer(f),
         outcome: Outcome::NotComputed,
         state: None,
         oracle,

@@ -1351,6 +1351,256 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "A level 90 Templar with a Life Mastery's 15% increased maximum Life if there are no Life Modifiers on Equipped Body Armour and a rare Astral Plate with armour and fire resistance: the condition holds, from the mods' life tags (PoB: no line with the text \"life\") (P3-8n)."
+    },
+    {
+      "id": "vortex-dot-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-witch.xml",
+      "sha256": "6244a0baf9af9ff394a22329acaea15ec0eb24e04fde5e093e08d8918e2fef41",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex alone: the skill's own cold damage over time against the default enemy's resistance, TotalDot (P6-1)."
+    },
+    {
+      "id": "vortex-dot-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-modifiers-witch.xml",
+      "sha256": "2ee061b134858cb5a40ba846154b5c71d6496908a43e9bee1e88d8b25f8a494a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex with increased damage over time and cold damage, spell damage (which reaches its DoT through spell_damage_modifiers_apply_to_skill_dot), and the damage over time and cold damage over time multipliers (P6-1)."
+    },
+    {
+      "id": "righteous-fire-marauder.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/righteous-fire-marauder.xml",
+      "sha256": "69abd30639634b24b7839a8b65ac323491655dd7cf49c5b3229ebb620ec187c0",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Righteous Fire as the main skill: its burn from maximum life and energy shield (PoB's preDamageFunc), burning damage, and the fire damage over time multiplier (P6-1)."
+    },
+    {
+      "id": "vaal-righteous-fire-marauder.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vaal-righteous-fire-marauder.xml",
+      "sha256": "5f5b085f765a3a7240d32a9a7a39828e90ffdf53670645604eab2517ea6b605f",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vaal Righteous Fire as the main skill: its burn from life plus energy shield, the share sacrificed, and the burn per second (PoB's preDamageFunc); the gem's Righteous Fire as a buff (P6-1)."
+    },
+    {
+      "id": "vortex-dot-shock-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/vortex-dot-shock-witch.xml",
+      "sha256": "08eaef8669fd9b6fdb4c323a0c08081e746d4318ab220504d52b3602b60b64a2",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDot"],
+      "description": "Vortex against a shocked enemy with 40% cold resistance and cold penetration: the resistance without penetration and shock's damage taken on the skill's damage over time (P6-1)."
+    },
+    {
+      "id": "smite-dual-wield-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-dual-wield-templar.xml",
+      "sha256": "d8b5c5787f09057410c3e92608f3662f14c48750b07fb7353988ac841ccaaae8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite dual wielding a Rusted Hatchet and a Driftwood Club: one pass per hand, hit and crit chance averaged, speed the harmonic mean, average damage and DPS halved, with dual wielding's inherent attack speed and block (P6-2a); each hand's rate is the game's (Q11, DIV-0072 to DIV-0074)."
+    },
+    {
+      "id": "ice-nova-ignite-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-ignite-witch.xml",
+      "sha256": "f35697170bcf7ddad86e328a8923e2a6b812dabc1d74f1d1e1c0556e04c1016d",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "IgniteDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with added fire damage to spells and a 30% chance to ignite: the ignite's chance from hits and crits, its source damage recomputed in the ignite's config (burning damage and the fire DoT multiplier reach it, spell damage does not), the +50% DoT multiplier of ignites from crits, its stacks and roll, and the enemy's fire resistance (P6-2b)."
+    },
+    {
+      "id": "ice-nova-ignite-duration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-ignite-duration-witch.xml",
+      "sha256": "42b4049affb829587e39cd046a6f30e93a6fc46a04982f24c4b7ebc2f3900e61",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "IgniteDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova igniting at 80% with longer ignites, longer ailments, ignites burning faster, and more crit chance: stacks above one move the roll toward the top of the range; burning faster scales the DPS and shortens the duration (P6-2b)."
+    },
+    {
+      "id": "smite-ignite-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-ignite-templar.xml",
+      "sha256": "74d75e15bb69b0885bb64fb60d8696aafd788e559cf362fb3c8b4e03ba862a3f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "IgniteDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet, added fire damage to attacks, and a 25% chance to ignite: an attack's ignite, weighted by its hit chance; its DPS differs from PoB's only through the weapon's rate (Q11, DIV-0075 to DIV-0078) (P6-2b)."
+    },
+    {
+      "id": "smite-bleed-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-bleed-templar.xml",
+      "sha256": "5dcfbd5f52877094234b8e9532c6dff002c3d44d9790e6288698470ced773091",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and a 40% chance to bleed: an attack's bleeding from its physical damage, the DoT multiplier before the roll, 70% per second, bleeding damage and duration; equal to PoB but for the weapon's rate (Q11, DIV-0083, DIV-0084) (P6-2c)."
+    },
+    {
+      "id": "smite-poison-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-poison-templar.xml",
+      "sha256": "c2ae29a60cd3391242caa33b1e323d0ce20e45305d1d5f9da09ec21812019e59",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalPoisonDPS"],
+      "description": "Smite with a Rusted Hatchet, added chaos damage, and a 60% chance to poison: every poison together, from chaos and physical damage, poison damage, duration, and DoT multiplier, and the enemy's chaos resistance; equal to PoB but for the weapon's rate (Q11, DIV-0085 to DIV-0087) (P6-2c)."
+    },
+    {
+      "id": "smite-poison-chaos-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-poison-chaos-templar.xml",
+      "sha256": "2eec824c4c1fbd81566e672d4889a02b85e755fd8ae49b42a9f3b9c69ac77c2c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalPoisonDPS"],
+      "description": "Smite with a Rusted Hatchet, added chaos damage, a 60% chance to poison, and 40% increased chaos damage: the poison's physical part takes the chaos modifiers too, as PoB's calcAilmentSourceDamage with the Chaos flag; equal to PoB but for the weapon's rate (Q11) (P6-2c review)."
+    },
+    {
+      "id": "ice-nova-tailwind-adrenaline-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-tailwind-adrenaline-witch.xml",
+      "sha256": "881de71d33c18a5355efb7f1e22c0739976bb89d3652e2df3bb880511571134e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the Tailwind and Adrenaline checks on: 8% increased action speed, 100% increased damage, 25% increased cast speed; beside them, inputs that only set names no modifier here reads, and inputs PoB v2.67.2 ignores, with no effect (P6-4a)."
+    },
+    {
+      "id": "smite-tailwind-adrenaline-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-tailwind-adrenaline-templar.xml",
+      "sha256": "8d6fd2c938fcc581d625cad28b95ab4037e2ed2b2fc25dfb58302663b968eb26",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and the Tailwind and Adrenaline checks on: 8% increased action speed, 100% increased damage, 25% increased attack speed (P6-4a)."
+    },
+    {
+      "id": "smite-flasks-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-flasks-templar.xml",
+      "sha256": "901d6c795d3453255f2193070f93e5f7d3b70ef42808969cfa08a5f9743ff727",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and five active flasks (magic Granite with its own effect and Armour during Effect, Ruby, magic Silver with its own effect, Diamond, Basalt), with flasks and magic utility flasks at increased effect: each buff scaled as PoB's ScaleAddList, Silver's Onslaught with flask effect (P6-4b)."
+    },
+    {
+      "id": "smite-shield-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-shield-templar.xml",
+      "sha256": "ca67de490bbbc8eb73295aa9bf22cbeb3dc2649a8d4377bff75105404ba5c543",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and a Splintered Tower Shield, and lines that hold while holding a shield (attack and spell block, elemental resistances, physical attack damage) or while dual wielding or holding a shield (P6-11a)."
+    },
+    {
+      "id": "smite-axe-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-axe-lines-templar.xml",
+      "sha256": "999e0e274aaed3c90ca73ce44fa11dd2dd7e37f47a622986f8ac394764ed8247",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet and lines by weapon type: axe, one-handed, and melee lines apply; bow, sword, two-handed, and wand lines do not (P6-11b)."
+    },
+    {
+      "id": "smite-dual-wield-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-dual-wield-lines-templar.xml",
+      "sha256": "0364259c1b00b0d7a5a4c9bf6878e29d14b6c30a45e0e8caa2b1cd859b4dcad4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite dual wielding a Rusted Hatchet and a Rusted Sword, with dual wielding lines and lines of one hand's weapon type (P6-11b)."
+    },
+    {
+      "id": "burning-arrow-bow-lines-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/burning-arrow-bow-lines-templar.xml",
+      "sha256": "aab1a1831922b332898dd198e6be2c58fd8290990941dd135933eb41dc2afed4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Burning Arrow with a Short Bow and lines by weapon type: bow and bow-skill lines apply (damage over time with bow skills to the ignite); wand, melee, and one-handed lines do not (P6-11c)."
+    },
+    {
+      "id": "ice-nova-ignite-overload-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-ignite-overload-witch.xml",
+      "sha256": "39f49244d03d3a5363b1c1038defb65f08bf9270ce5697e6ccd3e919cd88dfaa",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "IgniteDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Elemental Overload, added fire damage, a 40% chance to ignite, and more crit chance: ignites are never from crits (no critical DoT multiplier) and the keystone's 40% more elemental damage reaches the ignite (P6-2b review)."
+    },
+    {
+      "id": "smite-impale-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-impale-templar.xml",
+      "sha256": "bb9e8ae2411894303844e2625836ad9d1fd7f4260cf77b6dfdda52d64a2cac16",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "ImpaleDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Rusted Hatchet, a 40% chance to impale, and 30% increased impale effect against 3000 armour: every impale (the default, the maximum), the stored physical hit, the enemy's armour against it; equal to PoB but for the weapon's rate (Q11, DIV-0088 to DIV-0090) (P6-2d)."
+    },
+    {
+      "id": "minion-summon-flame-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-flame-golem-witch.xml",
+      "sha256": "9b28da58ab50eaa37d60de0012c4734aa8021124868da839a194d12b1b4bf1c9",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Flame Golem (level 20): a golem with energy shield and the whole armour and evasion tables (PoB's `or 1`)."
+    },
+    {
+      "id": "minion-summon-stone-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-witch.xml",
+      "sha256": "1657ce800e438a4b7b7bc6c0109e7ee5a2ca109b8288662ee04be5954939e6d4",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Stone Golem (level 20): a type with armour and evasion multipliers."
+    },
+    {
+      "id": "minion-summon-stone-golem-alt-y-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-alt-y-witch.xml",
+      "sha256": "d291a639bf46fe09ca517f5dff536d313819e7fb2672524f7e2363f4d5516f2c",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Stone Golem of Safeguarding: the gem's minion life stat (less life) is a reason on the minion fields until P6-7b3b."
+    },
+    {
+      "id": "minion-herald-of-purity-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-herald-of-purity-witch.xml",
+      "sha256": "4072321060561efae9986325d4a00e3120db615f9810a0557375484144cb4fee",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Herald of Purity: its sentinel; the gem's minion life stat is a reason until P6-7b3b."
     }
   ]
 }

@@ -7,7 +7,8 @@
 //! condition), conditioned on `Condition:Combat` or `Condition:Effective`,
 //! both on in PoB's main view, and `BuildModList` applies a check only
 //! when it is on (`Classes/ConfigTab.lua`). So an unset or `false` check
-//! is a settled `false`:
+//! is a settled `false` (none of these is a `defaultState = true` option,
+//! which PoB saves only when off: those are `config::DEFAULT_ON`):
 //! - `conditionShockedEnemyRecently`: `ShockedEnemyRecently` (1340);
 //! - `conditionShatteredEnemyRecently`: `ShatteredEnemyRecently` (1331);
 //! - `conditionAtCloseRange`: `AtCloseRange` (1765);

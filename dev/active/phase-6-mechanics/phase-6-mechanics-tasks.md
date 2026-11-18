@@ -1,0 +1,118 @@
+Last Updated: 2026-11-17 (P6-1: slice revision 3, PoB skill table, skill damage over time)
+
+# Phase 6: PoE1 mechanics expansion (tasks)
+
+Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task in the PR that does it, with the PR number. Every engine PR: unit tests, mechanic fixtures where PoB has the mechanic, before-and-after `calc-run` and `calc-parity` on public and corpus (`sh local/p6/evidence.sh <step>`; baseline `local/p6/base`), register entries, the bench within limits or re-baselined with a reason, handoff and CLAUDE.md updated.
+
+## P6-0: plan
+- [x] Plan, context, tasks in `dev/active/phase-6-mechanics/`
+- [x] plan-reviewer run; findings applied (context file, "Plan review")
+- [x] ACTION-PLAN, handoff, CLAUDE.md updated
+- [x] Open PR: #139 (base `dev`)
+
+## P6-0b: evidence bundle with tree packs (local)
+- [x] `tools/tree/acquire` 3_28 to 3_25; `tree-pack` chained; `bundle-check` (manifest `4814e3ac…`, as #134 recorded)
+- [x] Baseline re-measured on it (`local/p6/base-packs`); plan's numbers updated (#139)
+
+## P6-1: slice revision 3, PoB skill table, skill damage over time
+- [x] Slice revision 3: `applies: present`, `TotalDot`, `Field::DotDps` (emitted only when the main skill has a DoT)
+- [x] Readers that count fields: parity tests (revision, `present`), UI (`OFFENCE`, `FIRST`, label); golden documents unchanged (no DoT in the synthetic build)
+- [x] `pob_data.lua` format 10: `base_flags`, `parts`, `functions`; `loom-parity-cli pob-skills`; generated `poe1/pob_skills.rs` (1,231 skills, regenerates byte-identical). The `data-parity` check of the table itself is left for P6-6, where parts are first read; the base mods read here are `dotIsArea` and the ground flags.
+- [x] Skill DoT (`poe1::dot`), DoT multipliers, enemy DoT taken, `TotalDot`; DoT stat rows; Righteous Fire and Vaal Righteous Fire; Righteous Fire as an other-gem buff
+- [x] Found on the way: PoB's skills layout before skill sets (`SkillsLayout::Flat`, build v1 `skills.layout` additive); gems the data does not have are skipped as PoB does (a reason), renamed `skillId`s found by name
+- [x] Mechanic fixtures (5, all equal to PoB; Essence Drain kept local until P6-10b, D9); code-architecture-reviewer run, findings applied or recorded (D6 to D9); evidence (`docs/phase-6/dot.md`)
+- [x] Open PR: #140 (base `plan/phase-6-mechanics`)
+
+## P6-2a: dual wielding
+- [x] The off hand's weapon as its own quantities (`OffHandWeapon`, `OffHandWeaponMapping`); which hands attack (`CalcActiveSkill.lua` 318 to 335)
+- [x] One pass per hand and PoB's `combineStat` (average, harmonic mean, `DPS` with double hits); inherent dual-wield speed and block; the item card's off-hand weapon
+- [x] Fixture `smite-dual-wield-templar.xml` (21 fields equal to PoB; Q11 rate DIV-0072, DIV-0073; breakdown DIV-0074 `harness`); `docs/phase-6/dual-wield.md`
+- [x] Open PR: #141 (base `feat/p6-1-dot`)
+## P6-2b: ignite and the shared ailment base
+- [x] `poe1::ailment`: the shared base (chance, config, rate and duration, stacks and roll, source recomputed in the ailment's config, crit weighting) and ignite; `ignite-dps` (slice `present`)
+- [x] Keyword flags `KEYWORD_ATTACK` and `KEYWORD_SPELL` ("with Attack/Spell Skills" rows); Elemental Overload's ailment more and `AilmentsAreNeverFromCrit`; Elemental Weakness's duration on the enemy; the critical ailment DoT multiplier
+- [x] Fixtures (3; Q11 DIV-0075 to DIV-0078); community Smite builds' ignite (Q11 DIV-0079 to DIV-0082); `data-parity` export format 10; `docs/phase-6/ailments.md`
+- [x] Open PR: #142 (base `feat/p6-2a-dual-wield`)
+## P6-2c: bleed and poison
+- [x] The ailment base generalized (`ailment::damaging`, one spec per ailment); bleed and poison; `bleed-dps`, `poison-dps` (slice `present`)
+- [x] `CannotInflict`, `MELEE_HIT`; bleed and poison rows; Melee Physical Damage's and staff ailment damage leave `NO_EFFECT`
+- [x] P6-2b review applied (dual-wield hands, `HitChance` dependency, staff row, register prose, the Elemental Overload fixture); fixtures (3; Q11 DIV-0083 to DIV-0087); `docs/phase-6/ailments.md`
+- [x] Open PR: #143 (base `feat/p6-2b-ignite`)
+## P6-2d: impale
+- [x] `ailment::impale` (chance, default maximum stacks, stored hit, effect, the enemy's armour and damage taken, `(1 + x) - 1`); `poe1.impale-dps` (slice `present`); `hit::armour_reduction` split
+- [x] Impale rows; fixture `smite-impale-templar.xml` (Q11 DIV-0088 to DIV-0090); `docs/phase-6/ailments.md`, "P6-2d"
+- [x] Open PR: #144 (base `feat/p6-2c-bleed-poison`)
+## P6-3: cluster jewels (what remains)
+## P6-4a: config inputs (P6-4 split: flasks need a data run, so they are P6-4b; P6-3 waits on the cluster extraction)
+- [x] The P6-2c review applied: poison's physical part with chaos modifiers (`chaos_damage_+%` mapped), skill-data ailment keys as reasons, the staff row on attacks only; fixture `smite-poison-chaos-templar.xml` (Q11 DIV-0091 to DIV-0093); `docs/phase-6/ailments.md`
+- [x] Tailwind and Adrenaline (`poe1::buffs`); 61 inputs into `config::NAMED_ONLY`, 2 into `ENEMY_DAMAGE`, 4 into the new `config::INERT`
+- [x] Fixtures `ice-nova-tailwind-adrenaline-witch.xml`, `smite-tailwind-adrenaline-templar.xml` (Q11 DIV-0094 to DIV-0096); `docs/phase-6/config-inputs.md`
+- [x] Open PR: #145 (base `feat/p6-2d-impale`)
+## P6-4b: flasks
+- [x] The P6-4a review applied: a guard that no `NAMED_ONLY` name is settled; an `input_use` test; `DEFAULT_ON`; the corrected counts and readers
+- [x] Data: the `Flasks` extractor root, `poe1/flasks.json` (converter, loader, validator, synthetic row), `data-parity` table `flasks` (export format 11; 192 values, 0 differences); evidence bundle `local/p6/packs/b-flasks`
+- [x] `loom_calc::poe1::flasks` (effect scale, merge, Silver's Onslaught), `FlaskMapping` (charges, duration, eight aliases), rows for `flask_effect_+%`, `magic_utility_flask_effect_+%`, Basalt, Stibnite, Silver, Phasing; fixture `smite-flasks-templar.xml` (Q11 DIV-0097 to DIV-0099); `docs/phase-6/flasks.md`
+- [x] Open PR: #146 (base `feat/p6-4-config-inputs`)
+- [ ] Maintainer: the next data run ships `poe1/flasks.json` (the extraction with the `Flasks` root)
+## P6-6a: the skill sweep and skill stats, batch 1 (order change: before P6-5, whose channelled skills need P6-6's parts)
+- [x] The P6-4b review applied: negative buffs merge at the smallest scale; data without the flask table keeps `active-flask` a reason; flags unscaled; flask tests; doc and test placement
+- [x] `tools/oracle/sweep/make_sweep.py` (376 builds, local) and `skill_stats.py`; `poe1::skill_no_output` (148 stats), 7 + 2 `NoEffect` rows, fire and cold skill conversion, `global_always_hit`; `docs/phase-6/skill-data.md`
+- [x] Open PR: #147 (base `feat/p6-4b-flasks`)
+## P6-6b: PoB skill data as a rule (flags, parts, the vetting reason), with the sweep as evidence
+- [x] The P6-6a review: `global_always_hit` gem-only; the classifier's whole-tree scan; mapping tests; flask merge slot
+- [x] `hit::pob_part` / `pob_vetted` replace `SKILL_PARTS` and the vetted lists; spells take the projectile flag; DoT: `pob-skill-data` without PoB data or with unread base mods (four Complete-but-wrong DoTs found by the sweep)
+- [x] Open PR: #148 (base `feat/p6-6a-skill-sweep`)
+## P6-6c: the P6-6b review (melee and projectile by weapon; tagged stat map entries unvetted)
+- [x] PoB's weapon rule for melee and projectile; `PobSkill::own_stats` (generator, regenerated table) in the hit and DoT vetting; explicit DoT key lists; tests; `docs/phase-6/skill-data.md`, "P6-6c"
+- [x] Open PR: #149 (base `feat/p6-6b-skill-data`)
+## P6-5: channelling and Vaal skills
+- [x] Channelled skills computed (no tick cap; stages and release left to the vetting rule); Vaal skills checked by the sweep; the P6-6c review (`weapon_flags`, melee over projectile for spells and DoT); `docs/phase-6/channelling.md`
+- [x] Open PR: #150 (base `feat/p6-6c-skill-review`)
+## P6-6d: totems (P6-6 split: traps, mines, brands are P6-6e)
+- [x] Totems' hit and DoT computed per totem, the player's action speed for self-cast skills only; the P6-5 review (release skills unvetted, Vaal wording, test placement); `docs/phase-6/totems.md`
+- [x] Open PR: #151 (base `feat/p6-5-channel-vaal`)
+## P6-6e: traps, mines, brands
+- [x] Trap and mine spells computed with PoB's throwing and laying time (`trap-mine-data` reason); brands, trap and mine attacks left not computed; the P6-6d review (`totem-data` reason, tests, module docs); `docs/phase-6/totems.md`
+- [x] Open PR: #152 (base `feat/p6-6d-totems-traps`)
+## P6-7a: minion data
+- [x] `poe1/minions.json` (converter, loader, validator, synthetic row); data-parity `minions` (export format 12; 5,959 values, 1 rule); evidence bundle `local/p6/packs/b-minions`; the P6-6e review (docs); `docs/phase-6/minions.md`
+- [x] Open PR: #153 (base `feat/p6-6e-traps-mines-brands`)
+- [ ] Maintainer: the next data run ships `poe1/minions.json`
+## P6-7a2: the P6-7a review
+- [x] Converter strict on IDs and types; validator (duplicate types, empty fields, negatives, skill references); PoB's rod key; `MinionType::life_scaling`; `pob_data.lua` stops on duplicates; start cost measured (+40 ms); `docs/phase-6/minions.md`
+- [x] Open PR: #154 (base `feat/p6-7a-minion-data`)
+## P6-7b: minion actor (plan: `p6-7b-minion-actor-plan.md`, reviewed by plan-reviewer)
+- [x] Plan written and reviewed; split into b1 (data, blocked on the maintainer's depot download of the `.ot` bundles), b2 (actor in the core and parity tool, no value change), b3a, b3b, b4
+- [x] Plan PR: #155 (base `feat/p6-7a2-minion-review`)
+- [x] P6-7b2: `Actor`, `ActorState`, `Calc` per actor; `Field::Minion`; slice revision 4 (`pob_path`, `MINION_NAMES`, `applies: minion`); every document byte-identical
+- [x] P6-7b2 PR: #156 (base `feat/p6-7b-plan`)
+- [x] P6-7b2b: the P6-7b2 review (`with_actor` refuses a missing minion, skill sources per actor, engine tests)
+- [x] P6-7b2b PR: #157 (base `feat/p6-7b2-actor`), auras and buffs on it, minion defences
+- [x] P6-7b1 (after the maintainer's depot download, 2026-11-17): the extractor reads every monster `.ot` as PoB does (`monstertemplate.rs`, manifest format 6, 7,176 files); `poe1/minions.json` `object_stats` (3,265 object types, chains resolved as PoB, `values` and `unread` kept, validator); export format 13 (`minion_mods`, `minion_templates`); data-parity table `minion_mods` (332 lists, 17 differences, 2 rules); generated `pob_minions.rs` (331 minions) and the skills' minion lists; evidence bundle `local/p6/packs/b-ot`; the P6-11e review (`MainSkill::can_use`, test fixes); `docs/phase-6/minions.md`, "P6-7b1"
+- [x] P6-7b1 PR #163 (base `feat/p6-11e-dot-weapon`)
+- [x] P6-7b1b: the P6-7b1 review (monster base excluded, `can_use` test and docs, validator dangling and empty entries, one difference without `object_stats`, generator sort and split, export guard, docs); `docs/phase-6/minions.md`, "The P6-7b1 review"
+- [x] P6-7b1b PR #164 (base `feat/p6-7b1-minion-data`)
+- [x] P6-7b3a: the minion step (`minion_actor`: choice with `skillMinion`, level from the game's stat, base values, `MinionMapping`, template extras, the life override, reasons `minion-modifier` and `minion-buffs`, `MinionPending`); shared phase helpers; sweep of 52 builds (0 unexpected, 32 `Complete` minion fields equal to PoB); 4 mechanic fixtures; the #164 review's minors; `docs/phase-6/minions.md`, "P6-7b3a"
+- [x] P6-7b3a PR #165 (base `feat/p6-7b1b-review`)
+- [x] P6-7b3a2: the #165 review (12 item skills, `minion-buffs` in the main group, `base_numbers` and the `Ingest` test, six stat slots, early return, mapping comments); `docs/phase-6/minions.md`, "The P6-7b3a review"
+- [x] P6-7b3a2 PR #166 (base `feat/p6-7b3a-minion-base`)
+- [ ] P6-7b3b: register Vaal Summon Skeletons' minion level (88 against PoB's 90) once its fields are `Complete`; a fixture with `set_maximum_life_is_one`
+- [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
+## P6-7c: minion hits and DoT, spectres
+## P6-8a: triggers
+## P6-8b: mirages
+## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)
+## P6-10a: timeless jewels
+## P6-10b: recovery and defence outputs
+## P6-11: stat mop-up (batches)
+- [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
+- [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)
+- [x] P6-11b: weapon types (PoB's weapon `ModFlag`s per hand, `KeywordFlag.Bow`, ailments' `WeaponMask`; 43 hit rows, 3 state rows with `UsingWand`, 2 `NoEffect`), the P6-11a review (one `DualWielding` definition, three shield rows), and the dual-wield hit DPS fix (combined speed; DIV-0074 retired); fixtures `smite-axe-lines-templar.xml`, `smite-dual-wield-lines-templar.xml` (Q11 DIV-0102 to DIV-0107); `docs/phase-6/stat-mop-up.md`
+- [x] P6-11b PR #159 (base `feat/p6-11a-stat-batch`)
+- [x] P6-11c: the P6-11b review (an attack's DoT keeps its weapon flags, per-hand ailment flags, Intimidating Cry's uptime on the combined speed via `hand_rate`/`hand_hit`, `MainHandWeapon` replaced by `Flags::WEAPON`, staff lines on `Flags::STAFF`, `KEYWORD_ARROW`, wand damage); fixture `burning-arrow-bow-lines-templar.xml` (Q11 DIV-0108 to DIV-0110); `docs/phase-6/stat-mop-up.md`
+- [x] P6-11c PR #160 (base `feat/p6-11b-stat-batch`)
+- [x] P6-11d: the P6-11c review (arrow keyword from the active gem only, an attack DoT's main-hand flags with `Unarmed`, weapon-row and dual-wield Intimidating Cry tests); `docs/phase-6/stat-mop-up.md`
+- [x] P6-11d PR #161 (base `feat/p6-11c-weapon-review`)
+- [x] P6-11e: the P6-11d review (an attack DoT's main hand as PoB's `getWeaponFlags`, with the skill's weapon check and reasons; tests); `docs/phase-6/stat-mop-up.md`
+- [x] P6-11e PR #162 (base `feat/p6-11d-arrow-review`)
+## P6-12: combined and full DPS; report

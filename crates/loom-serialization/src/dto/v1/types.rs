@@ -345,6 +345,10 @@ dto! {
         pub active: Option<u32>,
         /// The sets.
         pub sets: Vec<Entry<SkillSet>>,
+        /// How the build's format held the sets; left out for one element
+        /// per set (Phase 6, additive).
+        #[serde(default, skip_serializing_if = "ConfigLayout::is_sets")]
+        pub layout: ConfigLayout,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
@@ -806,7 +810,7 @@ dto! {
         pub attributes: Vec<Attribute>,
     }
 
-    /// How a build's format held its config sets.
+    /// How a build's format held its config sets or skill sets.
     #[derive(Default, Copy, PartialEq, Eq)]
     #[serde(rename_all = "kebab-case")]
     pub enum ConfigLayout {

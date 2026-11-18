@@ -16,7 +16,7 @@ use crate::quantity::DamageType;
 
 /// A set of skill and damage flags.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Flags(u32);
+pub struct Flags(u64);
 
 impl Flags {
     /// No flag.
@@ -62,10 +62,99 @@ impl Flags {
     /// A fire, cold, or lightning skill (for an `any` condition).
     pub const SKILL_ELEMENTAL: Self =
         Self(Self::SKILL_FIRE.0 | Self::SKILL_COLD.0 | Self::SKILL_LIGHTNING.0);
+    /// Damage over time (PoB's `ModFlag.Dot`, Phase 6).
+    pub const DOT: Self = Self(1 << 17);
+    /// Physical damage over time (PoB's `KeywordFlag.PhysicalDot`).
+    pub const PHYSICAL_DOT: Self = Self(1 << 18);
+    /// Fire damage over time (PoB's `KeywordFlag.FireDot`).
+    pub const FIRE_DOT: Self = Self(1 << 19);
+    /// Cold damage over time (PoB's `KeywordFlag.ColdDot`).
+    pub const COLD_DOT: Self = Self(1 << 20);
+    /// Lightning damage over time (PoB's `KeywordFlag.LightningDot`).
+    pub const LIGHTNING_DOT: Self = Self(1 << 21);
+    /// Chaos damage over time (PoB's `KeywordFlag.ChaosDot`).
+    pub const CHAOS_DOT: Self = Self(1 << 22);
+    /// A damaging ailment (PoB's `ModFlag.Ailment` and `KeywordFlag.Ailment`).
+    pub const AILMENT: Self = Self(1 << 23);
+    /// Ignite (PoB's `KeywordFlag.Ignite`).
+    pub const IGNITE: Self = Self(1 << 24);
+    /// Bleeding (PoB's `KeywordFlag.Bleed`).
+    pub const BLEED: Self = Self(1 << 25);
+    /// Poison (PoB's `KeywordFlag.Poison`).
+    pub const POISON: Self = Self(1 << 26);
+    /// An attack skill (PoB's `KeywordFlag.Attack`, "with Attack Skills";
+    /// Phase 6): unlike [`Self::ATTACK`] (`ModFlag.Attack`), an attack's
+    /// ailments and damage over time keep it.
+    pub const KEYWORD_ATTACK: Self = Self(1 << 27);
+    /// A spell skill (PoB's `KeywordFlag.Spell`, "with Spell Skills"; Phase
+    /// 6): unlike [`Self::SPELL`] (`ModFlag.Spell`), a spell's ailments and
+    /// damage over time keep it.
+    pub const KEYWORD_SPELL: Self = Self(1 << 28);
+    /// An ailment from a melee hit (PoB's `ModFlag.MeleeHit`, which an
+    /// ailment's config gets when its hit is melee; Phase 6).
+    pub const MELEE_HIT: Self = Self(1 << 29);
+    /// An attack with a weapon, not unarmed (PoB's `ModFlag.Weapon`;
+    /// P6-11b: the weapon flags of an attack's hand,
+    /// [`crate::poe1::hit::weapon_type_flags`]).
+    pub const WEAPON: Self = Self(1 << 30);
+    /// An axe (PoB's `ModFlag.Axe`).
+    pub const AXE: Self = Self(1 << 31);
+    /// A bow (PoB's `ModFlag.Bow`).
+    pub const BOW: Self = Self(1 << 32);
+    /// A claw (PoB's `ModFlag.Claw`).
+    pub const CLAW: Self = Self(1 << 33);
+    /// A dagger (PoB's `ModFlag.Dagger`).
+    pub const DAGGER: Self = Self(1 << 34);
+    /// A mace or sceptre (PoB's `ModFlag.Mace`).
+    pub const MACE: Self = Self(1 << 35);
+    /// A staff (PoB's `ModFlag.Staff`).
+    pub const STAFF: Self = Self(1 << 36);
+    /// A sword (PoB's `ModFlag.Sword`).
+    pub const SWORD: Self = Self(1 << 37);
+    /// A wand (PoB's `ModFlag.Wand`).
+    pub const WAND: Self = Self(1 << 38);
+    /// Unarmed (PoB's `ModFlag.Unarmed`).
+    pub const UNARMED: Self = Self(1 << 39);
+    /// A fishing rod (PoB's `ModFlag.Fishing`).
+    pub const FISHING: Self = Self(1 << 40);
+    /// A melee weapon (PoB's `ModFlag.WeaponMelee`).
+    pub const WEAPON_MELEE: Self = Self(1 << 41);
+    /// A ranged weapon (PoB's `ModFlag.WeaponRanged`).
+    pub const WEAPON_RANGED: Self = Self(1 << 42);
+    /// A one-handed weapon (PoB's `ModFlag.Weapon1H`).
+    pub const WEAPON_1H: Self = Self(1 << 43);
+    /// A two-handed weapon (PoB's `ModFlag.Weapon2H`).
+    pub const WEAPON_2H: Self = Self(1 << 44);
+    /// A bow skill (PoB's `KeywordFlag.Bow`: an attack whose main hand
+    /// holds a bow, `CalcActiveSkill.lua` 406; its ailments keep it).
+    pub const KEYWORD_BOW: Self = Self(1 << 45);
+    /// An arrow skill (PoB's `KeywordFlag.Arrow`: the skill's
+    /// `skill_can_fire_arrows`, `SkillStatMap.lua` 1341 and
+    /// `CalcActiveSkill.lua` 412; P6-11c; its ailments and DoT keep it).
+    pub const KEYWORD_ARROW: Self = Self(1 << 46);
+    /// The weapon flags an attack's ailments keep (PoB's
+    /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
+    /// two-handed; not one-handed (`0x10000000` is outside the mask) and not
+    /// `ModFlag.Weapon`).
+    pub const AILMENT_WEAPON_MASK: Self = Self(
+        Self::AXE.0
+            | Self::BOW.0
+            | Self::CLAW.0
+            | Self::DAGGER.0
+            | Self::MACE.0
+            | Self::STAFF.0
+            | Self::SWORD.0
+            | Self::WAND.0
+            | Self::UNARMED.0
+            | Self::FISHING.0
+            | Self::WEAPON_MELEE.0
+            | Self::WEAPON_RANGED.0
+            | Self::WEAPON_2H.0,
+    );
 
     /// The raw bits.
     #[must_use]
-    pub const fn bits(self) -> u32 {
+    pub const fn bits(self) -> u64 {
         self.0
     }
 
@@ -115,6 +204,31 @@ impl Flags {
             DamageType::Lightning => Self::SKILL_LIGHTNING,
             DamageType::Chaos => Self::SKILL_CHAOS,
         }
+    }
+
+    /// The damage over time keyword of a damage type (PoB's
+    /// `KeywordFlag[type .. "Dot"]`).
+    #[must_use]
+    pub const fn dot_keyword(t: DamageType) -> Self {
+        match t {
+            DamageType::Physical => Self::PHYSICAL_DOT,
+            DamageType::Fire => Self::FIRE_DOT,
+            DamageType::Cold => Self::COLD_DOT,
+            DamageType::Lightning => Self::LIGHTNING_DOT,
+            DamageType::Chaos => Self::CHAOS_DOT,
+        }
+    }
+
+    /// The flags of `a` that `b` also has.
+    #[must_use]
+    pub const fn from_bits_and(a: Self, b: Self) -> Self {
+        Self(a.0 & b.0)
+    }
+
+    /// The set without the flags of `other`.
+    #[must_use]
+    pub const fn without(self, other: Self) -> Self {
+        Self(self.0 & !other.0)
     }
 }
 

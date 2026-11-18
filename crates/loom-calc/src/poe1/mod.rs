@@ -13,25 +13,36 @@
 //! multiplier, hit DPS. Its other hit fields, and every hit field of
 //! another kind of skill, are `Unsupported` with `NotComputed`.
 
+pub mod ailment;
 pub mod buffs;
 pub mod charges;
 pub mod collect;
 pub mod conditions;
 pub mod config;
 pub mod damage_taken;
+pub mod dot;
 pub mod enemy;
 pub mod exposure;
+pub mod flasks;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
 pub mod item_values;
 pub mod keystones;
 pub mod mapping;
+pub mod minion_actor;
 pub mod minions;
 pub mod pantheon;
+pub mod pob_minion;
+#[rustfmt::skip]
+pub mod pob_minions;
+pub mod pob_skill;
+#[rustfmt::skip]
+pub mod pob_skills;
 pub mod phases;
 pub mod skill;
 pub mod skill_modifiers;
+pub mod skill_no_output;
 pub mod sockets;
 pub mod stacks;
 pub mod states;
@@ -73,6 +84,9 @@ pub enum Poe1Quantity {
     CastTime,
     /// A value of the weapon in the main hand (its local properties).
     Weapon(WeaponValue),
+    /// A value of the weapon in the off hand (its local properties; Phase
+    /// 6, dual wielding).
+    OffHandWeapon(WeaponValue),
     /// The skill's own conversion of one damage type to another, percent
     /// (PoB's `Skill<From>DamageConvertTo<To>`, which takes precedence over
     /// other conversion).
@@ -115,6 +129,15 @@ pub enum Poe1Quantity {
     /// it (P3-12j); [`buffs`] gives its speed once, whatever the number of
     /// sources, as PoB's flag does.
     Onslaught,
+    /// Flasks applied to you have increased effect (PoB's `FlaskEffect`;
+    /// P6-4b): `Increased`, read by [`flasks`].
+    FlaskEffect,
+    /// Magic utility flasks applied to you have increased effect (PoB's
+    /// `MagicUtilityFlaskEffect`; P6-4b): `Increased`, read by [`flasks`].
+    MagicUtilityFlaskEffect,
+    /// A flask's own increased effect (PoB's local `FlaskEffect`; P6-4b):
+    /// `Increased`, read by [`flasks`] from the flask's lines alone.
+    LocalFlaskEffect,
     /// A modifier of a charge kind (P3-8d): its maximum, its minimum, or an
     /// effect per charge. Only [`charges`] reads them: it counts the
     /// charges as PoB's `doActorCharges` and turns each per-charge effect
@@ -136,6 +159,11 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
+    /// A minion modifier PoB applies to the minion's life or defences
+    /// ("Minions have #% increased maximum Life", the golems'; P6-7b3a): a
+    /// `Flag` no character field reads; the minion step makes each one a
+    /// reason on the minion fields until P6-7b3b applies them.
+    MinionPending,
     /// Reservation efficiency of a pool, or of both (PoB's
     /// `<Pool>ReservationEfficiency` and `ReservationEfficiency`, P3-8l):
     /// `Increased`, read by [`skill_modifiers::Totals`] for the other
@@ -242,6 +270,45 @@ pub enum Poe1Quantity {
     /// `<From>DamageGainAs<To>` BASE; P3-close): `Base`, percent, read by
     /// [`hit`]'s conversion table.
     GainAs(DamageType, DamageType),
+    /// A chance to inflict a damaging ailment on hit, percent (PoB's
+    /// `EnemyIgniteChance`, `BleedChance`, `PoisonChance`; Phase 6):
+    /// `Base`, read by [`ailment`].
+    AilmentChance(ailment::Ailment),
+    /// The duration of the ailments you inflict (PoB's `EnemyIgniteDuration`,
+    /// `EnemyAilmentDuration`, `EnemyElementalAilmentDuration`,
+    /// `DamagingAilmentDuration`, one quantity whose conditions say which
+    /// ailments; Phase 6): `Increased` and `More`.
+    AilmentDuration,
+    /// Ailments deal their damage faster (PoB's `IgniteBurnFaster`,
+    /// `BleedFaster`, `PoisonFaster`, by conditions; Phase 6): `Increased`.
+    AilmentFaster,
+    /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
+    /// Phase 6): `Increased`.
+    AilmentSlower,
+    /// A chance to impale on hit, percent (PoB's `ImpaleChance`; Phase 6):
+    /// `Base`, read by [`ailment::impale`].
+    ImpaleChance,
+    /// The effect of impales (PoB's `ImpaleEffect`; Phase 6): `Increased`
+    /// and `More`.
+    ImpaleEffect,
+    /// Impales on the enemy at most, added to the character template's
+    /// (PoB's `ImpaleStacksMax` BASE; Phase 6).
+    ImpaleStacksMax,
+    /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
+    /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
+    CannotInflict(ailment::Ailment),
+    /// The duration of ailments on the enemy (PoB's enemy
+    /// `SelfIgniteDuration`, `SelfAilmentDuration`,
+    /// `SelfElementalAilmentDuration`, by conditions; curses such as
+    /// Elemental Weakness; Phase 6): `Increased`, read by [`ailment`].
+    EnemyAilmentDuration,
+    /// "Ailments never count as being from Critical Strikes" (PoB's
+    /// `AilmentsAreNeverFromCrit`, Elemental Overload; Phase 6): a `Flag`
+    /// read by [`ailment`].
+    AilmentsNeverFromCrit,
+    /// The effect of the ailments you inflict (PoB's `AilmentEffect`, by
+    /// conditions; Phase 6): `Increased` and `More`.
+    AilmentEffect,
     /// Intimidating Cry's terms for its exerted attacks' uptime
     /// ([`gems::WarcryValue`]; close-out): `Base`, read by [`hit`].
     IntimidatingCry(gems::WarcryValue),
@@ -287,6 +354,35 @@ impl ReservationKind {
     }
 }
 
+/// A hand that holds a weapon (Phase 6, dual wielding).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Hand {
+    /// The main hand (`Weapon 1`).
+    Main,
+    /// The off hand (`Weapon 2`).
+    Off,
+}
+
+impl Hand {
+    /// The quantity of a value of the weapon in this hand.
+    #[must_use]
+    pub const fn weapon(self, value: WeaponValue) -> crate::quantity::Quantity {
+        crate::quantity::Quantity::Poe1(match self {
+            Self::Main => Poe1Quantity::Weapon(value),
+            Self::Off => Poe1Quantity::OffHandWeapon(value),
+        })
+    }
+
+    /// PoB's slot name.
+    #[must_use]
+    pub const fn slot(self) -> &'static str {
+        match self {
+            Self::Main => "Weapon 1",
+            Self::Off => "Weapon 2",
+        }
+    }
+}
+
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
 /// branch of `BuildModListForSlotNum`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -312,6 +408,11 @@ pub enum WeaponValue {
     /// `AlternateQualityWeapon`, P3-8n): a `Flag`; the weapon's physical
     /// damage then ignores its quality.
     AlternateQuality,
+    /// The weapon's local "+# to Accuracy Rating" (`Base`; Phase 6): PoB's
+    /// `Accuracy` BASE with the hand's `MainHandAttack` or `OffHandAttack`
+    /// condition (`Classes/Item.lua` 2282 to 2288), so each hand's pass
+    /// reads only its own weapon's ([`hit`]).
+    Accuracy,
     /// "Grants #% increased Elemental Damage per 2% Quality" (P3-8n):
     /// `Base`; `collect` turns it into the character's elemental damage
     /// times `floor(quality / 2)`.
@@ -329,6 +430,7 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::Accuracy => f.write_str("accuracy"),
         }
     }
 }
@@ -348,6 +450,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BaseDamageMultiplier => f.write_str("base-damage-multiplier"),
             Self::CastTime => f.write_str("cast-time"),
             Self::Weapon(value) => write!(f, "weapon.{value}"),
+            Self::OffHandWeapon(value) => write!(f, "off-hand-weapon.{value}"),
             Self::SkillConversion(from, to) => {
                 write!(f, "skill-conversion.{}.{}", from.name(), to.name())
             }
@@ -364,9 +467,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ShockMinimum => f.write_str("shock-minimum"),
             Self::ShockEffect => f.write_str("shock-effect"),
             Self::Onslaught => f.write_str("onslaught"),
+            Self::FlaskEffect => f.write_str("flask-effect"),
+            Self::MagicUtilityFlaskEffect => f.write_str("magic-utility-flask-effect"),
+            Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
+            Self::MinionPending => f.write_str("minion-pending"),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }
@@ -408,6 +515,17 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
             Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
+            Self::AilmentChance(a) => write!(f, "ailment-chance.{}", a.name()),
+            Self::AilmentDuration => f.write_str("ailment-duration"),
+            Self::AilmentFaster => f.write_str("ailment-faster"),
+            Self::AilmentSlower => f.write_str("ailment-slower"),
+            Self::AilmentEffect => f.write_str("ailment-effect"),
+            Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
+            Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
+            Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
+            Self::ImpaleChance => f.write_str("impale-chance"),
+            Self::ImpaleEffect => f.write_str("impale-effect"),
+            Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
         }
     }
 }
@@ -553,6 +671,9 @@ pub enum Poe1Field {
     SpellSuppressionChance,
     /// Chance to block spell damage.
     SpellBlockChance,
+    /// The main skill's impale damage per second (PoB's `ImpaleDPS`; Phase
+    /// 6). Present only when the skill impales.
+    ImpaleDps,
 }
 
 impl Poe1Field {
@@ -562,6 +683,7 @@ impl Poe1Field {
         match self {
             Self::SpellSuppressionChance => "spell-suppression-chance",
             Self::SpellBlockChance => "spell-block-chance",
+            Self::ImpaleDps => "impale-dps",
         }
     }
 }
@@ -620,6 +742,14 @@ impl Ruleset for Poe1Rules {
 
     fn phases(&self) -> &[Phase] {
         &phases::PHASES
+    }
+
+    fn minion(
+        &self,
+        input: &CalcInput<'_>,
+        player: &crate::store::ModStore,
+    ) -> Option<Result<crate::engine::ActorState, crate::state::UnsupportedReason>> {
+        minion_actor::minion(input, player)
     }
 
     fn states(
@@ -728,7 +858,9 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
-                "hit"
+                "minion",
+                "hit",
+                "dot"
             ]
         );
         assert_eq!(

@@ -22,12 +22,14 @@ mod data_parity;
 mod divergence;
 mod dto_hashes;
 mod extract;
+mod flasks;
 mod flavour;
 mod grafts;
 mod item_tags;
 mod jewel_radii;
 mod load_statdesc;
 mod lookup;
+mod minions;
 mod mod_filter;
 mod oracle;
 mod oracle_compare;
@@ -37,6 +39,7 @@ mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
 mod pantheons;
+mod pob_skills;
 mod poe1;
 mod poe2;
 mod properties;
@@ -165,6 +168,18 @@ const USAGE: &str = "usage:
       dto::v1); print each document's SHA-256 and size as JSON. CI compares
       the output of Windows and Linux. Exit 1 if a document differs on a
       second run or does not read back to the same build.
+  loom-parity-cli pob-skills <pob-data.json> --out <file.rs>
+      Write PoB v2.67.2's hand-written skill data (base flags, parts, base
+      mods, skill function names) from the PoB data export (format 10) as
+      the Rust table crates/loom-calc/src/poe1/pob_skills.rs (Phase 6 plan,
+      decision 5); from format 13, each skill's minion lists. Exit 0 when
+      written.
+  loom-parity-cli pob-minions <pob-data.json> --out <file.rs>
+      Write what PoB v2.67.2's minion templates (Export/Minions/*.txt) add
+      to each game variety (the variety, #limit, #hostile, extra skills,
+      #mod extras by line) from the PoB data export (format 13) as the Rust
+      table crates/loom-calc/src/poe1/pob_minions.rs (P6-7b1). Exit 0 when
+      written.
   loom-parity-cli custom-lines <bundle-dir> <pob-parse.json> --out <dir>
       Read every custom modifier line of <pob-parse.json> (the output of
       tools/oracle/data/pob_parse_lines.lua: each line with PoB v2.67.2's
@@ -1620,6 +1635,12 @@ fn main() -> ExitCode {
         }
         [cmd, mode, build, pob] if cmd == "tree-parity" && mode == "readback" => {
             tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
+        }
+        [cmd, export, flag, out] if cmd == "pob-skills" && flag == "--out" => {
+            pob_skills::run_skills(Path::new(export), Path::new(out))
+        }
+        [cmd, export, flag, out] if cmd == "pob-minions" && flag == "--out" => {
+            pob_skills::run_minions(Path::new(export), Path::new(out))
         }
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),

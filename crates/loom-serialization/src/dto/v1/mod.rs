@@ -117,6 +117,7 @@ impl Document {
             .config
             .check_custom_lines()
             .and_then(|()| build.config.check_layout())
+            .and_then(|()| build.skills.check_layout())
             .map_err(DtoError::Domain)?;
         Ok(Self {
             format: FORMAT.to_owned(),

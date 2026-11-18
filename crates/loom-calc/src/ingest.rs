@@ -231,6 +231,13 @@ impl<'m> Ingest<'m> {
         self.store.rescale_from(start, scaled);
     }
 
+    /// Scales every effect added since `start` (the index
+    /// [`Ingest::effects`] had then) as `scaled` gives it (an active flask's
+    /// lines, P6-4b).
+    pub fn rescale_from(&mut self, start: usize, scaled: &dyn Fn(Quantity, Op, f64) -> f64) {
+        self.store.rescale_from(start, scaled);
+    }
+
     /// Adds the effects of one stat line from `source`.
     pub fn stat(&mut self, source: &Source, line: &StatLine) {
         let mapping = self.mapping;
@@ -251,7 +258,10 @@ impl<'m> Ingest<'m> {
             }
             StatMap::Effects(t) => t,
         };
-        let Some(value) = settle(&line.value) else {
+        // A flag's value is not read (P6-7b3a): an unsettled range on a stat
+        // whose every effect is a flag still sets it.
+        let flags_only = !templates.is_empty() && templates.iter().all(|t| t.op == Op::Flag);
+        let Some(value) = settle(&line.value).or(flags_only.then_some(1.0)) else {
             self.reasons
                 .indeterminate
                 .insert(IndeterminateReason::UnsettledValue {
@@ -435,6 +445,11 @@ mod tests {
                 "reduced_life" => StatMap::Effects(vec![t(Op::Increased, -1.0, 1.0)]),
                 "life_hundredths" => StatMap::Effects(vec![t(Op::Base, 1.0, 100.0)]),
                 "ignored" => StatMap::NoEffect,
+                "flag" => StatMap::Effects(vec![t(Op::Flag, 1.0, 1.0)]),
+                "flag_and_base" => {
+                    StatMap::Effects(vec![t(Op::Flag, 1.0, 1.0), t(Op::Base, 1.0, 1.0)])
+                }
+                "empty" => StatMap::Effects(Vec::new()),
                 _ => StatMap::Unmapped,
             }
         }
@@ -510,6 +525,26 @@ mod tests {
         let (store, reasons) = i.finish();
         assert!(store.is_empty());
         assert_eq!(reasons.indeterminate.len(), 1);
+    }
+
+    /// A flag's value is not read (P6-7b3a): an unsettled range on a stat
+    /// whose every effect is a flag sets it; with another effect, or with
+    /// no effect at all, the range stays a reason.
+    #[test]
+    fn an_unsettled_flag_only_stat_should_set_its_flag() {
+        let ranged = StatValue::Ranged { min: 1, max: 9 };
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("flag", ranged.clone()));
+        let (store, reasons) = i.finish();
+        assert_eq!(store.len(), 1);
+        assert!(reasons.indeterminate.is_empty());
+        for stat in ["flag_and_base", "empty"] {
+            let mut i = Ingest::new(&Map);
+            i.stat(&Source::Character, &line(stat, ranged.clone()));
+            let (store, reasons) = i.finish();
+            assert!(store.is_empty(), "{stat}");
+            assert_eq!(reasons.indeterminate.len(), 1, "{stat}");
+        }
     }
 
     #[test]

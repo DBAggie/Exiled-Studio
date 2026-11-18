@@ -261,7 +261,9 @@ fn high_precision(quantity: Quantity, op: Op) -> Option<u8> {
 /// A mod's value scaled as PoB's `ScaleAddMod` (module docs).
 #[must_use]
 pub fn scale(quantity: Quantity, op: Op, value: f64, scale: f64) -> f64 {
-    if scale == 1.0 {
+    // A flag is not scaled (`ScaleAddMod` scales numbers only; a flag's
+    // value is `true`).
+    if scale == 1.0 || op == Op::Flag {
         return value;
     }
     let precision = high_precision(quantity, op).or_else(|| {
@@ -370,6 +372,13 @@ pub fn reserved(
 
 #[cfg(test)]
 mod tests {
+    /// A flag is not scaled (P6-4b review; `ScaleAddMod` scales numbers).
+    #[test]
+    fn a_flag_should_not_be_scaled() {
+        assert_eq!(scale(Quantity::Damage, Op::Flag, 1.0, 0.5), 1.0);
+        assert_eq!(scale(Quantity::Damage, Op::Increased, 40.0, 0.5), 20.0);
+    }
+
     use super::*;
     use crate::ingest::{StatMap, StatMapping};
     use crate::poe1::ArmourSlot;

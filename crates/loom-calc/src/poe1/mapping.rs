@@ -15,6 +15,7 @@ use loom_domain::{StatId, TypedResolution};
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
+use crate::poe1::ailment::Ailment;
 use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, conditions, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -51,20 +52,25 @@ const SK_FIRE: Flags = Flags::SKILL_FIRE;
 const SK_COLD: Flags = Flags::SKILL_COLD;
 const SK_LIGHTNING: Flags = Flags::SKILL_LIGHTNING;
 const SK_CHAOS: Flags = Flags::SKILL_CHAOS;
+/// The damaging ailments (for an `any` condition; P6-2b).
+const DAMAGING_AILMENTS: Flags = Flags::IGNITE.union(Flags::BLEED).union(Flags::POISON);
 const fn cast_with(keyword: Flags) -> Flags {
     Flags::CAST.union(keyword)
 }
 // A damage type's damage with attack or spell skills (P3-8h).
-const ATTACK_PHYSICAL: Flags = Flags::ATTACK.union(Flags::PHYSICAL);
-const ATTACK_FIRE: Flags = Flags::ATTACK.union(Flags::FIRE);
-const ATTACK_COLD: Flags = Flags::ATTACK.union(Flags::COLD);
-const ATTACK_LIGHTNING: Flags = Flags::ATTACK.union(Flags::LIGHTNING);
-const ATTACK_CHAOS: Flags = Flags::ATTACK.union(Flags::CHAOS);
-const SPELL_PHYSICAL: Flags = Flags::SPELL.union(Flags::PHYSICAL);
-const SPELL_FIRE: Flags = Flags::SPELL.union(Flags::FIRE);
-const SPELL_COLD: Flags = Flags::SPELL.union(Flags::COLD);
-const SPELL_LIGHTNING: Flags = Flags::SPELL.union(Flags::LIGHTNING);
-const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
+// "with Attack Skills" and "with Spell Skills" are PoB's keyword flags
+// (`KeywordFlag.Attack`, `KeywordFlag.Spell`, `ModParser.lua` 971, 978),
+// which an attack's or a spell's ailments and damage over time keep (P6-2b).
+const ATTACK_PHYSICAL: Flags = Flags::KEYWORD_ATTACK.union(Flags::PHYSICAL);
+const ATTACK_FIRE: Flags = Flags::KEYWORD_ATTACK.union(Flags::FIRE);
+const ATTACK_COLD: Flags = Flags::KEYWORD_ATTACK.union(Flags::COLD);
+const ATTACK_LIGHTNING: Flags = Flags::KEYWORD_ATTACK.union(Flags::LIGHTNING);
+const ATTACK_CHAOS: Flags = Flags::KEYWORD_ATTACK.union(Flags::CHAOS);
+const SPELL_PHYSICAL: Flags = Flags::KEYWORD_SPELL.union(Flags::PHYSICAL);
+const SPELL_FIRE: Flags = Flags::KEYWORD_SPELL.union(Flags::FIRE);
+const SPELL_COLD: Flags = Flags::KEYWORD_SPELL.union(Flags::COLD);
+const SPELL_LIGHTNING: Flags = Flags::KEYWORD_SPELL.union(Flags::LIGHTNING);
+const SPELL_CHAOS: Flags = Flags::KEYWORD_SPELL.union(Flags::CHAOS);
 
 /// The stats of hits P3-9b maps (a self-cast spell's), sorted by stat ID (a
 /// test checks the order), each read as PoB v2.67.2 reads it
@@ -160,7 +166,7 @@ const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
 /// for both spell flags likewise (PoB leaves `KeywordFlag.Spell` off only
 /// for the skills its own data marks `cast`: Bear Trap, Vaal Detonate
 /// Dead, the Heralds of Agony, Ice, and Thunder, one minion skill; none is
-/// a vetted spell, `hit::VETTED_SPELLS`, so any of them is `Partial`).
+/// a spell PoB's data vets, `hit::pob_vetted`, so any of them is `Partial`).
 pub const HIT_ROWS: &[HitRow] = &[
     (
         "accuracy_rating",
@@ -170,13 +176,36 @@ pub const HIT_ROWS: &[HitRow] = &[
         "accuracy_rating_+%",
         &[(Quantity::Accuracy, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1020: `Damage` MORE with `KeywordFlag.Ailment`
+    // (P6-2b).
+    (
+        "active_skill_ailment_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::AILMENT, NONE)],
+    ),
     (
         "active_skill_area_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1184: `Damage` MORE with `KeywordFlag.Ignite`
+    // (P6-2b).
+    (
+        "active_skill_ignite_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::IGNITE, NONE)],
+    ),
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1033: `EnemyIgniteChance` BASE 100 (P6-2b).
+    (
+        "always_ignite",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
     (
@@ -203,9 +232,42 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_fire_damage",
         &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "attack_maximum_added_fire_damage_with_swords",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_maximum_added_fire_damage_with_wand",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_maximum_added_lightning_damage_with_wand",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_maximum_added_physical_damage",
@@ -223,9 +285,42 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_fire_damage",
         &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "attack_minimum_added_fire_damage_with_swords",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_minimum_added_fire_damage_with_wand",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "attack_minimum_added_lightning_damage_with_wand",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_minimum_added_physical_damage",
@@ -235,13 +330,109 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1708: `ImpaleChance` BASE with
+    // `KeywordFlag.Attack` (P6-2d).
+    (
+        "attacks_impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-11b: "Axe Attacks deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Axe` and `Ailment`.
+    (
+        "axe_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::AXE.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Axes": `Speed` INC, `ModFlag.Axe`, `Hit`, `Attack`.
+    (
+        "axe_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::AXE.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1017: `Damage` INC with `KeywordFlag.Ailment`
+    // (P6-2b).
+    (
+        "base_ailment_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::AILMENT, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1151: `EnemyAilmentDuration` INC (P6-2b).
+    (
+        "base_all_ailment_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 709: `EnemyBleedDuration` INC (P6-2c).
+    (
+        "base_bleed_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::BLEED,
+            NONE,
+        )],
+    ),
     (
         "base_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1030: `EnemyIgniteChance` BASE (P6-2b).
+    (
+        "base_chance_to_ignite_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1023: `PoisonChance` BASE (P6-2c).
+    (
+        "base_chance_to_poison_on_hit_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "base_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1148: `EnemyElementalAilmentDuration` INC
+    // (P6-2b): the elemental ailments, of which ignite is the damaging one.
+    (
+        "base_elemental_status_ailment_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            NONE,
+            Flags::IGNITE,
+        )],
     ),
     // P3-8n: "#% of Physical Damage Converted to Fire Damage"
     // (`PhysicalDamageConvertToFire` BASE), conversion that is not the
@@ -253,6 +444,23 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1163: `Damage` INC with `KeywordFlag.Poison`
+    // (P6-2c).
+    (
+        "base_poison_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::POISON, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1123: `EnemyPoisonDuration` INC (P6-2c).
+    (
+        "base_poison_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::POISON,
             NONE,
         )],
     ),
@@ -280,6 +488,102 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 995: `BleedChance` BASE with `ModFlag.Attack`
+    // (P6-2c).
+    (
+        "bleed_on_hit_with_attacks_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1154: `Damage` INC with `KeywordFlag.Bleed`
+    // (P6-2c).
+    (
+        "bleeding_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::BLEED, NONE)],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Bows": `Accuracy` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Bows": `Speed` INC, `ModFlag.Bow`, `Hit`, `Attack`.
+    (
+        "bow_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Bows": `CritChance` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Bows": `CritMultiplier` BASE, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Damage with Bows": `Damage` INC, `ModFlag.Bow` and `Hit`.
+    (
+        "bow_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 755: `FireDamage` INC with
+    // `KeywordFlag.FireDot` (P6-1).
+    (
+        "burn_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::FIRE.union(Flags::FIRE_DOT),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1223: the `CannotBleed` flag (P6-2c).
+    (
+        "cannot_cause_bleeding",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CannotInflict(Ailment::Bleed)),
+            Op::Flag,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
     // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
@@ -347,6 +651,22 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // "#% chance to Freeze, Shock and Ignite" (PoB `EnemyFreezeChance`,
+    // `EnemyShockChance`, `EnemyIgniteChance` BASE): the ignite's chance on
+    // hit (P6-2b). The freeze and shock chances set only PoB's
+    // non-damaging ailment outputs, which no field reads (never the
+    // enemy's shock in a hit: the config and guaranteed shocks set it,
+    // P3-8k); they join when those are computed.
+    (
+        "chance_to_freeze_shock_ignite_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Ignite)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Critical Strike Chance with Chaos Skills",
     // "+#% to Critical Strike Multiplier with Chaos Skills": `CritChance`
     // INC, `CritMultiplier` BASE with `KeywordFlag.Chaos` (745, 748); the
@@ -359,6 +679,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "chaos_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_CHAOS, NONE)],
     ),
+    // "#% increased Chaos Damage": `ChaosDamage` INC, as the other types'
+    // (PoB `SkillStatMap.lua`; P6-2c review: poison's physical part reads
+    // it too).
+    (
+        "chaos_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::CHAOS, NONE)],
+    ),
     // P3-8h: "#% increased Chaos Damage with Attack Skills": `ChaosDamage`
     // INC with `KeywordFlag.Attack` (701, 978); "with Spell Skills" with
     // `KeywordFlag.Spell` (971); the other damage types likewise.
@@ -369,6 +696,11 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "chaos_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_CHAOS, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1178: `ChaosDotMultiplier` BASE (P6-1).
+    (
+        "chaos_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::CHAOS, NONE)],
     ),
     (
         "cold_critical_strike_chance_+%",
@@ -390,6 +722,11 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cold_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_COLD, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1181: `ColdDotMultiplier` BASE (P6-1).
+    (
+        "cold_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::COLD, NONE)],
+    ),
     (
         "critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)],
@@ -397,6 +734,50 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
+    (
+        "damage_+%_with_bow_skills",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_BOW,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 752: `Damage` INC with `ModFlag.Dot` (P6-1).
+    (
+        "damage_over_time_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
+    ),
+    // P6-11b: "#% increased Damage Over Time with Bow Skills": `Damage` INC, `ModFlag.Dot`, `KeywordFlag.Bow`.
+    (
+        "damage_over_time_+%_with_bow_skills",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::DOT.union(Flags::KEYWORD_BOW),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1187: `BleedFaster`, `PoisonFaster`, and
+    // `IgniteBurnFaster` INC (P6-2b).
+    (
+        "damaging_ailments_deal_damage_+%_faster",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            NONE,
+            DAMAGING_AILMENTS,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1172: `DotMultiplier` BASE (P6-1).
+    (
+        "dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, NONE, NONE)],
     ),
     (
         "elemental_damage_+%",
@@ -408,8 +789,41 @@ pub const HIT_ROWS: &[HitRow] = &[
             Quantity::Damage,
             Op::Increased,
             1.0,
-            Flags::ATTACK,
+            Flags::KEYWORD_ATTACK,
             Flags::ELEMENTAL,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1011: `BleedFaster` INC (P6-2c).
+    (
+        "faster_bleed_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::BLEED,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 758: `IgniteBurnFaster` INC (P6-2b).
+    (
+        "faster_burn_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::IGNITE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 761: `PoisonFaster` INC (P6-2c).
+    (
+        "faster_poison_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentFaster),
+            Op::Increased,
+            1.0,
+            Flags::POISON,
+            NONE,
         )],
     ),
     (
@@ -432,6 +846,22 @@ pub const HIT_ROWS: &[HitRow] = &[
         "fire_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_FIRE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1175: `FireDotMultiplier` BASE (P6-1).
+    (
+        "fire_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::FIRE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 998: `BleedChance` BASE 100 (P6-2c).
+    (
+        "global_bleed_on_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "global_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -447,6 +877,62 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "global_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // PoB `SkillStatMap.lua` 1026: `PoisonChance` BASE 100 (P6-2c).
+    (
+        "global_poison_on_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
+            Op::Base,
+            0.01,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1129: `EnemyIgniteDuration` INC (P6-2b).
+    (
+        "ignite_duration_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::Increased,
+            1.0,
+            Flags::IGNITE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1717: `ImpaleEffect` INC (P6-2d).
+    (
+        "impale_debuff_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleEffect),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1711: `ImpaleChance` BASE (P6-2d).
+    (
+        "impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB: `ImpaleStacksMax` BASE (the character template's stat, also on
+    // items; P6-2d).
+    (
+        "impaled_debuff_number_of_reflected_hits",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleStacksMax),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     (
         "lightning_critical_strike_chance_+%",
@@ -467,6 +953,17 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "lightning_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_LIGHTNING, NONE)],
+    ),
+    // P6-11b: "#% increased Attack Speed with Maces or Sceptres": `Speed` INC, `ModFlag.Mace`, `Hit`, `Attack`.
+    (
+        "mace_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::MACE.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
     ),
     (
         "maximum_added_lightning_damage_from_skill",
@@ -492,9 +989,49 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11b: "Attacks with Melee Weapons deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.WeaponMelee` and `Ailment`.
+    (
+        "melee_weapon_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_MELEE.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Melee Critical Strike Multiplier": `CritMultiplier` BASE, `ModFlag.Melee`.
+    (
+        "melee_weapon_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::MELEE, NONE)],
+    ),
     (
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with One Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon1H`, `WeaponMelee`, `Hit`.
+    (
+        "one_handed_melee_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WEAPON_1H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Axes": `PhysicalDamage` INC, `ModFlag.Axe` and `Hit`.
+    (
+        "physical_axe_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::AXE).union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "physical_damage_+%",
@@ -507,6 +1044,127 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "physical_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_PHYSICAL, NONE)],
+    ),
+    // PoB `ModParser.lua` 739 ("physical damage over time multiplier"):
+    // `PhysicalDotMultiplier` BASE (P6-1).
+    (
+        "physical_dot_multiplier_+",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            1.0,
+            Flags::PHYSICAL,
+            NONE,
+        )],
+    ),
+    // P3-8n, P6-11b review: "#% increased Physical Damage with Staves":
+    // `PhysicalDamage` INC with `ModFlag.Staff` and `ModFlag.Hit`
+    // (`ModParser.lua` 939; the hand's weapon flag, P3-8n read it from the
+    // `UsingStaff` state).
+    (
+        "physical_staff_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::STAFF).union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Swords": `PhysicalDamage` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "physical_sword_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL.union(Flags::SWORD).union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 1169: `DotMultiplier` BASE with
+    // `KeywordFlag.Poison` (P6-2c).
+    (
+        "poison_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::POISON, NONE)],
+    ),
+    // PoB `ModParser.lua` 719 ("projectile damage"): `Damage` INC with
+    // `ModFlag.Projectile` (P6-1).
+    (
+        "projectile_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PROJECTILE,
+            NONE,
+        )],
+    ),
+    // P6-11b review: "Damage with Weapons Penetrates #% Elemental
+    // Resistances": `ElementalPenetration` BASE with `ModFlag.Weapon`
+    // (each hand's weapon flag).
+    (
+        "reduce_enemy_elemental_resistance_with_weapons_%",
+        &[
+            (
+                Quantity::Penetration(FIRE_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(COLD_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                Flags::WEAPON,
+                NONE,
+            ),
+        ],
+    ),
+    // P3-8n, P6-11b review: "Damage with Weapons Penetrates #% Fire
+    // Resistance": `FirePenetration` BASE with `ModFlag.Weapon` (each hand's
+    // weapon flag; P3-8n read it from a main-hand state).
+    (
+        "reduce_enemy_fire_resistance_with_weapons_%",
+        &[(
+            Quantity::Penetration(FIRE_T),
+            Op::Base,
+            1.0,
+            Flags::WEAPON,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 962: `SkillPhysicalDamageConvertToCold` BASE
+    // (P6-6a, the skill sweep).
+    (
+        "skill_physical_damage_%_to_convert_to_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, COLD_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // PoB `SkillStatMap.lua` 965: `SkillPhysicalDamageConvertToFire` BASE
+    // (P6-6a, the skill sweep).
+    (
+        "skill_physical_damage_%_to_convert_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, FIRE_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     (
         "skill_physical_damage_%_to_convert_to_lightning",
@@ -602,13 +1260,61 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_minimum_base_physical_damage",
         &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1714: `ImpaleChance` BASE with
+    // `KeywordFlag.Spell` (P6-2d).
+    (
+        "spells_impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_SPELL,
+            NONE,
+        )],
+    ),
+    // P6-2b, P6-11b review: "Staff Attacks deal #% increased Damage with
+    // Ailments": `Damage` INC with `ModFlag.Ailment` and `ModFlag.Staff`
+    // (`ModParser.lua` 1111): the hand's weapon flag, which an ailment keeps
+    // (`WeaponMask`); P6-2b read it from `UsingStaff` with the attack keyword.
+    (
+        "staff_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::STAFF.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Staves": `CritChance` INC, `ModFlag.Staff` and `Hit`.
+    (
+        "staff_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Staff Attacks deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Staff`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "staff_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::STAFF,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
     (
         "support_attack_skills_elemental_damage_+%_final",
         &[(
             Quantity::Damage,
             Op::More,
             1.0,
-            Flags::ATTACK,
+            Flags::KEYWORD_ATTACK,
             Flags::ELEMENTAL,
         )],
     ),
@@ -634,6 +1340,265 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_melee_physical_damage_attack_speed_+%_final",
         &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
     ),
+    // PoB `Data/Skills/sup_str.lua` 3660 (Melee Physical Damage): `Damage`
+    // MORE with `ModFlag.MeleeHit` and `KeywordFlag.Bleed` or `Poison`
+    // (P6-2c).
+    (
+        "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE_HIT,
+            Flags::BLEED.union(Flags::POISON),
+        )],
+    ),
+    // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_accuracy_rating",
+        &[(
+            Quantity::Accuracy,
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Swords": `Accuracy` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Sword Attacks deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Sword` and `Ailment`.
+    (
+        "sword_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Swords": `Speed` INC, `ModFlag.Sword`, `Hit`, `Attack`.
+    (
+        "sword_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Swords": `CritChance` INC, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Swords": `CritMultiplier` BASE, `ModFlag.Sword` and `Hit`.
+    (
+        "sword_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Damage with Swords": `Damage` INC, `ModFlag.Sword` and `Hit` (ModParser "with swords").
+    (
+        "sword_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Two Handed Melee Weapons": `Speed` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`, `Attack`.
+    (
+        "two_handed_melee_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT)
+                .union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Two Handed Melee Weapons": `CritChance` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Two Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Physical Damage with Two Handed Melee Weapons": `PhysicalDamage` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    (
+        "two_handed_melee_physical_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PHYSICAL
+                .union(Flags::WEAPON_2H)
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Attacks with Two Handed Melee Weapons deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Ailment` (in PoB's `WeaponMask`, which an ailment keeps).
+    (
+        "two_handed_melee_weapon_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H
+                .union(Flags::WEAPON_MELEE)
+                .union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "Attacks with Two Handed Melee Weapons deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Weapon2H` and `WeaponMelee`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "two_handed_melee_weapon_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H.union(Flags::WEAPON_MELEE),
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
+    // P6-11b: "#% increased Accuracy Rating with Wands": `Accuracy` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_accuracy_rating_+%",
+        &[(
+            Quantity::Accuracy,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed with Wands": `Speed` INC, `ModFlag.Wand`, `Hit`, `Attack`.
+    (
+        "wand_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT).union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Critical Strike Chance with Wands": `CritChance` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "+#% to Critical Strike Multiplier with Wands": `CritMultiplier` BASE, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11c: "#% increased Damage with Wands": `Damage` INC, `ModFlag.Wand`
+    // and `Hit` (`ModParser.lua` 945, "with wands").
+    (
+        "wand_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11b: "#% increased Elemental Damage with Wands": `ElementalDamage` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "wand_elemental_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            Flags::ELEMENTAL,
+        )],
+    ),
+    // P6-11b: "Wand Attacks deal #% increased Damage with Hits and Ailments": `Damage` INC, `ModFlag.Wand`, `KeywordFlag.Hit` or `Ailment`.
+    (
+        "wand_hit_and_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WAND,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
 ];
 
 /// Whether `quantity` is read only by the main skill's hit: an effect of
@@ -651,6 +1616,18 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Accuracy
             | Quantity::AddedDamage(..)
             | Quantity::Penetration(..)
+            | Quantity::DotMultiplier
+            | Quantity::Poe1(
+                Poe1Quantity::AilmentChance(..)
+                    | Poe1Quantity::CannotInflict(..)
+                    | Poe1Quantity::ImpaleChance
+                    | Poe1Quantity::ImpaleEffect
+                    | Poe1Quantity::ImpaleStacksMax
+                    | Poe1Quantity::AilmentDuration
+                    | Poe1Quantity::AilmentFaster
+                    | Poe1Quantity::AilmentSlower
+                    | Poe1Quantity::AilmentEffect
+            )
             | Quantity::Poe1(
                 Poe1Quantity::SkillBaseDamage(..)
                     | Poe1Quantity::SkillConversion(..)
@@ -668,6 +1645,13 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
 /// its skill data; P3-9b reads the game's stat instead).
 pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
 
+/// A gem's "always hits" (P6-6a review): PoB's `skill("cannotBeEvaded")`
+/// (`SkillStatMap.lua` 145), which `CalcOffence.lua` 2162 reads as the
+/// `CannotBeEvaded` flag. Only through a gem: an item's "Hits can't be
+/// Evaded" is tagged with its hand (`ModCache.lua` 9458), not modelled, so
+/// on an item or a passive the stat stays unmapped (a reason).
+pub const ALWAYS_HIT_STAT: &str = "global_always_hit";
+
 /// The mapping of a gem's stats: the game's ([`Poe1Mapping`]), where every
 /// effect must be one only the skill's hit reads ([`is_hit_quantity`]);
 /// a stat with another effect is `Unmapped` (PoB applies a gem's stats to
@@ -678,8 +1662,21 @@ pub struct SkillMapping;
 
 impl StatMapping for SkillMapping {
     fn map(&self, stat: &StatId) -> StatMap {
-        if SKILL_FLAGS.contains(&stat.as_str()) {
+        if SKILL_FLAGS.contains(&stat.as_str())
+            || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
+            || stat.as_str() == super::hit::DOUBLE_HITS_STAT
+            || stat.as_str() == super::hit::ARROW_STAT
+        {
             return StatMap::NoEffect;
+        }
+        if stat.as_str() == ALWAYS_HIT_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
         }
         match Poe1Mapping.map(stat) {
             StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
@@ -730,6 +1727,69 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // P6-11b: "+#% Chance to Block Attack Damage while wielding a Staff":
+    // `BlockChance` BASE, `UsingStaff` (as `staff_block_%`).
+    (
+        "additional_staff_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+    // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
+    // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
+    // keyword, `UsingShield` (as the staff row).
+    (
+        "attack_ailment_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "#% increased Attack Damage while holding a Shield":
+    // `Damage` INC with `ModFlag.Attack`, `UsingShield`.
+    (
+        "attack_damage_+%_while_holding_a_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "Attack Skills deal #% increased Damage while holding a
+    // Shield": `Damage` INC with `KeywordFlag.Attack` (an attack's ailments
+    // too), `UsingShield`.
+    (
+        "attack_skills_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::KEYWORD_ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11a review: "#% increased Attack Speed while holding a Shield":
+    // `Speed` INC with `ModFlag.Attack`, `UsingShield`.
+    (
+        "attack_speed_+%_while_holding_shield",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11b: "#% increased Attack Speed while Dual Wielding": `Speed` INC,
+    // `ModFlag.Attack`, `DualWielding`.
+    (
+        "attack_speed_while_dual_wielding_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            states::DUAL_WIELDING,
+        )],
+    ),
     // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
     // ModParser.lua 1785), from the config (`poe1::conditions`).
@@ -783,6 +1843,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::SHOCKED_ENEMY_RECENTLY,
         )],
     ),
+    // P6-11b: "#% increased Damage while wielding a Wand": `Damage` INC,
+    // `UsingWand`.
+    (
+        "damage_+%_while_wielding_wand",
+        &[(Quantity::Damage, Op::Increased, NONE, states::USING_WAND)],
+    ),
     (
         "defences_+%_while_wielding_staff",
         &[
@@ -794,6 +1860,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
             (Quantity::Armour, Op::Increased, NONE, states::USING_STAFF),
             (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
+        ],
+    ),
+    // P6-11a: "+#% Chance to Block Attack Damage while Dual Wielding or
+    // holding a Shield": `BlockChance` BASE, `DualWielding` or `UsingShield`
+    // (PoB's `varList`); two rows, never both (a shield is no weapon).
+    (
+        "dual_wield_or_shield_block_%",
+        &[
+            (BLOCK, Op::Base, NONE, states::DUAL_WIELDING),
+            (BLOCK, Op::Base, NONE, states::USING_SHIELD),
         ],
     ),
     (
@@ -838,34 +1914,46 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::AT_CLOSE_RANGE,
         )],
     ),
-    // P3-8n: "Physical Damage with Staves": `PhysicalDamage` INC with
-    // `ModFlag.Staff` and `ModFlag.Hit` (939), which only an attack with a
-    // staff in the main hand has (a staff is two-handed).
+    // P6-11a: "#% increased Physical Attack Damage while holding a Shield":
+    // `PhysicalDamage` INC with `ModFlag.Attack`, `UsingShield`.
     (
-        "physical_staff_damage_+%",
+        "physical_attack_damage_+%_while_holding_a_shield",
         &[(
             Quantity::Damage,
             Op::Increased,
-            Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
-            states::USING_STAFF,
+            Flags::ATTACK.union(Flags::PHYSICAL),
+            states::USING_SHIELD,
         )],
     ),
-    // P3-8n: "Damage with Weapons Penetrates #% Fire Resistance"
-    // (`FirePenetration` BASE with `ModFlag.Weapon`, `ModParser.lua` 982),
-    // which an attack has when its hand holds a weapon
-    // (`CalcActiveSkill.lua` 209).
+    // P6-11a: "+#% Elemental Resistances while holding a Shield":
+    // `ElementalResist` BASE, `UsingShield`.
     (
-        "reduce_enemy_fire_resistance_with_weapons_%",
-        &[(
-            Quantity::Penetration(FIRE_T),
-            Op::Base,
-            Flags::ATTACK,
-            states::MAIN_HAND_WEAPON,
-        )],
+        "resist_all_elements_+%_while_holding_shield",
+        &[
+            (FIRE, Op::Base, NONE, states::USING_SHIELD),
+            (COLD, Op::Base, NONE, states::USING_SHIELD),
+            (LIGHTNING, Op::Base, NONE, states::USING_SHIELD),
+        ],
+    ),
+    // P6-11a: "+#% Chance to Block Attack Damage while holding a Shield":
+    // `BlockChance` BASE, `UsingShield`.
+    (
+        "shield_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_SHIELD)],
     ),
     (
         "shield_spell_block_%",
         &[(SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD)],
+    ),
+    // P6-11a: "+#% chance to Block Spell Damage while holding a Staff or
+    // Shield": `SpellBlockChance` BASE, `UsingStaff` or `UsingShield`; two
+    // rows, never both (a staff is two-handed).
+    (
+        "spell_block_chance_%_while_holding_staff_or_shield",
+        &[
+            (SPELL_BLOCK, Op::Base, NONE, states::USING_STAFF),
+            (SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD),
+        ],
     ),
     (
         "spell_block_with_staff_%",
@@ -1027,6 +2115,12 @@ pub const ROWS: &[Row] = &[
             (INT, Op::Increased, 1.0),
         ],
     ),
+    // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // MORE (P6-4b).
+    (
+        "basalt_flask_armour_+%_final",
+        &[(Quantity::Armour, Op::More, 1.0)],
+    ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
     ("base_dexterity", &[(DEX, Op::Base, 1.0)]),
@@ -1162,6 +2256,16 @@ pub const ROWS: &[Row] = &[
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
+    // "Flasks applied to you have #% increased Effect": PoB's `FlaskEffect`
+    // INC (`SkillStatMap.lua` 422); `poe1::flasks` reads it (P6-4b).
+    (
+        "flask_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::FlaskEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P3-8n: "Gain Convergence when you Hit a Unique Enemy"
     // (`Condition:CanGainConvergence`, 2661; `poe1::buffs`).
     (
@@ -1180,6 +2284,18 @@ pub const ROWS: &[Row] = &[
             (Quantity::Evasion, Op::Increased, 1.0),
         ],
     ),
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    // (`golem_*` stats are reasons for every minion type until P6-7b3b
+    // adds the type filter.)
+    (
+        "golem_immunity_to_elemental_damage",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
+    (
+        "golem_maximum_life_+%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
     // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
     // Resistances" (the enemy's `ElementalResist` BASE while ignited or
     // chilled, 4054; `poe1::damage_taken`).
@@ -1196,6 +2312,17 @@ pub const ROWS: &[Row] = &[
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
     ),
+    // "Magic Utility Flasks applied to you have #% increased Effect": PoB's
+    // `MagicUtilityFlaskEffect` INC (`ModParser.lua` 5180); `poe1::flasks`
+    // reads it (P6-4b).
+    (
+        "magic_utility_flask_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MagicUtilityFlaskEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     (
         "maximum_block_%",
         &[(Quantity::MaximumBlockChance, Op::Base, 1.0)],
@@ -1206,6 +2333,16 @@ pub const ROWS: &[Row] = &[
     ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
+    // P6-7b3a: a minion modifier PoB applies to the minion; read only
+    // by the minion step, as a reason, until P6-7b3b.
+    (
+        "minion_life_regeneration_rate_per_minute_%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
+    (
+        "minion_maximum_life_+%",
+        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
+    ),
     // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
     // hash; `collect` adds the node.
     (
@@ -1235,6 +2372,19 @@ pub const ROWS: &[Row] = &[
             (LIGHTNING, Op::Base, 1.0),
             (CHAOS, Op::Base, 1.0),
         ],
+    ),
+    // Silver Flask's buff flag, "Onslaught" in PoB's base data (the line
+    // PoB parses as the `Onslaught` condition, as the custom line); its
+    // effect with flask effect is `poe1::flasks`' (P6-4b).
+    (
+        "silver_flask_display_onslaught",
+        &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
+    ),
+    // Stibnite Flask's buff, "20% more Evasion Rating" in PoB's base data:
+    // `Evasion` MORE (P6-4b).
+    (
+        "stibnite_flask_evasion_rating_+%_final",
+        &[(Quantity::Evasion, Op::More, 1.0)],
     ),
     ("strength_+%", &[(STR, Op::Increased, 1.0)]),
     // P3-8n: Arcane Surge Support's cast speed (`ArcaneSurgeCastSpeed` MAX,
@@ -1306,13 +2456,26 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "%_of_your_and_your_minions_damage_cannot_be_reflected",
         "reflect",
     ),
+    // PoB `SkillStatMap.lua` 588: `AreaOfEffect` MORE, which feeds only
+    // radius outputs, as `base_skill_area_of_effect_+%` (P6-6a).
+    ("active_skill_area_of_effect_+%_final", "area"),
     // A skill's own base radius (PoB `skill("radius")`): it sets the area
     // PoB shows, which no slice field reads (P3-9b). Increased area stays
     // unmapped, as above.
     ("active_skill_base_area_of_effect_radius", "skill-radius"),
+    // PoB `SkillStatMap.lua` 570: `skill("radiusExtra")`, the area PoB
+    // shows, as the skill's own base radius (P6-6a).
+    ("active_skill_base_radius_+", "skill-radius"),
     (
         "active_skill_base_secondary_area_of_effect_radius",
         "skill-radius",
+    ),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    (
+        "active_skill_projectile_speed_+%_variation_final",
+        "display",
     ),
     // How the game describes a skill's areas, its visuals, its targeting:
     // nothing PoB computes from (P3-10, Smite).
@@ -1335,6 +2498,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
     ("always_shock", "ailment-chance"),
+    // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
+    // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
+    ("area_of_effect_+%_while_wielding_bow", "area"),
+    // P6-11b: "#% increased Area of Effect while wielding a Staff" (PoB:
+    // `AreaOfEffect` INC, `UsingStaff`): area.
+    ("area_of_effect_+%_while_wielding_staff", "area"),
     // P3-8n: "#% increased Area of Effect while you don't have
     // Convergence" (`AreaOfEffect` INC, not `Convergence`): area, as above.
     (
@@ -1361,6 +2530,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
     ),
+    // A skill marked a projectile skill (`base_is_projectile`): the skill's
+    // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
+    ("base_is_projectile", "skill type marker"),
     // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
     // counts fortification only while Fortified (`buffFortification`, a named
     // condition), and then only damage taken when hit and modifiers per
@@ -1396,6 +2568,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "cannot_be_stunned_if_have_been_stunned_or_blocked_stunning_hit_in_past_2_seconds",
         "stun",
     ),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("cannot_cancel_skill_before_contact_point", "display"),
     (
         "cannot_gain_corrupted_blood_while_you_have_at_least_5_stacks",
         "ailment-on-self",
@@ -1406,12 +2582,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ground-creation-chance",
     ),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
-    // "#% chance to Freeze, Shock and Ignite" (PoB `EnemyFreezeChance`,
-    // `EnemyShockChance`, `EnemyIgniteChance` BASE): a chance, as
-    // `base_chance_to_shock_%_from_skill` above; PoB's ailment chances
-    // (`CalcOffence.lua` 4262) set the chance on hit and the ailment's
-    // flags, never the enemy's shock or a hit (P3-8c).
-    ("chance_to_freeze_shock_ignite_%", "ailment-chance"),
     (
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
@@ -1437,6 +2607,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    (
+        "damage_cannot_be_reflected_or_leech_if_used_by_other_object",
+        "display",
+    ),
     ("debuff_time_passed_+%", "ailment-on-self"),
     ("degen_effect_+%", "damage-taken"),
     // P3-8n: Intensify's text; PoB maps no modifier.
@@ -1485,8 +2662,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("gloves_freeze_proliferation_radius", "freeze"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
-    ("golem_immunity_to_elemental_damage", "minion-defence"),
-    ("golem_maximum_life_+%", "minion-defence"),
     // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
     // cost; the stats that add damage from it stay unmapped
     // ([`NO_EFFECT_DEPENDS_ON`]).
@@ -1548,11 +2723,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
     ("melee_attack_number_of_spirit_strikes", "targeting"),
-    (
-        "minion_life_regeneration_rate_per_minute_%",
-        "minion-defence",
-    ),
-    ("minion_maximum_life_+%", "minion-defence"),
     ("movement_speed_+%_per_nearby_enemy", "movement-speed"),
     (
         "movement_speed_+%_while_on_burning_ground",
@@ -1567,6 +2737,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "pantheon_shakari_self_poison_duration_+%_final",
         "ailment-on-self",
     ),
+    // Quartz Flask's "Phasing" (PoB's `Condition:Phasing`, `ModParser.lua`
+    // 3972): only modifiers read it (unmapped, or an unsettled condition)
+    // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
+    // not modelled, a reason of their own) (P6-4b).
+    ("phase_through_objects", "condition"),
     (
         "physical_damage_over_time_taken_+%_while_moving",
         "damage-taken",
@@ -1599,11 +2774,25 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "damage-taken",
     ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("show_number_of_projectiles", "display"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_can_add_multiple_charges_per_action", "display"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_cannot_be_stunned_before_contact_point", "display"),
     ("skill_mana_cost_+_with_non_channelling_skills", "mana-cost"),
+    // P6-6a (the skill sweep): a skill's constant stat no stat map reads
+    // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
+    // module names: PoB reads it into no output.
+    ("skill_override_pvp_scaling_time_ms", "display"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
-    // P3-8n: "Staff Attacks deal #% increased Damage with Ailments": ailments.
-    ("staff_ailment_damage_+%", "ailment-damage"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
     // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
     // regeneration); its cast speed and spell damage are `poe1::buffs`.
@@ -1617,12 +2806,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "regeneration",
     ),
     ("support_inspiration_mana_cost_+%_final", "mana-cost"),
-    // Melee Physical Damage's more damage with poison and bleeding: no
-    // ailment is in the slice.
-    (
-        "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
-        "ailment-damage",
-    ),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
     // the channelling time to no modifier, the speed per momentum lost to
     // `MovementSpeed`); its attack speed is `poe1::stacks`.
@@ -1799,6 +2982,9 @@ pub const NO_EFFECT_PREFIXES: &[(&str, &str)] = &[
     ),
     ("local_affliction_notable_", "cluster jewel: adds a notable"),
     ("local_jewel_expansion_", "cluster jewel: adds nodes"),
+    // A gem's quality display stats (`quality_display_<skill>_is_gem`): text
+    // on the gem only; PoB maps none of them (P6-1).
+    ("quality_display_", "gem display text"),
     (
         "local_unique_jewel_grants_x_empty_passives",
         "cluster jewel: adds nodes that grant nothing",
@@ -1813,6 +2999,7 @@ impl StatMapping for Poe1Mapping {
             || NO_EFFECT_PREFIXES
                 .iter()
                 .any(|(p, _)| stat.as_str().starts_with(p))
+            || super::skill_no_output::contains(stat.as_str())
         {
             return StatMap::NoEffect;
         }
@@ -2084,10 +3271,9 @@ impl StatMapping for PieceMapping {
 /// increased Critical Strike Chance"); "No Physical Damage" (the game's
 /// `local_weapon_no_physical_damage`, 0 on the canonical increased physical
 /// damage line; not 0 is a reason, `hit::weapon_data`); and "+# to
-/// Accuracy Rating" as the
-/// character's `Accuracy` BASE for main-hand attacks (its
-/// `MainHandAttack` condition holds for every attack the engine computes,
-/// which use the main hand alone).
+/// Accuracy Rating" as the weapon's own accuracy (PoB: `Accuracy` BASE with
+/// the hand's `MainHandAttack` or `OffHandAttack` condition), which only that
+/// hand's attack pass reads (Phase 6, dual wielding).
 type WeaponRow = (&'static str, &'static [(Quantity, Op)]);
 
 const fn weapon(value: WeaponValue) -> Quantity {
@@ -2097,7 +3283,10 @@ const fn weapon(value: WeaponValue) -> Quantity {
 /// The local stats of weapons (`stat_descriptions.txt`, each with `local`
 /// set in the stats table).
 pub const WEAPON_ROWS: &[WeaponRow] = &[
-    ("local_accuracy_rating", &[(Quantity::Accuracy, Op::Base)]),
+    (
+        "local_accuracy_rating",
+        &[(weapon(WeaponValue::Accuracy), Op::Base)],
+    ),
     (
         "local_attack_speed_+%",
         &[(weapon(WeaponValue::AttackSpeed), Op::Increased)],
@@ -2199,6 +3388,31 @@ impl StatMapping for WeaponMapping {
     }
 }
 
+/// The mapping of a weapon in the off hand's lines (Phase 6, dual
+/// wielding): [`WeaponMapping`]'s, each weapon value on the off hand's
+/// weapon ([`super::Hand::Off`]).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OffHandWeaponMapping;
+
+impl StatMapping for OffHandWeaponMapping {
+    fn map(&self, stat: &StatId) -> StatMap {
+        match WeaponMapping.map(stat) {
+            StatMap::Effects(effects) => StatMap::Effects(
+                effects
+                    .into_iter()
+                    .map(|mut e| {
+                        if let Quantity::Poe1(Poe1Quantity::Weapon(v)) = e.quantity {
+                            e.quantity = super::Hand::Off.weapon(v);
+                        }
+                        e
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2233,6 +3447,92 @@ mod tests {
                 .collect(),
             other => panic!("{stat}: {other:?}"),
         }
+    }
+
+    /// The weapon-type rows (P6-11b, P6-11c): each with PoB's weapon
+    /// `ModFlag`s and keyword flags as `Data/ModCache.lua` gives them.
+    #[test]
+    fn weapon_type_stats_should_map_as_pob_reads_them() {
+        let all = |f: Flags| Conditions::none().with_all(f);
+        let inc = |q: Quantity, f: Flags| vec![(q, Op::Increased, 1.0, all(f))];
+        let hit_or_ailment = |f: Flags| {
+            vec![(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                Conditions::none()
+                    .with_all(f)
+                    .with_any(Flags::HIT.union(Flags::AILMENT)),
+            )]
+        };
+        // `flags=131076`: Bow, Hit; `131077`: with Attack.
+        assert_eq!(
+            hit("bow_damage_+%"),
+            inc(Quantity::Damage, Flags::BOW | Flags::HIT)
+        );
+        assert_eq!(
+            hit("bow_attack_speed_+%"),
+            inc(Quantity::Speed, Flags::BOW | Flags::HIT | Flags::ATTACK)
+        );
+        // `keywordFlags=1024` (Bow), with `flags=8` (Dot).
+        assert_eq!(
+            hit("damage_over_time_+%_with_bow_skills"),
+            inc(Quantity::Damage, Flags::DOT | Flags::KEYWORD_BOW)
+        );
+        // `flags=603979781`: Weapon2H, WeaponMelee, Hit, Attack.
+        assert_eq!(
+            hit("two_handed_melee_attack_speed_+%"),
+            inc(
+                Quantity::Speed,
+                Flags::WEAPON_2H | Flags::WEAPON_MELEE | Flags::HIT | Flags::ATTACK
+            )
+        );
+        // `flags=67110912`: WeaponMelee, Ailment.
+        assert_eq!(
+            hit("melee_weapon_ailment_damage_+%"),
+            inc(Quantity::Damage, Flags::WEAPON_MELEE | Flags::AILMENT)
+        );
+        // `flags=8388608, keywordFlags=786432`: Wand; Hit or Ailment.
+        assert_eq!(
+            hit("wand_hit_and_ailment_damage_+%"),
+            hit_or_ailment(Flags::WAND)
+        );
+        assert_eq!(
+            hit("wand_damage_+%"),
+            inc(Quantity::Damage, Flags::WAND | Flags::HIT)
+        );
+        // The staff lines on the weapon flag (P6-11c review).
+        assert_eq!(
+            hit("physical_staff_damage_+%"),
+            inc(
+                Quantity::Damage,
+                Flags::PHYSICAL | Flags::STAFF | Flags::HIT
+            )
+        );
+        assert_eq!(
+            hit("staff_ailment_damage_+%"),
+            inc(Quantity::Damage, Flags::STAFF | Flags::AILMENT)
+        );
+        // `flags=8192`: Weapon.
+        let pen = |t| (Quantity::Penetration(t), Op::Base, 1.0, all(Flags::WEAPON));
+        assert_eq!(
+            hit("reduce_enemy_fire_resistance_with_weapons_%"),
+            [pen(FIRE_T)]
+        );
+        assert_eq!(
+            hit("reduce_enemy_elemental_resistance_with_weapons_%"),
+            [pen(FIRE_T), pen(COLD_T), pen(LIGHTNING_T)]
+        );
+        // Added damage "with Wand Attacks": Wand, Hit.
+        assert_eq!(
+            hit("attack_minimum_added_lightning_damage_with_wand"),
+            [(
+                added(LIGHTNING_T, MIN),
+                Op::Base,
+                1.0,
+                all(Flags::WAND | Flags::HIT)
+            )]
+        );
     }
 
     #[test]
@@ -2403,7 +3703,7 @@ mod tests {
                 Op::Increased,
                 1.0,
                 Conditions::none()
-                    .with_all(Flags::ATTACK)
+                    .with_all(Flags::KEYWORD_ATTACK)
                     .with_any(Flags::ELEMENTAL)
             )]
         );
@@ -2428,10 +3728,11 @@ mod tests {
                 "{stat}"
             );
         }
-        assert_eq!(
+        // P6-2b: its ignite chance is read by the ignite.
+        assert!(matches!(
             Poe1Mapping.map(&StatId::new("chance_to_freeze_shock_ignite_%")),
-            StatMap::NoEffect
-        );
+            StatMap::Effects(_)
+        ));
         // P3-8j: minion damage is a minion modifier (`poe1::minions`).
         assert!(matches!(
             Poe1Mapping.map(&StatId::new("minion_damage_+%")),
@@ -2745,7 +4046,10 @@ mod tests {
             )]
         );
         for (name, t) in types.into_iter().chain([("physical", PHYS)]) {
-            for (kind, flag) in [("attack", Flags::ATTACK), ("spell", Flags::SPELL)] {
+            for (kind, flag) in [
+                ("attack", Flags::KEYWORD_ATTACK),
+                ("spell", Flags::KEYWORD_SPELL),
+            ] {
                 assert_eq!(
                     hit(&format!("{name}_damage_with_{kind}_skills_+%")),
                     [(
@@ -2798,7 +4102,7 @@ mod tests {
                 Quantity::Damage,
                 Op::More,
                 1.0,
-                all(Flags::ATTACK).with_any(Flags::ELEMENTAL)
+                all(Flags::KEYWORD_ATTACK).with_any(Flags::ELEMENTAL)
             )]
         );
         assert_eq!(
@@ -2897,7 +4201,7 @@ mod tests {
         );
         assert_eq!(
             local("local_accuracy_rating"),
-            [(Quantity::Accuracy, Op::Base, 1.0)]
+            [(weapon(WeaponValue::Accuracy), Op::Base, 1.0)]
         );
         // Other lines are the game's.
         assert_eq!(
@@ -2925,8 +4229,9 @@ mod tests {
                     [
                         states::USING_STAFF,
                         states::USING_SHIELD,
-                        states::MAIN_HAND_WEAPON,
+                        states::USING_WAND,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+                        states::DUAL_WIELDING,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -3010,23 +4315,6 @@ mod tests {
                 )],
             ),
             (
-                "physical_staff_damage_+%",
-                vec![staff(
-                    Quantity::Damage,
-                    Op::Increased,
-                    Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
-                )],
-            ),
-            (
-                "reduce_enemy_fire_resistance_with_weapons_%",
-                vec![(
-                    Quantity::Penetration(FIRE_T),
-                    Op::Base,
-                    Flags::ATTACK,
-                    states::MAIN_HAND_WEAPON,
-                )],
-            ),
-            (
                 "shield_spell_block_%",
                 vec![shield(SPELL_BLOCK, Op::Base, NONE)],
             ),
@@ -3067,6 +4355,76 @@ mod tests {
                 )],
             ),
         );
+        // P6-11a: the shield and dual wielding rows.
+        let dual = |q: Quantity, op: Op, all: Flags| (q, op, all, states::DUAL_WIELDING);
+        expected.extend([
+            // P6-11b: the weapon-condition rows.
+            (
+                "additional_staff_block_%",
+                vec![staff(BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "attack_speed_while_dual_wielding_+%",
+                vec![dual(Quantity::Speed, Op::Increased, Flags::ATTACK)],
+            ),
+            (
+                "damage_+%_while_wielding_wand",
+                vec![(Quantity::Damage, Op::Increased, NONE, states::USING_WAND)],
+            ),
+            (
+                "attack_damage_+%_while_holding_a_shield",
+                vec![shield(Quantity::Damage, Op::Increased, Flags::ATTACK)],
+            ),
+            (
+                "attack_skills_damage_+%_while_holding_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::KEYWORD_ATTACK,
+                )],
+            ),
+            (
+                "attack_speed_+%_while_holding_shield",
+                vec![shield(Quantity::Speed, Op::Increased, Flags::ATTACK)],
+            ),
+            (
+                "attack_ailment_damage_+%_while_holding_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+                )],
+            ),
+            (
+                "dual_wield_or_shield_block_%",
+                vec![dual(BLOCK, Op::Base, NONE), shield(BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "physical_attack_damage_+%_while_holding_a_shield",
+                vec![shield(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK.union(Flags::PHYSICAL),
+                )],
+            ),
+            (
+                "resist_all_elements_+%_while_holding_shield",
+                vec![
+                    shield(FIRE, Op::Base, NONE),
+                    shield(COLD, Op::Base, NONE),
+                    shield(LIGHTNING, Op::Base, NONE),
+                ],
+            ),
+            ("shield_block_%", vec![shield(BLOCK, Op::Base, NONE)]),
+            (
+                "spell_block_chance_%_while_holding_staff_or_shield",
+                vec![
+                    staff(SPELL_BLOCK, Op::Base, NONE),
+                    shield(SPELL_BLOCK, Op::Base, NONE),
+                ],
+            ),
+        ]);
+        expected.sort_by(|a, b| a.0.cmp(b.0));
         assert_eq!(STATE_ROWS.len(), expected.len());
         for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {
             assert_eq!(id, want_id);
@@ -3081,5 +4439,45 @@ mod tests {
                 .with_all(Flags::SPELL)
                 .with_state(ConditionKey::new(states::USING_STAFF), true)
         );
+    }
+
+    /// P6-6a review: "always hits" acts through a gem only; every stat of
+    /// `skill_no_output` is `NoEffect` through the game's and the gem's
+    /// mappings; fire and cold skill conversion reach the skill.
+    #[test]
+    fn skill_stats_batch_one_should_map_as_pob_reads_them() {
+        let id = StatId::new;
+        match SkillMapping.map(&id(ALWAYS_HIT_STAT)) {
+            StatMap::Effects(e) => {
+                assert_eq!(e.len(), 1);
+                assert_eq!(e[0].quantity, Quantity::Poe1(Poe1Quantity::CannotBeEvaded));
+                assert_eq!(e[0].op, Op::Flag);
+            }
+            other => panic!("{other:?}"),
+        }
+        assert_eq!(Poe1Mapping.map(&id(ALWAYS_HIT_STAT)), StatMap::Unmapped);
+        assert_eq!(WeaponMapping.map(&id(ALWAYS_HIT_STAT)), StatMap::Unmapped);
+        for s in crate::poe1::skill_no_output::STATS {
+            assert_eq!(Poe1Mapping.map(&id(s)), StatMap::NoEffect, "{s}");
+            assert_eq!(SkillMapping.map(&id(s)), StatMap::NoEffect, "{s}");
+        }
+        for (s, t) in [
+            (
+                "skill_physical_damage_%_to_convert_to_fire",
+                DamageType::Fire,
+            ),
+            (
+                "skill_physical_damage_%_to_convert_to_cold",
+                DamageType::Cold,
+            ),
+        ] {
+            let StatMap::Effects(e) = SkillMapping.map(&id(s)) else {
+                panic!("{s}");
+            };
+            assert_eq!(
+                e[0].quantity,
+                Quantity::Poe1(Poe1Quantity::SkillConversion(DamageType::Physical, t))
+            );
+        }
     }
 }

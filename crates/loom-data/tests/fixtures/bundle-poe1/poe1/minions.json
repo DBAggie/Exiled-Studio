@@ -1,0 +1,57 @@
+{
+ "object_stats": [
+  {
+   "object_type": "Test/Monsters/Minion",
+   "stats": [
+    [
+     "set_item_drop_slots",
+     0
+    ],
+    [
+     "set_monster_no_drops_or_experience",
+     1
+    ]
+   ]
+  }
+ ],
+ "types": [
+  {
+   "accuracy": 100,
+   "alt_life1": false,
+   "alt_life2": false,
+   "armour": 0,
+   "damage_ignores_attack_speed": false,
+   "damage_spread": 20,
+   "energy_shield": 0,
+   "evasion": 0,
+   "id": "TestMonsterType",
+   "player_minion": true,
+   "resistances": [
+    40,
+    40,
+    40,
+    20
+   ]
+  }
+ ],
+ "varieties": [
+  {
+   "attack_range": 10,
+   "attack_time": 1000,
+   "damage": 100,
+   "id": "Test/Monsters/Minion1",
+   "life": 100,
+   "main_hand": null,
+   "mods": [],
+   "monster_type": "TestMonsterType",
+   "name": "Test Minion",
+   "object_type": "Test/Monsters/Minion",
+   "off_hand": null,
+   "skills": [],
+   "special_mods": [],
+   "tags": [
+    "undead"
+   ]
+  }
+ ]
+}

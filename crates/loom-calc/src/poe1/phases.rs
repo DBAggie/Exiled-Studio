@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 7] = [
+pub const PHASES: [Phase; 9] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -54,8 +54,16 @@ pub const PHASES: [Phase; 7] = [
         run: unreserved,
     },
     Phase {
+        name: "minion",
+        run: super::minion_actor::phase,
+    },
+    Phase {
         name: "hit",
         run: super::hit::hit,
+    },
+    Phase {
+        name: "dot",
+        run: super::dot::dot,
     },
 ];
 
@@ -332,6 +340,39 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     Ok(())
 }
 
+/// A minion's life (P6-7b3a, `doActorLifeMana` for `env.minion`):
+/// `override or max(round(base x inc x more), 1)`, without the strength
+/// bonus (a minion's Strength is 0 until `StrengthAddedToMinions`,
+/// P6-7b3b).
+pub(super) fn minion_life(calc: &mut Calc<'_>) -> Result<(Valued, Reasons), CalcError> {
+    let parts = chain(
+        calc,
+        Quantity::Life,
+        &[],
+        &[],
+        Order::Left,
+        Term::Step("unrounded"),
+    )?;
+    let rounded = round(calc, parts.product, Term::Step("rounded"))?;
+    let life = at_least(calc, rounded, "minimum", 1.0)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let mut reasons = parts.reasons;
+    match store.override_value(graph, Quantity::Life, &cx)? {
+        Some(q) => {
+            reasons.extend(&q.reasons);
+            Ok((
+                Valued {
+                    node: q.node,
+                    value: q.value,
+                },
+                reasons,
+            ))
+        }
+        None => Ok((life, reasons)),
+    }
+}
+
 /// A constant of a rule.
 pub(super) fn constant(
     calc: &mut Calc<'_>,
@@ -466,64 +507,77 @@ pub(super) fn factor(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Value
 /// (`collect`); elemental stats are mapped to each element. The
 /// breakdown's terms are `step.min`, `step.max`, `step.total`.
 fn resistances(calc: &mut Calc<'_>) -> Result<(), CalcError> {
-    for t in [
-        DamageType::Fire,
-        DamageType::Cold,
-        DamageType::Lightning,
-        DamageType::Chaos,
-    ] {
-        let mut reasons = Reasons::new();
-        let quantity = Quantity::Resistance(t);
-        let base = sum(calc, quantity, Op::Base, Term::Base, &mut reasons)?;
-        let cx = calc.context(Flags::NONE);
-        let (store, graph) = calc.parts();
-        let inc = store.increased(graph, quantity, &cx)?;
-        let more = store.more(graph, quantity, &cx)?;
-        reasons.extend(&inc.reasons);
-        reasons.extend(&more.reasons);
-        let modifier = product(
-            calc,
-            &[
-                Valued {
-                    node: inc.node,
-                    value: inc.value,
-                },
-                Valued {
-                    node: more.node,
-                    value: more.value,
-                },
-            ],
-            Term::Step("modifier"),
-        )?;
-        let zero = constant(calc, "no-negative-modifier", 0.0)?;
-        let modifier = pair(
-            calc,
-            modifier,
-            zero,
-            Term::Step("modifier-at-least-zero"),
-            false,
-        )?;
-        let raw = product(calc, &[base, modifier], Term::Step("unrounded"))?;
-        let total = trunc(calc, raw, Term::Step("total"))?;
-
-        let max_base = sum(
-            calc,
-            Quantity::MaximumResistance(t),
-            Op::Base,
-            Term::Step("maximum-sum"),
-            &mut reasons,
-        )?;
-        let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
-        let max = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
-        let max = trunc(calc, max, Term::Step("max"))?;
-        let floor = constant(calc, "resistance-floor", RESIST_FLOOR)?;
-        let min = trunc(calc, floor, Term::Step("min"))?;
-
-        let capped = pair(calc, total, max, Term::Step("capped"), true)?;
-        let value = pair(calc, capped, min, Term::Result, false)?;
+    for t in RESISTANCES {
+        let (value, reasons) = resistance(calc, t)?;
         calc.set(Field::Resistance(t), query(value, reasons));
     }
     Ok(())
+}
+
+/// The resistances, in PoB's order.
+pub(super) const RESISTANCES: [DamageType; 4] = [
+    DamageType::Fire,
+    DamageType::Cold,
+    DamageType::Lightning,
+    DamageType::Chaos,
+];
+
+/// One resistance of the current actor ([`resistances`]; P6-7b3a: the
+/// minion's too, `calcs.resistances(actor)`).
+pub(super) fn resistance(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+) -> Result<(Valued, Reasons), CalcError> {
+    let mut reasons = Reasons::new();
+    let quantity = Quantity::Resistance(t);
+    let base = sum(calc, quantity, Op::Base, Term::Base, &mut reasons)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let inc = store.increased(graph, quantity, &cx)?;
+    let more = store.more(graph, quantity, &cx)?;
+    reasons.extend(&inc.reasons);
+    reasons.extend(&more.reasons);
+    let modifier = product(
+        calc,
+        &[
+            Valued {
+                node: inc.node,
+                value: inc.value,
+            },
+            Valued {
+                node: more.node,
+                value: more.value,
+            },
+        ],
+        Term::Step("modifier"),
+    )?;
+    let zero = constant(calc, "no-negative-modifier", 0.0)?;
+    let modifier = pair(
+        calc,
+        modifier,
+        zero,
+        Term::Step("modifier-at-least-zero"),
+        false,
+    )?;
+    let raw = product(calc, &[base, modifier], Term::Step("unrounded"))?;
+    let total = trunc(calc, raw, Term::Step("total"))?;
+
+    let max_base = sum(
+        calc,
+        Quantity::MaximumResistance(t),
+        Op::Base,
+        Term::Step("maximum-sum"),
+        &mut reasons,
+    )?;
+    let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
+    let max = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
+    let max = trunc(calc, max, Term::Step("max"))?;
+    let floor = constant(calc, "resistance-floor", RESIST_FLOOR)?;
+    let min = trunc(calc, floor, Term::Step("min"))?;
+
+    let capped = pair(calc, total, max, Term::Step("capped"), true)?;
+    let value = pair(calc, capped, min, Term::Result, false)?;
+    Ok((value, reasons))
 }
 
 /// PoB's `data.misc.MaxResistCap`: no maximum resistance above 90%.
@@ -549,12 +603,44 @@ const SUPPRESSION_CHANCE_CAP: f64 = 100.0;
 /// block", block chance equal to another) come from stats the mapping
 /// does not know, which make the fields `Partial`.
 fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
-    let cx = calc.context(Flags::NONE);
     let mut reasons = Reasons::new();
+    let shield = shield_block(calc, &mut reasons)?;
+    let AttackBlock {
+        value,
+        reasons,
+        inc,
+        more,
+        modifier_reasons,
+    } = attack_block(calc, shield, reasons)?;
+    calc.set(Field::BlockChance, query(value, reasons));
+    spell_block(calc, inc, more, &modifier_reasons)
+}
+
+/// Attack block's value and its shared modifier ([`attack_block`]).
+pub(super) struct AttackBlock {
+    /// The chance to block attack damage.
+    pub(super) value: Valued,
+    /// Its reasons.
+    pub(super) reasons: Reasons,
+    /// The increase factor, which spell block shares.
+    inc: Valued,
+    /// The more factor, which spell block shares.
+    more: Valued,
+    /// The modifier's reasons.
+    modifier_reasons: Reasons,
+}
+
+/// The current actor's chance to block attack damage ([`block`]; P6-7b3a:
+/// the minion's too, `calcs.defence(env, actor)`), with the shield's own
+/// chance as an extra base term when there is one.
+pub(super) fn attack_block(
+    calc: &mut Calc<'_>,
+    shield: Option<Valued>,
+    mut reasons: Reasons,
+) -> Result<AttackBlock, CalcError> {
+    let cx = calc.context(Flags::NONE);
     let mut base_terms = Vec::new();
-    if let Some(shield) = shield_block(calc, &mut reasons)? {
-        base_terms.push(shield);
-    }
+    base_terms.extend(shield);
     base_terms.push(sum(
         calc,
         Quantity::BlockChance,
@@ -590,8 +676,23 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let cap = constant(calc, "block-chance-cap", BLOCK_CHANCE_CAP)?;
     let max = pair(calc, max_base, cap, Term::Step("max"), true)?;
     let value = pair(calc, rounded, max, Term::Result, true)?;
-    calc.set(Field::BlockChance, query(value, reasons));
+    Ok(AttackBlock {
+        value,
+        reasons,
+        inc,
+        more,
+        modifier_reasons,
+    })
+}
 
+/// Spell block and spell suppression ([`block`]): spell block shares
+/// attack block's increases and more.
+fn spell_block(
+    calc: &mut Calc<'_>,
+    inc: Valued,
+    more: Valued,
+    modifier_reasons: &Reasons,
+) -> Result<(), CalcError> {
     let mut reasons = Reasons::new();
     let base = sum(
         calc,
@@ -600,7 +701,7 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         Term::Base,
         &mut reasons,
     )?;
-    reasons.extend(&modifier_reasons);
+    reasons.extend(modifier_reasons);
     let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
     let rounded = round(calc, raw, Term::Step("total"))?;
     let max_base = sum(
@@ -902,41 +1003,54 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             Some(Field::Dexterity),
         ),
     ] {
-        let mut reasons = Reasons::new();
-        let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
-        let mut rows = Vec::new();
-        for slot in ArmourSlot::ALL {
-            if !has(
-                calc,
-                Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
-            ) {
-                continue;
-            }
-            let base = piece(calc, slot, defence, &mut reasons)?;
-            if base.value > 0.0 {
-                rows.push(product(calc, &[base, modifier], Term::Step(slot.row()))?);
-            }
-        }
-        let flat = sum(
-            calc,
-            quantity,
-            Op::Base,
-            Term::Step("base-effects"),
-            &mut reasons,
-        )?;
-        let base = total(calc, &[flat], Term::Base)?;
-        if base.value > 0.0 {
-            rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
-        }
-        let sum = total(calc, &rows, Term::Step("slots"))?;
-        let rounded = round(calc, sum, Term::Step("rounded"))?;
-        let value = at_least(calc, rounded, "minimum", 0.0)?;
+        let (value, reasons) = primary_defence(calc, defence, quantity, extra)?;
         match dep {
             Some(dep) => calc.set_derived(field, query(value, reasons), &[dep]),
             None => calc.set(field, query(value, reasons)),
         }
     }
     Ok(())
+}
+
+/// One primary defence of the current actor ([`primary_defences`];
+/// P6-7b3a: the minion's too, whose store has no armour piece): each
+/// piece's row and the global row, times the modifier, rounded.
+pub(super) fn primary_defence(
+    calc: &mut Calc<'_>,
+    defence: Defence,
+    quantity: Quantity,
+    extra: Option<Valued>,
+) -> Result<(Valued, Reasons), CalcError> {
+    let mut reasons = Reasons::new();
+    let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
+    let mut rows = Vec::new();
+    for slot in ArmourSlot::ALL {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) {
+            continue;
+        }
+        let base = piece(calc, slot, defence, &mut reasons)?;
+        if base.value > 0.0 {
+            rows.push(product(calc, &[base, modifier], Term::Step(slot.row()))?);
+        }
+    }
+    let flat = sum(
+        calc,
+        quantity,
+        Op::Base,
+        Term::Step("base-effects"),
+        &mut reasons,
+    )?;
+    let base = total(calc, &[flat], Term::Base)?;
+    if base.value > 0.0 {
+        rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
+    }
+    let sum = total(calc, &rows, Term::Step("slots"))?;
+    let rounded = round(calc, sum, Term::Step("rounded"))?;
+    let value = at_least(calc, rounded, "minimum", 0.0)?;
+    Ok((value, reasons))
 }
 
 /// Unreserved life and mana: the pool less its reservation

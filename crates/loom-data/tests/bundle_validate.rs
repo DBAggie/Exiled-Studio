@@ -985,6 +985,121 @@ fn socket_cap_mutations_should_each_give_their_code() {
     }
 }
 
+/// Monster varieties (P6-7a): each mutation gives its code alone.
+#[test]
+fn minion_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/minions.json";
+    let cases: [(&str, Edit, &str); 9] = [
+        (
+            "object type no variety names (P6-7b1 review)",
+            |v| {
+                v["object_stats"][0]["object_type"] = json!("Test/Monsters/Zzz");
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "object type entry with nothing (P6-7b1 review)",
+            |v| v["object_stats"][0]["stats"] = json!([]),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "object type twice (P6-7b1)",
+            |v| {
+                let first = v["object_stats"][0].clone();
+                v["object_stats"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "object stats out of order (P6-7b1)",
+            |v| {
+                // A real entry for a real variety, only out of order.
+                let mut variety = v["varieties"][0].clone();
+                variety["id"] = json!("Test/Monsters/Minion2");
+                variety["object_type"] = json!("A");
+                v["varieties"].as_array_mut().unwrap().push(variety);
+                v["object_stats"]
+                    .as_array_mut()
+                    .unwrap()
+                    .push(json!({"object_type": "A", "stats": [["x", 1]]}));
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "type twice",
+            |v| {
+                let first = v["types"][0].clone();
+                v["types"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "negative life",
+            |v| v["varieties"][0]["life"] = json!(-1),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "unknown skill",
+            |v| v["varieties"][0]["skills"] = json!(["NoSuchSkill"]),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "variety twice",
+            |v| {
+                let first = v["varieties"][0].clone();
+                v["varieties"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown type",
+            |v| v["varieties"][0]["monster_type"] = json!("NoSuchType"),
+            "BUNDLE_DANGLING_REF",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
+/// Flask bases (P6-4b): each mutation gives its code alone.
+#[test]
+fn flask_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/flasks.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "base twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown base",
+            |v| v[0]["base"] = json!("Test/Items/Nothing"),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "unknown stat",
+            |v| v[0]["stats"] = json!([["test_no_such_stat", 1]]),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "negative duration",
+            |v| v[0]["duration"] = json!(-1),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
 /// Tree flavour (B-2 item evidence, E10): each mutation gives its code
 /// alone.
 #[test]

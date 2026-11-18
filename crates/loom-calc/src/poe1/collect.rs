@@ -47,9 +47,11 @@ use loom_domain::{
 };
 
 use super::gem_levels::GemLevels;
-use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
+use super::mapping::{
+    OffHandWeaponMapping, PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping,
+};
 use super::skill::{self, InstanceProblem};
-use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, hit};
+use super::{ArmourSlot, Defence, Hand, PieceValue, Poe1Quantity, WeaponValue, hit};
 use crate::ingest::{Ingest, StatMapping};
 use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveState, StatAmount, WeaponBase};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
@@ -92,9 +94,12 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
+    dual_wielding(input, ingest);
     // After the items: "Allocates <notable>" (P3-8n).
     granted_passives(input, spec, ingest);
     config(build, ingest);
+    // After every source of flask effect (P6-4b), before Onslaught.
+    super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
@@ -719,6 +724,11 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
     Some(n <= count)
 }
 
+/// Whether `slot` is a flask slot (PoB's `Flask 1` to `Flask 5`).
+pub(super) fn is_flask_slot(slot: &str) -> bool {
+    slot_kind(slot) == SlotKind::Flask
+}
+
 /// Whether a slot is in use for the item set's weapon set (PoB's
 /// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
 /// slots to set 1, every other slot to both.
@@ -815,12 +825,8 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 what,
             };
             match slot_kind(slot) {
-                SlotKind::Flask => {
-                    if attribute(&entry.attributes, "active") == Some("true") {
-                        ingest.reason(unmodelled("active-flask"));
-                    }
-                    continue;
-                }
+                // An active flask acts through `poe1::flasks` (P6-4b).
+                SlotKind::Flask => continue,
                 SlotKind::Abyssal => match abyssal_active(build, set, slot) {
                     // Its lines act as any jewel's (close-out).
                     Some(true) => {}
@@ -903,6 +909,8 @@ fn is_main_hand(slot: &str) -> bool {
 pub struct Hands {
     /// The main hand's weapon.
     pub main: Option<(ItemId, WeaponBase)>,
+    /// The off hand's weapon (Phase 6, dual wielding).
+    pub off: Option<(ItemId, WeaponBase)>,
     /// The off hand holds a weapon, or an item whose base is not known.
     pub off_hand_weapon: bool,
     /// What the main hand holds (P3-8f).
@@ -926,6 +934,24 @@ pub enum Held {
     Other,
     /// An item whose base is not known, or one of several bases.
     Unknown,
+}
+
+impl Hands {
+    /// PoB's `DualWielding` (`CalcPerform.lua` 216: both hands have weapon
+    /// data; P6-11a review): a weapon in each hand. An empty main hand with
+    /// a weapon in the off hand is `DualWielding` in PoB (its unarmed
+    /// weapon data, `CalcSetup.lua` 1462), but the engine has no unarmed
+    /// attack: unsettled, as is a hand whose base is not known. Hollow Palm
+    /// Technique and "Counts as Dual Wielding" items are not modelled
+    /// (their stats are reasons).
+    #[must_use]
+    pub fn dual_wielding(&self) -> Option<bool> {
+        match (&self.main_hand, &self.off_hand) {
+            (Held::Unknown, _) | (_, Held::Unknown) | (Held::Empty, Held::Weapon(_)) => None,
+            (Held::Weapon(_), Held::Weapon(_)) => Some(true),
+            _ => Some(false),
+        }
+    }
 }
 
 impl Held {
@@ -969,7 +995,10 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
             "Weapon 2" => {
                 hands.off_hand_weapon =
                     !matches!(base, Some(ItemBase::Armour(_) | ItemBase::Other));
-                hands.off_hand = Held::of(base);
+                hands.off_hand = Held::of(base.clone());
+                if let Some(ItemBase::Weapon(w)) = base {
+                    hands.off = Some((id, w));
+                }
             }
             _ => {}
         }
@@ -992,7 +1021,7 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
         return;
     };
     match name.find(input.data) {
-        Some(ItemBase::Weapon(base)) => weapon(item, &base, ingest),
+        Some(ItemBase::Weapon(base)) => weapon(item, &base, Hand::Main, ingest),
         Some(ItemBase::Armour(_) | ItemBase::Other) => {
             ingest.reason(unmodelled("not-weapon"));
             item_lines(item, ingest);
@@ -1017,8 +1046,8 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
 /// all on the weapon's own quantities ([`Poe1Quantity::Weapon`]); its
 /// other lines are global. The hit phase computes the weapon's values from
 /// them as PoB does (`hit` module docs).
-fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
-    let value = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
+    let value = |v| hand.weapon(v);
     let from_base = Source::ItemBase { item: item.id };
     let effect = |quantity, value: f64, source: &Source| Effect {
         quantity,
@@ -1075,7 +1104,10 @@ fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
-    item_lines_with(&WeaponMapping, item, ingest);
+    match hand {
+        Hand::Main => item_lines_with(&WeaponMapping, item, ingest),
+        Hand::Off => item_lines_with(&OffHandWeaponMapping, item, ingest),
+    }
     // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
     // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
     // 0.0001)`, the character's (`ModParser.lua` 5759, `ModStore`'s
@@ -1152,6 +1184,11 @@ fn armour_slot(
             ingest.reason(unmodelled("not-armour"));
             item_lines(item, ingest);
         }
+        // A weapon in the off hand (Phase 6, dual wielding): its base and
+        // local lines act on the off hand's weapon.
+        Some(ItemBase::Weapon(base)) if slot == ArmourSlot::Weapon2 => {
+            weapon(item, &base, Hand::Off, ingest);
+        }
         Some(ItemBase::Weapon(_)) => {
             ingest.reason(unmodelled("base-properties"));
             item_lines(item, ingest);
@@ -1166,6 +1203,57 @@ fn armour_slot(
                 key: name.name.clone(),
             });
             item_lines(item, ingest);
+        }
+    }
+}
+
+/// The inherent bonuses of dual wielding (Phase 6; PoB's `CalcSetup.lua`
+/// 533 and 535, `Condition:DualWielding`): attacks' `Speed` MORE by the
+/// character template's `dual_wield_inherent_attack_speed_+%_final`, and
+/// `BlockChance` BASE by its `inherent_block_while_dual_wielding_%`, each
+/// on the settled [`super::states::DUAL_WIELDING`] (one definition,
+/// [`Hands::dual_wielding`]; unsettled, the effect is a reason). PoB's
+/// doubled and removed variants come from stats this engine does not map
+/// (each a reason).
+fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let dual = hands(input).dual_wielding();
+    if dual == Some(false) {
+        return;
+    }
+    let state = crate::condition::ConditionKey::new(super::states::DUAL_WIELDING);
+    for (stat, quantity, op, all) in [
+        (
+            "dual_wield_inherent_attack_speed_+%_final",
+            Quantity::Speed,
+            Op::More,
+            crate::condition::Flags::ATTACK,
+        ),
+        (
+            "inherent_block_while_dual_wielding_%",
+            Quantity::BlockChance,
+            Op::Base,
+            crate::condition::Flags::NONE,
+        ),
+    ] {
+        match input.data.character_constant(stat) {
+            #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+            Some(value) => ingest.effect(Effect {
+                quantity,
+                op,
+                value: value as f64,
+                conditions: Conditions::none()
+                    .with_all(all)
+                    .with_state(state.clone(), true),
+                source: Source::Rule("dual-wielding"),
+            }),
+            // Unsettled and no value: nothing to read. With the data's
+            // value, an unsettled state is a reason where the effect is
+            // queried (the speed and block fields), not on every field.
+            None if dual.is_none() => {}
+            None => ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "character_constants",
+                key: stat.to_owned(),
+            }),
         }
     }
 }
@@ -1391,10 +1479,14 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         return;
     }
     let levels = GemLevels::from_effects(ingest.effects());
-    let hit = hit::hit_skill(input, &levels);
-    let modelled: Vec<_> = hit.as_ref().map_or_else(Vec::new, |h| {
-        std::iter::once(&h.skill().active_gem)
-            .chain(&h.skill().supports)
+    // The main skill whose gems act through a computed field: its hit, else
+    // its own damage over time (Phase 6, `poe1::dot`).
+    let main = hit::hit_skill(input, &levels)
+        .map(|h| (h.group(), h.skill().clone()))
+        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels));
+    let modelled: Vec<_> = main.as_ref().map_or_else(Vec::new, |(_, m)| {
+        std::iter::once(&m.active_gem)
+            .chain(&m.supports)
             .copied()
             .collect()
     });
@@ -1409,19 +1501,16 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     }
     super::gems::gems(
         input,
-        hit.as_ref().map(|h| (h.group(), h.skill())),
+        main.as_ref().map(|(g, m)| (*g, m)),
         &levels,
         &totals,
         ingest,
     );
-    let Some(hit) = hit else { return };
+    let Some((group, main)) = main else { return };
     // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
-    let buff_scale = totals.buff_scale(true, &hit.skill().types, 0.0);
+    let buff_scale = totals.buff_scale(true, &main.types, 0.0);
     for r in modelled {
-        let source = Source::Gem {
-            group: hit.group(),
-            gem: r.gem,
-        };
+        let source = Source::Gem { group, gem: r.gem };
         let instance = skill::instance(r.effect, r.level, r.quality, input.data);
         for p in &instance.problems {
             match p {
@@ -1589,7 +1678,10 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
     // Named conditions, multipliers, and distances only modifiers read,
     // and the enemy's damage: no computed field changes, for an input or a
     // placeholder (`poe1::config`, P3-12a, P3-12b).
-    if super::config::named_only(&input.name) || super::config::enemy_damage(&input.name) {
+    if super::config::named_only(&input.name)
+        || super::config::enemy_damage(&input.name)
+        || super::config::inert(&input.name)
+    {
         return InputUse::NoEffect;
     }
     if input.kind == ConfigInputKind::Placeholder {
@@ -1697,6 +1789,33 @@ mod tests {
         assert_eq!(slot_kind("Belt Abyssal Socket 1"), SlotKind::Abyssal);
         assert_eq!(slot_kind("Ring 3"), SlotKind::Other);
         assert_eq!(slot_kind("Graft 1"), SlotKind::Other);
+    }
+
+    /// P6-4a review: the inputs P6-4a classified change no field, as an
+    /// input and as a placeholder.
+    #[test]
+    fn classified_inputs_should_have_no_effect() {
+        use loom_domain::{ConfigInput, ConfigValue};
+        for name in [
+            "igniteMode",
+            "buffFortify",
+            "enemyDamageType",
+            "DisableEHPGainOnBlock",
+            "conditionHitRecently",
+            "multiplierWitheredStackCount",
+            "buffElusive",
+        ] {
+            for kind in [ConfigInputKind::Input, ConfigInputKind::Placeholder] {
+                let input = ConfigInput {
+                    name: name.to_owned(),
+                    value: ConfigValue::Boolean(true),
+                    kind,
+                    lines: Vec::new(),
+                    attributes: Vec::new(),
+                };
+                assert_eq!(input_use(&input), InputUse::NoEffect, "{name}");
+            }
+        }
     }
 
     #[test]

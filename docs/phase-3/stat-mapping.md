@@ -13,7 +13,7 @@ A stat that cannot change any of the 24 slice fields (attributes, life, mana, en
 | `regeneration` | life, mana, and energy shield regeneration (rate, per level, per charge, per fortification, per spell block, after exposure, near rare enemies), Zealot's Oath's swap, consecrated ground's ES recovery |
 | `leech` | energy shield leech from spell damage; cannot have life leeched from |
 | `movement-speed` | `base_movement_velocity_+%` |
-| `minion-defence` | minion and golem life, regeneration, golem immunity and revival |
+| `minion-defence` | golem revival (P6-7b3a moved minion and golem life, regeneration, and golem immunity to `Poe1Quantity::MinionPending`, a reason on the minion fields until P6-7b3b) |
 | `freeze`, `ailment-duration` | chance to freeze, freeze proliferation, freeze, cold and lightning ailment durations |
 | `stun`, `interruption` | stun duration, avoid interruption while casting |
 | `damage-taken`, `ailment-on-self` | physical damage taken as fire or lightning, ailment duration on you, cannot be shocked |
@@ -639,7 +639,7 @@ At the maintainer's request (2026-11-13), one PR for all 56 stats the eight in-s
 
 **Conditions the config settles (`poe1::conditions`, new).** PoB's check options add `Condition:<name>` flags only modifiers read (`ConfigOptions.lua`); an unset or `false` check is a settled `false`. The engine settles `ShockedEnemyRecently`, `ShatteredEnemyRecently`, `AtCloseRange`, the enemy's `FullLife`, the enemy's `RareOrUnique` (also from the `Boss`, `Pinnacle`, and `Uber` kinds, PoB's default `Pinnacle` too), and `AffectedByArcaneSurge` (`buffArcaneSurge`). Rows with a state (`STATE_ROWS`): damage if shattered or shocked recently, melee damage with hits at close range (`MELEE`, `HIT`), crit chance against enemies on full life, crit multiplier against unique enemies, Arcane Surge Support's more spell damage. `conditionShockedEnemyRecently` leaves `config::NAMED_ONLY`. A condition a mapped modifier can also set (you on consecrated ground while stationary) is not settled; its input stays in `NAMED_ONLY`.
 
-**Weapon conditions (`poe1::states`).** `MainHandWeapon` (PoB's `ModFlag.Weapon`, `CalcActiveSkill.lua` 209): "Damage with Weapons Penetrates #% Fire Resistance" on attacks. `UsingStaff`: "#% increased Physical Damage with Staves" (`ModFlag.Staff` and `ModFlag.Hit`, which only an attack with a staff has).
+**Weapon conditions (`poe1::states`).** `MainHandWeapon` (PoB's `ModFlag.Weapon`, `CalcActiveSkill.lua` 209): "Damage with Weapons Penetrates #% Fire Resistance" on attacks. `UsingStaff`: "#% increased Physical Damage with Staves" (`ModFlag.Staff` and `ModFlag.Hit`, which only an attack with a staff has). Since P6-11c both read each hand's weapon flags (`Flags::WEAPON`, `Flags::STAFF`), and `MainHandWeapon` is gone (`docs/phase-6/stat-mop-up.md`, "P6-11c").
 
 **The hit (`poe1::hit`).**
 - Action speed (`Poe1Quantity::ActionSpeed`): PoB scales a self-cast skill's rate by `calcs.actionSpeedMod` (`CalcOffence.lua` 2341, `CalcPerform.lua` 1107: `max(minimum / 100, 1 + (Temporal Chains + ActionSpeed INC) / 100)`, no minimum, maximum reduction, or Temporal Chains mapped) before the server tick cap. The stat is the game's `action_speed_-%`, negated ("#% reduced Action Speed").

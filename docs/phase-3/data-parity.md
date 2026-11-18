@@ -107,6 +107,26 @@ The passive tree's cluster jewels (`docs/tree/cluster-jewels.md`) come from the 
 
 A PoB row the bundle lacks is a difference. A bundle without the file (an extract made before T3) has PoB's rows only. Run on PoB's side here: 9 jewels, 300 notables, 8 keystones. The run against a bundle with the table is maintainer-run.
 
+## P6-4b: table `flasks` (flask bases, export format 11)
+The flask bases (`poe1/flasks.json`, `docs/phase-6/flasks.md`) against PoB's `flask` base data, by name:
+- life and mana per use;
+- the duration in seconds;
+- the buff's lines: the bundle's stats rendered together with `tincture_stat_descriptions`, the file PoB's exporter renders them with, compared sorted.
+
+On the flask evidence bundle: 48 flasks, 192 values, 0 differences.
+
+## P6-7a: table `minions` (monster varieties, export format 12)
+PoB's minions and spectres against the bundle's monster varieties (`poe1/minions.json`, `docs/phase-6/minions.md`), by variety ID, in PoB's form. On the minion evidence bundle: 332 minions, 5,959 values. The one difference is `GuardianRelicAll`, which PoB writes by hand: rule `minions-pob-written`.
+
+## P6-7b1: table `minion_mods` (minion mod lists, export format 13)
+Each minion's and spectre's mod list as PoB's exporter commented it in `Data/Minions.lua` and `Data/Spectres.lua` (`-- <mod> [<stat> = <value>]`, read from the files' text). It is compared against the bundle's list, by variety ID: the variety's mods and special mods, one line per stat with the lowest value, then its object type's `.ot` stats (`docs/phase-6/minions.md`, "P6-7b1").
+
+On the `.ot` evidence bundle: 332 lists, 700 lines. Every `.ot` stat matches. The 17 differences have two rules:
+- `minion-mods-six-stat-slots`: PoB reads a mod's first six stats only, so `CannotBeAugmented`'s seventh, `monster_no_talismans`, is missing on 16 minions.
+- `minion-mods-pob-written`: `GuardianRelicAll`.
+
+Export format 13 also writes `minion_templates`, PoB's template directives. They are not compared: PoB's own data, which `pob-minions` copies into the engine's table.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

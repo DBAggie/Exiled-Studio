@@ -30,6 +30,15 @@
 //!   base's node layout, the small passives a jewel can grant, the notables
 //!   and keystones it can add, and the tree's cluster sockets
 //!   ([`ClusterJewels`]).
+//! - `poe1/minions.json`: every monster variety and the monster types they
+//!   use (`MonsterVarieties`, `MonsterTypes`, Phase 6 P6-7a; [`Minions`]),
+//!   and the `.ot` stats of their object types (P6-7b1, [`ObjectStats`]):
+//!   the data a minion or a spectre is computed from.
+//! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
+//!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
+//!   applies an active flask's buff).
+
+use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +62,212 @@ pub const SOCKET_CAPS: &str = "poe1/socket_caps.json";
 pub const TREE_FLAVOUR: &str = "poe1/tree_flavour.json";
 /// Cluster jewels.
 pub const CLUSTER_JEWELS: &str = "poe1/cluster_jewels.json";
+/// Flask bases.
+pub const FLASKS: &str = "poe1/flasks.json";
+/// Monster varieties and types (minions, spectres).
+pub const MINIONS: &str = "poe1/minions.json";
+
+/// A monster type's values a minion reads (`MonsterTypes`, P6-7a), as PoB's
+/// minion exporter reads them (`src/Export/Scripts/minions.lua`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MinionType {
+    /// ID.
+    pub id: String,
+    /// Accuracy multiplier, percent.
+    pub accuracy: i64,
+    /// Armour multiplier, percent.
+    pub armour: i64,
+    /// Evasion multiplier, percent.
+    pub evasion: i64,
+    /// Energy shield multiplier, percent (PoB: `0.4 x value / 100`).
+    pub energy_shield: i64,
+    /// Damage spread, percent.
+    pub damage_spread: i64,
+    /// Fire, cold, lightning, and chaos resistances (`MonsterResistances`,
+    /// the merciless columns PoB reads).
+    pub resistances: [i64; 4],
+    /// The first alternate life scaling.
+    pub alt_life1: bool,
+    /// The second alternate life scaling.
+    pub alt_life2: bool,
+    /// Its base damage ignores attack speed.
+    pub damage_ignores_attack_speed: bool,
+    /// The game marks it a player's minion.
+    pub player_minion: bool,
+}
+
+/// A monster's life scaling (PoB's `lifeScaling`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LifeScaling {
+    /// `AltLife1`.
+    AltLife1,
+    /// `AltLife2`.
+    AltLife2,
+}
+
+impl MinionType {
+    /// The life scaling PoB reads (`minions.lua` writes `AltLife1`, then
+    /// `AltLife2` over it: the second wins).
+    #[must_use]
+    pub fn life_scaling(&self) -> Option<LifeScaling> {
+        if self.alt_life2 {
+            Some(LifeScaling::AltLife2)
+        } else if self.alt_life1 {
+            Some(LifeScaling::AltLife1)
+        } else {
+            None
+        }
+    }
+}
+
+/// A monster variety (`MonsterVarieties`, P6-7a), in the table's order.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MinionVariety {
+    /// ID (`Metadata/Monsters/...`): the key PoB's spectres use.
+    pub id: String,
+    /// The name.
+    pub name: String,
+    /// The monster type's ID.
+    pub monster_type: String,
+    /// Its tags' IDs.
+    pub tags: Vec<String>,
+    /// Damage multiplier, percent.
+    pub damage: i64,
+    /// Life multiplier, percent.
+    pub life: i64,
+    /// Attack duration, milliseconds.
+    pub attack_time: i64,
+    /// Maximum attack distance.
+    pub attack_range: i64,
+    /// The main hand's item class ID, if any.
+    #[serde(default)]
+    pub main_hand: Option<String>,
+    /// The off hand's item class ID, if any.
+    #[serde(default)]
+    pub off_hand: Option<String>,
+    /// Its granted effects' IDs (its skills), in order.
+    pub skills: Vec<String>,
+    /// Its mods' IDs, in order.
+    pub mods: Vec<String>,
+    /// Its special mods' IDs, in order.
+    pub special_mods: Vec<String>,
+    /// Its object type (`BaseMonsterTypeIndex`), whose `.ot` file holds
+    /// more stats ([`Minions::object_stats`]).
+    pub object_type: String,
+}
+
+/// The `.ot` stats of one object type (P6-7b1), as PoB v2.67.2's exporter
+/// reads them into a minion's `modList` (`src/Export/Scripts/minions.lua`
+/// `getOTStats`, 41 to 73): the type's file and the files its `extends`
+/// lines name, each superclass where its line stands, stopping at
+/// `Metadata/Monsters/Monster` and `nothing`; only the `Stats` block, no
+/// line with `//`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ObjectStats {
+    /// The object type, as the varieties write it
+    /// ([`MinionVariety::object_type`]).
+    pub object_type: String,
+    /// Its stats in PoB's order, repeats kept (PoB adds each line):
+    /// `(stat ID, value)`.
+    pub stats: Vec<(String, i64)>,
+    /// Lines whose value is not a whole number, as `(key, text)`: PoB's
+    /// `tonumber` gives nil for most of them (script text), and its
+    /// exporter would fail on such a minion. Kept, not dropped (ADR-015).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<(String, String)>,
+    /// The first file its chain names that the extract does not hold (a
+    /// template outside `Metadata/Monsters/`): its stats are incomplete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unread: Option<String>,
+}
+
+/// `poe1/minions.json`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Minions {
+    /// Monster types, in the table's order.
+    pub types: Vec<MinionType>,
+    /// Monster varieties, in the table's order.
+    pub varieties: Vec<MinionVariety>,
+    /// The `.ot` stats of the object types the varieties name (P6-7b1),
+    /// sorted by object type; a type without stats, values, or an unread
+    /// file is left out. `None` when the extract had no monster templates
+    /// (built before P6-7b1): the `.ot` stats are then unknown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub object_stats: Option<Vec<ObjectStats>>,
+}
+
+impl Minions {
+    /// The `.ot` stats of `object_type`: `None` when the bundle has none
+    /// (built before P6-7b1); an empty entry when the type has none.
+    #[must_use]
+    pub fn object_stats(&self, object_type: &str) -> Option<ObjectStatsRef<'_>> {
+        let all = self.object_stats.as_ref()?;
+        Some(
+            all.binary_search_by(|o| o.object_type.as_str().cmp(object_type))
+                .ok()
+                .and_then(|i| all.get(i))
+                .map_or(ObjectStatsRef::NONE, ObjectStatsRef::of),
+        )
+    }
+}
+
+/// A borrowed view of an object type's `.ot` stats ([`Minions::object_stats`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ObjectStatsRef<'a> {
+    /// [`ObjectStats::stats`].
+    pub stats: &'a [(String, i64)],
+    /// [`ObjectStats::values`].
+    pub values: &'a [(String, String)],
+    /// [`ObjectStats::unread`].
+    pub unread: Option<&'a str>,
+}
+
+impl<'a> ObjectStatsRef<'a> {
+    /// A type with no `.ot` stats.
+    pub const NONE: Self = Self {
+        stats: &[],
+        values: &[],
+        unread: None,
+    };
+
+    fn of(o: &'a ObjectStats) -> Self {
+        Self {
+            stats: &o.stats,
+            values: &o.values,
+            unread: o.unread.as_deref(),
+        }
+    }
+}
+
+/// A flask base (`Flasks`, P6-4b), in the table's order. PoB v2.67.2
+/// exports its `flask` base data from the same row
+/// (`src/Export/Scripts/bases.lua` 247 to 270).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Flask {
+    /// The base item's ID (`BaseItemTypes.Id`).
+    pub base: String,
+    /// The base item's name, as builds write it.
+    pub name: String,
+    /// Life recovered per use (`LifePerUse`; 0 for none).
+    pub life: i64,
+    /// Mana recovered per use (`ManaPerUse`; 0 for none).
+    pub mana: i64,
+    /// The duration in tenths of a second (`RecoveryTime`).
+    pub duration: i64,
+    /// The buff's ID (`BuffDefinitions.Id`), when the flask has one.
+    #[serde(default)]
+    pub buff: Option<String>,
+    /// The buff's stats (`(stat, value)`): its `StatsKeys` with
+    /// `BuffStatValues` in order, then its `GrantedFlags` at 1, as PoB's
+    /// exporter reads them.
+    #[serde(default)]
+    pub stats: Vec<(String, i64)>,
+}
 
 /// What a socketed cluster jewel adds to the tree (module docs), from the
 /// game's `PassiveTreeExpansionJewelSizes`, `PassiveTreeExpansionJewels`,
@@ -434,11 +649,16 @@ pub struct Poe1Section {
     pub tree_flavour: Option<TreeFlavour>,
     /// Cluster jewels (`None` when the file is absent).
     pub cluster_jewels: Option<ClusterJewels>,
+    /// Flask bases (`None` when the file is absent).
+    pub flasks: Option<Vec<Flask>>,
+    /// Monster varieties and types (`None` when the file is absent).
+    pub minions: Option<Minions>,
 }
 
 impl Poe1Section {
-    /// The stats the section's build choices (the pantheon's souls) name,
-    /// each with the row it is on: the validator checks each is a stat.
+    /// The stats the section's build choices (the pantheon's souls) and
+    /// flask buffs name, each with the row it is on: the validator checks
+    /// each is a stat.
     pub(super) fn choice_stats(&self) -> Vec<(String, &str)> {
         let mut out = Vec::new();
         for g in self.pantheons.iter().flatten() {
@@ -446,7 +666,139 @@ impl Poe1Section {
                 out.push((format!("{PANTHEONS}:{}", g.id), s.as_str()));
             }
         }
+        for f in self.flasks.iter().flatten() {
+            for (s, _) in &f.stats {
+                out.push((format!("{FLASKS}:{}", f.base), s.as_str()));
+            }
+        }
         out
+    }
+
+    /// The minions' domain checks for the validator (P6-7a review): the
+    /// varieties' and the types' IDs (each must be unique), the varieties
+    /// whose type is not in the file (dangling), and the rows out of range
+    /// (an empty ID, name, or type; a negative multiplier, attack time, or
+    /// range: the game has varieties at 0, never below).
+    #[expect(clippy::type_complexity, reason = "the validator's three lists")]
+    pub(super) fn minion_domain(
+        &self,
+    ) -> (
+        Vec<&str>,
+        Vec<&str>,
+        Vec<(String, &'static str)>,
+        Vec<(String, &'static str)>,
+    ) {
+        let Some(m) = &self.minions else {
+            return (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        };
+        let types: BTreeSet<&str> = m.types.iter().map(|t| t.id.as_str()).collect();
+        let ids = m.varieties.iter().map(|v| v.id.as_str()).collect();
+        let type_ids = m.types.iter().map(|t| t.id.as_str()).collect();
+        let dangling = m
+            .varieties
+            .iter()
+            .filter(|v| !types.contains(v.monster_type.as_str()))
+            .map(|v| (format!("{MINIONS}:{}", v.id), "a type not in the file"))
+            .collect();
+        let bad = m
+            .varieties
+            .iter()
+            .filter(|v| {
+                v.id.is_empty()
+                    || v.name.is_empty()
+                    || v.monster_type.is_empty()
+                    || v.life < 0
+                    || v.damage < 0
+                    || v.attack_time < 0
+                    || v.attack_range < 0
+            })
+            .map(|v| {
+                (
+                    format!("{MINIONS}:{}", v.id),
+                    "an empty ID, name, or type, or a negative value",
+                )
+            })
+            .collect();
+        (ids, type_ids, dangling, bad)
+    }
+
+    /// The object types with `.ot` stats, in file order, for the validator
+    /// (P6-7b1): each must be unique and the list sorted
+    /// ([`Minions::object_stats`] searches it).
+    pub(super) fn minion_object_types(&self) -> Vec<&str> {
+        self.minions
+            .iter()
+            .flat_map(|m| m.object_stats.iter().flatten())
+            .map(|o| o.object_type.as_str())
+            .collect()
+    }
+
+    /// The `.ot` entries the converter would not write (P6-7b1 review):
+    /// `(at, what)` for an object type no variety names (dangling) and for
+    /// an entry with nothing to carry (out of range).
+    pub(super) fn minion_object_findings(&self) -> (Vec<String>, Vec<String>) {
+        let Some(m) = &self.minions else {
+            return (Vec::new(), Vec::new());
+        };
+        let named: BTreeSet<&str> = m.varieties.iter().map(|v| v.object_type.as_str()).collect();
+        let mut dangling = Vec::new();
+        let mut empty = Vec::new();
+        for o in m.object_stats.iter().flatten() {
+            let at = format!("{MINIONS}:object_stats:{}", o.object_type);
+            if !named.contains(o.object_type.as_str()) {
+                dangling.push(at.clone());
+            }
+            if o.stats.is_empty() && o.values.is_empty() && o.unread.is_none() {
+                empty.push(at);
+            }
+        }
+        (dangling, empty)
+    }
+
+    /// The minions' skills (granted effects), each with its variety, for
+    /// the validator's reference check.
+    pub(super) fn minion_skills(&self) -> Vec<(String, &str)> {
+        self.minions
+            .iter()
+            .flat_map(|m| &m.varieties)
+            .flat_map(|v| {
+                v.skills
+                    .iter()
+                    .map(move |s| (format!("{MINIONS}:{}", v.id), s.as_str()))
+            })
+            .collect()
+    }
+
+    /// The flasks' domain checks for the validator: each row's base, and
+    /// the rows whose values are out of range (a negative recovery or
+    /// duration, a name missing, or stats without a buff).
+    pub(super) fn flask_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let rows = self.flasks.as_deref().unwrap_or_default();
+        let bases = rows.iter().map(|r| r.base.as_str()).collect();
+        let bad = rows
+            .iter()
+            .filter(|r| {
+                r.life < 0
+                    || r.mana < 0
+                    || r.duration < 0
+                    || r.name.is_empty()
+                    || (r.buff.is_none() && !r.stats.is_empty())
+            })
+            .map(|r| {
+                (
+                    format!("{FLASKS}:{}", r.base),
+                    "a negative recovery or duration, no name, or stats without a buff",
+                )
+            })
+            .collect();
+        (bases, bad)
+    }
+
+    /// The first flask base named `name` (builds name a base, and the
+    /// game's legacy rows repeat a name), if the file has one.
+    #[must_use]
+    pub fn flask_named(&self, name: &str) -> Option<&Flask> {
+        self.flasks.iter().flatten().find(|f| f.name == name)
     }
 
     /// The pantheon's domain checks for the validator: the file, its IDs
@@ -661,6 +1013,16 @@ impl Poe1Section {
             },
             cluster_jewels: if listed(CLUSTER_JEWELS) {
                 Some(json(source, CLUSTER_JEWELS)?)
+            } else {
+                None
+            },
+            flasks: if listed(FLASKS) {
+                Some(json(source, FLASKS)?)
+            } else {
+                None
+            },
+            minions: if listed(MINIONS) {
+                Some(json(source, MINIONS)?)
             } else {
                 None
             },

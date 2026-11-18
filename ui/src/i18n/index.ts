@@ -64,4 +64,9 @@ export const OFFENCE = new Set([
   'crit-chance',
   'crit-multiplier',
   'hit-dps',
+  'dot-dps',
+  'ignite-dps',
+  'bleed-dps',
+  'poison-dps',
+  'poe1.impale-dps',
 ])

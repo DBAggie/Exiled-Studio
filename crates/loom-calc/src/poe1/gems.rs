@@ -226,10 +226,17 @@ pub enum BuffStat {
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
     Threshold(&'static [HitEffect]),
+    /// Applies while unreserved life is at least 2 (PoB's one
+    /// `StatThreshold` tag on Righteous Fire's own buff, Phase 6): the rows
+    /// carry the state [`LIFE_THRESHOLD`], which the hit sets.
+    LifeThreshold(&'static [HitEffect]),
 }
 
 /// The state of [`BuffStat::Threshold`] rows.
 pub const STAT_THRESHOLD: &str = "LifeUnreservedAtLeast2AndManaAtLeast1";
+
+/// The state of [`BuffStat::LifeThreshold`] rows.
+pub const LIFE_THRESHOLD: &str = "LifeUnreservedAtLeast2";
 
 const NONE: Flags = Flags::NONE;
 const fn added(t: DamageType, b: Bound) -> Quantity {
@@ -345,9 +352,17 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         (enemy_res(DamageType::Lightning), Op::Base, 1.0, NONE, NONE),
                     ]),
                 ),
+                // PoB: the enemy's `SelfElementalAilmentDuration` INC, `mult =
+                // -1`; ignite's duration reads it (P6-2b).
                 (
                     "self_elemental_status_duration_-%",
-                    BuffStat::NoSlice("ailment-duration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration),
+                        Op::Increased,
+                        -1.0,
+                        NONE,
+                        Flags::IGNITE,
+                    )]),
                 ),
             ],
         },
@@ -600,6 +615,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 (
                     "warcry_count_power_from_enemies",
                     BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
+    // PoB `Data/Skills/act_int.lua` `skills["RighteousFire"]`: its spell
+    // damage more is a buff while unreserved life is at least 2; the
+    // degeneration reaches no slice field (Phase 6, P6-1).
+    (
+        "RighteousFire",
+        Kind::Buff {
+            name: "Righteous Fire",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "base_nonlethal_fire_damage_%_of_maximum_energy_shield_taken_per_minute",
+                    BuffStat::NoSlice("degeneration"),
+                ),
+                (
+                    "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",
+                    BuffStat::NoSlice("degeneration"),
+                ),
+                (
+                    "righteous_fire_spell_damage_+%_final",
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -1068,13 +1113,13 @@ pub fn arcane_surge_support(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
             return false;
         }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        skill::group_skills(group, group_matches, input.data, levels).is_ok_and(|skills| {
-            skills.iter().any(|s| {
+        skill::group_skills(group, group_matches, input.data, levels)
+            .iter()
+            .any(|s| {
                 s.supports
                     .iter()
                     .any(|sup| sup.effect.id == "SupportArcaneSurge")
             })
-        })
     })
 }
 
@@ -1215,22 +1260,15 @@ pub fn gems(
             }
             continue;
         }
+        // A gem the data does not have grants nothing, as in PoB; it is a
+        // reason (Phase 6).
+        for i in skill::unknown_gems(group, input.data) {
+            ingest.reason(UnsupportedReason::UnmodelledGem {
+                source: Source::Gem { group: g, gem: i },
+            });
+        }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        let skills = match skill::group_skills(group, group_matches, input.data, levels) {
-            Ok(s) => s,
-            Err(_) => {
-                // A gem the data does not have: every enabled gem of the
-                // group is a reason, as before P3-12h.
-                for (i, gem) in group.gems.typed().enumerate() {
-                    if gem.enabled {
-                        ingest.reason(UnsupportedReason::UnmodelledGem {
-                            source: Source::Gem { group: g, gem: i },
-                        });
-                    }
-                }
-                continue;
-            }
-        };
+        let skills = skill::group_skills(group, group_matches, input.data, levels);
         for s in &skills {
             let is_main = main.is_some_and(|(mg, m)| {
                 mg == g
@@ -1661,6 +1699,7 @@ fn add_rows(
                 (rows, None)
             }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
+            BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
         };
         #[expect(
             clippy::cast_precision_loss,
@@ -1977,7 +2016,8 @@ mod tests {
                 BuffStat::Rows(e)
                 | BuffStat::WhenInput { rows: e, .. }
                 | BuffStat::BloodStance(e)
-                | BuffStat::Threshold(e) => e,
+                | BuffStat::Threshold(e)
+                | BuffStat::LifeThreshold(e) => e,
                 BuffStat::NoSlice(_) | BuffStat::Gated(_) => &[],
             };
             for e in effects {
@@ -1998,6 +2038,7 @@ mod tests {
                         | Poe1Quantity::SkillExposure(_)
                         | Poe1Quantity::EnemyTypeDamageTaken(_)
                         | Poe1Quantity::EnemyDamageTaken
+                        | Poe1Quantity::EnemyAilmentDuration
                 )
             )
         };
@@ -2039,7 +2080,8 @@ mod tests {
             .chain(NO_EFFECT.iter().map(|r| r.0));
         // Checked rows: curses on you (`curse_effect_on_self_+%`, P3-8n) are
         // not the curses this module casts.
-        let checked = ["curse_effect_on_self_+%"];
+        // P6-2d: impale's effect is the impale's, not a buff's or an aura's.
+        let checked = ["curse_effect_on_self_+%", "impale_debuff_effect_+%"];
         for id in ids {
             for word in GUARDED_WORDS {
                 assert!(

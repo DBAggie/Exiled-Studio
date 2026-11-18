@@ -32,6 +32,11 @@ export const en = {
   'field.crit-chance': 'Critical strike chance',
   'field.crit-multiplier': 'Critical strike multiplier',
   'field.hit-dps': 'Hit DPS',
+  'field.dot-dps': 'Damage over time DPS',
+  'field.ignite-dps': 'Ignite DPS',
+  'field.bleed-dps': 'Bleeding DPS',
+  'field.poison-dps': 'Poison DPS',
+  'field.poe1.impale-dps': 'Impale DPS',
   'field.poe1.spell-suppression-chance': 'Spell suppression chance',
   'field.poe1.spell-block-chance': 'Spell block chance',
 

@@ -77,12 +77,6 @@ pub enum SkillProblem {
     UntypedGroup,
     /// The main group has no active skill.
     NoActiveSkill,
-    /// A gem of the main group is not in the data (by `gemId`, else
-    /// `skillId`).
-    UnknownGem {
-        /// The gem.
-        gem: String,
-    },
     /// An effect PoB might count was skipped before the chosen index
     /// (module docs).
     Uncertain,
@@ -96,7 +90,6 @@ impl SkillProblem {
             Self::NoSkillSet => "no-skill-set",
             Self::UntypedGroup => "untyped-group",
             Self::NoActiveSkill => "no-active-skill",
-            Self::UnknownGem { .. } => "unknown-gem",
             Self::Uncertain => "main-skill-uncertain",
         }
     }
@@ -143,7 +136,29 @@ pub struct MainSkill<'d> {
     pub types: BTreeSet<String>,
 }
 
+/// [`MainSkill::can_use`] for an active skill row (none: not restricted).
+fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
+    active
+        .is_none_or(|a| a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class))
+}
+
 impl<'d> MainSkill<'d> {
+    /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
+    /// `CalcActiveSkill.lua` 192 to 223; P6-11e review): the game lists the
+    /// classes per active skill (none: any weapon; `Unarmed` for an empty
+    /// hand). A skill without an active skill row is not restricted.
+    ///
+    /// Not modelled: a support's own `weaponTypes` (PoB adds each applied
+    /// support's list, 287 to 291, and the weapon must be in every list),
+    /// `countsAsAll1H` (a weapon that counts as every one-handed class,
+    /// Varunastra, 200), and a minion skill's empty hand (`summonSkill`
+    /// ignores the weapon types, 296 to 299): the active skill's own list
+    /// and the hand's own class decide.
+    #[must_use]
+    pub fn can_use(&self, class: &str) -> bool {
+        can_use(self.active, class)
+    }
+
     /// The active granted effect.
     #[must_use]
     pub const fn effect(&self) -> &'d GrantedEffect {
@@ -239,13 +254,39 @@ pub fn gem_variant<'d>(
     };
     let row = data.skill_gem(gem_id.as_str())?;
     let variant = attribute(&gem.attributes, "variantId");
-    let effect = row
-        .effects
-        .iter()
-        .filter_map(|e| data.gem_effect(e.as_str()))
+    let effects = || {
+        row.effects
+            .iter()
+            .filter_map(|e| data.gem_effect(e.as_str()))
+    };
+    // PoB's `LoadSkill` (`Classes/SkillsTab.lua` 437 to 459): the variant
+    // `variantId` names, else the one whose granted effect is `skillId`;
+    // with neither, `ProcessSocketGroup` finds the gem by its name
+    // (`FindSkillGem`, 1166 to 1174; old builds whose `skillId` the game has
+    // since renamed, Phase 6).
+    let effect = effects()
         .find(|e| match variant {
             Some(v) => e.id == v,
             None => e.granted_effect.as_deref() == skill,
+        })
+        .or_else(|| {
+            let name = gem.name.as_deref()?.trim();
+            // A variant's name; the default variant has none in the game
+            // data, and its name is its active skill's (the gem's base).
+            let shown = |e: &GemEffect| -> Option<String> {
+                if !e.name.is_empty() {
+                    return Some(e.name.clone());
+                }
+                let granted = data.granted_effect(e.granted_effect.as_deref()?)?;
+                Some(
+                    data.active_skill(granted.active_skill.as_deref()?)?
+                        .name
+                        .clone(),
+                )
+            };
+            effects().find(|e| {
+                !name.is_empty() && shown(e).is_some_and(|n| n.eq_ignore_ascii_case(name))
+            })
         })?;
     let mut out = Vec::new();
     for id in effect
@@ -435,28 +476,24 @@ fn choose<'d>(actives: &[Candidate<'d>], wanted: usize) -> Result<Candidate<'d>,
 /// plus its socket colour bonus.
 ///
 /// # Errors
-/// [`SkillProblem::UnknownGem`].
 fn group_effects<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
     data: &'d dyn CalcData,
     levels: &GemLevels,
-) -> Result<(Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>), SkillProblem> {
+) -> (Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>) {
     let mut actives: Vec<Candidate<'d>> = Vec::new();
     let mut supports: Vec<GemEffectRef<'d>> = Vec::new();
     for (g, gem) in group.gems.typed().enumerate() {
         if !gem.enabled {
             continue;
         }
-        let (variant, effects) =
-            gem_variant(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
-                gem: gem
-                    .gem
-                    .as_ref()
-                    .map(|g| g.as_str().to_owned())
-                    .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
-                    .unwrap_or_default(),
-            })?;
+        // A gem the data does not have grants nothing: PoB skips a gem
+        // without `gemData` (`Modules/CalcSetup.lua` 1649; Phase 6). Its
+        // reason is `poe1::gems`' ([`unknown_gems`]).
+        let Some((variant, effects)) = gem_variant(gem, data) else {
+            continue;
+        };
         let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()));
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
@@ -475,7 +512,21 @@ fn group_effects<'d>(
             }
         }
     }
-    Ok((actives, supports))
+    (actives, supports)
+}
+
+/// The enabled gems of `group` the data does not have (by position among
+/// the group's typed gems): they grant nothing, as in PoB, and each is a
+/// reason (Phase 6).
+#[must_use]
+pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
+    group
+        .gems
+        .typed()
+        .enumerate()
+        .filter(|(_, gem)| gem.enabled && gem_variant(gem, data).is_none())
+        .map(|(i, _)| i)
+        .collect()
 }
 
 /// The build's main skill (module docs), its gems at the levels `levels`
@@ -500,7 +551,7 @@ pub fn main_skill<'d>(
     let all = socket_matches(build, &groups, data);
     let matches: &[SocketMatch] = all.get(index - 1).map_or(&[], Vec::as_slice);
 
-    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
+    let (actives, group_supports) = group_effects(group, matches, data, levels);
     let wanted = group
         .main_active_skill
         .as_ref()
@@ -565,17 +616,16 @@ pub struct GroupSkill<'d> {
 /// 1740: gems in order, each gem's effects in order; supports as for the
 /// main skill, module docs). `matches` are the group's gems' socket
 /// matches ([`socket_matches`]), each adding its bonus to the gem's
-/// quality. `Err` names a gem the data does not have.
-///
-/// # Errors
-/// [`SkillProblem::UnknownGem`].
+/// quality. A gem the data does not have is skipped, as PoB does
+/// ([`unknown_gems`] names it).
+#[must_use]
 pub fn group_skills<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
     data: &'d dyn CalcData,
     levels: &GemLevels,
-) -> Result<Vec<GroupSkill<'d>>, SkillProblem> {
-    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
+) -> Vec<GroupSkill<'d>> {
+    let (actives, group_supports) = group_effects(group, matches, data, levels);
     let mut out = Vec::new();
     for (active_gem, _, global_off) in &actives {
         let effect = active_gem.effect;
@@ -605,7 +655,7 @@ pub fn group_skills<'d>(
             types,
         });
     }
-    Ok(out)
+    out
 }
 
 /// Why a gem instance's stats are not all known.
@@ -807,4 +857,34 @@ pub fn instances<'d>(skill: &MainSkill<'d>, data: &'d dyn CalcData) -> Vec<Insta
         .chain(&skill.supports)
         .map(|r| instance(r.effect, r.level, r.quality, data))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn active(classes: &[&str]) -> ActiveSkill {
+        ActiveSkill {
+            id: "TestSkill".to_owned(),
+            name: "Test Skill".to_owned(),
+            types: vec!["Attack".to_owned()],
+            minion_types: Vec::new(),
+            weapon_classes: classes.iter().map(|c| (*c).to_owned()).collect(),
+            manually_cast: true,
+        }
+    }
+
+    /// PoB's `weaponTypes` check for the active skill (P6-7b1 review): an
+    /// empty list or no row allows any weapon; a list allows its classes
+    /// only, `Unarmed` for an empty hand.
+    #[test]
+    fn can_use_should_follow_the_active_skills_weapon_classes() {
+        let any = active(&[]);
+        let axes = active(&["One Hand Axe", "Unarmed"]);
+        assert!(can_use(None, "Bow"));
+        assert!(can_use(Some(&any), "Bow"));
+        assert!(can_use(Some(&axes), "One Hand Axe"));
+        assert!(can_use(Some(&axes), "Unarmed"));
+        assert!(!can_use(Some(&axes), "Bow"));
+    }
 }

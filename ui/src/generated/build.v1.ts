@@ -1141,6 +1141,11 @@ export interface Skills {
    */
   attributes?: Attribute[]
   /**
+   * How the build's format held the sets; left out for one element
+   * per set (Phase 6, additive).
+   */
+  layout?: 'sets' | 'flat'
+  /**
    * The sets.
    */
   sets: SkillSetEntry[]

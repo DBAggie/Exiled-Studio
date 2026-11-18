@@ -28,7 +28,11 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 9,
+        "format": 13,
+        "flasks": {},
+        "minions": {},
+        "minion_mods": {},
+        "minion_templates": {},
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -203,6 +207,11 @@ fn equal_export_should_have_no_difference() {
             "monster_constants",
             "gem_effects",
             "cluster_jewels",
+            // The synthetic export has no flask or minion (P6-4b, P6-7a): the
+            // bundle's rows are bundle-only, compared in their own tests.
+            "flasks",
+            "minions",
+            "minion_mods",
         ]
         .contains(&table)
         {
@@ -332,6 +341,60 @@ fn a_skill_colour_should_compare_with_the_bundles_attribute() {
     );
 }
 
+/// `minion_mods` (P6-7b1): the variety's mods, then its object type's
+/// `.ot` stats with the stat as the ID, one line per stat, as PoB's
+/// exporter commented them; a minion PoB has and the bundle lacks is a row.
+#[test]
+fn minion_mods_should_compare_the_mod_list() {
+    let mut export = equal_export();
+    export["minion_mods"] = json!({"Test/Monsters/Minion1": [
+        ["set_item_drop_slots", "set_item_drop_slots", "0"],
+        ["set_monster_no_drops_or_experience", "set_monster_no_drops_or_experience", "1"]
+    ]});
+    assert_eq!(differences(&export), []);
+    export["minion_mods"]["Test/Monsters/Minion1"][1][2] = json!("2");
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/Minion1", "modList")]
+    );
+    // PoB's order matters: the superclass's stats come where its line stands.
+    export["minion_mods"]["Test/Monsters/Minion1"] = json!([
+        [
+            "set_monster_no_drops_or_experience",
+            "set_monster_no_drops_or_experience",
+            "1"
+        ],
+        ["set_item_drop_slots", "set_item_drop_slots", "0"]
+    ]);
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/Minion1", "modList")]
+    );
+    export["minion_mods"] = json!({"Test/Monsters/PobOnly": {}});
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/PobOnly", "row")]
+    );
+}
+
+/// A bundle built before P6-7b1 has no `.ot` stats: one difference says
+/// so, not one per minion (P6-7b1 review).
+#[test]
+fn minion_mods_without_object_stats_should_be_one_difference() {
+    let mut export = equal_export();
+    export["minion_mods"] = json!({"Test/Monsters/Minion1": {}});
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let mut b = bundle("bundle-poe1");
+    if let Some(m) = b.poe1.as_mut().and_then(|p| p.minions.as_mut()) {
+        m.object_stats = None;
+    }
+    let comparison = compare::compare(&b, &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(
+        fields(&comparison.differences),
+        [("minion_mods", "*", "object_stats")]
+    );
+}
+
 #[test]
 fn rows_on_one_side_should_be_listed() {
     let mut export = equal_export();
@@ -357,9 +420,15 @@ fn rows_on_one_side_should_be_listed() {
         .iter()
         .map(|b| (b.table, b.key.as_str()))
         .collect();
+    // The synthetic flask (P6-4b) is on the bundle's side only: the export
+    // has no flasks.
     assert_eq!(
         only,
-        [("skills", "TestStrike"), ("skills", "TestBolt:level.2")]
+        [
+            ("skills", "TestStrike"),
+            ("skills", "TestBolt:level.2"),
+            ("flasks", "Plain Test Ring")
+        ]
     );
     let skills = &comparison.tables["skills"];
     assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 2));

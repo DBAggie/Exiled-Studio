@@ -393,18 +393,15 @@ fn gems_are_found_by_variant_or_skill() {
         pick(r#"<Gem skillId="Bolt" level="1" quality="0" enabled="true"/>"#),
         Ok("Bolt".to_owned())
     );
-    // Not in the bundle.
+    // Not in the bundle: PoB skips the gem (Phase 6), so the group has no
+    // active skill.
     assert_eq!(
         pick(r#"<Gem gemId="Gem/Gone" variantId="Gone" level="1" quality="0" enabled="true"/>"#),
-        Err(Problem::UnknownGem {
-            gem: "Gem/Gone".to_owned()
-        })
+        Err(Problem::NoActiveSkill)
     );
     assert_eq!(
         pick(&vaal(r#"variantId="Missing""#, "")),
-        Err(Problem::UnknownGem {
-            gem: "Gem/VaalBolt".to_owned()
-        })
+        Err(Problem::NoActiveSkill)
     );
 }
 
@@ -708,7 +705,10 @@ fn the_committed_slice_fields_are_well_formed() {
         assert!(ids.insert(id), "{id} twice");
         assert!(f["pob_key"].is_string(), "{id}");
         assert!(
-            matches!(f["applies"].as_str(), Some("always" | "attack" | "spell")),
+            matches!(
+                f["applies"].as_str(),
+                Some("always" | "attack" | "spell" | "present" | "minion")
+            ),
             "{id}"
         );
         match f["comparison"]["rule"].as_str() {

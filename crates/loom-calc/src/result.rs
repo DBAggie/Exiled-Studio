@@ -55,8 +55,57 @@ pub enum Field {
     /// The main skill's hit damage per second: not the whole build's
     /// damage (Phase 3 plan, N6).
     HitDps,
+    /// The main skill's own damage over time per second (PoB's
+    /// `TotalDot`; Phase 6). Present only when the skill has some.
+    DotDps,
+    /// The main skill's ignite damage per second (PoB's `IgniteDPS`;
+    /// Phase 6). Present only when the skill ignites.
+    IgniteDps,
+    /// The main skill's bleeding damage per second (PoB's `BleedDPS`;
+    /// Phase 6). Present only when the skill's attack bleeds.
+    BleedDps,
+    /// The main skill's poisons' damage per second, every poison together
+    /// (PoB's `TotalPoisonDPS`; Phase 6). Present only when the skill
+    /// poisons.
+    PoisonDps,
     /// A Path of Exile only field.
     Poe1(Poe1Field),
+    /// A field of the main skill's minion (Phase 6 P6-7b2, plan decision
+    /// 2: a shared name, PoE2 has minions too). Present only when the main
+    /// skill has a minion the engine computes.
+    Minion(MinionField),
+}
+
+/// A minion's field ([`Field::Minion`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MinionField {
+    /// Maximum life.
+    Life,
+    /// Maximum energy shield.
+    EnergyShield,
+    /// Armour.
+    Armour,
+    /// Evasion rating.
+    Evasion,
+    /// Resistance to a damage type, after its cap.
+    Resistance(DamageType),
+    /// Chance to block attack damage.
+    BlockChance,
+}
+
+impl MinionField {
+    /// The name after `minion.`.
+    #[must_use]
+    pub fn name(self) -> String {
+        match self {
+            Self::Life => "life".to_owned(),
+            Self::EnergyShield => "energy-shield".to_owned(),
+            Self::Armour => "armour".to_owned(),
+            Self::Evasion => "evasion".to_owned(),
+            Self::Resistance(t) => format!("resistance.{}", t.name()),
+            Self::BlockChance => "block-chance".to_owned(),
+        }
+    }
 }
 
 impl core::fmt::Display for Field {
@@ -81,7 +130,12 @@ impl core::fmt::Display for Field {
             Self::CritChance => "crit-chance",
             Self::CritMultiplier => "crit-multiplier",
             Self::HitDps => "hit-dps",
+            Self::DotDps => "dot-dps",
+            Self::IgniteDps => "ignite-dps",
+            Self::BleedDps => "bleed-dps",
+            Self::PoisonDps => "poison-dps",
             Self::Poe1(p) => return write!(f, "poe1.{}", p.name()),
+            Self::Minion(m) => return write!(f, "minion.{}", m.name()),
         };
         f.write_str(name)
     }

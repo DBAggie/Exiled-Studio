@@ -14,7 +14,7 @@ use loom_calc::{
     Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveState, Range,
     Scaling, Source, StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
 };
-use loom_data::bundle::poe1::{Pantheon, PantheonSoul};
+use loom_data::bundle::poe1::{Flask, Pantheon, PantheonSoul};
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     Attribute, Build, ClassId, ConfigInput, ConfigSet, ConfigSetId, ConfigValue, DataVersion, Game,
@@ -46,6 +46,35 @@ struct Data {
     masteries: Vec<(u32, Vec<StatAmount>)>,
     /// The pantheon (P3-12g): `None` as data without the table.
     pantheons: Option<Vec<Pantheon>>,
+    /// Flask bases (P6-4b): `None` as data without the table.
+    flasks: Option<Vec<Flask>>,
+}
+
+/// Made-up flask bases (P6-4b): a utility flask with a positive buff, one
+/// with a negative buff, and a life flask.
+fn flask_bases() -> Vec<Flask> {
+    let flask = |name: &str, life: i64, stats: &[(&str, i64)]| Flask {
+        base: format!("Test/Flasks/{name}"),
+        name: name.to_owned(),
+        life,
+        mana: 0,
+        duration: 50,
+        buff: (!stats.is_empty()).then(|| "test_buff".to_owned()),
+        stats: stats.iter().map(|(s, v)| ((*s).to_owned(), *v)).collect(),
+    };
+    vec![
+        flask(
+            "Test Fire Flask",
+            0,
+            &[("base_fire_damage_resistance_%", 40)],
+        ),
+        flask(
+            "Test Cold Flask",
+            0,
+            &[("base_cold_damage_resistance_%", -10)],
+        ),
+        flask("Test Life Flask", 100, &[]),
+    ]
 }
 
 /// Two made-up gods: a major one whose souls hold a mapped stat (life), a
@@ -99,6 +128,7 @@ impl Data {
             ],
             masteries: vec![(77, vec![amount("maximum_mana_+%", 10)])],
             pantheons: Some(gods()),
+            flasks: Some(flask_bases()),
         }
     }
 }
@@ -217,6 +247,9 @@ impl CalcData for Data {
 impl Poe1Data for Data {
     fn pantheons(&self) -> Option<&[Pantheon]> {
         self.pantheons.as_deref()
+    }
+    fn flasks(&self) -> Option<&[Flask]> {
+        self.flasks.as_deref()
     }
 }
 
@@ -830,7 +863,6 @@ fn items_beyond_their_lines_should_be_reasons() {
         ("Ring 3", false, Some("unmodelled-item")),
         // No belt, so no abyssal socket: PoB empties the slot (close-out).
         ("Belt Abyssal Socket 1", false, None),
-        ("Flask 1", true, Some("unmodelled-item")),
         ("Flask 1", false, None),
         ("Weapon 1 Swap", false, None),
         ("Amulet", false, None),
@@ -841,6 +873,124 @@ fn items_beyond_their_lines_should_be_reasons() {
             None => assert_eq!(state(&r, Field::Life), StateKind::Complete, "{slot}"),
         }
     }
+    // An active flask whose base the data does not know (P6-4b).
+    let r = run(&with_items(
+        witch(1),
+        vec![plain()],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-item"]);
+}
+
+/// A flask item of base `base` with `lines` (P6-4b).
+fn flask_item(id: u32, base: &str, lines: Vec<ItemLine>) -> Item {
+    let mut it = item(id, lines);
+    it.body.base = Some(base.to_owned());
+    it
+}
+
+/// "#% increased effect" (the flask's own).
+fn own_effect(v: i64) -> ItemLine {
+    modifier(vec![stat("local_flask_effect_+%", v)])
+}
+
+/// Active flasks (P6-4b, review): the buff scaled by the flask's own and
+/// the global effect, merged per base at the scale that gives each mod
+/// its largest value, and the reasons.
+#[test]
+fn active_flasks_should_scale_and_merge_their_buffs() {
+    let fire = Field::Resistance(DamageType::Fire);
+    let cold = Field::Resistance(DamageType::Cold);
+    let bare = run(&witch(1));
+    let gain = |r: &CalcResult, f| value(r, f) - value(&bare, f);
+    // One flask: its buff.
+    let one = run(&with_items(
+        witch(1),
+        vec![flask_item(2, "Test Fire Flask", vec![])],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(state(&one, fire), StateKind::Complete);
+    assert_eq!(gain(&one, fire), 40.0);
+    // An inactive flask: nothing.
+    let off = run(&with_items(
+        witch(1),
+        vec![flask_item(2, "Test Fire Flask", vec![])],
+        &[("Flask 1", 2, false)],
+    ));
+    assert_eq!(gain(&off, fire), 0.0);
+    // Two of one base, one at 50% increased effect: the largest value,
+    // 40 x 1.5, not their sum.
+    let two = run(&with_items(
+        witch(1),
+        vec![
+            flask_item(2, "Test Fire Flask", vec![own_effect(50)]),
+            flask_item(3, "Test Fire Flask", vec![]),
+        ],
+        &[("Flask 1", 2, true), ("Flask 2", 3, true)],
+    ));
+    assert_eq!(gain(&two, fire), 60.0);
+    // A negative buff: the largest value is the smaller scale's, -10.
+    let neg = run(&with_items(
+        witch(1),
+        vec![
+            flask_item(2, "Test Cold Flask", vec![own_effect(50)]),
+            flask_item(3, "Test Cold Flask", vec![]),
+        ],
+        &[("Flask 1", 2, true), ("Flask 2", 3, true)],
+    ));
+    assert_eq!(gain(&neg, cold), -10.0);
+    // A scale below 1: trunc(40 x 0.5).
+    let low = run(&with_items(
+        witch(1),
+        vec![flask_item(2, "Test Fire Flask", vec![own_effect(-50)])],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(gain(&low, fire), 20.0);
+    // The global effect from another item: 40 x 1.2.
+    let global = run(&with_items(
+        witch(1),
+        vec![
+            flask_item(2, "Test Fire Flask", vec![]),
+            item(3, vec![modifier(vec![stat("flask_effect_+%", 20)])]),
+        ],
+        &[("Flask 1", 2, true), ("Ring 1", 3, false)],
+    ));
+    assert_eq!(gain(&global, fire), 48.0);
+    // Two flasks with the same lines: PoB merges them by their mods, not
+    // modelled (a reason).
+    let same = run(&with_items(
+        witch(1),
+        vec![
+            flask_item(2, "Test Fire Flask", vec![own_effect(10)]),
+            flask_item(3, "Test Fire Flask", vec![own_effect(10)]),
+        ],
+        &[("Flask 1", 2, true), ("Flask 2", 3, true)],
+    ));
+    assert_eq!(partial_reasons(&same, fire), ["unmodelled-item"]);
+    // A life flask: no buff, and its duration is unmapped (recovery).
+    let life = run(&with_items(
+        witch(1),
+        vec![flask_item(
+            2,
+            "Test Life Flask",
+            vec![modifier(vec![stat("local_flask_duration_+%", 10)])],
+        )],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(partial_reasons(&life, Field::Life), ["unmapped-stat"]);
+    // Data without the flask table: the active flask stays a reason.
+    let mut data = Data::new();
+    data.flasks = None;
+    let r = run_on(
+        &data,
+        &with_items(
+            witch(1),
+            vec![flask_item(2, "Test Fire Flask", vec![])],
+            &[("Flask 1", 2, true)],
+        ),
+        &options(Some("3_29")),
+    );
+    assert_eq!(partial_reasons(&r, fire), ["unmodelled-item"]);
 }
 
 #[test]
@@ -908,7 +1058,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "buffTailwind".to_owned(),
+        name: "conditionEnemyCrushed".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1412,8 +1562,11 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
             .unwrap_or("none")
     };
     assert_eq!(reason(&r("Helmet", None, vec![])), "no-base-name");
+    // A weapon in the off hand acts as the off hand's weapon (Phase 6,
+    // dual wielding): no reason; a weapon in another armour slot is one.
+    assert_eq!(reason(&r("Weapon 2", Some("Test Sword"), vec![])), "none");
     assert_eq!(
-        reason(&r("Weapon 2", Some("Test Sword"), vec![])),
+        reason(&r("Helmet", Some("Test Sword"), vec![])),
         "base-properties"
     );
     assert_eq!(
@@ -1574,9 +1727,11 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "buffTailwind",
+        // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
+        // `poe1::config`).
+        "conditionEnemyCrushed",
         // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
-        "buffElusive",
+        "buffAlchemistsGenius",
         // Wrath's check has effects since the close-out (`poe1::gems`).
         "buffUnholyMight",
     ] {
@@ -1644,7 +1799,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["buffTailwind", "resistancePenalty"] {
+    for name in ["conditionEnemyCrushed", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");
