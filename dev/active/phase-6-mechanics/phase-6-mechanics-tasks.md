@@ -92,7 +92,11 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b1 PR #163 (base `feat/p6-11e-dot-weapon`)
 - [x] P6-7b1b: the P6-7b1 review (monster base excluded, `can_use` test and docs, validator dangling and empty entries, one difference without `object_stats`, generator sort and split, export guard, docs); `docs/phase-6/minions.md`, "The P6-7b1 review"
 - [x] P6-7b1b PR #164 (base `feat/p6-7b1-minion-data`)
-- [ ] P6-7b3a (next, base `feat/p6-7b1b-review`), with the #164 review's minors (no blockers, no should-fix): a comment in `compare_minion_mods` for an absent `object_stats` with no PoB mod lists; import `BTreeSet` in `poe1.rs` `minion_object_findings`; note in `docs/phase-6/minions.md` that a bundle schema bump for `minions.json` would go with `deny_unknown_fields`
+- [x] P6-7b3a: the minion step (`minion_actor`: choice with `skillMinion`, level from the game's stat, base values, `MinionMapping`, template extras, the life override, reasons `minion-modifier` and `minion-buffs`, `MinionPending`); shared phase helpers; sweep of 52 builds (0 unexpected, 32 `Complete` minion fields equal to PoB); 4 mechanic fixtures; the #164 review's minors; `docs/phase-6/minions.md`, "P6-7b3a"
+- [x] P6-7b3a PR #165 (base `feat/p6-7b1b-review`)
+- [x] P6-7b3a2: the #165 review (12 item skills, `minion-buffs` in the main group, `base_numbers` and the `Ingest` test, six stat slots, early return, mapping comments); `docs/phase-6/minions.md`, "The P6-7b3a review"
+- [x] P6-7b3a2 PR #166 (base `feat/p6-7b3a-minion-base`)
+- [ ] P6-7b3b: register Vaal Summon Skeletons' minion level (88 against PoB's 90) once its fields are `Complete`; a fixture with `set_maximum_life_is_one`
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers

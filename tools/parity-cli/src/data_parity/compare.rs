@@ -1391,6 +1391,8 @@ fn compare_minion_mods(out: &mut Comparison, bundle: &Bundle, export: &Export) {
         }
         return;
     };
+    // Without `.ot` stats and without PoB mod lists there is nothing to
+    // compare: the loop below has no entry (#164 review).
     if m.object_stats.is_none() && !export.minion_mods.is_empty() {
         out.check(
             T,

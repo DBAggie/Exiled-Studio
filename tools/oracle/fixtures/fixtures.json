@@ -1561,6 +1561,46 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "ImpaleDPS", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite with a Rusted Hatchet, a 40% chance to impale, and 30% increased impale effect against 3000 armour: every impale (the default, the maximum), the stored physical hit, the enemy's armour against it; equal to PoB but for the weapon's rate (Q11, DIV-0088 to DIV-0090) (P6-2d)."
+    },
+    {
+      "id": "minion-summon-flame-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-flame-golem-witch.xml",
+      "sha256": "9b28da58ab50eaa37d60de0012c4734aa8021124868da839a194d12b1b4bf1c9",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Flame Golem (level 20): a golem with energy shield and the whole armour and evasion tables (PoB's `or 1`)."
+    },
+    {
+      "id": "minion-summon-stone-golem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-witch.xml",
+      "sha256": "1657ce800e438a4b7b7bc6c0109e7ee5a2ca109b8288662ee04be5954939e6d4",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Stone Golem (level 20): a type with armour and evasion multipliers."
+    },
+    {
+      "id": "minion-summon-stone-golem-alt-y-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-alt-y-witch.xml",
+      "sha256": "d291a639bf46fe09ca517f5dff536d313819e7fb2672524f7e2363f4d5516f2c",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Stone Golem of Safeguarding: the gem's minion life stat (less life) is a reason on the minion fields until P6-7b3b."
+    },
+    {
+      "id": "minion-herald-of-purity-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-herald-of-purity-witch.xml",
+      "sha256": "4072321060561efae9986325d4a00e3120db615f9810a0557375484144cb4fee",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Herald of Purity: its sentinel; the gem's minion life stat is a reason until P6-7b3b."
     }
   ]
 }

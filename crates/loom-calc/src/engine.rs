@@ -63,6 +63,19 @@ pub trait Ruleset {
     /// The phases, in order.
     fn phases(&self) -> &[Phase];
 
+    /// The main skill's minion (Phase 6 P6-7b3a), built after `collect`
+    /// from the input and the character's store: its collected state, or
+    /// why it is not computed (its fields then carry the reason). The
+    /// default: no minion.
+    fn minion(
+        &self,
+        input: &CalcInput<'_>,
+        player: &ModStore,
+    ) -> Option<Result<ActorState, UnsupportedReason>> {
+        let _ = (input, player);
+        None
+    }
+
     /// The named conditions the build settles (P3-8g), computed once per
     /// calculation, after `collect` and before the phases; every query
     /// context a phase builds with [`Calc::context`] holds a copy. They are
@@ -108,6 +121,9 @@ pub struct Calc<'a> {
     input: &'a CalcInput<'a>,
     player: ActorState,
     minion: Option<ActorState>,
+    /// Why the main skill's minion is not computed, when it has one the
+    /// engine cannot compute (P6-7b3a).
+    minion_problem: Option<UnsupportedReason>,
     actor: Actor,
     graph: Graph,
     fields: BTreeMap<Field, FieldResult>,
@@ -145,6 +161,13 @@ impl<'a> Calc<'a> {
     #[must_use]
     pub const fn has_minion(&self) -> bool {
         self.minion.is_some()
+    }
+
+    /// Why the main skill's minion is not computed, if it has one the
+    /// engine cannot compute (P6-7b3a).
+    #[must_use]
+    pub const fn minion_problem(&self) -> Option<&UnsupportedReason> {
+        self.minion_problem.as_ref()
     }
 
     /// Runs `f` with `actor` current, then restores the actor before;
@@ -345,6 +368,11 @@ pub(crate) fn collected<'a>(
     rules.collect(input, &mut ingest)?;
     let (store, global) = ingest.finish();
     let states = rules.states(input);
+    let (minion, minion_problem) = match rules.minion(input, &store) {
+        Some(Ok(m)) => (Some(m), None),
+        Some(Err(reason)) => (None, Some(reason)),
+        None => (None, None),
+    };
     Ok(Calc {
         input,
         player: ActorState {
@@ -353,7 +381,8 @@ pub(crate) fn collected<'a>(
             states,
             skill_sources: std::collections::BTreeSet::new(),
         },
-        minion: None,
+        minion,
+        minion_problem,
         actor: Actor::Player,
         graph: Graph::new(),
         fields: BTreeMap::new(),
@@ -516,6 +545,7 @@ mod tests {
             input,
             player: state(Some("player")),
             minion: None,
+            minion_problem: None,
             actor: Actor::Player,
             graph: Graph::new(),
             fields: BTreeMap::new(),

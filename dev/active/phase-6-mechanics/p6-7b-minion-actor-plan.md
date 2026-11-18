@@ -78,7 +78,7 @@ Phase 6, step P6-7b (plan decision 7: minions are a second actor in the shared c
   - the instruction-count bench is unchanged (decision 12, ADR-013);
   - tests for the slice revision.
 
-### P6-7b3a: base values and fields (after P6-7b1's data)
+### P6-7b3a: base values and fields (done: `docs/phase-6/minions.md`, "P6-7b3a")
 
 - **The minion step:**
   - the type, from PoB's minion list and name table;

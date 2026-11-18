@@ -30,6 +30,7 @@ pub mod hit;
 pub mod item_values;
 pub mod keystones;
 pub mod mapping;
+pub mod minion_actor;
 pub mod minions;
 pub mod pantheon;
 pub mod pob_minion;
@@ -158,6 +159,11 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
+    /// A minion modifier PoB applies to the minion's life or defences
+    /// ("Minions have #% increased maximum Life", the golems'; P6-7b3a): a
+    /// `Flag` no character field reads; the minion step makes each one a
+    /// reason on the minion fields until P6-7b3b applies them.
+    MinionPending,
     /// Reservation efficiency of a pool, or of both (PoB's
     /// `<Pool>ReservationEfficiency` and `ReservationEfficiency`, P3-8l):
     /// `Increased`, read by [`skill_modifiers::Totals`] for the other
@@ -467,6 +473,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
+            Self::MinionPending => f.write_str("minion-pending"),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }
@@ -737,6 +744,14 @@ impl Ruleset for Poe1Rules {
         &phases::PHASES
     }
 
+    fn minion(
+        &self,
+        input: &CalcInput<'_>,
+        player: &crate::store::ModStore,
+    ) -> Option<Result<crate::engine::ActorState, crate::state::UnsupportedReason>> {
+        minion_actor::minion(input, player)
+    }
+
     fn states(
         &self,
         input: &CalcInput<'_>,
@@ -843,6 +858,7 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
+                "minion",
                 "hit",
                 "dot"
             ]

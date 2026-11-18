@@ -50,6 +50,12 @@ pub trait Poe1Data {
     fn flasks(&self) -> Option<&[loom_data::bundle::poe1::Flask]> {
         None
     }
+
+    /// The monster varieties and types (P6-7a, [`super::minion_actor`]);
+    /// `None` (the default) when the data has no such table.
+    fn minions(&self) -> Option<&loom_data::bundle::poe1::Minions> {
+        None
+    }
 }
 
 impl Poe1Data for Bundle {
@@ -59,6 +65,10 @@ impl Poe1Data for Bundle {
 
     fn flasks(&self) -> Option<&[loom_data::bundle::poe1::Flask]> {
         self.poe1.as_ref()?.flasks.as_deref()
+    }
+
+    fn minions(&self) -> Option<&loom_data::bundle::poe1::Minions> {
+        self.poe1.as_ref()?.minions.as_ref()
     }
 }
 
