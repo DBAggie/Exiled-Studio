@@ -222,6 +222,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-10b: "#% increased Mana Cost of Attacks" (`ManaCost` INC,
+    // `SkillType` Attack).
+    (
+        "attack_mana_cost_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCost),
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     (
         "attack_maximum_added_chaos_damage",
         &[(added(CHAOS_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
@@ -1695,6 +1707,12 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ArcaneSurgeCastSpeed
                     // Its mana regeneration (P6-10b).
                     | Poe1Quantity::ArcaneSurgeManaRegen
+                    // The skill's cost (P6-10b).
+                    | Poe1Quantity::ManaCost
+                    | Poe1Quantity::Cost
+                    | Poe1Quantity::ManaCostNoMult
+                    | Poe1Quantity::ManaCostEfficiency
+                    | Poe1Quantity::CostEfficiency
                     // "Deal no ... Damage" (P6-7c2, Brutality's).
                     | Poe1Quantity::DealNo(..)
                     // P6-11j.
@@ -1763,7 +1781,9 @@ impl StatMapping for SkillMapping {
                     matches!(
                         t.quantity,
                         Quantity::Poe1(
-                            Poe1Quantity::MovementReason(_) | Poe1Quantity::RegenReason(..)
+                            Poe1Quantity::MovementReason(_)
+                                | Poe1Quantity::RegenReason(..)
+                                | Poe1Quantity::CostReason(_)
                         )
                     )
                 }) =>
@@ -2259,6 +2279,11 @@ pub const ROWS: &[Row] = &[
     ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
+    // P6-10b: "#% increased Cost of Skills" (`Cost` INC).
+    (
+        "base_cost_+%",
+        &[(Quantity::Poe1(Poe1Quantity::Cost), Op::Increased, 1.0)],
+    ),
     ("base_dexterity", &[(DEX, Op::Base, 1.0)]),
     (
         "base_dexterity_and_intelligence",
@@ -2299,6 +2324,25 @@ pub const ROWS: &[Row] = &[
     (
         "base_lightning_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0)],
+    ),
+    // P6-10b: "Skills Cost +# Mana" (`ManaCostNoMult` BASE).
+    (
+        "base_mana_cost_+",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCostNoMult), Op::Base, 1.0)],
+    ),
+    // P6-10b: "#% reduced Mana Cost of Skills" (`ManaCost` INC, negated).
+    (
+        "base_mana_cost_-%",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Increased, -1.0)],
+    ),
+    // P6-10b: "#% increased Mana Cost Efficiency" (`ManaCostEfficiency` INC).
+    (
+        "base_mana_cost_efficiency_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCostEfficiency),
+            Op::Increased,
+            1.0,
+        )],
     ),
     // P6-10b: "Regenerate # Mana per second" (`ManaRegen` BASE).
     (
@@ -2370,6 +2414,15 @@ pub const ROWS: &[Row] = &[
     (
         "base_should_have_onslaught_from_stat",
         &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
+    ),
+    // P6-10b: "#% increased Cost Efficiency" (`CostEfficiency` INC).
+    (
+        "base_skill_cost_efficiency_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CostEfficiency),
+            Op::Increased,
+            1.0,
+        )],
     ),
     ("base_spell_block_%", &[(SPELL_BLOCK, Op::Base, 1.0)]),
     (
@@ -2538,6 +2591,11 @@ pub const ROWS: &[Row] = &[
             (Quantity::Armour, Op::Increased, 1.0),
             (Quantity::Evasion, Op::Increased, 1.0),
         ],
+    ),
+    // P6-10b: "#% more Mana Cost of Skills" (`ManaCost` MORE).
+    (
+        "hierophant_mana_cost_+%_final",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
     ),
     // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
     // Resistances" (the enemy's `ElementalResist` BASE while ignited or
@@ -2713,6 +2771,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b: Inspiration Support's "#% more Mana Cost" (`ManaCost` MORE,
+    // its `statMap`).
+    (
+        "support_inspiration_mana_cost_+%_final",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
+    ),
 ];
 
 /// The Path of Exile stat-to-effect mapping: [`ROWS`]; every other stat
@@ -2851,8 +2915,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
-    // P6-11g: "#% increased Cost of Skills" (`Cost` INC): no slice field.
-    ("base_cost_+%", "mana-cost"),
     (
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
@@ -2890,8 +2952,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
     // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
     ("base_skill_area_of_effect_+%", "area"),
-    // P6-11g: "Skills Cost Life instead of #% of Mana Cost" (`HybridManaAndLifeCost_Life` BASE): costs, no slice field.
-    ("base_skill_cost_life_instead_of_mana_%", "mana-cost"),
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
     ("base_skill_effect_duration", "skill-duration"),
@@ -3007,10 +3067,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("golem_immunity_to_elemental_damage", "minion-defence"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
-    // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
-    // cost; the stats that add damage from it stay unmapped
-    // ([`NO_EFFECT_DEPENDS_ON`]).
-    ("hierophant_mana_cost_+%_final", "mana-cost"),
+    // P3-8n: the stats that add damage from a mana cost stay unmapped
+    // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
     ("keystone_divine_shield", "keystone-defence"),
@@ -3117,7 +3175,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_cannot_be_stunned_before_contact_point", "display"),
-    ("skill_mana_cost_+_with_non_channelling_skills", "mana-cost"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -3134,7 +3191,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
     ),
-    ("support_inspiration_mana_cost_+%_final", "mana-cost"),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
     // the channelling time to no modifier); its attack speed is
     // `poe1::stacks`, its speed per momentum lost a `MOVEMENT_REASONS` entry.
@@ -3180,14 +3236,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     // P3-8n: damage from a mana cost (PoB `PercentStat` of `ManaCost`).
-    (
-        "added_chaos_damage_%_mana_cost_if_payable",
-        "hierophant_mana_cost_+%_final",
-    ),
-    (
-        "arc_and_crackling_lance_added_cold_damage_%_mana_cost_if_payable",
-        "hierophant_mana_cost_+%_final",
-    ),
     // P3-8n: modifiers per fortification (`FortificationStacks`).
     (
         "armour_evasion_rating_+%_final_per_fortification_above_20",
@@ -3211,20 +3259,12 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "base_number_of_golems_allowed",
     ),
     (
-        "forbidden_rite_and_dark_pact_added_chaos_damage_%_mana_cost_if_payable",
-        "hierophant_mana_cost_+%_final",
-    ),
-    (
         "light_radius_additive_modifiers_apply_to_damage",
         "light_radius_+%",
     ),
     (
         "light_radius_increases_apply_to_accuracy",
         "light_radius_+%",
-    ),
-    (
-        "manaweave_added_cold_damage_%_cost_if_payable",
-        "support_inspiration_mana_cost_+%_final",
     ),
     (
         "maximum_added_fire_damage_to_attacks_per_1%_light_radius",
@@ -3300,6 +3340,29 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
         || super::skill_no_output::contains(stat)
 }
 
+/// Stats that change the main skill's mana cost in a way the engine does
+/// not model (P6-10b), sorted: each maps to [`Poe1Quantity::CostReason`],
+/// the mana cost field's reason alone. PoB's text for each
+/// (`ModParser.lua`): costs paid in life or energy shield instead
+/// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), socketed
+/// attacks' total mana cost (`SocketedIn`), Manaweave's base cost from
+/// unreserved mana, a flask's or full energy shield's condition, and
+/// channelling or non-channelling skills' total (`SkillType` 48, no flag
+/// here).
+pub const COST_REASONS: &[&str] = &[
+    "base_attack_skill_cost_life_instead_of_mana_%",
+    "base_skill_cost_life_instead_of_mana",
+    "base_skill_cost_life_instead_of_mana_%",
+    "local_display_socketed_attacks_mana_cost_+",
+    "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
+    "local_flask_skill_mana_cost_+%_during_flask_effect",
+    "mana_cost_+%_while_on_full_energy_shield",
+    "manaweave_cost_equals_%_unreserved_mana",
+    "skill_mana_cost_+_with_channelling_skills",
+    "skill_mana_cost_+_with_non_channelling_skills",
+    "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
+];
+
 /// Stats that change movement speed in a way the engine does not model
 /// (P6-10b), sorted: each maps to [`Poe1Quantity::MovementReason`], the
 /// movement fields' reason alone. PoB's text for each (`ModParser.lua`):
@@ -3371,6 +3434,15 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
 
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
+        if let Ok(i) = COST_REASONS.binary_search(&stat.as_str()) {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::CostReason(COST_REASONS[i])),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
         if let Ok(i) = MOVEMENT_REASONS.binary_search(&stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
                 quantity: Quantity::Poe1(Poe1Quantity::MovementReason(MOVEMENT_REASONS[i])),
@@ -3530,7 +3602,8 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::EnergyShieldRecharge
                 | Poe1Quantity::EnergyShieldRechargeFaster
                 | Poe1Quantity::MovementSpeed
-                | Poe1Quantity::MovementReason(_),
+                | Poe1Quantity::MovementReason(_)
+                | Poe1Quantity::CostReason(_),
             ) => true,
             _ => false,
         }
@@ -3873,6 +3946,7 @@ mod tests {
         // A binary search reads it (P6-10b).
         assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(MOVEMENT_REASONS.windows(2).all(|w| w[0] < w[1]));
+        assert!(COST_REASONS.windows(2).all(|w| w[0] < w[1]));
         for (stat, _) in HIT_ROWS {
             assert!(
                 ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err()

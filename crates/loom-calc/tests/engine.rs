@@ -359,9 +359,10 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
     let r = calculate(&input).unwrap();
     // The slice's 24, the regeneration and recharge fields (P6-10b: life,
     // mana, energy shield, its recharge and delay), present whenever their
-    // pool is, and the two movement speed fields (P6-10b), always.
-    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 7);
-    assert_eq!(r.fields.len(), 31, "docs/phase-3/slice-fields.json");
+    // pool is, and the two movement speed fields and the mana cost
+    // (P6-10b), always.
+    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 8);
+    assert_eq!(r.fields.len(), 32, "docs/phase-3/slice-fields.json");
     let computed: Vec<_> = r
         .fields
         .iter()
@@ -383,7 +384,8 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 7);
+    // The main skill's 7 and the mana cost (P6-10b): the build has no skill.
+    assert_eq!(not_computed, 8);
     assert_eq!(r.state, StateKind::Indeterminate);
     assert!(format!("{input:?}").contains("Poe1"));
 }

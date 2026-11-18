@@ -133,3 +133,43 @@ So the gap is Lunaris's soul with the build's 5 nearby enemies, a stat the table
 - **Corpus:** 0 unexpected, no value moved, no state changed.
 - **data-parity:** `gem_effects` 1,473 values, 0 differences (Haste's movement speed compared as `MovementSpeed`; the warcries' markers are not compared); uncategorized 353, unchanged.
 - **Real-bundle tests** pass. The workspace tests and clippy pass.
+
+## Part 4: the main skill's mana cost
+
+One new field: `mana-cost`, PoB's `ManaCost` (slice revision 9, applies present, group `cost`).
+- The engine always emits it.
+- When the build has no main skill it is `not-computed`. The bare characters and the minimal builds count one more `not-computed` field (tests updated).
+
+**The calculation** (`loom_calc::poe1::costs`, phase `costs` after `dot`; `CalcOffence.lua` 1677 to 1800). It follows PoB's order of floors and ceilings:
+- The base is the skill level's `Mana` cost (the granted effect level's costs).
+- Times the supports' cost multiplier `floor(More(SupportManaMultiplier), 4)` (`gems::support_multiplier`, as reservation's), floored, plus `ManaCostNoMult`.
+- Times `(1 + inc / 100)` of `ManaCost` and `Cost` `INC`, rounded up when the sum is below 0 and down otherwise.
+- The `ManaCost` more, then the `Cost` more, each rounded up below 1 and down otherwise.
+- Divided by the cost efficiency, `1 + (ManaCostEfficiency + CostEfficiency) / 100`.
+- Plus the total, the `BASE` sums of `ManaCost` and `Cost`; never below 0.
+- The modifiers are queried in the skill's context: attack or spell, and its keyword flags.
+
+**Sources now read:**
+- **Rows:**
+  - increased cost (`base_cost_+%`) and reduced mana cost (`base_mana_cost_-%`, negated);
+  - "Skills Cost +# Mana" (`ManaCostNoMult`);
+  - cost and mana cost efficiency;
+  - Hierophant's more mana cost and Inspiration Support's (its `statMap`);
+  - attacks' mana cost (a hit row on `Flags::ATTACK`).
+- **Retired `NoEffect` rows:** five P3-8n and P6-11g rows for costs. Two `NO_EFFECT_DEPENDS_ON` guards went with them, since the stats they guarded are rows now. The stats that add damage from a cost stay unmapped.
+- **`COST_REASONS`:** the cost field's markers (`Poe1Quantity::CostReason`), sorted and tested. Each is a reason on that field alone:
+  - costs paid in life or energy shield instead;
+  - socketed attacks' total cost and Manaweave's cost from unreserved mana;
+  - the flask's and full energy shield's conditions;
+  - channelling and non-channelling skills' totals;
+  - Focused Channelling's more cost.
+- **The skill's own data:** a cost in another resource and a skill whose reservation becomes its cost are the skill's reasons.
+
+**Evidence** (`local/p6/p6-10b4/`):
+- **Fixture:** `ice-nova-mana-cost-witch.xml`, with Controlled Destruction's multiplier, 12% reduced and 4% increased cost (a net reduction, rounded up), "Skills Cost +3 Mana", and 20% increased mana cost efficiency. ManaCost 27.5, equal to PoB's.
+- **Public `calc-parity`:** 194 builds, 131 expected differences, 0 unexpected; `Complete` fields 4,990 (4,823 after part 3).
+  - Every computed mana cost equals PoB's: 138 builds.
+  - No other value moved, and no field changed state.
+- **Corpus:** 0 unexpected, no value moved, no state changed.
+- **data-parity:** `gem_effects` 1,473 values, 0 differences; uncategorized 353, unchanged.
+- **Real-bundle tests** pass; the reservation stats test accepts a field's reason marker. The workspace tests and clippy pass.

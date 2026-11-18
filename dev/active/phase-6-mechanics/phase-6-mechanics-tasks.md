@@ -121,7 +121,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-10b part 1: life and mana regeneration (`poe1::regen`, fields `life-regen` and `mana-regen`, slice revision 6; Arcane Surge, consecrated ground, the stationary and stopped-DoT state rows; `mapping::REGEN_REASONS` and `elsewhere` keep reasons on these fields); fixtures `ice-nova-regeneration-witch.xml`, `ice-nova-arcane-surge-regeneration-witch.xml`; every regeneration value equal to PoB; `docs/phase-6/recovery.md`
 - [x] P6-10b part 2: energy shield regeneration, recharge, and delay (slice revision 7), Zealot's Oath, the rare or unique enemy nearby condition (`conditions::ENEMY_RARE_OR_UNIQUE_NEARBY`); fixtures `ice-nova-energy-shield-recovery-witch.xml`, `ice-nova-zealots-oath-witch.xml`; every energy shield value equal to PoB; `docs/phase-6/recovery.md`, "Part 2"
 - [x] P6-10b part 3: movement speed (`poe1::movement`, fields `movement-speed` and `effective-movement-speed`, slice revision 8), the armour bases' movement penalty, Onslaught's and Adrenaline's movement speed, `mapping::MOVEMENT_REASONS`; fixture `ice-nova-movement-speed-witch.xml`; every movement value equal to PoB; `docs/phase-6/recovery.md`, "Part 3"
-- [ ] P6-10b further parts: leech, degeneration (D7), physical damage reduction, maximum hit and EHP, skill costs
+- [x] P6-10b part 4: the main skill's mana cost (`poe1::costs`, field `mana-cost`, slice revision 9; `mapping::COST_REASONS`); fixture `ice-nova-mana-cost-witch.xml`; every mana cost equal to PoB; `docs/phase-6/recovery.md`, "Part 4"
+- [ ] P6-10b further parts: leech, degeneration (D7), physical damage reduction, maximum hit and EHP, other costs (life, energy shield, per second)
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)

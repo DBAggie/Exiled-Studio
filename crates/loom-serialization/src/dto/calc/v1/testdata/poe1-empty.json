@@ -847,6 +847,11 @@
             }
           }
         ]
+      },
+      {
+        "field": "poe1.mana-cost",
+        "state": "unsupported",
+        "reason": "not-computed"
       }
     ],
     "graph": [

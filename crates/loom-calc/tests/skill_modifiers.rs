@@ -125,6 +125,19 @@ fn real_reservation_and_aura_stats_should_be_covered() {
             // No effect by a rule of its own (Phase 6): a skill's own stat
             // with no output, a cluster jewel's or a gem display's prefix.
             loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
+            // A field's reason marker (P6-10b): still a reason, on that
+            // field alone (Manaweave's cost from unreserved mana).
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    matches!(
+                        t.quantity,
+                        loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::CostReason(_)
+                                | loom_calc::poe1::Poe1Quantity::RegenReason(..)
+                                | loom_calc::poe1::Poe1Quantity::MovementReason(_)
+                        )
+                    )
+                }) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

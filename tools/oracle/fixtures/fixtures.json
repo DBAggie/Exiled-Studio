@@ -1921,6 +1921,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-10b: Haste, an increased movement speed line, and Onslaught, Adrenaline, and Tailwind from the config: MovementSpeedMod and EffectiveMovementSpeedMod (with Tailwind's action speed)."
+    },
+    {
+      "id": "ice-nova-mana-cost-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-mana-cost-witch.xml",
+      "sha256": "f6f7f2b9eeb14485ca0cae12e48c756533473feef0b427025ff54059be73bab7",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: Controlled Destruction's cost multiplier with reduced and increased cost (a net reduction, rounded up), flat added cost, and mana cost efficiency: ManaCost."
     }
   ]
 }

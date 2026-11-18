@@ -19,6 +19,7 @@ pub mod charges;
 pub mod collect;
 pub mod conditions;
 pub mod config;
+pub mod costs;
 pub mod damage_taken;
 pub mod dot;
 pub mod enemy;
@@ -286,6 +287,24 @@ pub enum Poe1Quantity {
     /// (P6-10b; [`mapping::MOVEMENT_REASONS`]): a `Flag` only [`movement`]
     /// reads, as those fields' `unmapped-stat` reason.
     MovementReason(&'static str),
+    /// A skill's mana cost (PoB's `ManaCost`; P6-10b): `Increased`, `More`,
+    /// and `Base` (the total), read by [`costs`].
+    ManaCost,
+    /// A skill's cost of any resource (PoB's `Cost`; P6-10b): `Increased`,
+    /// `More`, and `Base`, read by [`costs`].
+    Cost,
+    /// Mana cost added after the support multiplier (PoB's
+    /// `ManaCostNoMult`; P6-10b): `Base`, read by [`costs`].
+    ManaCostNoMult,
+    /// Mana cost efficiency (PoB's `ManaCostEfficiency`; P6-10b):
+    /// `Increased`, read by [`costs`].
+    ManaCostEfficiency,
+    /// Cost efficiency (PoB's `CostEfficiency`; P6-10b): `Increased`, read by
+    /// [`costs`].
+    CostEfficiency,
+    /// A stat that changes the cost in a way the engine does not model
+    /// (P6-10b; [`mapping::COST_REASONS`]): a `Flag` only [`costs`] reads.
+    CostReason(&'static str),
     /// A chance to deal double damage, percent (PoB's `DoubleDamageChance`,
     /// P3-8n): `Base`; a hit's damage is scaled by `1 + min(chance, 100) /
     /// 100` ([`hit`]).
@@ -598,6 +617,12 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ActionSpeed => f.write_str("action-speed"),
             Self::MovementSpeed => f.write_str("movement-speed"),
             Self::MovementReason(stat) => write!(f, "movement-reason.{stat}"),
+            Self::ManaCost => f.write_str("mana-cost"),
+            Self::Cost => f.write_str("cost"),
+            Self::ManaCostNoMult => f.write_str("mana-cost-no-mult"),
+            Self::ManaCostEfficiency => f.write_str("mana-cost-efficiency"),
+            Self::CostEfficiency => f.write_str("cost-efficiency"),
+            Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),
             Self::DoubleDamageChance => f.write_str("double-damage-chance"),
             Self::Conversion(from, to) => {
                 write!(f, "conversion.{}.{}", from.name(), to.name())
@@ -793,6 +818,8 @@ pub enum Poe1Field {
     /// The movement speed modifier with action speed (PoB's
     /// `EffectiveMovementSpeedMod`; P6-10b).
     EffectiveMovementSpeedMod,
+    /// The main skill's mana cost (PoB's `ManaCost`; P6-10b).
+    ManaCost,
 }
 
 impl Poe1Field {
@@ -810,6 +837,7 @@ impl Poe1Field {
             Self::EnergyShieldRechargeDelay => "energy-shield-recharge-delay",
             Self::MovementSpeedMod => "movement-speed",
             Self::EffectiveMovementSpeedMod => "effective-movement-speed",
+            Self::ManaCost => "mana-cost",
         }
     }
 }
@@ -989,6 +1017,7 @@ mod tests {
                 "minion",
                 "hit",
                 "dot",
+                "costs",
                 "minion-hit"
             ]
         );

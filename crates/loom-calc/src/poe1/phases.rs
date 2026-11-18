@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 12] = [
+pub const PHASES: [Phase; 13] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -72,6 +72,10 @@ pub const PHASES: [Phase; 12] = [
     Phase {
         name: "dot",
         run: super::dot::dot,
+    },
+    Phase {
+        name: "costs",
+        run: super::costs::phase,
     },
     Phase {
         name: "minion-hit",
