@@ -44,7 +44,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 17] = [
+pub const TABLES: [&str; 19] = [
     "skills",
     "gems",
     "bases",
@@ -62,6 +62,8 @@ pub const TABLES: [&str; 17] = [
     "jewel_radii",
     "flavour_text",
     "cluster_jewels",
+    "flasks",
+    "minions",
 ];
 
 /// Summary and overlay format.

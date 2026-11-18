@@ -28,8 +28,9 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 11,
+        "format": 12,
         "flasks": {},
+        "minions": {},
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -204,6 +205,10 @@ fn equal_export_should_have_no_difference() {
             "monster_constants",
             "gem_effects",
             "cluster_jewels",
+            // The synthetic export has no flask or minion (P6-4b, P6-7a): the
+            // bundle's rows are bundle-only, compared in their own tests.
+            "flasks",
+            "minions",
         ]
         .contains(&table)
         {

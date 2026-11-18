@@ -87,9 +87,11 @@
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit
 //! (PoB's `skillFlags.hit`: a `Damage` or `Projectile` type), cast by the
-//! player or a totem: not an attack, triggered, a trap, mine, minion, or
-//! brand ([`NOT_SELF_CAST`]; channelled skills since P6-5, totems since
-//! P6-6d, the latter `Partial` through [`TOTEM_REASON`]), without a
+//! player, a totem, a trap, or a mine: not an attack, triggered, a minion,
+//! or brand ([`NOT_SELF_CAST`]; channelled skills since P6-5, totems since
+//! P6-6d, `Partial` through [`TOTEM_REASON`]; traps and mines since P6-6e,
+//! `Partial` through [`TRAP_MINE_REASON`], their attacks and DoT not
+//! computed), without a
 //! cooldown, with a cast time; or an attack
 //! that is none of those but an attack, without a cooldown, with a weapon
 //! in the main hand of a class the skill can use and no weapon in the off
@@ -1903,8 +1905,9 @@ fn cast_rate(
     // A trap's or a mine's spell (P6-6e): PoB replaces its time with the
     // throwing or laying time (`skillData.timeOverride`, `CalcOffence.lua`
     // 1223 to 1337, 2208): `1 / min(1 / base x action speed, tick rate)`,
-    // a mine's after a trap's, one thrown (no throw count mapped). Cast
-    // speed does not reach it.
+    // a mine's when it is both (PoB's mine path sets the time), one
+    // thrown (throw counts and trap or mine speed are not read: the
+    // reason). Cast speed does not reach it.
     let mine = spell.skill.types.contains("RemoteMined");
     if mine || spell.skill.types.contains("Trapped") {
         let base = if mine {

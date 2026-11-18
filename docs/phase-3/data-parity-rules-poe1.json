@@ -722,6 +722,22 @@
         "game:UniqueStashLayout.ItemVisualIdentityKey"
       ],
       "count": 1
+    },
+    {
+      "id": "minions-pob-written",
+      "category": "pob-derivation",
+      "table": "minions",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "GuardianRelicAll"
+      ],
+      "evidence": "PoB writes this minion by hand in its template (Export/Minions/Minions.txt 183, not a #monster directive): the combined Guardian relic, no game monster variety (P6-7a).",
+      "sources": [
+        "v2.67.2:src/Export/Minions/Minions.txt:183"
+      ],
+      "count": 1
     }
   ]
 }

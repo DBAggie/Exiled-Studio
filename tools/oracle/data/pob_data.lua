@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 11
+local FORMAT = 12
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -333,6 +333,56 @@ for name, base in pairs(data.itemBases) do
 	end
 end
 
+-- Every minion and spectre (data.minions after Data.lua 1126 to 1133, format
+-- 12, Phase 6 P6-7a): the values PoB's exporter wrote from each monster
+-- variety (src/Export/Scripts/minions.lua), keyed by the variety's ID.
+-- Spectres are keyed by it; a minion's key is a short name, which PoB's own
+-- template (Export/Minions/Minions.txt, `#monster <id> <name>`) maps to
+-- the variety. A name the template does not map is written under its key.
+local minionVariety = {}
+local template = openFile("Export/Minions/Minions.txt", "r")
+if not template then
+	die("Export/Minions/Minions.txt not found")
+end
+for line in template:lines() do
+	local id, name = line:match("^#monster%s+(%S+)%s+(%S+)")
+	if id and name and name ~= "#" then
+		minionVariety[name] = id
+	end
+end
+template:close()
+local minions = {}
+for key, m in pairs(data.minions) do
+	local id = minionVariety[key] or key
+	if minions[id] then
+		die("two minions for " .. id)
+	end
+	minions[id] = {
+		key = key,
+		name = m.name,
+		life = m.life,
+		energyShield = m.energyShield,
+		armour = m.armour,
+		evasion = m.evasion,
+		fireResist = m.fireResist,
+		coldResist = m.coldResist,
+		lightningResist = m.lightningResist,
+		chaosResist = m.chaosResist,
+		damage = m.damage,
+		damageSpread = m.damageSpread,
+		attackTime = m.attackTime,
+		attackRange = m.attackRange,
+		accuracy = m.accuracy,
+		damageFixup = m.damageFixup,
+		lifeScaling = m.lifeScaling,
+		baseDamageIgnoresAttackSpeed = m.baseDamageIgnoresAttackSpeed == true,
+		weaponType1 = m.weaponType1,
+		weaponType2 = m.weaponType2,
+		monsterTags = list(m.monsterTags),
+		skillList = list(m.skillList),
+	}
+end
+
 ---------------------------------------------------------------------------
 -- Item mods (format 6, UX sprint B-2): the affix name and level of each
 -- mod PoB keys by the game's mod ID, from the files Modules/Data.lua loads
@@ -535,6 +585,7 @@ local document = {
 	bases = bases,
 	base_requirements = baseRequirements,
 	flasks = flasks,
+	minions = minions,
 	mods = itemMods,
 	monster_tables = monsterTables,
 	game_constants = copyMap(data.gameConstants),

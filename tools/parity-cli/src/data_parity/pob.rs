@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 11;
+pub const FORMAT: u32 = 12;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -38,6 +38,9 @@ pub struct Export {
     pub base_requirements: BTreeMap<String, BaseRequirements>,
     /// Every flask base's `flask` data, by name (format 11, P6-4b).
     pub flasks: BTreeMap<String, FlaskBase>,
+    /// Every minion and spectre, by the monster variety's ID (format 12,
+    /// P6-7a).
+    pub minions: BTreeMap<String, Minion>,
     /// The mods of the keyed `data.itemMods` files, by mod ID (format 6).
     pub mods: BTreeMap<String, ItemMod>,
     /// `data.monster*Table`, by table name; entry `i` is level `i + 1`.
@@ -154,6 +157,61 @@ pub struct Boss {
     /// `isUber`.
     #[serde(rename = "isUber")]
     pub is_uber: bool,
+}
+
+/// A minion or spectre of `data.minions` (`src/Data/Minions.lua`,
+/// `Spectres.lua`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Minion {
+    /// PoB's key (the variety's ID, or a minion's short name).
+    #[expect(
+        dead_code,
+        reason = "read so the export is checked whole; the variety's ID keys the row"
+    )]
+    pub key: String,
+    /// The name.
+    pub name: String,
+    /// Life multiplier.
+    pub life: f64,
+    #[serde(default, rename = "energyShield")]
+    pub energy_shield: Option<f64>,
+    #[serde(default)]
+    pub armour: Option<f64>,
+    #[serde(default)]
+    pub evasion: Option<f64>,
+    #[serde(rename = "fireResist")]
+    pub fire_resist: f64,
+    #[serde(rename = "coldResist")]
+    pub cold_resist: f64,
+    #[serde(rename = "lightningResist")]
+    pub lightning_resist: f64,
+    #[serde(rename = "chaosResist")]
+    pub chaos_resist: f64,
+    /// Damage multiplier.
+    pub damage: f64,
+    #[serde(rename = "damageSpread")]
+    pub damage_spread: f64,
+    /// Attack time, seconds.
+    #[serde(rename = "attackTime")]
+    pub attack_time: f64,
+    #[serde(rename = "attackRange")]
+    pub attack_range: f64,
+    pub accuracy: f64,
+    #[serde(default, rename = "damageFixup")]
+    pub damage_fixup: Option<f64>,
+    #[serde(default, rename = "lifeScaling")]
+    pub life_scaling: Option<String>,
+    #[serde(rename = "baseDamageIgnoresAttackSpeed")]
+    pub base_damage_ignores_attack_speed: bool,
+    #[serde(default, rename = "weaponType1")]
+    pub weapon_type1: Option<String>,
+    #[serde(default, rename = "weaponType2")]
+    pub weapon_type2: Option<String>,
+    #[serde(rename = "monsterTags", deserialize_with = "list")]
+    pub monster_tags: Vec<String>,
+    #[serde(rename = "skillList", deserialize_with = "list")]
+    pub skill_list: Vec<String>,
 }
 
 /// A flask base's `flask` table (`src/Data/Bases/flask.lua`).

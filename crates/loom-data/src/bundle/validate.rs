@@ -1039,6 +1039,31 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (ids, type_ids, dangling, bad) = p.minion_domain();
+        duplicates(
+            report,
+            super::poe1::MINIONS,
+            ids.into_iter().chain(type_ids),
+        );
+        for (at, detail) in dangling {
+            report.add("BUNDLE_DANGLING_REF", at, detail);
+        }
+        for (at, detail) in bad {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        if let Some(sk) = &b.skills {
+            let effects: BTreeSet<&str> =
+                sk.granted_effects.iter().map(|g| g.id.as_str()).collect();
+            for (at, s) in p.minion_skills() {
+                if !effects.contains(s) {
+                    report.add(
+                        "BUNDLE_DANGLING_REF",
+                        at,
+                        format!("granted effect {s} does not exist"),
+                    );
+                }
+            }
+        }
         let (bases, findings) = p.flask_domain();
         duplicates(report, super::poe1::FLASKS, bases.iter().copied());
         for base in bases.iter().filter(|x| !known.contains(*x)) {
