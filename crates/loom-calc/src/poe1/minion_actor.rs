@@ -315,6 +315,13 @@ fn collect(
         weapon(input, variety, ty, level, &mut ingest);
         support_modifiers(input, skill, &mut ingest);
     }
+    // A computed minion spell's own stats (P6-7c3).
+    if let Some(id) = own_skill
+        .as_deref()
+        .filter(|id| super::minion_hit::VETTED_SPELLS.contains(id))
+    {
+        own_skill_stats(input, id, level, &mut ingest);
+    }
     ingest.effect(base(
         Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
         Op::Flag,
@@ -623,8 +630,43 @@ fn support_modifiers(
     }
 }
 
+/// The minion skill's own stats (P6-7c3): PoB builds the skill at level 1
+/// with the minion as its actor, so an effectiveness-scaled stat (its base
+/// damage) is PoB's value at the minion's level
+/// ([`skill::instance_for_actor`]). They join the skill's list
+/// ([`super::minion_hit::SKILL_RULE`]) through the mapping a support's
+/// stats take on a minion's skill ([`SupportOnMinion`]; a skill has no
+/// `notMinionStat` list PoB reads, `Modules/Data.lua` 82).
+fn own_skill_stats(input: &CalcInput<'_>, id: &str, level: i64, ingest: &mut Ingest<'_>) {
+    let source = Source::Rule(super::minion_hit::SKILL_RULE);
+    let Some(effect) = input.data.granted_effect(id) else {
+        ingest.reason(not_computed(&source, "minion-skill"));
+        return;
+    };
+    let instance = skill::instance_for_actor(effect, 1, level, input.data);
+    for p in &instance.problems {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: p.name(),
+        });
+    }
+    let lines: Vec<StatLine> = instance
+        .stats
+        .iter()
+        .map(|(stat, value)| StatLine {
+            stat: StatId::new(stat.as_str()),
+            value: StatValue::Exact {
+                min: *value,
+                max: *value,
+            },
+        })
+        .collect();
+    ingest.stats_with(&SupportOnMinion { support: id }, &source, &lines);
+}
+
 /// The gem mapping of a support's stats on a minion's skill
-/// ([`support_modifiers`]).
+/// ([`support_modifiers`]), and of the minion skill's own
+/// ([`own_skill_stats`]).
 struct SupportOnMinion<'a> {
     support: &'a str,
 }

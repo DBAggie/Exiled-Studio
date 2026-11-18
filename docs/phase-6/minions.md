@@ -449,6 +449,49 @@ A support's stats then join the minion skill's list. Two kinds are not read ther
 
 **Next (P6-7c, part 3):** more minion skills (spells, slams: each PoB skill's data, as the character's), the minion's ailments and damage over time (the copies exist: `MinionField::IgniteDps` and kin), spectres.
 
+## P6-7c, part 3a: the minion's spells
+
+A minion's spell runs through the character's spell path (`hit::spell_hit`) under the minion actor, as its attack runs through the attack path.
+
+**What PoB does** (`CalcActiveSkill.lua` 868 to 922):
+- **The level:** each minion skill is created at level 1, or at the highest level the minion's level reaches. Its actor is the minion, so `actorLevel` is the minion's level (567).
+- **Its own stats** (`calcLib.buildSkillInstanceStats`, `CalcTools.lua` 183 to 240):
+  - A stat with effectiveness interpolation (code 3) is `round(effectiveness x value)`.
+  - `effectiveness = (3.885209 + 0.360246 x (level - 1)) x baseEffectiveness x (1 + incrementalEffectiveness) ^ (level - 1)` at the actor's level (`Data/Misc.lua` 29 and 30).
+  - The game's resolved value is the value at the level requirement, so it does not fit a minion.
+- **Its damage effectiveness:** `1 + minionDamageEffectiveness / 100` of the summoning skill (910). No skill in PoB's data sets that, so it is 1.
+- **The totem flag** is the skill's `baseFlags.totem` (415 to 444). The Flame Golem's Immolate has the `SummonsTotem` type but no such flag, so PoB casts it as the golem's spell.
+
+**The engine:**
+- **`skill::instance_for_actor`:** an effectiveness-scaled stat at the actor's level, by `skill::effectiveness`. The stat set's single-precision values are widened as PoB's exporter reads them, and `math::pow` is the deterministic power.
+- **`minion_actor::own_skill_stats`:** reads the spell's own stats into the minion's store. They go through the mapping a support's stats take on a minion's skill, under the rule source `minion-skill`, which joins the skill's list (its mores are rounded with the supports').
+- **`minion_hit::VETTED_SPELLS`:** the minion spells computed. Each is a plain self-cast spell in PoB's data: the spell flag, no totem flag, `pob_vetted`, one level, no cooldown, and a cast time (a test, and `spell`'s checks). The list holds the Flame Golem's Immolate.
+- **The hit under the minion actor:** damage effectiveness 1, and the totem reason follows PoB's flag.
+
+**Rows added:**
+- `active_skill_cast_speed_+%_final`, PoB's `Speed` MORE with `ModFlag.Cast` (`SkillStatMap.lua` 1729), a hit row;
+- `always_pierce`: PoB reads it only into `PierceCount` (`CalcOffence.lua` 1106), so `NoEffect` (no slice field), as `base_projectile_speed_+%`;
+- `monster_penalty_against_minions_damage_+%_final_vs_player_minions` and `spell_maximum_action_distance_+%`: no row in PoB's stat map, so `NoEffect`.
+
+**Not computed yet** (each still `unmodelled-skill` `minion-skill`):
+- the Lightning Golem's Storm Orb (a cooldown);
+- the Holy Relic's Nova (triggered, PoB's average);
+- the Carrion Golem's combo attack (its own stat map);
+- the Reaper's skills.
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run12`): every Flame Golem minion offence value equals PoB's, the average damage (371.74375), the speed (0.44), and the DPS (163.567) included. The plain build is `Complete`; the two alternate-quality builds are `partial` for their gem only. No other sweep document changed; 0 unexpected.
+- **Fixture:** `minion-summon-flame-golem-witch.xml` is retargeted to its five minion offence fields, all met.
+- **Public `calc-parity` on `b-ot`:** 195 builds, 172 expected, 0 unexpected; `Complete` fields 5,166 (5,158 before).
+  - Two other builds' documents changed: `holy-flame-totem-hierophant.xml` and `lightning-trap-of-sparking-elementalist.xml` lost `always_pierce` from their reasons.
+  - No value or state moved in either.
+- **Corpus:** 0 unexpected. One document lost `always_pierce` from its reasons; no value or state moved.
+- **Tests:**
+  - `effectiveness_should_follow_pobs_formula_at_the_actors_level` (Immolate at levels 1, 68, and 90);
+  - `vetted_minion_spells_should_be_plain_spells`;
+  - the workspace's tests and clippy pass.
+
 ## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
 
 Applied:

@@ -1569,8 +1569,8 @@
       "path": "mechanic/minion-summon-flame-golem-witch.xml",
       "sha256": "9b28da58ab50eaa37d60de0012c4734aa8021124868da839a194d12b1b4bf1c9",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "P6-7b3a: Summon Flame Golem (level 20): a golem with energy shield and the whole armour and evasion tables (PoB's `or 1`)."
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Flame Golem (level 20): a golem with energy shield and the whole armour and evasion tables (PoB's `or 1`). P6-7c3: its spell, Immolate, at the golem's level (PoB's effectiveness), its damage effectiveness 1 and its -89% cast speed."
     },
     {
       "id": "minion-summon-stone-golem-witch.xml",

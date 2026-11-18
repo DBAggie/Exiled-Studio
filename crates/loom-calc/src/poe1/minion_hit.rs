@@ -50,6 +50,23 @@ use crate::state::UnsupportedReason;
 /// Raging Spirit's (`Data/Skills/minion.lua` 2132: `attack`, `melee`).
 pub const VETTED: &[&str] = &["Melee", "SumonRagingSpiritMelee"];
 
+/// The minion spells the engine computes (P6-7c3), by granted effect ID,
+/// each a plain self-cast spell in PoB's data (a test checks them: PoB's
+/// `spell` flag, no totem flag, [`hit::pob_vetted`], no cooldown, a cast
+/// time) whose own stats the mapping reads (none `unmapped-stat`): the
+/// Flame Golem's Immolate (`Data/Skills/minion.lua` 104).
+pub const VETTED_SPELLS: &[&str] = &["FireElementalFlameRedSummoned"];
+
+/// The source of the minion skill's own stats (P6-7c3): its skill list,
+/// as the summoning skill's supports are ([`super::minion_actor`]).
+pub const SKILL_RULE: &str = "minion-skill";
+
+/// The minion's main skill as the hit path computes it.
+enum MinionSkill<'d> {
+    Attack(AttackSkill<'d>),
+    Spell(hit::SpellSkill<'d>),
+}
+
 /// The minion's offence fields the slice compares.
 pub const FIELDS: [MinionField; 6] = [
     MinionField::AverageDamage,
@@ -102,18 +119,22 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 s.supports
                     .iter()
                     .map(|r| Source::Gem { group, gem: r.gem })
+                    .chain(std::iter::once(Source::Rule(SKILL_RULE)))
                     .collect()
             })
             .unwrap_or_default();
-    match attack(&input, &levels, skill_id.as_deref(), weapon.as_deref()) {
-        Ok(attack) => calc
+    match minion_skill(&input, &levels, skill_id.as_deref(), weapon.as_deref()) {
+        Ok(skill) => calc
             .with_actor(Actor::Minion, |c| {
                 attributes(c)?;
-                // The minion skill's own list: the summoning skill's
-                // supports (PoB multiplies their mores apart from the
-                // minion's; P6-7c review).
+                // The minion skill's own list: its own stats and the
+                // summoning skill's supports (PoB multiplies their mores
+                // apart from the minion's; P6-7c review).
                 c.set_skill_sources(sources.clone());
-                hit::attack_hit(c, &attack)?;
+                match &skill {
+                    MinionSkill::Attack(attack) => hit::attack_hit(c, attack)?,
+                    MinionSkill::Spell(spell) => hit::spell_hit(c, spell)?,
+                }
                 // Fields the slice does not compare yet (the minion's
                 // ailments): not computed until they are (P6-7c review).
                 for field in UNVALIDATED {
@@ -150,14 +171,15 @@ fn attributes(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     Ok(())
 }
 
-/// The minion's main skill as an attack with its monster weapon (module
-/// docs), or why it is not computed.
-fn attack<'d>(
+/// The minion's main skill as the hit path computes it: a vetted attack
+/// with its monster weapon, or a vetted spell (module docs); or why it is
+/// not computed.
+fn minion_skill<'d>(
     input: &crate::input::CalcInput<'d>,
     levels: &super::gem_levels::GemLevels,
     skill_id: Option<&str>,
     weapon: Option<&str>,
-) -> Result<AttackSkill<'d>, UnsupportedReason> {
+) -> Result<MinionSkill<'d>, UnsupportedReason> {
     let data = input.data;
     let summon =
         skill::main_skill(input.build, data, levels).map_err(|_| UnsupportedReason::NotComputed)?;
@@ -170,6 +192,9 @@ fn attack<'d>(
         what,
     };
     let id = skill_id.ok_or_else(|| not("minion-skill"))?;
+    if VETTED_SPELLS.contains(&id) {
+        return spell(input, &summon, id).ok_or_else(|| not("minion-skill"));
+    }
     if !VETTED.contains(&id) {
         return Err(not("minion-skill"));
     }
@@ -216,7 +241,7 @@ fn attack<'d>(
         .stats
         .iter()
         .any(|(s, v)| s == hit::ARROW_STAT && *v != 0);
-    Ok(AttackSkill {
+    Ok(MinionSkill::Attack(AttackSkill {
         group: summon.group.saturating_sub(1),
         level,
         attack_speed_multiplier: level_row.attack_speed_multiplier,
@@ -232,7 +257,61 @@ fn attack<'d>(
         part,
         known_parts: hit::pob_vetted(id, 0),
         skill,
-    })
+    }))
+}
+
+/// A vetted minion spell (P6-7c3): the skill at level 1 (every vetted one
+/// has one level, so PoB's highest level the minion reaches is 1), its
+/// cast time and PoB's part flags; its own stats are in the minion's store
+/// ([`super::minion_actor`]). `None`: its data is missing.
+fn spell<'d>(
+    input: &crate::input::CalcInput<'d>,
+    summon: &MainSkill<'d>,
+    id: &str,
+) -> Option<MinionSkill<'d>> {
+    let data = input.data;
+    let effect = data.granted_effect(id)?;
+    let active = effect
+        .active_skill
+        .as_deref()
+        .and_then(|a| data.active_skill(a));
+    let types = active.map_or_else(Default::default, |a| a.types.iter().cloned().collect());
+    let level = skill::stat_set_level(effect, 1, data)?;
+    // A cooldown or no cast time: not the self-cast spell path. More than
+    // one level: PoB's level is the highest the minion's level reaches,
+    // not read here.
+    if effect.levels.len() != 1
+        || effect.cast_time <= 0
+        || skill::effect_level(effect, 1)?.cooldown != 0
+    {
+        return None;
+    }
+    let (part, _) = hit::pob_part(id, 1)?;
+    Some(MinionSkill::Spell(hit::SpellSkill {
+        skill: MainSkill {
+            group: summon.group,
+            active_gem: GemEffectRef {
+                gem: summon.active_gem.gem,
+                effect,
+                level: 1,
+                bonus: 0,
+                quality: 0,
+                socket: SocketMatch::No,
+            },
+            active,
+            item_granted: false,
+            supports: Vec::new(),
+            unapplied: Vec::new(),
+            types,
+        },
+        group: summon.group.saturating_sub(1),
+        level,
+        cast_time: effect.cast_time,
+        area: part.area,
+        projectile: part.projectile,
+        melee: part.melee,
+        vetted: true,
+    }))
 }
 
 #[cfg(test)]
@@ -246,6 +325,20 @@ mod tests {
         for id in VETTED {
             let pob = super::super::pob_skill::skill(id).expect(id);
             assert!(pob.flag("attack"), "{id}");
+            assert!(hit::pob_vetted(id, 0), "{id}");
+            assert!(hit::pob_part(id, 1).is_some(), "{id}");
+        }
+    }
+
+    /// Each vetted minion spell is a plain self-cast spell in PoB's data:
+    /// its spell flag without a totem flag, vetted by the hit's own check
+    /// (`spell` checks the game data's cooldown and cast time).
+    #[test]
+    fn vetted_minion_spells_should_be_plain_spells() {
+        for id in VETTED_SPELLS {
+            let pob = super::super::pob_skill::skill(id).expect(id);
+            assert!(pob.flag("spell"), "{id}");
+            assert!(!pob.flag("totem"), "{id}");
             assert!(hit::pob_vetted(id, 0), "{id}");
             assert!(hit::pob_part(id, 1).is_some(), "{id}");
         }

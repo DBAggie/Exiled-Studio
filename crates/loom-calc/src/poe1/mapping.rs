@@ -188,6 +188,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "active_skill_area_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 1729: `Speed` MORE with `ModFlag.Cast`
+    // (P6-7c3, the Flame Golem's Immolate).
+    (
+        "active_skill_cast_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::CAST, NONE)],
+    ),
     // PoB `SkillStatMap.lua` 1184: `Damage` MORE with `KeywordFlag.Ignite`
     // (P6-2b).
     (
@@ -2937,6 +2943,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // on), never for the enemy's shock in the hit, which only the config
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
+    // P6-7c3: PoB `SkillStatMap.lua` 1362, `PierceAllTargets`, read only
+    // into `PierceCount` (`CalcOffence.lua` 1106): no slice field, as
+    // `base_projectile_speed_+%`.
+    ("always_pierce", "pierce"),
     ("always_shock", "ailment-chance"),
     // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
     // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
@@ -3168,6 +3178,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
+    // P6-7c3: a monster skill's penalty against the player's minions (the
+    // Flame Golem's Immolate): PoB's stat map has no row for it.
+    (
+        "monster_penalty_against_minions_damage_+%_final_vs_player_minions",
+        "monster",
+    ),
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
@@ -3235,6 +3251,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("skill_override_pvp_scaling_time_ms", "display"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
+    // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
+    // stat map has no row for it.
+    ("spell_maximum_action_distance_+%", "targeting"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
     ("stun_threshold_+%", "stun"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)

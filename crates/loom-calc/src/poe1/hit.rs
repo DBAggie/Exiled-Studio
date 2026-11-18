@@ -988,7 +988,7 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 }
 
 /// A self-cast spell's hit.
-fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
+pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
     let mut flags = Flags::SPELL
@@ -1016,7 +1016,16 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
             what: "pob-skill-data",
         });
     }
-    if spell.skill.types.contains("SummonsTotem") {
+    // PoB's totem flag is the skill's `baseFlags.totem`
+    // (`CalcActiveSkill.lua` 415 to 444). A minion's spell with the
+    // `SummonsTotem` type but no such flag (the Flame Golem's Immolate) is
+    // cast by the minion (P6-7c3); the character's keeps the type's reason.
+    let totem = if calc.actor() == crate::engine::Actor::Minion {
+        super::pob_skill::skill(&spell.skill.effect().id).is_none_or(|p| p.flag("totem"))
+    } else {
+        spell.skill.types.contains("SummonsTotem")
+    };
+    if totem {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
             what: TOTEM_REASON,
@@ -3302,11 +3311,20 @@ fn passes(
         let v = (10_000 + stored) as f64 / 10_000.0;
         v
     };
+    // A minion's skill: PoB replaces its damage effectiveness with `1 +
+    // minionDamageEffectiveness / 100` of the summoning skill
+    // (`CalcActiveSkill.lua` 910), a value no skill of PoB's data sets, so
+    // 1 (P6-7c3).
+    let stored = if calc.actor() == crate::engine::Actor::Minion {
+        0
+    } else {
+        shape.level.damage_effectiveness.unwrap_or(0)
+    };
     let effectiveness = leaf(
         calc,
         shape.source.clone(),
         Quantity::Poe1(Poe1Quantity::DamageEffectiveness),
-        ratio(shape.level.damage_effectiveness.unwrap_or(0)),
+        ratio(stored),
     )?;
     let base_multiplier = leaf(
         calc,

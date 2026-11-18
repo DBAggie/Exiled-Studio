@@ -865,6 +865,50 @@ pub fn instance<'d>(
     quality: i64,
     data: &'d dyn CalcData,
 ) -> Instance<'d> {
+    instance_at(effect, level, quality, None, data)
+}
+
+/// [`instance`] of a skill an actor of `actor_level` uses (P6-7c3: a
+/// minion's skill, PoB's `skillInstance.actorLevel`, `CalcActiveSkill.lua`
+/// 567). An effectiveness-scaled stat is then PoB's value at that level
+/// ([`effectiveness`]), not the game's resolved one, which is the value at
+/// the level requirement.
+#[must_use]
+pub fn instance_for_actor<'d>(
+    effect: &'d GrantedEffect,
+    level: i64,
+    actor_level: i64,
+    data: &'d dyn CalcData,
+) -> Instance<'d> {
+    instance_at(effect, level, 0, Some(actor_level), data)
+}
+
+/// PoB's `SkillDamageBaseEffectiveness` and
+/// `SkillDamageIncrementalEffectiveness` (`Data/Misc.lua` 29 and 30).
+const SKILL_DAMAGE_EFFECTIVENESS: (f64, f64) = (3.885_209, 0.360_246);
+
+/// PoB's effectiveness of a stat set at `actor_level`
+/// (`calcLib.buildSkillInstanceStats`, `CalcTools.lua` 198 to 204):
+/// `(base + incremental x (level - 1)) x baseEffectiveness x (1 +
+/// incrementalEffectiveness) ^ (level - 1)`, the set's two values as PoB's
+/// exporter reads them (single precision, widened).
+#[must_use]
+pub fn effectiveness(set: &StatSet, actor_level: i64) -> f64 {
+    let (base, incremental) = SKILL_DAMAGE_EFFECTIVENESS;
+    #[expect(clippy::cast_precision_loss, reason = "a level, exact as f64")]
+    let steps = (actor_level - 1) as f64;
+    (base + incremental * steps)
+        * f64::from(set.base_effectiveness)
+        * crate::math::pow(1.0 + f64::from(set.incremental_effectiveness), steps)
+}
+
+fn instance_at<'d>(
+    effect: &'d GrantedEffect,
+    level: i64,
+    quality: i64,
+    actor_level: Option<i64>,
+    data: &'d dyn CalcData,
+) -> Instance<'d> {
     let mut stats: BTreeMap<String, i64> = BTreeMap::new();
     let mut problems = Vec::new();
     if quality > 0 {
@@ -897,7 +941,7 @@ pub fn instance<'d>(
     if let Some(id) = effect.stat_sets.first() {
         match data.stat_set(id) {
             None => problems.push(InstanceProblem::MissingStatSet { id: id.clone() }),
-            Some(set) => set_stats(set, level, &mut stats, &mut problems),
+            Some(set) => set_stats(set, level, actor_level, &mut stats, &mut problems),
         }
     }
     problems.sort();
@@ -915,6 +959,7 @@ pub fn instance<'d>(
 fn set_stats(
     set: &StatSet,
     level: Option<i64>,
+    actor_level: Option<i64>,
     stats: &mut BTreeMap<String, i64>,
     problems: &mut Vec<InstanceProblem>,
 ) {
@@ -924,10 +969,22 @@ fn set_stats(
     if let Some(row) = level.and_then(|l| set.levels.iter().find(|r| r.level == l)) {
         for f in &row.float_stats {
             // Effectiveness interpolation: the game's resolved value (module
-            // docs). Every float stat of the 3.29 data has it; another kind
-            // is not modelled.
+            // docs), or PoB's at an actor's level. Every float stat of the
+            // 3.29 data has it; another kind is not modelled.
             if f.interpolation == 3 {
-                *stats.entry(f.stat.clone()).or_default() += f.resolved;
+                let value = match actor_level {
+                    // PoB's `round(availableEffectiveness x level[index])`.
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "a skill's base damage, far inside i64"
+                    )]
+                    Some(l) => {
+                        crate::math::round_half_up(effectiveness(set, l) * f64::from(f.value))
+                            as i64
+                    }
+                    None => f.resolved,
+                };
+                *stats.entry(f.stat.clone()).or_default() += value;
             } else {
                 problems.push(InstanceProblem::Interpolated {
                     stat: f.stat.clone(),
@@ -998,6 +1055,36 @@ mod tests {
         assert!(can_use(Some(&staves), "Warstaff"));
         assert!(can_use(Some(&active(&["Warstaff"])), "Staff"));
         assert!(!can_use(Some(&staves), "Bow"));
+    }
+
+    /// PoB's effectiveness at an actor's level (`CalcTools.lua` 198 to
+    /// 204), the Flame Golem's Immolate (base 1.2547, incremental 0.0446):
+    /// its fire damage `round(effectiveness x 0.8)` to `round(... x 1.2)`,
+    /// the values PoB's formula gives in doubles from the single-precision
+    /// data (P6-7c3; the public fixture `minion-summon-flame-golem-witch.xml`
+    /// equals PoB's hit).
+    #[test]
+    fn effectiveness_should_follow_pobs_formula_at_the_actors_level() {
+        let set = StatSet {
+            id: "FireElementalFlameRedSummoned".to_owned(),
+            implicit_stats: Vec::new(),
+            constant_stats: Vec::new(),
+            base_effectiveness: 1.2547,
+            incremental_effectiveness: 0.0446,
+            damage_incremental_effectiveness: None,
+            levels: Vec::new(),
+        };
+        #[expect(clippy::cast_possible_truncation, reason = "small damage values")]
+        let damage = |level: i64| {
+            let e = effectiveness(&set, level);
+            (
+                crate::math::round_half_up(e * f64::from(0.8_f32)) as i64,
+                crate::math::round_half_up(e * f64::from(1.2_f32)) as i64,
+            )
+        };
+        assert_eq!(damage(1), (4, 6));
+        assert_eq!(damage(68), (523, 785));
+        assert_eq!(damage(90), (1753, 2630));
     }
 
     /// PoB's disabled skill (`CalcActiveSkill.lua` 269 to 334): an empty
