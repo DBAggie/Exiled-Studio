@@ -1051,6 +1051,15 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in bad {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let object_types = p.minion_object_types();
+        duplicates(report, super::poe1::MINIONS, object_types.iter().copied());
+        if !object_types.is_sorted() {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("{}:object_stats", super::poe1::MINIONS),
+                "object stats not sorted by object type",
+            );
+        }
         if let Some(sk) = &b.skills {
             let effects: BTreeSet<&str> =
                 sk.granted_effects.iter().map(|g| g.id.as_str()).collect();

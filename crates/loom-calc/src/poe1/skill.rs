@@ -137,6 +137,22 @@ pub struct MainSkill<'d> {
 }
 
 impl<'d> MainSkill<'d> {
+    /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
+    /// `CalcActiveSkill.lua` 192 to 223; P6-11e review): the game lists the
+    /// classes per active skill (none: any weapon; `Unarmed` for an empty
+    /// hand). A skill without an active skill row is not restricted.
+    ///
+    /// Not modelled: a support's own `weaponTypes` (PoB disables the
+    /// support, not the skill, for a weapon it cannot use) and
+    /// `countsAsAll1H` (a weapon that counts as every one-handed class,
+    /// Varunastra): the main hand's own class decides.
+    #[must_use]
+    pub fn can_use(&self, class: &str) -> bool {
+        self.active.is_none_or(|a| {
+            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
+        })
+    }
+
     /// The active granted effect.
     #[must_use]
     pub const fn effect(&self) -> &'d GrantedEffect {

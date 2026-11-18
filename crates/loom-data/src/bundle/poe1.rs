@@ -31,7 +31,8 @@
 //!   and keystones it can add, and the tree's cluster sockets
 //!   ([`ClusterJewels`]).
 //! - `poe1/minions.json`: every monster variety and the monster types they
-//!   use (`MonsterVarieties`, `MonsterTypes`, Phase 6 P6-7a; [`Minions`]):
+//!   use (`MonsterVarieties`, `MonsterTypes`, Phase 6 P6-7a; [`Minions`]),
+//!   and the `.ot` stats of their object types (P6-7b1, [`ObjectStats`]):
 //!   the data a minion or a spectre is computed from.
 //! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
 //!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
@@ -151,8 +152,34 @@ pub struct MinionVariety {
     /// Its special mods' IDs, in order.
     pub special_mods: Vec<String>,
     /// Its object type (`BaseMonsterTypeIndex`), whose `.ot` file holds
-    /// more stats (not carried).
+    /// more stats ([`Minions::object_stats`]).
     pub object_type: String,
+}
+
+/// The `.ot` stats of one object type (P6-7b1), as PoB v2.67.2's exporter
+/// reads them into a minion's `modList` (`src/Export/Scripts/minions.lua`
+/// `getOTStats`, 41 to 73): the type's file and the files its `extends`
+/// lines name, each superclass where its line stands, stopping at
+/// `Metadata/Monsters/Monster` and `nothing`; only the `Stats` block, no
+/// line with `//`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ObjectStats {
+    /// The object type, as the varieties write it
+    /// ([`MinionVariety::object_type`]).
+    pub object_type: String,
+    /// Its stats in PoB's order, repeats kept (PoB adds each line):
+    /// `(stat ID, value)`.
+    pub stats: Vec<(String, i64)>,
+    /// Lines whose value is not a whole number, as `(key, text)`: PoB's
+    /// `tonumber` gives nil for most of them (script text), and its
+    /// exporter would fail on such a minion. Kept, not dropped (ADR-015).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<(String, String)>,
+    /// The first file its chain names that the extract does not hold (a
+    /// template outside `Metadata/Monsters/`): its stats are incomplete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unread: Option<String>,
 }
 
 /// `poe1/minions.json`.
@@ -163,6 +190,55 @@ pub struct Minions {
     pub types: Vec<MinionType>,
     /// Monster varieties, in the table's order.
     pub varieties: Vec<MinionVariety>,
+    /// The `.ot` stats of the object types the varieties name (P6-7b1),
+    /// sorted by object type; a type without stats, values, or an unread
+    /// file is left out. `None` when the extract had no monster templates
+    /// (built before P6-7b1): the `.ot` stats are then unknown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub object_stats: Option<Vec<ObjectStats>>,
+}
+
+impl Minions {
+    /// The `.ot` stats of `object_type`: `None` when the bundle has none
+    /// (built before P6-7b1); an empty entry when the type has none.
+    #[must_use]
+    pub fn object_stats(&self, object_type: &str) -> Option<ObjectStatsRef<'_>> {
+        let all = self.object_stats.as_ref()?;
+        Some(
+            all.binary_search_by(|o| o.object_type.as_str().cmp(object_type))
+                .ok()
+                .and_then(|i| all.get(i))
+                .map_or(ObjectStatsRef::NONE, ObjectStatsRef::of),
+        )
+    }
+}
+
+/// A borrowed view of an object type's `.ot` stats ([`Minions::object_stats`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ObjectStatsRef<'a> {
+    /// [`ObjectStats::stats`].
+    pub stats: &'a [(String, i64)],
+    /// [`ObjectStats::values`].
+    pub values: &'a [(String, String)],
+    /// [`ObjectStats::unread`].
+    pub unread: Option<&'a str>,
+}
+
+impl<'a> ObjectStatsRef<'a> {
+    /// A type with no `.ot` stats.
+    pub const NONE: Self = Self {
+        stats: &[],
+        values: &[],
+        unread: None,
+    };
+
+    fn of(o: &'a ObjectStats) -> Self {
+        Self {
+            stats: &o.stats,
+            values: &o.values,
+            unread: o.unread.as_deref(),
+        }
+    }
 }
 
 /// A flask base (`Flasks`, P6-4b), in the table's order. PoB v2.67.2
@@ -643,6 +719,17 @@ impl Poe1Section {
             })
             .collect();
         (ids, type_ids, dangling, bad)
+    }
+
+    /// The object types with `.ot` stats, in file order, for the validator
+    /// (P6-7b1): each must be unique and the list sorted
+    /// ([`Minions::object_stats`] searches it).
+    pub(super) fn minion_object_types(&self) -> Vec<&str> {
+        self.minions
+            .iter()
+            .flat_map(|m| m.object_stats.iter().flatten())
+            .map(|o| o.object_type.as_str())
+            .collect()
     }
 
     /// The minions' skills (granted effects), each with its variety, for

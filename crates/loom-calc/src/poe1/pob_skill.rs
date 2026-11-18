@@ -109,6 +109,12 @@ pub struct PobSkill {
     /// condition), sorted (P6-6b review): PoB reads them under that tag,
     /// which the engine's mapping does not.
     pub own_stats: &'static [&'static str],
+    /// PoB's `minionList`, in PoB's order (the first is the skill's
+    /// default minion; P6-7b1): PoB's minion names
+    /// ([`super::pob_minion::minion`]) or, for spectres, variety IDs.
+    pub minions: &'static [&'static str],
+    /// PoB's `addMinionList` (a support's minions), in PoB's order.
+    pub add_minions: &'static [&'static str],
 }
 
 impl PobSkill {

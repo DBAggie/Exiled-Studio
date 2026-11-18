@@ -28,9 +28,11 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 12,
+        "format": 13,
         "flasks": {},
         "minions": {},
+        "minion_mods": {},
+        "minion_templates": {},
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -209,6 +211,7 @@ fn equal_export_should_have_no_difference() {
             // bundle's rows are bundle-only, compared in their own tests.
             "flasks",
             "minions",
+            "minion_mods",
         ]
         .contains(&table)
         {
@@ -335,6 +338,42 @@ fn a_skill_colour_should_compare_with_the_bundles_attribute() {
     assert_eq!(
         fields(&differences(&export)),
         [("skills", "TestBolt", "color")]
+    );
+}
+
+/// `minion_mods` (P6-7b1): the variety's mods, then its object type's
+/// `.ot` stats with the stat as the ID, one line per stat, as PoB's
+/// exporter commented them; a minion PoB has and the bundle lacks is a row.
+#[test]
+fn minion_mods_should_compare_the_mod_list() {
+    let mut export = equal_export();
+    export["minion_mods"] = json!({"Test/Monsters/Minion1": [
+        ["set_item_drop_slots", "set_item_drop_slots", "0"],
+        ["set_monster_no_drops_or_experience", "set_monster_no_drops_or_experience", "1"]
+    ]});
+    assert_eq!(differences(&export), []);
+    export["minion_mods"]["Test/Monsters/Minion1"][1][2] = json!("2");
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/Minion1", "modList")]
+    );
+    // PoB's order matters: the superclass's stats come where its line stands.
+    export["minion_mods"]["Test/Monsters/Minion1"] = json!([
+        [
+            "set_monster_no_drops_or_experience",
+            "set_monster_no_drops_or_experience",
+            "1"
+        ],
+        ["set_item_drop_slots", "set_item_drop_slots", "0"]
+    ]);
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/Minion1", "modList")]
+    );
+    export["minion_mods"] = json!({"Test/Monsters/PobOnly": {}});
+    assert_eq!(
+        fields(&differences(&export)),
+        [("minion_mods", "Test/Monsters/PobOnly", "row")]
     );
 }
 

@@ -17,6 +17,9 @@
 //!   every item type file (`*.it`) into `<dir>/item_types/**/*.json` and
 //!   the character and monster object templates (`*.ot`) into
 //!   `<dir>/object_templates/**/*.json` (see [`loom_extractor::itemtype`]),
+//!   every monster template (`Metadata/Monsters/**.ot`) as PoB reads it into
+//!   `<dir>/monster_templates/**/*.json` (see
+//!   [`loom_extractor::monstertemplate`]),
 //!   plus `<dir>/manifest.json` (see
 //!   [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
@@ -59,6 +62,7 @@ use loom_extractor::install::{
     INDEX_PATH, InstallError, InstallIndex, hex, read_files, read_index, steam_build_id,
 };
 use loom_extractor::itemtype::{self, ItemTypeManifest, ItemTypeStatus};
+use loom_extractor::monstertemplate::{self, MonsterTemplateManifest, MonsterTemplateStatus};
 use loom_extractor::psg::{self, GraphManifest};
 use loom_extractor::schema::{Game, Schema};
 use loom_extractor::statdesc::{FileStatus, StatDescManifest, source_kind};
@@ -367,6 +371,7 @@ fn planned_files(
             || psg::is_graph(&path)
             || itemtype::is_item_type(&path)
             || itemtype::is_object_template(&path)
+            || monstertemplate::is_monster_template(&path)
         {
             by_path.entry(path.clone()).or_default();
         }
@@ -519,6 +524,26 @@ fn print_item_types(item_types: &ItemTypeManifest) {
     }
 }
 
+/// Prints the monster template part of the run summary: counts, then each
+/// file that was not read.
+fn print_monster_templates(m: &MonsterTemplateManifest) {
+    let ok = m
+        .files
+        .values()
+        .filter(|f| f.status == MonsterTemplateStatus::Ok)
+        .count();
+    let stats: usize = m.files.values().filter_map(|f| f.stats).sum();
+    println!(
+        "monster templates    {} ({ok} ok, {stats} stat lines)",
+        m.files.len()
+    );
+    for (path, f) in &m.files {
+        if let Some(e) = &f.error {
+            println!("  {path}: [{}] {}", e.code, e.message);
+        }
+    }
+}
+
 /// Prints the run summary.
 fn print_summary(m: &Manifest, manifest: &[u8]) {
     let mut by_status: BTreeMap<Status, usize> = BTreeMap::new();
@@ -564,6 +589,7 @@ fn print_summary(m: &Manifest, manifest: &[u8]) {
     print_stat_descriptions(&m.stat_descriptions);
     print_graphs(&m.passive_skill_graphs);
     print_item_types(&m.item_types);
+    print_monster_templates(&m.monster_templates);
     println!("files written        {} ({rows} rows)", m.files.len());
     println!("manifest sha256      {}", hex(&Sha256::digest(manifest)));
 }

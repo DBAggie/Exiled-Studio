@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 12;
+pub const FORMAT: u32 = 13;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -41,6 +41,17 @@ pub struct Export {
     /// Every minion and spectre, by the monster variety's ID (format 12,
     /// P6-7a).
     pub minions: BTreeMap<String, Minion>,
+    /// Each minion's and spectre's mod list as PoB's exporter commented it
+    /// (format 13, P6-7b1), keyed as [`Self::minions`]: `(mod ID, stat,
+    /// value as written)` in file order.
+    #[serde(deserialize_with = "map_of_lists")]
+    pub minion_mods: BTreeMap<String, Vec<(String, String, String)>>,
+    #[expect(
+        dead_code,
+        reason = "read so the export is checked whole; `pob-minions` generates the engine's table from it (data_parity::NOT_COMPARED)"
+    )]
+    /// PoB's minion templates by PoB's name (format 13, P6-7b1).
+    pub minion_templates: BTreeMap<String, MinionTemplate>,
     /// The mods of the keyed `data.itemMods` files, by mod ID (format 6).
     pub mods: BTreeMap<String, ItemMod>,
     /// `data.monster*Table`, by table name; entry `i` is level `i + 1`.
@@ -716,6 +727,56 @@ where
         ListOrEmpty::Object(map) if map.is_empty() => Ok(Vec::new()),
         ListOrEmpty::Object(_) => Err(de::Error::custom("expected a list")),
     }
+}
+
+/// What a minion's template directives add (format 13, P6-7b1): PoB's
+/// `Export/Minions/*.txt`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[expect(dead_code, reason = "read so the export is checked whole")]
+pub struct MinionTemplate {
+    /// `Minions` or `Spectres`.
+    pub file: String,
+    /// The `#monster` or `#spectre` line.
+    pub line: u32,
+    /// The monster variety's ID.
+    pub variety: String,
+    /// `#limit`.
+    #[serde(default)]
+    pub limit: Option<String>,
+    /// `#hostile`.
+    #[serde(default)]
+    pub hostile: Option<String>,
+    /// The extra skills, in order.
+    #[serde(deserialize_with = "list")]
+    pub skills: Vec<String>,
+    /// Each `#mod`, in order.
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<TemplateMod>,
+}
+
+/// One `#mod` directive.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[expect(dead_code, reason = "read so the export is checked whole")]
+pub struct TemplateMod {
+    /// Its line.
+    pub line: u32,
+    /// The mod as written.
+    pub text: String,
+}
+
+/// A map of lists, each read as [`list`] (an empty list is `{}`).
+fn map_of_lists<'de, D, T>(deserializer: D) -> Result<BTreeMap<String, Vec<T>>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(bound = "T: Deserialize<'de>")]
+    struct Entry<T>(#[serde(deserialize_with = "list")] Vec<T>);
+    let map = BTreeMap::<String, Entry<T>>::deserialize(deserializer)?;
+    Ok(map.into_iter().map(|(k, Entry(v))| (k, v)).collect())
 }
 
 /// Reads an export.

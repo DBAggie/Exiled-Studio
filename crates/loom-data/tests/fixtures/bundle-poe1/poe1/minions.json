@@ -1,4 +1,19 @@
 {
+ "object_stats": [
+  {
+   "object_type": "Test/Monsters/Minion",
+   "stats": [
+    [
+     "set_item_drop_slots",
+     0
+    ],
+    [
+     "set_monster_no_drops_or_experience",
+     1
+    ]
+   ]
+  }
+ ],
  "types": [
   {
    "accuracy": 100,

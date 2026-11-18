@@ -44,7 +44,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 19] = [
+pub const TABLES: [&str; 20] = [
     "skills",
     "gems",
     "bases",
@@ -64,6 +64,7 @@ pub const TABLES: [&str; 19] = [
     "cluster_jewels",
     "flasks",
     "minions",
+    "minion_mods",
 ];
 
 /// Summary and overlay format.
@@ -74,7 +75,7 @@ pub const UNCATEGORIZED: &str = "uncategorized";
 
 /// What the export and the comparison leave out on purpose, with the
 /// reason, for the report.
-pub const NOT_COMPARED: [(&str, &str, &str); 12] = [
+pub const NOT_COMPARED: [(&str, &str, &str); 13] = [
     (
         "mod_affixes",
         "bundle mods PoB does not export; PoB's crafted mods (data.masterMods); prefix or suffix kind, group, weights, lines",
@@ -134,6 +135,11 @@ pub const NOT_COMPARED: [(&str, &str, &str); 12] = [
         "monster_levels",
         "experience, difficulty, and the PoE2-only columns",
         "not carried by the bundle (P3-1c)",
+    ),
+    (
+        "minions",
+        "PoB's template directives: #limit, #hostile, extra skills, #mod extras (export minion_templates)",
+        "PoB's own template, not game data; `pob-minions` writes them into the engine's table, each #mod cited by its line (P6-7b1)",
     ),
 ];
 

@@ -990,7 +990,25 @@ fn socket_cap_mutations_should_each_give_their_code() {
 fn minion_mutations_should_each_give_their_code() {
     type Edit = fn(&mut Value);
     let path = "poe1/minions.json";
-    let cases: [(&str, Edit, &str); 5] = [
+    let cases: [(&str, Edit, &str); 7] = [
+        (
+            "object type twice (P6-7b1)",
+            |v| {
+                let first = v["object_stats"][0].clone();
+                v["object_stats"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "object stats out of order (P6-7b1)",
+            |v| {
+                v["object_stats"]
+                    .as_array_mut()
+                    .unwrap()
+                    .push(json!({"object_type": "A", "stats": []}));
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
         (
             "type twice",
             |v| {

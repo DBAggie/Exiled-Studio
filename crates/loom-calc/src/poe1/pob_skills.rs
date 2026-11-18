@@ -14,6 +14,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ABTTAzmeriGoddessAura",
@@ -22,6 +24,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ABTTAzmeriShepherdSpellDamage",
@@ -30,6 +34,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ABTTAzmeriSpiderLeaderAura",
@@ -38,6 +44,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ABTTAzmeriTurtleInvulnerability",
@@ -46,6 +54,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Absolution",
@@ -54,6 +64,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["AbsolutionTemplarJudge", "AbsolutionTemplarJudgeVaal"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbsolutionAltX",
@@ -62,6 +74,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["AbsolutionTemplarJudge", "AbsolutionTemplarJudgeVaal"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbsolutionMinion",
@@ -70,6 +84,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbsolutionMinionEmpowered",
@@ -78,6 +94,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbsolutionMinionVaal",
@@ -86,6 +104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbsolutionMinionVaalCascade",
@@ -94,6 +114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbyssalFiendEnfeebleAura",
@@ -102,6 +124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbyssalFiendPunishmentAura",
@@ -110,6 +134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AbyssalFiendTemporalChainsAura",
@@ -118,6 +144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Affliction",
@@ -126,6 +154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AfflictionMinionPhysSlamCircleBig",
@@ -134,6 +164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AfflictionMinionPhysSlamCircleRectangle",
@@ -142,6 +174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AfflictionMinionPhysSlamCircleSmall",
@@ -150,6 +184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AilmentBearer",
@@ -158,6 +194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AlchemistsMark",
@@ -166,6 +204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["mark_skills_curse_effect_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Ambush",
@@ -174,6 +214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AncestralCry",
@@ -182,6 +224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_empowers_next_x_melee_attacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Anger",
@@ -190,6 +234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateGuardian",
@@ -198,6 +244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedArmour"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateGuardianAltX",
@@ -206,6 +254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedArmour"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateGuardianSmite",
@@ -214,6 +264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateGuardiansWeapon",
@@ -222,6 +274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateWeapon",
@@ -230,6 +284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateWeaponAltX",
@@ -238,6 +294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseMainHandWeapon"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimateWeaponAltY",
@@ -246,6 +304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "AnimosityUniqueSkill",
@@ -254,6 +314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ApproachingFlames",
@@ -262,6 +324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Arc",
@@ -270,6 +334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["arc_damage_+%_final_for_each_remaining_chain"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArcAltX",
@@ -278,6 +344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArcAltY",
@@ -286,6 +354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["arc_damage_+%_final_for_each_remaining_chain"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArcaneCloak",
@@ -294,6 +364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "GuardAbsorbLimit", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ManaSpentRecently", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArcticArmour",
@@ -302,6 +374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArmageddonBrand",
@@ -310,6 +384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArmageddonBrandAltX",
@@ -318,6 +394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArmageddonBrandAltY",
@@ -326,6 +404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArtilleryBallista",
@@ -334,6 +414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["attack_skills_additional_ballista_totems_allowed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArtilleryBallistaAltX",
@@ -342,6 +424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["attack_skills_additional_ballista_totems_allowed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ArtilleryBallistaAltY",
@@ -350,6 +434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["attack_skills_additional_ballista_totems_allowed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AspectOfTheAvian",
@@ -358,6 +444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AspectOfTheCat",
@@ -366,6 +454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AspectOfTheCrab",
@@ -374,6 +464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AspectOfTheSpider",
@@ -382,6 +474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("stackCount"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AssassinsMark",
@@ -390,6 +484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasCruasderJudgeFadingNova",
@@ -398,6 +494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasCrusaderJudgeBallLightning",
@@ -406,6 +504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasCrusaderMageguardBeam",
@@ -414,6 +514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasCrusaderSisterMortarSpectre",
@@ -422,6 +524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasExileCrusaderMageguardBombExplodeSpectre",
@@ -430,6 +534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasExilesCrusaderMageguardProjectile",
@@ -438,6 +544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieArcherCrystalImpact",
@@ -446,6 +554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieArcherMortar",
@@ -454,6 +564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieArcherSnipe",
@@ -462,6 +574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieBirdBreath",
@@ -470,6 +584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieKiwethMortarShards",
@@ -478,6 +594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtlasEyrieKiwethMortarSpectre",
@@ -486,6 +604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtziriUniqueStaffFlameblast",
@@ -494,6 +614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("triggerSource"), value: Some(V::Str("Queen's Demand")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AtziriUniqueStaffStormCall",
@@ -502,6 +624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("triggerSource"), value: Some(V::Str("Queen's Demand")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Autoexertion",
@@ -510,6 +634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Automation",
@@ -518,6 +644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AvengingFlame",
@@ -526,6 +654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AxisCasterGlacialCascade",
@@ -534,6 +664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AxisDoubleStrikeTrigger",
@@ -542,6 +674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AxisEnfeeble",
@@ -550,6 +684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AxisTemporalChains",
@@ -558,6 +694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralDashMortars",
@@ -566,6 +704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralDashThrustTriggered",
@@ -574,6 +714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralDoubleStrikeTriggered",
@@ -582,6 +724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralGeyserDamage",
@@ -590,6 +734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralPrecision",
@@ -598,6 +744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriAdmiralTidalWave",
@@ -606,6 +754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriArgusMeleeAtAnimationSpeed",
@@ -614,6 +764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBarrageDemonRainOfSpines",
@@ -622,6 +774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBarrageDemonSpineProjectile",
@@ -630,6 +784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBarrageDemonSpinestorm",
@@ -638,6 +794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Spine explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Spines fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskComboSlam",
@@ -646,6 +804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskComboThrust",
@@ -654,6 +814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskDecapThrust",
@@ -662,6 +824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskDecapitateRightToLeft",
@@ -670,6 +834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskDualProjectile",
@@ -678,6 +844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskDualProjectileImpact",
@@ -686,6 +854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskShoulderMortar",
@@ -694,6 +864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskShoulderMortar2",
@@ -702,6 +874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskWyvernFlight",
@@ -710,6 +884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBasiliskWyvernGroundCollide",
@@ -718,6 +894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBirdBeam",
@@ -726,6 +904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBirdGrace",
@@ -734,6 +914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBirdScreechExposure",
@@ -742,6 +924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriBossShockRifleSingle",
@@ -750,6 +934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriCasterDemonProjectile",
@@ -758,6 +944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriCasterDemonSpellDamageAura",
@@ -766,6 +954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriCycloneDemonCleave",
@@ -774,6 +964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriCycloneDemonDesecratedGroundCyclone",
@@ -782,6 +974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "CooldownRecovery", kind: "OVERRIDE", key: None, value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriDemonPhysicalDamageAura",
@@ -790,6 +984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriDemonTeethShot",
@@ -798,6 +994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriDoubleSlashAnimatedWeapon",
@@ -806,6 +1004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriDualStrikeDemonDualStrike",
@@ -814,6 +1014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriDualStrikeDemonFireEnrage",
@@ -822,6 +1024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriFireFuryMoltenStrike",
@@ -830,6 +1034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriFirefuryCremation",
@@ -838,6 +1044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriFirefuryFireResistAura",
@@ -846,6 +1054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGeofriSlam",
@@ -854,6 +1064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGeofriSmite",
@@ -862,6 +1074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGoddessBeam",
@@ -870,6 +1084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGoddessDiscipline",
@@ -878,6 +1094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGoddessOfferingOfJudgement",
@@ -886,6 +1104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGoddessOfferingOfJudgementChaos",
@@ -894,6 +1114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGoddessSpiritMortar",
@@ -902,6 +1124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGolemBossWhipLeft",
@@ -910,6 +1134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGolemLeapSlam",
@@ -918,6 +1144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGolemRotateZap",
@@ -926,6 +1154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGolemVTurretProjectile",
@@ -934,6 +1164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGuardian4BeamGun",
@@ -942,6 +1174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriGuardian4Slam",
@@ -950,6 +1184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHailrakeArcticArmour",
@@ -958,6 +1194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHailrakeColdResistAura",
@@ -966,6 +1204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHailrakeGlacialCascade",
@@ -974,6 +1214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHailrakeGlacialHammer",
@@ -982,6 +1224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHydraBarrage",
@@ -990,6 +1234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHydraDoomArrow",
@@ -998,6 +1244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHydraForkArrow",
@@ -1006,6 +1254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriHydraHatred",
@@ -1014,6 +1264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriKudukuShockNova",
@@ -1022,6 +1274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriKudukuSparkExtraProj",
@@ -1030,6 +1284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriKudukuWarp",
@@ -1038,6 +1294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriKudukuWrath",
@@ -1046,6 +1304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriLightningMelee",
@@ -1054,6 +1314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriMegaSkeletonCleave",
@@ -1062,6 +1324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriMegaSkeletonHeavyMelee",
@@ -1070,6 +1334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOakLeapSlam",
@@ -1078,6 +1344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOakSweep",
@@ -1086,6 +1354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOakVitality",
@@ -1094,6 +1364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOversoulColdSnapTriggered",
@@ -1102,6 +1374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOversoulExplosionIgnite",
@@ -1110,6 +1384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOversoulLaserMaxShock",
@@ -1118,6 +1394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriOversoulRocksTriggered",
@@ -1126,6 +1404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Rock explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Rocks fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriPhantasmClarity",
@@ -1134,6 +1414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriPhantasmExplode",
@@ -1142,6 +1424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriPhantasmExplodeSap",
@@ -1150,6 +1434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriReaperMelee",
@@ -1158,6 +1444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriSawbladeAnimatedWeaponCyclone",
@@ -1166,6 +1454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriSpiderLeaderMortar",
@@ -1174,6 +1464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriStampedeTiger",
@@ -1182,6 +1474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriSwordStormCascade",
@@ -1190,6 +1484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Sword explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Swords fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTentacleMinionLightningResistAura",
@@ -1198,6 +1494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTigerGeometryAttackStrafe",
@@ -1206,6 +1504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTigerHaste",
@@ -1214,6 +1514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTigerSpiritFangs",
@@ -1222,6 +1524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTigerSpiritLacerate",
@@ -1230,6 +1534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTigerSpiritTeleportSlam",
@@ -1238,6 +1544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriTurtleDetermination",
@@ -1246,6 +1554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriVikingCyclone",
@@ -1254,6 +1564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriVikingUpheaval",
@@ -1262,6 +1574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "AzmeriZombieCausticGroundWhenHit",
@@ -1270,6 +1584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCausticGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BallLightning",
@@ -1278,6 +1594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("strikeInterval"), value: Some(V::Num(0.15)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("projectileSpeed"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("duration"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BallLightningAltX",
@@ -1286,6 +1604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("strikeInterval"), value: Some(V::Num(0.3)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("strikeInterval"), value: Some(V::Num(0.15)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("projectileSpeed"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("duration"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BallLightningAltY",
@@ -1294,6 +1614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("strikeInterval"), value: Some(V::Num(0.15)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("duration"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BanditChampionBlastRainSpectre",
@@ -1302,6 +1624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(4.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BanditExplosiveArrowAtAnimationSpeed",
@@ -1310,6 +1634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ExplosiveArrowFuse", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["fuse_arrow_explosion_radius_+_per_fuse_arrow_orb", "maximum_fire_damage_per_fuse_arrow_orb", "minimum_fire_damage_per_fuse_arrow_orb"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Bane",
@@ -1318,6 +1644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preSkillTypeFunc"],
         own_stats: &["dark_ritual_damage_+%_final_per_curse_applied", "dark_ritual_skill_effect_duration_+%_per_curse_applied"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BaneAltX",
@@ -1326,6 +1654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preSkillTypeFunc"],
         own_stats: &["dark_ritual_damage_+%_final_per_curse_applied", "dark_ritual_skill_effect_duration_+%_per_curse_applied"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Barkskin",
@@ -1334,6 +1664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BarnacleSnap",
@@ -1342,6 +1674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Barrage",
@@ -1350,6 +1684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BarrageAltX",
@@ -1358,6 +1694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BattlemagesCry",
@@ -1366,6 +1704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BearTrap",
@@ -1374,6 +1714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BearTrapAltX",
@@ -1382,6 +1724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Berserk",
@@ -1390,6 +1734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BetrayalSecretPoliceCurveDagger1",
@@ -1398,6 +1744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BirdmanBloodProjectileMortar",
@@ -1406,6 +1754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BirdmanConsumeCorpse",
@@ -1414,6 +1764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BitingBraidNova",
@@ -1422,6 +1774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeBlast",
@@ -1430,6 +1784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:BladeBlastMaxStages", kind: "BASE", key: None, value: Some(V::Num(50.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsBaseMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeBlastAltX",
@@ -1438,6 +1794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:BladeBlastofUnloadingMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsBaseMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["blade_burst_area_of_effect_+%_final_per_blade_vortex_blade_detonated", "blade_vortex_damage_+%_per_blade_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeBlastAltY",
@@ -1446,6 +1804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeFlurry",
@@ -1454,6 +1814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("numStages"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("stackMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["blade_flurry_damage_+%_final_while_at_max_stages", "charged_attack_damage_per_stack_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeFlurryAltX",
@@ -1462,6 +1824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("numStages"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("stackMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["blade_flurry_critical_strike_chance_per_stage_+%_final", "blade_flurry_critical_strike_multiplier_+_while_at_max_stages"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeTrap",
@@ -1470,6 +1834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeTrapAltX",
@@ -1478,6 +1844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeTrapAltY",
@@ -1486,6 +1854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeVortex",
@@ -1494,6 +1864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitFrequency"), value: Some(V::Num(0.6)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:BladeVortexBlade", kind: "BASE", key: None, value: Some(V::Num(5.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:BladeVortexBlade", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Condition:HaveBladeVortex", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["blade_vortex_ailment_damage_+%_per_blade_final", "blade_vortex_damage_+%_per_blade_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladeVortexAltX",
@@ -1502,6 +1874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitTimeOverride"), value: Some(V::Num(0.6)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveBladeVortex", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Bladefall",
@@ -1510,6 +1884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(44.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Volley Width:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Volley Length:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladefallAltX",
@@ -1518,6 +1894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["bladefall_critical_strike_chance_+%_per_stage", "bladefall_damage_per_stage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladefallAltY",
@@ -1526,6 +1904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_impale_on_crit_%_chance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladefallAltZ",
@@ -1534,6 +1914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["bladefall_volley_frequency_+%_per_100_maximum_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Bladestorm",
@@ -1542,6 +1924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of initial attack:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area of bladestorms:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "BleedChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 1, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_bleeding_damage_+%_final_in_blood_stance", "bladestorm_attack_speed_+%_final_while_in_bloodstorm", "bladestorm_storm_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BladestormAltX",
@@ -1550,6 +1934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of initial attack:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area of bladestorms:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["bladestorm_attack_speed_+%_final_while_in_bloodstorm", "bladestorm_storm_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlastRain",
@@ -1558,6 +1944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlastRainAltX",
@@ -1566,6 +1954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlazingSalvo",
@@ -1574,6 +1964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Minimum Range:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Maximum Range:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Blight",
@@ -1582,6 +1974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuffSecondary"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_blight_stacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlightAltX",
@@ -1590,6 +1984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuffSecondary"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_blight_stacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlightAltY",
@@ -1598,6 +1994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuffSecondary"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_blight_stacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlinkArrow",
@@ -1606,6 +2004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowClone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlinkArrowAltX",
@@ -1614,6 +2014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowCloneRoA"],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlinkArrowAltY",
@@ -1622,6 +2024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowCloneEle"],
+        add_minions: &[],
     },
     PobSkill {
         id: "BlinkMirrorArrowMelee",
@@ -1630,6 +2034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BloodAndSand",
@@ -1638,6 +2044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BloodOffering",
@@ -1646,6 +2054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["offering_skill_effect_duration_per_corpse"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BloodRage",
@@ -1654,6 +2064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("thisIsNotABuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BloodSacramentUnique",
@@ -1662,6 +2074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(5.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:BloodSacramentMaxStages", kind: "BASE", key: None, value: Some(V::Num(33.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "HasUncancellableReservation", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["initialFunc"],
         own_stats: &["flameblast_ailment_damage_+%_final_per_10_life_reserved", "flameblast_damage_+%_final_per_10_life_reserved", "flameblast_hundred_times_radius_+_per_1%_life_reserved"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BloodShrineUniqueTriggeredExplodingToad",
@@ -1670,6 +2084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Bodyswap",
@@ -1678,6 +2094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["corpse_warp_area_of_effect_+%_final_when_consuming_corpse", "spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BodyswapAltX",
@@ -1686,6 +2104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["corpse_warp_area_of_effect_+%_final_when_consuming_minion", "skill_minion_explosion_life_%", "spell_base_fire_damage_%_maximum_life", "spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneArmour",
@@ -1694,6 +2114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "AvoidBleed", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneGolemCascade",
@@ -1702,6 +2124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneGolemCascadeEmpowered",
@@ -1710,6 +2134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneGolemLeapSlam",
@@ -1718,6 +2144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneGolemMultiAttack",
@@ -1726,6 +2154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneNova",
@@ -1734,6 +2164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneOffering",
@@ -1742,6 +2174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["offering_skill_effect_duration_per_corpse"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneStalkerEarthquake",
@@ -1750,6 +2184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Boneshatter",
@@ -1758,6 +2194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "HasTrauma", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["trauma_strike_damage_+%_final_per_trauma"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneshatterAltX",
@@ -1766,6 +2204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "HasTrauma", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["trauma_strike_damage_+%_final_per_trauma_capped"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BoneshatterAltY",
@@ -1774,6 +2214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_damage_+%_final_vs_stunned_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BrandRecall",
@@ -1782,6 +2224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BrandSupport",
@@ -1790,6 +2234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Brandsurge",
@@ -1798,6 +2244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachArc",
@@ -1806,6 +2254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachBlizzardSpectre",
@@ -1814,6 +2264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachCleave",
@@ -1822,6 +2274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_merged_damage_+%_final_while_dual_wielding"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachHandTrap",
@@ -1830,6 +2284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_hit_damage_+%_final_per_curse_on_target", "gain_%_of_phys_as_extra_chaos_per_white_socket_on_gloves", "gain_%_of_phys_as_extra_cold_per_green_socket_on_gloves", "gain_%_of_phys_as_extra_fire_per_red_socket_on_gloves", "gain_%_of_phys_as_extra_lightning_per_blue_socket_on_gloves"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachLightningOrbsCommander",
@@ -1838,6 +2294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachLightningWhip",
@@ -1846,6 +2304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BreachTeamWarp",
@@ -1854,6 +2314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BullCharge",
@@ -1862,6 +2324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BurningArrow",
@@ -1870,6 +2334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "BurningArrowAltX",
@@ -1878,6 +2344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["added_fire_damage_to_attacks_equal_to_%_maximum_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CGEFaridunWarlockSwarmGround",
@@ -1886,6 +2354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CageSpiderCycloneTriggerSandstorms",
@@ -1894,6 +2364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CageSpiderSandSpark",
@@ -1902,6 +2374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CallOfSteel",
@@ -1910,6 +2384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CatsStealthTriggeredIntimidatingCry",
@@ -1918,6 +2394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CausticArrow",
@@ -1926,6 +2404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("AoE Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Caustic Ground:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCausticGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CausticArrowAltX",
@@ -1934,6 +2414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("AoE Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CeaselessFleshUnique",
@@ -1942,6 +2424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["ShamblingUndead"],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChainHook",
@@ -1950,6 +2434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["chain_strike_cone_radius_+_per_x_rage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChainHookAltY",
@@ -1958,6 +2444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Strike area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Chain length:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["chain_strike_cone_radius_+_per_x_rage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChannelledSnipeSupport",
@@ -1966,6 +2454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "TriggeredBySnipe", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_triggered_by_snipe"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChaosDegenAura",
@@ -1974,6 +2464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChaosElementalCascadeSummoned",
@@ -1982,6 +2474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChargedDash",
@@ -1990,6 +2484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Start of Dash:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("End of Dash:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitTimeMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ChargedDashMaxStages", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["charged_dash_channelling_damage_at_full_stacks_+%_final", "charged_dash_damage_+%_final", "charged_dash_damage_+%_final_per_stack"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ChargedDashAltX",
@@ -1998,6 +2494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Start of Dash:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("End of Dash:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitTimeMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ChargedDashofProjectionMaxStages", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["charged_dash_channelling_damage_at_full_stacks_+%_final", "charged_dash_damage_+%_final", "charged_dash_damage_+%_final_per_stack"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Clarity",
@@ -2006,6 +2504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Cleave",
@@ -2014,6 +2514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_merged_damage_+%_final_while_dual_wielding", "cleave_+1_base_radius_per_nearby_enemy_up_to_10"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CleaveAltX",
@@ -2022,6 +2524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_merged_damage_+%_final_while_dual_wielding", "chain_strike_cone_radius_+_per_x_rage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CobraLash",
@@ -2030,6 +2534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cobra_lash_hit_and_ailment_damage_+%_final_for_each_remaining_chain"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ColdAegis",
@@ -2038,6 +2544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ColdSnap",
@@ -2046,6 +2554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Burst:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Initial Chilled Ground:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Final Chilled Ground:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ColdSnapAltX",
@@ -2054,6 +2564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Combust",
@@ -2062,6 +2574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Conductivity",
@@ -2070,6 +2584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Conflagration",
@@ -2078,6 +2594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_fire_damage_to_deal_per_minute", "napalm_arrow_detonation_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ConsecratedPath",
@@ -2086,6 +2604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["groundslam_damage_to_close_targets_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ConsecratedPathAltX",
@@ -2094,6 +2614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_area_of_effect_+%_final_per_endurance_charge", "active_skill_attack_damage_+%_final_per_endurance_charge", "groundslam_damage_to_close_targets_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Contagion",
@@ -2102,6 +2624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ContagionAltX",
@@ -2110,6 +2634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ContagionAltY",
@@ -2118,6 +2644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ConversionTrap",
@@ -2126,6 +2654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Convocation",
@@ -2134,6 +2664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CorpseWalk",
@@ -2142,6 +2674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CorruptingFever",
@@ -2150,6 +2684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCorruptingBlood", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:CorruptingFeverMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 8, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CracklingLance",
@@ -2158,6 +2694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["disintegrate_base_radius_+_per_intensify", "disintegrate_damage_+%_final_per_intensity"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CracklingLanceAltX",
@@ -2166,6 +2704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CracklingLanceAltY",
@@ -2174,6 +2714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CreateFungalGroundOnKill",
@@ -2182,6 +2724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CreepingFrost",
@@ -2190,6 +2734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Projectile Impact:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("DoT Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CreepingFrostAltX",
@@ -2198,6 +2744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Projectile Impact:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("DoT Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Cremation",
@@ -2206,6 +2754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CremationAltX",
@@ -2214,6 +2764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CremationAltY",
@@ -2222,6 +2774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CrucibleIceStormTrap",
@@ -2230,6 +2784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Ice explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Ice fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CrucibleVendigoFlickerStrike",
@@ -2238,6 +2794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CrushingFist",
@@ -2246,6 +2804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Cyclone",
@@ -2254,6 +2814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["initialFunc"],
         own_stats: &["cyclone_area_of_effect_+%_per_additional_melee_range"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "CycloneAltX",
@@ -2262,6 +2824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["initialFunc"],
         own_stats: &["cyclone_area_of_effect_+%_per_additional_melee_range", "cyclone_attack_speed_+%_final_per_stage", "cyclone_melee_weapon_range_+_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DTTHellscapeStabWeb",
@@ -2270,6 +2834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DancingDervishCycloneChannelled",
@@ -2278,6 +2844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusIsWeaponRange"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DarkMarionetteExplode",
@@ -2286,6 +2854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("PhysicalMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("PhysicalMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("LightningMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("LightningMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DarkMarionetteExplodePerfect",
@@ -2294,6 +2864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("PhysicalMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("PhysicalMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("LightningMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("LightningMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "EnemyScorchChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DarkPact",
@@ -2302,6 +2874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["skeletal_chains_no_minions_damage_+%_final", "skeletal_chains_no_minions_radius_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DarkPactAltX",
@@ -2310,6 +2884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Dash",
@@ -2318,6 +2894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeathAura",
@@ -2326,6 +2904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeathExplodeIceElementalSummoned",
@@ -2334,6 +2914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeathWalk",
@@ -2342,6 +2924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeathWish",
@@ -2350,6 +2934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["death_wish_hit_and_ailment_damage_+%_final_per_stage", "death_wish_max_stages", "spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeceleratingProjectileAzmeriCasterDemon",
@@ -2358,6 +2944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DeceleratingProjectileAzmeriCasterDemonExplode",
@@ -2366,6 +2954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DecoyTotem",
@@ -2374,6 +2964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DefianceBanner",
@@ -2382,6 +2974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AuraEffect", kind: "MORE", key: None, value: Some(V::Num(-100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Condition:AffectedByPlacedBanner", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["banner_area_of_effect_+%_final_per_resource", "banner_buff_effect_+%_final_per_resource"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelayedBlastSpectre",
@@ -2390,6 +2984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveMelee",
@@ -2398,6 +2994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveMeleeCold",
@@ -2406,6 +3004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveMonsterEnfeebleOnHit",
@@ -2414,6 +3014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveProtovaalWhirlingCharge",
@@ -2422,6 +3024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveSpiderFlickerStrike",
@@ -2430,6 +3034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DelveWraithScreechChaos",
@@ -2438,6 +3044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DemonFemaleRangedProjectile",
@@ -2446,6 +3054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DemonFemaleRangedProjectile2",
@@ -2454,6 +3064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DemonModularBladeVortexSpectre",
@@ -2462,6 +3074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitTimeOverride"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Desecrate",
@@ -2470,6 +3084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Despair",
@@ -2478,6 +3094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DestructiveLink",
@@ -2486,6 +3104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Determination",
@@ -2494,6 +3114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DetonateDead",
@@ -2502,6 +3124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DetonateDeadAltX",
@@ -2510,6 +3134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DetonateDeadAltY",
@@ -2518,6 +3144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DevouringTotem",
@@ -2526,6 +3154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Discharge",
@@ -2534,6 +3164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["area_of_effect_+%_final_per_removable_power_frenzy_or_endurance_charge", "spell_maximum_base_cold_damage_per_removable_frenzy_charge", "spell_maximum_base_fire_damage_per_removable_endurance_charge", "spell_maximum_base_lightning_damage_per_removable_power_charge", "spell_minimum_base_cold_damage_per_removable_frenzy_charge", "spell_minimum_base_fire_damage_per_removable_endurance_charge", "spell_minimum_base_lightning_damage_per_removable_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DischargeAltX",
@@ -2542,6 +3174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["area_of_effect_+%_final_per_removable_power_frenzy_or_endurance_charge", "spell_maximum_base_cold_damage_per_removable_frenzy_charge", "spell_maximum_base_fire_damage_per_removable_endurance_charge", "spell_maximum_base_lightning_damage_per_removable_power_charge", "spell_minimum_base_cold_damage_per_removable_frenzy_charge", "spell_minimum_base_fire_damage_per_removable_endurance_charge", "spell_minimum_base_lightning_damage_per_removable_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Discipline",
@@ -2550,6 +3184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineBlast",
@@ -2558,6 +3194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["discus_slam_damage_+%_final_for_shockwave", "off_hand_critical_strike_chance_+_per_10_es_on_shield", "off_hand_maximum_added_physical_damage_per_15_shield_armour", "off_hand_minimum_added_physical_damage_per_15_shield_armour"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineBlastAltX",
@@ -2566,6 +3204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_critical_strike_chance_+_per_10_es_on_shield", "off_hand_maximum_added_physical_damage_per_15_shield_armour", "off_hand_minimum_added_physical_damage_per_15_shield_armour"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineIre",
@@ -2574,6 +3214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:DivineIreMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(38.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["divine_tempest_ailment_damage_+%_final_per_stage", "divine_tempest_damage_+%_final_while_channelling", "divine_tempest_hit_damage_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineIreAltX",
@@ -2582,6 +3224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:DivineIreofHolyLightningMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(38.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["divine_tempest_ailment_damage_+%_final_per_stage", "divine_tempest_hit_damage_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineIreAltY",
@@ -2590,6 +3234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:DivineIreofDisintegrationMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["divine_tempest_ailment_damage_+%_final_per_stage", "divine_tempest_hit_damage_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DivineRetribution",
@@ -2598,6 +3244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DominatingBlow",
@@ -2606,6 +3254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AxisEliteSoldierDominatingBlow", "AxisEliteSoldierDominatingBlowVaal"],
+        add_minions: &[],
     },
     PobSkill {
         id: "DominatingBlowAltX",
@@ -2614,6 +3264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AxisEliteSoldierDominatingBlow", "AxisEliteSoldierDominatingBlowVaal"],
+        add_minions: &[],
     },
     PobSkill {
         id: "DominatingBlowMinionCharge",
@@ -2622,6 +3274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["shield_charge_damage_+%_maximum"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DoomBlast",
@@ -2630,6 +3284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["triggered_vicious_hex_explosion"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DoryanisTouch",
@@ -2638,6 +3294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DoubleStrike",
@@ -2646,6 +3304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(-50.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["chance_to_deal_double_damage_%_vs_bleeding_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DoubleStrikeAltX",
@@ -2654,6 +3314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(-50.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DoubleStrikeAltY",
@@ -2662,6 +3324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(-50.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["double_strike_attack_speed_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DreadBanner",
@@ -2670,6 +3334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AuraEffect", kind: "MORE", key: None, value: Some(V::Num(-100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Condition:AffectedByPlacedBanner", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["banner_area_of_effect_+%_final_per_resource", "banner_buff_effect_+%_final_per_resource"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DropBearSummonedGroundSlam",
@@ -2678,6 +3344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DropBearSummonedRallyingCry",
@@ -2686,6 +3354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DualStrike",
@@ -2694,6 +3364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["dual_strike_critical_strike_chance_+%_final_against_enemies_on_full_life", "dual_strike_damage_+%_final_against_enemies_on_full_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "DualStrikeAltX",
@@ -2702,6 +3374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_main_hand_weapon_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EDSHarvestMinerHammerSmoke",
@@ -2710,6 +3384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EDSHeistScienceUnarmedGas",
@@ -2718,6 +3394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Earthquake",
@@ -2726,6 +3404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["quake_slam_fully_charged_explosion_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EarthquakeAltX",
@@ -2734,6 +3414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["earthquake_skill_aftershock_ailment_damage_+%_final_per_100ms_duration", "earthquake_skill_aftershock_area_of_effect_+%_final_per_100ms_duration", "earthquake_skill_aftershock_hit_damage_+%_final_per_100ms_duration"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Earthshatter",
@@ -2742,6 +3424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spike_slam_explosion_damage_+%_final", "spike_slam_spike_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EarthshatterAltX",
@@ -2750,6 +3434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spike_slam_explosion_damage_+%_final", "spike_slam_spike_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EarthshatterAltY",
@@ -2758,6 +3444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["earthshatter_spike_area_of_effect_+%_final", "spike_slam_explosion_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElderTentacleMinionProjectile",
@@ -2766,6 +3454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElderTentacleMinionProjectileDeepcaller",
@@ -2774,6 +3464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElderTentacleMinionProjectileEpic",
@@ -2782,6 +3474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalAegis",
@@ -2790,6 +3484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalHit",
@@ -2798,6 +3494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_base_area_of_effect_radius", "elemental_hit_damage_+%_final_per_enemy_elemental_ailment", "elemental_hit_no_physical_chaos_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalHitAltX",
@@ -2806,6 +3504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_base_area_of_effect_radius", "elemental_hit_damage_+%_final_per_enemy_elemental_ailment"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalHitCloneShot",
@@ -2814,6 +3514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalHitSkeletonKnight",
@@ -2822,6 +3524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "DealNoPhysical", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DealNoChaos", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DealNoCold", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DealNoLightning", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AreaOfEffect", kind: "MORE", key: None, value: Some(V::Num(80.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ElementalHitAilmentOnEnemy", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalHitSkeletonKnightIncursion",
@@ -2830,6 +3534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalWarding",
@@ -2838,6 +3544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillPhysicalDamageConvertToFire", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillPhysicalDamageConvertToCold", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillPhysicalDamageConvertToLightning", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ElementalWeakness",
@@ -2846,6 +3554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EmbraceMadness",
@@ -2854,6 +3564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EmpoweringHowlSpectre",
@@ -2862,6 +3574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EmptyActionAttackAzmeriGolemVSlam",
@@ -2870,6 +3584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EmptyActionAttackSecretPoliceDaggers",
@@ -2878,6 +3594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EmptyActionSpellWarlordGrandmaster",
@@ -2886,6 +3604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfBladesOnHit",
@@ -2894,6 +3614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfBladesOnHit2",
@@ -2902,6 +3624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfBladesOnHit3",
@@ -2910,6 +3634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfBladesOnHit4",
@@ -2918,6 +3644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFlamesOnHit",
@@ -2926,6 +3654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFlamesOnHit2",
@@ -2934,6 +3664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFlamesOnHit3",
@@ -2942,6 +3674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFlamesOnHit4",
@@ -2950,6 +3684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfForceOnHit",
@@ -2958,6 +3694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfForceOnHit2",
@@ -2966,6 +3704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfForceOnHit3",
@@ -2974,6 +3714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfForceOnHit4",
@@ -2982,6 +3724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFrostOnKill",
@@ -2990,6 +3734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFrostOnKill2",
@@ -2998,6 +3744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFrostOnKill3",
@@ -3006,6 +3754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFrostOnKill4",
@@ -3014,6 +3764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFuryOnHit",
@@ -3022,6 +3774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFuryOnHit2",
@@ -3030,6 +3784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFuryOnHit3",
@@ -3038,6 +3794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfFuryOnHit4",
@@ -3046,6 +3804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfInfernoOnKill",
@@ -3054,6 +3814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfInfernoOnKill2",
@@ -3062,6 +3824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfInfernoOnKill3",
@@ -3070,6 +3834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfInfernoOnKill4",
@@ -3078,6 +3844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfIreWhenHit",
@@ -3086,6 +3854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfIreWhenHit2",
@@ -3094,6 +3864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfIreWhenHit3",
@@ -3102,6 +3874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfIreWhenHit4",
@@ -3110,6 +3884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfLightWhenCrit",
@@ -3118,6 +3894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfLightWhenCrit2",
@@ -3126,6 +3904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfLightWhenCrit3",
@@ -3134,6 +3914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfLightWhenCrit4",
@@ -3142,6 +3924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfReflectionWhenHit",
@@ -3150,6 +3934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["Clone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfReflectionWhenHit2",
@@ -3158,6 +3944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["Clone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfReflectionWhenHit3",
@@ -3166,6 +3954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["Clone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfReflectionWhenHit4",
@@ -3174,6 +3964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["Clone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfSpiteWhenHit",
@@ -3182,6 +3974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfSpiteWhenHit2",
@@ -3190,6 +3984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfSpiteWhenHit3",
@@ -3198,6 +3994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfSpiteWhenHit4",
@@ -3206,6 +4004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_counterattack_trigger_on_hit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTempestOnHit",
@@ -3214,6 +4014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTempestOnHit2",
@@ -3222,6 +4024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTempestOnHit3",
@@ -3230,6 +4034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTempestOnHit4",
@@ -3238,6 +4044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTheGraveOnKill",
@@ -3246,6 +4054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["IcyRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTheGraveOnKill2",
@@ -3254,6 +4064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["IcyRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTheGraveOnKill3",
@@ -3262,6 +4074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["IcyRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfTheGraveOnKill4",
@@ -3270,6 +4084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["IcyRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfThunderOnKill",
@@ -3278,6 +4094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfThunderOnKill2",
@@ -3286,6 +4104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfThunderOnKill3",
@@ -3294,6 +4114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfThunderOnKill4",
@@ -3302,6 +4124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWarOnKill",
@@ -3310,6 +4134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWarOnKill2",
@@ -3318,6 +4144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWarOnKill3",
@@ -3326,6 +4154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWarOnKill4",
@@ -3334,6 +4164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWinterWhenHit",
@@ -3342,6 +4174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWinterWhenHit2",
@@ -3350,6 +4184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWinterWhenHit3",
@@ -3358,6 +4194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnchantmentOfWinterWhenHit4",
@@ -3366,6 +4204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnduringCry",
@@ -3374,6 +4214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnemyExplode",
@@ -3382,6 +4224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("corpseExplosionLifeMultiplier"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitChanceIsExplodeChance"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnergyBlade",
@@ -3390,6 +4234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Enfeeble",
@@ -3398,6 +4244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EnsnaringArrow",
@@ -3406,6 +4254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Envy",
@@ -3414,6 +4264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EssenceDrain",
@@ -3422,6 +4274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EssenceDrainAltX",
@@ -3430,6 +4284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EssenceDrainAltY",
@@ -3438,6 +4294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EtherealKnives",
@@ -3446,6 +4304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EtherealKnivesAltX",
@@ -3454,6 +4314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EtherealKnivesAltY",
@@ -3462,6 +4324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Eviscerate",
@@ -3470,6 +4334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExperimenterDetonateDead",
@@ -3478,6 +4344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveArrow",
@@ -3486,6 +4354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["explosiveArrowFunc"],
         own_stats: &["explosive_arrow_ailment_damage_+%_final_per_stack", "explosive_arrow_explosion_base_damage_+permyriad", "explosive_arrow_explosion_maximum_added_fire_damage", "explosive_arrow_explosion_minimum_added_fire_damage", "explosive_arrow_hit_damage_+%_final_per_stack", "explosive_arrow_stack_limit", "fuse_arrow_explosion_radius_+_per_fuse_arrow_orb"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveConcoction",
@@ -3494,6 +4364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["flask_throw_maximum_cold_damage_if_used_sapphire_flask", "flask_throw_maximum_lightning_damage_if_used_topaz_flask", "flask_throw_minimum_cold_damage_if_used_sapphire_flask", "flask_throw_minimum_lightning_damage_if_used_topaz_flask", "flask_throw_ruby_flask_ignite_dot_multiplier_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveConcoctionAltX",
@@ -3502,6 +4374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["flask_throw_maximum_cold_damage_if_used_sapphire_flask", "flask_throw_maximum_lightning_damage_if_used_topaz_flask", "flask_throw_minimum_cold_damage_if_used_sapphire_flask", "flask_throw_minimum_lightning_damage_if_used_topaz_flask", "flask_throw_ruby_flask_critical_strike_multiplier_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveTrap",
@@ -3510,6 +4384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Primary Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Secondary Area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Secondary Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryBaseMargin"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveTrapAltX",
@@ -3518,6 +4394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Primary Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Secondary Area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Secondary Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryBaseMargin"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExplosiveTrapAltY",
@@ -3526,6 +4404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Exsanguinate",
@@ -3534,6 +4414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ExsanguinateMaxStages", kind: "BASE", key: None, value: Some(V::Num(3.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PhysicalDamage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 16777216, tagged: true }, PobBaseMod { name: "FireDamage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 10, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ExsanguinateAltX",
@@ -3542,6 +4424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ExsanguinateofTransmissionMaxStages", kind: "BASE", key: None, value: Some(V::Num(3.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PhysicalDamage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 16777216, tagged: true }, PobBaseMod { name: "FireDamage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 10, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EyeOfWinter",
@@ -3550,6 +4434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EyeOfWinterAltX",
@@ -3558,6 +4444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "EyeOfWinterAltY",
@@ -3566,6 +4454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FaridunCasterUndeadDamageOverTimeAura",
@@ -3574,6 +4464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FemaleCannibalBossFireStorm",
@@ -3582,6 +4474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fireball explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Fireballs fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FemaleCannibalBossFlameDash",
@@ -3590,6 +4484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FieryImpactHeistMaceImplicit",
@@ -3598,6 +4494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireAegis",
@@ -3606,6 +4504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireBurstOnHit",
@@ -3614,6 +4514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireElementalConeSummoned",
@@ -3622,6 +4524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireElementalFlameRedSummoned",
@@ -3630,6 +4534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireElementalMeteorSummoned",
@@ -3638,6 +4544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireElementalMortarSummoned",
@@ -3646,6 +4554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireMonsterWhirlingBlades",
@@ -3654,6 +4564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireTrap",
@@ -3662,6 +4574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsBurningGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["global_maximum_added_fire_damage_vs_burning_enemies", "global_minimum_added_fire_damage_vs_burning_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireTrapAltX",
@@ -3670,6 +4584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["global_maximum_added_fire_damage_vs_burning_enemies", "global_minimum_added_fire_damage_vs_burning_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Fireball",
@@ -3678,6 +4594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireballIncursionChaos",
@@ -3686,6 +4604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireballIncusionFire",
@@ -3694,6 +4614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FireballIncusionLightning",
@@ -3702,6 +4624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Firestorm",
@@ -3710,6 +4634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(false)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fireball explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which fireballs fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["firestorm_initial_impact_area_of_effect_+%_final", "firestorm_initial_impact_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FirestormAltX",
@@ -3718,6 +4644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FirestormAltY",
@@ -3726,6 +4654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fire projectile:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Target area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameDash",
@@ -3734,6 +4664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsBurningGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameDashAltY",
@@ -3742,6 +4674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsBurningGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameLink",
@@ -3750,6 +4684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameSurge",
@@ -3758,6 +4694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["flame_whip_damage_+%_final_vs_burning_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameSurgeAltX",
@@ -3766,6 +4704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameWall",
@@ -3774,6 +4714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Flame Wall Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_fire_damage_to_deal_per_minute", "secondary_base_fire_damage_to_deal_per_minute"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlamebearerFlameBlue",
@@ -3782,6 +4724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Flameblast",
@@ -3790,6 +4734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["charged_blast_spell_damage_+%_final_per_stack", "flameblast_ailment_damage_+%_final_per_stack", "vaal_flameblast_radius_+_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameblastAltX",
@@ -3798,6 +4744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["charged_blast_spell_damage_+%_final_per_stack", "vaal_flameblast_radius_+_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlameblastAltY",
@@ -3806,6 +4754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PvpTvalueMultiplier", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["charged_blast_spell_damage_+%_final_per_stack", "flameblast_ailment_damage_+%_final_per_stack", "vaal_flameblast_radius_+_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlamethrowerTrap",
@@ -3814,6 +4764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(32.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["flamethrower_trap_damage_+%_final_vs_burning_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlamethrowerTrapAltX",
@@ -3822,6 +4774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(32.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Flammability",
@@ -3830,6 +4784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FleshAndStone",
@@ -3838,6 +4794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FleshOffering",
@@ -3846,6 +4804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["offering_skill_effect_duration_per_corpse"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlickerStrike",
@@ -3854,6 +4814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_attack_speed_+%_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FlickerStrikeAltX",
@@ -3862,6 +4824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_per_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FogOfWar",
@@ -3870,6 +4834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ForbiddenRite",
@@ -3878,6 +4844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ForbiddenRiteAltX",
@@ -3886,6 +4854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FreezingPulse",
@@ -3894,6 +4864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Frenzy",
@@ -3902,6 +4874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["frenzy_skill_attack_damage_+%_final_per_frenzy_charge", "frenzy_skill_attack_speed_+%_final_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrenzyAltX",
@@ -3910,6 +4884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["frenzy_skill_attack_damage_+%_final_per_frenzy_charge", "frenzy_skill_attack_speed_+%_final_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBlades",
@@ -3918,6 +4894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBladesAltX",
@@ -3926,6 +4904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["base_cold_damage_to_deal_per_minute"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBolt",
@@ -3934,6 +4914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBomb",
@@ -3942,6 +4924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuffSecondary"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBombAltX",
@@ -3950,6 +4934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostBombAltY",
@@ -3958,6 +4944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["active_skill_ailment_damage_+%_final_per_100ms_duration", "active_skill_hit_damage_+%_final_per_100ms_duration"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostShield",
@@ -3966,6 +4954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostWall",
@@ -3974,6 +4964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Frostbite",
@@ -3982,6 +4974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Frostblink",
@@ -3990,6 +4984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of initial explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area of Chilled Ground:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["ice_dash_cooldown_recovery_per_nearby_normal_or_magic_enemy", "ice_dash_cooldown_recovery_per_nearby_rare_or_unique_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrostblinkAltX",
@@ -3998,6 +4994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["frostblink_damage_+%_final_per_5%_chill_effect_on_target"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrozenLegion",
@@ -4006,6 +5004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrozenLegionAltX",
@@ -4014,6 +5014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrozenSweep",
@@ -4022,6 +5024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "FrozenSweepAltX",
@@ -4030,6 +5034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriDemonLeapSlamDamage",
@@ -4038,6 +5044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriDemonMeleeMiniSlam1",
@@ -4046,6 +5054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriReaperComboRightSlash",
@@ -4054,6 +5064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriReaperComboWhirl",
@@ -4062,6 +5074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriReaperLacerate",
@@ -4070,6 +5084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAAzmeriRobotArgusSlam",
@@ -4078,6 +5094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GABeastCleave",
@@ -4086,6 +5104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAExpeditionDeathKnightSlam",
@@ -4094,6 +5114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHarvestCrabDashSlam",
@@ -4102,6 +5124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHarvestMinerHammerSlam",
@@ -4110,6 +5134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHarvestRhexDashSlash",
@@ -4118,6 +5144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHeistCultistUnarmedLeapImpact",
@@ -4126,6 +5154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHeistRobotHoundStomp",
@@ -4134,6 +5164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHeistThugRangedArrowShotgun",
@@ -4142,6 +5174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHeistThugRangedShotgun",
@@ -4150,6 +5184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHellscapeDemonElite1DashSlash",
@@ -4158,6 +5194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHellscapePaleEliteSkyStab",
@@ -4166,6 +5204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAHellscapeStabbyCleave1",
@@ -4174,6 +5214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GASummonReaperComboLeftSlash",
@@ -4182,6 +5224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GASummonReaperComboWhirl",
@@ -4190,6 +5234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GASummonReaperUltimateLeftSlash",
@@ -4198,6 +5244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAVaalDominationLargeSlam",
@@ -4206,6 +5254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GAZombieCorpseGroundImpact",
@@ -4214,6 +5264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GPSHellscapeFleshEliteSpikeBarrage",
@@ -4222,6 +5274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAncestralDruidFlaskExplode",
@@ -4230,6 +5284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriAdmiralCannonball",
@@ -4238,6 +5294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriBirdDashZap",
@@ -4246,6 +5304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriDemonBossCorruptExplode",
@@ -4254,6 +5314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriHailrakeIceNova",
@@ -4262,6 +5324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriShepherdBeamNuke",
@@ -4270,6 +5334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriTentacleMonsterBeam",
@@ -4278,6 +5344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSAzmeriTentacleMonsterShockExplode",
@@ -4286,6 +5354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSExpeditionDeathKnightNova",
@@ -4294,6 +5364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHarvestRhexScreech",
@@ -4302,6 +5374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistLightningVolatileExplode",
@@ -4310,6 +5384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistLightningWaterfallHit",
@@ -4318,6 +5394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistRobotPyreBeamBlast",
@@ -4326,6 +5404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistRobotPyreBeamSweepBeam",
@@ -4334,6 +5414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistRobotPyreNukeBeam",
@@ -4342,6 +5424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistRobotPyreNukeBeamChannelled",
@@ -4350,6 +5434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHeistScienceLightningDashImpact",
@@ -4358,6 +5444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHellscapeDemonElite1Screech",
@@ -4366,6 +5454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHellscapeDemonEliteBeamNuke",
@@ -4374,6 +5464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHellscapeFleshEliteBloodOrbExplosion",
@@ -4382,6 +5474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHellscapePaleEliteBoltImpact",
@@ -4390,6 +5484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSHellscapePaleEliteOmegaBeam",
@@ -4398,6 +5494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GSRoboHoundBellyDamage",
@@ -4406,6 +5504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GalvanicArrow",
@@ -4414,6 +5514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GalvanicArrowAltX",
@@ -4422,6 +5524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GalvanicArrowAltY",
@@ -4430,6 +5534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GalvanicField",
@@ -4438,6 +5544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(19.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["base_galvanic_field_beam_delay_ms", "galvanic_field_damage_+%_final_per_5%_increased_damage_taken_from_shock", "galvanic_field_radius_+_per_10%_increased_damage_taken_from_shock", "galvanic_field_retargeting_delay_ms"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GalvanicFieldAltX",
@@ -4446,6 +5554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(19.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["base_galvanic_field_beam_delay_ms", "galvanic_field_retargeting_delay_ms"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GemDetonateMines",
@@ -4454,6 +5564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GeneralsCry",
@@ -4462,6 +5574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GeneralsCrySupport",
@@ -4470,6 +5584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["triggered_by_spiritual_cry"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GhostCannons",
@@ -4478,6 +5594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GhostPirateBladeVortexSpectre",
@@ -4486,6 +5604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("hitTimeOverride"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GlacialCascade",
@@ -4494,6 +5614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusExtra"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["glacial_cascade_final_spike_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GlacialCascadeAltX",
@@ -4502,6 +5624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GlacialHammer",
@@ -4510,6 +5634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GlacialHammerAltX",
@@ -4518,6 +5644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GlacialShieldSwipe",
@@ -4526,6 +5654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GluttonyOfElements",
@@ -4534,6 +5664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AvoidCurse", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GoatmanEarthquake",
@@ -4542,6 +5674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GoatmanFireMagmaOrb",
@@ -4550,6 +5684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GoatmanMoltenShell",
@@ -4558,6 +5694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GoatmanMonsterSlam",
@@ -4566,6 +5704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GoreShockwave",
@@ -4574,6 +5714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Grace",
@@ -4582,6 +5724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GroundEffectsSlamDockworkerChampion",
@@ -4590,6 +5734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GroundSlam",
@@ -4598,6 +5744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(35.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["groundslam_damage_to_close_targets_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GroundSlamAltX",
@@ -4606,6 +5754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(35.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["groundslam_damage_to_close_targets_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GuardianArc",
@@ -4614,6 +5764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "GuardianSentinelFireAura",
@@ -4622,6 +5774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireDot"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HalfSkeletonPuncture",
@@ -4630,6 +5784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "BleedChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HarvestCrabAbyssSlam",
@@ -4638,6 +5794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HarvestNessaCrabScreech",
@@ -4646,6 +5804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HarvestNessaCrabScreechDebuff",
@@ -4654,6 +5814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HarvestRhexLeapSlam",
@@ -4662,6 +5824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HarvestRhexScreechDebuff",
@@ -4670,6 +5834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Haste",
@@ -4678,6 +5844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Hatred",
@@ -4686,6 +5854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeavyStrike",
@@ -4694,6 +5864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeavyStrikeAltY",
@@ -4702,6 +5874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_deal_double_damage_%_per_10_intelligence"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeistCultistLightningBolt",
@@ -4710,6 +5884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeistCultistUnarmedLeap",
@@ -4718,6 +5894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeistProjectUnarmedMelee1",
@@ -4726,6 +5904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeistThugRangedExplosiveArrow",
@@ -4734,6 +5914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:ExplosiveArrowFuse", kind: "BASE", key: None, value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["explosive_arrow_hit_and_ailment_damage_+%_final_per_stack", "fuse_arrow_explosion_radius_+_per_fuse_arrow_orb"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HellionRallyingCry",
@@ -4742,6 +5924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HellscapeFleshFodderArc",
@@ -4750,6 +5934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfAgony",
@@ -4758,6 +5944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["HeraldOfAgonySpiderPlated"],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfAgonyMinionCleave",
@@ -4766,6 +5954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfAgonyMinionMortar",
@@ -4774,6 +5964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfAgonyMinionTailSpike",
@@ -4782,6 +5974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfAsh",
@@ -4790,6 +5984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsHeraldOfAsh", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfIce",
@@ -4798,6 +5994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfLightMinionSlam",
@@ -4806,6 +6004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfPurity",
@@ -4814,6 +6014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AxisEliteSoldierHeraldOfLight"],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfTheBreach",
@@ -4822,6 +6024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["herald_of_the_breach_add_stack_on_inflicting_ailment", "herald_of_the_breach_pulse_frequency_+%_per_otherworldly_pressure"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HeraldOfThunder",
@@ -4830,6 +6034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(32.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(false)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Hexblast",
@@ -4838,6 +6044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["hexblast_ailment_damage_+%_final_if_hexed", "hexblast_hit_damage_+%_final_if_hexed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HexblastAltX",
@@ -4846,6 +6054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["hexblast_ailment_damage_+%_final_if_hexed", "hexblast_hit_damage_+%_final_if_hexed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HexblastAltY",
@@ -4854,6 +6064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyFireElementalFireball",
@@ -4862,6 +6074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyFlameTotem",
@@ -4870,6 +6084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyFlameTotemAltX",
@@ -4878,6 +6094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyHammers",
@@ -4886,6 +6104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["holy_hammers_damage_+%_final_for_initial_hammer_in_cascade", "holy_hammers_damage_+%_final_if_consuming_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyHammersAltX",
@@ -4894,6 +6114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["holy_hammers_damage_+%_final_per_power_charge_consumed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyStrike",
@@ -4902,6 +6124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["HolyStrikeMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "HolyStrikeMinionAttack",
@@ -4910,6 +6134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Hydrosphere",
@@ -4918,6 +6144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["skill_physical_damage_%_to_convert_to_cold"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceCrash",
@@ -4926,6 +6154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("First hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Second hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Third hit:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["ice_crash_second_hit_damage_+%_final", "ice_crash_third_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceCrashAltX",
@@ -4934,6 +6164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_main_hand_weapon_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceCrashAzmeriHailrake",
@@ -4942,6 +6174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceElementalIceCyclone",
@@ -4950,6 +6184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceElementalSpearSummoned",
@@ -4958,6 +6194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceElementalSpearSummonedDeathNova",
@@ -4966,6 +6204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceNova",
@@ -4974,6 +6214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceNovaAltX",
@@ -4982,6 +6224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["ice_nova_damage_when_cast_on_frostbolt_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceNovaAltY",
@@ -4990,6 +6234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceShot",
@@ -4998,6 +6244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillPhysicalDamageConvertToCold", kind: "BASE", key: None, value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceShotAltX",
@@ -5006,6 +6254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillPhysicalDamageConvertToCold", kind: "BASE", key: None, value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceSpear",
@@ -5014,6 +6264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PierceChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["ice_spear_second_form_critical_strike_chance_+%", "ice_spear_second_form_critical_strike_multiplier_+", "ice_spear_second_form_projectile_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceSpearAltX",
@@ -5022,6 +6274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PierceChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["ice_spear_second_form_projectile_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceTrap",
@@ -5030,6 +6284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("First Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Second Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Third Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IceTrapAltX",
@@ -5038,6 +6294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("First Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Second Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Icestorm",
@@ -5046,6 +6304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Ice projectile:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Target area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_effect_duration_per_100_int", "spell_maximum_base_cold_damage_+_per_10_intelligence", "spell_minimum_base_cold_damage_+_per_10_intelligence"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IcicleBurst",
@@ -5054,6 +6314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IcicleMine",
@@ -5062,6 +6324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IcicleMineAltX",
@@ -5070,6 +6334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IcicleMineAltY",
@@ -5078,6 +6344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IguanaProjectile",
@@ -5086,6 +6354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IguanaProjectileChrome",
@@ -5094,6 +6364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IllusoryWarp",
@@ -5102,6 +6374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ImmortalCall",
@@ -5110,6 +6384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["buff_effect_duration_+%_per_removable_endurance_charge_limited_to_5"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IncaMinionProjectile",
@@ -5118,6 +6394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Incinerate",
@@ -5126,6 +6404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Flame Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Flame Width:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["expanding_fire_cone_final_wave_always_ignite", "expanding_fire_cone_radius_+_per_stage", "expanding_fire_cone_release_hit_damage_+%_final", "flamethrower_damage_+%_per_stage_final", "grant_expanding_fire_cone_release_ignite_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IncinerateAltX",
@@ -5134,6 +6414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Flame Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Flame Width:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["expanding_fire_cone_final_wave_always_ignite", "expanding_fire_cone_radius_+_per_stage", "expanding_fire_cone_release_hit_damage_+%_final", "flamethrower_damage_+%_per_stage_final", "grant_expanding_fire_cone_release_ignite_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IncinerateAltY",
@@ -5142,6 +6424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Flame Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Flame Width:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["expanding_fire_cone_radius_+_per_stage", "flamethrower_damage_+%_per_stage_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IncursionLeapSlamChampion",
@@ -5150,6 +6434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IncursionMeteorUpheaval",
@@ -5158,6 +6444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "InfernalBlow",
@@ -5166,6 +6454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:DebuffStack", kind: "BASE", key: None, value: Some(V::Num(5.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Hit area:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Explosion area:")), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["active_skill_base_area_of_effect_radius", "active_skill_base_secondary_area_of_effect_radius"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "InfernalBlowAltX",
@@ -5174,6 +6464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:DebuffStack", kind: "BASE", key: None, value: Some(V::Num(5.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "InfernalCry",
@@ -5182,6 +6474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Warcry area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "InfernalLegion",
@@ -5190,6 +6484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireDot"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "InsectSpawnerSpit",
@@ -5198,6 +6494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IntimidatingCry",
@@ -5206,6 +6504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "IntuitiveLink",
@@ -5214,6 +6514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KaomFireBeamTotemSpectre",
@@ -5222,6 +6524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KaomWarriorGroundSlam",
@@ -5230,6 +6534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KaomWarriorMoltenStrike",
@@ -5238,6 +6544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticBlast",
@@ -5246,6 +6554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticBlastAltX",
@@ -5254,6 +6564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["added_physical_damage_to_attacks_equal_to_%_maximum_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticBolt",
@@ -5262,6 +6574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticBoltAltX",
@@ -5270,6 +6584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticFusillade",
@@ -5278,6 +6594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["postCritFunc", "preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticFusilladeAltX",
@@ -5286,6 +6604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["postCritFunc", "preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticRain",
@@ -5294,6 +6614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticRainAltX",
@@ -5302,6 +6624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KineticRainKineticInstability",
@@ -5310,6 +6634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KitavaDemonCleave",
@@ -5318,6 +6644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KitavaDemonLeapSlam",
@@ -5326,6 +6654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KitavaDemonWhirlingBlades",
@@ -5334,6 +6664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KitavaDemonXMortar",
@@ -5342,6 +6674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "KitavaSlavedriverFlameWhip",
@@ -5350,6 +6684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Lacerate",
@@ -5358,6 +6694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(38.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_bleeding_damage_+%_final_in_blood_stance", "attack_speed_+%_if_changed_stance_recently", "chance_to_bleed_on_hit_%_chance_in_blood_stance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LacerateAltX",
@@ -5366,6 +6704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(38.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LacerateAltY",
@@ -5374,6 +6714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(38.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LancingSteel",
@@ -5382,6 +6724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["lancing_steel_damage_+%_at_close_range", "lancing_steel_damage_+%_final_after_first_hit_on_target", "number_of_projectiles_to_fire_+%_final_per_steel_ammo_consumed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LancingSteelAltX",
@@ -5390,6 +6734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["lancing_steel_damage_+%_final_after_first_hit_on_target"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LeapSlam",
@@ -5398,6 +6744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["stun_duration_+%_vs_enemies_that_are_on_full_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LeapSlamAltX",
@@ -5406,6 +6754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["stun_duration_+%_vs_enemies_that_are_on_full_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionKaruiArcherSnipe",
@@ -5414,6 +6764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionKaruiMeleeCombo2",
@@ -5422,6 +6774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionKaruiMeleeLeapSlam",
@@ -5430,6 +6784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionMonsterProximityShield",
@@ -5438,6 +6794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionTemplarJudgeBallLightning",
@@ -5446,6 +6804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LegionTemplarJudgeStormCall",
@@ -5454,6 +6814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningAegis",
@@ -5462,6 +6824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningArrow",
@@ -5470,6 +6834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningArrowAltX",
@@ -5478,6 +6844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningBolt",
@@ -5486,6 +6854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningConduit",
@@ -5494,6 +6864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Targeting range:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["energy_release_damage_+%_final_per_5%_increased_damage_taken_from_shock_on_target"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningConduitAltX",
@@ -5502,6 +6874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningGolemArcSummoned",
@@ -5510,6 +6884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningGolemWrath",
@@ -5518,6 +6894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningSpireTrap",
@@ -5526,6 +6904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Targeting Area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Impact Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["critical_strike_chance_+%_vs_shocked_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningSpireTrapAltX",
@@ -5534,6 +6914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Targeting Area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Impact Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningSpireTrapAltY",
@@ -5542,6 +6924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Targeting Area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Impact Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningStrike",
@@ -5550,6 +6934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningStrikeAltX",
@@ -5558,6 +6944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final", "skill_damage_+%_final_per_chain_from_skill_specific_stat"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningTendrils",
@@ -5566,6 +6954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "DPS", kind: "MORE", key: None, value: Some(V::Num(-66.66666666666666)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "DPS", kind: "MORE", key: None, value: Some(V::Num(-33.33333333333333)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["lightning_tendrils_channelled_larger_pulse_always_crit", "lightning_tendrils_channelled_larger_pulse_damage_+%_final", "lightning_tendrils_channelled_larger_pulse_interval"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningTendrilsAltX",
@@ -5574,6 +6964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["postCritFunc", "preDamageFunc"],
         own_stats: &["lightning_tendrils_channelled_larger_pulse_always_crit", "lightning_tendrils_channelled_larger_pulse_area_of_effect_+%_final", "lightning_tendrils_channelled_larger_pulse_damage_+%_final", "lightning_tendrils_channelled_larger_pulse_interval"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningTendrilsAltY",
@@ -5582,6 +6974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["lightning_tendrils_channelled_base_radius_+_per_second_while_channelling"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningTrap",
@@ -5590,6 +6984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_vs_shocked_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningTrapAltX",
@@ -5598,6 +6994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_vs_shocked_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "LightningWarp",
@@ -5606,6 +7004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSAzmeriDemonBloodVomitLarge",
@@ -5614,6 +7014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSAzmeriDemonBloodVomitMedium",
@@ -5622,6 +7024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSAzmeriDemonBloodVomitSmall",
@@ -5630,6 +7034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSAzmeriShepherdTripleMortar",
@@ -5638,6 +7044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSAzmeriShepherdVomitMortar",
@@ -5646,6 +7054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSHeistRobotClockworkGolemMortarSpectre",
@@ -5654,6 +7064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSHellscapeDemonEliteTripleMortar",
@@ -5662,6 +7074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSHellscapeDemonEliteVomitMortar",
@@ -5670,6 +7084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MMSPyromaniacIceMortar",
@@ -5678,6 +7094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPSFaridunWarlockBloodSpray",
@@ -5686,6 +7104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPSHeistCultistStaffProjectileGreen",
@@ -5694,6 +7114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPSHeistRobotClockworkGolemBasicProjectile",
@@ -5702,6 +7124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPSHellscapeFleshEliteBasicProj",
@@ -5710,6 +7134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPSPhantasmBasicBlood",
@@ -5718,6 +7144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPWExpeditionSummonedArbalestProjectile",
@@ -5726,6 +7154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPWHeistThugRangedBurningArrow",
@@ -5734,6 +7164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MPWVaalGuardBarrage",
@@ -5742,6 +7174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Malevolence",
@@ -5750,6 +7184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ManaInfusedStaff",
@@ -5758,6 +7194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_added_lightning_damage_equal_to_%_of_maximum_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Manabond",
@@ -5766,6 +7204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Circle area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Rectangle area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ManifestDancingDervishes",
@@ -5774,6 +7214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "DisableWeapons", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Condition:Onslaught", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionLevel"), value: Some(V::Num(65.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["UniqueAnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "MassFrenzy",
@@ -5782,6 +7224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MassPower",
@@ -5790,6 +7234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Melee",
@@ -5798,6 +7244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeed",
@@ -5806,6 +7254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeedChaos",
@@ -5814,6 +7264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeedCold",
@@ -5822,6 +7274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeedFire",
@@ -5830,6 +7284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeedLightning",
@@ -5838,6 +7294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeAtAnimationSpeedUnique",
@@ -5846,6 +7304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeCold",
@@ -5854,6 +7314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeComboCold",
@@ -5862,6 +7324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeEyrieArrow",
@@ -5870,6 +7334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeEyrieBird",
@@ -5878,6 +7344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeFire",
@@ -5886,6 +7354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeKaruiArcher",
@@ -5894,6 +7364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleePartialChaos",
@@ -5902,6 +7374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MeleeUseContactPoint",
@@ -5910,6 +7384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MinerThrowFireSpectre",
@@ -5918,6 +7394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MinionInstability",
@@ -5926,6 +7404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMin"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireMax"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MirrorArrow",
@@ -5934,6 +7414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowClone"],
+        add_minions: &[],
     },
     PobSkill {
         id: "MirrorArrowAltX",
@@ -5942,6 +7424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowCloneRoA"],
+        add_minions: &[],
     },
     PobSkill {
         id: "MirrorArrowAltY",
@@ -5950,6 +7434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionUseBowAndQuiver"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["ArrowCloneEle"],
+        add_minions: &[],
     },
     PobSkill {
         id: "MistyReflection",
@@ -5958,6 +7444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "DamageTaken", kind: "INC", key: None, value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(-30.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MoltenShell",
@@ -5966,6 +7454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MoltenStrike",
@@ -5974,6 +7464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("projectileSpeedAppliesToMSAreaOfEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Ball area:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Chain Minimum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Chain Maximum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MoltenStrikeAltX",
@@ -5982,6 +7474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("projectileSpeedAppliesToMSAreaOfEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Ball area:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Chain Minimum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Chain Maximum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final", "molten_strike_every_5th_attack_fire_X_additional_projectiles", "molten_strike_every_5th_attack_projectiles_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterArc",
@@ -5990,6 +7484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterCausticArrow",
@@ -5998,6 +7494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterCausticArrowAtAnimationSpeed",
@@ -6006,6 +7504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterCausticBomb",
@@ -6014,6 +7514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterChanceToTemporalChainsOnHit1",
@@ -6022,6 +7524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterDischarge",
@@ -6030,6 +7534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_maximum_base_cold_damage_per_removable_frenzy_charge", "spell_maximum_base_fire_damage_per_removable_endurance_charge", "spell_maximum_base_lightning_damage_per_removable_power_charge", "spell_minimum_base_cold_damage_per_removable_frenzy_charge", "spell_minimum_base_fire_damage_per_removable_endurance_charge", "spell_minimum_base_lightning_damage_per_removable_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterEnduringCry",
@@ -6038,6 +7544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterFireBomb",
@@ -6046,6 +7554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterFireballContactPos",
@@ -6054,6 +7564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterFlameRedCannibal",
@@ -6062,6 +7574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterFlickerStrike",
@@ -6070,6 +7584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_attack_speed_+%_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterIceShot",
@@ -6078,6 +7594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLeapSlam",
@@ -6086,6 +7604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLeapSlamFoothills",
@@ -6094,6 +7614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLesserMultiFireballSpectre",
@@ -6102,6 +7624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLesserMultiIceSpear",
@@ -6110,6 +7634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLightningArrow",
@@ -6118,6 +7644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterLightningThorns",
@@ -6126,6 +7654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterMultiFireballSpectre",
@@ -6134,6 +7664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterMultiIceSpear",
@@ -6142,6 +7674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterProjectileSpellLightningGolemSummoned",
@@ -6150,6 +7684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterProjectileWeakness",
@@ -6158,6 +7694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterProximityShield",
@@ -6166,6 +7704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterPuncture",
@@ -6174,6 +7714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "BleedChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterRighteousFireWhileSpectred",
@@ -6182,6 +7724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterShockNova",
@@ -6190,6 +7734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterSpark",
@@ -6198,6 +7744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterSplitFireballSpectre",
@@ -6206,6 +7754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterSplitIceSpear",
@@ -6214,6 +7764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterViperStrike",
@@ -6222,6 +7774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterViperStrikeAtAnimationSpeed",
@@ -6230,6 +7784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterVulnerabilityOnHit1",
@@ -6238,6 +7794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MonsterWarlordsMark",
@@ -6246,6 +7804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MotherOfFlamesMagmaOrb3",
@@ -6254,6 +7814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "MountainGoatmanIceSpear",
@@ -6262,6 +7824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerConductivity",
@@ -6270,6 +7834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerElementalWeakness",
@@ -6278,6 +7844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerEnfeeble",
@@ -6286,6 +7854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerFlammability",
@@ -6294,6 +7864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerFrostbite",
@@ -6302,6 +7874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerProjectileWeakness",
@@ -6310,6 +7884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerRaiseZombie",
@@ -6318,6 +7894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "NecromancerVulnerability",
@@ -6326,6 +7904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "OrbOfStorms",
@@ -6334,6 +7914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "OrbOfStormsAltX",
@@ -6342,6 +7924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["orb_of_storms_base_channelling_bolt_frequency_ms"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Pacify",
@@ -6350,6 +7934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PactOfBeidat",
@@ -6358,6 +7944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PactOfGhorr",
@@ -6366,6 +7954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PactOfKtash",
@@ -6374,6 +7964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PactOfLycia",
@@ -6382,6 +7974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PenanceBrand",
@@ -6390,6 +7984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:PenanceBrandMaxEnergy", kind: "BASE", key: None, value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PenanceBrandAltX",
@@ -6398,6 +7994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:PenanceBrandofDissipationMaxStages", kind: "BASE", key: None, value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["magma_brand_ailment_damage_+%_final_per_additional_pustule", "magma_brand_hit_damage_+%_final_per_additional_pustule", "penance_brand_pulses_instead_of_explode", "sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PenanceBrandAltY",
@@ -6406,6 +8004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PenanceMark",
@@ -6414,6 +8014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("minionLevelIsEnemyLevel"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["PenanceMarkPhantasm"],
+        add_minions: &[],
     },
     PobSkill {
         id: "Perforate",
@@ -6422,6 +8024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(11.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["blood_spears_damage_+%_final_in_blood_stance", "skill_area_of_effect_+%_final_in_sand_stance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PerforateAltX",
@@ -6430,6 +8034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(11.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["blood_spears_additional_number_of_spears_if_changed_stance_recently", "blood_spears_damage_+%_final_in_blood_stance", "skill_area_of_effect_+%_final_in_sand_stance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PerforateAltY",
@@ -6438,6 +8044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(11.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PestilentStrike",
@@ -6446,6 +8054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(27.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PhaseRun",
@@ -6454,6 +8064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_effect_duration_+%_per_removable_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PhysicalAegis",
@@ -6462,6 +8074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PlagueBearer",
@@ -6470,6 +8084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PoachersMark",
@@ -6478,6 +8094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PoisonousConcoction",
@@ -6486,6 +8104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["flask_throw_added_chaos_damage_%_of_flask_life_to_recover"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PoisonousConcoctionAltX",
@@ -6494,6 +8114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "DPS", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &["flask_throw_added_chaos_damage_%_of_flask_life_to_recover"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Portal",
@@ -6502,6 +8124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PowerSiphon",
@@ -6510,6 +8134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_final_per_power_charge_from_power_siphon", "critical_strike_multiplier_+_per_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PowerSiphonAltX",
@@ -6518,6 +8144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["attack_skills_have_added_lightning_damage_equal_to_%_of_maximum_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Precision",
@@ -6526,6 +8154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Pride",
@@ -6534,6 +8164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PrimalAegis",
@@ -6542,6 +8174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PrismaticBurst",
@@ -6550,6 +8184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(13.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["prismatic_burst_unchosen_type_damage_-100%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ProtectiveLink",
@@ -6558,6 +8194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Puncture",
@@ -6566,6 +8204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("bleedIsSkillEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PunctureAltX",
@@ -6574,6 +8214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("bleedIsSkillEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_vs_bleeding_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Punishment",
@@ -6582,6 +8224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DebilitateChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurifyingFlame",
@@ -6590,6 +8234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(50.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Shockwave:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["sanctify_wave_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurifyingFlameAltX",
@@ -6598,6 +8244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(50.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Shockwave:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["sanctify_wave_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurityOfElements",
@@ -6606,6 +8254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurityOfFire",
@@ -6614,6 +8264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurityOfIce",
@@ -6622,6 +8274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PurityOfLightning",
@@ -6630,6 +8284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PyroChaosFireball",
@@ -6638,6 +8294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PyroFireball",
@@ -6646,6 +8304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PyroSuicideExplosion",
@@ -6654,6 +8314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PyroclastMine",
@@ -6662,6 +8324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of initial explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which projectiles will land:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Area of projectile explosions:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "PyroclastMineAltX",
@@ -6670,6 +8334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of initial explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which projectiles will land:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Area of projectile explosions:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "QuickGuard",
@@ -6678,6 +8344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "AvoidBleed", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "QuickstepHardMode",
@@ -6686,6 +8354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RageVortex",
@@ -6694,6 +8364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preSkillTypeFunc"],
         own_stats: &["rage_slash_damage_+%_final_per_amount_of_rage_sacrificed", "rage_slash_radius_+_per_amount_of_rage_sacrificed", "rage_slash_vortex_attack_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RageVortexAltX",
@@ -6702,6 +8374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["rage_slash_vortex_attack_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RagingSpiritMeleeAttack",
@@ -6710,6 +8384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RainOfArrows",
@@ -6718,6 +8394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RainOfArrowsAltX",
@@ -6726,6 +8404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RainOfArrowsAltY",
@@ -6734,6 +8414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RainOfArrowsCloneShot",
@@ -6742,6 +8424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseSpectre",
@@ -6750,6 +8434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseSpectreAltX",
@@ -6758,6 +8444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseSpiders",
@@ -6766,6 +8454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &["SpiderMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseZombie",
@@ -6774,6 +8464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedZombie"],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseZombieAltX",
@@ -6782,6 +8474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedZombie"],
+        add_minions: &[],
     },
     PobSkill {
         id: "RaiseZombieAltY",
@@ -6790,6 +8484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedZombie"],
+        add_minions: &[],
     },
     PobSkill {
         id: "RallyingCry",
@@ -6798,6 +8494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Ravenous",
@@ -6806,6 +8504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["ravenous_buff_magnitude"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Reap",
@@ -6814,6 +8514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute", "blood_scythe_cost_+%_final_per_charge", "blood_scythe_damage_+%_final_per_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ReapAltX",
@@ -6822,6 +8524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute", "blood_scythe_cost_+%_final_per_charge", "blood_scythe_damage_+%_final_per_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ReaperConsumeMinionForBuff",
@@ -6830,6 +8534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "MinionModifier", kind: "LIST", key: None, value: None, flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "MinionModifier", kind: "LIST", key: None, value: None, flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "MinionModifier", kind: "LIST", key: None, value: None, flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Reave",
@@ -6838,6 +8544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ReaveMaxStages", kind: "BASE", key: None, value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["reave_area_of_effect_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ReaveAltX",
@@ -6846,6 +8554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ReaveofRefractionMaxStages", kind: "BASE", key: None, value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["reave_area_of_effect_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RejuvenationTotem",
@@ -6854,6 +8564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_life_regeneration_rate_per_minute"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RelicTriggeredNova",
@@ -6862,6 +8574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["holy_relic_trigger_on_parent_attack_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RepeatingShockwave",
@@ -6870,6 +8584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ReplicaSiegebreakerBurningGround",
@@ -6878,6 +8594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("FireDot"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsBurningGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ResentmentUniqueSkill",
@@ -6886,6 +8604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_fire_damage_to_deal_per_minute", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RevenantBossSpellProjectile",
@@ -6894,6 +8614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RevenantSpellProjectileSpectre",
@@ -6902,6 +8624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RighteousFire",
@@ -6910,6 +8634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RighteousFireAltX",
@@ -6918,6 +8644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RockGolemMinionWhirlingBlades",
@@ -6926,6 +8654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RockGolemSlam",
@@ -6934,6 +8664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RollingMagma",
@@ -6942,6 +8674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(14.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RuneBlast",
@@ -6950,6 +8684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "RuneBlastAltX",
@@ -6958,6 +8694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SandstormChaosElementalSummoned",
@@ -6966,6 +8704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SandstormChaosElementalSummonedEmpowered",
@@ -6974,6 +8714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ScorchingRay",
@@ -6982,6 +8724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:ScorchingRayMaxStages", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "DotCanStackAsTotems", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_fire_beam_stacks", "fire_beam_additional_stack_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ScorchingRayAltX",
@@ -6990,6 +8734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:ScorchingRayofImmolationMaxStages", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "DotCanStackAsTotems", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_fire_beam_stacks", "fire_beam_additional_stack_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ScourgeArrow",
@@ -6998,6 +8744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["virulent_arrow_damage_+%_final_per_stage", "virulent_arrow_pod_projectile_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ScourgeArrowAltX",
@@ -7006,6 +8754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["virulent_arrow_damage_+%_final_per_stage", "virulent_arrow_pod_projectile_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeaWitchScreech",
@@ -7014,6 +8764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SearingBond",
@@ -7022,6 +8774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SearingBondAltX",
@@ -7030,6 +8784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["number_of_additional_totems_allowed_per_maximum_power_charge", "searing_bond_totems_detonation_damage_over_time_+%_final_per_active_totem"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeawitchFrostbolt",
@@ -7038,6 +8794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeawitchVulnerability",
@@ -7046,6 +8804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SecretDesecrateMonsterEarthquakeTriggered",
@@ -7054,6 +8814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SecretDesecrateMonsterMultiSlash",
@@ -7062,6 +8824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeismicCry",
@@ -7070,6 +8834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(60.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_empowers_next_x_melee_attacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeismicTrap",
@@ -7078,6 +8844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Large Burst:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Small Burst:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SeismicTrapAltX",
@@ -7086,6 +8854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Large Burst:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Small Burst:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SentinelHolySlam",
@@ -7094,6 +8864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShadeForm",
@@ -7102,6 +8874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShaperApparitionBeam",
@@ -7110,6 +8884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShaperApparitionProjectiles",
@@ -7118,6 +8894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_repeat_count"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShaperApparitionTeleportSlam",
@@ -7126,6 +8904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShatteringSteel",
@@ -7134,6 +8914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShatteringSteelAltX",
@@ -7142,6 +8924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["fires_1_projectile_if_no_steel_ammo", "shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShieldCharge",
@@ -7150,6 +8934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("End Cone area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("End Circle area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(8.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Charging area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "shield_charge_damage_+%_maximum"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShieldCrush",
@@ -7158,6 +8944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(29.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "shield_crush_damage_+%_final_from_distance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShieldCrushAltX",
@@ -7166,6 +8954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(29.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["off_hand_maximum_added_fire_damage_per_15_shield_armour", "off_hand_minimum_added_fire_damage_per_15_shield_armour", "shield_crush_damage_+%_final_from_distance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShieldOfLight",
@@ -7174,6 +8964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_critical_strike_chance_+_per_10_es_on_shield", "off_hand_maximum_added_physical_damage_per_15_shield_armour", "off_hand_minimum_added_physical_damage_per_15_shield_armour"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShieldShatter",
@@ -7182,6 +8974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_maximum_base_physical_damage_per_shield_quality", "spell_minimum_base_physical_damage_per_shield_quality"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShockNova",
@@ -7190,6 +8984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["shock_nova_ring_chance_to_shock_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShockNovaAltX",
@@ -7198,6 +8994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dpsMultiplier"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShockwaveTotem",
@@ -7206,6 +9004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShockwaveTotemAltX",
@@ -7214,6 +9014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShrapnelBallista",
@@ -7222,6 +9024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["attack_skills_additional_ballista_totems_allowed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ShrapnelBallistaAltX",
@@ -7230,6 +9034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["attack_skills_additional_ballista_totems_allowed", "fires_1_projectile_if_no_steel_ammo"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiegeBallista",
@@ -7238,6 +9044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ProjectileRain", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["attack_speed_+%_per_maximum_totem"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiegeBallistaAltX",
@@ -7246,6 +9054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ProjectileRain", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiegeBallistaAltY",
@@ -7254,6 +9064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiegebreakerCausticGround",
@@ -7262,6 +9074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("ChaosDot"), value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCausticGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SigilOfPower",
@@ -7270,6 +9084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiphoningTrap",
@@ -7278,6 +9094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SiphoningTrapAltX",
@@ -7286,6 +9104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonArcherLightningArrow",
@@ -7294,6 +9114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonBlackAbyssBoneLance",
@@ -7302,6 +9124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonCannonBoneMortar",
@@ -7310,6 +9134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonCannonBoneNova",
@@ -7318,6 +9144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonCannonMortar",
@@ -7326,6 +9154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonMassBowProjectile",
@@ -7334,6 +9164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "BleedChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonMinionProjectileCold",
@@ -7342,6 +9174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonMinionProjectileFire",
@@ -7350,6 +9184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonMinionProjectileLightning",
@@ -7358,6 +9194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonProjectileBlack",
@@ -7366,6 +9204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonSoldierTornadoShot",
@@ -7374,6 +9214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonSpark",
@@ -7382,6 +9224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkeletonVulnerability",
@@ -7390,6 +9234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SkitterbotWait",
@@ -7398,6 +9244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SlavedriverFlameWhip",
@@ -7406,6 +9254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Smite",
@@ -7414,6 +9264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Lightning Strike area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Aura area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SmiteAltX",
@@ -7422,6 +9274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SmokeMine",
@@ -7430,6 +9284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SnakeSpineProjectile",
@@ -7438,6 +9294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Snipe",
@@ -7446,6 +9304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SnipersMark",
@@ -7454,6 +9314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SolarisChampionFlameVortex",
@@ -7462,6 +9324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SolartwineBlindingNova",
@@ -7470,6 +9334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SomaticShell",
@@ -7478,6 +9344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SoulLink",
@@ -7486,6 +9354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Soulrend",
@@ -7494,6 +9364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SoulrendAltX",
@@ -7502,6 +9374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SoulrendAltY",
@@ -7510,6 +9384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Spark",
@@ -7518,6 +9394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SparkAltX",
@@ -7526,6 +9404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SparkAltY",
@@ -7534,6 +9414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpecialBeamCannon",
@@ -7542,6 +9424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralHelix",
@@ -7550,6 +9434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "NoAdditionalProjectiles", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AdditionalProjectilesAddBouncesInstead", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralHelixAltY",
@@ -7558,6 +9444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "NoAdditionalProjectiles", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AdditionalProjectilesAddBouncesInstead", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy", "throw_X_additional_traps_if_dual_wielding", "trap_throwing_speed_+%_while_wielding_2hand"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralShieldThrow",
@@ -7566,6 +9454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "primary_projectile_chains_+", "thrown_shield_secondary_projectile_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralShieldThrowAltX",
@@ -7574,6 +9464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_maximum_added_cold_damage_per_15_shield_evasion", "off_hand_minimum_added_cold_damage_per_15_shield_evasion", "thrown_shield_secondary_projectile_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralShieldThrowAltY",
@@ -7582,6 +9474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating", "stationary_shield_throw_firing_interval_ms", "thrown_shield_secondary_projectile_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralSkullShieldCharge",
@@ -7590,6 +9484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["shield_charge_damage_+%_maximum"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralSpirits",
@@ -7598,6 +9494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &["SummonedEssenceSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralThrow",
@@ -7606,6 +9504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PierceChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralThrowAltX",
@@ -7614,6 +9514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PierceChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpectralThrowAltY",
@@ -7622,6 +9524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PierceChance", kind: "BASE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Spellslinger",
@@ -7630,6 +9534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpiritBurst",
@@ -7638,6 +9544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SpiritOffering",
@@ -7646,6 +9554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffMinions"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffNotPlayer"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["offering_skill_effect_duration_per_corpse"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SplitArrow",
@@ -7654,6 +9564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SplitArrowAltX",
@@ -7662,6 +9574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SplittingSteel",
@@ -7670,6 +9584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SplittingSteelAltX",
@@ -7678,6 +9594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StalkingPustule",
@@ -7686,6 +9604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Orb explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Corpse explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StaticStrike",
@@ -7694,6 +9614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["static_strike_beam_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StaticStrikeAltX",
@@ -7702,6 +9624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["hit_and_ailment_damage_+%_final_per_gathering_lightning"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormBrand",
@@ -7710,6 +9634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormBrandAltX",
@@ -7718,6 +9644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["sigil_attached_target_hit_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormBurst",
@@ -7726,6 +9654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormBurstAltX",
@@ -7734,6 +9664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormCall",
@@ -7742,6 +9674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormCallAltX",
@@ -7750,6 +9684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormCascadeTriggered",
@@ -7758,6 +9694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormRain",
@@ -7766,6 +9704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Arrow Explosion:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Beam Width:")), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormRainAltX",
@@ -7774,6 +9714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormRainAltY",
@@ -7782,6 +9724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Stormbind",
@@ -7790,6 +9734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(3.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["rune_paint_area_of_effect_+%_final_per_rune_level", "rune_paint_area_of_effect_+%_per_rune_level", "rune_paint_damage_+%_final_per_rune_level"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormbindAltX",
@@ -7798,6 +9744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Multiplier:RuneLevel", kind: "BASE", key: None, value: Some(V::Num(3.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["rune_paint_area_of_effect_+%_final_per_rune_level", "rune_paint_area_of_effect_+%_per_rune_level", "rune_paint_damage_+%_final_per_rune_level"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "StormblastMine",
@@ -7806,6 +9754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonAbyssalConstructs",
@@ -7814,6 +9764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AbyssCurseBot", "AbyssDebuffBot"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonArbalists",
@@ -7822,6 +9774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedArbalists"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonBeastialRhoa",
@@ -7830,6 +9784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveBestialMinion", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["RhoaUniqueSummoned"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonBeastialSnake",
@@ -7838,6 +9794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveBestialMinion", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SnakeSpitUniqueSummoned"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonBeastialUrsa",
@@ -7846,6 +9804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveBestialMinion", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["DropBearUniqueSummoned"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonCarrionGolem",
@@ -7854,6 +9814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveCarrionGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedCarrionGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonCarrionGolemAltX",
@@ -7862,6 +9824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveCarrionGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedCarrionGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonCarrionGolemAltY",
@@ -7870,6 +9834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveCarrionGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedCarrionGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonChaosGolem",
@@ -7878,6 +9844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveChaosGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedChaosGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonChaosGolemAltX",
@@ -7886,6 +9854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveChaosGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedChaosGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonChaosGolemAltY",
@@ -7894,6 +9864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveChaosGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "MinionModifier", kind: "LIST", key: None, value: None, flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedChaosGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonDoedresEffigy",
@@ -7902,6 +9874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonElementalRelic",
@@ -7910,6 +9884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["GuardianRelicAll"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonFlameGolem",
@@ -7918,6 +9894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveFireGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedFlameGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonFlameGolemAltX",
@@ -7926,6 +9904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveFireGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedFlameGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonFlameGolemAltY",
@@ -7934,6 +9914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveFireGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedFlameGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfBrutality",
@@ -7942,6 +9924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfBrutalityUber",
@@ -7950,6 +9934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfDirections",
@@ -7958,6 +9944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfDirectionsUber",
@@ -7966,6 +9954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfFocus",
@@ -7974,6 +9964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfFocusAscendancy",
@@ -7982,6 +9974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfFocusUber",
@@ -7990,6 +9984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfStorms",
@@ -7998,6 +9994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfStormsUber",
@@ -8006,6 +10004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTheArcane",
@@ -8014,6 +10014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTheArcaneAscendancy",
@@ -8022,6 +10024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTheArcaneUber",
@@ -8030,6 +10034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTime",
@@ -8038,6 +10044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ActionSpeed", kind: "INC", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTimeAscendancy",
@@ -8046,6 +10054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ActionSpeed", kind: "INC", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHarbingerOfTimeUber",
@@ -8054,6 +10064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ActionSpeed", kind: "INC", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("buffAllies"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHolyRelic",
@@ -8062,6 +10074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["HolyLivingRelic"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonHolyRelicAltX",
@@ -8070,6 +10084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["HolyLivingRelic"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonIceGolem",
@@ -8078,6 +10094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveColdGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedIceGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonIceGolemAltX",
@@ -8086,6 +10104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveColdGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedIceGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonIceGolemAltY",
@@ -8094,6 +10114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveColdGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedIceGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonLightningGolem",
@@ -8102,6 +10124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveLightningGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedLightningGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonLightningGolemAltX",
@@ -8110,6 +10134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HaveLightningGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedLightningGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonMirageChieftain",
@@ -8118,6 +10144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonPhantasmFadingProjectile",
@@ -8126,6 +10154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonRagingSpirit",
@@ -8134,6 +10164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonRagingSpiritAltX",
@@ -8142,6 +10174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedRagingSpirit"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonReaper",
@@ -8150,6 +10184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedReaper"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonReaperAltX",
@@ -8158,6 +10194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedReaper"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonReaperAltY",
@@ -8166,6 +10204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedReaper"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSacredWisp",
@@ -8174,6 +10214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_sacred_wisps_wisp_additional_%_chance_to_attack_when_rare_or_unique_enemy_in_presence"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSentinelOfRadiance",
@@ -8182,6 +10224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["GuardianSentinel"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonShaperApparition",
@@ -8190,6 +10234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSkeletons",
@@ -8198,6 +10244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedSkeleton", "RaisedSkeletonCaster"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSkeletonsAltX",
@@ -8206,6 +10254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedSkeletonArcher"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSkeletonsAltY",
@@ -8214,6 +10264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedSkeletonCaster"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSkitterbots",
@@ -8222,6 +10274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &["SkitterbotCold", "SkitterbotLightning", "SkitterbotFire"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSpectralTiger",
@@ -8230,6 +10284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &["SummonedSpectralTiger"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonSpectralWolf",
@@ -8238,6 +10294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &["SummonedSpectralWolf"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonStoneGolem",
@@ -8246,6 +10304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HavePhysicalGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedStoneGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonStoneGolemAltX",
@@ -8254,6 +10314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HavePhysicalGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedStoneGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonStoneGolemAltY",
@@ -8262,6 +10324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("allowTotemBuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:HavePhysicalGolem", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &["SummonedStoneGolem"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonTauntingContraption",
@@ -8270,6 +10334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonVoidSpawn",
@@ -8278,6 +10344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["VoidSpawn"],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedLivingLightningZap",
@@ -8286,6 +10354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedReaperMelee",
@@ -8294,6 +10364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedReaperUltimate",
@@ -8302,6 +10374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedRhoaShieldCharge",
@@ -8310,6 +10384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["shield_charge_damage_+%_maximum"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedSnakeProjectile",
@@ -8318,6 +10394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SummonedSpiderViperStrike",
@@ -8326,6 +10404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SumonRagingSpiritMelee",
@@ -8334,6 +10414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Sunder",
@@ -8342,6 +10424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:SunderWaveArea", kind: "BASE", key: None, value: Some(V::Num(4.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["shockwave_slam_explosion_damage_+%_final", "sunder_wave_radius_+_per_step"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SunderAltX",
@@ -8350,6 +10434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["shockwave_slam_explosion_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SunderAltY",
@@ -8358,6 +10444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["shockwave_slam_explosion_damage_+%_final", "sunder_wave_max_steps", "sunder_wave_radius_+_per_step"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportArcaneSurge",
@@ -8366,6 +10454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportArchmage",
@@ -8374,6 +10464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["archmage_gain_lightning_damage_%_of_max_unreserved_mana", "manaweave_cost_equals_%_unreserved_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAutoexertion",
@@ -8382,6 +10474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_autocast_warcries"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAutomation",
@@ -8390,6 +10484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable", "support_autocast_instant_spells"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedAddedColdDamage",
@@ -8398,6 +10494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_cold_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedAddedFireDamage",
@@ -8406,6 +10504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_physical_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedAddedLightningDamage",
@@ -8414,6 +10514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_lightning_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedBurningDamage",
@@ -8422,6 +10524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_fire_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedCastOnCriticalStrike",
@@ -8430,6 +10534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_linked_spells_on_attack_crit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedCastWhileChannelling",
@@ -8438,6 +10544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["channelled_skill_damage_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedGenerosity",
@@ -8446,6 +10554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["non_curse_aura_effect_+%", "supported_aura_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedMeleeSplash",
@@ -8454,6 +10564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_strike_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedMinionDamage",
@@ -8462,6 +10574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_minion_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedMultistrike",
@@ -8470,6 +10584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_melee_attack_repeat_count", "multistrike_damage_+%_final_on_first_repeat", "multistrike_damage_+%_final_on_second_repeat", "multistrike_damage_+%_final_on_third_repeat", "support_multiple_attacks_melee_attack_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedSpellEcho",
@@ -8478,6 +10594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_echo_plus_chance_double_damage_%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedUnleash",
@@ -8486,6 +10604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "HasSeals", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportAwakenedVoidManipulation",
@@ -8494,6 +10614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["supported_chaos_skill_gem_level_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBallistaTotem",
@@ -8502,6 +10624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["attack_skills_additional_ballista_totems_allowed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBarrage",
@@ -8510,6 +10634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["number_of_additional_projectiles", "projectiles_barrage", "support_barrage_attack_time_+%_per_projectile_fired", "support_barrage_damage_+%_final", "support_barrage_trap_and_mine_throwing_time_+%_final_per_projectile_fired"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBehead",
@@ -8518,6 +10644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_vs_enemies_on_low_life_+%", "support_executioner_damage_vs_enemies_on_low_life_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBlastchainMine",
@@ -8526,6 +10654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_skill_show_average_damage_instead_of_dps"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBloodlust",
@@ -8534,6 +10664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["melee_damage_vs_bleeding_enemies_+%", "support_bloodlust_melee_physical_damage_+%_final_vs_bleeding_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBloodsoakedBanner",
@@ -8542,6 +10674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCorruptingBlood", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:BloodsoakedBannerMaxStages", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 16777216, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBloodthirst",
@@ -8550,6 +10684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["blood_price_gain_%_maximum_life_as_added_physical_damage_with_weapons_while_on_low_life", "damage_+%_when_on_low_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBluntWeaponShockwave",
@@ -8558,6 +10694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBonechill",
@@ -8566,6 +10704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("supportBonechill"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportBrandSupport",
@@ -8574,6 +10714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("triggeredByBrand"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnCritTriggered",
@@ -8582,6 +10724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_spell_on_linked_attack_crit", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnCritTriggeredPlus",
@@ -8590,6 +10734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_spell_on_linked_attack_crit", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnCriticalStrike",
@@ -8598,6 +10744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_linked_spells_on_attack_crit_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnDeath",
@@ -8606,6 +10754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("triggeredOnDeath"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnLifeSpent",
@@ -8614,6 +10764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_cast_on_life_spent"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnManaSpent",
@@ -8622,6 +10774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_cast_on_mana_spent"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnMeleeKill",
@@ -8630,6 +10784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_linked_spells_on_melee_kill_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnMeleeKillTriggered",
@@ -8638,6 +10794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_spell_on_linked_melee_kill", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastOnWardBreak",
@@ -8646,6 +10804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cooldown_recovery_rate_+%_per_100_ward", "spell_uncastable_if_triggerable", "trigger_on_ward_break_%_chance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastWhenDamageTaken",
@@ -8654,6 +10814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastWhenStunned",
@@ -8662,6 +10824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastWhileChannelling",
@@ -8670,6 +10834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["channelled_skill_damage_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastWhileChannellingTriggered",
@@ -8678,6 +10844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_spell_while_linked_skill_channelling", "spell_uncastable_if_triggerable", "support_cast_while_channelling_triggered_skill_damage_+%_final", "triggered_skill_damage_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCastWhileChannellingTriggeredPlus",
@@ -8686,6 +10854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_spell_while_linked_skill_channelling", "spell_uncastable_if_triggerable", "support_cast_while_channelling_triggered_skill_damage_+%_final", "triggered_skill_damage_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportChargedMines",
@@ -8694,6 +10864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["mine_critical_strike_chance_+%_per_power_charge", "mine_throwing_speed_+%_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportChargedTraps",
@@ -8702,6 +10874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["trap_critical_strike_multiplier_+_per_power_charge", "trap_throwing_speed_+%_per_frenzy_charge", "trap_trigger_radius_"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCloseCombat",
@@ -8710,6 +10884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:SupportedByCloseCombat", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["close_combat_damage_to_close_range_+%", "support_slashing_damage_+%_final_from_distance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCompanionship",
@@ -8718,6 +10894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_companionship_minion_damage_taken_+%_final_if_at_most_one_minion"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportControlledBlaze",
@@ -8726,6 +10904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_recent_ignites_damage_per_recent_ignite_+%_final", "support_recent_ignites_ignite_damage_per_recent_ignite_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCorruptingCry",
@@ -8734,6 +10914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCorruptingBlood", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:CorruptingCryMaxStages", kind: "BASE", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Damage", kind: "MORE", key: None, value: Some(V::Num(100.0)), flags: 0, keyword_flags: 16777216, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCriticalStrikeAffliction",
@@ -8742,6 +10924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["critical_ailment_dot_multiplier_+"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCruelty",
@@ -8750,6 +10934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Cruelty", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["hits_grant_cruelty"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCullTheWeak",
@@ -8758,6 +10944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["kill_normal_or_magic_enemy_on_hit_if_under_x%_life"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCurseOnTrapTriggered",
@@ -8766,6 +10954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["hex_applied_when_trap_triggers"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportCursePillarTriggerCurses",
@@ -8774,6 +10964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("manaReservationPercent"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportDamageOnFullLife",
@@ -8782,6 +10974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_damage_while_on_full_life_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportDevour",
@@ -8790,6 +10984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_+%_if_you_have_consumed_a_corpse_recently"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportDivineSentinel",
@@ -8798,6 +10994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "PhysicalDamageGainAsFire", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "PhysicalDamageGainAsLightning", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "LifeRegenPercent", kind: "BASE", key: None, value: Some(V::Num(1.5)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "ManaRegen", kind: "INC", key: None, value: Some(V::Num(30.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "ChaosResist", kind: "BASE", key: None, value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "CurseEffectOnSelf", kind: "INC", key: None, value: Some(V::Num(-50.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportEldritchBlasphemy",
@@ -8806,6 +11004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_blasphemy_enemies_gain_malignant_madness_if_in_aura_for_x_seconds"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportEnduranceChargeOnMeleeStun",
@@ -8814,6 +11014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["endurance_charge_on_melee_stun_damage_+%_final_per_endurance_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportEnergyLeech",
@@ -8822,6 +11024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_+%_while_es_leeching", "support_energy_shield_leech_damage_+%_on_full_energy_shield_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportEternalBlessing",
@@ -8830,6 +11034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("manaReservationFlat"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("lifeReservationFlat"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("manaReservationPercent"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("lifeReservationPercent"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportExemplar",
@@ -8838,6 +11044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["minion_critical_strike_chance_+%_per_attack_crit_recently_up_to_100", "minion_critical_strike_multiplier_+_per_attack_crit_recently_up_to_100"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportFeedingFrenzy",
@@ -8846,6 +11054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_minion_offensive_stance_minion_damage_+%_final_while_you_have_puppet_master"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportFocusedChannelling",
@@ -8854,6 +11064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportFreshMeat",
@@ -8862,6 +11074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "MinionModifier", kind: "LIST", key: None, value: None, flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["support_recent_minions_additional_critical_strike_chance_from_wakened_fury", "support_recent_minions_additional_critical_strike_multiplier_from_wakened_fury"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportFrostmage",
@@ -8870,6 +11084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["frostmage_cost_equals_%_reserved_mana"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportGenerosity",
@@ -8878,6 +11094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["non_curse_aura_effect_+%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportGreaterMultistrike",
@@ -8886,6 +11104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_melee_attack_repeat_count", "multistrike_damage_+%_final_on_first_repeat", "multistrike_damage_+%_final_on_second_repeat", "multistrike_damage_+%_final_on_third_repeat", "support_multiple_attacks_melee_attack_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportGreaterSpellEcho",
@@ -8894,6 +11114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_greater_spell_echo_area_of_effect_+%_per_repeat", "support_greater_spell_echo_spell_damage_+%_final_per_repeat"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportGreaterUnleash",
@@ -8902,6 +11124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "HasSeals", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportGuardiansBlessing",
@@ -8910,6 +11134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("manaReservationFlat"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("lifeReservationFlat"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("manaReservationPercent"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("lifeReservationPercent"), value: Some(V::Num(0.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportHypothermia",
@@ -8918,6 +11144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["additional_chance_to_freeze_chilled_enemies_%", "support_hypothermia_damage_+%_vs_chilled_enemies_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportIceBite",
@@ -8926,6 +11154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_+%_per_frenzy_charge", "maximum_added_cold_damage_per_frenzy_charge", "minimum_added_cold_damage_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportImmolate",
@@ -8934,6 +11164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["global_maximum_added_fire_damage_vs_burning_enemies", "global_minimum_added_fire_damage_vs_burning_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportIntensify",
@@ -8942,6 +11174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_spell_boost_area_of_effect_+%_final_per_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportInvention",
@@ -8950,6 +11184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_invention_trap_and_mine_damage_+%_final_per_second_placed_up_to_100", "trap_and_mine_area_of_effect_+%_per_second_placed_up_to_100"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportLethalDose",
@@ -8958,6 +11194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["additional_poisons_+_to_apply_vs_non_poisoned_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportLifeLeech",
@@ -8966,6 +11204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_+%_while_life_leeching"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMachinations",
@@ -8974,6 +11214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_cost_+%_per_keystone"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportManaLeech",
@@ -8982,6 +11224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["damage_+%_while_mana_leeching"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportManaforgedArrows",
@@ -8990,6 +11234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_manaforged_arrows_damage_+%_final_per_mana_spent", "support_manaforged_arrows_mana_cost_%_threshold"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMarkOnHit",
@@ -8998,6 +11244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["mark_skills_curse_effect_+%", "trigger_on_attack_hit_against_rare_or_unique"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMeatShield",
@@ -9006,6 +11254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_minion_defensive_stance_minion_damage_+%_final_against_enemies_near_you"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMinionPact",
@@ -9014,6 +11264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_maximum_added_physical_damage_per_active_permanent_minion", "spell_minimum_added_physical_damage_per_active_permanent_minion"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMirageArcher",
@@ -9022,6 +11274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_can_own_mirage_archers"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMomentum",
@@ -9030,6 +11284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SupportedByMomentum", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["support_momentum_attack_speed_+%_per_stack"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportMultistrike",
@@ -9038,6 +11294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_melee_attack_repeat_count", "multistrike_damage_+%_final_on_first_repeat", "multistrike_damage_+%_final_on_second_repeat", "support_multiple_attacks_melee_attack_speed_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportNightblade",
@@ -9046,6 +11304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SupportedByNightblade", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Condition:CanBeElusive", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["additional_critical_strike_chance_permyriad_while_affected_by_elusive", "nightblade_elusive_grants_critical_strike_multiplier_+_to_supported_skills"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportPinpoint",
@@ -9054,6 +11314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["additional_projectiles_per_intensity", "greater_projectile_intensity_projectile_damage_+%_final_per_intensity"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportPowerChargeOnCritical",
@@ -9062,6 +11324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_power_charge_on_crit_damage_+%_final_per_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportPredator",
@@ -9070,6 +11334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_minion_focus_fire_damage_+%_final_vs_focussed_target"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportPyre",
@@ -9078,6 +11344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_call_the_pyre_chance_to_trigger_call_the_pyre_on_melee_hit_vs_ignited_enemies_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportRage",
@@ -9086,6 +11354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["attack_speed_+%_with_at_least_10_rage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportReturningProjectiles",
@@ -9094,6 +11364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["returning_projectiles_always_pierce"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportSacredWisps",
@@ -9102,6 +11374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["summon_sacred_wisps_on_hit"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportScornfulHerald",
@@ -9110,6 +11384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["herald_no_buff_effect"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportSecondWind",
@@ -9118,6 +11394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_added_cooldown_count_if_not_instant"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportSpellslinger",
@@ -9126,6 +11404,18 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:SupportedBySpellslinger", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spellslinger_trigger_on_wand_attack_%"],
+        minions: &[],
+        add_minions: &[],
+    },
+    PobSkill {
+        id: "SupportSummonPhantasm",
+        flags: &[],
+        parts: &[],
+        base_mods: &[],
+        functions: &[],
+        own_stats: &[],
+        minions: &[],
+        add_minions: &["SummonedPhantasm"],
     },
     PobSkill {
         id: "SupportTrap",
@@ -9134,6 +11424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_skill_show_average_damage_instead_of_dps"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTrauma",
@@ -9142,6 +11434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "HasTrauma", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerBowSkillOnBowAttack",
@@ -9150,6 +11444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellFromHelmet",
@@ -9158,6 +11454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_triggered_when_you_focus_chance_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellOnAttack",
@@ -9166,6 +11464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellOnBowAttack",
@@ -9174,6 +11474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellOnBowAttackFreezeHit",
@@ -9182,6 +11484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellOnSkillUse",
@@ -9190,6 +11494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_has_trigger_from_crafted_item_mod"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
@@ -9198,6 +11504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_is_triggered_on_hit"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportTrinity",
@@ -9206,6 +11514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["elemental_damage_+%_final_per_5_lowest_resonance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportUniqueCastCurseOnCurse",
@@ -9214,6 +11524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["cast_when_cast_curse_%"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
@@ -9222,6 +11534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["unique_cospris_malice_cold_spells_triggered"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportUniqueMjolnerLightningSpellsCastOnHit",
@@ -9230,6 +11544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["unique_mjolner_lightning_spells_triggered"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportUnleash",
@@ -9238,6 +11554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "HasSeals", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportVileToxins",
@@ -9246,6 +11564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["support_debilitate_hit_damage_+%_final_per_poison_stack"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SupportVolatility",
@@ -9254,6 +11574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["maximum_attack_damage_+%_final_from_volatility_support", "minimum_attack_damage_+%_final_from_volatility_support"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Sweep",
@@ -9262,6 +11584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotBeEvaded", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["holy_sweep_hammerfall_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SweepAltX",
@@ -9270,6 +11594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CannotBeEvaded", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["holy_sweep_hammerfall_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Swordstorm",
@@ -9278,6 +11604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("doubleHitsWhenDualWielding"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisPhysicalTripleMortar",
@@ -9286,6 +11614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisPhysicalVolatileSlam",
@@ -9294,6 +11624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisSoulstealerBolt",
@@ -9302,6 +11634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisSoulstealerLaser",
@@ -9310,6 +11644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisSoulstealerProjectileLightning",
@@ -9318,6 +11654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisSoulstealerProjectilePhysical",
@@ -9326,6 +11664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "SynthesisSoulstealerQuicksand",
@@ -9334,6 +11674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TBHellscapePaleLightningBoltSpammableLeft",
@@ -9342,6 +11684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TalismanT1TemporalChains",
@@ -9350,6 +11694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CooldownRecovery", kind: "OVERRIDE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TalismanT1Vulnerability",
@@ -9358,6 +11704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CooldownRecovery", kind: "OVERRIDE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TalismanT2EnfeebleAura",
@@ -9366,6 +11714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "CooldownRecovery", kind: "OVERRIDE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TarMortarTaster",
@@ -9374,6 +11724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TectonicSlam",
@@ -9382,6 +11734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fissure Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(7.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Fissure Width:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_area_of_effect_+%_final_per_endurance_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TectonicSlamAltX",
@@ -9390,6 +11744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fissure Length:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(7.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Fissure Width:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["endurance_charge_slam_damage_+%_final_per_endurance_charge_consumed", "tectonic_slam_area_of_effect_+%_final_per_endurance_charge_consumed"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TempestShield",
@@ -9398,6 +11754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("chanceToTriggerCounterattackOnBlock"), value: Some(V::Num(100.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TemporalChains",
@@ -9406,6 +11764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TemporalRift",
@@ -9414,6 +11774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TentacleSmash",
@@ -9422,6 +11784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ThirstForBlood",
@@ -9430,6 +11794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Thunderstorm",
@@ -9438,6 +11804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["base_skill_show_average_damage_instead_of_dps", "base_windstorm_storm_stage_gained_per_X_ms", "windstorm_storm_area_of_effect_+%_final_per_stage", "windstorm_storm_hit_damage_+%_final_on_detonation", "windstorm_storm_maximum_stages"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ThunderstormMiniTornados",
@@ -9446,6 +11814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Tornado",
@@ -9454,6 +11824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TornadoAltY",
@@ -9462,6 +11834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &["elemental_strike_physical_damage_%_to_convert"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TornadoShot",
@@ -9470,6 +11844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TornadoShotAltX",
@@ -9478,6 +11854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ToxicRain",
@@ -9486,6 +11864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DotCanStack", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Pod Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ToxicRainAltX",
@@ -9494,6 +11874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Pod Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ToxicRainAltY",
@@ -9502,6 +11884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "DotCanStack", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Pod Area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorAhuana",
@@ -9510,6 +11894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralAhuanaMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorAkoya",
@@ -9518,6 +11904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralAkoyaMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorIkiaho",
@@ -9526,6 +11914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralIkiahoMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorKahuturoa",
@@ -9534,6 +11924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralKahuturoaMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorKaom",
@@ -9542,6 +11934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralKaomMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorKiloava",
@@ -9550,6 +11944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "LifeOnBlock", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "EnergyShieldOnBlock", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "ManaOnBlock", kind: "BASE", key: None, value: Some(V::Num(1.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralKiloavaMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorMaata",
@@ -9558,6 +11954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralMaataMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorRakiata",
@@ -9566,6 +11964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralRakiataMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorTawhanuku",
@@ -9574,6 +11974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralTawhanukuMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggerSummonedAncestorUtula",
@@ -9582,6 +11984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%"],
+        minions: &["AncestralUtulaMinion"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredBloodrend",
@@ -9590,6 +11994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredConsecrate",
@@ -9598,6 +12004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredHeavensScourge",
@@ -9606,6 +12014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredMoltenStrike",
@@ -9614,6 +12024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredShockedGround",
@@ -9622,6 +12034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "ShockedGroundEffect", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredStarfall",
@@ -9630,6 +12044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSummonGhostOnKill",
@@ -9638,6 +12054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &["SummonedPhantasm"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSummonLesserShrine",
@@ -9646,6 +12064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:CanHaveLesserShrines", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportBonespire",
@@ -9654,6 +12074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportCrystalfall",
@@ -9662,6 +12084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportFissure",
@@ -9670,6 +12094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportFoulgrasp",
@@ -9678,6 +12104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportGreaterKineticInstability",
@@ -9686,6 +12114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["triggered_by_kinetic_instability_support"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportHextoad",
@@ -9694,6 +12124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportHiveborn",
@@ -9702,6 +12134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["Hiveborn"],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportKineticInstability",
@@ -9710,6 +12144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["triggered_by_kinetic_instability_support"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportLivingLightning",
@@ -9718,6 +12154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &["LivingLightningMinion"],
     },
     PobSkill {
         id: "TriggeredSupportPyre",
@@ -9726,6 +12164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportVoidShockwave",
@@ -9734,6 +12174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["shockwave_chained_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportVoidstorm",
@@ -9742,6 +12184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["windstorm_storm_area_of_effect_+%_final_per_stage", "windstorm_storm_hit_damage_+%_final_on_detonation_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "TriggeredSupportWindburst",
@@ -9750,6 +12194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Twister",
@@ -9758,6 +12204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UltimatumGuardConeArrowCold",
@@ -9766,6 +12214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UltimatumGuardMeleeCold",
@@ -9774,6 +12224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UndyingWhirlingBlades",
@@ -9782,6 +12234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Unearth",
@@ -9790,6 +12244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("corpseMonsterVariety"), value: Some(V::Str("Bone Archer")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Unhinge",
@@ -9798,6 +12254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UniqueEnchantmentOfInfernoOnCrit",
@@ -9806,6 +12264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UniqueMirageWarriors",
@@ -9814,6 +12274,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["display_mirage_warriors_no_spirit_strikes", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "UnseenStrike",
@@ -9822,6 +12284,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["skill_has_trigger_from_unique_item"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalAbsolution",
@@ -9830,6 +12294,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalAbsolutionDelayedBlast",
@@ -9838,6 +12304,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalAnimateWeapon",
@@ -9846,6 +12314,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["AnimatedWeapon"],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalArc",
@@ -9854,6 +12324,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:CanBeLucky", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["arc_damage_+%_final_for_each_remaining_chain"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalArcticArmour",
@@ -9862,6 +12334,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalBladeFlurry",
@@ -9870,6 +12344,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalBladeVortex",
@@ -9878,6 +12354,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("VaalBladeVortexBlade"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalBlight",
@@ -9886,6 +12364,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["display_max_blight_stacks"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalBreach",
@@ -9894,6 +12374,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalBurningArrow",
@@ -9902,6 +12384,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalCausticArrow",
@@ -9910,6 +12394,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("AoE Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Caustic Ground:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsCausticGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalClarity",
@@ -9918,6 +12404,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalCleave",
@@ -9926,6 +12414,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "CullPercent", kind: "MAX", key: None, value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_merged_damage_+%_final_while_dual_wielding", "cleave_+1_base_radius_per_nearby_enemy_up_to_10"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalColdSnap",
@@ -9934,6 +12424,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Burst:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Initial Chilled Ground:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Final Chilled Ground:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalCyclone",
@@ -9942,6 +12434,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["initialFunc"],
         own_stats: &["cyclone_area_of_effect_+%_per_additional_melee_range"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDetonateDead",
@@ -9950,6 +12444,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDiscipline",
@@ -9958,6 +12454,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDomination",
@@ -9966,6 +12464,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDominationMelee",
@@ -9974,6 +12474,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDominationSunder",
@@ -9982,6 +12484,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalDoubleStrike",
@@ -9990,6 +12494,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["chance_to_deal_double_damage_%_vs_bleeding_enemies"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalEarthquake",
@@ -9998,6 +12504,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(28.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["quake_slam_fully_charged_explosion_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalFireball",
@@ -10006,6 +12514,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalFirestorm",
@@ -10014,6 +12524,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "dotIsBurningGround", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Area of fireball explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which fireballs fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalFlameblast",
@@ -10022,6 +12534,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Multiplier:VaalFlameblastMaxStages", kind: "BASE", key: None, value: Some(V::Num(15.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(45.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["charged_blast_spell_damage_+%_final_per_stack", "flameblast_ailment_damage_+%_final_per_stack", "vaal_flameblast_radius_+_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalFlickerStrike",
@@ -10030,6 +12544,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OnlyFinalRepeat", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "FinalRepeatSumsDamage", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_attack_speed_+%_per_frenzy_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalGlacialHammer",
@@ -10038,6 +12554,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalGrace",
@@ -10046,6 +12564,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalGroundSlam",
@@ -10054,6 +12574,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(39.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["groundslam_damage_to_close_targets_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalHaste",
@@ -10062,6 +12584,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalIceNova",
@@ -10070,6 +12594,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalIceShot",
@@ -10078,6 +12604,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalImmortalCall",
@@ -10086,6 +12614,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:CannotDie", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["buff_effect_duration_+%_per_removable_endurance_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalImpurityOfFire",
@@ -10094,6 +12624,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalImpurityOfIce",
@@ -10102,6 +12634,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalImpurityOfLightning",
@@ -10110,6 +12644,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalIncursionFirestorm",
@@ -10118,6 +12654,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Fireball explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Area in which Fireballs fall:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalIncursionSpecialBeamCannonBlood",
@@ -10126,6 +12664,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalLightningArrow",
@@ -10134,6 +12674,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalLightningStrike",
@@ -10142,6 +12684,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["vaal_lightning_strike_beam_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalLightningTrap",
@@ -10150,6 +12694,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalLightningWarpInstant",
@@ -10158,6 +12704,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalMoltenShell",
@@ -10166,6 +12714,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalMoltenStrike",
@@ -10174,6 +12724,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("projectileSpeedAppliesToMSAreaOfEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(9.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Ball area:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(2.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Chain Minimum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiary"), value: Some(V::Num(25.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusTertiaryLabel"), value: Some(V::Str("Chain Maximum Distance:")), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalOverseerHeavyStrike",
@@ -10182,6 +12734,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalPowerSiphon",
@@ -10190,6 +12744,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["critical_strike_chance_+%_final_per_power_charge_from_power_siphon", "critical_strike_multiplier_+_per_power_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalRainOfArrows",
@@ -10198,6 +12754,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(10.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "OneShotProj", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalReap",
@@ -10206,6 +12764,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(23.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["base_physical_damage_to_deal_per_minute", "blood_scythe_damage_+%_final_per_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalReave",
@@ -10214,6 +12774,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(12.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "Multiplier:ReaveMaxStages", kind: "BASE", key: None, value: Some(V::Num(4.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["reave_area_of_effect_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalRejuvenationTotem",
@@ -10222,6 +12784,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalRighteousFire",
@@ -10230,6 +12794,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalSmite",
@@ -10238,6 +12804,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Lightning Strike area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Aura area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalSpark",
@@ -10246,6 +12814,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalSpectralThrow",
@@ -10254,6 +12824,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["projectile_damage_+%_final_if_pierced_enemy"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalStormCall",
@@ -10262,6 +12834,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Lightning tether area:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondary"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Final Lightning Strike area:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalSummonSkeletons",
@@ -10270,6 +12844,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &["RaisedSkeletonMeleeVaal", "RaisedSkeletonCaster", "RaisedSkeletonArcherVaal"],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalVenomGyre",
@@ -10278,6 +12854,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalVolcanicFissure",
@@ -10286,6 +12864,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VaalincursionMortar",
@@ -10294,6 +12874,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VampiricLink",
@@ -10302,6 +12884,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VengefulCry",
@@ -10310,6 +12894,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VenomGyre",
@@ -10318,6 +12904,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:ReturningProjectile", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["active_skill_returning_projectile_damage_+%_final", "returning_projectiles_always_pierce"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VigilantStrike",
@@ -10326,6 +12914,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_attack_damage_+%_final_per_endurance_charge"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ViperStrike",
@@ -10334,6 +12924,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("poisonIsSkillEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["viper_strike_dual_wield_attack_speed_+%_final", "viper_strike_dual_wield_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ViperStrikeAltX",
@@ -10342,6 +12934,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("poisonIsSkillEffect"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["viper_strike_dual_wield_attack_speed_+%_final", "viper_strike_dual_wield_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Vitality",
@@ -10350,6 +12944,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VoidGaze",
@@ -10358,6 +12954,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VoidShot",
@@ -10366,6 +12964,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VoidSphere",
@@ -10374,6 +12974,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VoidSphereAltX",
@@ -10382,6 +12984,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolatileAnomaly",
@@ -10390,6 +12994,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["chance_to_cast_on_kill_%", "spell_uncastable_if_triggerable"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolatileDead",
@@ -10398,6 +13004,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Orb Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Corpse Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolatileDeadAltX",
@@ -10406,6 +13014,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Orb Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Corpse Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolatileDeadAltY",
@@ -10414,6 +13024,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("explodeCorpse"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Orb Explosion:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Corpse Explosion:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["spell_maximum_base_fire_damage", "spell_minimum_base_fire_damage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolcanicFissure",
@@ -10422,6 +13034,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "CannotSplit", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_hit_ailment_damage_with_projectile_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VolcanicFissureAltX",
@@ -10430,6 +13044,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VoltaxicBurst",
@@ -10438,6 +13054,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["voltaxic_burst_hit_and_ailment_damage_+%_final_per_stack"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Vortex",
@@ -10446,6 +13064,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Ground Degen:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "VortexAltX",
@@ -10454,6 +13074,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("dotIsArea"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusLabel"), value: Some(V::Str("Initial Hit:")), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radiusSecondaryLabel"), value: Some(V::Str("Ground Degen:")), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["active_skill_area_of_effect_+%_final_when_cast_on_frostbolt", "active_skill_if_used_through_frostbolt_damage_+%_final"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Vulnerability",
@@ -10462,6 +13084,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(22.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WalkingDoubleSlash",
@@ -10470,6 +13094,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WallOfForce",
@@ -10478,6 +13104,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WarBanner",
@@ -10486,6 +13114,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "AuraEffect", kind: "MORE", key: None, value: Some(V::Num(-100.0)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "Condition:AffectedByPlacedBanner", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["banner_area_of_effect_+%_final_per_resource", "banner_buff_effect_+%_final_per_resource"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WardShatter",
@@ -10494,6 +13124,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("showAverage"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &["active_skill_damage_+%_final_if_ward_has_not_broken_in_the_past_2_seconds", "spell_maximum_base_physical_damage_%_of_ward", "spell_minimum_base_physical_damage_%_of_ward", "trigger_on_ward_break_%_chance"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WarlordsMark",
@@ -10502,6 +13134,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WaveOfConviction",
@@ -10510,6 +13144,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WaveOfConvictionAltY",
@@ -10518,6 +13154,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &["preDamageFunc"],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WhirlingBlades",
@@ -10526,6 +13164,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &["active_skill_merged_damage_+%_final_while_dual_wielding"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WickerManMoltenStrike",
@@ -10534,6 +13174,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WildStrike",
@@ -10542,6 +13184,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["elemental_strike_physical_damage_%_to_convert"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WildStrikeAltX",
@@ -10550,6 +13194,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(24.0)), flags: 0, keyword_flags: 0, tagged: true }],
         functions: &[],
         own_stats: &["elemental_strike_physical_damage_%_to_convert"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WinterOrb",
@@ -10558,6 +13204,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(16.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["frost_fury_duration_+%_per_stage", "frost_fury_fire_speed_+%_final_while_channelling", "frost_fury_fire_speed_+%_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WintertideBrand",
@@ -10566,6 +13214,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(20.0)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuffTertiary"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &["preDamageFunc"],
         own_stats: &["immolation_brand_burn_damage_+%_final_per_stage"],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Wither",
@@ -10574,6 +13224,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("debuff"), value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: false }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WitheringStep",
@@ -10582,6 +13234,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "Condition:CanBeElusive", kind: "FLAG", key: None, value: Some(V::Bool(true)), flags: 0, keyword_flags: 0, tagged: true }, PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(26.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "WraithEtherealKnives",
@@ -10590,6 +13244,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Wrath",
@@ -10598,6 +13254,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "Zealotry",
@@ -10606,6 +13264,8 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(40.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
     PobSkill {
         id: "ZombieSlam",
@@ -10614,5 +13274,7 @@ pub static SKILLS: &[PobSkill] = &[
         base_mods: &[PobBaseMod { name: "SkillData", kind: "LIST", key: Some("radius"), value: Some(V::Num(18.0)), flags: 0, keyword_flags: 0, tagged: false }],
         functions: &[],
         own_stats: &[],
+        minions: &[],
+        add_minions: &[],
     },
 ];

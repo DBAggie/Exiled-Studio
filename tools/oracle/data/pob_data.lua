@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 12
+local FORMAT = 13
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -383,6 +383,112 @@ for key, m in pairs(data.minions) do
 	}
 end
 
+-- The minions' and spectres' mod lists (format 13, Phase 6 P6-7b1): the
+-- comments PoB's exporter wrote beside each `modList` line
+-- (src/Export/Scripts/minions.lua 226 to 241: `-- <mod ID> [<stat> =
+-- <value>]`, one per stat; the `.ot` stats with the stat as the ID), read
+-- from the generated files' text, since `data.minions` keeps only the
+-- mods. Keyed as `minions`; each entry is { mod ID, stat, value as PoB
+-- wrote it }, in file order.
+local minionMods = {}
+for _, path in ipairs({ "Data/Minions.lua", "Data/Spectres.lua" }) do
+	local file = openFile(path, "r")
+	if not file then
+		die(path .. " not found")
+	end
+	local current
+	for line in file:lines() do
+		local key = line:match('^minions%["(.-)"%] = {')
+		if key then
+			local id = minionVariety[key] or key
+			if minionMods[id] then
+				die("two mod lists for " .. id)
+			end
+			current = {}
+			minionMods[id] = current
+		elseif current then
+			local modId, stat, value = line:match("%-%- (%S+) %[(%S+) = (%S+)%]")
+			if modId then
+				table.insert(current, { modId, stat, value })
+			end
+		end
+	end
+	file:close()
+end
+for id in pairs(minions) do
+	if not minionMods[id] then
+		die("no mod list for " .. id)
+	end
+end
+
+-- PoB's minion templates (format 13, Phase 6 P6-7b1): what each emitted
+-- minion's directives in Export/Minions/Minions.txt and Spectres.txt add
+-- to the game's variety (src/Export/Scripts/minions.lua 97 to 147 and
+-- 245 to 249, read as Export/Main.lua 116 to 127 reads a template: the
+-- first `#word` of a line, anywhere in it). Keyed by PoB's name (the key
+-- of data.minions): the template file, the `#monster` or `#spectre`
+-- line, the variety's ID, `#limit`, `#hostile`, the extra skills (the
+-- `#monster` arguments after the name, then `#skill`), and each `#mod`
+-- with its line, as written.
+local minionTemplates = {}
+for _, file in ipairs({ "Minions", "Spectres" }) do
+	local path = "Export/Minions/" .. file .. ".txt"
+	local template = openFile(path, "r")
+	if not template then
+		die(path .. " not found")
+	end
+	local state = { mods = {}, skills = {} }
+	local function emit()
+		if minionTemplates[state.name] then
+			die("two templates for " .. state.name)
+		end
+		minionTemplates[state.name] = {
+			file = file,
+			line = state.line,
+			variety = state.variety,
+			limit = state.limit,
+			hostile = state.hostile,
+			skills = list(state.skills),
+			mods = list(state.mods),
+		}
+	end
+	local number = 0
+	for line in template:lines() do
+		number = number + 1
+		local spec, args = line:match("#(%a+) ?(.*)")
+		if spec == "monster" or spec == "spectre" then
+			state = { line = number, mods = {}, skills = {} }
+			for arg in args:gmatch("%S+") do
+				if state.variety == nil then
+					state.variety = arg
+				elseif state.name == nil then
+					state.name = arg == "#" and state.variety or arg
+				else
+					table.insert(state.skills, arg)
+				end
+			end
+			state.variety = state.variety or args
+			state.name = state.name or args
+			if spec == "spectre" then
+				emit()
+			end
+		elseif spec == "limit" then
+			state.limit = args
+		elseif spec == "hostile" then
+			state.hostile = args
+		elseif spec == "mod" then
+			table.insert(state.mods, { line = number, text = args })
+		elseif spec == "skill" then
+			table.insert(state.skills, args)
+		elseif spec == "emit" then
+			emit()
+		elseif spec then
+			die(path .. ":" .. number .. ": unknown directive " .. spec)
+		end
+	end
+	template:close()
+end
+
 ---------------------------------------------------------------------------
 -- Item mods (format 6, UX sprint B-2): the affix name and level of each
 -- mod PoB keys by the game's mod ID, from the files Modules/Data.lua loads
@@ -586,6 +692,8 @@ local document = {
 	base_requirements = baseRequirements,
 	flasks = flasks,
 	minions = minions,
+	minion_mods = minionMods,
+	minion_templates = minionTemplates,
 	mods = itemMods,
 	monster_tables = monsterTables,
 	game_constants = copyMap(data.gameConstants),

@@ -407,6 +407,7 @@ pub fn compare(
     compare_pantheons(&mut out, bundle, export)?;
     compare_flasks(&mut out, bundle, export)?;
     compare_minions(&mut out, bundle, export);
+    compare_minion_mods(&mut out, bundle, export);
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
@@ -1373,6 +1374,64 @@ const DAMAGE_FIXUPS: [(&str, f64); 3] = [
     ("MonsterSpeedAndDamageFixupLarge", 0.22),
     ("MonsterSpeedAndDamageFixupComplete", 0.33),
 ];
+
+/// `minion_mods` (P6-7b1): each minion's and spectre's mod list as PoB's
+/// exporter commented it (`minions.lua` 215 to 241) against the bundle's,
+/// by the variety's ID: the variety's mods, then its special mods, one line
+/// per stat with the stat's lowest value (PoB's `Stat<i>Value[1]`), then
+/// its object type's `.ot` stats with the stat as the ID
+/// ([`loom_data::bundle::poe1::ObjectStats`]), unless the object type is
+/// `Metadata/Monsters/Monster`. A bundle built before P6-7b1 has no `.ot`
+/// stats, so every list with one differs.
+fn compare_minion_mods(out: &mut Comparison, bundle: &Bundle, export: &Export) {
+    const T: &str = "minion_mods";
+    let Some(m) = bundle.poe1.as_ref().and_then(|p| p.minions.as_ref()) else {
+        for id in export.minion_mods.keys() {
+            out.pob_only(T, id);
+        }
+        return;
+    };
+    let varieties: BTreeMap<&str, &loom_data::bundle::poe1::MinionVariety> =
+        m.varieties.iter().map(|v| (v.id.as_str(), v)).collect();
+    let mods: BTreeMap<&str, &loom_data::bundle::ModEntry> =
+        bundle.mods.iter().map(|r| (r.id.as_str(), r)).collect();
+    for (id, pob) in &export.minion_mods {
+        let Some(v) = varieties.get(id.as_str()) else {
+            out.pob_only(T, id);
+            continue;
+        };
+        let mut ours: Vec<(String, String, String)> = Vec::new();
+        for mod_id in v.mods.iter().chain(&v.special_mods) {
+            match mods.get(mod_id.as_str()) {
+                Some(row) => ours.extend(
+                    row.stats
+                        .iter()
+                        .map(|s| (mod_id.clone(), s.stat.clone(), s.min.to_string())),
+                ),
+                None => ours.push((mod_id.clone(), "(no mod row)".to_owned(), String::new())),
+            }
+        }
+        if !v.object_type.is_empty() && v.object_type != "Metadata/Monsters/Monster" {
+            let o = m
+                .object_stats(&v.object_type)
+                .unwrap_or(loom_data::bundle::poe1::ObjectStatsRef::NONE);
+            ours.extend(
+                o.stats
+                    .iter()
+                    .map(|(k, n)| (k.clone(), k.clone(), n.to_string())),
+            );
+            ours.extend(
+                o.values
+                    .iter()
+                    .map(|(k, t)| (k.clone(), k.clone(), t.clone())),
+            );
+            if let Some(file) = o.unread {
+                ours.push(("(unread)".to_owned(), file.to_owned(), String::new()));
+            }
+        }
+        out.check(T, id, "modList", json!(ours), json!(pob));
+    }
+}
 
 /// `minions` (P6-7a): PoB's minions and spectres (`data.minions`) against
 /// the bundle's monster varieties (`poe1/minions.json`), by the variety's
