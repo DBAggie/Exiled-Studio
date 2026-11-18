@@ -116,6 +116,8 @@ pub enum PerCharge {
     CritMultiplier,
     /// Increased evasion rating (`Evasion` INC; P6-11f).
     Evasion,
+    /// Increased movement speed (`MovementSpeed` INC; P6-10b).
+    MovementSpeed,
 }
 
 impl PerCharge {
@@ -128,6 +130,7 @@ impl PerCharge {
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
             Self::Evasion => "per.evasion",
+            Self::MovementSpeed => "per.movement-speed",
         }
     }
 
@@ -141,6 +144,11 @@ impl PerCharge {
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
             Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
+            Self::MovementSpeed => (
+                Quantity::Poe1(super::Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                Flags::NONE,
+            ),
         }
     }
 }
@@ -209,6 +217,11 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeValue::Maximum,
     ),
     ("max_power_charges", ChargeKind::Power, ChargeValue::Maximum),
+    (
+        "movement_velocity_+%_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::MovementSpeed),
+    ),
     (
         "spell_damage_+%_per_power_charge",
         ChargeKind::Power,
@@ -493,8 +506,6 @@ mod tests {
         // Regeneration per charge: not a slice field.
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
         "mana_regeneration_rate_+%_per_power_charge",
-        // Movement speed per charge (P6-11g): not a slice field.
-        "movement_velocity_+%_per_frenzy_charge",
         // A skill's constant stat no stat map reads (P6-6a): not a charge
         // count.
         "skill_can_add_multiple_charges_per_action",

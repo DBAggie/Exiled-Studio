@@ -5613,6 +5613,490 @@
             }
           }
         ]
+      },
+      {
+        "field": "poe1.movement-speed",
+        "value": 1.0,
+        "node": 272,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.effective-movement-speed",
+        "value": 1.0,
+        "node": 275,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
       }
     ],
     "graph": [
@@ -7647,6 +8131,72 @@
           264
         ],
         "value": 2.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          267
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          270
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          268,
+          269
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-minimum-action-speed"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.action-speed",
+        "children": [
+          271,
+          273
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          272,
+          274
+        ],
+        "value": 1.0
       }
     ]
   }

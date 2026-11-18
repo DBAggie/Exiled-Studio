@@ -629,9 +629,20 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Warcry {
             name: "Enduring Cry",
             stats: &[
+                // Per 5 warcry power, which the engine does not model: the
+                // life regeneration field's reason (P6-10b).
                 (
                     "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
-                    BuffStat::Reason("warcry-power"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::RegenReason(
+                            Pool::Life,
+                            "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
+                        )),
+                        Op::Flag,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "warcry_count_power_from_enemies",
@@ -873,7 +884,17 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "attack_speed_+%_granted_from_skill",
                     BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)]),
                 ),
-                ("base_movement_velocity_+%", BuffStat::NoSlice("movement")),
+                // P6-10b: a field now.
+                (
+                    "base_movement_velocity_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
                 (
                     "cast_speed_+%_granted_from_skill",
                     BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)]),
@@ -1035,9 +1056,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Warcry {
             name: "Intimidating Cry",
             stats: &[
+                // Per 5 warcry power, which the engine does not model: the
+                // movement fields' reason (P6-10b).
                 (
                     "intimidating_cry_movement_speed_+%_per_5_power_up_to_cap",
-                    BuffStat::NoSlice("movement"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::MovementReason(
+                            "intimidating_cry_movement_speed_+%_per_5_power_up_to_cap",
+                        )),
+                        Op::Flag,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "warcry_count_power_from_enemies",
@@ -1930,9 +1961,19 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportMinionSpeed", &[]),
     (
         "SupportMomentum",
+        // Swiftness per the config's stacks removed: the movement fields'
+        // reason (P6-10b, `mapping::MOVEMENT_REASONS`).
         &[(
             "support_momentum_movement_speed_+%_per_stack_removed",
-            BuffStat::NoSlice("movement"),
+            BuffStat::Rows(&[(
+                Quantity::Poe1(Poe1Quantity::MovementReason(
+                    "support_momentum_movement_speed_+%_per_stack_removed",
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            )]),
         )],
     ),
     ("SupportMultipleTotems", &[]),
@@ -3603,12 +3644,25 @@ mod tests {
                 }
             }
             // Warcries: no row reaches a slice field (module docs); one that
-            // would is a reason (P6-10b: Enduring Cry's regeneration).
+            // would is a reason, or a field's reason marker (P6-10b: Enduring
+            // Cry's regeneration, Intimidating Cry's movement speed).
+            let marker = |rows: &[HitEffect]| {
+                rows.iter().all(|r| {
+                    matches!(
+                        r.0,
+                        Quantity::Poe1(
+                            Poe1Quantity::RegenReason(..) | Poe1Quantity::MovementReason(_)
+                        )
+                    )
+                })
+            };
             if let Kind::Warcry { stats, .. } = k {
                 assert!(
-                    stats
-                        .iter()
-                        .all(|(_, b)| matches!(b, BuffStat::NoSlice(_) | BuffStat::Reason(_))),
+                    stats.iter().all(|(_, b)| match b {
+                        BuffStat::NoSlice(_) | BuffStat::Reason(_) => true,
+                        BuffStat::Rows(rows) => marker(rows),
+                        _ => false,
+                    }),
                     "{id}"
                 );
             }

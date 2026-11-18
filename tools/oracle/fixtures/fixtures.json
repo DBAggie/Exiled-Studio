@@ -1911,6 +1911,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-10b: Zealot's Oath with Vitality and life regeneration lines: LifeRegen 0, life's flat and percent regeneration on energy shield (EnergyShieldRegen)."
+    },
+    {
+      "id": "ice-nova-movement-speed-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-movement-speed-witch.xml",
+      "sha256": "d5f1257e9d53cfab089116cfca2a980c600d5b2ef3b7987116e2ee48b20cff51",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: Haste, an increased movement speed line, and Onslaught, Adrenaline, and Tailwind from the config: MovementSpeedMod and EffectiveMovementSpeedMod (with Tailwind's action speed)."
     }
   ]
 }

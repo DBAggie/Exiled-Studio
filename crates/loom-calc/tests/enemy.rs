@@ -318,8 +318,8 @@ fn the_real_pantheons_stats_should_be_no_effect_rows() {
         .and_then(|p| p.pantheons.as_ref())
         .expect("the bundle's pantheon");
     assert_eq!(gods.len(), 12);
-    // 41 soul stats, each on one soul only (39 rows of `NO_EFFECT` and two
-    // state rows, P6-10b).
+    // 41 soul stats, each on one soul only (37 rows of `NO_EFFECT`, two
+    // state rows, and two movement reasons, P6-10b).
     let mut stats = 0;
     let mut unique = std::collections::BTreeSet::new();
     for (stat, _) in gods.iter().flat_map(|g| &g.souls).flat_map(|s| &s.stats) {
@@ -334,6 +334,16 @@ fn the_real_pantheons_stats_should_be_no_effect_rows() {
             == "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently"
         {
             // A recovery rate under a config check (P6-10b): a state row.
+            assert!(matches!(map, StatMap::Effects(_)), "{stat}");
+        } else if [
+            "movement_speed_+%_while_on_burning_ground",
+            "movement_speed_+%_per_nearby_enemy",
+        ]
+        .contains(&stat.as_str())
+        {
+            // Movement speed on burning ground or per nearby enemy, a
+            // condition or count the engine does not read (P6-10b): the
+            // movement fields' reason.
             assert!(matches!(map, StatMap::Effects(_)), "{stat}");
         } else {
             assert_eq!(map, StatMap::NoEffect, "{stat}");

@@ -574,6 +574,7 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::RegenPercent(p)) => format!("{}RegenPercent", title(p.name())),
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
+        Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();
@@ -677,6 +678,16 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         ),
         BuffStat::NoSlice(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => return Vec::new(),
     };
+    // A field's reason marker (P6-10b: warcry power): PoB's mod is not
+    // modelled, so there is nothing to compare.
+    if rows.iter().all(|r| {
+        matches!(
+            r.0,
+            Quantity::Poe1(Poe1Quantity::RegenReason(..) | Poe1Quantity::MovementReason(_))
+        )
+    }) {
+        return Vec::new();
+    }
     if let Some(one) = collapse(rows) {
         return vec![one + &suffix];
     }

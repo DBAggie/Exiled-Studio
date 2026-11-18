@@ -33,6 +33,7 @@ pub mod mapping;
 pub mod minion_actor;
 pub mod minion_hit;
 pub mod minions;
+pub mod movement;
 pub mod pantheon;
 pub mod pob_minion;
 pub mod regen;
@@ -278,6 +279,13 @@ pub enum Poe1Quantity {
     /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
     /// tick cap ([`hit`]).
     ActionSpeed,
+    /// Movement speed (PoB's `MovementSpeed`; P6-10b): `Increased` and
+    /// `More`, read by [`movement`].
+    MovementSpeed,
+    /// A stat that changes movement speed in a way the engine does not model
+    /// (P6-10b; [`mapping::MOVEMENT_REASONS`]): a `Flag` only [`movement`]
+    /// reads, as those fields' `unmapped-stat` reason.
+    MovementReason(&'static str),
     /// A chance to deal double damage, percent (PoB's `DoubleDamageChance`,
     /// P3-8n): `Base`; a hit's damage is scaled by `1 + min(chance, 100) /
     /// 100` ([`hit`]).
@@ -588,6 +596,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
             Self::ActionSpeed => f.write_str("action-speed"),
+            Self::MovementSpeed => f.write_str("movement-speed"),
+            Self::MovementReason(stat) => write!(f, "movement-reason.{stat}"),
             Self::DoubleDamageChance => f.write_str("double-damage-chance"),
             Self::Conversion(from, to) => {
                 write!(f, "conversion.{}.{}", from.name(), to.name())
@@ -778,6 +788,11 @@ pub enum Poe1Field {
     /// Seconds before energy shield starts to recharge (PoB's
     /// `EnergyShieldRechargeDelay`; P6-10b).
     EnergyShieldRechargeDelay,
+    /// The movement speed modifier (PoB's `MovementSpeedMod`; P6-10b).
+    MovementSpeedMod,
+    /// The movement speed modifier with action speed (PoB's
+    /// `EffectiveMovementSpeedMod`; P6-10b).
+    EffectiveMovementSpeedMod,
 }
 
 impl Poe1Field {
@@ -793,6 +808,8 @@ impl Poe1Field {
             Self::EnergyShieldRegen => "energy-shield-regen",
             Self::EnergyShieldRecharge => "energy-shield-recharge",
             Self::EnergyShieldRechargeDelay => "energy-shield-recharge-delay",
+            Self::MovementSpeedMod => "movement-speed",
+            Self::EffectiveMovementSpeedMod => "effective-movement-speed",
         }
     }
 }
@@ -968,6 +985,7 @@ mod tests {
                 "primary-defences",
                 "unreserved",
                 "regeneration",
+                "movement",
                 "minion",
                 "hit",
                 "dot",

@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 7,
+  "revision": 8,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 8 (Phase 6, P6-10b): the movement speed modifier and the effective one with action speed (MovementSpeedMod, EffectiveMovementSpeedMod), applies present: our result always has them.",
     "Revision 7 (Phase 6, P6-10b): energy shield regeneration and recharge per second and the recharge delay in seconds (EnergyShieldRegen, EnergyShieldRecharge, EnergyShieldRechargeDelay), applies present: our result has them whenever energy shield is computed.",
     "Revision 6 (Phase 6, P6-10b): life and mana regeneration per second (LifeRegen, ManaRegen), applies present: our result has them whenever the pool is computed.",
     "Revision 5 (Phase 6, P6-7c): the minion's main skill's hit (AverageDamage, Speed, HitChance, CritChance, CritMultiplier, TotalDPS under output.Minion), applies minion as revision 4's.",
@@ -177,6 +178,8 @@
     {"id": "EnergyShieldRegen", "group": "recovery", "pob_key": "EnergyShieldRegen", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): energy shield regenerated per second (PoB rounds to one decimal)."},
     {"id": "EnergyShieldRecharge", "group": "recovery", "pob_key": "EnergyShieldRecharge", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): energy shield recharged per second (PoB rounds to a whole number)."},
     {"id": "EnergyShieldRechargeDelay", "group": "recovery", "pob_key": "EnergyShieldRechargeDelay", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): seconds before energy shield starts to recharge."},
+    {"id": "MovementSpeedMod", "group": "movement", "pob_key": "MovementSpeedMod", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): the movement speed modifier, (1 + increased / 100) x more."},
+    {"id": "EffectiveMovementSpeedMod", "group": "movement", "pob_key": "EffectiveMovementSpeedMod", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): the movement speed modifier times the action speed modifier."},
     {"id": "Minion.AverageDamage", "group": "minion", "pob_key": "AverageDamage", "pob_path": ["Minion", "AverageDamage"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.Speed", "group": "minion", "pob_key": "Speed", "pob_path": ["Minion", "Speed"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.HitChance", "group": "minion", "pob_key": "HitChance", "pob_path": ["Minion", "HitChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},

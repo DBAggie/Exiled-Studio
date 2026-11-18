@@ -497,6 +497,7 @@ impl CalcData for OverlayData<'_> {
                     evasion: range("evasion", a.evasion),
                     energy_shield: range("energy_shield", a.energy_shield),
                     block: a.block.map(|b| self.int("bases", name, "block", b)),
+                    movement_speed: a.movement_speed,
                 }))
             }
             other => Some(other),

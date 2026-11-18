@@ -89,3 +89,47 @@ PoB takes the printed number. Life's percent stat uses the `2dp_if_required` han
 - **Corpus:** 0 unexpected. One value moved, to PoB's (a Zealot's Oath build's LifeRegen); no state changed.
 - **data-parity:** `gem_effects` 1,475 values, 0 differences (Discipline's recharge compared as `EnergyShieldRecharge`); uncategorized 353, unchanged.
 - **Real-bundle tests** pass. The workspace tests and clippy pass.
+
+## Part 3: movement speed
+
+Two new fields (slice revision 8, applies present, group `movement`). The engine always computes them:
+- `movement-speed`: PoB's `MovementSpeedMod`.
+- `effective-movement-speed`: PoB's `EffectiveMovementSpeedMod`.
+
+**The calculation** (`loom_calc::poe1::movement`, phase `movement` after `regeneration`; `CalcDefence.lua` 1504 to 1508):
+- **Movement speed modifier:** `(1 + increased / 100)` times the more multipliers of `MovementSpeed`.
+- **Effective modifier:** the movement speed modifier times the action speed modifier, `max(0, 1 + ActionSpeed increased / 100)` (`calcs.actionSpeedMod`, as the hit's).
+
+**Sources now read:**
+- **Rows:**
+  - "#% increased Movement Speed" (`base_movement_velocity_+%`, a `NoEffect` row before);
+  - Haste's movement speed (a gem row, not `NoSlice`);
+  - a flask's "#% increased Movement Speed during Effect", now an alias of the global stat (`flasks::ALIASES`), out of `NO_EFFECT_LOCAL`.
+- **Per charge:** movement speed per frenzy charge (`charges::PerCharge::MovementSpeed`).
+- **Item bases:** the armour base's movement penalty, the armour types table's `movement_speed` (`ArmourBase::movement_speed`; PoB's `MovementPenalty`, `Item.lua` 2361). It is -3 on shields and lighter body armours and -5 on the heavier ones.
+- **Buffs:**
+  - Onslaught's movement speed (`CalcPerform.lua` 684), with Silver Flask's extra;
+  - Adrenaline's 25 (745).
+- **`MOVEMENT_REASONS`:** stats that change movement speed in a way the engine does not model map to `Poe1Quantity::MovementReason`, a marker only `movement` reads, so they are these fields' `unmapped-stat` reason and no other field's. The table is sorted, and a test checks it. It covers:
+  - on kill, during a flask's effect, on burning ground, on low life, while ignited, and with no gems in the boots: config conditions the engine does not settle;
+  - per summoned phantasm;
+  - per nearby enemy: Lunaris's soul, PoB's `Multiplier:NearbyEnemies` with a limit, a `NoEffect` row before;
+  - the armour penalties ignored;
+  - movement speed that cannot go below its base;
+  - Momentum's Swiftness, per the config's `MomentumSwiftnessStacks`, also on another group's Momentum through `gems::SUPPORTS`.
+- **Warcries:** Intimidating Cry's movement speed per warcry power uses the same marker. Enduring Cry's regeneration now uses `RegenReason` in place of `BuffStat::Reason`, which put its reason on every field. `SkillMapping` keeps both markers on the main skill's gems.
+
+**Found while checking:** "Smite Inquisitor, act 1" was 1.45 against PoB's 1.5. PoB runs on two variants of the build found the cause:
+- without the body armour, 1.55;
+- without the Onslaught line, 1.3.
+
+So the gap is Lunaris's soul with the build's 5 nearby enemies, a stat the table had as `NoEffect`. It is a movement reason now.
+
+**Evidence** (`local/p6/p6-10b3/`):
+- **Fixture:** `ice-nova-movement-speed-witch.xml`, with Haste, "25% increased Movement Speed", and Onslaught, Adrenaline, and Tailwind from the config. MovementSpeedMod 1.86 and EffectiveMovementSpeedMod 2.0088, both equal to PoB's.
+- **Public `calc-parity`:** 193 builds, 131 expected differences, 0 unexpected; `Complete` fields 4,823 (4,484 after part 2).
+  - Every computed movement value equals PoB's: 156 builds each.
+  - No other value moved, and no field changed state.
+- **Corpus:** 0 unexpected, no value moved, no state changed.
+- **data-parity:** `gem_effects` 1,473 values, 0 differences (Haste's movement speed compared as `MovementSpeed`; the warcries' markers are not compared); uncategorized 353, unchanged.
+- **Real-bundle tests** pass. The workspace tests and clippy pass.

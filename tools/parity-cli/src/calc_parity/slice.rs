@@ -20,8 +20,8 @@ pub const FORMAT: u32 = 1;
 /// with a nested PoB path (`pob_path`) and `applies: minion`; revision 5
 /// added the minion's main skill's hit (P6-7c); revision 6 life and mana
 /// regeneration (P6-10b); revision 7 energy shield regeneration and
-/// recharge (P6-10b).
-pub const REVISION: u32 = 7;
+/// recharge (P6-10b); revision 8 movement speed (P6-10b).
+pub const REVISION: u32 = 8;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -87,7 +87,7 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 10] = [
+pub const PRESENT_NAMES: [(&str, &str); 12] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -105,6 +105,9 @@ pub const PRESENT_NAMES: [(&str, &str); 10] = [
         "EnergyShieldRechargeDelay",
         "poe1.energy-shield-recharge-delay",
     ),
+    // Revision 8 (P6-10b): movement speed; our result always has them.
+    ("MovementSpeedMod", "poe1.movement-speed"),
+    ("EffectiveMovementSpeedMod", "poe1.effective-movement-speed"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

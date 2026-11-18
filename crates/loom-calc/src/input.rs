@@ -238,6 +238,9 @@ pub struct ArmourBase {
     pub energy_shield: Range,
     /// A shield's chance to block, percent.
     pub block: Option<i64>,
+    /// The base's movement speed change, percent (the armour types table;
+    /// P6-10b: PoB's `MovementPenalty`, `Item.lua` 2361).
+    pub movement_speed: i64,
 }
 
 /// A weapon base's properties (the weapon types table) and its item class.
@@ -356,6 +359,7 @@ impl CalcData for Bundle {
                         evasion: range(&a.evasion),
                         energy_shield: range(&a.energy_shield),
                         block,
+                        movement_speed: a.movement_speed,
                     })
                 } else if let Some(w) = weapon {
                     ItemBase::Weapon(WeaponBase {

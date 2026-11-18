@@ -783,6 +783,70 @@
             }
           }
         ]
+      },
+      {
+        "field": "poe1.movement-speed",
+        "value": 1.0,
+        "node": 279,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.effective-movement-speed",
+        "value": 1.0,
+        "node": 282,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
       }
     ],
     "graph": [
@@ -2908,6 +2972,72 @@
           271
         ],
         "value": 2.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          274
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          277
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          275,
+          276
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-minimum-action-speed"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.action-speed",
+        "children": [
+          278,
+          280
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          279,
+          281
+        ],
+        "value": 1.0
       }
     ]
   }

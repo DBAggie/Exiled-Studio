@@ -1756,6 +1756,20 @@ impl StatMapping for SkillMapping {
             {
                 StatMap::Effects(e)
             }
+            // A field's reason marker (P6-10b: Momentum's Swiftness): the
+            // stat's reason stays on that field.
+            StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    matches!(
+                        t.quantity,
+                        Quantity::Poe1(
+                            Poe1Quantity::MovementReason(_) | Poe1Quantity::RegenReason(..)
+                        )
+                    )
+                }) =>
+            {
+                StatMap::Effects(e)
+            }
             StatMap::Effects(_) => StatMap::Unmapped,
             other => other,
         }
@@ -2330,6 +2344,15 @@ pub const ROWS: &[Row] = &[
         "base_maximum_spell_block_%",
         &[(MAX_SPELL_BLOCK, Op::Base, 1.0)],
     ),
+    // P6-10b: "#% increased Movement Speed" (`MovementSpeed` INC).
+    (
+        "base_movement_velocity_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     (
         "base_physical_damage_reduction_rating",
         &[(Quantity::Armour, Op::Base, 1.0)],
@@ -2852,7 +2875,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // condition), and then only damage taken when hit and modifiers per
     // fortification read the count ([`NO_EFFECT_DEPENDS_ON`]).
     ("base_max_fortification", "fortification"),
-    ("base_movement_velocity_+%", "movement-speed"),
     // P3-8n: "Maximum # Summoned Golems" (`ActiveGolemLimit`): only golem
     // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
     // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
@@ -3034,13 +3056,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
-    ("movement_speed_+%_per_nearby_enemy", "movement-speed"),
-    (
-        "movement_speed_+%_while_on_burning_ground",
-        "movement-speed",
-    ),
-    // P6-11g: "#% increased Movement Speed per Frenzy Charge" (`MovementSpeed` INC per charge).
-    ("movement_velocity_+%_per_frenzy_charge", "movement-speed"),
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
@@ -3121,13 +3136,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("support_inspiration_mana_cost_+%_final", "mana-cost"),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
-    // the channelling time to no modifier, the speed per momentum lost to
-    // `MovementSpeed`); its attack speed is `poe1::stacks`.
+    // the channelling time to no modifier); its attack speed is
+    // `poe1::stacks`, its speed per momentum lost a `MOVEMENT_REASONS` entry.
     ("support_momentum_base_buff_duration_ms", "skill-duration"),
-    (
-        "support_momentum_movement_speed_+%_per_stack_removed",
-        "movement-speed",
-    ),
     (
         "support_momentum_stack_while_channelling_base_ms",
         "channelling",
@@ -3289,6 +3300,35 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
         || super::skill_no_output::contains(stat)
 }
 
+/// Stats that change movement speed in a way the engine does not model
+/// (P6-10b), sorted: each maps to [`Poe1Quantity::MovementReason`], the
+/// movement fields' reason alone. PoB's text for each (`ModParser.lua`):
+/// on kill (`KilledRecently`), during a flask's effect (`UsingFlask`), on
+/// burning ground, on low life, while ignited, and with no gems in the
+/// boots, each a config condition the engine does not settle; per
+/// summoned phantasm (`PerStat`) and per nearby enemy (the config's
+/// count, limited); the armour movement penalties ignored;
+/// movement speed that cannot go below its base; and Momentum's
+/// Swiftness per stack removed.
+pub const MOVEMENT_REASONS: &[&str] = &[
+    "gain_movement_speed_+%_for_20_seconds_on_kill",
+    "ignore_armour_movement_penalties",
+    "movement_speed_+%_during_flask_effect",
+    // Lunaris's soul: `Multiplier:NearbyEnemies` with a limit, a config
+    // count the engine does not read.
+    "movement_speed_+%_per_nearby_enemy",
+    "movement_speed_+%_per_summoned_phantasm",
+    "movement_speed_+%_while_on_burning_ground",
+    "movement_speed_cannot_be_reduced_below_base",
+    "movement_velocity_+%_when_on_low_life",
+    "movement_velocity_+%_while_ignited",
+    "movement_velocity_+%_while_no_gems_in_boots",
+    // Momentum's Swiftness: `MovementSpeed` INC per the config's
+    // `MomentumSwiftnessStacks` (`Multiplier:MomentumStacksRemoved`), a
+    // count the engine does not read.
+    "support_momentum_movement_speed_+%_per_stack_removed",
+];
+
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
 /// regeneration field's reason alone. PoB's text for each
@@ -3331,6 +3371,15 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
 
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
+        if let Ok(i) = MOVEMENT_REASONS.binary_search(&stat.as_str()) {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::MovementReason(MOVEMENT_REASONS[i])),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
         if let Ok(i) = REGEN_REASONS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
             let (id, pool) = REGEN_REASONS[i];
             return StatMap::Effects(vec![EffectTemplate {
@@ -3479,7 +3528,9 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::RecoveryRate(_)
                 | Poe1Quantity::RegenReason(..)
                 | Poe1Quantity::EnergyShieldRecharge
-                | Poe1Quantity::EnergyShieldRechargeFaster,
+                | Poe1Quantity::EnergyShieldRechargeFaster
+                | Poe1Quantity::MovementSpeed
+                | Poe1Quantity::MovementReason(_),
             ) => true,
             _ => false,
         }
@@ -3821,6 +3872,7 @@ mod tests {
         assert!(NO_EFFECT.windows(2).all(|w| w[0].0 < w[1].0));
         // A binary search reads it (P6-10b).
         assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(MOVEMENT_REASONS.windows(2).all(|w| w[0] < w[1]));
         for (stat, _) in HIT_ROWS {
             assert!(
                 ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err()

@@ -714,8 +714,8 @@ fn field_reasons_should_follow_the_state() {
 fn the_shipped_rules_should_write_every_slice_field() {
     let doc = Document::from_result(&shipped_result(Game::Poe1)).unwrap();
     // With the regeneration and recharge fields (P6-10b), present with
-    // their pools.
-    assert_eq!(doc.result.fields.len(), loom_calc::poe1::SLICE.len() + 5);
+    // their pools, and the two movement speed fields.
+    assert_eq!(doc.result.fields.len(), loom_calc::poe1::SLICE.len() + 7);
     let poe2 = to_json(&shipped_result(Game::Poe2)).unwrap();
     assert!(poe2.contains("\"state\": \"unsupported\""), "{poe2}");
     assert!(poe2.contains("\"fields\": []"), "{poe2}");

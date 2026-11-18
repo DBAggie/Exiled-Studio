@@ -400,6 +400,12 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             (Quantity::Damage, ADRENALINE_DAMAGE, Flags::NONE),
             (Quantity::Speed, ADRENALINE_SPEED, Flags::ATTACK),
             (Quantity::Speed, ADRENALINE_SPEED, Flags::CAST),
+            // Its movement speed (`CalcPerform.lua` 745; P6-10b).
+            (
+                Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                ADRENALINE_SPEED,
+                Flags::NONE,
+            ),
         ],
     );
     // The last input counts; a check's placeholder is not applied.
@@ -441,6 +447,14 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             source: source.clone(),
         });
     }
+    // Its movement speed (`CalcPerform.lua` 684; P6-10b).
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+        op: Op::Increased,
+        value: ONSLAUGHT_SPEED,
+        conditions: Conditions::none(),
+        source,
+    });
 }
 
 #[cfg(test)]

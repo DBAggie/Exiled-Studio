@@ -78,15 +78,13 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// A flask's own lines that reach no slice field (P6-11i), sorted, each as
 /// PoB parses its text (`local/p6/parse2`): Bleeding and Corrupted Blood
 /// immunity on use, consecrated ground on use, charges when hit, and use
-/// on full charges PoB does not parse at all; movement speed during the
-/// effect (`MovementSpeed` INC, `UsingFlask`) and the effect of curses on
-/// you during it (`CurseEffectOnSelf` INC, `UsingFlask`) no slice field
-/// reads.
-pub const NO_EFFECT_LOCAL: [&str; 6] = [
+/// on full charges PoB does not parse at all; the effect of curses on you
+/// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
+/// field reads. Movement speed during the effect is an alias since P6-10b.
+pub const NO_EFFECT_LOCAL: [&str; 5] = [
     "local_consecrate_ground_on_flask_use_radius",
     "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
     "local_flask_gain_X_charges_when_hit",
-    "local_flask_movement_speed_+%_while_healing",
     "local_flask_use_on_full_charges",
     "local_self_curse_effect_+%_during_flask_effect",
 ];
@@ -118,6 +116,11 @@ pub const ALIASES: &[(&str, &str)] = &[
     ),
     // "#% increased Evasion Rating during Effect".
     ("local_flask_evasion_+%_while_healing", "evasion_rating_+%"),
+    // "#% increased Movement Speed during Effect" (P6-10b).
+    (
+        "local_flask_movement_speed_+%_while_healing",
+        "base_movement_velocity_+%",
+    ),
     // "#% additional Elemental Resistances during Effect" (PoB: "additional"
     // is BASE).
     (
@@ -431,8 +434,8 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // constant [`super::buffs`] adds. PoB floors one sum, `20 x (1 + flask
     // inc + Onslaught effect inc)`, and gives it to movement speed too; the
     // split equals it while the Onslaught effect stats stay unmapped
-    // (`buffs::DEPENDS_ON`, a test), and movement speed is no field. Mapping
-    // either must compute the extra as one floor here.
+    // (`buffs::DEPENDS_ON`, a test). Mapping them must compute the extra as
+    // one floor here.
     let silver = active
         .iter()
         .filter(|a| a.base.stats.iter().any(|(s, _)| s == SILVER_STAT))
@@ -449,6 +452,14 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                     source: Source::ItemBase { item: s.item },
                 });
             }
+            // Its movement speed too (P6-10b).
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                op: Op::Increased,
+                value: extra,
+                conditions: Conditions::none(),
+                source: Source::ItemBase { item: s.item },
+            });
         }
     }
 }
