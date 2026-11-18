@@ -117,6 +117,26 @@ const DISPLAY_KEYS: &[&str] = &[
     // Herald of Ash's burn (close-out).
     "hoaMoreBurn",
     "hoaOverkillPercent",
+    // P6-9d: a skill's own base damage, damage over time, hit frequency,
+    // and corpse explosion data; PoB reads them only from the skill's own
+    // `skillData` (`CalcOffence.lua`), never from another skill's.
+    "ChaosDot",
+    "ChaosMax",
+    "ChaosMin",
+    "ColdDot",
+    "FireMax",
+    "FireMin",
+    "LightningMax",
+    "LightningMin",
+    "PhysicalDot",
+    "corpseExplosionLifeMultiplier",
+    "damageInterval",
+    "dotIsProjectile",
+    "dpsMultiplier",
+    "explodeCorpse",
+    "fixedCastTime",
+    "hitChanceIsExplodeChance",
+    "hitFrequency",
 ];
 
 /// Types an inert skill may not have; a buff skill may reserve
@@ -261,6 +281,8 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
     ("FleshAndStone", "AuraDebuff Flesh and Stone"),
     ("FleshAndStone", "Buff Flesh and Stone"),
     // A warcry's `UsesWarcryPower` flag is a `Buff` of its name.
+    ("EnduringCry", "Buff Enduring Cry"),
+    ("EnduringCry", "Warcry Enduring Cry"),
     ("IntimidatingCry", "Buff Intimidating Cry"),
     ("IntimidatingCry", "Warcry Intimidating Cry"),
     ("RallyingCry", "Buff Rallying Cry"),
@@ -317,6 +339,8 @@ const NO_SLICE_NAMES: &[&str] = &[
     "Condition:HavePhysicalGolem",
     "DamageTakenWhenHit",
     "Dummy",
+    // A skill effect duration (Malevolence's, P6-9d).
+    "Duration",
     // Purity of Elements' immunity (P6-9): no slice field reads it.
     "ElementalAilmentImmune",
     "FireDegen",
@@ -324,6 +348,8 @@ const NO_SLICE_NAMES: &[&str] = &[
     "FireDamageTakenWhenHit",
     "FreezeImmune",
     "LifeRegen",
+    // Enduring Cry's regeneration per warcry power (P6-9d).
+    "LifeRegenPercent",
     "ManaRegen",
     "MovementSpeed",
     "PhysicalDamageLifeLeech",
@@ -415,7 +441,11 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     if flags & 1024 != 0 {
         f.push("projectile");
     }
-    let rest = flags & !(1 | 2 | 4 | 16 | 1024);
+    // `ModFlag.Dot` (P6-9d: Malevolence).
+    if flags & 8 != 0 {
+        f.push("dot");
+    }
+    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 1024);
     let rest_kw = kw & !(0x1_0000 | 0x2_0000);
     let mut tags: Vec<String> = m
         .tags
@@ -660,8 +690,16 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
             if all.contains(Flags::PROJECTILE) {
                 f.push("projectile");
             }
+            if all.contains(Flags::DOT) {
+                f.push("dot");
+            }
             let other = !any.is_empty()
-                || !(Flags::ATTACK | Flags::SPELL | Flags::HIT | Flags::CAST | Flags::PROJECTILE)
+                || !(Flags::ATTACK
+                    | Flags::SPELL
+                    | Flags::HIT
+                    | Flags::CAST
+                    | Flags::PROJECTILE
+                    | Flags::DOT)
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",

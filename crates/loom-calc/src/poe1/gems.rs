@@ -398,6 +398,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("Contagion", Kind::Inert),
     // Convocation's buff goes to minions only (`buffNotPlayer`,
     // `Data/Skills/other.lua` 907): nothing reaches the character.
     (
@@ -411,6 +412,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("Dash", Kind::Inert),
+    ("Desecrate", Kind::Inert),
     (
         "Despair",
         Kind::Curse {
@@ -483,6 +486,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("DivineIre", Kind::Inert),
     ("DominatingBlow", Kind::Inert),
     ("DominatingBlowAltX", Kind::Inert),
+    ("DoubleStrike", Kind::Inert),
     ("Earthshatter", Kind::Inert),
     (
         "ElementalWeakness",
@@ -513,6 +517,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     (
+        "EnduringCry",
+        Kind::Warcry {
+            name: "Enduring Cry",
+            stats: &[
+                (
+                    "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
+                    BuffStat::NoSlice("regeneration"),
+                ),
+                (
+                    "warcry_count_power_from_enemies",
+                    BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
+    ("EnemyExplode", Kind::Inert),
+    (
         "Enfeeble",
         Kind::Curse {
             name: "Enfeeble",
@@ -530,6 +551,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("EssenceDrain", Kind::Inert),
+    ("FireTrap", Kind::Inert),
+    ("FlameDash", Kind::Inert),
     (
         "FlameWall",
         Kind::Buff {
@@ -708,6 +732,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     (
+        "Hatred",
+        Kind::Buff {
+            name: "Hatred",
+            effect: EffectType::Aura,
+            stats: &[(
+                "physical_damage_%_to_add_as_cold",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, DamageType::Cold)),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
+    (
         "HeraldOfAsh",
         Kind::Buff {
             name: "Herald of Ash",
@@ -786,6 +827,55 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    (
+        "HeraldOfThunder",
+        Kind::Buff {
+            name: "Herald of Thunder",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "attack_maximum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "attack_minimum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "spell_maximum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "spell_minimum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     ("HolyFlameTotem", Kind::Inert),
     ("HolyStrike", Kind::Inert),
     ("IceNova", Kind::Inert),
@@ -807,6 +897,25 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("LeapSlam", Kind::Inert),
+    (
+        "Malevolence",
+        Kind::Buff {
+            name: "Malevolence",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "delirium_aura_damage_over_time_+%_final",
+                    BuffStat::Rows(&[(Quantity::Damage, Op::More, 1.0, Flags::DOT, NONE)]),
+                ),
+                // Skill effect duration reaches no slice field.
+                (
+                    "delirium_skill_effect_duration_+%",
+                    BuffStat::NoSlice("duration"),
+                ),
+            ],
+        },
+    ),
+    ("OrbOfStorms", Kind::Inert),
     ("PoisonousConcoctionAltX", Kind::Inert),
     ("Portal", Kind::Inert),
     (
@@ -1018,11 +1127,14 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("RollingMagma", Kind::Inert),
     ("SearingBond", Kind::Inert),
     ("ShieldCharge", Kind::Inert),
+    ("ShieldCrush", Kind::Inert),
     ("SpectralShieldThrow", Kind::Inert),
     ("Spellslinger", Kind::Inert),
     ("StaticStrike", Kind::Inert),
+    ("StormRain", Kind::Inert),
     (
         "SummonFlameGolem",
         Kind::Buff {
@@ -1147,6 +1259,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("Tornado", Kind::Inert),
+    ("ToxicRain", Kind::Inert),
+    ("VaalDetonateDead", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
     ("VaalSummonSkeletons", Kind::Inert),
@@ -1161,6 +1276,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("VolatileDead", Kind::Inert),
     (
         "Vulnerability",
         Kind::Curse {
