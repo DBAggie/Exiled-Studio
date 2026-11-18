@@ -249,6 +249,7 @@ fn merge_pick<'a, 'd>(
 /// One active flask, after its lines are in.
 struct Active<'d> {
     item: ItemId,
+    slot: String,
     base: &'d Flask,
     scale: f64,
 }
@@ -360,6 +361,7 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         ingest.rescale_from(start, &|q, op, v| skill_modifiers::scale(q, op, v, scale));
         active.push(Active {
             item: id,
+            slot: slot.clone(),
             base,
             scale,
         });
@@ -387,7 +389,7 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             let Some(pick) = merge_pick(&line, *value, &group) else {
                 ingest.reason(UnsupportedReason::UnmodelledItem {
                     item: a.item,
-                    slot: String::new(),
+                    slot: a.slot.clone(),
                     what: "flask-merge",
                 });
                 continue;
