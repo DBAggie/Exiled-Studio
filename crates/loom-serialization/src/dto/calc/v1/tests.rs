@@ -716,8 +716,9 @@ fn the_shipped_rules_should_write_every_slice_field() {
     // With the regeneration and recharge fields (P6-10b), present with
     // their pools, the two movement speed fields, the mana cost, and the
     // five base damage reductions (P6-10b part 5), and the seven leech caps
-    // (P6-10b part 7), and the life and energy shield costs (P6-10b part 8).
-    assert_eq!(doc.result.fields.len(), loom_calc::poe1::SLICE.len() + 22);
+    // (P6-10b part 7), the life and energy shield costs (P6-10b part 8), and
+    // the five damage taken over time multipliers (P6-10b part 10).
+    assert_eq!(doc.result.fields.len(), loom_calc::poe1::SLICE.len() + 27);
     let poe2 = to_json(&shipped_result(Game::Poe2)).unwrap();
     assert!(poe2.contains("\"state\": \"unsupported\""), "{poe2}");
     assert!(poe2.contains("\"fields\": []"), "{poe2}");

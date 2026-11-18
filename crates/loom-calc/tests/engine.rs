@@ -363,9 +363,10 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
     // (P6-10b), always, the five base damage reductions (P6-10b part
     // 5), always, and the seven leech caps (P6-10b part 7), with their
     // pools and the percent always, and the life and energy shield costs
-    // (P6-10b part 8), always.
-    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 22);
-    assert_eq!(r.fields.len(), 46, "docs/phase-3/slice-fields.json");
+    // (P6-10b part 8), always, and the five damage taken over time
+    // multipliers (P6-10b part 10), always.
+    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 27);
+    assert_eq!(r.fields.len(), 51, "docs/phase-3/slice-fields.json");
     let computed: Vec<_> = r
         .fields
         .iter()
@@ -373,8 +374,9 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
     // The five base damage reductions (P6-10b part 5) and the seven leech
-    // caps (P6-10b part 7) are computed too.
-    assert_eq!(computed.len(), 36, "{computed:?}");
+    // caps (P6-10b part 7) and the five damage taken over time multipliers
+    // (P6-10b part 10) are computed too.
+    assert_eq!(computed.len(), 41, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons

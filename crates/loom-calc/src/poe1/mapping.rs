@@ -17,8 +17,8 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
 use crate::poe1::ailment::Ailment;
 use crate::poe1::{
-    ArmourSlot, Defence, LeechSource, PieceValue, Poe1Quantity, Pool, WeaponValue, conditions,
-    states,
+    ArmourSlot, Defence, LeechSource, PieceValue, Poe1Quantity, Pool, TakenOf, TakenWhen,
+    WeaponValue, conditions, states,
 };
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -204,6 +204,54 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    // P6-10b part 10: "+#% Chaos Resistance against Damage Over Time"
+    // (`ChaosResist` BASE with `ModFlag.Dot`): the over-time resistance alone.
+    (
+        "additional_chaos_resistance_against_damage_over_time_%",
+        &[(
+            Quantity::Resistance(DamageType::Chaos),
+            Op::Base,
+            1.0,
+            Flags::DOT,
+            NONE,
+        )],
+    ),
+    // P6-10b part 10: "+#% Cold Resistance against Damage Over Time"
+    // (`ColdResist` BASE with `ModFlag.Dot`): the over-time resistance alone.
+    (
+        "additional_cold_resistance_against_damage_over_time_%",
+        &[(
+            Quantity::Resistance(DamageType::Cold),
+            Op::Base,
+            1.0,
+            Flags::DOT,
+            NONE,
+        )],
+    ),
+    // P6-10b part 10: "+#% Fire Resistance against Damage Over Time"
+    // (`FireResist` BASE with `ModFlag.Dot`): the over-time resistance alone.
+    (
+        "additional_fire_resistance_against_damage_over_time_%",
+        &[(
+            Quantity::Resistance(DamageType::Fire),
+            Op::Base,
+            1.0,
+            Flags::DOT,
+            NONE,
+        )],
+    ),
+    // P6-10b part 10: "+#% Lightning Resistance against Damage Over Time"
+    // (`LightningResist` BASE with `ModFlag.Dot`): the over-time resistance alone.
+    (
+        "additional_lightning_resistance_against_damage_over_time_%",
+        &[(
+            Quantity::Resistance(DamageType::Lightning),
+            Op::Base,
+            1.0,
+            Flags::DOT,
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 1033: `EnemyIgniteChance` BASE 100 (P6-2b).
     (
@@ -2499,6 +2547,18 @@ pub const ROWS: &[Row] = &[
         "base_cost_+%",
         &[(Quantity::Poe1(Poe1Quantity::Cost), Op::Increased, 1.0)],
     ),
+    // P6-10b part 10: "#% increased Damage taken" (`DamageTaken` INC).
+    (
+        "base_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::All,
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     ("base_dexterity", &[(DEX, Op::Base, 1.0)]),
     (
         "base_dexterity_and_intelligence",
@@ -2737,6 +2797,19 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 10: "#% increased Physical Damage taken over time"
+    // (`PhysicalDamageTakenOverTime` INC).
+    (
+        "base_physical_damage_over_time_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     (
         "base_physical_damage_reduction_rating",
         &[(Quantity::Armour, Op::Base, 1.0)],
@@ -2806,6 +2879,30 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 10: "#% increased Chaos Damage taken" (`ChaosDamageTaken` INC).
+    (
+        "chaos_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Chaos),
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 10: "#% increased Chaos Damage taken over time" (`ChaosDamageTakenOverTime` INC).
+    (
+        "chaos_damage_taken_over_time_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::Type(DamageType::Chaos),
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     (
         "cold_and_chaos_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
@@ -2813,6 +2910,18 @@ pub const ROWS: &[Row] = &[
     (
         "cold_and_lightning_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
+    ),
+    // P6-10b part 10: "#% increased Cold Damage taken" (`ColdDamageTaken` INC).
+    (
+        "cold_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Cold),
+            )),
+            Op::Increased,
+            1.0,
+        )],
     ),
     // P3-8n: "#% increased Effect of Consecrated Ground you create"
     // (`ConsecratedGroundEffect` INC, `ModParser.lua` 465): the enemy's
@@ -2846,7 +2955,32 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 10: "#% increased Damage taken from Damage Over Time"
+    // (`DamageTakenOverTime` INC).
+    (
+        "degen_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::All,
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
+    // P6-10b part 10: "#% increased Elemental Damage taken" (`ElementalDamageTaken` INC).
+    (
+        "elemental_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Elemental,
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P6-10b: "#% faster start of Energy Shield Recharge"
     // (`EnergyShieldRechargeFaster` INC).
     (
@@ -2940,6 +3074,18 @@ pub const ROWS: &[Row] = &[
     (
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
+    ),
+    // P6-10b part 10: "#% increased Fire Damage taken" (`FireDamageTaken` INC).
+    (
+        "fire_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Fire),
+            )),
+            Op::Increased,
+            1.0,
+        )],
     ),
     // "Flasks applied to you have #% increased Effect": PoB's `FlaskEffect`
     // INC (`SkillStatMap.lua` 422); `poe1::flasks` reads it (P6-4b).
@@ -3145,6 +3291,18 @@ pub const ROWS: &[Row] = &[
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
     ),
+    // P6-10b part 10: "#% increased Lightning Damage taken" (`LightningDamageTaken` INC).
+    (
+        "lightning_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Lightning),
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // "Magic Utility Flasks applied to you have #% increased Effect": PoB's
     // `MagicUtilityFlaskEffect` INC (`ModParser.lua` 5180); `poe1::flasks`
     // reads it (P6-4b).
@@ -3199,6 +3357,18 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::Mana)),
             Op::Base,
             1.0 / 60.0,
+        )],
+    ),
+    // P6-10b part 10: "Take #% more Damage" (`DamageTaken` MORE).
+    (
+        "marauder_hidden_ascendancy_damage_taken_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::All,
+            )),
+            Op::More,
+            1.0,
         )],
     ),
     (
@@ -3322,6 +3492,18 @@ pub const ROWS: &[Row] = &[
     (
         "physical_damage_reduction_rating_+%",
         &[(Quantity::Armour, Op::Increased, 1.0)],
+    ),
+    // P6-10b part 10: "#% increased Physical Damage taken" (`PhysicalDamageTaken` INC).
+    (
+        "physical_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Increased,
+            1.0,
+        )],
     ),
     // P6-10b: Zealot's Oath (PoB's `ZealotsOath` flag, `CalcDefence.lua`
     // 1250): life's regeneration is energy shield's.
@@ -3519,10 +3701,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Slaughter): as the power charge's, PoB never reads it.
     ("add_frenzy_charge_on_kill_%_chance", "charge-gain-chance"),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
-    (
-        "additional_chaos_resistance_against_damage_over_time_%",
-        "dot-resistance",
-    ),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
     // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
@@ -3663,7 +3841,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
-    ("chaos_damage_taken_+%", "damage-taken"),
     (
         "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
         "damage-taken",
@@ -3684,7 +3861,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("debuff_time_passed_+%", "ailment-on-self"),
-    ("degen_effect_+%", "damage-taken"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
     (

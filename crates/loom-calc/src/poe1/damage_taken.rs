@@ -823,7 +823,6 @@ mod tests {
         "physical_damage_taken_%_as_lightning",
         // The pantheon's souls (P3-12g): damage taken by you, its
         // reduction, and shock on you, not the enemy's.
-        "chaos_damage_taken_+%",
         "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
         "elemental_damage_taken_+%_if_been_hit_recently",
         "elemental_damage_taken_+%_if_not_hit_recently",
@@ -853,6 +852,18 @@ mod tests {
             // P6-8a: Cast when Damage Taken's own less damage on the spell it
             // triggers; "damage taken" names the trigger, not the enemy.
             "cast_on_damage_taken_damage_+%_final",
+            // P6-10b part 10: damage the character takes (`poe1::taken`),
+            // not the enemy's.
+            "base_damage_taken_+%",
+            "base_physical_damage_over_time_taken_+%",
+            "chaos_damage_taken_+%",
+            "chaos_damage_taken_over_time_+%",
+            "cold_damage_taken_+%",
+            "elemental_damage_taken_+%",
+            "fire_damage_taken_+%",
+            "lightning_damage_taken_+%",
+            "marauder_hidden_ascendancy_damage_taken_+%_final",
+            "physical_damage_taken_+%",
         ];
         for id in ids {
             assert!(

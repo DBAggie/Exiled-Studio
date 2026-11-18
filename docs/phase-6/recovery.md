@@ -384,3 +384,34 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Data parity:** `uncategorized` 353, `gem_effects` 0 differences.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,764 tests and clippy pass.
+
+## Part 10: damage taken over time
+
+**What PoB does** (`CalcDefence.lua` 1880 to 1940), for each damage type:
+- **The base:** the `INC` sum and the more product of `DamageTaken` and `<Type>DamageTaken` (and `ElementalDamageTaken` for fire, cold, and lightning).
+- **Over time:** the base with the `DamageTakenOverTime` forms of the same names.
+- **The multiplier:** `<Type>TakenDotMult = max((1 - resist / 100) x (1 - reduction / 100) x (1 + inc / 100) x more, 0)`.
+  - `resist` is `<Type>ResistOverTime`: the resistance with its base summed with `ModFlag.Dot` (`CalcDefence.lua` 589), so "+#% Chaos Resistance against Damage Over Time" counts there alone. Physical's is 0.
+  - `reduction` is the base damage reduction (part 5).
+- **The hit's multiplier:** PoB writes a first `<Type>TakenHitMult` here, then overwrites it in its incoming hit (1942 on) with the whole hit's mitigation against the enemy's damage. That field waits for the enemy's hit (next part).
+
+**The engine** (`poe1::taken`, phase `damage-taken` after `damage-reduction`; slice revision 18):
+- **The fields:** `<type>-taken-dot-mult` for the five types, always present.
+- **The over-time resistance:** `phases::resistance_in` sums the resistance's base in a context with the flags given (`DOT` here), the rest as `resistance`.
+- **The quantity:** `SelfDamageTaken(when, of)` (`TakenWhen`: always, hit, over time; `TakenOf`: all, a type, elemental).
+- **The rows** (PoB's parse of each line):
+  - nine damage taken lines;
+  - "#% increased Damage taken from Damage Over Time" (`degen_effect_+%`, was `NoEffect`);
+  - "#% increased Physical Damage taken over time";
+  - the four "Resistance against Damage Over Time" lines (`Resistance` BASE with `DOT`).
+- **The pantheon:** `chaos_damage_taken_+%` (Shakari's soul) left `NoEffect` and the guard test's list (`damage_taken::tests`).
+- **Rounding:** PoB rounds its more products per `ModDB:More` call; the engine rounds each quantity's, which is the same while each call has at most one source (the only mapped more is the hidden Marauder ascendancy's).
+- **Not modelled:** conditional damage taken, damage taken from a hit's source, reflected damage, and ignoring a resistance or reduction. Each is an unmapped stat, so a reason.
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 9,280.
+  - Each of the five fields equals PoB's in 175 builds, Arakaali's and Shakari's souls included (`ice-nova-pantheon-arakaali-shakari-witch.xml`: fire 1.44, chaos 1.02).
+  - No other field's value or state moved.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,764 tests and clippy pass.

@@ -108,7 +108,7 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
             // The main skill's 7 and the mana, life, and energy shield
             // costs (P6-10b).
             unsupported: 10,
-            indeterminate: 36,
+            indeterminate: 41,
             ..StateCounts::default()
         })
     );
@@ -119,9 +119,9 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
         Some(sha256_hex(json.as_bytes()).as_str())
     );
     let doc = calc_dto::from_json(json).unwrap();
-    assert_eq!(doc.result.fields.len(), 46);
+    assert_eq!(doc.result.fields.len(), 51);
     assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&10));
-    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&36));
+    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&41));
     assert_eq!(out.summary.build_states.get("indeterminate"), Some(&1));
     assert_eq!(out.summary.timing.builds, 1);
 }
@@ -416,7 +416,7 @@ fn write_and_read_should_round_trip_and_check_hashes() {
     let (report, _) = read_report(&dir).unwrap();
     assert_eq!(report, out.report);
     let doc = read_document(&dir, &report.builds[0]).unwrap();
-    assert_eq!(doc.result.fields.len(), 46);
+    assert_eq!(doc.result.fields.len(), 51);
     for name in ["summary.json", "timing.json"] {
         assert!(dir.join(name).is_file(), "{name}");
     }

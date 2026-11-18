@@ -54,6 +54,7 @@ pub mod skill_no_output;
 pub mod sockets;
 pub mod stacks;
 pub mod states;
+pub mod taken;
 pub mod triggers;
 
 pub use mapping::Poe1Mapping;
@@ -371,6 +372,10 @@ pub enum Poe1Quantity {
     /// The skill cannot leech the pool (PoB's `CannotLeech<Pool>`; P6-10b
     /// part 9): a `Flag`.
     CannotLeech(Pool),
+    /// Damage the character takes (PoB's `DamageTaken`, `<Type>DamageTaken`,
+    /// `ElementalDamageTaken`, and their `WhenHit` and `OverTime` forms;
+    /// P6-10b part 10): `Increased` and `More`, read by [`taken`].
+    SelfDamageTaken(TakenWhen, TakenOf),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -493,6 +498,52 @@ pub enum Pool {
     Mana,
     /// Energy shield (regeneration only; P6-10b).
     EnergyShield,
+}
+
+/// When a damage taken modifier applies (P6-10b part 10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TakenWhen {
+    /// Always (PoB's `DamageTaken`).
+    Always,
+    /// From hits (PoB's `DamageTakenWhenHit`).
+    Hit,
+    /// Over time (PoB's `DamageTakenOverTime`).
+    OverTime,
+}
+
+impl TakenWhen {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::Hit => "hit",
+            Self::OverTime => "over-time",
+        }
+    }
+}
+
+/// What damage a damage taken modifier reads (P6-10b part 10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TakenOf {
+    /// All damage.
+    All,
+    /// One type's.
+    Type(DamageType),
+    /// Fire, cold, and lightning.
+    Elemental,
+}
+
+impl TakenOf {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::All => "all",
+            Self::Type(t) => t.name(),
+            Self::Elemental => "elemental",
+        }
+    }
 }
 
 /// What damage a leech line reads (P6-10b part 9): all of it, one type's,
@@ -691,6 +742,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LeechRate(p) => write!(f, "leech-rate.{}", p.name()),
             Self::InstantLeech(p) => write!(f, "instant-leech.{}", p.name()),
             Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
+            Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
             Self::ZealotsOath => f.write_str("zealots-oath"),
@@ -982,6 +1034,9 @@ pub enum Poe1Field {
     /// The main skill's leech of a pool per second (PoB's `<Pool>LeechRate`;
     /// P6-10b part 9). Present when the skill's hit leeches the pool.
     LeechRate(Pool),
+    /// The multiplier of a type's damage taken over time, with resistance
+    /// and base reduction (PoB's `<Type>TakenDotMult`; P6-10b part 10).
+    TakenDotMult(DamageType),
 }
 
 impl Poe1Field {
@@ -1017,6 +1072,13 @@ impl Poe1Field {
             Self::EnergyShieldCost => "energy-shield-cost",
             Self::LifePerSecondCost => "life-per-second-cost",
             Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
+            Self::TakenDotMult(t) => match t {
+                DamageType::Physical => "physical-taken-dot-mult",
+                DamageType::Fire => "fire-taken-dot-mult",
+                DamageType::Cold => "cold-taken-dot-mult",
+                DamageType::Lightning => "lightning-taken-dot-mult",
+                DamageType::Chaos => "chaos-taken-dot-mult",
+            },
             Self::LeechRate(p) => match p {
                 Pool::Life => "life-leech-rate",
                 Pool::Mana => "mana-leech-rate",
@@ -1205,6 +1267,7 @@ mod tests {
                 "primary-defences",
                 "unreserved",
                 "damage-reduction",
+                "damage-taken",
                 "regeneration",
                 "leech",
                 "movement",

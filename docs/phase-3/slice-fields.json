@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 17,
+  "revision": 18,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 18 (Phase 6, P6-10b part 10): each type's damage taken over time multiplier (<Type>TakenDotMult), applies present: our result always has it.",
     "Revision 17 (Phase 6, P6-10b part 9): the main skill's leech rates (LifeLeechRate, EnergyShieldLeechRate, ManaLeechRate), applies present: our result has each when the skill's hit leeches the pool.",
     "Revision 16 (Phase 6, P6-10b part 8): the main skill's life and energy shield costs and their costs per second (LifeCost, ESCost, LifePerSecondCost, ESPerSecondCost), applies present: our result has the costs with a main skill, the costs per second with a cost and a computed speed.",
     "Revision 15 (Phase 6, P6-10b part 7): the leech caps (MaxLifeLeechRate, MaxLifeLeechRatePercent, MaxLifeLeechInstance, MaxEnergyShieldLeechRate, MaxEnergyShieldLeechInstance, MaxManaLeechRate, MaxManaLeechInstance), applies present: our result has each with its pool, the percent always.",
@@ -195,6 +196,11 @@
     {"id": "LifeLeechRate", "group": "defence", "pob_key": "LifeLeechRate", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 9): life leeched per second by the main skill's hit: its instances at the hit rate, capped, times the recovery rate."},
     {"id": "EnergyShieldLeechRate", "group": "defence", "pob_key": "EnergyShieldLeechRate", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 9): energy shield leeched per second by the main skill's hit."},
     {"id": "ManaLeechRate", "group": "defence", "pob_key": "ManaLeechRate", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 9): mana leeched per second by the main skill's hit."},
+    {"id": "PhysicalTakenDotMult", "group": "defence", "pob_key": "PhysicalTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of physical damage taken over time, with resistance and base reduction."},
+    {"id": "FireTakenDotMult", "group": "defence", "pob_key": "FireTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of fire damage taken over time, with resistance and base reduction."},
+    {"id": "ColdTakenDotMult", "group": "defence", "pob_key": "ColdTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of cold damage taken over time, with resistance and base reduction."},
+    {"id": "LightningTakenDotMult", "group": "defence", "pob_key": "LightningTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of lightning damage taken over time, with resistance and base reduction."},
+    {"id": "ChaosTakenDotMult", "group": "defence", "pob_key": "ChaosTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of chaos damage taken over time, with resistance and base reduction."},
     {"id": "Minion.Life", "group": "minion", "pob_key": "Life", "pob_path": ["Minion", "Life"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.EnergyShield", "group": "minion", "pob_key": "EnergyShield", "pob_path": ["Minion", "EnergyShield"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.Armour", "group": "minion", "pob_key": "Armour", "pob_path": ["Minion", "Armour"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},

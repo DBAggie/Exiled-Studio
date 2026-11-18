@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 17] = [
+pub const PHASES: [Phase; 18] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -56,6 +56,10 @@ pub const PHASES: [Phase; 17] = [
     Phase {
         name: "damage-reduction",
         run: super::reduction::phase,
+    },
+    Phase {
+        name: "damage-taken",
+        run: super::taken::phase,
     },
     Phase {
         name: "regeneration",
@@ -591,9 +595,30 @@ pub(super) fn resistance(
     calc: &mut Calc<'_>,
     t: DamageType,
 ) -> Result<(Valued, Reasons), CalcError> {
+    resistance_in(calc, t, Flags::NONE)
+}
+
+/// [`resistance`] with its base summed in `base_flags`: PoB's
+/// `<Type>ResistOverTime` sums the base with `ModFlag.Dot` (`dotBase`,
+/// `CalcDefence.lua` 589 and 590; P6-10b part 10), the rest as the
+/// resistance's.
+pub(super) fn resistance_in(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    base_flags: Flags,
+) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let quantity = Quantity::Resistance(t);
-    let base = sum(calc, quantity, Op::Base, Term::Base, &mut reasons)?;
+    let base = {
+        let cx = calc.context(base_flags);
+        let (store, graph) = calc.parts();
+        let q = store.sum(graph, quantity, Op::Base, &cx, Term::Base)?;
+        reasons.extend(&q.reasons);
+        Valued {
+            node: q.node,
+            value: q.value,
+        }
+    };
     let cx = calc.context(Flags::NONE);
     let (store, graph) = calc.parts();
     let inc = store.increased(graph, quantity, &cx)?;
