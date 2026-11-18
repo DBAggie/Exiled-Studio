@@ -95,7 +95,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b3a: the minion step (`minion_actor`: choice with `skillMinion`, level from the game's stat, base values, `MinionMapping`, template extras, the life override, reasons `minion-modifier` and `minion-buffs`, `MinionPending`); shared phase helpers; sweep of 52 builds (0 unexpected, 32 `Complete` minion fields equal to PoB); 4 mechanic fixtures; the #164 review's minors; `docs/phase-6/minions.md`, "P6-7b3a"
 - [x] P6-7b3a PR #165 (base `feat/p6-7b1b-review`)
 - [x] P6-7b3a2: the #165 review (12 item skills, `minion-buffs` in the main group, `base_numbers` and the `Ingest` test, six stat slots, early return, mapping comments); `docs/phase-6/minions.md`, "The P6-7b3a review"
-- [ ] P6-7b3a2 PR (base `feat/p6-7b3a-minion-base`)
+- [x] P6-7b3a2 PR #166 (base `feat/p6-7b3a-minion-base`)
 - [ ] P6-7b3b: register Vaal Summon Skeletons' minion level (88 against PoB's 90) once its fields are `Complete`; a fixture with `set_maximum_life_is_one`
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
