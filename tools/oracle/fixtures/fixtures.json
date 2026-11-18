@@ -1821,6 +1821,16 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7c: Raise Zombie with the character's minion damage and speed lines: the zombie's hit (its monster weapon, damage, attack speed with PoB's rounding, crit, the enemy's armour)."
+    },
+    {
+      "id": "minion-raise-zombie-supports-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-raise-zombie-supports-witch.xml",
+      "sha256": "74ef0cf94a7a81a9d2af7f7203c076a15f34810edd6aab11826fc6f6b51a7e21",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.AverageDamage", "Minion.ChaosResist", "Minion.ColdResist", "Minion.CritChance", "Minion.CritMultiplier", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.HitChance", "Minion.Life", "Minion.LightningResist", "Minion.Speed", "Minion.TotalDPS", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7c2: Raise Zombie supported by Minion Damage, Minion Speed, Melee Physical Damage, and Brutality: the summoning skill's supports on the zombie's skill (Melee Physical Damage's and Brutality's more physical damage, Brutality's no elemental or chaos damage) and their minion modifiers (Minion Damage's more damage)."
     }
   ]
 }

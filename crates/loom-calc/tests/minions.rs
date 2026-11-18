@@ -11,7 +11,7 @@ use loom_calc::quantity::{DamageType, Op};
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 31] = [
+const TEXTS: [(&str, &str); 32] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -126,6 +126,10 @@ const TEXTS: [(&str, &str); 31] = [
         "Minions have {0}% more Maximum Life",
     ),
     (
+        "support_minion_damage_+%_final",
+        "Minions from Supported Skills deal {0}% more Damage",
+    ),
+    (
         "support_minion_damage_minion_life_+%_final",
         "Minions from Supported Skills have {0}% more Maximum Life",
     ),
@@ -158,7 +162,10 @@ fn kinds_of(text: &str) -> Vec<(MinionValue, Op)> {
         vec![(MinionValue::AttackSpeed, op)]
     } else if text.contains("Cast Speed") {
         vec![(MinionValue::CastSpeed, op)]
-    } else if text.contains("Damage also affect") || text.contains("increased Damage") {
+    } else if text.contains("Damage also affect")
+        || text.contains("increased Damage")
+        || text.contains("more Damage")
+    {
         vec![(MinionValue::Damage, op)]
     } else if text.contains("Movement Speed") {
         vec![(MinionValue::MovementSpeed, op)]

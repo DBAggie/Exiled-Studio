@@ -214,7 +214,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 31] = [
+pub const STATS: [MinionRow; 32] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -341,6 +341,12 @@ pub const STATS: [MinionRow; 31] = [
     (
         "necromancer_defensive_notable_minion_maximum_life_+%_final",
         &[(minion(MinionValue::Life), MORE, 1.0)],
+    ),
+    // P6-7c2: Minion Damage's own `statMap` (`Data/Skills/sup_int.lua`
+    // 4813): `MinionModifier` holding `Damage` MORE.
+    (
+        "support_minion_damage_+%_final",
+        &[(minion(MinionValue::Damage), MORE, 1.0)],
     ),
     (
         "support_minion_damage_minion_life_+%_final",

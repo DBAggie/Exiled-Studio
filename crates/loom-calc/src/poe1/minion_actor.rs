@@ -313,6 +313,7 @@ fn collect(
     let own_skill = minion_skill(input, skill, variety, template);
     if own_skill.is_some() {
         weapon(input, variety, ty, level, &mut ingest);
+        support_modifiers(input, skill, &mut ingest);
     }
     ingest.effect(base(
         Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
@@ -369,6 +370,299 @@ fn weapon_class(game_class: &str) -> Option<&'static str> {
         "Shield" => "Shield",
         _ => return None,
     })
+}
+
+/// PoB's supports that never reach a minion's skill (`calcLib.canGrantedEffectSupportActiveSkill`, `CalcTools.lua` 113 to 130): a trigger support (`isTrigger`: the minion is not the player), or one that names weapon types (the minion skills have none). From `Data/Skills/sup_*.lua` (P6-7c2), sorted.
+pub const NO_MINION_SUPPORTS: &[&str] = &[
+    "SupportArrowNova",
+    "SupportAwakenedArrowNova",
+    "SupportBallistaTotem",
+    "SupportBarrage",
+    "SupportCastOnCritTriggered",
+    "SupportCastOnCritTriggeredPlus",
+    "SupportCastOnDeath",
+    "SupportCastOnMeleeKillTriggered",
+    "SupportCastOnWardBreak",
+    "SupportCastWhenDamageTaken",
+    "SupportCastWhenStunned",
+    "SupportCastWhileChannellingTriggered",
+    "SupportCastWhileChannellingTriggeredPlus",
+    "SupportCloseCombat",
+    "SupportCrystalfall",
+    "SupportCurseOnHitCurse",
+    "SupportCurseOnHitCursePlus",
+    "SupportGreaterKineticInstability",
+    "SupportKineticInstability",
+    "SupportManaforgedArrows",
+    "SupportMarkOnHit",
+    "SupportNightblade",
+    "SupportSacredWisps",
+    "SupportShockwave",
+    "SupportTrauma",
+    "SupportVoidShockwave",
+    "SupportVoidstorm",
+];
+
+/// PoB's `notMinionStat` lists of supports (`Modules/Data.lua` 81 to 90: a minion's skill does not read them), from `Data/Skills/sup_*.lua` (P6-7c2), sorted by support.
+pub const NOT_MINION_STATS: &[(&str, &[&str])] = &[
+    (
+        "SupportAwakenedCastWhileChannelling",
+        &["cast_while_channelling_time_ms"],
+    ),
+    (
+        "SupportAwakenedSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportAwakenedUnleash",
+        &[
+            "support_anticipation_rapid_fire_count",
+            "support_anticipation_charge_gain_interval_ms",
+        ],
+    ),
+    ("SupportBallistaTotem", &["totem_support_gem_level"]),
+    (
+        "SupportBloodsoakedBanner",
+        &[
+            "support_bloodstained_banner_corrupted_blood_base_physical_damage_to_deal_per_minute_per_valour",
+        ],
+    ),
+    (
+        "SupportCastWhenDamageTaken",
+        &["cast_on_damage_taken_threshold"],
+    ),
+    ("SupportCastWhenStunned", &["cast_on_stunned_%"]),
+    (
+        "SupportCastWhileChannelling",
+        &["cast_while_channelling_time_ms"],
+    ),
+    ("SupportCooldownRecovery", &["base_cooldown_speed_+%"]),
+    ("SupportCursedGround", &["base_hex_zone_skill_duration_ms"]),
+    (
+        "SupportFocusedBallista",
+        &[
+            "support_focused_ballista_totem_attack_speed_+%_final",
+            "support_focused_ballista_totem_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportFocusedChannelling",
+        &["support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%"],
+    ),
+    (
+        "SupportFrostmage",
+        &["frostmage_gain_cold_damage_%_of_max_reserved_mana"],
+    ),
+    (
+        "SupportGluttony",
+        &["support_gluttony_fire_x_additional_projectiles_in_nova_while_affected_by_disgorge"],
+    ),
+    (
+        "SupportGreaterAncestralCall",
+        &["extra_target_targeting_distance_+%"],
+    ),
+    (
+        "SupportGreaterSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportGreaterUnleash",
+        &["support_anticipation_charge_gain_interval_ms"],
+    ),
+    (
+        "SupportHextoad",
+        &[
+            "base_hex_zone_skill_duration_ms",
+            "hex_zone_trigger_hextoad_every_x_ms",
+        ],
+    ),
+    (
+        "SupportInfusedChannelling",
+        &["support_storm_barrier_damage_+%_final"],
+    ),
+    (
+        "SupportInspiration",
+        &[
+            "support_inspiration_mana_cost_+%_final",
+            "lose_all_righteous_charges_on_mana_use_threshold",
+            "elemental_damage_+%_final_per_righteous_charge",
+            "critical_strike_chance_+%_per_righteous_charge",
+        ],
+    ),
+    (
+        "SupportIntensify",
+        &["support_spell_boost_area_damage_+%_final_per_charge"],
+    ),
+    (
+        "SupportLifetap",
+        &[
+            "support_lifetap_damage_+%_final_while_buffed",
+            "support_lifetap_spent_life_threshold",
+        ],
+    ),
+    (
+        "SupportMachinations",
+        &["physical_damage_%_to_add_as_chaos_per_keystone"],
+    ),
+    (
+        "SupportOverheat",
+        &["support_overheat_ailment_damage_+%_final_per_3_fortification_consumed"],
+    ),
+    (
+        "SupportOverloadedIntensity",
+        &[
+            "additional_critical_strike_chance_per_overloaded_intensity",
+            "critical_strike_multiplier_+_per_overloaded_intensity",
+        ],
+    ),
+    (
+        "SupportPinpoint",
+        &["support_greater_projectile_intensity_projectile_damage_+%_final"],
+    ),
+    (
+        "SupportSacrifice",
+        &[
+            "support_sacrifice_sacrifice_%_of_current_life",
+            "support_sacrifice_gain_%_of_sacrificed_life_as_added_chaos_damage",
+        ],
+    ),
+    ("SupportSecondWind", &["base_cooldown_speed_+%"]),
+    (
+        "SupportSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    ("SupportSpellTotem", &["totem_support_gem_level"]),
+    (
+        "SupportSpellblade",
+        &[
+            "support_spell_weapon_damage_gain_%_of_one_hand_melee_weapon_damage_as_added_spell_damage",
+        ],
+    ),
+    (
+        "SupportTransfusion",
+        &["random_nearby_minion_gain_a_soul_eater_soul_on_X_life_spent"],
+    ),
+    (
+        "SupportTrauma",
+        &[
+            "trauma_strike_self_damage_per_trauma",
+            "attack_minimum_added_physical_damage_with_weapons_per_trauma",
+            "attack_maximum_added_physical_damage_with_weapons_per_trauma",
+            "support_trauma_stun_duration_+%_per_trauma",
+            "support_trauma_base_duration_ms",
+        ],
+    ),
+    (
+        "SupportTrinity",
+        &["damage_penetrates_%_elemental_resistances_while_all_resonance_is_25"],
+    ),
+    (
+        "SupportUnholyTrinity",
+        &[
+            "damage_+%_final_per_10_lowest_unholy_resonance",
+            "hits_ignore_enemy_monster_physical_damage_reduction_%_chance_while_all_unholy_resonance_is_25",
+            "hits_ignore_enemy_monster_lightning_and_chaos_resistance_%_chance_while_all_unholy_resonance_is_25",
+        ],
+    ),
+    (
+        "SupportUnleash",
+        &["support_anticipation_charge_gain_interval_ms"],
+    ),
+];
+
+/// The summoning skill's supports on the minion's skills (P6-7c2;
+/// `CalcActiveSkill.lua` 903: `createActiveSkill(activeEffect,
+/// activeSkill.supportList, minion, ...)`): PoB checks a support against
+/// the summoning skill's types and its minion types (`CalcTools.lua` 104 to
+/// 105), as the summoning skill's own supports already are, so each of
+/// them reaches the minion's skill but those of [`NO_MINION_SUPPORTS`].
+/// Its stats go into the minion skill's list through the gem mapping
+/// ([`SupportOnMinion`]): its minion modifiers there apply to the minion's
+/// own minions (none), so they are left to [`gem_modifiers`], and its
+/// `notMinionStat` stats ([`NOT_MINION_STATS`]) are not read.
+fn support_modifiers(
+    input: &CalcInput<'_>,
+    summon: &skill::MainSkill<'_>,
+    ingest: &mut Ingest<'_>,
+) {
+    let group = summon.group.saturating_sub(1);
+    for r in &summon.supports {
+        let id = r.effect.id.as_str();
+        if NO_MINION_SUPPORTS.binary_search(&id).is_ok() {
+            continue;
+        }
+        let instance = skill::instance(r.effect, r.level, r.quality, input.data);
+        let source = Source::Gem { group, gem: r.gem };
+        for p in &instance.problems {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what: p.name(),
+            });
+        }
+        let lines: Vec<StatLine> = instance
+            .stats
+            .iter()
+            .map(|(stat, value)| StatLine {
+                stat: StatId::new(stat.as_str()),
+                value: StatValue::Exact {
+                    min: *value,
+                    max: *value,
+                },
+            })
+            .collect();
+        ingest.stats_with(&SupportOnMinion { support: id }, &source, &lines);
+    }
+}
+
+/// The gem mapping of a support's stats on a minion's skill
+/// ([`support_modifiers`]).
+struct SupportOnMinion<'a> {
+    support: &'a str,
+}
+
+impl StatMapping for SupportOnMinion<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        let not_minion = NOT_MINION_STATS
+            .binary_search_by(|(id, _)| (*id).cmp(self.support))
+            .ok()
+            .and_then(|i| NOT_MINION_STATS.get(i))
+            .is_some_and(|(_, stats)| stats.contains(&stat.as_str()));
+        if not_minion {
+            return StatMap::NoEffect;
+        }
+        match SkillMapping.map(stat) {
+            StatMap::Effects(templates) => {
+                let kept: Vec<EffectTemplate> = templates
+                    .into_iter()
+                    .filter(|t| {
+                        !matches!(
+                            t.quantity,
+                            Quantity::Poe1(
+                                Poe1Quantity::Minion(_)
+                                    | Poe1Quantity::GolemMinion(_)
+                                    | Poe1Quantity::MinionToYou(..)
+                            )
+                        )
+                    })
+                    .collect();
+                if kept.is_empty() {
+                    StatMap::NoEffect
+                } else {
+                    StatMap::Effects(kept)
+                }
+            }
+            other => other,
+        }
+    }
 }
 
 /// The prefix of the enemy's conditions ([`super::conditions`]).
@@ -1462,5 +1756,40 @@ mod tests {
                 "{class}"
             );
         }
+    }
+
+    /// P6-7c2: the support tables are sorted for their searches.
+    #[test]
+    fn support_tables_should_be_sorted() {
+        assert!(NO_MINION_SUPPORTS.windows(2).all(|w| w[0] < w[1]));
+        assert!(NOT_MINION_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+    }
+
+    /// P6-7c2: a support's stats on the minion's skill keep its hit rows,
+    /// leave its minion modifiers to the minion step, and skip its
+    /// `notMinionStat` stats.
+    #[test]
+    fn a_support_on_the_minion_should_keep_its_hit_rows_only() {
+        let melee = SupportOnMinion {
+            support: "SupportMeleePhysicalDamage",
+        };
+        assert!(matches!(
+            melee.map(&StatId::new("support_melee_physical_damage_+%_final")),
+            StatMap::Effects(e) if e.iter().all(|t| t.quantity == Quantity::Damage)
+        ));
+        let minion_damage = SupportOnMinion {
+            support: "SupportMinionDamage",
+        };
+        assert_eq!(
+            minion_damage.map(&StatId::new("support_minion_damage_+%_final")),
+            StatMap::NoEffect
+        );
+        let second_wind = SupportOnMinion {
+            support: "SupportSecondWind",
+        };
+        assert_eq!(
+            second_wind.map(&StatId::new("base_cooldown_speed_+%")),
+            StatMap::NoEffect
+        );
     }
 }

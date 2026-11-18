@@ -26,10 +26,10 @@
 //! - `calcs.offence(env, env.minion, env.minion.mainSkill)` (3737).
 //!
 //! What the engine does: the minion's main skill is computed when it is a
-//! skill of [`VETTED`] and the summoning skill has no support; otherwise its
-//! offence fields are `unmodelled-skill` (`minion-skill`,
-//! `minion-skill-support`). A minion with items is not computed at all
-//! ([`super::minion_actor`]).
+//! skill of [`VETTED`], with the summoning skill's supports in its store
+//! (P6-7c2, [`super::minion_actor`]); otherwise its offence fields are
+//! `unmodelled-skill` `minion-skill`. A minion with items is not computed
+//! at all ([`super::minion_actor`]).
 
 use loom_domain::ItemId;
 
@@ -153,11 +153,8 @@ fn attack<'d>(
     // (`CalcActiveSkill.lua` 302 to 308).
     let (mut part, _) = hit::pob_part(id, 1).ok_or_else(|| not("minion-skill"))?;
     (part.melee, part.projectile) = hit::weapon_flags(class, part.melee, part.projectile);
-    // PoB gives the minion's skills the summoning skill's supports, which
-    // the engine does not apply to them yet.
-    if !summon.supports.is_empty() {
-        return Err(not("minion-skill-support"));
-    }
+    // The summoning skill's supports reach the minion's skills through its
+    // store ([`super::minion_actor`], P6-7c2).
     let effect = data.granted_effect(id).ok_or_else(|| not("minion-skill"))?;
     let active = effect
         .active_skill

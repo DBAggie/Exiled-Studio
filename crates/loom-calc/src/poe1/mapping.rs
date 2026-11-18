@@ -422,6 +422,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-7c2: `SkillStatMap.lua` 1232 to 1239: `DealNoFire`, `DealNoCold`,
+    // `DealNoLightning` FLAG; `DealNoChaos` FLAG (Brutality's).
+    (
+        "base_deal_no_chaos_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Chaos)),
+            Op::Flag,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1148: `EnemyElementalAilmentDuration` INC
     // (P6-2b): the elemental ailments, of which ignite is the damaging one.
     (
@@ -773,6 +785,32 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             DAMAGING_AILMENTS,
         )],
+    ),
+    (
+        "deal_no_elemental_damage",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Fire)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Cold)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Lightning)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
     ),
     // PoB `SkillStatMap.lua` 1172: `DotMultiplier` BASE (P6-1).
     (
@@ -1318,6 +1356,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ELEMENTAL,
         )],
     ),
+    // P6-7c2: Brutality's own `statMap` (`Data/Skills/sup_str.lua` 802):
+    // `PhysicalDamage` MORE.
+    (
+        "support_brutality_physical_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PHYSICAL, NONE)],
+    ),
     (
         "support_controlled_destruction_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
@@ -1635,6 +1679,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::DoubleDamageChance
                     | Poe1Quantity::Stack(..)
                     | Poe1Quantity::ArcaneSurgeCastSpeed
+                    // "Deal no ... Damage" (P6-7c2, Brutality's).
+                    | Poe1Quantity::DealNo(..)
             )
     )
 }

@@ -416,4 +416,35 @@ PoB computes the minion's main skill with its own offence code: `calcs.offence(e
 - **Corpus:** 0 unexpected, no value moved.
 - Both runs are byte-identical.
 
-**Next (P6-7c, part 2):** the summoning skill's supports on the minion's skills; more minion skills (spells, slams); damage over time and ailments of the minion (the copies exist: `MinionField::IgniteDps` and kin); spectres.
+## P6-7c, part 2: the summoning skill's supports on the minion's skills
+
+PoB creates the minion's skills with the summoning skill's support list (`CalcActiveSkill.lua` 903). For a minion's skill, `canGrantedEffectSupportActiveSkill` checks a support against the summoning skill's types and its minion types (`CalcTools.lua` 104 to 105), the same check the summoning skill's own supports passed. So each of them reaches the minion's skill, except:
+- **triggers:** `isTrigger`, since the minion is not the player (113);
+- **supports that name weapon types:** the minion skills have none (119 to 130).
+
+A support's stats then join the minion skill's list. Two kinds are not read there:
+- **its minion modifiers:** they apply to the minion's own minions, which don't exist;
+- **its `notMinionStat` stats:** `Modules/Data.lua` 81 to 90 tags them so a minion's skill skips them.
+
+**The engine:**
+- `minion_actor::support_modifiers` reads each such support's stats into the minion's store through the gem mapping (`SupportOnMinion`). It drops the minion modifiers, which `gem_modifiers` already gives the minion, and the `notMinionStat` stats.
+- The tables come from `Data/Skills/sup_*.lua`: `NO_MINION_SUPPORTS` (27 triggers and weapon-typed supports) and `NOT_MINION_STATS` (36 supports).
+- An unmapped stat is the minion's `unmapped-stat` reason, as for the character's skill.
+- The `minion-skill-support` gate is gone.
+
+**Rows added on the way** (the character's own skills read them too):
+- Brutality's own `statMap` (`sup_str.lua` 802): `support_brutality_physical_damage_+%_final`, `PhysicalDamage` MORE;
+- `SkillStatMap.lua` 1232 to 1239: `deal_no_elemental_damage` and `base_deal_no_chaos_damage`, PoB's `DealNo<Type>` flags. The gem mapping now takes `DealNo` as a hit quantity;
+- Minion Damage's own `statMap` (`sup_int.lua` 4813): `support_minion_damage_+%_final`, a minion modifier holding `Damage` MORE (the redirect to the character reads only increases).
+
+### Evidence
+
+- **Fixture:** `minion-raise-zombie-supports-witch.xml`, Raise Zombie with Minion Damage, Minion Speed, Melee Physical Damage, and Brutality. All 31 compared fields `Complete` and equal to PoB, the zombie's 468.04 average damage included.
+- **The sweep:** unchanged (no support in its builds), 0 unexpected.
+- **Public `calc-parity` on `b-ot`:** 184 builds, 123 expected differences, 0 unexpected; `Complete` fields 3,491.
+  - 10 values of other builds moved, 8 toward PoB: Brutality's more physical damage in Boneshatter, Cyclone, and Lacerate builds.
+  - 2 moved away: Kinetic Blast of Clustering's main group has Void Manipulation, whose "deal no elemental damage" now applies, as in PoB. The build's fields stay `Partial` with other reasons, and PoB's value is far above ours for them.
+- **Corpus:** 0 unexpected, no value moved.
+- Both runs are byte-identical.
+
+**Next (P6-7c, part 3):** more minion skills (spells, slams: each PoB skill's data, as the character's), the minion's ailments and damage over time (the copies exist: `MinionField::IgniteDps` and kin), spectres.
