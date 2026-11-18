@@ -106,6 +106,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7c2: the summoning skill's supports on the minion's skills (`support_modifiers`, `SupportOnMinion`, `NO_MINION_SUPPORTS`, `NOT_MINION_STATS`), Brutality's and Minion Damage's own rows, `DealNo` in the gem mapping; fixture `minion-raise-zombie-supports-witch.xml` (31 fields equal to PoB); public 184 builds, 0 unexpected, 3,491 `Complete`; `docs/phase-6/minions.md`, "P6-7c, part 2"
 - [x] P6-7c3a: the minion's spells (`skill::instance_for_actor`, PoB's effectiveness at the minion's level; `minion_hit::VETTED_SPELLS`: the Flame Golem's Immolate; damage effectiveness 1; `active_skill_cast_speed_+%_final`); `minion-summon-flame-golem-witch.xml` retargeted, every minion offence value equal to PoB; `docs/phase-6/minions.md`, "P6-7c, part 3a"
 - [x] P6-7c3b: a spell's cooldown caps its rate (`hit::cooldown_limit`, the character's spells too); the Lightning Golem's Storm Orb; fixture `minion-summon-lightning-golem-witch.xml`; `docs/phase-6/minions.md`, "P6-7c, part 3b"
+- [x] P6-7c3c: a minion attack's own stat map (`minion_hit::OWN_STATS`, `minion_actor::OwnSkillMapping`): the Carrion Golem's combo attack, every value equal to PoB; `docs/phase-6/minions.md`, "P6-7c, part 3c"
 - [ ] P6-7c3 rest: triggered minion skills (the relic's Nova), stat-mapped attacks (the Carrion Golem's), the minion's ailments and damage over time, spectres
 ## P6-8a: triggers
 ## P6-8b: mirages

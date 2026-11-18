@@ -315,11 +315,10 @@ fn collect(
         weapon(input, variety, ty, level, &mut ingest);
         support_modifiers(input, skill, &mut ingest);
     }
-    // A computed minion spell's own stats (P6-7c3).
-    if let Some(id) = own_skill
-        .as_deref()
-        .filter(|id| super::minion_hit::VETTED_SPELLS.contains(id))
-    {
+    // A computed minion skill's own stats (P6-7c3).
+    if let Some(id) = own_skill.as_deref().filter(|id| {
+        super::minion_hit::VETTED_SPELLS.contains(id) || super::minion_hit::VETTED.contains(id)
+    }) {
         own_skill_stats(input, id, level, &mut ingest);
     }
     ingest.effect(base(
@@ -661,7 +660,26 @@ fn own_skill_stats(input: &CalcInput<'_>, id: &str, level: i64, ingest: &mut Ing
             },
         })
         .collect();
-    ingest.stats_with(&SupportOnMinion { support: id }, &source, &lines);
+    ingest.stats_with(&OwnSkillMapping { skill: id }, &source, &lines);
+}
+
+/// The mapping of a minion skill's own stats ([`own_skill_stats`]): PoB's
+/// own stat map of the skill ([`super::minion_hit::OWN_STATS`], P6-7c3c),
+/// then the mapping a support's stats take on a minion's skill.
+struct OwnSkillMapping<'a> {
+    skill: &'a str,
+}
+
+impl StatMapping for OwnSkillMapping<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        match super::minion_hit::own_stat(self.skill, stat.as_str()) {
+            Some(template) => StatMap::Effects(vec![template]),
+            None => SupportOnMinion {
+                support: self.skill,
+            }
+            .map(stat),
+        }
+    }
 }
 
 /// The gem mapping of a support's stats on a minion's skill

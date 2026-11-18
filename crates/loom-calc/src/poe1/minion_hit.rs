@@ -36,9 +36,11 @@ use loom_domain::ItemId;
 use super::hit::{self, AttackSkill};
 use super::skill::{self, GemEffectRef, MainSkill};
 use super::sockets::SocketMatch;
+use crate::condition::{Conditions, Flags};
 use crate::engine::{Actor, Calc};
 use crate::error::CalcError;
-use crate::quantity::Quantity;
+use crate::ingest::EffectTemplate;
+use crate::quantity::{Op, Quantity};
 use crate::result::{Field, MinionField};
 use crate::source::Source;
 use crate::state::UnsupportedReason;
@@ -48,7 +50,52 @@ use crate::state::UnsupportedReason;
 /// test checks them with [`hit::pob_vetted`]): PoB's default attack
 /// (`Data/Skills/other.lua` 1215: `attack`, `melee`, `projectile`) and the
 /// Raging Spirit's (`Data/Skills/minion.lua` 2132: `attack`, `melee`).
-pub const VETTED: &[&str] = &["Melee", "SumonRagingSpiritMelee"];
+/// The Carrion Golem's combo attack (`Data/Skills/minion.lua` 1465) joined
+/// in P6-7c3c: its own stat map is [`OWN_STATS`].
+pub const VETTED: &[&str] = &["BoneGolemMultiAttack", "Melee", "SumonRagingSpiritMelee"];
+
+/// PoB's own stat maps of the minion skills the engine computes (P6-7c3c),
+/// by skill and stat: the quantity, how it combines, PoB's `div`, and the
+/// mod's flags. The Carrion Golem's combo attack: `Speed` MORE with
+/// `KeywordFlag.Attack` and `Damage` MORE, each `div = 1.5`
+/// (`Data/Skills/minion.lua` 1472 to 1481). These entries are untagged, so
+/// the generated table's `own_stats` (tagged entries only) leaves them out
+/// and [`hit::pob_vetted`] accepts the skill; without these rows its stats
+/// would be unmapped.
+pub const OWN_STATS: &[(&str, &str, Quantity, Op, f64, Flags)] = &[
+    (
+        "BoneGolemMultiAttack",
+        "bone_golem_attack_speed_+%_final_after_third_combo_index",
+        Quantity::Speed,
+        Op::More,
+        1.5,
+        Flags::KEYWORD_ATTACK,
+    ),
+    (
+        "BoneGolemMultiAttack",
+        "bone_golem_damage_+%_final_after_third_combo_index",
+        Quantity::Damage,
+        Op::More,
+        1.5,
+        Flags::NONE,
+    ),
+];
+
+/// The effect of `skill`'s own stat `stat` ([`OWN_STATS`]), if PoB's stat
+/// map has it.
+#[must_use]
+pub fn own_stat(skill: &str, stat: &str) -> Option<EffectTemplate> {
+    OWN_STATS
+        .iter()
+        .find(|(s, id, ..)| *s == skill && *id == stat)
+        .map(|&(_, _, quantity, op, divisor, flags)| EffectTemplate {
+            quantity,
+            op,
+            scale: 1.0,
+            divisor,
+            conditions: Conditions::none().with_all(flags),
+        })
+}
 
 /// The minion spells the engine computes (P6-7c3), by granted effect ID,
 /// each a plain self-cast spell in PoB's data (a test checks them: PoB's
@@ -330,6 +377,25 @@ mod tests {
             assert!(hit::pob_vetted(id, 0), "{id}");
             assert!(hit::pob_part(id, 1).is_some(), "{id}");
         }
+    }
+
+    /// Each own stat row is an untagged entry of its skill's own stat map
+    /// in PoB's data (`Data/Skills/minion.lua` 1472 to 1481), and its
+    /// skill is computed (P6-7c3c).
+    #[test]
+    fn own_stats_should_be_pobs_stat_map_entries() {
+        for (skill, stat, ..) in OWN_STATS {
+            let pob = super::super::pob_skill::skill(skill).expect(skill);
+            // PoB's table keeps only tagged own stat map entries; these are
+            // untagged, so not among them (vetted as plain).
+            assert!(!pob.own_stats.contains(stat), "{skill} {stat}");
+            assert!(
+                VETTED.contains(skill) || VETTED_SPELLS.contains(skill),
+                "{skill}"
+            );
+            assert_eq!(own_stat(skill, stat).map(|t| t.divisor), Some(1.5));
+        }
+        assert!(own_stat("Melee", OWN_STATS[0].1).is_none());
     }
 
     /// Each vetted minion spell is a plain self-cast spell in PoB's data:

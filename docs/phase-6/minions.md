@@ -513,6 +513,29 @@ A minion's spell runs through the character's spell path (`hit::spell_hit`) unde
 - **Corpus:** no document changed; 0 unexpected.
 - **Tests:** `a_spells_cooldown_should_cap_its_rate` (3 s rounded to a tick) replaces the test that a cooldown spell is not computed. The workspace's tests and clippy pass.
 
+## P6-7c, part 3c: a minion attack's own stat map
+
+**What PoB does:** the Carrion Golem's combo attack (`Data/Skills/minion.lua` 1465 to 1495) has its own `statMap`, read as untagged mods (each `div = 1.5`):
+- `bone_golem_attack_speed_+%_final_after_third_combo_index` (200): `Speed` MORE with `KeywordFlag.Attack`;
+- `bone_golem_damage_+%_final_after_third_combo_index` (20): `Damage` MORE.
+
+Its level also has `baseMultiplier = 1.6`. Its damage effectiveness of 1.6 is replaced by 1 (part 3a).
+
+**The engine:**
+- **`minion_hit::OWN_STATS`:** PoB's own stat map rows of the minion skills the engine computes. Each row has the skill, the stat, the quantity, how it combines, the divisor (PoB's `div`, `value / 1.5` in one division as PoB's), and the flags.
+- **`minion_actor::OwnSkillMapping`:** reads those rows first, then the mapping a support's stats take on a minion's skill.
+- **A computed minion attack's own stats** are read into the minion's store too, as a spell's are (part 3a).
+- **`VETTED`** gains `BoneGolemMultiAttack`.
+- **Why the generated table missed them:** `pob_skills.rs` keeps only tagged own stat map entries. These are untagged, so `pob_vetted` already accepted the skill, and without these rows its stats were unmapped (a test).
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run14`): every Carrion Golem minion offence value equals PoB's, the speed 2.589 and the DPS 212.846 included. No other sweep document changed; 0 unexpected.
+  - The fields stay `partial`: Summon Carrion Golem's own stats are unmapped reasons (damage per nearby non-golem minion, the golem's added damage to minions; the remaining P6-9 gem work).
+  - So no fixture: none of its hit fields would be a target.
+- **Public and corpus:** no document changed (neither has a Carrion Golem); 0 unexpected.
+- **Tests:** `own_stats_should_be_pobs_stat_map_entries`; the workspace's tests and clippy pass.
+
 ## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
 
 Applied:
