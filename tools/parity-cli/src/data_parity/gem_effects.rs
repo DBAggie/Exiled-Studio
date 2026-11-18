@@ -914,7 +914,7 @@ mod tests {
             "tree_version": "3_29",
             "skill_types": {},
             "skills": {"Precision": skill},
-            "gems": {}, "bases": {}, "base_requirements": {}, "mods": {},
+            "gems": {}, "bases": {}, "base_requirements": {}, "flasks": {}, "mods": {},
             "monster_tables": {}, "game_constants": {},
             "character_constants": {}, "monster_constants": {}, "bosses": {}, "pantheons": {}, "jewel_radii": {}, "flavour_text": {},
             "cluster_jewels": {"jewels": {}, "notable_sort_order": {}, "keystones": {}, "orbit_offsets": {}},

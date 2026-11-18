@@ -830,7 +830,6 @@ fn items_beyond_their_lines_should_be_reasons() {
         ("Ring 3", false, Some("unmodelled-item")),
         // No belt, so no abyssal socket: PoB empties the slot (close-out).
         ("Belt Abyssal Socket 1", false, None),
-        ("Flask 1", true, Some("unmodelled-item")),
         ("Flask 1", false, None),
         ("Weapon 1 Swap", false, None),
         ("Amulet", false, None),
@@ -841,6 +840,15 @@ fn items_beyond_their_lines_should_be_reasons() {
             None => assert_eq!(state(&r, Field::Life), StateKind::Complete, "{slot}"),
         }
     }
+    // An active flask acts through its base's data (P6-4b): data without
+    // the flask table leaves the build `Indeterminate` (`missing-data`),
+    // never a value without the flask.
+    let r = run(&with_items(
+        witch(1),
+        vec![plain()],
+        &[("Flask 1", 2, true)],
+    ));
+    assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
 }
 
 #[test]
@@ -908,7 +916,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "buffTailwind".to_owned(),
+        name: "conditionEnemyCrushed".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1577,9 +1585,11 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "buffTailwind",
+        // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
+        // `poe1::config`).
+        "conditionEnemyCrushed",
         // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
-        "buffElusive",
+        "buffAlchemistsGenius",
         // Wrath's check has effects since the close-out (`poe1::gems`).
         "buffUnholyMight",
     ] {
@@ -1647,7 +1657,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["buffTailwind", "resistancePenalty"] {
+    for name in ["conditionEnemyCrushed", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");

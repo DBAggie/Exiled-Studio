@@ -231,6 +231,13 @@ impl<'m> Ingest<'m> {
         self.store.rescale_from(start, scaled);
     }
 
+    /// Scales every effect added since `start` (the index
+    /// [`Ingest::effects`] had then) as `scaled` gives it (an active flask's
+    /// lines, P6-4b).
+    pub fn rescale_from(&mut self, start: usize, scaled: &dyn Fn(Quantity, Op, f64) -> f64) {
+        self.store.rescale_from(start, scaled);
+    }
+
     /// Adds the effects of one stat line from `source`.
     pub fn stat(&mut self, source: &Source, line: &StatLine) {
         let mapping = self.mapping;

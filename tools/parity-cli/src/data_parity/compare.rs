@@ -405,6 +405,7 @@ pub fn compare(
     compare_monster_levels(&mut out, properties, export);
     compare_bosses(&mut out, properties, export, bosses);
     compare_pantheons(&mut out, bundle, export)?;
+    compare_flasks(&mut out, bundle, export)?;
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
@@ -1249,6 +1250,95 @@ fn compare_pantheons(out: &mut Comparison, bundle: &Bundle, export: &Export) -> 
                 ),
             );
         }
+    }
+    Ok(())
+}
+
+/// The stat-description scope PoB's base exporter renders flask buffs
+/// with (`v2.67.2:src/Export/Scripts/bases.lua` 5:
+/// `tincture_stat_descriptions.txt`, which includes the main file).
+pub const FLASK_SCOPE: &str = "tincture_stat_descriptions";
+
+/// `flasks` (P6-4b): PoB's flask bases (`data.itemBases[name].flask`)
+/// against the bundle's (`poe1/flasks.json`), by name; the bundle's first
+/// row of a name, as the calc reads it (the game's legacy rows repeat
+/// three life flask names, and PoB's values are the first row's). Life and
+/// mana per use (PoB writes none for 0), the duration in seconds (PoB's
+/// `RecoveryTime / 10`), and the buff's lines: the bundle's stats rendered
+/// together with the game's descriptions ([`FLASK_SCOPE`]), as PoB's
+/// `describeStats` renders the stat set, compared sorted (the order of a
+/// buff's lines carries nothing). A name on one side only is a difference.
+///
+/// # Errors
+/// A message when the scope does not load.
+fn compare_flasks(out: &mut Comparison, bundle: &Bundle, export: &Export) -> Result<(), String> {
+    const T: &str = "flasks";
+    let mut rows: BTreeMap<&str, &loom_data::bundle::poe1::Flask> = BTreeMap::new();
+    for f in bundle
+        .poe1
+        .as_ref()
+        .and_then(|p| p.flasks.as_ref())
+        .into_iter()
+        .flatten()
+    {
+        rows.entry(f.name.as_str()).or_insert(f);
+    }
+    out.bundle_only(
+        T,
+        rows.keys()
+            .filter(|n| !export.flasks.contains_key(**n))
+            .map(|n| (*n).to_owned()),
+    );
+    if export.flasks.is_empty() {
+        return Ok(());
+    }
+    let root = bundle
+        .scope_root(FLASK_SCOPE)
+        .map_err(|e| format!("stat descriptions {FLASK_SCOPE}: {e}"))?;
+    let scope = bundle
+        .stat_descriptions
+        .scope(root)
+        .map_err(|e| format!("stat descriptions {FLASK_SCOPE}: {e}"))?;
+    for (name, pob) in &export.flasks {
+        let Some(f) = rows.get(name.as_str()) else {
+            out.pob_only(T, name);
+            continue;
+        };
+        let per_use = |v: i64| (v > 0).then(|| int(v));
+        out.check(
+            T,
+            name,
+            "life",
+            json!(per_use(f.life)),
+            json!(pob.life.map(num)),
+        );
+        out.check(
+            T,
+            name,
+            "mana",
+            json!(per_use(f.mana)),
+            json!(pob.mana.map(num)),
+        );
+        #[expect(clippy::cast_precision_loss, reason = "a small duration in tenths")]
+        let seconds = f.duration as f64 / 10.0;
+        out.check(T, name, "duration", num(seconds), num(pob.duration));
+        let stats: Vec<StatAmount> = f
+            .stats
+            .iter()
+            .map(|(stat, value)| StatAmount {
+                stat: stat.clone(),
+                value: *value,
+            })
+            .collect();
+        let mut lines = if stats.is_empty() {
+            Vec::new()
+        } else {
+            render(bundle, &scope, &stats)
+        };
+        lines.sort();
+        let mut theirs = pob.buff.clone();
+        theirs.sort();
+        out.check(T, name, "buff", json!(lines), json!(theirs));
     }
     Ok(())
 }

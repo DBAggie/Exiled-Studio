@@ -1045,6 +1045,11 @@ poe1["poe1/tree_flavour.json"] = {
     ],
     "ascendancies": [{"id": "TestChampion", "text": "A made-up quote.", "colour": "200,180,120"}],
 }
+# Phase 6 (P6-4b): a made-up flask base in the game's form, on the ring's
+# base row, with a buff of one made-up stat.
+poe1["poe1/flasks.json"] = [
+    {"base": "Test/Items/Ring1", "name": "Plain Test Ring", "life": 0, "mana": 0, "duration": 50, "buff": "test_buff", "stats": [["test_maximum_life", 10]]},
+]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))

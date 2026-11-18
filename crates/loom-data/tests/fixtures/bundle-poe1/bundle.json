@@ -147,6 +147,11 @@
    "size": 142
   },
   {
+   "path": "poe1/flasks.json",
+   "sha256": "dadbc239fab8727a55a738ebbc2a2125fafd29524256c421e49329639fe5f281",
+   "size": 195
+  },
+  {
    "path": "poe1/grafts.json",
    "sha256": "2724bbcc0f4a54997746944b7df4039bc7f950ac98538461b5cbee95583dcb02",
    "size": 163

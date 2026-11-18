@@ -43,7 +43,17 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Impale rows; fixture `smite-impale-templar.xml` (Q11 DIV-0088 to DIV-0090); `docs/phase-6/ailments.md`, "P6-2d"
 - [x] Open PR: #144 (base `feat/p6-2c-bleed-poison`)
 ## P6-3: cluster jewels (what remains)
-## P6-4: flasks and config inputs
+## P6-4a: config inputs (P6-4 split: flasks need a data run, so they are P6-4b; P6-3 waits on the cluster extraction)
+- [x] The P6-2c review applied: poison's physical part with chaos modifiers (`chaos_damage_+%` mapped), skill-data ailment keys as reasons, the staff row on attacks only; fixture `smite-poison-chaos-templar.xml` (Q11 DIV-0091 to DIV-0093); `docs/phase-6/ailments.md`
+- [x] Tailwind and Adrenaline (`poe1::buffs`); 61 inputs into `config::NAMED_ONLY`, 2 into `ENEMY_DAMAGE`, 4 into the new `config::INERT`
+- [x] Fixtures `ice-nova-tailwind-adrenaline-witch.xml`, `smite-tailwind-adrenaline-templar.xml` (Q11 DIV-0094 to DIV-0096); `docs/phase-6/config-inputs.md`
+- [x] Open PR: #145 (base `feat/p6-2d-impale`)
+## P6-4b: flasks
+- [x] The P6-4a review applied: a guard that no `NAMED_ONLY` name is settled; an `input_use` test; `DEFAULT_ON`; the corrected counts and readers
+- [x] Data: the `Flasks` extractor root, `poe1/flasks.json` (converter, loader, validator, synthetic row), `data-parity` table `flasks` (export format 11; 192 values, 0 differences); evidence bundle `local/p6/packs/b-flasks`
+- [x] `loom_calc::poe1::flasks` (effect scale, merge, Silver's Onslaught), `FlaskMapping` (charges, duration, eight aliases), rows for `flask_effect_+%`, `magic_utility_flask_effect_+%`, Basalt, Stibnite, Silver, Phasing; fixture `smite-flasks-templar.xml` (Q11 DIV-0097 to DIV-0099); `docs/phase-6/flasks.md`
+- [x] Open PR: #146 (base `feat/p6-4-config-inputs`)
+- [ ] Maintainer: the next data run ships `poe1/flasks.json` (the extraction with the `Flasks` root)
 ## P6-5: channelling and Vaal skills
 ## P6-6: totems, traps, mines, brands
 ## P6-7a: minion data

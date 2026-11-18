@@ -107,6 +107,14 @@ The passive tree's cluster jewels (`docs/tree/cluster-jewels.md`) come from the 
 
 A PoB row the bundle lacks is a difference. A bundle without the file (an extract made before T3) has PoB's rows only. Run on PoB's side here: 9 jewels, 300 notables, 8 keystones. The run against a bundle with the table is maintainer-run.
 
+## P6-4b: table `flasks` (flask bases, export format 11)
+The flask bases (`poe1/flasks.json`, `docs/phase-6/flasks.md`) against PoB's `flask` base data, by name:
+- life and mana per use;
+- the duration in seconds;
+- the buff's lines: the bundle's stats rendered together with `tincture_stat_descriptions`, the file PoB's exporter renders them with, compared sorted.
+
+On the flask evidence bundle: 48 flasks, 192 values, 0 differences.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

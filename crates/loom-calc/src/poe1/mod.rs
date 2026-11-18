@@ -23,6 +23,7 @@ pub mod damage_taken;
 pub mod dot;
 pub mod enemy;
 pub mod exposure;
+pub mod flasks;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
@@ -123,6 +124,15 @@ pub enum Poe1Quantity {
     /// it (P3-12j); [`buffs`] gives its speed once, whatever the number of
     /// sources, as PoB's flag does.
     Onslaught,
+    /// Flasks applied to you have increased effect (PoB's `FlaskEffect`;
+    /// P6-4b): `Increased`, read by [`flasks`].
+    FlaskEffect,
+    /// Magic utility flasks applied to you have increased effect (PoB's
+    /// `MagicUtilityFlaskEffect`; P6-4b): `Increased`, read by [`flasks`].
+    MagicUtilityFlaskEffect,
+    /// A flask's own increased effect (PoB's local `FlaskEffect`; P6-4b):
+    /// `Increased`, read by [`flasks`] from the flask's lines alone.
+    LocalFlaskEffect,
     /// A modifier of a charge kind (P3-8d): its maximum, its minimum, or an
     /// effect per charge. Only [`charges`] reads them: it counts the
     /// charges as PoB's `doActorCharges` and turns each per-charge effect
@@ -447,6 +457,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ShockMinimum => f.write_str("shock-minimum"),
             Self::ShockEffect => f.write_str("shock-effect"),
             Self::Onslaught => f.write_str("onslaught"),
+            Self::FlaskEffect => f.write_str("flask-effect"),
+            Self::MagicUtilityFlaskEffect => f.write_str("magic-utility-flask-effect"),
+            Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
