@@ -17,10 +17,29 @@
 //! 0), and each of impale,
 //! damage over time, ignite, bleeding, and poison that the build has (each
 //! a dependency, so an unsupported one leaves this field unsupported and a
-//! partial one makes it partial). Not modelled: mirages (P6-8b), ground
-//! damage over time and corrupting blood (the damage over time field is
-//! then unsupported), decay, critical culling, and skills that show their
-//! average damage (their stat stays a reason).
+//! partial one makes it partial). Not modelled: ground damage over time
+//! and corrupting blood (the damage over time field is then unsupported),
+//! decay, critical culling, and skills that show their average damage
+//! (their stat stays a reason).
+//!
+//! **Mirage Archer** (P6-8b; `CalcMirages.lua` 64 to 113, `CalcOffence.lua`
+//! 6088 to 6123): a skill Mirage Archer supports (its
+//! `skill_can_own_mirage_archers`, PoB's `triggeredByMirageArcher` for a
+//! `MirageArcherCanUse` skill) is computed again as the mirage uses it: a
+//! copy with the support's less damage and attack speed as `Damage` and
+//! `Speed` MORE ([`crate::input::MirageUse`]; the engine runs
+//! [`crate::calculate`] with it). Then:
+//! - `CombinedDPS` gains the mirage's `TotalDPS` and `ImpaleDPS`, each
+//!   times the count (1 per `summon_mirage_archer_on_hit`, PoB's
+//!   `MirageArcherMaxCount` BASE 1);
+//! - a mirage ignite or bleeding larger than the skill's own sets the
+//!   skill's to 0 (and adds the mirage's only to PoB's `MirageDPS`, not to
+//!   `CombinedDPS`);
+//! - the cull multiplier is the larger of the two, the skill's (the copy
+//!   has the skill's Culling Strike);
+//! - a mirage poison (PoB adds its single poison's `PoisonDPS`, which the
+//!   engine does not compute) or damage over time (added by
+//!   `DotCanStack`, not modelled) is a reason.
 
 use super::phases::{self, Valued};
 use super::{Poe1Field, Poe1Quantity};
@@ -47,6 +66,104 @@ pub const DOT_DPS_CAP: f64 = 35_791_394.0;
 /// Culling Strike's percent (PoB's `CullPercent` MAX 10).
 pub const CULL_PERCENT: f64 = 10.0;
 
+/// The source of a mirage's less damage and speed (P6-8b).
+pub const MIRAGE_RULE: &str = "mirage-archer";
+/// Mirage Archer's mark on the skill (PoB's `triggeredByMirageArcher`,
+/// `SkillStatMap.lua` 285).
+const MIRAGE_STAT: &str = "skill_can_own_mirage_archers";
+/// Mirage Archer's less damage (PoB's `MirageArcherLessDamage`).
+const MIRAGE_DAMAGE_STAT: &str = "support_mirage_archer_damage_+%_final";
+/// Mirage Archer's less attack speed (`MirageArcherLessAttackSpeed`).
+const MIRAGE_SPEED_STAT: &str = "support_mirage_archer_attack_speed_+%_final";
+/// One mirage per stat (`MirageArcherMaxCount` BASE 1).
+const MIRAGE_COUNT_STAT: &str = "summon_mirage_archer_on_hit";
+
+/// The mirage's fields the combined damage per second reads.
+pub(super) struct MirageOut {
+    hit: f64,
+    impale: Option<f64>,
+    ignite: Option<f64>,
+    bleed: Option<f64>,
+    count: f64,
+    reasons: Reasons,
+}
+
+/// The mirage of the character's main skill, when Mirage Archer supports
+/// it (module docs): `Ok(None)` without one, `Err` when its copy's hit is
+/// not computed.
+fn mirage(
+    calc: &Calc<'_>,
+    skill: &super::skill::MainSkill<'_>,
+) -> Result<Option<MirageOut>, UnsupportedReason> {
+    let input = *calc.input();
+    if input.options.mirage.is_some() || !skill.types.contains("MirageArcherCanUse") {
+        return Ok(None);
+    }
+    let (mut damage, mut speed, mut count, mut marked) = (0, 0, 0_u32, false);
+    for i in super::skill::instances(skill, input.data) {
+        for (stat, value) in &i.stats {
+            match stat.as_str() {
+                MIRAGE_STAT => marked |= *value != 0,
+                MIRAGE_DAMAGE_STAT => damage += value,
+                MIRAGE_SPEED_STAT => speed += value,
+                MIRAGE_COUNT_STAT => count += 1,
+                _ => {}
+            }
+        }
+    }
+    if !marked {
+        return Ok(None);
+    }
+    let source = crate::source::Source::Rule(MIRAGE_RULE);
+    let unsupported = |what| UnsupportedReason::UnmodelledSkill {
+        source: source.clone(),
+        what,
+    };
+    let mut options = input.options.clone();
+    options.mirage = Some(crate::input::MirageUse {
+        damage_more: damage,
+        speed_more: speed,
+    });
+    let sub = crate::input::CalcInput {
+        build: input.build,
+        data: input.data,
+        options: &options,
+    };
+    let result = crate::calculate(&sub).map_err(|_| unsupported("mirage"))?;
+    let mut reasons = Reasons::new();
+    let mut read = |f: Field| -> Result<Option<f64>, UnsupportedReason> {
+        let Some(r) = result.fields.get(&f) else {
+            return Ok(None);
+        };
+        if !super::triggers::carry(&r.state, &mut reasons) {
+            return Err(unsupported("mirage"));
+        }
+        Ok(r.value)
+    };
+    let hit = read(Field::HitDps)?.ok_or_else(|| unsupported("mirage"))?;
+    let impale = read(Field::Poe1(Poe1Field::ImpaleDps))?;
+    let ignite = read(Field::IgniteDps)?;
+    let bleed = read(Field::BleedDps)?;
+    let poison = read(Field::PoisonDps)?.is_some_and(|v| v != 0.0);
+    let dot = read(Field::DotDps)?.is_some_and(|v| v != 0.0);
+    if poison {
+        reasons.partial.insert(unsupported("mirage-poison"));
+    }
+    if dot {
+        reasons
+            .partial
+            .insert(unsupported("mirage-damage-over-time"));
+    }
+    Ok(Some(MirageOut {
+        hit,
+        impale,
+        ignite,
+        bleed,
+        count: f64::from(count.max(1)),
+        reasons,
+    }))
+}
+
 /// The combined phase (module docs).
 ///
 /// # Errors
@@ -57,7 +174,13 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let Ok(skill) = super::skill::main_skill(input.build, input.data, &levels) else {
         return Ok(());
     };
-    combine(calc, &skill)
+    match mirage(calc, &skill) {
+        Ok(m) => combine(calc, &skill, m.as_ref()),
+        Err(reason) => {
+            calc.set_unsupported(Field::Poe1(Poe1Field::CombinedDps), reason);
+            Ok(())
+        }
+    }
 }
 
 /// The combined damage per second of `skill` from the fields the actor
@@ -69,6 +192,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 pub(super) fn combine(
     calc: &mut Calc<'_>,
     skill: &super::skill::MainSkill<'_>,
+    mirage: Option<&MirageOut>,
 ) -> Result<(), CalcError> {
     let field = Field::Poe1(Poe1Field::CombinedDps);
     let value_of = |calc: &Calc<'_>, f: Field| {
@@ -102,6 +226,21 @@ pub(super) fn combine(
             terms.push(v);
         }
     }
+    let mut reasons = Reasons::new();
+    // The mirage's hit and impale, times the count (6089 to 6111).
+    if let Some(m) = mirage {
+        reasons.extend(&m.reasons);
+        let count = phases::constant(calc, "mirage-count", m.count)?;
+        for (name, v) in [
+            ("mirage-hit-dps", Some(m.hit)),
+            ("mirage-impale-dps", m.impale),
+        ] {
+            if let Some(v) = v {
+                let v = phases::constant(calc, name, v)?;
+                terms.push(phases::product(calc, &[v, count], Term::Step(name))?);
+            }
+        }
+    }
     let mut dots = Vec::new();
     for f in [
         Field::DotDps,
@@ -111,7 +250,25 @@ pub(super) fn combine(
     ] {
         if calc.field(f).is_some() {
             deps.push(f);
+            // A mirage ignite or bleeding larger than the skill's own sets
+            // the skill's to 0 (6096 to 6103).
+            let mirage_value = mirage.and_then(|m| match f {
+                Field::IgniteDps => m.ignite,
+                Field::BleedDps => m.bleed,
+                _ => None,
+            });
             if let Some(v) = value_of(calc, f) {
+                if mirage_value.is_some_and(|mv| mv > v.value) {
+                    let zero = phases::constant(calc, "mirage-replaces", 0.0)?;
+                    let state = calc
+                        .field(f)
+                        .map(|r| r.state.clone())
+                        .unwrap_or(crate::state::FieldState::Complete);
+                    let mut field_reasons = Reasons::new();
+                    super::triggers::carry(&state, &mut field_reasons);
+                    calc.set(f, phases::query(zero, field_reasons));
+                    continue;
+                }
                 dots.push(v);
             }
         }
@@ -140,7 +297,6 @@ pub(super) fn combine(
     if skill.types.contains("Spell") {
         flags = flags | Flags::SPELL;
     }
-    let mut reasons = Reasons::new();
     let cx = calc.context(flags);
     let (store, graph) = calc.parts();
     let cull = store.flag(graph, Quantity::Poe1(Poe1Quantity::CullingStrike), &cx)?;

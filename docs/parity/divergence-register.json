@@ -3696,6 +3696,86 @@
       "test": "crates/loom-calc/src/poe1/triggers.rs::tests::the_rotation_should_share_and_cap_the_triggers",
       "added": "2026-11-18",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0185",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "mirage-archer-burning-arrow-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.1549999999999998,
+      "successor_value": 1.1544227886056972,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture mirage-archer-burning-arrow-templar.xml (P6-8a): P6-8b: the bow's attack rate is the registered Q11 difference (1.1544228 against PoB's 1.155); the skill's TotalDPS and IgniteDPS and the mirage's copy (PoB's MirageDPS 2.6153142, ours 2.6140072) each differ from PoB by the same ratio, 0.99950025, so CombinedDPS carries only the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/combined.rs::tests::a_skill_hits_with_a_damage_attack_or_projectile_type",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0186",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "mirage-archer-burning-arrow-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 9.503321953124999,
+      "successor_value": 9.498572666791604,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture mirage-archer-burning-arrow-templar.xml (P6-8a): P6-8b: the bow's attack rate is the registered Q11 difference (1.1544228 against PoB's 1.155); the skill's TotalDPS and IgniteDPS and the mirage's copy (PoB's MirageDPS 2.6153142, ours 2.6140072) each differ from PoB by the same ratio, 0.99950025, so CombinedDPS carries only the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/combined.rs::tests::a_skill_hits_with_a_damage_attack_or_projectile_type",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0187",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "mirage-archer-burning-arrow-templar.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 10.47860438625,
+      "successor_value": 10.473367702398802,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture mirage-archer-burning-arrow-templar.xml (P6-8a): P6-8b: the bow's attack rate is the registered Q11 difference (1.1544228 against PoB's 1.155); the skill's TotalDPS and IgniteDPS and the mirage's copy (PoB's MirageDPS 2.6153142, ours 2.6140072) each differ from PoB by the same ratio, 0.99950025, so CombinedDPS carries only the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/combined.rs::tests::a_skill_hits_with_a_damage_attack_or_projectile_type",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0188",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "mirage-archer-burning-arrow-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 22.597240540875,
+      "successor_value": 22.585947567091456,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture mirage-archer-burning-arrow-templar.xml (P6-8a): P6-8b: the bow's attack rate is the registered Q11 difference (1.1544228 against PoB's 1.155); the skill's TotalDPS and IgniteDPS and the mirage's copy (PoB's MirageDPS 2.6153142, ours 2.6140072) each differ from PoB by the same ratio, 0.99950025, so CombinedDPS carries only the attack rate's difference"
+      ],
+      "test": "crates/loom-calc/src/poe1/combined.rs::tests::a_skill_hits_with_a_damage_attack_or_projectile_type",
+      "added": "2026-11-18",
+      "status": "accepted"
     }
   ]
 }

@@ -596,6 +596,22 @@ pub struct CalcOptions {
     /// tree (`loom-pipeline` with `loom-tree`); the engine does not walk
     /// the tree's links.
     pub passives: ResolvedPassives,
+    /// The main skill as a mirage uses it (Phase 6 P6-8b): the engine sets
+    /// it when it computes a mirage's copy of the skill (PoB's
+    /// `calcs.copyActiveSkill`, `CalcMirages.lua` 37 to 52). A host leaves
+    /// it `None`.
+    pub mirage: Option<MirageUse>,
+}
+
+/// What a mirage changes in its copy of the main skill (P6-8b): Mirage
+/// Archer's `Damage` and `Speed` MORE, percent (`CalcMirages.lua` 69 to
+/// 84).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MirageUse {
+    /// `Damage` MORE, percent.
+    pub damage_more: i64,
+    /// `Speed` MORE, percent.
+    pub speed_more: i64,
 }
 
 /// The active spec's allocated nodes, each with what the tree makes of it

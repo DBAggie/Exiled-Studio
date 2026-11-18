@@ -192,7 +192,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                     MinionSkill::Attack(attack) => &attack.skill,
                     MinionSkill::Spell(spell) => &spell.skill,
                 };
-                super::combined::combine(c, main)
+                super::combined::combine(c, main, None)
             })
             .unwrap_or(Ok(())),
         Err(reason) => {

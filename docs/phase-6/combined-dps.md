@@ -17,7 +17,7 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
 
 **Not modelled:**
 - A hitting skill whose hit is not computed: the field is unsupported.
-- Mirages (P6-8b), decay, and critical culling.
+- Decay and critical culling. Mirage Archer is in since P6-8b (`docs/phase-6/mirages.md`).
 - Skills that show their average damage (`base_skill_show_average_damage_instead_of_dps`, a reason).
 - Ground damage over time and corrupting blood: the damage over time field is unsupported for them, and so is this one.
 

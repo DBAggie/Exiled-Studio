@@ -413,24 +413,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
     let Some(src) = best else {
         return Outcome::SelfCast;
     };
-    let mut carry = |state: Option<&FieldState>| -> bool {
-        match state {
-            Some(FieldState::Complete) | None => true,
-            Some(FieldState::Partial(p)) => {
-                reasons.partial.extend(p.iter().cloned());
-                true
-            }
-            Some(FieldState::Indeterminate {
-                reasons: r,
-                partial,
-            }) => {
-                reasons.indeterminate.extend(r.iter().cloned());
-                reasons.partial.extend(partial.iter().cloned());
-                true
-            }
-            Some(FieldState::Unsupported(_)) => false,
-        }
-    };
+    let mut carry = |state: Option<&FieldState>| state.is_none_or(|s| carry(s, &mut reasons));
     if !carry(src.speed.as_ref()) {
         return unsupported("trigger-source");
     }
@@ -498,6 +481,28 @@ fn killed_recently(input: &crate::input::CalcInput<'_>) -> Option<bool> {
         Some(_) => return None,
     };
     Some(check || count)
+}
+
+/// Adds a field's reasons to `reasons` (its partial and indeterminate
+/// ones); `false` when the field is unsupported (P6-8a: a trigger's
+/// source; P6-8b: a mirage's copy).
+pub(super) fn carry(state: &FieldState, reasons: &mut Reasons) -> bool {
+    match state {
+        FieldState::Complete => true,
+        FieldState::Partial(p) => {
+            reasons.partial.extend(p.iter().cloned());
+            true
+        }
+        FieldState::Indeterminate {
+            reasons: r,
+            partial,
+        } => {
+            reasons.indeterminate.extend(r.iter().cloned());
+            reasons.partial.extend(partial.iter().cloned());
+            true
+        }
+        FieldState::Unsupported(_) => false,
+    }
 }
 
 /// The source skill's fields a trigger reads.

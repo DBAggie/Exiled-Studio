@@ -44,7 +44,7 @@ pub use ingest::{EffectTemplate, Ingest, ItemLines, StatMap, StatMapping, TypedM
 pub use input::{
     ActiveSkill, ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions,
     CharacterBase, ClusterPassive, EffectLevel, GemEffect, GrantedEffect, ItemBase, LineValues,
-    MONSTER_TEMPLATE, MonsterDefences, MonsterLife, MonsterStats, PackNode, PackStats,
+    MONSTER_TEMPLATE, MirageUse, MonsterDefences, MonsterLife, MonsterStats, PackNode, PackStats,
     PassiveState, Range, ResolvedPassives, Scaling, SkillChoice, SkillGem, StatAmount, StatSet,
     StatSetLevel, WeaponBase,
 };

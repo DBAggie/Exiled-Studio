@@ -3305,6 +3305,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_can_add_multiple_charges_per_action", "display"),
+    // P6-8b: read by `poe1::combined` (PoB's `triggeredByMirageArcher`).
+    ("skill_can_own_mirage_archers", "mirage"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -3322,6 +3324,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("spell_uncastable_if_triggerable", "trigger"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
     ("stun_threshold_+%", "stun"),
+    // P6-8b: read by `poe1::combined` (the mirage count).
+    ("summon_mirage_archer_on_hit", "mirage"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
     // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
     // regeneration); its cast speed and spell damage are `poe1::buffs`.
@@ -3330,6 +3334,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
     ),
+    // P6-8b: the mirage's less attack speed, read by `poe1::combined` for
+    // the mirage's copy alone.
+    ("support_mirage_archer_attack_speed_+%_final", "mirage"),
+    // P6-8b: the mirage's duration; no PoB module reads
+    // `MirageArcherDuration`.
+    ("support_mirage_archer_base_duration", "mirage"),
+    // P6-8b: the mirage's less damage, read by `poe1::combined` for the
+    // mirage's copy alone.
+    ("support_mirage_archer_damage_+%_final", "mirage"),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
     // the channelling time to no modifier); its attack speed is
     // `poe1::stacks`, its speed per momentum lost a `MOVEMENT_REASONS` entry.

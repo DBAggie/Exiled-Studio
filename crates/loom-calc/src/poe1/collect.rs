@@ -115,6 +115,25 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // effect and minimum (P3-8k).
     super::exposure::exposure(active_config(build), ingest);
     super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
+    // A mirage's copy of the main skill (P6-8b): its less damage and speed.
+    if let Some(m) = input.options.mirage {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "small stat values, exact as f64"
+        )]
+        for (quantity, value) in [
+            (Quantity::Damage, m.damage_more as f64),
+            (Quantity::Speed, m.speed_more as f64),
+        ] {
+            ingest.effect(Effect {
+                quantity,
+                op: Op::More,
+                value,
+                conditions: Conditions::none(),
+                source: Source::Rule(super::combined::MIRAGE_RULE),
+            });
+        }
+    }
 }
 
 /// The character's base values: class attributes, life and mana with

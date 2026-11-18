@@ -114,6 +114,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-8a part 2: Cast while Channelling (`CWCHandler`), Cast on Melee Kill, Cast on Ward Break; triggered damage (`TRIGGERED_DAMAGE`); Cyclone's unscalable movement buff; five fixtures; DIV-0181 to DIV-0184; `docs/phase-6/triggers.md`, "Part 2"
 - [ ] P6-8a further configs: Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; the Holy Relic's Nova (data: skill level requirements)
 ## P6-8b: mirages
+- [x] P6-8b: Mirage Archer (`CalcOptions::mirage`, the copy computed by `calculate`, its DPS in `combined-dps`); fixture `mirage-archer-burning-arrow-templar.xml`; DIV-0185 to DIV-0188; `docs/phase-6/mirages.md`
+- [ ] P6-8b rest: General's Cry's mirage warriors, Sacred Wisps (each an unmapped-stat reason meanwhile)
 ## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)
 - [x] Order change (decision without the maintainer, D10): P6-9 before P6-7c, since every minion build's fields carry the summoning gem's `unmodelled-gem` until P6-9 models it, so P6-7c's minion hit fields could not be shown `Complete`
 - [x] P6-9a: 15 inert skills, 43 plain supports, nine auras (Anger, Wrath, Determination, Grace, the four Purities, Vitality); `gem_effects` 894 values, 0 differences; three aura fixtures; `docs/phase-6/gems.md`
