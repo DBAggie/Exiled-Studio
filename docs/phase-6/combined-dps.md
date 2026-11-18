@@ -13,8 +13,10 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
 - **Dependencies:** each component the build has. An unsupported one leaves the field unsupported, and a partial one makes it partial.
 - **Reservation multiplier:** PoB's enemy life reservation multiplier is 1 here; its stats stay reasons.
 
+**A skill without a hit** (no `Damage`, `Attack`, or `Projectile` type, as the hit phase reads a spell; `combined::has_hit`) adds PoB's 0 for the hit. Examples are Righteous Fire and the summoning skills.
+
 **Not modelled:**
-- A skill whose hit is not computed: the field is unsupported. Damage over time skills such as Righteous Fire are among these, where PoB adds 0 for the hit.
+- A hitting skill whose hit is not computed: the field is unsupported.
 - Mirages (P6-8b), decay, and critical culling.
 - Skills that show their average damage (`base_skill_show_average_damage_instead_of_dps`, a reason).
 - Ground damage over time and corrupting blood: the damage over time field is unsupported for them, and so is this one.
@@ -35,3 +37,8 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
   - Two builds gained a bleeding field (`smite-bleed-templar.xml`, complete; `lacerate-bleed-gladiator.xml`, partial). No other value moved.
 - **Corpus:** 0 unexpected, no value moved, no state changed.
 - **Tests:** the flag at 0 (`ingest`); the slice's names. Workspace tests, clippy, and the real-bundle tests pass.
+
+**The skill without a hit** (a follow-up commit; `local/p6/p6-12b/`):
+- `CombinedDPS` now equals PoB's in 97 builds: both Righteous Fire fixtures and the summoning skills' builds (PoB's 0) joined.
+- 0 unexpected; no other value moved. A unit test covers `has_hit`.
+

@@ -12,8 +12,9 @@
 //!   enemy (1 here: its stats stay reasons).
 //!
 //! The engine reads the fields the earlier phases computed: the hit's DPS
-//! (a dependency: a skill whose hit is not computed, a damage over time
-//! skill among them, leaves this field unsupported), and each of impale,
+//! (a dependency: a hitting skill whose hit is not computed leaves this
+//! field unsupported; a skill without a hit, Righteous Fire, adds PoB's
+//! 0), and each of impale,
 //! damage over time, ignite, bleeding, and poison that the build has (each
 //! a dependency, so an unsupported one leaves this field unsupported and a
 //! partial one makes it partial). Not modelled: mirages (P6-8b), ground
@@ -30,6 +31,15 @@ use crate::graph::{Node, Term};
 use crate::quantity::Quantity;
 use crate::result::Field;
 use crate::state::{Reasons, UnsupportedReason};
+
+/// Whether a skill of `types` hits: the game's `Damage`, `Attack`, or
+/// `Projectile` type, as [`super::hit::spell_skill`] reads a spell (P6-12:
+/// Righteous Fire has none, so its hit DPS is PoB's 0).
+fn has_hit(types: &std::collections::BTreeSet<String>) -> bool {
+    ["Damage", "Attack", "Projectile"]
+        .iter()
+        .any(|t| types.contains(*t))
+}
 
 /// PoB's `data.misc.DotDpsCap`: `(2^31 - 1) / 60`.
 pub const DOT_DPS_CAP: f64 = 35_791_394.0;
@@ -56,7 +66,12 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             })
         })
     };
-    let Some(hit) = value_of(calc, Field::HitDps) else {
+    let mut deps = Vec::new();
+    let mut terms = Vec::new();
+    if let Some(hit) = value_of(calc, Field::HitDps) {
+        deps.push(Field::HitDps);
+        terms.push(hit);
+    } else if has_hit(&skill.types) {
         calc.set_unsupported(
             field,
             UnsupportedReason::DependsOnNotComputed {
@@ -64,9 +79,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             },
         );
         return Ok(());
-    };
-    let mut deps = vec![Field::HitDps];
-    let mut terms = vec![hit];
+    } else {
+        // A skill without a hit (Righteous Fire): PoB's `TotalDPS` is 0.
+        terms.push(phases::constant(calc, "no-hit", 0.0)?);
+    }
     if calc.field(Field::Poe1(Poe1Field::ImpaleDps)).is_some() {
         deps.push(Field::Poe1(Poe1Field::ImpaleDps));
         if let Some(v) = value_of(calc, Field::Poe1(Poe1Field::ImpaleDps)) {
@@ -86,6 +102,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 dots.push(v);
             }
         }
+    }
+    if terms.is_empty() && dots.is_empty() {
+        calc.set_unsupported(field, UnsupportedReason::NotComputed);
+        return Ok(());
     }
     if !dots.is_empty() {
         let sum = phases::total(calc, &dots, Term::Step("dot-sum"))?;
@@ -128,4 +148,22 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let result = phases::total(calc, &[combined], Term::Result)?;
     calc.set_derived(field, phases::query(result, reasons), &deps);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_skill_hits_with_a_damage_attack_or_projectile_type() {
+        let types = |names: &[&str]| names.iter().map(|s| (*s).to_owned()).collect();
+        assert!(has_hit(&types(&["Spell", "Damage", "Area"])));
+        assert!(has_hit(&types(&["Attack", "DamageOverTime"])));
+        assert!(!has_hit(&types(&[
+            "Spell",
+            "Buff",
+            "DamageOverTime",
+            "CausesBurning"
+        ])));
+    }
 }
