@@ -141,6 +141,9 @@ pub trait CalcData {
     }
 }
 
+/// The name PoB counts Life Masteries by (`CalcSetup.lua` 689; P6-11l).
+pub const LIFE_MASTERY: &str = "Life Mastery";
+
 /// A passive node's kind ([`CalcData::passive_kind`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct PassiveKind {
@@ -148,6 +151,9 @@ pub struct PassiveKind {
     pub notable: bool,
     /// An ascendancy's node.
     pub ascendancy: bool,
+    /// A Life Mastery (P6-11l: PoB counts allocated nodes named "Life
+    /// Mastery", `CalcSetup.lua` 689).
+    pub life_mastery: bool,
 }
 
 /// The mods by an implicit tag ([`CalcData::mods_by_tag`]).
@@ -507,6 +513,7 @@ impl CalcData for Bundle {
         Some(PassiveKind {
             notable: p.notable,
             ascendancy: p.ascendancy.is_some(),
+            life_mastery: p.name == LIFE_MASTERY,
         })
     }
 

@@ -62,6 +62,13 @@ pub const DUAL_WIELDING: &str = "DualWielding";
 /// in parity and needs its divergence entry then.
 pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour";
 
+/// At least 6 Life Masteries allocated (P6-11l; PoB's
+/// `Multiplier:AllocatedLifeMastery` at least 6, `ModParser.lua`'s "if you
+/// have at least 6 Life Masteries allocated"): settled from the active
+/// spec's connected nodes and their kind; a node whose kind the data does
+/// not give leaves it unsettled unless 6 are already counted.
+pub const SIX_LIFE_MASTERIES: &str = "SixLifeMasteries";
+
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].
 pub const NO_LIFE_MODIFIERS_STAT: &str = "maximum_life_+%_if_no_life_tags_on_body_armour";
 
@@ -100,12 +107,40 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     }
     // The config's condition checks (P3-8n).
     super::conditions::settle(input, &mut out);
+    if let Some(v) = six_life_masteries(input) {
+        out.insert(ConditionKey::new(SIX_LIFE_MASTERIES), v);
+    }
     if reads_life_modifiers(input)
         && let Some(v) = no_life_modifiers_on_body_armour(input)
     {
         out.insert(ConditionKey::new(NO_LIFE_MODIFIERS_ON_BODY_ARMOUR), v);
     }
     out
+}
+
+/// [`SIX_LIFE_MASTERIES`]: 6 or more allocated Life Masteries settle it
+/// true; fewer settle it false when every node's kind is known.
+fn six_life_masteries(input: &CalcInput<'_>) -> Option<bool> {
+    let spec = collect::active_spec(input.build)?;
+    let mut count = 0;
+    let mut unknown = false;
+    for n in spec.nodes.value() {
+        if !input.options.passives.connected(*n) {
+            continue;
+        }
+        match collect::node_kind(input, n.0) {
+            Some(k) if k.life_mastery => count += 1,
+            Some(_) => {}
+            None => unknown = true,
+        }
+    }
+    if count >= 6 {
+        Some(true)
+    } else if unknown {
+        None
+    } else {
+        Some(false)
+    }
 }
 
 /// PoB's `UsingWand` (`CalcPerform.lua` 187 to 190, either hand's weapon

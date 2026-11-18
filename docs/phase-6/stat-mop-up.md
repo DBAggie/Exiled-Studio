@@ -285,7 +285,7 @@ Two kinds of line, each checked against PoB's parse (`local/p6/parse2`):
   - It has no skill type tag. PoB sums it for every aura buff on you (`CalcPerform.lua` 2413), and never for a buff or on a minion.
   - It is `Poe1Quantity::SkillAuraEffectOnSelf`, a `skill_modifiers::STATS` row, and `Totals::buff_scale` adds it for every aura.
 
-**Left for later:** spell damage per 100 maximum mana (PoB's `PerStat` with a total limit, which the hit would read after mana) and "#% more maximum Life" with at least 6 life masteries (a count of allocated life masteries). They stay `unmapped-stat` reasons.
+**Left for later:** spell damage per 100 maximum mana (PoB's `PerStat` with a total limit, which every damage path would read after mana) stays an `unmapped-stat` reason. The life mastery line is P6-11l.
 
 **Evidence** (`local/p6/p6-11k/`):
 - **Fixture:** `ice-nova-shield-defences-aura-self-witch.xml`: a Twig Spirit Shield with both shield lines, and Discipline with 20% increased effect of your auras on you. EnergyShield 282 and its recharge 128, both equal to PoB's.
@@ -295,4 +295,20 @@ Two kinds of line, each checked against PoB's parse (`local/p6/parse2`):
 - **Corpus:** 0 unexpected. 25 values moved, all toward PoB, 7 of them now equal (armour and evasion of shield builds). No state changed.
 - **data-parity:** unchanged (uncategorized 353).
 - **Tests:** a unit test of the aura on self in `buff_scale`; the real-bundle reservation and aura test lists the stat's text. Workspace tests, clippy, and the real-bundle tests pass.
+
+## P6-11l: more maximum life with at least 6 Life Masteries
+
+"#% more maximum Life if you have at least 6 Life Masteries allocated" (`life_mastery_count_maximum_life_+%_final`) is PoB's `Life` MORE with `MultiplierThreshold` `AllocatedLifeMastery` 6. PoB counts allocated nodes named "Life Mastery" (`CalcSetup.lua` 689).
+
+- **The data:** `PassiveKind` gains `life_mastery`. From the bundle it is a node named "Life Mastery"; from a tree pack it is a mastery node of that name (`loom-pipeline`).
+- **The state:** `states::SIX_LIFE_MASTERIES` counts the active spec's connected nodes.
+  - 6 or more settle it true.
+  - Fewer settle it false when every node's kind is known; otherwise it stays unsettled.
+- **The row:** a state row, `Life` MORE.
+
+**Evidence** (`local/p6/p6-11l/`):
+- **Public `calc-parity`:** 195 builds, 0 unexpected, 5,020 `Complete`. 7 values moved, all toward PoB (two partial builds' life, unreserved life, regeneration, and DoT). No state changed.
+- **Corpus:** 0 unexpected. 9 values moved, all toward PoB; three builds' Life and LifeUnreserved now equal PoB's. No state changed.
+- **Tests:** the state rows' test lists the row. Workspace tests, clippy, and the real-bundle tests pass.
+  - `loom-persistence`'s file round trip failed once on a Windows rename (access denied) and passed three reruns; it is unrelated to this step.
 

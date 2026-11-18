@@ -559,6 +559,8 @@ fn pack_stats(tree: &Tree) -> PackStats {
                 let kind = loom_calc::input::PassiveKind {
                     notable: x.kind == loom_tree::Kind::Notable,
                     ascendancy: x.ascendancy.is_some(),
+                    life_mastery: x.kind == loom_tree::Kind::Mastery
+                        && x.name == loom_calc::input::LIFE_MASTERY,
                 };
                 (NodeId(*n), node(&x.stats, kind, tree.unresolved.get(n)))
             })

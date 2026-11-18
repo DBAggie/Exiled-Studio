@@ -375,7 +375,7 @@ pub(crate) fn node_stats<'a>(input: &'a CalcInput<'_>, node: u32) -> Option<&'a 
 }
 
 /// A node's kind, as [`node_stats`].
-fn node_kind(input: &CalcInput<'_>, node: u32) -> Option<crate::input::PassiveKind> {
+pub(crate) fn node_kind(input: &CalcInput<'_>, node: u32) -> Option<crate::input::PassiveKind> {
     match &input.options.passives.pack {
         Some(pack) => pack.passives.get(&NodeId(node)).map(|p| p.kind),
         None => input.data.passive_kind(node),

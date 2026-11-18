@@ -2470,6 +2470,7 @@ fn a_granted_passive_should_read_the_tree_packs_stats() {
             kind: loom_calc::input::PassiveKind {
                 notable: true,
                 ascendancy: false,
+                life_mastery: false,
             },
             unresolved: Vec::new(),
         },

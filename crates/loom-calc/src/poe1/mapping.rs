@@ -2035,6 +2035,13 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
         ],
     ),
+    // P6-11l: "#% more maximum Life if you have at least 6 Life Masteries
+    // allocated" (`Life` MORE, `MultiplierThreshold` `AllocatedLifeMastery`
+    // 6).
+    (
+        "life_mastery_count_maximum_life_+%_final",
+        &[(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+    ),
     // P6-10b: "Regenerate #% of Life per second while stationary" (the
     // Soul of Shakari's; `LifeRegenPercent` BASE, `Stationary`), per minute.
     (
@@ -4821,6 +4828,7 @@ mod tests {
                         states::DUAL_WIELDING,
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
+                        states::SIX_LIFE_MASTERIES,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -4833,6 +4841,11 @@ mod tests {
         let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
         let config = |q: Quantity, op: Op, all: Flags, c: &'static str| (q, op, all, c);
         let expected = [
+            // P6-11l: more life with at least 6 Life Masteries.
+            (
+                "life_mastery_count_maximum_life_+%_final",
+                vec![(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+            ),
             // P6-10b: energy shield regeneration near a rare or unique enemy.
             (
                 "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",

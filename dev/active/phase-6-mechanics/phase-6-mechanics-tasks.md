@@ -142,4 +142,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11i: six flask lines that reach no field (`flasks::NO_EFFECT_LOCAL`)
 - [x] P6-11j: the chance to ignore the enemy's physical damage reduction with PoB's config mode (`hit::ignore_reduction`); fixtures `smite-ignore-pdr-average-templar.xml`, `smite-ignore-pdr-max-templar.xml` (Q11 DIV-0127 to DIV-0132); `docs/phase-6/stat-mop-up.md`, "P6-11i and P6-11j"
 - [x] P6-11k: the equipped shield's energy shield and defences (`Poe1Quantity::SlotIncreased`, a piece's own modifier), the effect of your auras on you (`SkillAuraEffectOnSelf`); fixture `ice-nova-shield-defences-aura-self-witch.xml`; 34 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11k"
+- [x] P6-11l: more maximum life with at least 6 Life Masteries (`PassiveKind::life_mastery`, `states::SIX_LIFE_MASTERIES`); three corpus builds' Life equal to PoB; `docs/phase-6/stat-mop-up.md`, "P6-11l"
 ## P6-12: combined and full DPS; report
