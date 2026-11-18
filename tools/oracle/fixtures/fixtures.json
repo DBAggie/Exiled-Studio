@@ -1671,6 +1671,56 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-9b: Ice Nova with Elemental Weakness, Frostbite, and Despair and two curse slots (an additional curse): Despair replaces the last lower curse, Frostbite, as PoB walks the slots."
+    },
+    {
+      "id": "minion-vaal-summon-skeletons-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-vaal-summon-skeletons-witch.xml",
+      "sha256": "21035288456436b423c25aac71b5df2ebbb65265493c60ce879c8b8a85077155",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9c: Vaal Summon Skeletons of Mages (level 20): its melee skeleton at the game's minion level (base_display_minion_actor_level, 68), where PoB takes the gem level's requirement (70): life, armour, and evasion are registered game-truth divergences (DIV-0111 to DIV-0113)."
+    },
+    {
+      "id": "minion-raise-zombie-minion-lines-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-raise-zombie-minion-lines-witch.xml",
+      "sha256": "36c2cf5e280fe94969a0c3ab21a27584c28df693fef68f8b3b4800eacd1ac187",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3b: Raise Zombie with Minion Life and custom minion lines (life, resistances and their maximums, block, evasion, armour; a golem line that must not apply): PoB more multiplier rounded to two decimals (1.38 x 1.49). Targets since P6-9c (Raise Zombie modelled)."
+    },
+    {
+      "id": "minion-raise-zombie-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-raise-zombie-witch.xml",
+      "sha256": "6761130964862417576f7ec9fcbdc1a3d64a56997a0bad4cbcc62818a9228cd9",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9c: Raise Zombie (level 20), modelled as inert for the character: the zombie life, armour, evasion, and resistances."
+    },
+    {
+      "id": "minion-summon-skeletons-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-skeletons-witch.xml",
+      "sha256": "1b6dda9a3c1868e8da37e47cbd16663d2c5c3ca475398f0154ce4311e3b7e9d6",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9c: Summon Skeletons (level 20), modelled as inert for the character: the skeleton life and defences."
+    },
+    {
+      "id": "minion-summon-raging-spirit-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-raging-spirit-witch.xml",
+      "sha256": "7ce5277381e5112bf733105644898eba9dd3fc718ea3ff0dcc99d32e1c88bb00",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-9c: Summon Raging Spirit (level 20), modelled as inert for the character: the spirit life and defences."
     }
   ]
 }

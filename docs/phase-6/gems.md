@@ -94,3 +94,29 @@ Punishment is left `unmodelled-gem`: its damage taken applies only while the ene
 - **Corpus:** 3 values moved toward PoB, none away.
 - **Public `calc-parity`:** 168 builds, 109 expected differences, 0 unexpected.
 
+## P6-9c: the summoning skills
+
+A summoning skill's minions act through the minion step. For the character, such a skill is inert when neither it nor any of its minions' skills has a `GlobalEffect` mod. A minion's skills come from PoB's minion data and templates, and `local/p6/minion_skill_globals.py` checks them in PoB's export. Of the 87 summoning skills in PoB, only Summon Elemental Relic's minion has auras (Anger, Hatred).
+
+**Inert (20):**
+- Absolution, Animate Guardian, Animate Weapon, Dominating Blow, Raise Zombie, Summon Raging Spirit, and Summon Skeletons, with their PoB variants;
+- Vaal Summon Skeletons, Holy Strike, Summon Holy Relic of Conviction, and Summon Void Spawn.
+
+Each of these is in `gem_effects`' `ALLOWED_MINIONS`, the list of skills whose minions are known. Vaal Summon Skeletons' variants of Mages and of Archers are not in PoB v2.67.2's data, so they cannot be checked and stay `unmodelled-gem`.
+
+**Minion supports with no row (6):**
+- Minion Damage and its Awakened version, Minion Speed, Infernal Legion, Predator, and Minion Pact.
+- Minion Life and Meat Shield were in already.
+- A support's minion stats reach the minion through the minion step (P6-7b3b, `gem_modifiers`) when its skill is the main skill.
+
+**Vaal Summon Skeletons' level:**
+- The game's `base_display_minion_actor_level` at gem level 20 is 68. PoB takes the gem level's requirement, 70.
+- With the gem modelled, the skeleton's fields are `Complete`. Its life, armour, and evasion are registered `game-truth` divergences (DIV-0111 to DIV-0113), with fixture `minion-vaal-summon-skeletons-witch.xml`.
+- Confirmation in game (the skeletons' level) is a maintainer item.
+
+**Evidence:**
+- **`gem_effects`:** 1,110 values compared, 0 differences.
+- **The minion sweep (52 builds):** 109 minion fields `Complete` and equal to PoB, or registered. That is 40 before P6-9c. 13 builds have every minion field `Complete`.
+- **Fixtures (`Complete` and equal to PoB):** the Raise Zombie build with minion lines (P6-7b3b, local until now), and the sweep's Raise Zombie, Summon Skeletons, and Summon Raging Spirit.
+- **Public `calc-parity`:** 173 builds, 112 expected differences (the three new entries), 0 unexpected. `Complete` fields: 3,124.
+

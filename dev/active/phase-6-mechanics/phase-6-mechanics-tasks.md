@@ -97,7 +97,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b3a2: the #165 review (12 item skills, `minion-buffs` in the main group, `base_numbers` and the `Ingest` test, six stat slots, early return, mapping comments); `docs/phase-6/minions.md`, "The P6-7b3a review"
 - [x] P6-7b3a2 PR #166 (base `feat/p6-7b3a-minion-base`)
 - [x] P6-7b3b: the character's minion modifiers on the minion (31 rows in `poe1::minions::STATS`, `GolemMinion`, `minion_modifiers`, `gem_modifiers`, `ModStore::elsewhere`), `MinionPending` removed, PoB's more rounding in `phases::chain`; fixture `minion-summon-stone-golem-golem-lines-witch.xml`; sweep 40 `Complete` minion fields equal to PoB; `docs/phase-6/minions.md`, "P6-7b3b" (PR: the open-tasks PR, branch `feat/p6-remaining`)
-- [ ] Vaal Summon Skeletons' minion level (88 against PoB's 90): register once its fields are `Complete` (its gem is `unmodelled-gem` until P6-9)
+- [x] Vaal Summon Skeletons' minion level (the game's stat 68 against PoB's level requirement 70 at gem level 20): registered with P6-9c (DIV-0111 to DIV-0113, `game-truth`; confirmation in game is a maintainer item), fixture `minion-vaal-summon-skeletons-witch.xml`
 - [ ] A fixture with `set_maximum_life_is_one`: waits on a data run with gem level requirements (every such minion's level comes from them or the character)
 - [x] P6-7b4: the character's auras and buffs on the minion (`gems::minion_buffs`, `Totals::from_effects`; `deferred_reasons` removed); fixture `minion-summon-stone-golem-discipline-witch.xml`; `docs/phase-6/minions.md`, "P6-7b4"
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
@@ -108,6 +108,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Order change (decision without the maintainer, D10): P6-9 before P6-7c, since every minion build's fields carry the summoning gem's `unmodelled-gem` until P6-9 models it, so P6-7c's minion hit fields could not be shown `Complete`
 - [x] P6-9a: 15 inert skills, 43 plain supports, nine auras (Anger, Wrath, Determination, Grace, the four Purities, Vitality); `gem_effects` 894 values, 0 differences; three aura fixtures; `docs/phase-6/gems.md`
 - [x] P6-9b: PoB's curse slots and priority, the curse limit stat, a hex's own curse effect, six hexes (Despair, Flammability, Vulnerability, Conductivity, Enfeeble, Temporal Chains); `gem_effects` 954 values, 0 differences; two curse fixtures; `docs/phase-6/gems.md`, "P6-9b"
+- [x] P6-9c: summoning skills inert for the character (20, each minion's skills checked in PoB's export: no `GlobalEffect`), six minion supports; `gem_effects` 1,110 values, 0 differences; minion sweep 109 `Complete` minion fields (80 before Vaal Summon Skeletons' level registered); fixtures: four minion builds and Vaal Summon Skeletons with DIV-0111 to DIV-0113; `docs/phase-6/gems.md`, "P6-9c"
 ## P6-10a: timeless jewels
 ## P6-10b: recovery and defence outputs
 ## P6-11: stat mop-up (batches)

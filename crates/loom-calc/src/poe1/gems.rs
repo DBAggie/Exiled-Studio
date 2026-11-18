@@ -256,6 +256,8 @@ const GOLEM_CONDITION: BuffStat = BuffStat::NoSlice("golem-condition");
 /// the order). Each was checked against PoB v2.67.2's data (module docs)
 /// and no calc module names it.
 pub const SKILLS: &[(&str, Kind)] = &[
+    ("Absolution", Kind::Inert),
+    ("AbsolutionAltX", Kind::Inert),
     (
         "Anger",
         Kind::Buff {
@@ -305,6 +307,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("AnimateGuardian", Kind::Inert),
+    ("AnimateGuardianAltX", Kind::Inert),
+    ("AnimateWeapon", Kind::Inert),
+    ("AnimateWeaponAltY", Kind::Inert),
     (
         "ArcticArmour",
         Kind::Buff {
@@ -475,6 +481,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("DivineIre", Kind::Inert),
+    ("DominatingBlow", Kind::Inert),
+    ("DominatingBlowAltX", Kind::Inert),
     ("Earthshatter", Kind::Inert),
     (
         "ElementalWeakness",
@@ -779,6 +787,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("HolyFlameTotem", Kind::Inert),
+    ("HolyStrike", Kind::Inert),
     ("IceNova", Kind::Inert),
     ("IceSpear", Kind::Inert),
     (
@@ -943,6 +952,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("RaiseZombie", Kind::Inert),
+    ("RaiseZombieAltX", Kind::Inert),
+    ("RaiseZombieAltY", Kind::Inert),
     (
         "RallyingCry",
         Kind::Warcry {
@@ -1029,6 +1041,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("SummonHolyRelicAltX", Kind::Inert),
     (
         "SummonIceGolem",
         Kind::Buff {
@@ -1065,6 +1078,11 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("SummonRagingSpirit", Kind::Inert),
+    ("SummonRagingSpiritAltX", Kind::Inert),
+    ("SummonSkeletons", Kind::Inert),
+    ("SummonSkeletonsAltX", Kind::Inert),
+    ("SummonSkeletonsAltY", Kind::Inert),
     (
         "SummonStoneGolem",
         Kind::Buff {
@@ -1103,6 +1121,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("SummonVoidSpawn", Kind::Inert),
     ("Sunder", Kind::Inert),
     // Shockwave Support's own attack (`SupportBluntWeaponShockwave`): it
     // hits on its own when triggered; nothing reaches the character.
@@ -1130,6 +1149,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
+    ("VaalSummonSkeletons", Kind::Inert),
     (
         "Vitality",
         Kind::Buff {
@@ -1277,6 +1297,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportAwakenedControlledDestruction", &[]),
     ("SupportAwakenedGreaterMultipleProjectiles", &[]),
     ("SupportAwakenedMeleePhysicalDamage", &[]),
+    ("SupportAwakenedMinionDamage", &[]),
     ("SupportAwakenedViciousProjectiles", &[]),
     ("SupportAwakenedVoidManipulation", &[]),
     ("SupportBarrage", &[]),
@@ -1311,6 +1332,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportIncreasedAreaOfEffect", &[]),
     ("SupportIncreasedCriticalDamage", &[]),
     ("SupportIncreasedCriticalStrikes", &[]),
+    ("SupportInfernalLegion", &[]),
     (
         "SupportInfusedChannelling",
         &[(
@@ -1323,7 +1345,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportLifetap", &[]),
     ("SupportMeatShield", &[]),
     ("SupportMeleePhysicalDamage", &[]),
+    ("SupportMinionDamage", &[]),
     ("SupportMinionLife", &[]),
+    ("SupportMinionPact", &[]),
+    ("SupportMinionSpeed", &[]),
     (
         "SupportMomentum",
         &[(
@@ -1334,6 +1359,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportMultipleTotems", &[]),
     ("SupportPierce", &[]),
     ("SupportPowerChargeOnCritical", &[]),
+    ("SupportPredator", &[]),
     ("SupportPulverise", &[]),
     ("SupportRuthless", &[]),
     ("SupportSecondWind", &[]),

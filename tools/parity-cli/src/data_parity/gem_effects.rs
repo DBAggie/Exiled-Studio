@@ -220,14 +220,37 @@ const ALLOWED_TYPES: &[(&str, &str)] = &[
 ];
 
 /// Active skills whose minions the engine knows (their skills give the
-/// character nothing, or Wrath, which `gems::wrath` models).
+/// character nothing, or Wrath, which `gems::wrath` models). P6-9c: the
+/// summoning skills modelled as inert, each checked against PoB's export:
+/// no minion of theirs has a skill with a `GlobalEffect` mod
+/// (`docs/phase-6/gems.md`, "P6-9c").
 const ALLOWED_MINIONS: &[&str] = &[
+    "Absolution",
+    "AbsolutionAltX",
+    "AnimateGuardian",
+    "AnimateGuardianAltX",
+    "AnimateWeapon",
+    "AnimateWeaponAltY",
+    "DominatingBlow",
+    "DominatingBlowAltX",
     "HeraldOfPurity",
+    "HolyStrike",
+    "RaiseZombie",
+    "RaiseZombieAltX",
+    "RaiseZombieAltY",
     "SummonFlameGolem",
+    "SummonHolyRelicAltX",
     "SummonIceGolem",
     "SummonLightningGolem",
+    "SummonRagingSpirit",
+    "SummonRagingSpiritAltX",
+    "SummonSkeletons",
+    "SummonSkeletonsAltX",
+    "SummonSkeletonsAltY",
     "SummonStoneGolem",
     "SummonStoneGolemAltY",
+    "SummonVoidSpawn",
+    "VaalSummonSkeletons",
 ];
 
 /// A skill's buff identities besides its kind's, with why: Flesh and

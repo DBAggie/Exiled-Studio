@@ -2212,6 +2212,66 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-17",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0111",
+      "mechanic": "A skill minion's level: the game's base_display_minion_actor_level stat of the gem level (Vaal Summon Skeletons level 20: 68); PoB takes the gem level's level requirement (70). The minion's base life is the monster table's value at that level.",
+      "fixture": "minion-vaal-summon-skeletons-witch.xml",
+      "field": "/main_output/Minion/Life",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1551,
+      "successor_value": 1395.0,
+      "kind": "game-truth",
+      "evidence": [
+        "Game data (the bundle's stat set VaalSummonSkeletons, level 20): base_display_minion_actor_level 68, the minion level the gem's tooltip shows; level 21: 70",
+        "PoB v2.67.2 Data/Skills/act_int.lua, VaalSummonSkeletons levels[20]: the same stat 68 and levelRequirement 70; CalcActiveSkill.lua 707 to 710 sets the minion level from levelRequirement",
+        "The stat equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem levels; the 39 others are all Vaal Summon Skeletons' (docs/phase-6/minions.md, P6-7b3a). Confirmation in game (the skeletons' level) is a maintainer item"
+      ],
+      "test": "crates/loom-calc/src/poe1/minion_actor.rs::tests::the_level_should_be_the_games_stat_clamped",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0112",
+      "mechanic": "A skill minion's level: the game's base_display_minion_actor_level stat of the gem level (Vaal Summon Skeletons level 20: 68); PoB takes the gem level's level requirement (70). The minion's base armour is the monster table's value at that level.",
+      "fixture": "minion-vaal-summon-skeletons-witch.xml",
+      "field": "/main_output/Minion/Armour",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 3512,
+      "successor_value": 3002.0,
+      "kind": "game-truth",
+      "evidence": [
+        "Game data (the bundle's stat set VaalSummonSkeletons, level 20): base_display_minion_actor_level 68, the minion level the gem's tooltip shows; level 21: 70",
+        "PoB v2.67.2 Data/Skills/act_int.lua, VaalSummonSkeletons levels[20]: the same stat 68 and levelRequirement 70; CalcActiveSkill.lua 707 to 710 sets the minion level from levelRequirement",
+        "The stat equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem levels; the 39 others are all Vaal Summon Skeletons' (docs/phase-6/minions.md, P6-7b3a). Confirmation in game (the skeletons' level) is a maintainer item"
+      ],
+      "test": "crates/loom-calc/src/poe1/minion_actor.rs::tests::the_level_should_be_the_games_stat_clamped",
+      "added": "2026-11-18",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0113",
+      "mechanic": "A skill minion's level: the game's base_display_minion_actor_level stat of the gem level (Vaal Summon Skeletons level 20: 68); PoB takes the gem level's level requirement (70). The minion's base evasion is the monster table's value at that level.",
+      "fixture": "minion-vaal-summon-skeletons-witch.xml",
+      "field": "/main_output/Minion/Evasion",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 5081,
+      "successor_value": 4739.0,
+      "kind": "game-truth",
+      "evidence": [
+        "Game data (the bundle's stat set VaalSummonSkeletons, level 20): base_display_minion_actor_level 68, the minion level the gem's tooltip shows; level 21: 70",
+        "PoB v2.67.2 Data/Skills/act_int.lua, VaalSummonSkeletons levels[20]: the same stat 68 and levelRequirement 70; CalcActiveSkill.lua 707 to 710 sets the minion level from levelRequirement",
+        "The stat equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem levels; the 39 others are all Vaal Summon Skeletons' (docs/phase-6/minions.md, P6-7b3a). Confirmation in game (the skeletons' level) is a maintainer item"
+      ],
+      "test": "crates/loom-calc/src/poe1/minion_actor.rs::tests::the_level_should_be_the_games_stat_clamped",
+      "added": "2026-11-18",
+      "status": "accepted"
     }
   ]
 }
