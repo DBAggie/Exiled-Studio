@@ -250,3 +250,5 @@ The recovery, regeneration, and leech rows hold only until P6-10b adds those fie
 - **Public `calc-parity`:** 186 builds, 125 expected differences, 0 unexpected; `Complete` fields 3,536. 2 values moved, both toward PoB.
 - **Corpus:** 0 unexpected. 13 block and spell block values moved, all toward PoB; 10 are now equal.
 - Both runs are byte-identical.
+
+**The resolver change's reach** (the P6-11h review): every description with one stat and no placeholder now gives 1 where it gave 0. `resolve-corpus` on build 26530219 with Spike B's six PoB sources (`local/p6/rc-new`) gives the same rate: 3,356 of 3,366 lines, 99.70%, `uncategorized` 0. `data-parity` is unchanged in every table. More resolver cases: a lone stat whose condition excludes 1 keeps the old rule.

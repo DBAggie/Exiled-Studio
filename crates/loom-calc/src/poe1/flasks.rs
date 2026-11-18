@@ -75,6 +75,22 @@ pub const CHARGE_STATS: [&str; 3] = [
 /// recovery is computed (P6-10b).
 pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_duration_+%_final"];
 
+/// A flask's own lines that reach no slice field (P6-11i), sorted, each as
+/// PoB parses its text (`local/p6/parse2`): Bleeding and Corrupted Blood
+/// immunity on use, consecrated ground on use, charges when hit, and use
+/// on full charges PoB does not parse at all; movement speed during the
+/// effect (`MovementSpeed` INC, `UsingFlask`) and the effect of curses on
+/// you during it (`CurseEffectOnSelf` INC, `UsingFlask`) no slice field
+/// reads.
+pub const NO_EFFECT_LOCAL: [&str; 6] = [
+    "local_consecrate_ground_on_flask_use_radius",
+    "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
+    "local_flask_gain_X_charges_when_hit",
+    "local_flask_movement_speed_+%_while_healing",
+    "local_flask_use_on_full_charges",
+    "local_self_curse_effect_+%_during_flask_effect",
+];
+
 /// A flask's own lines PoB reads as the global stat's mod: the line's
 /// "during Effect" is PoB's `Condition:UsingFlask` tag (`ModParser.lua`
 /// 1737, 1738), on while the flask is active, so the mod is the global
@@ -146,7 +162,10 @@ impl StatMapping for FlaskMapping {
         if let Ok(i) = ALIASES.binary_search_by(|(local, _)| (*local).cmp(id)) {
             return Poe1Mapping.map(&StatId::new(ALIASES[i].1));
         }
-        if CHARGE_STATS.contains(&id) || (!self.recovery && DURATION_STATS.contains(&id)) {
+        if CHARGE_STATS.contains(&id)
+            || NO_EFFECT_LOCAL.contains(&id)
+            || (!self.recovery && DURATION_STATS.contains(&id))
+        {
             return StatMap::NoEffect;
         }
         if id.starts_with("local_") || id.starts_with("old_do_not_use_local_") {
@@ -449,8 +468,9 @@ mod tests {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
             assert_eq!(map(&life, s), StatMap::Unmapped);
         }
+        // A local line no row reads stays a reason (recovery: P6-10b).
         assert_eq!(
-            map(&utility, "local_flask_movement_speed_+%_while_healing"),
+            map(&life, "local_flask_amount_to_recover_+%"),
             StatMap::Unmapped
         );
         // Each alias reads as its global stat, and that stat is mapped.
@@ -459,6 +479,21 @@ mod tests {
             let theirs = Poe1Mapping.map(&StatId::new(*global));
             assert!(matches!(theirs, StatMap::Effects(_)), "{global}");
             assert_eq!(map(&utility, local), theirs, "{local}");
+        }
+    }
+
+    /// P6-11i: the no-effect local lines are sorted and read as no effect.
+    #[test]
+    fn no_effect_local_lines_should_have_no_effect() {
+        assert!(NO_EFFECT_LOCAL.windows(2).all(|w| w[0] < w[1]));
+        for id in NO_EFFECT_LOCAL {
+            for recovery in [false, true] {
+                assert_eq!(
+                    FlaskMapping { recovery }.map(&StatId::new(id)),
+                    StatMap::NoEffect,
+                    "{id}"
+                );
+            }
         }
     }
 }

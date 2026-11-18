@@ -257,7 +257,7 @@ impl<'a> Calc<'a> {
     /// minion, its copy of `field` ([`Field::for_minion`]).
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {
-        self.fields.get(&self.actor_field(field)?)
+        self.fields.get(&self.actor_field(field))
     }
 
     /// The current actor's main skill picked at collection
@@ -274,11 +274,10 @@ impl<'a> Calc<'a> {
     }
 
     /// `field` as the current actor writes it: itself for the character,
-    /// its minion copy for the minion ([`Field::for_minion`]; P6-7c), `None`
-    /// when the minion has none.
-    fn actor_field(&self, field: Field) -> Option<Field> {
+    /// its minion copy for the minion ([`Field::for_minion`]; P6-7c).
+    const fn actor_field(&self, field: Field) -> Field {
         match self.actor {
-            Actor::Player => Some(field),
+            Actor::Player => field,
             Actor::Minion => field.for_minion(),
         }
     }
@@ -317,10 +316,7 @@ impl<'a> Calc<'a> {
     /// the query's reasons and the reasons that apply to every field. A
     /// later phase may replace the field.
     pub fn set(&mut self, field: Field, query: Query) {
-        let Some(field) = self.actor_field(field) else {
-            debug_assert!(false, "the minion has no copy of {field}");
-            return;
-        };
+        let field = self.actor_field(field);
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         self.fields.insert(
@@ -337,10 +333,7 @@ impl<'a> Calc<'a> {
     /// `reason` (Phase 6: a field that applies but whose kind is not
     /// modelled).
     pub fn set_unsupported(&mut self, field: Field, reason: UnsupportedReason) {
-        let Some(field) = self.actor_field(field) else {
-            debug_assert!(false, "the minion has no copy of {field}");
-            return;
-        };
+        let field = self.actor_field(field);
         self.fields.insert(field, FieldResult::unsupported(reason));
     }
 
@@ -350,14 +343,11 @@ impl<'a> Calc<'a> {
     /// computed (absent or `Unsupported`) makes the field `Unsupported`
     /// with `DependsOnNotComputed`, without a value.
     pub fn set_derived(&mut self, field: Field, query: Query, deps: &[Field]) {
-        let Some(field) = self.actor_field(field) else {
-            debug_assert!(false, "the minion has no copy of {field}");
-            return;
-        };
+        let field = self.actor_field(field);
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         for dep in deps {
-            let dep = &self.actor_field(*dep).unwrap_or(*dep);
+            let dep = &self.actor_field(*dep);
             match self.fields.get(dep).map(|f| &f.state) {
                 None | Some(FieldState::Unsupported(_)) => {
                     self.fields.insert(
@@ -631,6 +621,64 @@ mod tests {
         assert!(!c.is_skill_source(&Source::Character));
         assert_eq!(c.field_reasons().partial.len(), 1);
         assert!(c.with_actor(Actor::Minion, |c| c.context(Flags::NONE).states[&key]) == Some(true));
+    }
+
+    /// P6-7c review: under the minion actor a phase writes and reads the
+    /// minion's copies only; a dependency the minion has not computed makes
+    /// a derived field not computed, never the character's.
+    #[test]
+    fn the_minion_actor_should_write_and_read_its_own_fields() {
+        use crate::result::MinionField;
+        let build: &'static loom_domain::Build =
+            Box::leak(Box::new(loom_domain::Build::new(Game::Poe1)));
+        let options: &'static crate::input::CalcOptions = Box::leak(Box::default());
+        let input: &'static CalcInput<'static> = Box::leak(Box::new(CalcInput {
+            build,
+            data: &NoData,
+            options,
+        }));
+        let mut c = calc(input);
+        c.add_minion(state(None));
+        let query = |c: &mut Calc<'_>, v: f64| {
+            let node = c
+                .graph_mut()
+                .push(
+                    crate::graph::Node::Constant {
+                        label: "x",
+                        value: v,
+                    },
+                    v,
+                )
+                .unwrap();
+            Query {
+                value: v,
+                node,
+                reasons: Reasons::new(),
+            }
+        };
+        let q = query(&mut c, 7.0);
+        c.set(Field::Strength, q);
+        c.with_actor(Actor::Minion, |c| {
+            let q = query(c, 3.0);
+            c.set(Field::Strength, q);
+            assert_eq!(c.field(Field::Strength).and_then(|f| f.value), Some(3.0));
+            let q = query(c, 1.0);
+            c.set_derived(Field::HitDps, q, &[Field::Speed]);
+        });
+        assert_eq!(c.field(Field::Strength).and_then(|f| f.value), Some(7.0));
+        assert_eq!(
+            c.field(Field::Minion(MinionField::Strength))
+                .and_then(|f| f.value),
+            Some(3.0)
+        );
+        assert!(c.field(Field::HitDps).is_none());
+        assert!(matches!(
+            c.field(Field::Minion(MinionField::HitDps))
+                .map(|f| &f.state),
+            Some(FieldState::Unsupported(
+                UnsupportedReason::DependsOnNotComputed { .. }
+            ))
+        ));
     }
 
     #[test]

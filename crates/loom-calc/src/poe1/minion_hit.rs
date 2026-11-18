@@ -60,6 +60,17 @@ pub const FIELDS: [MinionField; 6] = [
     MinionField::HitDps,
 ];
 
+/// The minion's fields the attack path writes that the slice does not
+/// compare yet: not computed (P6-7c review), never an unchecked value.
+const UNVALIDATED: [MinionField; 6] = [
+    MinionField::HitSpeed,
+    MinionField::DotDps,
+    MinionField::IgniteDps,
+    MinionField::BleedDps,
+    MinionField::PoisonDps,
+    MinionField::ImpaleDps,
+];
+
 /// The phase: the minion's main skill's hit (module docs).
 ///
 /// # Errors
@@ -84,11 +95,33 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             )
         })
         .unwrap_or_default();
+    let sources: std::collections::BTreeSet<Source> =
+        skill::main_skill(input.build, input.data, &levels)
+            .map(|s| {
+                let group = s.group.saturating_sub(1);
+                s.supports
+                    .iter()
+                    .map(|r| Source::Gem { group, gem: r.gem })
+                    .collect()
+            })
+            .unwrap_or_default();
     match attack(&input, &levels, skill_id.as_deref(), weapon.as_deref()) {
         Ok(attack) => calc
             .with_actor(Actor::Minion, |c| {
                 attributes(c)?;
-                hit::attack_hit(c, &attack)
+                // The minion skill's own list: the summoning skill's
+                // supports (PoB multiplies their mores apart from the
+                // minion's; P6-7c review).
+                c.set_skill_sources(sources.clone());
+                hit::attack_hit(c, &attack)?;
+                // Fields the slice does not compare yet (the minion's
+                // ailments): not computed until they are (P6-7c review).
+                for field in UNVALIDATED {
+                    if c.field(Field::Minion(field)).is_some() {
+                        c.set_unsupported(Field::Minion(field), UnsupportedReason::NotComputed);
+                    }
+                }
+                Ok(())
             })
             .unwrap_or(Ok(())),
         Err(reason) => {
@@ -187,9 +220,10 @@ fn attack<'d>(
         group: summon.group.saturating_sub(1),
         level,
         attack_speed_multiplier: level_row.attack_speed_multiplier,
-        // The minion's weapon is no item of the build: no item reason can
-        // name it (its store holds no item line).
-        weapon: ItemId(0),
+        // The minion's weapon is no item of the build: a sentinel id no
+        // build item has (its store holds no item line, so no item reason
+        // names it).
+        weapon: ItemId(u32::MAX),
         weapon_flags,
         off_weapon: None,
         off_weapon_flags: crate::condition::Flags::NONE,

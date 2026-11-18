@@ -122,6 +122,15 @@ pub enum MinionField {
     PoisonDps,
     /// Its impale damage per second.
     ImpaleDps,
+    /// Its maximum mana (review of P6-7c: every character field has a
+    /// minion copy, so a phase under the minion actor never drops a write).
+    Mana,
+    /// Its life not reserved.
+    LifeUnreserved,
+    /// Its mana not reserved.
+    ManaUnreserved,
+    /// A game-specific field of the minion's.
+    Poe1(Poe1Field),
 }
 
 impl MinionField {
@@ -150,6 +159,10 @@ impl MinionField {
             Self::BleedDps => "bleed-dps".to_owned(),
             Self::PoisonDps => "poison-dps".to_owned(),
             Self::ImpaleDps => "impale-dps".to_owned(),
+            Self::Mana => "mana".to_owned(),
+            Self::LifeUnreserved => "life-unreserved".to_owned(),
+            Self::ManaUnreserved => "mana-unreserved".to_owned(),
+            Self::Poe1(p) => format!("poe1.{}", p.name()),
         }
     }
 }
@@ -157,10 +170,11 @@ impl MinionField {
 impl Field {
     /// The minion's field a phase writing `self` writes while the current
     /// actor is the minion (P6-7c: the character's phases compute the
-    /// minion's hit unchanged, [`crate::engine::Calc::with_actor`]); `None`
-    /// for a field the minion has no copy of. A minion field is itself.
+    /// minion's hit unchanged, [`crate::engine::Calc::with_actor`]). Every
+    /// field has one (P6-7c review), so no write is dropped and no read
+    /// falls back to the character's. A minion field is itself.
     #[must_use]
-    pub const fn for_minion(self) -> Option<Self> {
+    pub const fn for_minion(self) -> Self {
         let m = match self {
             Self::Minion(m) => m,
             Self::Strength => MinionField::Strength,
@@ -184,11 +198,12 @@ impl Field {
             Self::BleedDps => MinionField::BleedDps,
             Self::PoisonDps => MinionField::PoisonDps,
             Self::Poe1(crate::poe1::Poe1Field::ImpaleDps) => MinionField::ImpaleDps,
-            Self::Mana | Self::LifeUnreserved | Self::ManaUnreserved | Self::Poe1(_) => {
-                return None;
-            }
+            Self::Mana => MinionField::Mana,
+            Self::LifeUnreserved => MinionField::LifeUnreserved,
+            Self::ManaUnreserved => MinionField::ManaUnreserved,
+            Self::Poe1(p) => MinionField::Poe1(p),
         };
-        Some(Self::Minion(m))
+        Self::Minion(m)
     }
 }
 
@@ -317,18 +332,20 @@ mod tests {
     fn for_minion_should_name_the_minions_copy() {
         assert_eq!(
             Field::HitDps.for_minion(),
-            Some(Field::Minion(MinionField::HitDps))
+            Field::Minion(MinionField::HitDps)
         );
         assert_eq!(
             Field::Poe1(Poe1Field::ImpaleDps).for_minion(),
-            Some(Field::Minion(MinionField::ImpaleDps))
+            Field::Minion(MinionField::ImpaleDps)
         );
         assert_eq!(
             Field::Minion(MinionField::Life).for_minion(),
-            Some(Field::Minion(MinionField::Life))
+            Field::Minion(MinionField::Life)
         );
-        assert_eq!(Field::Mana.for_minion(), None);
-        assert_eq!(Field::ManaUnreserved.for_minion(), None);
+        assert_eq!(
+            Field::ManaUnreserved.for_minion(),
+            Field::Minion(MinionField::ManaUnreserved)
+        );
     }
 
     #[test]

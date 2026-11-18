@@ -323,9 +323,9 @@ fn collect(
     // The enemy is shared (PoB's one `enemyDB`): its modifiers and the
     // configured enemy conditions reach the minion's hits too.
     enemy_effects(input, player, &mut ingest);
-    let mut settled = std::collections::BTreeMap::new();
-    super::conditions::settle(input, &mut settled);
-    for (key, value) in settled {
+    // Every enemy state the rules settle (P6-7c review), not only the
+    // config's checks.
+    for (key, value) in states::states(input) {
         if key.as_str().starts_with(ENEMY_STATE) {
             states.insert(key, value);
         }
@@ -644,14 +644,17 @@ impl StatMapping for SupportOnMinion<'_> {
                 let kept: Vec<EffectTemplate> = templates
                     .into_iter()
                     .filter(|t| {
-                        !matches!(
-                            t.quantity,
-                            Quantity::Poe1(
-                                Poe1Quantity::Minion(_)
-                                    | Poe1Quantity::GolemMinion(_)
-                                    | Poe1Quantity::MinionToYou(..)
+                        // The enemy's quantities come with the enemy's
+                        // effects ([`enemy_effects`]): never twice.
+                        !is_enemy_quantity(t.quantity)
+                            && !matches!(
+                                t.quantity,
+                                Quantity::Poe1(
+                                    Poe1Quantity::Minion(_)
+                                        | Poe1Quantity::GolemMinion(_)
+                                        | Poe1Quantity::MinionToYou(..)
+                                )
                             )
-                        )
                     })
                     .collect();
                 if kept.is_empty() {
@@ -681,13 +684,28 @@ fn minion_skill(
     variety: &MinionVariety,
     template: &PobMinion,
 ) -> Option<String> {
-    let list: Vec<&str> = variety
+    let mut list: Vec<&str> = variety
         .skills
         .iter()
         .map(String::as_str)
         .chain(template.skills.iter().copied())
         .filter(|id| pob_skill::skill(id).is_some())
         .collect();
+    // PoB's `ExtraMinionSkill` from the summoning skill's gems' stat maps,
+    // appended in order (`CalcActiveSkill.lua` 880 to 884; P6-7c review).
+    // From the character's lines it comes through stats the engine does
+    // not map: the character's reasons, which the minion's fields carry.
+    for r in std::iter::once(&summon.active_gem).chain(&summon.supports) {
+        let instance = skill::instance(r.effect, r.level, r.quality, input.data);
+        for (stat, value) in &instance.stats {
+            if *value == 0 {
+                continue;
+            }
+            if let Some(&(_, extra)) = EXTRA_MINION_SKILLS.iter().find(|(s, _)| s == stat) {
+                list.push(extra);
+            }
+        }
+    }
     if list.is_empty() {
         return Some("Melee".to_owned());
     }
@@ -701,6 +719,20 @@ fn minion_skill(
     let index = wanted.clamp(1, list.len()) - 1;
     list.get(index).map(|s| (*s).to_owned())
 }
+
+/// The gem stats whose PoB stat map adds an `ExtraMinionSkill`, and the
+/// skill (`Data/Skills/sup_int.lua` 3822 to 3825, Infernal Legion;
+/// `Data/Skills/other.lua` 4697 to 4700, the Radiant Sentinel).
+const EXTRA_MINION_SKILLS: [(&str, &str); 2] = [
+    (
+        "radiant_sentinel_minion_fire_%_of_life_to_deal_nearby_per_minute",
+        "GuardianSentinelFireAura",
+    ),
+    (
+        "support_minion_instability_minion_base_fire_area_damage_per_minute",
+        "InfernalLegion",
+    ),
+];
 
 /// PoB's `damageFixup` of the exporter (`minions.lua` 185 to 191): a
 /// variety mod's ID and its fixup.

@@ -126,6 +126,7 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         // Any of a condition's inputs on sets it; an unreadable input leaves
         // it unsettled unless another sets it (P6-11g).
         let key = ConditionKey::new(condition);
+        let seen_before = seen.get(condition).copied().flatten().is_some();
         let merged = match (seen.get(condition).copied(), value) {
             (None, v) => v,
             (Some(Some(true)), _) | (_, Some(true)) => Some(true),
@@ -137,9 +138,11 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             Some(v) => {
                 out.insert(key, v);
             }
-            None => {
+            // Only an entry this loop set earlier (P6-7c review).
+            None if seen_before => {
                 out.remove(&key);
             }
+            None => {}
         }
     }
 }

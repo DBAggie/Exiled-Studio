@@ -448,3 +448,19 @@ A support's stats then join the minion skill's list. Two kinds are not read ther
 - Both runs are byte-identical.
 
 **Next (P6-7c, part 3):** more minion skills (spells, slams: each PoB skill's data, as the character's), the minion's ailments and damage over time (the copies exist: `MinionField::IgniteDps` and kin), spectres.
+
+## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
+
+Applied:
+- **Every character field has a minion copy** (`Field::for_minion` is total: `MinionField` gains mana, the unreserved pools, and the game's own fields). Under the minion actor no write is dropped and no dependency falls back to the character's field. Test: `engine::tests::the_minion_actor_should_write_and_read_its_own_fields` (a minion write leaves the character's field alone; a dependency the minion did not compute makes the derived field `DependsOnNotComputed`).
+- **The minion's enemy states** are every `Enemy:` state the rules settle (`states::states`), not only the config's checks.
+- **`SupportOnMinion` drops the enemy's quantities**, which come with the enemy's effects (no double count).
+- **`ExtraMinionSkill`:** the summoning skill's gems' stats that PoB's stat map turns into an extra minion skill (Infernal Legion, the Radiant Sentinel) are appended to the minion's list, as PoB's `CalcActiveSkill.lua` 880 to 884. From the character's lines it comes through unmapped stats, the character's reasons.
+- **The minion skill's own list** is the summoning skill's supports (`set_skill_sources`): PoB rounds their mores apart.
+- **The minion's ailments, damage over time, and hit speed** are `not-computed` until the slice compares them.
+- **`conditions::settle`** removes only an entry it set itself.
+- **The minion's weapon id** is a sentinel no build item has (`ItemId(u32::MAX)`).
+
+Noted: the minion's life and mana thresholds (`STAT_THRESHOLD`, `LIFE_THRESHOLD`) are never settled for it, so a gem row that needs them is the minion's reason.
+
+**Evidence:** public 186 builds and corpus 21, 0 unexpected, no compared value moved. Both runs are byte-identical. The sweep is unchanged, 0 unexpected.
