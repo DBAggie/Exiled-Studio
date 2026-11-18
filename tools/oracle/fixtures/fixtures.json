@@ -1611,6 +1611,16 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-7b3b: Summon Stone Golem with golem lines (life, armour) and two minion more-life lines: the character's minion modifiers on a golem, and PoB's more multiplier rounded to two decimals."
+    },
+    {
+      "id": "minion-summon-stone-golem-discipline-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-discipline-witch.xml",
+      "sha256": "08625c9d0a2025bf492f8418270005607de15194638601bc91618179a0f80dbb",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b4: Summon Stone Golem with Discipline in another group and 15% increased effect of non-curse auras: the character's aura on the minion, scaled as on the character."
     }
   ]
 }

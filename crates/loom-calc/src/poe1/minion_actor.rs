@@ -74,8 +74,17 @@
 //! also a hit or damage over time the engine computes; their effects in
 //! the character's store are skipped, so none counts twice.
 //!
-//! Not yet, each a reason on the minion fields ([`deferred_reasons`]):
-//! a conditional minion modifier; buffs and auras on the minion (P6-7b4).
+//! **Auras and buffs** (P6-7b4): the character's auras, and buffs PoB
+//! applies to minions, with their rows scaled and merged as PoB's
+//! `minionBuffs` ([`super::gems::minion_buffs`]); one the engine does not
+//! model is a `minion-buffs` reason.
+//!
+//! **`extraSkillModList`:** PoB adds the skill's to the minion
+//! (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines,
+//! which the engine maps to nothing, so each is already the character's
+//! `unmapped-stat` reason, which every minion field carries.
+//!
+//! Not yet, each a reason: a conditional minion modifier.
 //! Keystones granted to the minion (`Keystone` mods on it, 1920 to 1924),
 //! `StrengthAddedToMinions` (1207), and `ResistanceAddedToMinions`
 //! (`CalcDefence.lua` 648) come from stats the engine does not map: each is
@@ -282,10 +291,9 @@ fn collect(
 
     let mapping = MinionMapping;
     let mut ingest = Ingest::new(&mapping);
-    for reason in deferred_reasons(input, skill) {
-        ingest.reason(reason);
-    }
     minion_modifiers(player, skill, &mut ingest);
+    let totals = super::skill_modifiers::Totals::from_effects(player.effects());
+    super::gems::minion_buffs(input, &levels_of(player), &totals, &mut ingest);
     gem_modifiers(input, skill, &mut ingest);
     base_values(input, variety, ty, level, &mut ingest)
         .ok_or_else(|| not_computed(source, "minion-data"))?;
@@ -824,57 +832,9 @@ fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &m
     }
 }
 
-/// What the character gives the minion that P6-7b4 models, a reason on
-/// every minion field until then (module docs):
-/// - each other enabled gem (in any group, the main one included) whose
-///   active skill is an aura, or a buff PoB applies to minions
-///   (`skillData.buffMinions`, `buffAllies`; `CalcPerform.lua` 2282 and
-///   2427): `minion-buffs`.
-///
-/// PoB also adds the skill's `extraSkillModList` to the minion
-/// (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines.
-/// The engine maps none of them, so each is already an `unmapped-stat`
-/// reason of the character, which every minion field carries.
-fn deferred_reasons(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>) -> Vec<UnsupportedReason> {
-    let mut out = Vec::new();
-    let Ok(groups) = skill::active_groups(input.build) else {
-        return out;
-    };
-    for (index, group) in groups.iter().enumerate() {
-        if !group.enabled {
-            continue;
-        }
-        let main = index + 1 == skill.group;
-        for (gem_index, gem) in group.gems.typed().enumerate() {
-            // The main group's other active skills (an aura linked beside
-            // the summon gem) reach the minion too (P6-7b3a review).
-            if !gem.enabled || (main && gem_index == skill.active_gem.gem) {
-                continue;
-            }
-            for effect in skill::gem_effects(gem, input.data).unwrap_or_default() {
-                let active = effect
-                    .active_skill
-                    .as_deref()
-                    .and_then(|id| input.data.active_skill(id));
-                let aura = active.is_some_and(|a| a.types.iter().any(|t| t == "Aura"));
-                let buff = pob_skill::skill(&effect.id).is_some_and(|p| {
-                    ["buffMinions", "buffAllies"]
-                        .iter()
-                        .any(|k| p.skill_data(k).is_some_and(pob_skill::Value::truthy))
-                });
-                if aura || buff {
-                    out.push(UnsupportedReason::UnmodelledSkill {
-                        source: Source::Gem {
-                            group: index,
-                            gem: gem_index,
-                        },
-                        what: "minion-buffs",
-                    });
-                }
-            }
-        }
-    }
-    out
+/// The gem levels the character's effects give (as [`minion`] reads them).
+fn levels_of(player: &ModStore) -> GemLevels {
+    GemLevels::from_effects(player.effects())
 }
 
 fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {

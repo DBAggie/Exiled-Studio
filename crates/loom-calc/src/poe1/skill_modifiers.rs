@@ -180,8 +180,15 @@ impl Totals {
     /// quantities sets [`Self::unread`].
     #[must_use]
     pub fn read(ingest: &Ingest<'_>) -> Self {
+        Self::from_effects(ingest.effects())
+    }
+
+    /// [`Self::read`] from a finished store's effects (the minion step's
+    /// view of the character, P6-7b4).
+    #[must_use]
+    pub fn from_effects(effects: &[crate::store::Effect]) -> Self {
         let mut t = Self::default();
-        for e in ingest.effects() {
+        for e in effects {
             let Quantity::Poe1(q) = e.quantity else {
                 continue;
             };

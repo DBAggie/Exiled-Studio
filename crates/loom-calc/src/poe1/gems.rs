@@ -1402,6 +1402,124 @@ fn own_effect(input: &CalcInput<'_>, s: &GroupSkill<'_>, aura: bool) -> f64 {
     sum
 }
 
+/// Whether PoB applies the skill's buff to the main skill's minion
+/// (`CalcPerform.lua` 2282 and 2427): an aura (every self aura reaches
+/// allies), or a buff with `skillData.buffMinions` or `buffAllies`.
+fn reaches_minion(s: &GroupSkill<'_>) -> bool {
+    s.types.contains("Aura")
+        || super::pob_skill::skill(&s.active_gem.effect.id).is_some_and(|p| {
+            ["buffMinions", "buffAllies"]
+                .iter()
+                .any(|k| p.skill_data(k).is_some_and(super::pob_skill::Value::truthy))
+        })
+}
+
+/// The character's auras and buffs on the main skill's minion (P6-7b4;
+/// `CalcPerform.lua` 2282 to 2290 for a buff, 2425 to 2438 for an aura):
+/// each enabled skill (as [`gems`] walks them) whose buff reaches the
+/// minion ([`reaches_minion`]) adds its rows, scaled as on the character
+/// and merged per name keeping each row's largest value (`mergeBuff`
+/// into `minionBuffs`). The scale is the character's ([`Totals`]): PoB's
+/// minion scale leaves out the effect "on self" terms, and the engine
+/// reads none of them. One the engine does not model, or with a support
+/// it does not model, is a `minion-buffs` reason. Lightning Golem's Wrath
+/// (a minion skill's aura, which reaches the minion too, 2775 to 2780)
+/// is a reason when the config enables it.
+pub fn minion_buffs(
+    input: &CalcInput<'_>,
+    levels: &GemLevels,
+    totals: &Totals,
+    ingest: &mut Ingest<'_>,
+) {
+    let build = input.build;
+    let Ok(groups) = skill::active_groups(build) else {
+        return;
+    };
+    let config = super::collect::active_config(build);
+    let main_group = skill::main_skill(build, input.data, levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let mut merged = Merged::new();
+    let reason = |source: Source| UnsupportedReason::UnmodelledSkill {
+        source,
+        what: "minion-buffs",
+    };
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        // A granted group is the character's `unmodelled-gem` ([`gems`]),
+        // which the minion's fields carry.
+        if skill::attribute(&group.attributes, "source").is_some() {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in &skill::group_skills(group, group_matches, input.data, levels) {
+            if !reaches_minion(s) {
+                continue;
+            }
+            let source = Source::Gem {
+                group: g,
+                gem: s.active_gem.gem,
+            };
+            if s.active_gem.effect.id == WRATH_GOLEM {
+                let on =
+                    config.and_then(|set| last_input(set, WRATH_INPUT, ConfigInputKind::Input));
+                if !matches!(on, None | Some(ConfigValue::Boolean(false))) {
+                    ingest.reason(reason(source.clone()));
+                }
+            }
+            match kind(&s.active_gem.effect.id) {
+                Some(Kind::Buff {
+                    name,
+                    effect,
+                    stats,
+                }) => {
+                    if s.global_off {
+                        continue;
+                    }
+                    if s.supports
+                        .iter()
+                        .any(|sup| support(&sup.effect.id).is_none())
+                    {
+                        ingest.reason(reason(source));
+                        continue;
+                    }
+                    let aura = effect == EffectType::Aura;
+                    let scale = totals.buff_scale(aura, &s.types, own_effect(input, s, aura));
+                    add_rows(
+                        input,
+                        g,
+                        &s.active_gem,
+                        name,
+                        stats,
+                        scale,
+                        config,
+                        &mut merged,
+                        ingest,
+                    );
+                }
+                _ => ingest.reason(reason(source)),
+            }
+        }
+    }
+    for (value, source, (quantity, op, _, all, any), state) in merged.into_values() {
+        let mut conditions = Conditions::none().with_all(all).with_any(any);
+        if let Some((key, on)) = state {
+            conditions = conditions.with_state(ConditionKey::new(key), on);
+        }
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions,
+            source,
+        });
+    }
+}
+
 /// One active skill of group `g` (module docs).
 fn one_skill(
     input: &CalcInput<'_>,

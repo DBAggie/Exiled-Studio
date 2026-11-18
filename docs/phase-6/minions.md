@@ -342,3 +342,28 @@ The new kinds of `MinionValue` are the minion's life, energy shield, armour, eva
 - **Public `calc-parity` on `b-ot`:** 162 builds, 109 expected differences, 0 unexpected. `Complete` fields went from 2,822 to 2,857 (2,840 without the new fixture), and the indeterminate count is unchanged.
 - **Corpus:** 0 unexpected, field counts unchanged.
 - Both runs are byte-identical.
+
+## P6-7b4: the character's auras and buffs on the minion
+
+PoB applies two kinds of the character's skills to the main skill's minion, merging them per name into `minionBuffs`:
+- **a buff with `skillData.buffMinions` or `buffAllies`** (`CalcPerform.lua` 2282 to 2290);
+- **every self aura** (2425 to 2438), unless the character's "auras cannot affect allies" flags say otherwise.
+
+The minion's scale is `(1 + inc / 100) x more`, from the skill's `AuraEffect` and `BuffEffect`. It leaves out the "on self" terms the character's scale has, and adds the minion's own `BuffEffectOnSelf` and `AuraEffectOnSelf`.
+
+**The engine:** `poe1::gems::minion_buffs`:
+- It walks the enabled skills as `gems` does, and takes each skill whose buff reaches the minion (`reaches_minion`).
+- For a modelled one (`Kind::Buff`), it adds the rows with `add_rows`. They are scaled by the character's `Totals::buff_scale` (now also built from a finished store, `Totals::from_effects`) and merged per name with each row's largest value, as `mergeBuff`. The "on self" terms PoB leaves out are terms the engine reads nowhere (they are unmapped, reasons), so the two scales are the same.
+- An unmodelled one, or one with an unmodelled support, is a `minion-buffs` reason.
+- Lightning Golem's Wrath, a minion skill's aura that reaches minions too (2775 to 2780), is a reason when the config enables it.
+- The flags that stop auras reaching allies, and the minion's buff effect on itself, come from stats the engine does not map: the character's reasons, which every minion field carries.
+
+`deferred_reasons` is gone: every source it named is now applied or a reason where it is read.
+
+### Evidence
+
+- **Fixture:** `minion-summon-stone-golem-discipline-witch.xml`: Stone Golem with Discipline in another group, and 15% increased effect of non-curse auras. The golem's energy shield is 249, as in PoB, and all 25 fields are `Complete` and equal to PoB.
+- **The sweep:** unchanged (no aura in its builds).
+- **Public `calc-parity` on `b-ot`:** 163 builds, 109 expected differences, 0 unexpected. No document but the new fixture's changed.
+- **Corpus:** unchanged, 0 unexpected.
+- Both runs are byte-identical.
