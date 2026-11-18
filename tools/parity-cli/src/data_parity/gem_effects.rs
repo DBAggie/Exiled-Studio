@@ -294,6 +294,8 @@ const NO_SLICE_NAMES: &[&str] = &[
     "Condition:HavePhysicalGolem",
     "DamageTakenWhenHit",
     "Dummy",
+    // Purity of Elements' immunity (P6-9): no slice field reads it.
+    "ElementalAilmentImmune",
     "FireDegen",
     "EnergyShieldRecharge",
     "FireDamageTakenWhenHit",
@@ -431,6 +433,10 @@ fn pob_name(q: Quantity) -> String {
         Quantity::EnergyShield => "EnergyShield".into(),
         Quantity::Armour => "Armour".into(),
         Quantity::Evasion => "Evasion".into(),
+        // The character's resistances and their maximums (P6-9: the
+        // purities).
+        Quantity::Resistance(t) => format!("{}Resist", title(t.name())),
+        Quantity::MaximumResistance(t) => format!("{}ResistMax", title(t.name())),
         Quantity::Poe1(Poe1Quantity::EnemyResistance(t)) => format!("{}Resist", title(t.name())),
         Quantity::Poe1(Poe1Quantity::SkillExposure(t)) => format!("{}Exposure", title(t.name())),
         Quantity::Poe1(Poe1Quantity::GainAs(a, b)) => {
@@ -476,6 +482,10 @@ fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
     };
     let kind = effects.first().map(|e| op_name(e.1))?;
     if same([res(D::Fire), res(D::Cold), res(D::Lightning)]) {
+        return Some(format!("ElementalResist {kind} []"));
+    }
+    let own = Quantity::Resistance;
+    if same([own(D::Fire), own(D::Cold), own(D::Lightning)]) {
         return Some(format!("ElementalResist {kind} []"));
     }
     if same([Quantity::EnergyShield, Quantity::Armour, Quantity::Evasion]) {
@@ -567,10 +577,7 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
             .into_iter()
             .find(|(f, _)| q == Quantity::Damage && all.contains(*f));
             let (name, all) = match typed {
-                Some((f, t)) => (
-                    format!("{t}Damage"),
-                    if all == f { Flags::NONE } else { all },
-                ),
+                Some((f, t)) => (format!("{t}Damage"), all.without(f)),
                 None if elemental_duration => ("SelfElementalAilmentDuration".to_owned(), all),
                 None => (pob_name(q), all),
             };

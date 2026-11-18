@@ -252,6 +252,55 @@ const GOLEM_CONDITION: BuffStat = BuffStat::NoSlice("golem-condition");
 /// and no calc module names it.
 pub const SKILLS: &[(&str, Kind)] = &[
     (
+        "Anger",
+        Kind::Buff {
+            name: "Anger",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "attack_maximum_added_fire_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Fire, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "attack_minimum_added_fire_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Fire, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "spell_maximum_added_fire_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Fire, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "spell_minimum_added_fire_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Fire, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::SPELL,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
+    (
         "ArcticArmour",
         Kind::Buff {
             name: "Arctic Armour",
@@ -269,10 +318,12 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("Autoexertion", Kind::Inert),
     // Automation reserves and triggers the skill it supports
     // (`SupportAutomation`); nothing of its own reaches the character
     // (`Data/Skills/act_int.lua` 417).
     ("Automation", Kind::Inert),
+    ("BlastRain", Kind::Inert),
     (
         "BloodRage",
         Kind::Buff {
@@ -298,6 +349,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("BurningArrow", Kind::Inert),
     (
         "Clarity",
         Kind::Buff {
@@ -323,6 +375,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     (
+        "Determination",
+        Kind::Buff {
+            name: "Determination",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_physical_damage_reduction_rating",
+                    BuffStat::Rows(&[(Quantity::Armour, Op::Base, 1.0, NONE, NONE)]),
+                ),
+                (
+                    "determination_aura_armour_+%_final",
+                    BuffStat::Rows(&[(Quantity::Armour, Op::More, 1.0, NONE, NONE)]),
+                ),
+            ],
+        },
+    ),
+    (
         "Discipline",
         Kind::Buff {
             name: "Discipline",
@@ -339,6 +408,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("DivineIre", Kind::Inert),
+    ("Earthshatter", Kind::Inert),
     (
         "ElementalWeakness",
         Kind::Curse {
@@ -428,6 +499,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("FreezingPulse", Kind::Inert),
+    ("Frenzy", Kind::Inert),
     (
         "FrostBomb",
         Kind::Debuff {
@@ -469,6 +541,24 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("Frostblink", Kind::Inert),
     ("FrostblinkAltX", Kind::Inert),
+    ("GemDetonateMines", Kind::Inert),
+    (
+        "Grace",
+        Kind::Buff {
+            name: "Grace",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_evasion_rating",
+                    BuffStat::Rows(&[(Quantity::Evasion, Op::Base, 1.0, NONE, NONE)]),
+                ),
+                (
+                    "grace_aura_evasion_rating_+%_final",
+                    BuffStat::Rows(&[(Quantity::Evasion, Op::More, 1.0, NONE, NONE)]),
+                ),
+            ],
+        },
+    ),
     ("GroundSlam", Kind::Inert),
     (
         "Haste",
@@ -569,6 +659,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("HolyFlameTotem", Kind::Inert),
     ("IceNova", Kind::Inert),
+    ("IceSpear", Kind::Inert),
     (
         "IntimidatingCry",
         Kind::Warcry {
@@ -586,6 +677,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("LeapSlam", Kind::Inert),
+    ("PoisonousConcoctionAltX", Kind::Inert),
+    ("Portal", Kind::Inert),
     (
         "Precision",
         Kind::Buff {
@@ -599,6 +692,132 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 (
                     "skill_buff_grants_critical_strike_chance_+%",
                     BuffStat::Rows(&[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)]),
+                ),
+            ],
+        },
+    ),
+    (
+        "PurityOfElements",
+        Kind::Buff {
+            name: "Purity of Elements",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_resist_all_elements_%",
+                    BuffStat::Rows(&[
+                        (
+                            Quantity::Resistance(DamageType::Fire),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        ),
+                        (
+                            Quantity::Resistance(DamageType::Cold),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        ),
+                        (
+                            Quantity::Resistance(DamageType::Lightning),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        ),
+                    ]),
+                ),
+                (
+                    "immune_to_status_ailments",
+                    BuffStat::NoSlice("ailment-immunity"),
+                ),
+            ],
+        },
+    ),
+    (
+        "PurityOfFire",
+        Kind::Buff {
+            name: "Purity of Fire",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_fire_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Resistance(DamageType::Fire),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "base_maximum_fire_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::MaximumResistance(DamageType::Fire),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
+    (
+        "PurityOfIce",
+        Kind::Buff {
+            name: "Purity of Ice",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_cold_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Resistance(DamageType::Cold),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "base_maximum_cold_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::MaximumResistance(DamageType::Cold),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
+    (
+        "PurityOfLightning",
+        Kind::Buff {
+            name: "Purity of Lightning",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_lightning_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Resistance(DamageType::Lightning),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "base_maximum_lightning_damage_resistance_%",
+                    BuffStat::Rows(&[(
+                        Quantity::MaximumResistance(DamageType::Lightning),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -666,7 +885,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("SearingBond", Kind::Inert),
     ("ShieldCharge", Kind::Inert),
+    ("SpectralShieldThrow", Kind::Inert),
+    ("Spellslinger", Kind::Inert),
     ("StaticStrike", Kind::Inert),
     (
         "SummonFlameGolem",
@@ -760,10 +982,62 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("Sunder", Kind::Inert),
     // Shockwave Support's own attack (`SupportBluntWeaponShockwave`): it
     // hits on its own when triggered; nothing reaches the character.
     ("SupportBluntWeaponShockwave", Kind::Inert),
+    ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
+    (
+        "Vitality",
+        Kind::Buff {
+            name: "Vitality",
+            effect: EffectType::Aura,
+            stats: &[(
+                "base_life_regeneration_rate_per_minute",
+                BuffStat::NoSlice("regeneration"),
+            )],
+        },
+    ),
+    (
+        "Wrath",
+        Kind::Buff {
+            name: "Wrath",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "attack_maximum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "attack_minimum_added_lightning_damage",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        Flags::ATTACK,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "wrath_aura_spell_lightning_damage_+%_final",
+                    BuffStat::Rows(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::SPELL.union(Flags::LIGHTNING),
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     (
         "Zealotry",
         Kind::Buff {
@@ -817,13 +1091,42 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
         ],
     ),
     ("SupportAutomation", &[]),
+    ("SupportAwakenedBrutality", &[]),
+    ("SupportAwakenedControlledDestruction", &[]),
+    ("SupportAwakenedGreaterMultipleProjectiles", &[]),
+    ("SupportAwakenedMeleePhysicalDamage", &[]),
+    ("SupportAwakenedViciousProjectiles", &[]),
+    ("SupportAwakenedVoidManipulation", &[]),
+    ("SupportBarrage", &[]),
+    ("SupportBrutality", &[]),
+    ("SupportBurningDamage", &[]),
     ("SupportChanceToBleed", &[]),
+    ("SupportCombustion", &[]),
+    ("SupportConcentratedEffect", &[]),
+    ("SupportControlledDestruction", &[]),
+    ("SupportCooldownRecovery", &[]),
+    ("SupportCullingStrike", &[]),
+    ("SupportDamageOnFullLife", &[]),
+    ("SupportEfficacy", &[]),
     ("SupportElementalArmy", &[]),
+    ("SupportElementalDamageWithAttacks", &[]),
+    ("SupportElementalFocus", &[]),
     ("SupportElementalProliferation", &[]),
+    ("SupportEmpower", &[]),
+    ("SupportEnhance", &[]),
+    ("SupportEnlighten", &[]),
     ("SupportFasterAttacks", &[]),
+    ("SupportFasterCasting", &[]),
+    ("SupportFeedingFrenzy", &[]),
+    ("SupportFocusedBallista", &[]),
     ("SupportFortify", &[]),
     ("SupportGuardiansBlessing", &[]),
     ("SupportGuardiansBlessingMinion", &[]),
+    ("SupportHextouch", &[]),
+    ("SupportHypothermia", &[]),
+    ("SupportIceBite", &[]),
+    ("SupportImmolate", &[]),
+    ("SupportIncreasedAreaOfEffect", &[]),
     ("SupportIncreasedCriticalDamage", &[]),
     ("SupportIncreasedCriticalStrikes", &[]),
     (
@@ -835,6 +1138,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ),
     ("SupportInspiration", &[]),
     ("SupportIntensify", &[]),
+    ("SupportLifetap", &[]),
     ("SupportMeatShield", &[]),
     ("SupportMeleePhysicalDamage", &[]),
     ("SupportMinionLife", &[]),
@@ -845,9 +1149,15 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             BuffStat::NoSlice("movement"),
         )],
     ),
+    ("SupportMultipleTotems", &[]),
+    ("SupportPierce", &[]),
     ("SupportPowerChargeOnCritical", &[]),
+    ("SupportPulverise", &[]),
     ("SupportRuthless", &[]),
+    ("SupportSecondWind", &[]),
     ("SupportShockwave", &[]),
+    ("SupportSpellCascade", &[]),
+    ("SupportSpellEcho", &[]),
     (
         "SupportSummonPhantasm",
         &[
@@ -861,8 +1171,15 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             ),
         ],
     ),
+    ("SupportSwiftAffliction", &[]),
+    ("SupportSwiftAssembly", &[]),
     ("SupportTrinity", &[]),
+    ("SupportUnleash", &[]),
     ("SupportUrgentOrders", &[]),
+    ("SupportViciousProjectiles", &[]),
+    ("SupportVoidManipulation", &[]),
+    ("SupportVolatility", &[]),
+    ("SupportWitheringTouch", &[]),
 ];
 
 /// Supports whose base mods set the reservation of a skill of the type to
