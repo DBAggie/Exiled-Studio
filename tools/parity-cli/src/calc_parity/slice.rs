@@ -18,8 +18,9 @@ pub const FORMAT: u32 = 1;
 /// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`;
 /// revision 4 added the minion's fields ([`MINION_NAMES`], P6-7b2), each
 /// with a nested PoB path (`pob_path`) and `applies: minion`; revision 5
-/// added the minion's main skill's hit (P6-7c).
-pub const REVISION: u32 = 5;
+/// added the minion's main skill's hit (P6-7c); revision 6 life and mana
+/// regeneration (P6-10b).
+pub const REVISION: u32 = 6;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -85,12 +86,16 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 5] = [
+pub const PRESENT_NAMES: [(&str, &str); 7] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
     ("TotalPoisonDPS", "poison-dps"),
     ("ImpaleDPS", "poe1.impale-dps"),
+    // Revision 6 (P6-10b): regeneration; our result has them whenever the
+    // pool is computed.
+    ("LifeRegen", "poe1.life-regen"),
+    ("ManaRegen", "poe1.mana-regen"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

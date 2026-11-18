@@ -611,6 +611,76 @@
             }
           }
         ]
+      },
+      {
+        "field": "poe1.life-regen",
+        "value": 0.0,
+        "node": 236,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.mana-regen",
+        "value": 0.0,
+        "node": 217,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_regeneration_rate_per_minute_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
       }
     ],
     "graph": [
@@ -2179,6 +2249,292 @@
           64
         ],
         "value": 56.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat-sum",
+        "children": [
+          199
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.percent",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 0.01
+      },
+      {
+        "kind": "product",
+        "term": "step.percent-of-pool",
+        "children": [
+          64,
+          201,
+          202
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          200,
+          203
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          205
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.regeneration",
+        "children": [
+          204,
+          206,
+          207
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          209
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.recovery-rate",
+        "children": [
+          210,
+          211
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          208,
+          212
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "ten"
+          }
+        },
+        "value": 10.0
+      },
+      {
+        "kind": "product",
+        "term": "step.round-scaled",
+        "children": [
+          213,
+          214
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.round-whole",
+        "children": [
+          215
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          216,
+          214
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.flat-sum",
+        "children": [
+          218
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.percent",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "percent"
+          }
+        },
+        "value": 0.01
+      },
+      {
+        "kind": "product",
+        "term": "step.percent-of-pool",
+        "children": [
+          50,
+          220,
+          221
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          219,
+          222
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          224
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.regeneration",
+        "children": [
+          223,
+          225,
+          226
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          228
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.recovery-rate",
+        "children": [
+          229,
+          230
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          227,
+          231
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "ten"
+          }
+        },
+        "value": 10.0
+      },
+      {
+        "kind": "product",
+        "term": "step.round-scaled",
+        "children": [
+          232,
+          233
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.round-whole",
+        "children": [
+          234
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "quotient",
+        "term": "result",
+        "children": [
+          235,
+          233
+        ],
+        "value": 0.0
       }
     ]
   }

@@ -162,6 +162,8 @@ impl CalcData for Data {
                 Some(75)
             }
             "base_evasion_rating" => Some(15),
+            // 1.75% of mana per second (P6-10b).
+            "mana_regeneration_rate_per_minute_%" => Some(105),
             _ => None,
         }
     }
@@ -445,6 +447,10 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         (Field::EnergyShield, 0.0),
         (Field::LifeUnreserved, 1125.0),
         (Field::ManaUnreserved, 590.0),
+        // P6-10b: no life regeneration; mana 590 x 105 / 60 / 100 = 10.325,
+        // PoB's round to one decimal.
+        (Field::Poe1(Poe1Field::LifeRegen), 0.0),
+        (Field::Poe1(Poe1Field::ManaRegen), 10.3),
     ];
     for (field, v) in expect {
         assert_eq!(value(&r, field), v, "{field}");

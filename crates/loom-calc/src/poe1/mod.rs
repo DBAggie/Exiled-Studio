@@ -35,6 +35,7 @@ pub mod minion_hit;
 pub mod minions;
 pub mod pantheon;
 pub mod pob_minion;
+pub mod regen;
 #[rustfmt::skip]
 pub mod pob_minions;
 pub mod pob_skill;
@@ -170,6 +171,33 @@ pub enum Poe1Quantity {
     /// INC on the enemy; Sniper's Mark, P6-9e): `Increased`, read only by a
     /// projectile hit ([`hit`]).
     EnemyProjectileDamageTaken,
+    /// A pool's regeneration (P6-10b): `Base` the flat amount per second
+    /// (PoB's `<Pool>Regen` BASE), `Increased` and `More` its rate, read by
+    /// [`regen`].
+    Regen(Pool),
+    /// A pool's regeneration as a percent of the pool per second (PoB's
+    /// `<Pool>RegenPercent` BASE; P6-10b): `Base`, read by [`regen`].
+    RegenPercent(Pool),
+    /// A pool's regeneration as a percent of the pool per minute (the
+    /// game's per-minute stats on a state row, which has no scale; P6-10b):
+    /// `Base`, read by [`regen`] divided by 60.
+    RegenPercentPerMinute(Pool),
+    /// A stat that changes a pool's regeneration in a way the engine does
+    /// not model (P6-10b; [`mapping::REGEN_REASONS`]): a `Flag` only
+    /// [`regen`] reads, as that field's `unmapped-stat` reason, so the
+    /// character's other fields keep their state.
+    RegenReason(Pool, &'static str),
+    /// A pool's recovery rate (PoB's `<Pool>RecoveryRate`; P6-10b):
+    /// `Increased` and `More`, read by [`regen`].
+    RecoveryRate(Pool),
+    /// "You have Consecrated Ground around you while stationary" (PoB's
+    /// `Condition:OnConsecratedGround` with `Condition:Stationary`; P6-10b):
+    /// a `Flag`, read by [`buffs`].
+    ConsecratedWhileStationary,
+    /// Arcane Surge's increased mana regeneration from its sources (PoB's
+    /// `ArcaneSurgeManaRegen`, read as its largest; P6-10b): `Base`, read
+    /// by [`buffs`].
+    ArcaneSurgeManaRegen,
     /// A hit's chance to ignore the enemy's physical damage reduction (PoB's
     /// `ChanceToIgnoreEnemyPhysicalDamageReduction`; P6-11j): `Base`, read
     /// by a hit's armour ([`hit`]).
@@ -506,6 +534,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
             Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
+            Self::Regen(p) => write!(f, "regen.{}", p.name()),
+            Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),
+            Self::RecoveryRate(p) => write!(f, "recovery-rate.{}", p.name()),
+            Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
+            Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
+            Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
+            Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
             Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
             Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
@@ -709,6 +744,10 @@ pub enum Poe1Field {
     /// The main skill's impale damage per second (PoB's `ImpaleDPS`; Phase
     /// 6). Present only when the skill impales.
     ImpaleDps,
+    /// Life regenerated per second (PoB's `LifeRegen`; P6-10b).
+    LifeRegen,
+    /// Mana regenerated per second (PoB's `ManaRegen`; P6-10b).
+    ManaRegen,
 }
 
 impl Poe1Field {
@@ -719,6 +758,8 @@ impl Poe1Field {
             Self::SpellSuppressionChance => "spell-suppression-chance",
             Self::SpellBlockChance => "spell-block-chance",
             Self::ImpaleDps => "impale-dps",
+            Self::LifeRegen => "life-regen",
+            Self::ManaRegen => "mana-regen",
         }
     }
 }
@@ -893,6 +934,7 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
+                "regeneration",
                 "minion",
                 "hit",
                 "dot",

@@ -357,15 +357,17 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         options: &options,
     };
     let r = calculate(&input).unwrap();
-    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len());
-    assert_eq!(r.fields.len(), 24, "docs/phase-3/slice-fields.json");
+    // The slice's 24, and life and mana regeneration (P6-10b), present
+    // whenever their pool is.
+    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 2);
+    assert_eq!(r.fields.len(), 26, "docs/phase-3/slice-fields.json");
     let computed: Vec<_> = r
         .fields
         .iter()
         .filter(|(_, f)| f.value.is_some())
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
-    assert_eq!(computed.len(), 17, "{computed:?}");
+    assert_eq!(computed.len(), 19, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons

@@ -16,7 +16,9 @@ use loom_domain::{StatId, TypedResolution};
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
 use crate::poe1::ailment::Ailment;
-use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, conditions, states};
+use crate::poe1::{
+    ArmourSlot, Defence, PieceValue, Poe1Quantity, Pool, WeaponValue, conditions, states,
+};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::store::Effect;
@@ -1691,6 +1693,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::DoubleDamageChance
                     | Poe1Quantity::Stack(..)
                     | Poe1Quantity::ArcaneSurgeCastSpeed
+                    // Its mana regeneration (P6-10b).
+                    | Poe1Quantity::ArcaneSurgeManaRegen
                     // "Deal no ... Damage" (P6-7c2, Brutality's).
                     | Poe1Quantity::DealNo(..)
                     // P6-11j.
@@ -1965,6 +1969,29 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_STAFF,
         )],
     ),
+    // P6-10b: "#% increased Recovery rate of Life and Energy Shield if
+    // you've stopped taking Damage Over Time Recently" (`LifeRecoveryRate`
+    // and `EnergyShieldRecoveryRate` INC; the second reaches no field).
+    (
+        "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
+            Op::Increased,
+            NONE,
+            conditions::STOPPED_TAKING_DOT_RECENTLY,
+        )],
+    ),
+    // P6-10b: "Regenerate #% of Life per second while stationary" (the
+    // Soul of Shakari's; `LifeRegenPercent` BASE, `Stationary`), per minute.
+    (
+        "life_regeneration_rate_per_minute_%_while_stationary",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+            Op::Base,
+            NONE,
+            conditions::STATIONARY,
+        )],
+    ),
     // P3-8n: "#% increased maximum Life if there are no Life Modifiers on
     // Equipped Body Armour" (`Data/ModCache.lua` 3483: an `ItemCondition`
     // on the body armour's lines; the engine reads the mods' tags,
@@ -2206,9 +2233,27 @@ pub const ROWS: &[Row] = &[
     ("base_evasion_rating", &[(Quantity::Evasion, Op::Base, 1.0)]),
     ("base_fire_damage_resistance_%", &[(FIRE, Op::Base, 1.0)]),
     ("base_intelligence", &[(INT, Op::Base, 1.0)]),
+    // P6-10b: "Regenerate # Life per second" (`LifeRegen` BASE, the stat per minute).
+    (
+        "base_life_regeneration_rate_per_minute",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
+    ),
     (
         "base_lightning_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0)],
+    ),
+    // P6-10b: "Regenerate # Mana per second" (`ManaRegen` BASE).
+    (
+        "base_mana_regeneration_rate_per_minute",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
     ),
     (
         "base_maximum_all_resistances_%",
@@ -2318,6 +2363,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b: "You have Consecrated Ground around you while stationary"
+    // (`Condition:OnConsecratedGround` while `Stationary`, `ModParser.lua`
+    // 2902): a flag `poe1::buffs` reads with the config's stationary count.
+    (
+        "consecrated_ground_while_stationary_radius",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ConsecratedWhileStationary),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
     (
         "evasion_and_physical_damage_reduction_rating_+%",
@@ -2382,6 +2438,33 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
+    // P6-10b: "#% increased Life Recovery rate" (`LifeRecoveryRate` INC).
+    (
+        "life_recovery_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Life Regeneration rate" (`LifeRegen` INC).
+    (
+        "life_regeneration_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "Regenerate #% of Life per second" (`LifeRegenPercent` BASE).
+    (
+        "life_regeneration_rate_per_minute_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::Life)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
+    ),
     (
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
@@ -2395,6 +2478,33 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::MagicUtilityFlaskEffect),
             Op::Increased,
             1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Mana Recovery rate" (`ManaRecoveryRate` INC).
+    (
+        "mana_recovery_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Mana)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "#% increased Mana Regeneration Rate" (`ManaRegen` INC).
+    (
+        "mana_regeneration_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b: "Regenerate #% of Mana per second" (`ManaRegenPercent` BASE).
+    (
+        "mana_regeneration_rate_per_minute_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::Mana)),
+            Op::Base,
+            1.0 / 60.0,
         )],
     ),
     (
@@ -2470,6 +2580,16 @@ pub const ROWS: &[Row] = &[
         "support_arcane_surge_cast_speed_+%",
         &[(
             Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b: Arcane Surge Support's mana regeneration (`ArcaneSurgeManaRegen`,
+    // read as its largest by `poe1::buffs`).
+    (
+        "support_arcane_surge_mana_regeneration_rate_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen),
             Op::Base,
             1.0,
         )],
@@ -2629,12 +2749,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_life_gained_on_enemy_death", "recovery"),
     // P6-11g: "#% of Attack Damage Leeched as Life" (`DamageLifeLeech` BASE).
     ("base_life_leech_from_attack_damage_permyriad", "leech"),
-    // P6-11g: "Regenerate # Life per second" (`LifeRegen` BASE): no regeneration field (P6-10b).
-    ("base_life_regeneration_rate_per_minute", "regeneration"),
     // P6-11g: "#% of Attack Damage Leeched as Mana" (`DamageManaLeech` BASE).
     ("base_mana_leech_from_attack_damage_permyriad", "leech"),
-    // P6-11g: "Regenerate # Mana per second" (`ManaRegen` BASE).
-    ("base_mana_regeneration_rate_per_minute", "regeneration"),
     // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
     // counts fortification only while Fortified (`buffFortification`, a named
     // condition), and then only damage taken when hit and modifiers per
@@ -2706,14 +2822,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
-    ),
-    // P3-8n: "You have Consecrated Ground around you while stationary"
-    // (`Condition:OnConsecratedGround` while `Stationary`, 2902): you on
-    // consecrated ground, which only regeneration, curses on you, and
-    // modifiers read ([`NO_EFFECT_DEPENDS_ON`]); never the enemy.
-    (
-        "consecrated_ground_while_stationary_radius",
-        "consecrated-ground",
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
@@ -2809,38 +2917,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11g: "#% of Leech is Instant" (`Instant<Pool>Leech` BASE).
     ("leech_%_is_instant", "leech"),
     (
-        "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
-        "regeneration",
-    ),
-    (
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
         "flask",
     ),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
-    (
-        "life_regeneration_per_minute_%_per_fortification",
-        "regeneration",
-    ),
-    // P6-11g: "Regenerate # Life per second for each 1% Uncapped Fire Resistance" (`LifeRegen` BASE per stat).
-    (
-        "life_regeneration_per_minute_per_1%_uncapped_fire_damage_resistance",
-        "regeneration",
-    ),
-    // P6-11g: "#% increased Life Regeneration rate" (`LifeRegen` INC).
-    ("life_regeneration_rate_+%", "regeneration"),
-    ("life_regeneration_rate_per_minute_%", "regeneration"),
-    (
-        "life_regeneration_rate_per_minute_%_per_endurance_charge",
-        "regeneration",
-    ),
-    (
-        "life_regeneration_rate_per_minute_%_while_stationary",
-        "regeneration",
-    ),
-    (
-        "life_regeneration_rate_per_minute_per_level",
-        "regeneration",
-    ),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
     // "Gems Socketed always have the Quality bonus from Socket Colour":
@@ -2860,16 +2940,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "mana_gained_on_attack_hit_if_used_mana_flask_in_past_10_seconds",
         "recovery",
-    ),
-    ("mana_regeneration_rate_+%", "regeneration"),
-    (
-        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
-        "regeneration",
-    ),
-    ("mana_regeneration_rate_+%_per_power_charge", "regeneration"),
-    (
-        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
-        "regeneration",
     ),
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
@@ -2926,7 +2996,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11g: "Recover # Energy Shield when you Block Spell Damage" (`EnergyShieldOnSpellBlock` BASE).
     ("recover_x_energy_shield_on_spell_block", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
-    ("regenerate_energy_shield_instead_of_life", "regeneration"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
     (
         "self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently",
@@ -2961,10 +3030,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
-    ),
-    (
-        "support_arcane_surge_mana_regeneration_rate_+%",
-        "regeneration",
     ),
     ("support_inspiration_mana_cost_+%_final", "mana-cost"),
     // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
@@ -3020,11 +3085,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "added_chaos_damage_%_mana_cost_if_payable",
         "hierophant_mana_cost_+%_final",
     ),
-    // P3-8n: modifiers while on consecrated ground.
-    (
-        "additional_block_%_while_on_consecrated_ground",
-        "consecrated_ground_while_stationary_radius",
-    ),
     (
         "arc_and_crackling_lance_added_cold_damage_%_mana_cost_if_payable",
         "hierophant_mana_cost_+%_final",
@@ -3033,10 +3093,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "armour_evasion_rating_+%_final_per_fortification_above_20",
         "base_max_fortification",
-    ),
-    (
-        "attack_and_cast_speed_+%_while_on_consecrated_ground",
-        "consecrated_ground_while_stationary_radius",
     ),
     (
         "attack_damage_+%_while_you_have_at_least_20_fortification",
@@ -3049,10 +3105,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "attack_speed_+%_per_fortification_above_20",
         "base_max_fortification",
-    ),
-    (
-        "damage_+%_on_consecrated_ground",
-        "consecrated_ground_while_stationary_radius",
     ),
     // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
     (
@@ -3086,18 +3138,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "spell_suppression_chance_%_per_fortification",
         "base_max_fortification",
-    ),
-    (
-        "virtual_critical_strike_chance_+%_while_on_consecrated_ground",
-        "consecrated_ground_while_stationary_radius",
-    ),
-    (
-        "your_consecrated_ground_grants_accuracy_rating_+%",
-        "consecrated_ground_while_stationary_radius",
-    ),
-    (
-        "your_consecrated_ground_grants_damage_+%",
-        "consecrated_ground_while_stationary_radius",
     ),
 ];
 
@@ -3161,8 +3201,53 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
         || super::skill_no_output::contains(stat)
 }
 
+/// Stats that change a pool's regeneration in a way the engine does not
+/// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
+/// regeneration field's reason alone. PoB's text for each
+/// (`ModParser.lua`): life per fortification stack, per uncapped fire
+/// resistance (`PerStat`), per endurance charge, per level, per power
+/// charge, per spell block chance, with exposure inflicted recently, and
+/// life regeneration applying to energy shield instead.
+pub const REGEN_REASONS: &[(&str, Pool)] = &[
+    // Per fortification stack: fortification is named only
+    // (`config::NAMED_ONLY`), so this stays a reason, now on the field.
+    (
+        "life_regeneration_per_minute_%_per_fortification",
+        Pool::Life,
+    ),
+    (
+        "life_regeneration_per_minute_per_1%_uncapped_fire_damage_resistance",
+        Pool::Life,
+    ),
+    (
+        "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        Pool::Life,
+    ),
+    ("life_regeneration_rate_per_minute_per_level", Pool::Life),
+    (
+        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
+        Pool::Mana,
+    ),
+    ("mana_regeneration_rate_+%_per_power_charge", Pool::Mana),
+    (
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        Pool::Mana,
+    ),
+    ("regenerate_energy_shield_instead_of_life", Pool::Life),
+];
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
+        if let Ok(i) = REGEN_REASONS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            let (id, pool) = REGEN_REASONS[i];
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::RegenReason(pool, id)),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
         if NO_EFFECT
             .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .is_ok()
@@ -3291,6 +3376,15 @@ impl StatMapping for Poe1Mapping {
             Quantity::Poe1(Poe1Quantity::Minion(v) | Poe1Quantity::GolemMinion(v)) => {
                 !super::minions::MinionValue::REDIRECTED.contains(&v)
             }
+            // A regeneration stat's unsettled value: the regeneration
+            // fields' reason only (P6-10b, [`super::regen`]).
+            Quantity::Poe1(
+                Poe1Quantity::Regen(_)
+                | Poe1Quantity::RegenPercent(_)
+                | Poe1Quantity::RegenPercentPerMinute(_)
+                | Poe1Quantity::RecoveryRate(_)
+                | Poe1Quantity::RegenReason(..),
+            ) => true,
             _ => false,
         }
     }
@@ -3441,6 +3535,12 @@ impl StatMapping for PieceMapping {
                 .collect(),
         )
     }
+
+    // An item line's unsettled value of a stat another actor or field
+    // alone reads (P6-10b: regeneration) is that one's reason.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
+    }
 }
 
 /// What a weapon's local stat changes: `(stat, [(quantity, op)])`, sorted
@@ -3567,6 +3667,12 @@ impl StatMapping for WeaponMapping {
                 .collect(),
         )
     }
+
+    // An item line's unsettled value of a stat another actor or field
+    // alone reads (P6-10b: regeneration) is that one's reason.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
+    }
 }
 
 /// The mapping of a weapon in the off hand's lines (Phase 6, dual
@@ -3591,6 +3697,12 @@ impl StatMapping for OffHandWeaponMapping {
             ),
             other => other,
         }
+    }
+
+    // An item line's unsettled value of a stat another actor or field
+    // alone reads (P6-10b: regeneration) is that one's reason.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
     }
 }
 
@@ -4413,6 +4525,7 @@ mod tests {
                         states::USING_WAND,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                         states::DUAL_WIELDING,
+                        conditions::STATIONARY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -4425,6 +4538,26 @@ mod tests {
         let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
         let config = |q: Quantity, op: Op, all: Flags, c: &'static str| (q, op, all, c);
         let expected = [
+            // P6-10b: the Soul of Arakaali's recovery rate.
+            (
+                "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RecoveryRate(Pool::Life)),
+                    Op::Increased,
+                    NONE,
+                    conditions::STOPPED_TAKING_DOT_RECENTLY,
+                )],
+            ),
+            // P6-10b: the Soul of Shakari's regeneration while stationary.
+            (
+                "life_regeneration_rate_per_minute_%_while_stationary",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+                    Op::Base,
+                    NONE,
+                    conditions::STATIONARY,
+                )],
+            ),
             // P6-11g: "+# Armour if you've Blocked Recently" (PoB's
             // `Armour` BASE, `Condition` `BlockedRecently`).
             (

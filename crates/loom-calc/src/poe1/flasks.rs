@@ -173,6 +173,12 @@ impl StatMapping for FlaskMapping {
         }
         Poe1Mapping.map(stat)
     }
+
+    // An item line's unsettled value of a stat another actor or field
+    // alone reads (P6-10b: regeneration) is that one's reason.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
+    }
 }
 
 /// The prefix of the consume stats a flask line's description pairs with

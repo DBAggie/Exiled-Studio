@@ -569,6 +569,10 @@ fn pob_name(q: Quantity) -> String {
         }
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) => "ArcaneSurgeCastSpeed".into(),
         Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
+        // P6-10b: regeneration.
+        Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
+        Quantity::Poe1(Poe1Quantity::RegenPercent(p)) => format!("{}RegenPercent", title(p.name())),
+        Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();
@@ -670,7 +674,7 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             rows,
             format!(" tags global {}", json!({ "modCond": condition })),
         ),
-        BuffStat::NoSlice(_) | BuffStat::Gated(_) => return Vec::new(),
+        BuffStat::NoSlice(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => return Vec::new(),
     };
     if let Some(one) = collapse(rows) {
         return vec![one + &suffix];
@@ -681,7 +685,9 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         .map(|(f, row)| {
             // Arcane Surge's cast speed: PoB's MAX mod, `unscalable`; the
             // engine keeps the largest (`poe1::buffs`).
-            if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) {
+            if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed)
+                || row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen)
+            {
                 return f.replacen(" BASE ", " MAX ", 1)
                     + &format!(" tags global {}", json!({ "unscalable": true }));
             }
@@ -916,7 +922,8 @@ fn check_one(
                     strings(conds),
                 );
             }
-            BuffStat::Rows(_)
+            BuffStat::Reason(_)
+            | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)

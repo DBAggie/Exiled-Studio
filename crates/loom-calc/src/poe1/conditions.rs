@@ -52,6 +52,11 @@ pub const SHOCKED_ENEMY_RECENTLY: &str = "ShockedEnemyRecently";
 pub const SHATTERED_ENEMY_RECENTLY: &str = "ShatteredEnemyRecently";
 /// "at Close Range".
 pub const AT_CLOSE_RANGE: &str = "AtCloseRange";
+/// "while stationary" (PoB's `Condition:Stationary`, set when the config's
+/// `conditionStationary` count is above 0; P6-10b).
+pub const STATIONARY: &str = "Stationary";
+/// "if you've stopped taking Damage Over Time Recently" (P6-10b).
+pub const STOPPED_TAKING_DOT_RECENTLY: &str = "StoppedTakingDamageOverTimeRecently";
 /// "if you've Blocked Recently" (P6-11g).
 pub const BLOCKED_RECENTLY: &str = "BlockedRecently";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
@@ -83,6 +88,10 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
+    (
+        "conditionStoppedTakingDamageOverTimeRecently",
+        STOPPED_TAKING_DOT_RECENTLY,
+    ),
 ];
 
 /// A check's value: `Some(false)` when unset or off, `None` for a value
@@ -106,6 +115,17 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
 /// The conditions the config settles (module docs), into `out`.
 pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     let set = super::collect::active_config(input.build);
+    // The stationary count (a number, [`super::buffs::STATIONARY_INPUT`]):
+    // above 0 is `Stationary`; a value of another type leaves it unsettled.
+    match set.and_then(|s| last(s, super::buffs::STATIONARY_INPUT, ConfigInputKind::Input)) {
+        None => {
+            out.insert(ConditionKey::new(STATIONARY), false);
+        }
+        Some(ConfigValue::Number(n)) => {
+            out.insert(ConditionKey::new(STATIONARY), n.value().0 > 0.0);
+        }
+        Some(_) => {}
+    }
     let mut seen: BTreeMap<&str, Option<bool>> = BTreeMap::new();
     for &(name, condition) in CHECKS {
         let mut value = check(set, name);

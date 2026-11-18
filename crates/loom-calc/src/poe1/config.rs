@@ -92,12 +92,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
 ///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
 ///   taken when a modifier's flag asks for it.
-/// - `conditionOnConsecratedGround`: `Condition:OnConsecratedGround`, also
-///   for minions (line 1148); `CalcPerform.lua` adds life regeneration
-///   and less curse effect on you (804, 3171; not slice fields) and
-///   accuracy from `ConsecratedGroundAlsoAccuracy` (a modifier).
-/// - `conditionStationary`: `Multiplier:StationarySeconds`, and
-///   `Condition:Stationary` when above 0 (line 158).
+/// - `conditionOnConsecratedGround` and `conditionStationary` moved to
+///   [`super::buffs`] in P6-10b: consecrated ground's life regeneration
+///   is a field now.
 /// - Moved in P3-8n: `conditionShockedEnemyRecently` to
 ///   [`super::conditions`] (its condition settled for the rows that read
 ///   it); `conditionEnemyOnConsecratedGround` and `conditionEnemyIgnited`
@@ -334,20 +331,12 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("conditionLowLife", &["Condition:LowLife"]),
     ("conditionMoving", &["Condition:Moving"]),
     (
-        "conditionOnConsecratedGround",
-        &["Condition:OnConsecratedGround"],
-    ),
-    (
         "conditionSacrificeMinion",
         &["Condition:SacrificeMinionOnAttack"],
     ),
     (
         "conditionSpawnedCorpseRecently",
         &["Condition:SpawnedCorpseRecently"],
-    ),
-    (
-        "conditionStationary",
-        &["Multiplier:StationarySeconds", "Condition:Stationary"],
     ),
     (
         "conditionSummonedTotemRecently",
@@ -822,15 +811,15 @@ mod tests {
             assert!(!id.contains("fortif"), "{id}: revisit NAMED_ONLY");
         }
         // `NoEffect` rows naming fortification, each checked: a chance to
-        // fortify, its duration, regeneration per stack; none reaches a
-        // slice field.
+        // fortify, its duration; none reaches a slice field. Regeneration
+        // per stack is a `mapping::REGEN_REASONS` entry (P6-10b): the life
+        // regeneration field's reason, never a value.
         let checked = [
             // The maximum (P3-8n): its readers per fortification are
             // `mapping::NO_EFFECT_DEPENDS_ON` guards.
             "base_max_fortification",
             "chance_to_fortify_on_melee_hit_+%",
             "fortify_duration_+%",
-            "life_regeneration_per_minute_%_per_fortification",
         ];
         for (id, _) in crate::poe1::mapping::NO_EFFECT {
             assert!(
@@ -862,12 +851,8 @@ mod tests {
             assert!(!names(id), "{id}: revisit NAMED_ONLY");
         }
         // Rage's loss delay (PoB `InherentRageLossDelay`): rage's loss,
-        // never its gain or effect. Mana regeneration if you inflicted
-        // exposure recently: regeneration, not a slice field.
-        let checked = [
-            "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
-            "rage_loss_delay_ms",
-        ];
+        // never its gain or effect.
+        let checked = ["rage_loss_delay_ms"];
         for (id, _) in NO_EFFECT {
             assert!(
                 !names(id) || checked.contains(id),

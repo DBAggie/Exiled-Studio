@@ -29,7 +29,7 @@ Implicits: 0
 			<Input name="conditionBlockedAttackRecently" boolean="true"/>
 			<CustomModifierBlock enabled="true" title="Default">
 				+300 Armour if you've Blocked Recently
-Regenerate 20 Life per second
+Regenerate 2% of Life per second
 15% increased Life Regeneration rate
 1% of Attack Damage Leeched as Life
 Gain 5 Life per Enemy Hit with Attacks

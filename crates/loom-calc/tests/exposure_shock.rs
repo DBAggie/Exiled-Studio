@@ -86,7 +86,6 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
     "lightning_ailment_duration_+%",
-    "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
     "shocked_effect_on_self_+%",
 ];
 
@@ -100,6 +99,10 @@ const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
 /// engine computes no shock from a hit (only the config's and the
 /// guaranteed one), so its shock part reaches no field.
 const OTHER_PART_ROWS: &[&str] = &["chance_to_freeze_shock_ignite_%"];
+
+/// Regeneration rows whose text names exposure (P6-10b): the regeneration
+/// field's reason alone (`mapping::REGEN_REASONS`), never the enemy's.
+const REGEN_ROWS: &[&str] = &["mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently"];
 
 #[test]
 fn the_texts_should_name_the_rows() {
@@ -188,6 +191,7 @@ fn real_exposure_and_shock_stats_should_be_covered() {
             // enemy's shock.
             loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
             loom_calc::StatMap::Effects(_) if OTHER_PART_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if REGEN_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

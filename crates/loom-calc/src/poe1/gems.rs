@@ -222,6 +222,10 @@ pub enum BuffStat {
     Rows(&'static [HitEffect]),
     /// Reaches no slice field: a category, as `NO_EFFECT`'s.
     NoSlice(&'static str),
+    /// Reaches a slice field in a way the engine does not model: an
+    /// `unmodelled-skill` reason with this name when the stat is not 0
+    /// (P6-10b: Enduring Cry's regeneration per warcry power).
+    Reason(&'static str),
     /// Applies only under a condition only a modifier sets (PoB's
     /// `effectCond`), so it applies nowhere a modifier does not set it,
     /// and that modifier's stat is a reason ([`DEPENDS_ON`]).
@@ -459,7 +463,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
             effect: EffectType::Aura,
             stats: &[(
                 "base_mana_regeneration_rate_per_minute",
-                BuffStat::NoSlice("regeneration"),
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+                    Op::Base,
+                    60.0,
+                    NONE,
+                    NONE,
+                )]),
             )],
         },
     ),
@@ -614,7 +624,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
-                    BuffStat::NoSlice("regeneration"),
+                    BuffStat::Reason("warcry-power"),
                 ),
                 (
                     "warcry_count_power_from_enemies",
@@ -1545,7 +1555,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "lightning_golem_grants_base_mana_regeneration_rate_per_minute",
-                    BuffStat::NoSlice("regeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+                        Op::Base,
+                        60.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -1564,7 +1580,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ("", GOLEM_CONDITION),
                 (
                     "stone_golem_grants_base_life_regeneration_rate_per_minute",
-                    BuffStat::NoSlice("regeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+                        Op::Base,
+                        60.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "stone_golem_grants_defences_+%",
@@ -1679,7 +1701,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
             effect: EffectType::Aura,
             stats: &[(
                 "base_life_regeneration_rate_per_minute",
-                BuffStat::NoSlice("regeneration"),
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+                    Op::Base,
+                    60.0,
+                    NONE,
+                    NONE,
+                )]),
             )],
         },
     ),
@@ -1811,7 +1839,13 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             ),
             (
                 "support_arcane_surge_mana_regeneration_rate_+%",
-                BuffStat::NoSlice("regeneration"),
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
             ),
         ],
     ),
@@ -3123,6 +3157,15 @@ fn add_rows(
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
+            BuffStat::Reason(what) => {
+                if *value != 0 {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what,
+                    });
+                }
+                continue;
+            }
             BuffStat::WhenInput {
                 input: check, rows, ..
             } => {
@@ -3497,7 +3540,7 @@ mod tests {
                 | BuffStat::WhenState { rows: e, .. }
                 | BuffStat::MinionOnly(e)
                 | BuffStat::ConfigIs { rows: e, .. } => e,
-                BuffStat::NoSlice(_) | BuffStat::Gated(_) => &[],
+                BuffStat::NoSlice(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => &[],
             };
             for e in effects {
                 assert!(!early.contains(&e.0), "{stat}");
@@ -3552,10 +3595,13 @@ mod tests {
                     }
                 }
             }
-            // Warcries: no row reaches a slice field (module docs).
+            // Warcries: no row reaches a slice field (module docs); one that
+            // would is a reason (P6-10b: Enduring Cry's regeneration).
             if let Kind::Warcry { stats, .. } = k {
                 assert!(
-                    stats.iter().all(|(_, b)| matches!(b, BuffStat::NoSlice(_))),
+                    stats
+                        .iter()
+                        .all(|(_, b)| matches!(b, BuffStat::NoSlice(_) | BuffStat::Reason(_))),
                     "{id}"
                 );
             }

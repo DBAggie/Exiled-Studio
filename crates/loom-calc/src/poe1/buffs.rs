@@ -33,7 +33,8 @@
 //! gives cast `Speed` INC `(Max(ArcaneSurgeCastSpeed) or 20) x effect`,
 //! the effect `1 + (ArcaneSurgeEffect + BuffEffectOnSelf) / 100` (and a
 //! flask's share): no effect stat is mapped ([`ARCANE_SURGE_DEPENDS_ON`]),
-//! so 1. Its mana regeneration and `ArcaneSurgeDamage` (unmapped) are not
+//! so 1; and its mana regeneration, `ManaRegen` INC `(Max(ArcaneSurgeManaRegen)
+//! or 30) x effect` (P6-10b). `ArcaneSurgeDamage` (unmapped) is not
 //! here. Its source is the input.
 //!
 //! **Convergence** (P3-8n). `conditionConvergence` (1430) sets
@@ -137,8 +138,95 @@ pub fn is_buff_input(input: &str) -> bool {
         CONVERGENCE_INPUT,
         TAILWIND_INPUT,
         ADRENALINE_INPUT,
+        CONSECRATED_INPUT,
+        STATIONARY_INPUT,
     ]
     .contains(&input)
+}
+
+/// The check that puts you on consecrated ground (`ConfigOptions.lua`
+/// 1137).
+pub const CONSECRATED_INPUT: &str = "conditionOnConsecratedGround";
+
+/// The count of seconds you have been stationary (`ConfigOptions.lua`:
+/// `Multiplier:StationarySeconds`, and `Condition:Stationary` above 0).
+pub const STATIONARY_INPUT: &str = "conditionStationary";
+
+/// Consecrated ground's life regeneration, percent of life per second
+/// (`CalcPerform.lua` 772: `5 x effect`).
+pub const CONSECRATED_LIFE_REGEN: f64 = 5.0;
+
+/// Consecrated ground under you (P6-10b; `CalcPerform.lua` 770 to 775):
+/// on with the config's check, or with "Consecrated Ground around you while
+/// stationary" and a stationary count above 0. Its life regeneration,
+/// `LifeRegenPercent` 5 times its effect (`1 + ConsecratedGroundEffect INC /
+/// 100`, the effect you create); its less curse effect on you
+/// reaches no slice field, and its accuracy comes from a stat that stays a
+/// reason.
+fn consecrated_ground(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let line = ingest
+        .effects()
+        .iter()
+        .find(|e| e.quantity == Quantity::Poe1(Poe1Quantity::ConsecratedWhileStationary))
+        .map(|e| e.source.clone());
+    let on = match check(set, CONSECRATED_INPUT) {
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: CONSECRATED_INPUT.to_owned(),
+            });
+            return;
+        }
+        Ok(true) => Some(Source::Config {
+            input: CONSECRATED_INPUT.to_owned(),
+        }),
+        Ok(false) => match line {
+            None => None,
+            Some(source) => {
+                match set.and_then(|s| {
+                    super::config::last_input(s, STATIONARY_INPUT, ConfigInputKind::Input)
+                }) {
+                    None => None,
+                    Some(ConfigValue::Number(n)) => (n.value().0 > 0.0).then_some(source),
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: STATIONARY_INPUT.to_owned(),
+                        });
+                        return;
+                    }
+                }
+            }
+        },
+    };
+    if let Some(source) = on {
+        // Its effect: `1 + ConsecratedGroundEffect INC / 100`, the
+        // unconditional increases; a conditional one is a reason.
+        let mut inc = 0.0;
+        let mut conditional = None;
+        for e in ingest.effects() {
+            if e.quantity == Quantity::Poe1(Poe1Quantity::ConsecratedGroundEffect)
+                && e.op == Op::Increased
+            {
+                if e.conditions == Conditions::none() {
+                    inc += e.value;
+                } else {
+                    conditional = Some(e.source.clone());
+                }
+            }
+        }
+        if let Some(s) = conditional {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: s,
+                what: "consecrated-ground-effect",
+            });
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::RegenPercent(super::Pool::Life)),
+            op: Op::Base,
+            value: CONSECRATED_LIFE_REGEN * (1.0 + inc / 100.0),
+            conditions: Conditions::none(),
+            source,
+        });
+    }
 }
 
 /// A check buff's constant effects (Tailwind, Adrenaline; module docs),
@@ -210,20 +298,47 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             Some(m.map_or(v, |m| crate::math::max(m, v)))
         })
         .unwrap_or(ARCANE_SURGE_SPEED);
+    let source = if checked {
+        Source::Config {
+            input: ARCANE_SURGE_INPUT.to_owned(),
+        }
+    } else {
+        support.unwrap_or(Source::Rule("arcane-surge"))
+    };
+    // Its mana regeneration (P6-10b; `CalcPerform.lua` 690): `ManaRegen`
+    // INC, the largest `ArcaneSurgeManaRegen` or 30, times its effect (1).
+    let regen = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(None, |m: Option<f64>, v| {
+            Some(m.map_or(v, |m| crate::math::max(m, v)))
+        })
+        .unwrap_or(ARCANE_SURGE_MANA_REGEN);
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::Regen(super::Pool::Mana)),
+        op: Op::Increased,
+        value: regen,
+        conditions: Conditions::none(),
+        source: source.clone(),
+    });
     ingest.effect(Effect {
         quantity: Quantity::Speed,
         op: Op::Increased,
         value: speed,
         conditions: Conditions::none().with_all(Flags::CAST),
-        source: if checked {
-            Source::Config {
-                input: ARCANE_SURGE_INPUT.to_owned(),
-            }
-        } else {
-            support.unwrap_or(Source::Rule("arcane-surge"))
-        },
+        source,
     });
 }
+
+/// Arcane Surge's increased mana regeneration without a source of its own
+/// (`CalcPerform.lua` 690).
+const ARCANE_SURGE_MANA_REGEN: f64 = 30.0;
 
 /// Convergence's more elemental damage (module docs).
 fn convergence(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
@@ -266,6 +381,7 @@ pub const ONSLAUGHT_STAT: &str = "base_should_have_onslaught_from_stat";
 pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     arcane_surge(set, ingest);
     convergence(set, ingest);
+    consecrated_ground(set, ingest);
     constant_buff(
         set,
         ingest,

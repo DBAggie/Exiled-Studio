@@ -118,6 +118,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] P6-9 remaining: warcry power (Battlemage's, Ancestral, Infernal, Seismic Cry), Arrogance and Eternal Blessing (reservation as life), Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 ## P6-10b: recovery and defence outputs
+- [x] P6-10b part 1: life and mana regeneration (`poe1::regen`, fields `life-regen` and `mana-regen`, slice revision 6; Arcane Surge, consecrated ground, the stationary and stopped-DoT state rows; `mapping::REGEN_REASONS` and `elsewhere` keep reasons on these fields); fixtures `ice-nova-regeneration-witch.xml`, `ice-nova-arcane-surge-regeneration-witch.xml`; every regeneration value equal to PoB; `docs/phase-6/recovery.md`
+- [ ] P6-10b further parts: energy shield regeneration and recharge, leech, degeneration (D7), physical damage reduction, maximum hit and EHP, movement speed, skill costs
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)

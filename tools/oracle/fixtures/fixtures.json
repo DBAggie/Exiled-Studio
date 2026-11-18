@@ -1837,10 +1837,10 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/smite-blocked-recently-no-effect-templar.xml",
-      "sha256": "9adb08161f2282841969a1c797b27099fdd75aa34c3f777cccf3d52c451bd0fb",
+      "sha256": "c2cd6f974b3a9f7e1e3473857a3227d6689a521d137406cc88b05a881e374975",
       "expect": "ok",
-      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "P6-11g: \"+# Armour if you've Blocked Recently\" with the config's Blocked an Attack Recently (BlockedRecently set by any of its three checks), and lines that reach no slice field (Q11 DIV-0125, DIV-0126)."
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-11g: \"+# Armour if you've Blocked Recently\" with the config's Blocked an Attack Recently (BlockedRecently set by any of its three checks), and lines that reach no slice field (Q11 DIV-0125, DIV-0126). P6-10b: its regeneration line is a percent of life (a flat one per second is an unsettled value)."
     },
     {
       "id": "ice-nova-glancing-blows-witch.xml",
@@ -1871,6 +1871,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-11j: the same chance with the config's MAX mode: the reduction ignored (Q11 DIV-0130 to DIV-0132)."
+    },
+    {
+      "id": "ice-nova-regeneration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-regeneration-witch.xml",
+      "sha256": "7e31d8e8e11ca0252facc6ebf51c94c41cf756461527d26440981496661e60e8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: Clarity and Vitality with life regeneration percent, increased regeneration and recovery rate, increased mana regeneration: LifeRegen and ManaRegen, PoB rounding to one decimal."
+    },
+    {
+      "id": "ice-nova-arcane-surge-regeneration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-arcane-surge-regeneration-witch.xml",
+      "sha256": "398d888ae7606594bd3dfe24a63a5fbce0ab7d07477efb2569e5a3619e088aef",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaRegen", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b: Arcane Surge from the config: its 30% increased mana regeneration (and cast speed)."
     }
   ]
 }
