@@ -21,8 +21,9 @@ pub const FORMAT: u32 = 1;
 /// added the minion's main skill's hit (P6-7c); revision 6 life and mana
 /// regeneration (P6-10b); revision 7 energy shield regeneration and
 /// recharge (P6-10b); revision 8 movement speed (P6-10b); revision 9 the
-/// main skill's mana cost (P6-10b).
-pub const REVISION: u32 = 9;
+/// main skill's mana cost (P6-10b); revision 10 the combined damage per
+/// second (P6-12).
+pub const REVISION: u32 = 10;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -88,7 +89,7 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 14] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 13] = [
+pub const PRESENT_NAMES: [(&str, &str); 14] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -112,6 +113,9 @@ pub const PRESENT_NAMES: [(&str, &str); 13] = [
     // Revision 9 (P6-10b): the main skill's mana cost; our result always
     // has it.
     ("ManaCost", "poe1.mana-cost"),
+    // Revision 10 (P6-12): the main skill's combined damage per second;
+    // our result has it whenever the build has a main skill.
+    ("CombinedDPS", "poe1.combined-dps"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),
@@ -516,7 +520,13 @@ mod tests {
             .collect();
         assert_eq!(ours, engine);
         assert_eq!(SliceFile::our_name("TotalDPS"), Some("hit-dps"));
-        assert_eq!(SliceFile::our_name("CombinedDPS"), None);
+        // A Phase 6 field (P6-12) has our name too; a PoB id the slice
+        // never names has none.
+        assert_eq!(
+            SliceFile::our_name("CombinedDPS"),
+            Some("poe1.combined-dps")
+        );
+        assert_eq!(SliceFile::our_name("CullingDPS"), None);
     }
 
     #[test]

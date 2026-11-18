@@ -17,6 +17,7 @@ pub mod ailment;
 pub mod buffs;
 pub mod charges;
 pub mod collect;
+pub mod combined;
 pub mod conditions;
 pub mod config;
 pub mod costs;
@@ -247,6 +248,9 @@ pub enum Poe1Quantity {
     /// `SkillAuraEffectOnSelf`, P6-11k): `Increased`, read by
     /// [`skill_modifiers::Totals`] for every aura buff on you.
     SkillAuraEffectOnSelf,
+    /// Culling Strike (PoB's `CullPercent` MAX 10; P6-12): a `Flag`, read
+    /// by [`combined`].
+    CullingStrike,
     /// A defence's increase from one equipped piece only (PoB's
     /// `<Defence>` or `Defences` INC tagged `SlotName`, P6-11k: "#%
     /// increased Energy Shield from Equipped Shield"): `Increased`, added to
@@ -615,6 +619,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),
             Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
             Self::SkillAuraEffectOnSelf => f.write_str("skill-aura-effect-on-self"),
+            Self::CullingStrike => f.write_str("culling-strike"),
             Self::SlotIncreased(s, d) => write!(f, "slot-increased.{}.{}", s.row(), d.name()),
             Self::CannotBeEvaded => f.write_str("cannot-be-evaded"),
             Self::NeverCrit => f.write_str("never-crit"),
@@ -831,6 +836,9 @@ pub enum Poe1Field {
     EffectiveMovementSpeedMod,
     /// The main skill's mana cost (PoB's `ManaCost`; P6-10b).
     ManaCost,
+    /// The main skill's combined damage per second (PoB's `CombinedDPS`;
+    /// P6-12): the hit's, impale's, and the damage over time's, culled.
+    CombinedDps,
 }
 
 impl Poe1Field {
@@ -849,6 +857,7 @@ impl Poe1Field {
             Self::MovementSpeedMod => "movement-speed",
             Self::EffectiveMovementSpeedMod => "effective-movement-speed",
             Self::ManaCost => "mana-cost",
+            Self::CombinedDps => "combined-dps",
         }
     }
 }
@@ -1029,6 +1038,7 @@ mod tests {
                 "hit",
                 "dot",
                 "costs",
+                "combined",
                 "minion-hit"
             ]
         );

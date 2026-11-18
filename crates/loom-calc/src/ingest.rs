@@ -284,6 +284,13 @@ impl<'m> Ingest<'m> {
             return;
         };
         for t in templates {
+            // A flag stat at 0 is off (P6-12): a description of several
+            // stats resolves its line with the others at 0 ("Attacks have
+            // #% chance to cause Bleeding" is the variant whose
+            // `cannot_cause_bleeding` is 0), and that 0 sets no flag.
+            if t.op == Op::Flag && value == 0.0 {
+                continue;
+            }
             self.store.add(Effect {
                 quantity: t.quantity,
                 op: t.op,
@@ -574,6 +581,30 @@ mod tests {
             assert!(store.is_empty(), "{stat}");
             assert_eq!(reasons.indeterminate.len(), 1, "{stat}");
         }
+    }
+
+    /// A flag stat at 0 is off (P6-12): no flag effect; a stat's other
+    /// effects still come in.
+    #[test]
+    fn a_flag_stat_at_zero_should_set_no_flag() {
+        let zero = StatValue::Exact { min: 0, max: 0 };
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("flag", zero.clone()));
+        let (store, reasons) = i.finish();
+        assert!(store.is_empty());
+        assert!(reasons.indeterminate.is_empty());
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("flag_and_base", zero));
+        let (store, _) = i.finish();
+        assert_eq!(store.len(), 1);
+        assert_eq!(store.effects()[0].op, Op::Base);
+        // At 1 the flag is on.
+        let mut i = Ingest::new(&Map);
+        i.stat(
+            &Source::Character,
+            &line("flag", StatValue::Exact { min: 1, max: 1 }),
+        );
+        assert_eq!(i.finish().0.len(), 1);
     }
 
     /// P6-7b3b: an unsettled value of a stat whose every effect acts on

@@ -1707,6 +1707,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ArcaneSurgeCastSpeed
                     // Its mana regeneration (P6-10b).
                     | Poe1Quantity::ArcaneSurgeManaRegen
+                    // Culling Strike (P6-12).
+                    | Poe1Quantity::CullingStrike
                     // The skill's cost (P6-10b).
                     | Poe1Quantity::ManaCost
                     | Poe1Quantity::Cost
@@ -2616,6 +2618,13 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
+    // P6-12: Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua`
+    // 5066): `CullMultiplier`, which scales `CombinedDPS`
+    // (`CalcOffence.lua` 3221, 6138), not the hit or `TotalDPS`.
+    (
+        "kill_enemy_on_hit_if_under_10%_life",
+        &[(Quantity::Poe1(Poe1Quantity::CullingStrike), Op::Flag, 1.0)],
+    ),
     // P6-10b: "#% increased Life Recovery rate" (`LifeRecoveryRate` INC).
     (
         "life_recovery_rate_+%",
@@ -3127,12 +3136,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("keystone_mana_shield", "keystone-defence"),
     // P6-11f: Unwavering Stance (the keystone node: cannot evade attacks, cannot be stunned): evade chance and stun, no slice field.
     ("keystone_unwavering_stance", "evade"),
-    // Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua` 5066): it
-    // reaches only `CullMultiplier`, which scales `CullingDPS` and
-    // `CombinedDPS` (`CalcOffence.lua` 3332 to 3339, 6289 to 6292), not
-    // the hit, its rate, or `TotalDPS` (P3-12f, the Smite builds' custom
-    // line).
-    ("kill_enemy_on_hit_if_under_10%_life", "culling"),
     // P6-11g: "#% of Leech is Instant" (`Instant<Pool>Leech` BASE).
     ("leech_%_is_instant", "leech"),
     (

@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 9,
+  "revision": 10,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 10 (Phase 6, P6-12): the main skill's combined damage per second (CombinedDPS), applies present: our result has it whenever the build has a main skill.",
     "Revision 9 (Phase 6, P6-10b): the main skill's mana cost (ManaCost), applies present: our result always has it.",
     "Revision 8 (Phase 6, P6-10b): the movement speed modifier and the effective one with action speed (MovementSpeedMod, EffectiveMovementSpeedMod), applies present: our result always has them.",
     "Revision 7 (Phase 6, P6-10b): energy shield regeneration and recharge per second and the recharge delay in seconds (EnergyShieldRegen, EnergyShieldRecharge, EnergyShieldRechargeDelay), applies present: our result has them whenever energy shield is computed.",
@@ -182,6 +183,7 @@
     {"id": "MovementSpeedMod", "group": "movement", "pob_key": "MovementSpeedMod", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): the movement speed modifier, (1 + increased / 100) x more."},
     {"id": "EffectiveMovementSpeedMod", "group": "movement", "pob_key": "EffectiveMovementSpeedMod", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): the movement speed modifier times the action speed modifier."},
     {"id": "ManaCost", "group": "cost", "pob_key": "ManaCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b): the main skill's mana cost per use."},
+    {"id": "CombinedDPS", "group": "offence", "pob_key": "CombinedDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-12): the hit's, impale's, and the damage over time's damage per second, times the cull multiplier."},
     {"id": "Minion.AverageDamage", "group": "minion", "pob_key": "AverageDamage", "pob_path": ["Minion", "AverageDamage"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.Speed", "group": "minion", "pob_key": "Speed", "pob_path": ["Minion", "Speed"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
     {"id": "Minion.HitChance", "group": "minion", "pob_key": "HitChance", "pob_path": ["Minion", "HitChance"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."},
@@ -190,7 +192,7 @@
     {"id": "Minion.TotalDPS", "group": "minion", "pob_key": "TotalDPS", "pob_path": ["Minion", "TotalDPS"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7c): the minion's main skill's hit (PoB's output.Minion)."}
   ],
   "not_in_slice": [
-    {"what": "ailments, minions, CombinedDPS beyond hit DPS", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},
+    {"what": "ailments, minions, CombinedDPS beyond hit DPS (Phase 6 adds CombinedDPS in revision 10)", "why": "Phase 3 plan decision 4; Phase 6 adds them in its steps (revision 3 added TotalDot)"},
     {"what": "AverageHit", "why": "absent for attacks (per hand in PoB); AverageDamage stands for the average hit of both kinds"}
   ]
 }
