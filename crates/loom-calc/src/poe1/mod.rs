@@ -159,11 +159,11 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
-    /// A minion modifier PoB applies to the minion's life or defences
-    /// ("Minions have #% increased maximum Life", the golems'; P6-7b3a): a
-    /// `Flag` no character field reads; the minion step makes each one a
-    /// reason on the minion fields until P6-7b3b applies them.
-    MinionPending,
+    /// A minion modifier for golems only ("Golems have #% increased
+    /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
+    /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
+    /// minion step applies it when the main skill is a golem skill.
+    GolemMinion(minions::MinionValue),
     /// Reservation efficiency of a pool, or of both (PoB's
     /// `<Pool>ReservationEfficiency` and `ReservationEfficiency`, P3-8l):
     /// `Increased`, read by [`skill_modifiers::Totals`] for the other
@@ -473,7 +473,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
-            Self::MinionPending => f.write_str("minion-pending"),
+            Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }

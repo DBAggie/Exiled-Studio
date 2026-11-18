@@ -96,7 +96,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-7b3a PR #165 (base `feat/p6-7b1b-review`)
 - [x] P6-7b3a2: the #165 review (12 item skills, `minion-buffs` in the main group, `base_numbers` and the `Ingest` test, six stat slots, early return, mapping comments); `docs/phase-6/minions.md`, "The P6-7b3a review"
 - [x] P6-7b3a2 PR #166 (base `feat/p6-7b3a-minion-base`)
-- [ ] P6-7b3b: register Vaal Summon Skeletons' minion level (88 against PoB's 90) once its fields are `Complete`; a fixture with `set_maximum_life_is_one`
+- [x] P6-7b3b: the character's minion modifiers on the minion (31 rows in `poe1::minions::STATS`, `GolemMinion`, `minion_modifiers`, `gem_modifiers`, `ModStore::elsewhere`), `MinionPending` removed, PoB's more rounding in `phases::chain`; fixture `minion-summon-stone-golem-golem-lines-witch.xml`; sweep 40 `Complete` minion fields equal to PoB; `docs/phase-6/minions.md`, "P6-7b3b" (PR: the open-tasks PR, branch `feat/p6-remaining`)
+- [ ] Vaal Summon Skeletons' minion level (88 against PoB's 90): register once its fields are `Complete` (its gem is `unmodelled-gem` until P6-9)
+- [ ] A fixture with `set_maximum_life_is_one`: waits on a data run with gem level requirements (every such minion's level comes from them or the character)
 - [ ] Maintainer: the next data run ships `poe1/minions.json` with `object_stats`
 ## P6-7c: minion hits and DoT, spectres
 ## P6-8a: triggers

@@ -1696,6 +1696,10 @@ impl StatMapping for SkillMapping {
             other => other,
         }
     }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
+    }
 }
 
 const STR: Quantity = Quantity::Strength;
@@ -2284,18 +2288,6 @@ pub const ROWS: &[Row] = &[
             (Quantity::Evasion, Op::Increased, 1.0),
         ],
     ),
-    // P6-7b3a: a minion modifier PoB applies to the minion; read only
-    // by the minion step, as a reason, until P6-7b3b.
-    // (`golem_*` stats are reasons for every minion type until P6-7b3b
-    // adds the type filter.)
-    (
-        "golem_immunity_to_elemental_damage",
-        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
-    ),
-    (
-        "golem_maximum_life_+%",
-        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
-    ),
     // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
     // Resistances" (the enemy's `ElementalResist` BASE while ignited or
     // chilled, 4054; `poe1::damage_taken`).
@@ -2333,16 +2325,6 @@ pub const ROWS: &[Row] = &[
     ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
-    // P6-7b3a: a minion modifier PoB applies to the minion; read only
-    // by the minion step, as a reason, until P6-7b3b.
-    (
-        "minion_life_regeneration_rate_per_minute_%",
-        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
-    ),
-    (
-        "minion_maximum_life_+%",
-        &[(Quantity::Poe1(Poe1Quantity::MinionPending), Op::Flag, 1.0)],
-    ),
     // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
     // hash; `collect` adds the node.
     (
@@ -2660,6 +2642,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
     ("gloves_freeze_proliferation_radius", "freeze"),
+    // P6-7b3b: "Golems are Immune to Elemental Damage": PoB's parser does
+    // not read the line (no mod), so it reaches none of PoB's outputs; no
+    // minion field reads damage taken.
+    ("golem_immunity_to_elemental_damage", "minion-defence"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
     // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
@@ -3112,6 +3098,20 @@ impl StatMapping for Poe1Mapping {
                         .collect(),
                 )
             })
+    }
+
+    /// A minion modifier of the minion's own life or defences acts on the
+    /// minion only (P6-7b3b): its unsettled value is the minion's reason
+    /// ([`super::minion_actor`]), not the character's. Minion damage and
+    /// speeds can reach the character through a redirect
+    /// ([`super::minions`]), so they stay the character's.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        match quantity {
+            Quantity::Poe1(Poe1Quantity::Minion(v) | Poe1Quantity::GolemMinion(v)) => {
+                !super::minions::MinionValue::REDIRECTED.contains(&v)
+            }
+            _ => false,
+        }
     }
 
     /// The curated custom-line patterns (ADR-015 Amendment 2; their names

@@ -55,6 +55,10 @@ fn canonical(a: &Effect, b: &Effect) -> Ordering {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModStore {
     effects: Vec<Effect>,
+    /// Unsettled values of stats whose every effect acts on another actor
+    /// (a minion modifier, P6-7b3b), with those effects' quantities: not
+    /// this actor's reasons, but the other's when it reads them.
+    elsewhere: Vec<(Vec<Quantity>, IndeterminateReason)>,
 }
 
 impl ModStore {
@@ -73,6 +77,19 @@ impl ModStore {
     #[must_use]
     pub fn effects(&self) -> &[Effect] {
         &self.effects
+    }
+
+    /// Records an unsettled value of a stat whose every effect, of
+    /// `quantities`, acts on another actor (P6-7b3b).
+    pub fn add_elsewhere(&mut self, quantities: Vec<Quantity>, reason: IndeterminateReason) {
+        self.elsewhere.push((quantities, reason));
+    }
+
+    /// The unsettled values for other actors, with their effects'
+    /// quantities, in the order they were added.
+    #[must_use]
+    pub fn elsewhere(&self) -> &[(Vec<Quantity>, IndeterminateReason)] {
+        &self.elsewhere
     }
 
     /// Replaces the value of each effect from the `start`-th on with

@@ -60,19 +60,38 @@
 //! formulas ([`super::phases`]); the minion has no item. Its reasons are its
 //! own and the character's (an unmapped "Minions have ..." line).
 //!
-//! Not yet: the character's `MinionModifier` lines, keystones granted to
-//! the minion, `StrengthAddedToMinions` and `ResistanceAddedToMinions`
-//! (P6-7b3b); buffs and auras on the minion (P6-7b4). Each such source is a
-//! reason on the minion fields ([`deferred_reasons`]).
+//! **The character's minion modifiers** (P6-7b3b; `CalcPerform.lua`
+//! `addMinionModifiers`, 1213 to 1219, called at 1918 with the main skill's
+//! `skillModList`): every unconditional [`Poe1Quantity::Minion`] effect of
+//! the character whose kind a minion field reads
+//! ([`super::minions::MinionValue::on_minion`]), and every [`Poe1Quantity::GolemMinion`]
+//! one when the main skill is a golem skill, is added to the minion with
+//! its op, value, and source ([`minion_modifiers`]). The main skill's own
+//! gems (the active one and the supports that apply) are read here from
+//! their stats through the gem mapping ([`gem_modifiers`]: "Minions have
+//! #% more Life" of Minion Life, Stone Golem of Safeguarding's "50% less
+//! Life"), since the character's store holds them only when the skill is
+//! also a hit or damage over time the engine computes; their effects in
+//! the character's store are skipped, so none counts twice.
+//!
+//! Not yet, each a reason on the minion fields ([`deferred_reasons`]):
+//! a conditional minion modifier; buffs and auras on the minion (P6-7b4).
+//! Keystones granted to the minion (`Keystone` mods on it, 1920 to 1924),
+//! `StrengthAddedToMinions` (1207), and `ResistanceAddedToMinions`
+//! (`CalcDefence.lua` 648) come from stats the engine does not map: each is
+//! already an `unmapped-stat` reason of the character.
 
 use loom_data::bundle::poe1::{LifeScaling, MinionType, MinionVariety};
 use loom_domain::{StatId, StatLine, StatValue};
 
-use super::mapping::Poe1Mapping;
+use super::mapping::{Poe1Mapping, SkillMapping};
+
+#[cfg(test)]
+use super::minions::MinionValue;
 use super::phases::{self, Valued};
 use super::pob_minion::{self, PobMinion};
 use super::pob_skill::{self, PobSkill};
-use super::{Defence, gem_levels::GemLevels, skill, states};
+use super::{Defence, Poe1Quantity, gem_levels::GemLevels, skill, states};
 use crate::condition::{ConditionKey, Conditions};
 use crate::engine::{Actor, ActorState, Calc};
 use crate::error::CalcError;
@@ -263,9 +282,11 @@ fn collect(
 
     let mapping = MinionMapping;
     let mut ingest = Ingest::new(&mapping);
-    for reason in deferred_reasons(input, player, skill) {
+    for reason in deferred_reasons(input, skill) {
         ingest.reason(reason);
     }
+    minion_modifiers(player, skill, &mut ingest);
+    gem_modifiers(input, skill, &mut ingest);
     base_values(input, variety, ty, level, &mut ingest)
         .ok_or_else(|| not_computed(source, "minion-data"))?;
     mod_list(input, minions, variety, &mut ingest);
@@ -670,15 +691,141 @@ pub const FIELDS: [MinionField; 9] = [
     MinionField::BlockChance,
 ];
 
-/// What the character gives the minion that P6-7b3b and P6-7b4 model, a
-/// reason on every minion field until then (module docs):
-/// - each [`super::Poe1Quantity::MinionPending`] effect of the character
-///   (a `MinionModifier` on the minion's life or defences), with its
-///   source: `minion-modifier`;
-/// - each stat of the main skill's gems (the active one and its supports)
-///   that PoB's stat map sends to the minion
-///   ([`PobSkill::minion_stats`]: the gem's "Minions have #% more Life"):
-///   `minion-modifier`, with the gem as source;
+/// The character's minion modifiers on the minion (module docs): each
+/// unconditional effect of a kind a minion field reads is added; a
+/// conditional one is a `minion-modifier` reason (its condition would be
+/// the character's, or the minion's, as PoB's tags say: not modelled).
+fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mut Ingest<'_>) {
+    let golem = skill.types.contains("Golem");
+    // An unsettled minion modifier of the character is the minion's reason
+    // when the minion reads it.
+    for (quantities, reason) in player.elsewhere() {
+        if quantities.iter().any(|q| on_minion(golem, *q).is_some()) {
+            ingest.indeterminate(reason.clone());
+        }
+    }
+    let main_group = skill.group.saturating_sub(1);
+    for e in player.effects() {
+        // The main skill's own gems: [`gem_modifiers`].
+        if matches!(e.source, Source::Gem { group, .. } if group == main_group) {
+            continue;
+        }
+        let Some(quantity) = on_minion(golem, e.quantity) else {
+            continue;
+        };
+        if e.conditions != Conditions::none() {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: e.source.clone(),
+                what: "minion-modifier",
+            });
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity,
+            op: e.op,
+            value: e.value,
+            conditions: Conditions::none(),
+            source: e.source.clone(),
+        });
+    }
+}
+
+/// The minion's quantity of a minion modifier of the character, when the
+/// minion reads it: a [`Poe1Quantity::GolemMinion`] one only for a golem
+/// skill (`golem`: the main skill has the `Golem` type).
+fn on_minion(golem: bool, quantity: Quantity) -> Option<Quantity> {
+    match quantity {
+        Quantity::Poe1(Poe1Quantity::Minion(v)) => v.on_minion(),
+        Quantity::Poe1(Poe1Quantity::GolemMinion(v)) if golem => v.on_minion(),
+        _ => None,
+    }
+}
+
+/// How the gem mapping reads a stat PoB's stat map sends to the minion
+/// ([`gem_modifiers`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GemMinionStat {
+    /// As minion modifiers, applied.
+    Applied,
+    /// Not at all: an `unmapped-stat` reason on the minion.
+    Unmapped,
+    /// As no effect, or as the character's: lost on the minion, a
+    /// `minion-modifier` reason.
+    Lost,
+}
+
+/// How the gem mapping reads `stat` ([`GemMinionStat`]).
+fn gem_minion_stat(stat: &str) -> GemMinionStat {
+    match SkillMapping.map(&StatId::new(stat)) {
+        StatMap::Effects(e)
+            if e.iter()
+                .all(|t| super::minions::is_minion_quantity(t.quantity)) =>
+        {
+            GemMinionStat::Applied
+        }
+        StatMap::Unmapped => GemMinionStat::Unmapped,
+        _ => GemMinionStat::Lost,
+    }
+}
+
+/// The main skill's own gems' minion modifiers (module docs): each stat
+/// of the active gem and of the supports that apply that the gem mapping
+/// reads as minion modifiers ([`on_minion`]), with the gem as source. A
+/// stat PoB's stat map sends to the minion ([`PobSkill::minion_stats`])
+/// that the gem mapping does not read is a reason ([`GemMinionStat`]).
+fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &mut Ingest<'_>) {
+    let golem = skill.types.contains("Golem");
+    let group = skill.group.saturating_sub(1);
+    for gem in std::iter::once(&skill.active_gem).chain(&skill.supports) {
+        let source = Source::Gem {
+            group,
+            gem: gem.gem,
+        };
+        let pob = pob_skill::skill(&gem.effect.id);
+        let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
+        for (stat, value) in &instance.stats {
+            let to_minion = *value != 0
+                && pob.is_some_and(|p| p.minion_stats.binary_search(&stat.as_str()).is_ok());
+            match (to_minion, gem_minion_stat(stat)) {
+                (true, GemMinionStat::Unmapped) => {
+                    ingest.reason(UnsupportedReason::UnmappedStat {
+                        stat: StatId::new(stat.as_str()),
+                        source: source.clone(),
+                    });
+                    continue;
+                }
+                (true, GemMinionStat::Lost) => {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what: "minion-modifier",
+                    });
+                    continue;
+                }
+                _ => {}
+            }
+            let StatMap::Effects(templates) = SkillMapping.map(&StatId::new(stat.as_str())) else {
+                continue;
+            };
+            for t in templates {
+                let Some(quantity) = on_minion(golem, t.quantity) else {
+                    continue;
+                };
+                #[expect(clippy::cast_precision_loss, reason = "gem stat values are small")]
+                let value = *value as f64 * t.scale / t.divisor;
+                ingest.effect(Effect {
+                    quantity,
+                    op: t.op,
+                    value,
+                    conditions: t.conditions.clone(),
+                    source: source.clone(),
+                });
+            }
+        }
+    }
+}
+
+/// What the character gives the minion that P6-7b4 models, a reason on
+/// every minion field until then (module docs):
 /// - each other enabled gem (in any group, the main one included) whose
 ///   active skill is an aura, or a buff PoB applies to minions
 ///   (`skillData.buffMinions`, `buffAllies`; `CalcPerform.lua` 2282 and
@@ -688,40 +835,8 @@ pub const FIELDS: [MinionField; 9] = [
 /// (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines.
 /// The engine maps none of them, so each is already an `unmapped-stat`
 /// reason of the character, which every minion field carries.
-fn deferred_reasons(
-    input: &CalcInput<'_>,
-    player: &ModStore,
-    skill: &skill::MainSkill<'_>,
-) -> Vec<UnsupportedReason> {
+fn deferred_reasons(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>) -> Vec<UnsupportedReason> {
     let mut out = Vec::new();
-    for e in player.effects() {
-        if e.quantity == Quantity::Poe1(super::Poe1Quantity::MinionPending) {
-            out.push(UnsupportedReason::UnmodelledSkill {
-                source: e.source.clone(),
-                what: "minion-modifier",
-            });
-        }
-    }
-    let main_group = skill.group.saturating_sub(1);
-    for gem in std::iter::once(&skill.active_gem).chain(&skill.supports) {
-        let Some(pob) = pob_skill::skill(&gem.effect.id) else {
-            continue;
-        };
-        let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
-        if instance
-            .stats
-            .iter()
-            .any(|(s, v)| *v != 0 && pob.minion_stats.binary_search(&s.as_str()).is_ok())
-        {
-            out.push(UnsupportedReason::UnmodelledSkill {
-                source: Source::Gem {
-                    group: main_group,
-                    gem: gem.gem,
-                },
-                what: "minion-modifier",
-            });
-        }
-    }
     let Ok(groups) = skill::active_groups(input.build) else {
         return out;
     };
@@ -792,6 +907,51 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// P6-7b3b: a minion modifier reaches the minion's quantity; a golem
+    /// one only for a golem skill; a kind no minion field reads, and any
+    /// other quantity, reach nothing.
+    #[test]
+    fn on_minion_should_filter_golem_modifiers() {
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        let golem = |v| Quantity::Poe1(Poe1Quantity::GolemMinion(v));
+        assert_eq!(
+            on_minion(false, minion(MinionValue::Life)),
+            Some(Quantity::Life)
+        );
+        assert_eq!(on_minion(false, golem(MinionValue::Life)), None);
+        assert_eq!(
+            on_minion(true, golem(MinionValue::Life)),
+            Some(Quantity::Life)
+        );
+        assert_eq!(
+            on_minion(true, golem(MinionValue::Resistance(DamageType::Cold))),
+            Some(Quantity::Resistance(DamageType::Cold))
+        );
+        assert_eq!(on_minion(true, minion(MinionValue::Damage)), None);
+        assert_eq!(on_minion(true, minion(MinionValue::LifeRegen)), None);
+        assert_eq!(on_minion(true, Quantity::Life), None);
+    }
+
+    /// P6-7b3b: a gem's minion stat the gem mapping reads as a minion
+    /// modifier is applied; one it leaves unmapped, or reads as no effect,
+    /// is a reason.
+    #[test]
+    fn gem_minion_stats_should_follow_the_gem_mapping() {
+        assert_eq!(
+            gem_minion_stat("active_skill_minion_life_+%_final"),
+            GemMinionStat::Applied
+        );
+        assert_eq!(gem_minion_stat("minion_damage_+%"), GemMinionStat::Applied);
+        assert_eq!(
+            gem_minion_stat("minion_critical_strike_multiplier_+"),
+            GemMinionStat::Unmapped
+        );
+        assert_eq!(
+            gem_minion_stat("active_skill_area_of_effect_+%_final"),
+            GemMinionStat::Lost
+        );
+    }
 
     /// PoB's exporter writes multipliers with Lua's `tostring`.
     #[test]

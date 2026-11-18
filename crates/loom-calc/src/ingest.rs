@@ -82,6 +82,15 @@ pub trait StatMapping {
         let _ = (resolution, source);
         TypedMap::Unhandled
     }
+
+    /// Whether `quantity` acts on another actor only (a minion modifier,
+    /// P6-7b3b): an unsettled value of a stat whose every effect does is
+    /// that actor's reason ([`ModStore::elsewhere`]), not this one's. The
+    /// default: none does.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        let _ = quantity;
+        false
+    }
 }
 
 /// A stat value as one number: an exact value shown as itself, or the
@@ -262,12 +271,16 @@ impl<'m> Ingest<'m> {
         // whose every effect is a flag still sets it.
         let flags_only = !templates.is_empty() && templates.iter().all(|t| t.op == Op::Flag);
         let Some(value) = settle(&line.value).or(flags_only.then_some(1.0)) else {
-            self.reasons
-                .indeterminate
-                .insert(IndeterminateReason::UnsettledValue {
-                    stat: line.stat.clone(),
-                    source: source.clone(),
-                });
+            let reason = IndeterminateReason::UnsettledValue {
+                stat: line.stat.clone(),
+                source: source.clone(),
+            };
+            if !templates.is_empty() && templates.iter().all(|t| mapping.elsewhere(t.quantity)) {
+                let quantities = templates.iter().map(|t| t.quantity).collect();
+                self.store.add_elsewhere(quantities, reason);
+            } else {
+                self.reasons.indeterminate.insert(reason);
+            }
             return;
         };
         for t in templates {
@@ -450,8 +463,24 @@ mod tests {
                     StatMap::Effects(vec![t(Op::Flag, 1.0, 1.0), t(Op::Base, 1.0, 1.0)])
                 }
                 "empty" => StatMap::Effects(Vec::new()),
+                "mana_elsewhere" => StatMap::Effects(vec![EffectTemplate {
+                    quantity: Quantity::Mana,
+                    ..t(Op::Base, 1.0, 1.0)
+                }]),
+                "life_and_mana" => StatMap::Effects(vec![
+                    t(Op::Base, 1.0, 1.0),
+                    EffectTemplate {
+                        quantity: Quantity::Mana,
+                        ..t(Op::Base, 1.0, 1.0)
+                    },
+                ]),
                 _ => StatMap::Unmapped,
             }
+        }
+
+        /// Mana stands for another actor's quantity here.
+        fn elsewhere(&self, quantity: Quantity) -> bool {
+            quantity == Quantity::Mana
         }
     }
 
@@ -545,6 +574,27 @@ mod tests {
             assert!(store.is_empty(), "{stat}");
             assert_eq!(reasons.indeterminate.len(), 1, "{stat}");
         }
+    }
+
+    /// P6-7b3b: an unsettled value of a stat whose every effect acts on
+    /// another actor is kept for that actor, not this one's reason; with an
+    /// effect of this actor too, it stays this one's.
+    #[test]
+    fn an_unsettled_stat_of_another_actor_should_be_kept_for_it() {
+        let ranged = StatValue::Ranged { min: 1, max: 9 };
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("mana_elsewhere", ranged.clone()));
+        let (store, reasons) = i.finish();
+        assert!(store.is_empty());
+        assert!(reasons.indeterminate.is_empty());
+        assert_eq!(store.elsewhere().len(), 1);
+        assert_eq!(store.elsewhere()[0].0, [Quantity::Mana]);
+
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("life_and_mana", ranged));
+        let (store, reasons) = i.finish();
+        assert!(store.elsewhere().is_empty());
+        assert_eq!(reasons.indeterminate.len(), 1);
     }
 
     #[test]

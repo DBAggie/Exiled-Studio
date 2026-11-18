@@ -1,4 +1,4 @@
-//! Minion modifiers that also affect you (P3-8j, `loom_calc::poe1::minions`)
+//! Minion modifiers (P3-8j and P6-7b3b, `loom_calc::poe1::minions`)
 //! against the real bundle's stat descriptions.
 
 #[expect(dead_code, reason = "only the real bundle's reader is used here")]
@@ -6,10 +6,24 @@ mod common;
 
 use loom_calc::poe1::Poe1Quantity;
 use loom_calc::poe1::minions::{DEPENDS_ON, MinionValue, STATS};
+use loom_calc::quantity::{DamageType, Op};
 
 /// The English text of each row's stat, as PoB's patterns read it
-/// (`ModParser.lua` 3455 to 3462 and its "minions" words).
-const TEXTS: [(&str, &str); 8] = [
+/// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
+/// P6-7b3b's rows checked against PoB's parse of each text).
+const TEXTS: [(&str, &str); 31] = [
+    (
+        "active_skill_minion_energy_shield_+%_final",
+        "Minions have {0}% more Energy Shield",
+    ),
+    (
+        "active_skill_minion_life_+%_final",
+        "Minions have {0}% more Maximum Life",
+    ),
+    (
+        "active_skill_minion_movement_velocity_+%_final",
+        "{0}% more Minion Movement Speed",
+    ),
     (
         "additive_minion_damage_modifiers_apply_to_you_at_150%_value",
         "Increases and Reductions to Minion Damage also affect you at 150% of their value",
@@ -23,6 +37,22 @@ const TEXTS: [(&str, &str); 8] = [
         "Increases and Reductions to Minion Cast Speed also affect you",
     ),
     (
+        "golem_maximum_energy_shield_+%",
+        "Golems have {0}% increased Maximum Energy Shield",
+    ),
+    (
+        "golem_maximum_life_+%",
+        "Golems have {0}% increased Maximum Life",
+    ),
+    (
+        "golem_physical_damage_reduction_rating",
+        "Golems have {0:+d} to Armour",
+    ),
+    (
+        "minion_additional_spell_block_%",
+        "Minions have {0:+d}% Chance to Block Spell Damage",
+    ),
+    (
         "minion_attack_and_cast_speed_+%",
         "Minions have {0}% increased Attack and Cast Speed",
     ),
@@ -31,56 +61,167 @@ const TEXTS: [(&str, &str); 8] = [
         "Minions have {0}% increased Attack Speed",
     ),
     (
+        "minion_block_%",
+        "Minions have {0:+d}% Chance to Block Attack Damage",
+    ),
+    (
         "minion_cast_speed_+%",
         "Minions have {0}% increased Cast Speed",
+    ),
+    (
+        "minion_chaos_resistance_%",
+        "Minions have {0:+d}% to Chaos Resistance",
+    ),
+    (
+        "minion_cold_damage_resistance_%",
+        "Minions have {0:+d}% to Cold Resistance",
+    ),
+    (
+        "minion_cooldown_recovery_+%",
+        "Minions have {0}% increased Cooldown Recovery Rate",
     ),
     ("minion_damage_+%", "Minions deal {0}% increased Damage"),
     (
         "minion_damage_increases_and_reductions_also_affects_you",
         "Increases and Reductions to Minion Damage also affect you",
     ),
+    (
+        "minion_elemental_resistance_%",
+        "Minions have {0:+d}% to all Elemental Resistances",
+    ),
+    (
+        "minion_evasion_rating_+%",
+        "Minions have {0}% increased Evasion Rating",
+    ),
+    (
+        "minion_fire_damage_resistance_%",
+        "Minions have {0:+d}% to Fire Resistance",
+    ),
+    (
+        "minion_life_regeneration_rate_per_minute_%",
+        "Minions Regenerate {0}% of Life per second",
+    ),
+    (
+        "minion_maximum_all_elemental_resistances_%",
+        "Minions have {0:+d}% to all maximum Elemental Resistances",
+    ),
+    (
+        "minion_maximum_energy_shield_+%",
+        "Minions have {0}% increased maximum Energy Shield",
+    ),
+    (
+        "minion_maximum_life_+%",
+        "Minions have {0}% increased maximum Life",
+    ),
+    (
+        "minion_movement_speed_+%",
+        "Minions have {0}% increased Movement Speed",
+    ),
+    (
+        "minion_physical_damage_reduction_rating",
+        "Minions have {0:+d} to Armour",
+    ),
+    (
+        "necromancer_defensive_notable_minion_maximum_life_+%_final",
+        "Minions have {0}% more Maximum Life",
+    ),
+    (
+        "support_minion_damage_minion_life_+%_final",
+        "Minions from Supported Skills have {0}% more Maximum Life",
+    ),
+    (
+        "support_minion_maximum_life_+%_final",
+        "Minions have {0}% more maximum Life",
+    ),
 ];
 
-/// The kind a text names, and its percent for a redirect.
-fn kind_of(text: &str) -> Vec<MinionValue> {
-    if text.contains("Attack and Cast Speed") {
-        vec![MinionValue::AttackSpeed, MinionValue::CastSpeed]
-    } else if text.contains("Attack Speed") {
-        vec![MinionValue::AttackSpeed]
-    } else if text.contains("Cast Speed") {
-        vec![MinionValue::CastSpeed]
+/// The kinds and ops a text names (PoB's reading of it).
+fn kinds_of(text: &str) -> Vec<(MinionValue, Op)> {
+    let op = if text.starts_with("Increases and Reductions") {
+        Op::Flag
+    } else if text.contains("% more ") {
+        Op::More
+    } else if text.contains("% increased ") {
+        Op::Increased
     } else {
-        vec![MinionValue::Damage]
+        Op::Base
+    };
+    let elemental = |f: fn(DamageType) -> MinionValue| {
+        [DamageType::Fire, DamageType::Cold, DamageType::Lightning]
+            .into_iter()
+            .map(|t| (f(t), op))
+            .collect()
+    };
+    if text.contains("Attack and Cast Speed") {
+        vec![(MinionValue::AttackSpeed, op), (MinionValue::CastSpeed, op)]
+    } else if text.contains("Attack Speed") {
+        vec![(MinionValue::AttackSpeed, op)]
+    } else if text.contains("Cast Speed") {
+        vec![(MinionValue::CastSpeed, op)]
+    } else if text.contains("Damage also affect") || text.contains("increased Damage") {
+        vec![(MinionValue::Damage, op)]
+    } else if text.contains("Movement Speed") {
+        vec![(MinionValue::MovementSpeed, op)]
+    } else if text.contains("Cooldown Recovery") {
+        vec![(MinionValue::CooldownRecovery, op)]
+    } else if text.contains("of Life per second") {
+        vec![(MinionValue::LifeRegen, op)]
+    } else if text.contains("Energy Shield") {
+        vec![(MinionValue::EnergyShield, op)]
+    } else if text.contains("aximum Life") {
+        vec![(MinionValue::Life, op)]
+    } else if text.contains("to Armour") {
+        vec![(MinionValue::Armour, op)]
+    } else if text.contains("Evasion Rating") {
+        vec![(MinionValue::Evasion, op)]
+    } else if text.contains("Block Spell Damage") {
+        vec![(MinionValue::SpellBlockChance, op)]
+    } else if text.contains("Block Attack Damage") {
+        vec![(MinionValue::BlockChance, op)]
+    } else if text.contains("all maximum Elemental Resistances") {
+        elemental(MinionValue::MaximumResistance)
+    } else if text.contains("all Elemental Resistances") {
+        elemental(MinionValue::Resistance)
+    } else if text.contains("Chaos Resistance") {
+        vec![(MinionValue::Resistance(DamageType::Chaos), op)]
+    } else if text.contains("Cold Resistance") {
+        vec![(MinionValue::Resistance(DamageType::Cold), op)]
+    } else if text.contains("Fire Resistance") {
+        vec![(MinionValue::Resistance(DamageType::Fire), op)]
+    } else {
+        panic!("no kind for {text}")
     }
 }
 
 #[test]
 fn every_row_should_follow_its_text() {
+    assert_eq!(STATS.len(), TEXTS.len());
     for ((stat, row), (text_stat, text)) in STATS.iter().zip(TEXTS) {
         assert_eq!(*stat, text_stat);
-        let kinds: Vec<MinionValue> = row
+        let kinds: Vec<(MinionValue, Op)> = row
             .iter()
-            .map(|(q, _)| match q {
-                Poe1Quantity::Minion(k) => *k,
+            .map(|&(q, op, _)| match q {
+                Poe1Quantity::Minion(k) => {
+                    assert!(!text.starts_with("Golems"), "{stat}");
+                    (k, op)
+                }
+                Poe1Quantity::GolemMinion(k) => {
+                    assert!(text.starts_with("Golems"), "{stat}");
+                    (k, op)
+                }
                 Poe1Quantity::MinionToYou(k, percent) => {
                     let want = if text.contains("at 150% of their value") {
                         150
                     } else {
                         100
                     };
-                    assert_eq!(*percent, want, "{stat}");
-                    *k
+                    assert_eq!(percent, want, "{stat}");
+                    (k, op)
                 }
                 other => panic!("{stat}: {other:?}"),
             })
             .collect();
-        assert_eq!(kinds, kind_of(text), "{stat}");
-        let redirect = text.starts_with("Increases and Reductions");
-        assert!(
-            row.iter()
-                .all(|(q, _)| matches!(q, Poe1Quantity::MinionToYou(..)) == redirect),
-            "{stat}"
-        );
+        assert_eq!(kinds, kinds_of(text), "{stat}");
     }
 }
 

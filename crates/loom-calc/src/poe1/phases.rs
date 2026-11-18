@@ -148,7 +148,45 @@ fn chain(
         inc_factor,
     )?;
 
-    let more = store.more(graph, quantity, &cx)?;
+    let mut more = store.more(graph, quantity, &cx)?;
+    // PoB rounds a list's more multiplier to two decimals
+    // (`ModDB:MoreInternal`, `round(modResult, 2)`; none of the chained
+    // quantities is in `data.highPrecisionMods`). The nodes are added only
+    // when the rounding changes the value (two or more effects), so the
+    // graphs of every other build are unchanged (P6-7b3b).
+    let rounded = math::round_half_up(more.value * 100.0) / 100.0;
+    if rounded.to_bits() != more.value.to_bits() {
+        let hundred = graph.push(
+            Node::Constant {
+                label: "hundred",
+                value: 100.0,
+            },
+            100.0,
+        )?;
+        let scaled = graph.push(
+            Node::Product {
+                term: Term::Step("more-scaled"),
+                factors: vec![more.node, hundred],
+            },
+            more.value * 100.0,
+        )?;
+        let whole = graph.push(
+            Node::RoundHalfUp {
+                term: Term::Step("more-whole"),
+                of: scaled,
+            },
+            math::round_half_up(more.value * 100.0),
+        )?;
+        more.node = graph.push(
+            Node::Quotient {
+                term: Term::Step("more-rounded"),
+                a: whole,
+                b: hundred,
+            },
+            rounded,
+        )?;
+        more.value = rounded;
+    }
     let (value, factors) = match order {
         Order::Left => (
             base * inc_factor * more.value,

@@ -284,3 +284,61 @@ The code-architecture-reviewer found no blockers in #165. Applied:
 **Evidence:**
 - **The sweep:** only Holy Strike changed, its reason now `minion-items` instead of `minion-level`. There are still 0 unexpected differences.
 - **Public and corpus on `b-ot`:** no value or state changed. There are 0 unexpected differences, and both runs are byte-identical.
+
+## P6-7b3b: the character's minion modifiers on the minion
+
+PoB adds every `MinionModifier` of the main skill's `skillModList` to the minion (`CalcPerform.lua` `addMinionModifiers`, 1213 to 1219, called at 1918), keeping only those whose `type` names the minion. "Golems have ..." lines carry the main skill's `SkillType.Golem` tag (`ModParser.lua` 1137).
+
+### The rows
+
+`poe1::minions::STATS` has 31 rows, sorted. Each carries PoB's mod type as its op. Each was checked against PoB's own reading:
+- **item and passive lines:** PoB's `modLib.parseMod` on the game's text, rendered from the bundle's stat descriptions. The tool is `tools/oracle/data/pob_parse_lines.lua`, with the inner `MinionModifier` mod written out (local copy, `local/p6/parse2`).
+- **gem stats:** PoB's stat map (`Data/SkillStatMap.lua` 1922 to 2061; `Data/Skills/sup_int.lua` 4675 and 4929).
+
+The new kinds of `MinionValue` are the minion's life, energy shield, armour, evasion, each resistance, each maximum resistance, block and spell block, life regeneration, movement speed, and cooldown recovery. `MinionValue::on_minion` names the minion's quantity for each. Regeneration, movement speed, and cooldown recovery reach no minion field, just as the character's movement speed reaches no field. Damage and speeds are P6-7c's.
+
+| Rows | PoB's reading |
+|---|---|
+| `minion_maximum_life_+%`, `minion_maximum_energy_shield_+%`, `minion_evasion_rating_+%` | `Life`, `EnergyShield`, `Evasion` INC |
+| `active_skill_minion_life_+%_final`, `support_minion_maximum_life_+%_final`, `support_minion_damage_minion_life_+%_final`, `necromancer_defensive_notable_minion_maximum_life_+%_final`, `active_skill_minion_energy_shield_+%_final` | `Life` or `EnergyShield` MORE |
+| `minion_physical_damage_reduction_rating` | `Armour` BASE |
+| `minion_elemental_resistance_%`, `minion_fire_damage_resistance_%`, `minion_cold_damage_resistance_%`, `minion_chaos_resistance_%` | `<Type>Resist` BASE (all three for the elemental row) |
+| `minion_maximum_all_elemental_resistances_%` | `ElementalResistMax` BASE |
+| `minion_block_%`, `minion_additional_spell_block_%` | `BlockChance`, `SpellBlockChance` BASE |
+| `minion_life_regeneration_rate_per_minute_%` | `LifeRegenPercent` BASE, per minute over 60 (no field) |
+| `minion_movement_speed_+%`, `active_skill_minion_movement_velocity_+%_final`, `minion_cooldown_recovery_+%` | `MovementSpeed` INC and MORE, `CooldownRecovery` INC (no field) |
+| `golem_maximum_life_+%`, `golem_maximum_energy_shield_+%`, `golem_physical_damage_reduction_rating` | the same, tagged `SkillType.Golem`: `Poe1Quantity::GolemMinion` |
+
+**Moved out of `MinionPending`:**
+- `Poe1Quantity::MinionPending` is gone. Its four stats are rows now, except `golem_immunity_to_elemental_damage`.
+- `golem_immunity_to_elemental_damage` is back in `NO_EFFECT` (`minion-defence`): PoB's parser does not read its line ("Golems are Immune to Elemental Damage"), so it reaches none of PoB's outputs.
+
+### The minion step
+
+`poe1::minion_actor` now adds three things to the minion:
+- **`minion_modifiers`:** the character's effects of those kinds. A golem kind applies only when the main skill has the `Golem` type. A conditional one is a `minion-modifier` reason.
+- **`gem_modifiers`:** the main skill's own gems' stats, read through the gem mapping.
+  - The character's store holds them only when the skill is also a hit or damage over time the engine computes. So they are read here, and their copies in the character's store are skipped.
+  - A stat PoB's stat map sends to the minion (`PobSkill::minion_stats`) that the gem mapping leaves unmapped is an `unmapped-stat` reason on the minion. One it reads as no effect is a `minion-modifier` reason.
+- **Unsettled values:** an unsettled range on a minion-only stat (`StatMapping::elsewhere`) is kept in `ModStore::elsewhere`. It becomes the minion's `unsettled-value` reason, not the character's.
+  - Before this, such a range made every character field indeterminate (Forged Frostbearer's "Minions Regenerate (1-2)% of Life per second").
+  - Minion damage and speeds stay the character's, since a redirect can give them to the character.
+
+**PoB's more multiplier rounding:** `ModDB:MoreInternal` rounds each name's product of `1 + more / 100` to two decimals. The engine's `phases::chain` (life, mana, energy shield, armour, evasion) did not. It now does, adding the nodes only when the rounding changes the value. Raise Zombie with Minion Life shows it: 1.38 x 1.49 = 2.0562, which PoB rounds to 2.06. No character value of the public or corpus builds changed. `hit.rs` already rounded the hit's multipliers so.
+
+**Not modelled, each a reason:** keystones given to the minion, `StrengthAddedToMinions`, and `ResistanceAddedToMinions` come from stats the engine does not map, so each is already the character's `unmapped-stat`. Reaper's "non-Reaper minions" life (a `GlobalEffect` buff) waits for P6-7b4.
+
+### Evidence
+
+- **The sweep (52 builds):**
+  - 0 unexpected differences.
+  - 40 minion fields are `Complete`, all equal to PoB. That is 32 before, minus those now carrying a gem's unmapped minion damage stat, plus Herald of Purity's and Stone Golem of Safeguarding's.
+  - Every `Partial` field equals PoB except Vaal Summon Skeletons' life, armour, and evasion (the level). Its fields stay `Partial` through the gem's `unmodelled-gem`, so its register entry waits (task kept).
+- **Fixtures:**
+  - New: `minion-summon-stone-golem-golem-lines-witch.xml`, with golem life and armour lines and two more-life lines. All 25 fields are `Complete` and equal to PoB, the rounding included.
+  - Stone Golem of Safeguarding's targets gain its minion fields.
+  - A Raise Zombie build with the minion lines and Minion Life equals PoB on every minion field. It stays local (`local/p6/fx16`): the Raise Zombie gem is the character's `unmodelled-gem` until P6-9.
+- **`set_maximum_life_is_one`:** every skill minion with it (skitterbots, Herald of Agony's spider, ancestral totems' minions) takes its level from the gem's level requirement or the character. The bundle carries neither, so those minions are `minion-level`, and the fixture waits on a data run with level requirements.
+- **Public `calc-parity` on `b-ot`:** 162 builds, 109 expected differences, 0 unexpected. `Complete` fields went from 2,822 to 2,857 (2,840 without the new fixture), and the indeterminate count is unchanged.
+- **Corpus:** 0 unexpected, field counts unchanged.
+- Both runs are byte-identical.

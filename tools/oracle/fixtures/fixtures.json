@@ -1589,8 +1589,8 @@
       "path": "mechanic/minion-summon-stone-golem-alt-y-witch.xml",
       "sha256": "d291a639bf46fe09ca517f5dff536d313819e7fb2672524f7e2363f4d5516f2c",
       "expect": "ok",
-      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "P6-7b3a: Summon Stone Golem of Safeguarding: the gem's minion life stat (less life) is a reason on the minion fields until P6-7b3b."
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3a: Summon Stone Golem of Safeguarding: the gem's minion life stat (50% less life), applied to the minion since P6-7b3b."
     },
     {
       "id": "minion-herald-of-purity-witch.xml",
@@ -1600,7 +1600,17 @@
       "sha256": "4072321060561efae9986325d4a00e3120db615f9810a0557375484144cb4fee",
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "P6-7b3a: Herald of Purity: its sentinel; the gem's minion life stat is a reason until P6-7b3b."
+      "description": "P6-7b3a: Herald of Purity: its sentinel; the gem minion life stat is applied since P6-7b3b, and its unmapped minion damage stat is a reason on the minion fields until P6-7c."
+    },
+    {
+      "id": "minion-summon-stone-golem-golem-lines-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/minion-summon-stone-golem-golem-lines-witch.xml",
+      "sha256": "c7c15a26b31d7873e021a87ed711f24b489c065dfe4fcd0ea10e1caaab5b9d7a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Minion.Armour", "Minion.ChaosResist", "Minion.ColdResist", "Minion.EnergyShield", "Minion.Evasion", "Minion.FireResist", "Minion.Life", "Minion.LightningResist", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-7b3b: Summon Stone Golem with golem lines (life, armour) and two minion more-life lines: the character's minion modifiers on a golem, and PoB's more multiplier rounded to two decimals."
     }
   ]
 }
