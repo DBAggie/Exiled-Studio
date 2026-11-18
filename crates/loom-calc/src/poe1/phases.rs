@@ -148,45 +148,9 @@ fn chain(
         inc_factor,
     )?;
 
-    let mut more = store.more(graph, quantity, &cx)?;
     // PoB rounds a list's more multiplier to two decimals
-    // (`ModDB:MoreInternal`, `round(modResult, 2)`; none of the chained
-    // quantities is in `data.highPrecisionMods`). The nodes are added only
-    // when the rounding changes the value (two or more effects), so the
-    // graphs of every other build are unchanged (P6-7b3b).
-    let rounded = math::round_half_up(more.value * 100.0) / 100.0;
-    if rounded.to_bits() != more.value.to_bits() {
-        let hundred = graph.push(
-            Node::Constant {
-                label: "hundred",
-                value: 100.0,
-            },
-            100.0,
-        )?;
-        let scaled = graph.push(
-            Node::Product {
-                term: Term::Step("more-scaled"),
-                factors: vec![more.node, hundred],
-            },
-            more.value * 100.0,
-        )?;
-        let whole = graph.push(
-            Node::RoundHalfUp {
-                term: Term::Step("more-whole"),
-                of: scaled,
-            },
-            math::round_half_up(more.value * 100.0),
-        )?;
-        more.node = graph.push(
-            Node::Quotient {
-                term: Term::Step("more-rounded"),
-                a: whole,
-                b: hundred,
-            },
-            rounded,
-        )?;
-        more.value = rounded;
-    }
+    // (`ModStore::more_rounded`; P6-7b3b and its review).
+    let more = store.more_rounded(graph, quantity, &cx)?;
     let (value, factors) = match order {
         Order::Left => (
             base * inc_factor * more.value,
@@ -572,7 +536,7 @@ pub(super) fn resistance(
     let cx = calc.context(Flags::NONE);
     let (store, graph) = calc.parts();
     let inc = store.increased(graph, quantity, &cx)?;
-    let more = store.more(graph, quantity, &cx)?;
+    let more = store.more_rounded(graph, quantity, &cx)?;
     reasons.extend(&inc.reasons);
     reasons.extend(&more.reasons);
     let modifier = product(
@@ -690,7 +654,7 @@ pub(super) fn attack_block(
     // Attack and spell block share these nodes (and their reasons).
     let (store, graph) = calc.parts();
     let inc = store.increased(graph, Quantity::BlockChance, &cx)?;
-    let more = store.more(graph, Quantity::BlockChance, &cx)?;
+    let more = store.more_rounded(graph, Quantity::BlockChance, &cx)?;
     let mut modifier_reasons = inc.reasons.clone();
     modifier_reasons.extend(&more.reasons);
     reasons.extend(&modifier_reasons);
@@ -796,7 +760,7 @@ fn defence_modifier(
     let inc = factor(calc, inc, Term::Increased)?;
     let cx = calc.context(Flags::NONE);
     let (store, graph) = calc.parts();
-    let more = store.more(graph, quantity, &cx)?;
+    let more = store.more_rounded(graph, quantity, &cx)?;
     reasons.extend(&more.reasons);
     product(
         calc,

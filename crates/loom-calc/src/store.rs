@@ -266,6 +266,62 @@ impl ModStore {
         })
     }
 
+    /// [`Self::more`] rounded as PoB's `ModDB:MoreInternal` rounds a
+    /// list's product (`round(modResult, 2)`, for a mod name not in
+    /// `data.highPrecisionMods`; P6-7b3b and its review): with any effect,
+    /// `round(product x 100) / 100`, as nodes; with none, 1. The product is
+    /// rounded per quantity: PoB rounds per mod name, which differs only
+    /// where several names feed one quantity (a reason to read per name
+    /// where the engine has such a case, as `poe1::hit` does).
+    ///
+    /// # Errors
+    /// A graph error (the graph is full).
+    pub fn more_rounded(
+        &self,
+        graph: &mut Graph,
+        quantity: Quantity,
+        cx: &QueryContext,
+    ) -> Result<Query, GraphError> {
+        let mut more = self.more(graph, quantity, cx)?;
+        let mut reasons = Reasons::new();
+        if self.select(quantity, Op::More, cx, &mut reasons).is_empty() {
+            return Ok(more);
+        }
+        let hundred = graph.push(
+            Node::Constant {
+                label: "hundred",
+                value: 100.0,
+            },
+            100.0,
+        )?;
+        let scaled_value = more.value * 100.0;
+        let scaled = graph.push(
+            Node::Product {
+                term: Term::Step("more-scaled"),
+                factors: vec![more.node, hundred],
+            },
+            scaled_value,
+        )?;
+        let whole_value = math::round_half_up(scaled_value);
+        let whole = graph.push(
+            Node::RoundHalfUp {
+                term: Term::Step("more-whole"),
+                of: scaled,
+            },
+            whole_value,
+        )?;
+        more.value = whole_value / 100.0;
+        more.node = graph.push(
+            Node::Quotient {
+                term: Term::Step("more-rounded"),
+                a: whole,
+                b: hundred,
+            },
+            more.value,
+        )?;
+        Ok(more)
+    }
+
     /// Whether a `Flag` effect on `quantity` applies: `1` if one does,
     /// else `0`.
     ///
@@ -472,6 +528,39 @@ mod tests {
             .more(&mut g, Quantity::Life, &QueryContext::default())
             .unwrap();
         assert_eq!(q.value, 0.8 * 1.5);
+        g.check().unwrap();
+    }
+
+    /// PoB's `round(modResult, 2)` (P6-7b3b review): two mores round
+    /// together; one already two-decimal stays; none is 1.
+    #[test]
+    fn more_rounded_should_round_to_two_decimals() {
+        let cx = QueryContext::default();
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 15.0, rule("a")));
+        s.add(effect(Op::More, 15.0, rule("b")));
+        let mut g = Graph::new();
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.32
+        );
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 33.3, rule("a")));
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.33
+        );
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 49.0, rule("a")));
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.49
+        );
+        let s = ModStore::new();
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.0
+        );
         g.check().unwrap();
     }
 

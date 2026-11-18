@@ -369,6 +369,8 @@ const NO_SLICE_NAMES: &[&str] = &[
 const ENEMY_NO_SLICE_NAMES: &[&str] = &[
     "Accuracy",
     "BuffExpireFaster",
+    // The enemy's own damage (Enfeeble): no field computes the enemy's
+    // offence. If one ever does, this name must leave this list.
     "Damage",
     "SelfFreezeChance",
     "SelfFreezeDuration",

@@ -120,3 +120,54 @@ Each of these is in `gem_effects`' `ALLOWED_MINIONS`, the list of skills whose m
 - **Fixtures (`Complete` and equal to PoB):** the Raise Zombie build with minion lines (P6-7b3b, local until now), and the sweep's Raise Zombie, Summon Skeletons, and Summon Raging Spirit.
 - **Public `calc-parity`:** 173 builds, 112 expected differences (the three new entries), 0 unexpected. `Complete` fields: 3,124.
 
+## P6-9d: skills with their own data, and four buffs
+
+**A skill's own data:** PoB reads these `SkillData` keys only from the skill's own `skillData` (checked in `CalcOffence.lua`), never another skill's. `gem_effects` now counts them as the skill's own keys:
+- base damage and damage over time: `FireMin`, `FireMax`, `LightningMin`, `LightningMax`, `ChaosMin`, `ChaosMax`, `ChaosDot`, `ColdDot`, `PhysicalDot`;
+- timing: `damageInterval`, `hitFrequency`, `fixedCastTime`;
+- corpse explosion data: `explodeCorpse`, `corpseExplosionLifeMultiplier`, `hitChanceIsExplodeChance`;
+- `dpsMultiplier`, `dotIsProjectile`.
+
+16 skills are then inert as another group's skill: Flame Dash, Detonate Dead's corpse explosion (`EnemyExplode`), Desecrate, Dash, Toxic Rain, Shield Crush, Tornado, Volatile Dead, Vaal Detonate Dead, Orb of Storms, Fire Trap, Storm Rain, Double Strike, Essence Drain, Contagion, and Rolling Magma.
+
+**Buffs:**
+
+| Skill | Rows |
+|---|---|
+| Hatred (aura) | `PhysicalDamageGainAsCold` BASE, `Poe1Quantity::GainAs` |
+| Herald of Thunder (buff) | added lightning damage to attacks and spells |
+| Malevolence (aura) | `Damage` MORE with `ModFlag.Dot` (`Flags::DOT`); its skill effect duration reaches no field |
+| Enduring Cry (warcry) | none reaches a slice field (regeneration, warcry power) |
+
+`gem_effects` reads `ModFlag.Dot` as `dot`, and allows `Duration` and `LifeRegenPercent` as names no field reads.
+
+**Not yet, with why:**
+- Tempest Shield: PoB disables it without a shield, which the other-gems table does not check yet.
+- Pride: its effect is PoB's `modCond` from the config.
+- The marks: they need the mark slot rule.
+- General's and Battlemage's Cry: mirage warriors, warcry power.
+- The offerings and Bone and Carrion golems: minion buffs with their own effect stats.
+
+**Evidence:**
+- **`gem_effects`:** 1,237 values compared, 0 differences.
+- **Fixture:** `ice-nova-herald-of-thunder-enlighten-witch.xml` (Herald of Thunder and Purity of Ice with Enlighten 3, and Hatred). All 22 computed fields are `Complete` and equal to PoB, reservation included.
+- **Corpus:** 8 values moved toward PoB and 5 away. Three builds' unreserved mana went further below PoB's: the newly modelled reserving skills add reservation that PoB lowers with modifiers the engine does not read yet (those fields stay `Partial`). The fixture shows the skills' own reservation equal to PoB.
+
+## The review of P6-7b3b to P6-9c (code-architecture-reviewer, no blockers)
+
+Applied:
+- **M1, M2: PoB's more rounding everywhere the phases read a more.**
+  - `ModStore::more_rounded` rounds the product to two decimals whenever an effect applies. The nodes are always added, so the graph no longer depends on float noise.
+  - `phases` uses it for every chained quantity, the resistances, block, and the primary defences, the minion's included. Test: `more_rounded_should_round_to_two_decimals`.
+  - PoB rounds per mod name. The store rounds per quantity, which differs only where several names feed one quantity (energy shield's `EnergyShield` and `Defences`); this is noted in the doc.
+- **M3:** the minion step adds the `unread-skill-modifier` reason when the buff totals did not read a modifier.
+- **M4:** an unsettled minion-only value reaches the minion's reasons for every kind (regeneration, movement, cooldown too), except a golem one for a skill that is not a golem. Test: `applies_to_should_keep_every_kind_but_golem_for_others`.
+- **m1:** a conditional minion modifier from the main skill's gems is a `minion-modifier` reason, as from the character.
+- **m8:** the export scripts behind the inert classification are committed: `tools/oracle/data/classify_gems.py`, `minion_skill_globals.py`. `ENEMY_NO_SLICE_NAMES`' `Damage` is noted.
+- **m9:** line ranges made consistent.
+
+Left, with why:
+- **m3:** curses that ignore the limit, and hexproof enemies. Their sources are unmapped stats or PoB config options the engine classifies, so they stay reasons.
+- **m4:** the socket index uses the gem's position among typed gems. It differs from PoB's only with untyped gems or a repeated curse gem in one group.
+- **m7:** the register has only `accepted` and `retired`. DIV-0111 to DIV-0113 note that confirmation in game is a maintainer item.
+

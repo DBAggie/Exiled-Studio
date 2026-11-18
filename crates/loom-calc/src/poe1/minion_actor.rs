@@ -293,6 +293,14 @@ fn collect(
     let mut ingest = Ingest::new(&mapping);
     minion_modifiers(player, skill, &mut ingest);
     let totals = super::skill_modifiers::Totals::from_effects(player.effects());
+    // A buff or aura effect modifier the totals do not read scales the
+    // minion's buffs as the character's (P6-7b3b review).
+    if totals.unread {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: Source::Rule("skill-modifiers"),
+            what: "unread-skill-modifier",
+        });
+    }
     super::gems::minion_buffs(input, &levels_of(player), &totals, &mut ingest);
     gem_modifiers(input, skill, &mut ingest);
     base_values(input, variety, ty, level, &mut ingest)
@@ -707,8 +715,11 @@ fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mu
     let golem = skill.types.contains("Golem");
     // An unsettled minion modifier of the character is the minion's reason
     // when the minion reads it.
+    // Every one reaches the minion's reasons, those of kinds no minion field
+    // reads yet too (regeneration, movement, cooldown: kept visible, ADR-015;
+    // P6-7b3b review), but a golem one for a skill that is not a golem.
     for (quantities, reason) in player.elsewhere() {
-        if quantities.iter().any(|q| on_minion(golem, *q).is_some()) {
+        if quantities.iter().any(|q| applies_to(golem, *q)) {
             ingest.indeterminate(reason.clone());
         }
     }
@@ -735,6 +746,17 @@ fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mu
             conditions: Conditions::none(),
             source: e.source.clone(),
         });
+    }
+}
+
+/// Whether a minion modifier of the character applies to this minion at
+/// all (a golem one only for a golem skill), whether or not a minion field
+/// reads its kind.
+fn applies_to(golem: bool, quantity: Quantity) -> bool {
+    match quantity {
+        Quantity::Poe1(Poe1Quantity::Minion(_)) => true,
+        Quantity::Poe1(Poe1Quantity::GolemMinion(_)) => golem,
+        _ => false,
     }
 }
 
@@ -818,13 +840,23 @@ fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &m
                 let Some(quantity) = on_minion(golem, t.quantity) else {
                     continue;
                 };
+                // As for the character's (`minion_modifiers`): a
+                // conditional minion modifier is a reason, not evaluated
+                // against the minion's states (P6-7b3b review).
+                if t.conditions != Conditions::none() {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what: "minion-modifier",
+                    });
+                    continue;
+                }
                 #[expect(clippy::cast_precision_loss, reason = "gem stat values are small")]
                 let value = *value as f64 * t.scale / t.divisor;
                 ingest.effect(Effect {
                     quantity,
                     op: t.op,
                     value,
-                    conditions: t.conditions.clone(),
+                    conditions: Conditions::none(),
                     source: source.clone(),
                 });
             }
@@ -871,6 +903,19 @@ mod tests {
     /// P6-7b3b: a minion modifier reaches the minion's quantity; a golem
     /// one only for a golem skill; a kind no minion field reads, and any
     /// other quantity, reach nothing.
+    /// P6-7b3b review: an unsettled value of a kind no minion field reads
+    /// still reaches the minion; a golem one only a golem.
+    #[test]
+    fn applies_to_should_keep_every_kind_but_golem_for_others() {
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        let golem = |v| Quantity::Poe1(Poe1Quantity::GolemMinion(v));
+        assert!(applies_to(false, minion(MinionValue::LifeRegen)));
+        assert!(applies_to(false, minion(MinionValue::Life)));
+        assert!(!applies_to(false, golem(MinionValue::Life)));
+        assert!(applies_to(true, golem(MinionValue::Life)));
+        assert!(!applies_to(true, Quantity::Life));
+    }
+
     #[test]
     fn on_minion_should_filter_golem_modifiers() {
         let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));

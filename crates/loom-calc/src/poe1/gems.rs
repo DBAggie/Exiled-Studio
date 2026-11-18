@@ -1906,7 +1906,7 @@ fn curse_priority(name: &str, gem: usize, slot: Option<&str>, aura: bool) -> i64
     base + socket + slot + if aura { 20000 } else { 0 }
 }
 
-/// PoB's curse slots (`CalcPerform.lua` 3160 to 3212, no mark): the
+/// PoB's curse slots (`CalcPerform.lua` 3155 to 3212, no mark): the
 /// indexes of `curses` (in the skill list's order) that hold the
 /// `limit` slots.
 fn curse_slots(curses: &[CurseApplied], limit: usize) -> Vec<usize> {

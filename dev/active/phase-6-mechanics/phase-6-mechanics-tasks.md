@@ -109,6 +109,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-9a: 15 inert skills, 43 plain supports, nine auras (Anger, Wrath, Determination, Grace, the four Purities, Vitality); `gem_effects` 894 values, 0 differences; three aura fixtures; `docs/phase-6/gems.md`
 - [x] P6-9b: PoB's curse slots and priority, the curse limit stat, a hex's own curse effect, six hexes (Despair, Flammability, Vulnerability, Conductivity, Enfeeble, Temporal Chains); `gem_effects` 954 values, 0 differences; two curse fixtures; `docs/phase-6/gems.md`, "P6-9b"
 - [x] P6-9c: summoning skills inert for the character (20, each minion's skills checked in PoB's export: no `GlobalEffect`), six minion supports; `gem_effects` 1,110 values, 0 differences; minion sweep 109 `Complete` minion fields (80 before Vaal Summon Skeletons' level registered); fixtures: four minion builds and Vaal Summon Skeletons with DIV-0111 to DIV-0113; `docs/phase-6/gems.md`, "P6-9c"
+- [x] P6-9d: skills with their own data (16 inert), Hatred, Herald of Thunder, Malevolence, Enduring Cry; `gem_effects` 1,237 values, 0 differences; fixture with Enlighten; `docs/phase-6/gems.md`, "P6-9d"
+- [x] The review of P6-7b3b to P6-9c applied (`ModStore::more_rounded` in every phase, the minion's unread totals, unsettled minion-only values, conditional gem minion modifiers, the export scripts committed); `docs/phase-6/gems.md`, "The review"
+- [ ] P6-9 remaining: marks (mark slot rule), Tempest Shield (shield check), Pride (`modCond`), General's and Battlemage's Cry, offerings, Bone and Carrion golems
 ## P6-10a: timeless jewels
 ## P6-10b: recovery and defence outputs
 ## P6-11: stat mop-up (batches)
