@@ -623,6 +623,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cast_on_damage_taken_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
+    // PoB `Data/Skills/sup_dex.lua` 841 (Cast on Ward Break): `Damage`
+    // MORE with `ModFlag.Spell` (P6-8a part 2).
+    (
+        "cast_on_ward_break_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
     // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
     // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
     // skills"; `ModParser.lua` 754, 1052); likewise below.
@@ -1406,6 +1412,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_cast_on_crit_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // PoB `Data/Skills/sup_str.lua` 1091 (Cast on Melee Kill's triggered
+    // part): `Damage` MORE with `ModFlag.Spell` (P6-8a part 2).
+    (
+        "support_cast_on_melee_kill_spell_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
     (
         "support_controlled_destruction_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
@@ -2175,6 +2187,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::More,
             Flags::SPELL,
             conditions::ARCANE_SURGE,
+        )],
+    ),
+    // P6-8a part 2: Cast while Channelling's triggered part,
+    // `TriggeredDamage` MORE with `SkillType.Triggered`
+    // (`Data/Skills/sup_int.lua` 759), which PoB turns into `Damage` MORE
+    // when the trigger's source is the skill itself (`poe1::triggers`).
+    (
+        "support_cast_while_channelling_triggered_skill_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            super::triggers::TRIGGERED_DAMAGE,
         )],
     ),
 ];
@@ -3066,6 +3091,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("cannot_have_life_leeched_from", "leech"),
     // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
     ("cast_linked_spells_on_attack_crit_%", "trigger"),
+    // P6-8a part 2: PoB's `chanceToTriggerOnMeleeKill`, which no module
+    // reads (`Modules/`).
+    ("cast_linked_spells_on_melee_kill_%", "trigger"),
     // P6-8a: Cast when Damage Taken's chance; PoB's stat map has no row.
     ("cast_on_damage_taken_%", "trigger"),
     // P6-8a: read by `poe1::triggers` (`triggeredByDamageTaken`).
@@ -3073,6 +3101,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-8a: PoB's `triggeredByCoc` and `triggerOnCrit`, which
     // `poe1::triggers` reads from the support.
     ("cast_spell_on_linked_attack_crit", "trigger"),
+    // P6-8a part 2: PoB's `triggeredByMeleeKill`, which `poe1::triggers`
+    // decides.
+    ("cast_spell_on_linked_melee_kill", "trigger"),
+    // P6-8a part 2: PoB's `triggeredWhileChannelling`, which
+    // `poe1::triggers` decides.
+    ("cast_spell_while_linked_skill_channelling", "trigger"),
+    // P6-8a part 2: read by `poe1::triggers` (Cast while Channelling's
+    // interval, PoB's `triggerTime`).
+    ("cast_while_channelling_time_ms", "trigger"),
     (
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
@@ -3307,6 +3344,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("take_half_area_damage_from_hit_%_chance", "damage-taken"),
+    // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
+    // its cap (`CalcTriggers.lua` 793 to 804).
+    ("trigger_on_ward_break_%_chance", "trigger"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
@@ -4896,6 +4936,9 @@ mod tests {
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
+                        // P6-8a part 2: settled by the spell path from the
+                        // trigger before the damage.
+                        super::super::triggers::TRIGGERED_DAMAGE,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -5140,6 +5183,16 @@ mod tests {
                     staff(SPELL_BLOCK, Op::Base, NONE),
                     shield(SPELL_BLOCK, Op::Base, NONE),
                 ],
+            ),
+            // P6-8a part 2: Cast while Channelling's triggered damage.
+            (
+                "support_cast_while_channelling_triggered_skill_damage_+%_final",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    super::super::triggers::TRIGGERED_DAMAGE,
+                )],
             ),
         ]);
         expected.sort_by(|a, b| a.0.cmp(b.0));

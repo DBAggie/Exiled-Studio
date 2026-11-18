@@ -80,11 +80,17 @@ pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
+/// PoB's `Condition:ChannellingCyclone`, from its config check
+/// `channellingCycloneCheck` (`ConfigOptions.lua` 375; P6-8a: Cyclone's
+/// movement speed buff, `poe1::gems`).
+pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
+
 /// The check inputs and the condition each sets (module docs), sorted by
 /// input (a test checks); an input may set several, and several inputs
 /// one: the condition holds when any of its inputs is on (P6-11g).
 pub const CHECKS: &[(&str, &str)] = &[
     ("buffArcaneSurge", ARCANE_SURGE),
+    ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     ("conditionBlockedAttackRecently", "BlockedAttackRecently"),
     ("conditionBlockedAttackRecently", BLOCKED_RECENTLY),

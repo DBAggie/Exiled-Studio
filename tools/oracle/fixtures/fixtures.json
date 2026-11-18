@@ -1991,6 +1991,46 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-8a: Cast when Damage Taken and Ice Nova: a global trigger at its 0.25 s cooldown rounded to a server tick, and its less damage."
+    },
+    {
+      "id": "trigger-cwc-ice-nova-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-cwc-ice-nova-templar.xml",
+      "sha256": "dca4ed2fbfe5bfa95fce7005adb340a5a22309f479d93c19c686a2a89a2d8a8d",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-8a part 2: Cyclone with Cast while Channelling and Ice Nova: triggered every interval of the channelling skill (PoB's CWCHandler), with the support's TriggeredDamage less damage."
+    },
+    {
+      "id": "trigger-comk-ice-nova-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-comk-ice-nova-templar.xml",
+      "sha256": "1c94e9105141009655d8f286132be6fa4be4274425f0228037d3e9ad8407c448",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-8a part 2: Smite with Cast on Melee Kill and Ice Nova, having killed recently: triggered at Smite's rate and hit chance. Speed, TotalDPS, and CombinedDPS carry Smite's Q11 attack rate (DIV-0181 to DIV-0183)."
+    },
+    {
+      "id": "trigger-comk-no-kill-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-comk-no-kill-templar.xml",
+      "sha256": "4cdb873e62611777666bbe64cee455883a515cc83343c1c87448fb0defd7edc0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-8a part 2: Smite with Cast on Melee Kill and Ice Nova without a recent kill: PoB reports the spell as self-cast."
+    },
+    {
+      "id": "trigger-cwc-channelling-cyclone-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-cwc-channelling-cyclone-templar.xml",
+      "sha256": "78790cbaac0d5e3e8938786d54d7fa7dfaa4da7c89076e84b58c2c2aba92d0ff",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-8a part 2: Cast while Channelling with the channelling Cyclone check on: Cyclone's unscalable movement speed buff (MovementSpeedMod 0.8) and the triggered Ice Nova."
     }
   ]
 }

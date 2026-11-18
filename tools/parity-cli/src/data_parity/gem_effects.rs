@@ -341,6 +341,23 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("SupportCastOnCriticalStrike", "chanceToTriggerOnCrit"),
     ("SupportCastWhenDamageTaken", "triggered"),
     ("SupportCastWhenDamageTaken", "triggeredByDamageTaken"),
+    ("SupportAwakenedCastWhileChannelling", "triggerTime"),
+    ("SupportCastOnMeleeKill", "chanceToTriggerOnMeleeKill"),
+    ("SupportCastOnMeleeKillTriggered", "triggered"),
+    ("SupportCastOnMeleeKillTriggered", "triggeredByMeleeKill"),
+    ("SupportCastOnWardBreak", "chanceToTriggerOnWardBreak"),
+    ("SupportCastOnWardBreak", "triggered"),
+    ("SupportCastWhileChannelling", "triggerTime"),
+    ("SupportCastWhileChannellingTriggered", "triggered"),
+    (
+        "SupportCastWhileChannellingTriggered",
+        "triggeredWhileChannelling",
+    ),
+    ("SupportCastWhileChannellingTriggeredPlus", "triggered"),
+    (
+        "SupportCastWhileChannellingTriggeredPlus",
+        "triggeredWhileChannelling",
+    ),
     // Tempest Shield's counterattack trigger on block (P6-9e): a `SkillData`
     // for attack skills (`SkillType` 2) it triggers, none of its own.
     ("TempestShield", "chanceToTriggerCounterattackOnBlock"),
@@ -458,6 +475,10 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportCastOnCritTriggered", "Triggered"),
     ("SupportCastOnCritTriggeredPlus", "Triggered"),
     ("SupportCastWhenDamageTaken", "Triggered"),
+    ("SupportCastOnMeleeKillTriggered", "Triggered"),
+    ("SupportCastOnWardBreak", "Triggered"),
+    ("SupportCastWhileChannellingTriggered", "Triggered"),
+    ("SupportCastWhileChannellingTriggeredPlus", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
@@ -703,7 +724,17 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         BuffStat::MinionOnly(rows) => (rows, String::new()),
         BuffStat::WhenState { var, rows, .. } => (
             rows,
-            format!(" tags {}", json!({ "type": "Condition", "var": var })),
+            format!(
+                " tags {}{}",
+                json!({ "type": "Condition", "var": var }),
+                // Cyclone's buff is `unscalable` (P6-8a,
+                // `poe1::gems::UNSCALABLE`).
+                if *var == "ChannellingCyclone" {
+                    format!(";global {}", json!({ "unscalable": true }))
+                } else {
+                    String::new()
+                }
+            ),
         ),
         BuffStat::ConfigIs {
             condition, rows, ..

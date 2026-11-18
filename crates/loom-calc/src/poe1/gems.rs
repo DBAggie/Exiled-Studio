@@ -515,6 +515,31 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    // Cyclone (P6-8a, Cast while Channelling's source): its movement speed
+    // buff, `MovementSpeed` MORE with `Condition:ChannellingCyclone` (the
+    // config's check) as an `unscalable` buff (`Data/Skills/act_dex.lua`
+    // 4719 to 4721; [`UNSCALABLE`]).
+    (
+        "Cyclone",
+        Kind::Buff {
+            name: "Cyclone",
+            effect: EffectType::Buff,
+            stats: &[(
+                "cyclone_movement_speed_+%_final",
+                BuffStat::WhenState {
+                    state: super::conditions::CHANNELLING_CYCLONE,
+                    var: "ChannellingCyclone",
+                    rows: &[(
+                        Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                        Op::More,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )],
+                },
+            )],
+        },
+    ),
     ("Dash", Kind::Inert),
     ("Desecrate", Kind::Inert),
     (
@@ -1895,6 +1920,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
 ];
 
+/// Skills whose buff PoB marks `unscalable` (its `GlobalEffect` tag): no
+/// buff effect modifier scales it (P6-8a).
+const UNSCALABLE: &[&str] = &["Cyclone"];
+
 /// The modelled supports, sorted by granted effect ID, each with its
 /// global stats (a buff of the skill it supports, named by the tag's
 /// `effectName` or that skill's name). Checked as [`SKILLS`].
@@ -1931,6 +1960,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportAutomation", &[]),
     ("SupportAwakenedBrutality", &[]),
     ("SupportAwakenedCastOnCriticalStrike", &[]),
+    ("SupportAwakenedCastWhileChannelling", &[]),
     ("SupportAwakenedControlledDestruction", &[]),
     // P6-9e
     ("SupportAwakenedEmpower", &[]),
@@ -1948,7 +1978,13 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCastOnCritTriggered", &[]),
     ("SupportCastOnCritTriggeredPlus", &[]),
     ("SupportCastOnCriticalStrike", &[]),
+    ("SupportCastOnMeleeKill", &[]),
+    ("SupportCastOnMeleeKillTriggered", &[]),
+    ("SupportCastOnWardBreak", &[]),
     ("SupportCastWhenDamageTaken", &[]),
+    ("SupportCastWhileChannelling", &[]),
+    ("SupportCastWhileChannellingTriggered", &[]),
+    ("SupportCastWhileChannellingTriggeredPlus", &[]),
     ("SupportChanceToBleed", &[]),
     ("SupportCombustion", &[]),
     ("SupportConcentratedEffect", &[]),
@@ -3043,7 +3079,12 @@ fn one_skill(
             } else {
                 own_effect(input, s, aura)
             };
-            let scale = totals.buff_scale(aura, &s.types, own);
+            // An `unscalable` buff (Cyclone's movement speed, P6-8a): scale 1.
+            let scale = if UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
+                1.0
+            } else {
+                totals.buff_scale(aura, &s.types, own)
+            };
             if effect == EffectType::Guard {
                 collected
                     .guards

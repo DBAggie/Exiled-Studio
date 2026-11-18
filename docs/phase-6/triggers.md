@@ -63,3 +63,53 @@ A triggered skill's rate is PoB v2.67.2's (`Modules/CalcTriggers.lua`), in `loom
   - `the_rotation_should_share_and_cap_the_triggers`;
   - the damage-taken guard lists Cast when Damage Taken's rows;
   - the workspace's 1,763 tests and clippy pass.
+
+## Part 2: Cast while Channelling, Cast on Melee Kill, Cast on Ward Break
+
+**Configs:**
+- **Cast while Channelling** (`CWCHandler`, `CalcTriggers.lua` 219 to 388):
+  - The source is the group's first channelling skill, not triggered, that the support's first part supports.
+  - Its interval is that part's `cast_while_channelling_time_ms` (PoB's `triggerTime`).
+  - The rate is the rotation of the group's spells it triggers at `1 / interval`, with no trigger cooldown and a chance of 100.
+- **Cast on Melee Kill** (1155): as Cast On Critical Strike from the group's melee attacks, without the crit chance.
+  - It applies only while the character has killed recently, which is PoB's `Condition:KilledRecently` from the config check or a kill count above 0. Otherwise PoB reports self-cast.
+  - A kill count of another type leaves the speed unsupported.
+- **Cast on Ward Break** (1195): a global trigger, as Cast when Stunned.
+- **Not ported:** Cast on Death. PoB's config returns none, but the support's `triggeredOnDeath` changes the skill's time and damage (`CalcOffence.lua` 2403, 4909), so a skill it supports stays not computed.
+
+**Triggered damage:** PoB turns a skill's `TriggeredDamage` into `Damage` when the trigger's source is the skill itself (`addTriggerIncMoreMods`, its `SkillType.Triggered` tag read in the source's config). That is the case for Cast while Channelling and the global triggers.
+- `triggers::Outcome::Rate` carries that flag.
+- The spell path settles the state `triggers::TRIGGERED_DAMAGE` before the damage.
+- Cast while Channelling's `support_cast_while_channelling_triggered_skill_damage_+%_final` is a `STATE_ROWS` row on it.
+
+**Cyclone:**
+- Its movement speed buff (`MovementSpeed` MORE with `Condition:ChannellingCyclone`, `unscalable`) is a gem table entry. The config check `channellingCycloneCheck` is now a settled condition (`conditions::CHANNELLING_CYCLONE`, out of `NAMED_ONLY`).
+- An `unscalable` buff takes scale 1 (`gems::UNSCALABLE`).
+- The `gem_effects` tool renders its `unscalable` tag.
+
+**Rows:**
+- `Damage` MORE with `ModFlag.Spell`: `support_cast_on_melee_kill_spell_damage_+%_final` and `cast_on_ward_break_damage_+%_final`.
+- `NoEffect`: `cast_spell_on_linked_melee_kill`, `cast_spell_while_linked_skill_channelling`, `cast_while_channelling_time_ms`, `trigger_on_ward_break_%_chance`, and `cast_linked_spells_on_melee_kill_%` (PoB's `chanceToTriggerOnMeleeKill`, which no module reads).
+- `cooldown_recovery_rate_+%_per_100_ward` stays unmapped: the engine does not compute ward.
+
+**`data-parity`, table `gem_effects`:** 1,569 values compared, 0 differences.
+
+### Evidence
+
+- **Fixtures** (new, all original; PoB's outputs in `local/p6/fx-trig2-oracle` and `fx-trig2b-oracle`):
+  - `trigger-cwc-ice-nova-templar.xml`: Cyclone, Cast while Channelling, Ice Nova. Every value equals PoB's (the rate 3.128, the 20% less damage).
+  - `trigger-cwc-channelling-cyclone-templar.xml`: the same with the check on. Cyclone's movement speed equals PoB's (0.8).
+  - `trigger-comk-ice-nova-templar.xml`: Smite, Cast on Melee Kill, Ice Nova, killed recently. The damage equals PoB's.
+    - The rate is PoB's simulation fed Smite's Q11 attack rate: with PoB's 1.275 it gives PoB's 0.28056166190371506 to the bit.
+    - Registered: DIV-0181 to DIV-0184, `game-truth` (`Speed`, `TotalDPS`, `CombinedDPS`, and the `TotalDPS` breakdown's printed total).
+  - `trigger-comk-no-kill-templar.xml`: no recent kill, so self-cast. Every value equals PoB's.
+- **Local only** (no `Complete` field to target):
+  - Cast on Ward Break: rate, damage, and DPS equal PoB's, `partial` for the ward stat.
+  - Cast on Death: not computed.
+- **Public `calc-parity` on `b-ot`:** 204 builds, 183 expected, 0 unexpected; `Complete` fields 5,473 (5,349 before).
+  - Three test builds moved, all `indeterminate` or `partial`.
+  - `Generals Perforate Zerker.xml`: Cyclone's buff now applies, as the config check is on, so movement went 1.87 to 1.496 against PoB's 1.832. PoB's value has other unmodelled content. The fixture above shows the buff equals PoB's.
+  - `Dual Wield Cospris CoC.xml`: its Cast On Critical Strike spell is now computed.
+- **Corpus and the minion sweep:** unchanged; 0 unexpected.
+- **Skill sweep:** unchanged.
+- **Tests:** the state row's expected list; the workspace's 1,763 tests and clippy pass.

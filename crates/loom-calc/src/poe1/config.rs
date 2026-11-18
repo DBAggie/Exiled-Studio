@@ -267,7 +267,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Multiplier:NearbyNonGolemMinion"],
     ),
     ("changedStance", &["Condition:ChangedStanceRecently"]),
-    ("channellingCycloneCheck", &["Condition:ChannellingCyclone"]),
     (
         "conditionAttackedRecently",
         &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],

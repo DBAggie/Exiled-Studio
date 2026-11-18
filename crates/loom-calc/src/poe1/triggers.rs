@@ -10,9 +10,24 @@
 //!   same group with the highest rate; the triggered skills are the group's
 //!   spells it supports; the trigger chance is the source's hit chance
 //!   times its crit chance.
-//! - **Cast when Damage Taken** (1175) and **Cast when Stunned** (1190):
-//!   global triggers whose source is the skill itself; the rate is the
-//!   trigger's cooldown cap.
+//! - **Cast when Damage Taken** (1175), **Cast when Stunned** (1190), and
+//!   **Cast on Ward Break** (1195): global triggers whose source is the
+//!   skill itself; the rate is the trigger's cooldown cap.
+//! - **Cast on Melee Kill** (1155, P6-8a part 2): as Cast On Critical
+//!   Strike from the group's melee attacks, without the crit chance, only
+//!   while the character has killed recently (PoB's
+//!   `Condition:KilledRecently`: the config's check or its kill count);
+//!   else self-cast.
+//! - **Cast while Channelling** (1393, `CWCHandler` 219 to 388): the
+//!   source is the group's channelling skill the support's first part
+//!   supports, its interval the part's `cast_while_channelling_time_ms`
+//!   (PoB's `triggerTime`); the rate is the rotation of the group's spells
+//!   it triggers at `1 / interval`, without a trigger cooldown or chance.
+//!
+//! Cast on Death is not ported: PoB's config returns none, but the
+//! support's `triggeredOnDeath` changes the skill's own time and damage
+//! (`CalcOffence.lua` 2403, 4909), so a skill it supports stays not
+//! computed.
 //!
 //! The Holy Relic's Nova (1167, a minion skill the character's attacks
 //! trigger) waits for the skills' level requirements in the bundle: PoB
@@ -58,6 +73,12 @@ use crate::result::Field;
 use crate::source::Source;
 use crate::state::{FieldState, Reasons, UnsupportedReason};
 
+/// The state of PoB's `TriggeredDamage` turned into `Damage` (P6-8a part
+/// 2: Cast while Channelling's less damage): settled by the spell path
+/// from [`Outcome::Rate`]'s flag before the damage
+/// (`mapping::STATE_ROWS`).
+pub const TRIGGERED_DAMAGE: &str = "TriggeredDamage";
+
 /// PoB's `data.misc.ServerTickTime`.
 const SERVER_TICK_TIME: f64 = 0.033;
 
@@ -70,6 +91,12 @@ pub enum Config {
     CastWhenDamageTaken,
     /// Cast when Stunned.
     CastWhenStunned,
+    /// Cast on Ward Break.
+    CastOnWardBreak,
+    /// Cast on Melee Kill.
+    CastOnMeleeKill,
+    /// Cast while Channelling (and its awakened gem).
+    CastWhileChannelling,
 }
 
 /// The trigger supports ported, by the granted effect PoB marks
@@ -79,7 +106,35 @@ const SUPPORTS: &[(&str, Config)] = &[
     ("SupportCastOnCritTriggeredPlus", Config::CastOnCrit),
     ("SupportCastWhenDamageTaken", Config::CastWhenDamageTaken),
     ("SupportCastWhenStunned", Config::CastWhenStunned),
+    ("SupportCastOnWardBreak", Config::CastOnWardBreak),
+    ("SupportCastOnMeleeKillTriggered", Config::CastOnMeleeKill),
+    (
+        "SupportCastWhileChannellingTriggered",
+        Config::CastWhileChannelling,
+    ),
+    (
+        "SupportCastWhileChannellingTriggeredPlus",
+        Config::CastWhileChannelling,
+    ),
 ];
+
+/// The first parts of the two-part trigger gems, on the source skill:
+/// Cast On Critical Strike's and Cast on Melee Kill's on the attack, Cast
+/// while Channelling's on the channelling skill.
+const SOURCE_PARTS: &[(&str, Config)] = &[
+    ("SupportAwakenedCastOnCriticalStrike", Config::CastOnCrit),
+    (
+        "SupportAwakenedCastWhileChannelling",
+        Config::CastWhileChannelling,
+    ),
+    ("SupportCastOnCriticalStrike", Config::CastOnCrit),
+    ("SupportCastOnMeleeKill", Config::CastOnMeleeKill),
+    ("SupportCastWhileChannelling", Config::CastWhileChannelling),
+];
+
+/// Cast while Channelling's interval on the channelling skill (PoB's
+/// `triggerTime`, `div = 1000`, `Data/Skills/sup_int.lua` 689).
+const CWC_TIME_STAT: &str = "cast_while_channelling_time_ms";
 
 /// PoB's trigger supports (`isTrigger = true`, `Data/Skills/sup_*.lua`):
 /// a skill one of them supports is triggered.
@@ -141,8 +196,12 @@ pub enum Outcome {
     /// Not triggered, or no source: PoB reports the skill as self-cast.
     SelfCast,
     /// The trigger rate, per second, with the reasons it carries (the
-    /// source's fields').
-    Rate(f64, Reasons),
+    /// source's fields'), and whether the trigger's source is the skill
+    /// itself (Cast while Channelling, the global triggers): PoB then
+    /// turns the skill's `TriggeredDamage` into `Damage`
+    /// (`addTriggerIncMoreMods`, 23 to 30, its tag `SkillType.Triggered`
+    /// read in the source's config) ([`TRIGGERED_DAMAGE`]).
+    Rate(f64, Reasons, bool),
     /// The rate cannot be computed.
     Unsupported(UnsupportedReason),
 }
@@ -177,6 +236,14 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
             .find(|(id, _)| id == stat)
             .map(|(_, v)| *v)
     };
+    // Cast on Melee Kill applies only after a kill (its config, 1155).
+    if config == Config::CastOnMeleeKill {
+        match killed_recently(&input) {
+            Some(true) => {}
+            Some(false) => return Outcome::SelfCast,
+            None => return unsupported("killed-recently"),
+        }
+    }
     // Cast when Damage Taken applies only with its threshold
     // (`triggeredByDamageTaken`); else PoB reports self-cast.
     if config == Config::CastWhenDamageTaken
@@ -221,7 +288,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
     let mut reasons = Reasons::new();
     let global = matches!(
         config,
-        Config::CastWhenDamageTaken | Config::CastWhenStunned
+        Config::CastWhenDamageTaken | Config::CastWhenStunned | Config::CastOnWardBreak
     );
     if global {
         // `skillFlags.globalTrigger` without `triggeredSkillCond`: the
@@ -230,11 +297,62 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         if !cap.is_finite() {
             return unsupported("trigger-no-cooldown");
         }
-        return Outcome::Rate(cap, reasons);
+        return Outcome::Rate(cap, reasons, true);
     }
-    // The source (`findTriggerSkill`).
     let skills = skill::active_skills(input.build, input.data, &levels);
     let main_group = skill.group;
+    let is_main = |s: &MainSkill<'_>| {
+        s.active_gem.gem == skill.active_gem.gem && s.effect().id == skill.effect().id
+    };
+    let rotation_of = |config: Config| -> Vec<Rotated> {
+        skills
+            .iter()
+            .filter(|(g, _, s)| {
+                *g == main_group
+                    && s.types.contains("Spell")
+                    && s.supports.iter().any(|x| {
+                        SUPPORTS
+                            .iter()
+                            .any(|(id, c)| *c == config && *id == x.effect.id)
+                    })
+            })
+            .map(|(_, _, s)| Rotated {
+                cooldown: skill::effect_level(s.effect(), s.active_gem.level)
+                    .map_or(0.0, |l| seconds(l.cooldown)),
+                main: is_main(s),
+            })
+            .collect()
+    };
+    if config == Config::CastWhileChannelling {
+        // `CWCHandler`: the first channelling skill of the group the
+        // support's first part supports, not triggered (219 to 236).
+        let interval = skills.iter().find_map(|(g, _, s)| {
+            if *g != main_group || is_main(s) || s.types.contains("Triggered") {
+                return None;
+            }
+            s.supports
+                .iter()
+                .find(|x| {
+                    SOURCE_PARTS
+                        .iter()
+                        .any(|(id, c)| *c == Config::CastWhileChannelling && *id == x.effect.id)
+                })
+                .and_then(|x| instance_stat(x, CWC_TIME_STAT))
+        });
+        let rotation = rotation_of(Config::CastWhileChannelling);
+        let Some(ms) = interval.filter(|ms| *ms > 0) else {
+            return Outcome::SelfCast;
+        };
+        if !rotation.iter().any(|r| r.main) {
+            return Outcome::SelfCast;
+        }
+        return Outcome::Rate(
+            rotation_rate(&rotation, 1.0 / seconds(ms), 0.0, 100.0),
+            reasons,
+            true,
+        );
+    }
+    // The source (`findTriggerSkill`).
     let player_main = skill::main_skill(input.build, input.data, &levels).ok();
     let is_player_main = |g: usize, s: &MainSkill<'_>| {
         player_main.as_ref().is_some_and(|m| {
@@ -251,7 +369,11 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
             && !is_player_main(*g, s)
             && match config {
                 Config::CastOnCrit => *g == main_group,
-                Config::CastWhenDamageTaken | Config::CastWhenStunned => false,
+                Config::CastOnMeleeKill => *g == main_group && s.types.contains("Melee"),
+                Config::CastWhenDamageTaken
+                | Config::CastWhenStunned
+                | Config::CastOnWardBreak
+                | Config::CastWhileChannelling => false,
             };
         if !candidate || s.disabled_by_hands(&hands) != Ok(false) {
             continue;
@@ -338,35 +460,9 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
             chance = chance * crit / 100.0;
         }
     }
-    // The rotation: Cast On Critical Strike's spells of the group it
-    // supports (`triggeredByCoc` and `slotMatch`), else the skill alone.
-    let mut rotation = Vec::new();
-    match config {
-        Config::CastOnCrit => {
-            for (g, _, s) in &skills {
-                let by_coc = *g == main_group
-                    && s.types.contains("Spell")
-                    && s.supports.iter().any(|x| {
-                        SUPPORTS
-                            .iter()
-                            .any(|(id, c)| *c == Config::CastOnCrit && *id == x.effect.id)
-                    });
-                if by_coc {
-                    let cd = skill::effect_level(s.effect(), s.active_gem.level)
-                        .map_or(0.0, |l| seconds(l.cooldown));
-                    rotation.push(Rotated {
-                        cooldown: cd,
-                        main: s.active_gem.gem == skill.active_gem.gem
-                            && s.effect().id == skill.effect().id,
-                    });
-                }
-            }
-        }
-        _ => rotation.push(Rotated {
-            cooldown: triggered_cd,
-            main: true,
-        }),
-    }
+    // The rotation: the group's spells the trigger supports
+    // (`triggeredByCoc`, `triggeredByMeleeKill`, and `slotMatch`).
+    let rotation = rotation_of(config);
     if !rotation.iter().any(|r| r.main) {
         return unsupported("trigger-rotation");
     }
@@ -381,7 +477,27 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         };
         rotation_rate(&rotation, effective, trigger, chance)
     };
-    Outcome::Rate(value, reasons)
+    Outcome::Rate(value, reasons, false)
+}
+
+/// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:
+/// the check, or a kill count above 0 through `multiplierKilledRecently`);
+/// `None` for a value of another type.
+fn killed_recently(input: &crate::input::CalcInput<'_>) -> Option<bool> {
+    let set = super::collect::active_config(input.build);
+    let check = super::conditions::check(set, "conditionKilledRecently")?;
+    let count = match set.and_then(|s| {
+        super::config::last_input(
+            s,
+            "multiplierKilledRecently",
+            loom_domain::ConfigInputKind::Input,
+        )
+    }) {
+        None => false,
+        Some(loom_domain::ConfigValue::Number(n)) => n.value().0 > 0.0,
+        Some(_) => return None,
+    };
+    Some(check || count)
 }
 
 /// The source skill's fields a trigger reads.

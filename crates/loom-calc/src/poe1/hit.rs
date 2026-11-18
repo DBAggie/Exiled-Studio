@@ -1006,6 +1006,13 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// A self-cast spell's hit.
 pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
+    // The trigger first (P6-8a): whether PoB turns the skill's
+    // `TriggeredDamage` into `Damage` is settled before the damage.
+    let trigger = super::triggers::rate(calc, &spell.skill, &spell.source());
+    calc.settle_state(
+        ConditionKey::new(super::triggers::TRIGGERED_DAMAGE),
+        matches!(trigger, super::triggers::Outcome::Rate(_, _, true)),
+    );
     let enemy = enemy::enemy(input.build, input.data);
     let mut flags = Flags::SPELL
         | Flags::KEYWORD_SPELL
@@ -1086,18 +1093,17 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
 
     // A trigger's rate replaces the cast rate (P6-8a; `CalcOffence.lua`
     // 2223 to 2227); without a source PoB reports the skill as self-cast.
-    let (speed, mut speed_reasons) =
-        match super::triggers::rate(calc, &spell.skill, &spell.source()) {
-            super::triggers::Outcome::SelfCast => cast_rate(calc, spell, &cx)?,
-            super::triggers::Outcome::Rate(value, reasons) => (
-                phases::constant(calc, "skill-trigger-rate", value)?,
-                reasons,
-            ),
-            super::triggers::Outcome::Unsupported(reason) => {
-                calc.set_unsupported(Field::Speed, reason);
-                return Ok(());
-            }
-        };
+    let (speed, mut speed_reasons) = match trigger {
+        super::triggers::Outcome::SelfCast => cast_rate(calc, spell, &cx)?,
+        super::triggers::Outcome::Rate(value, reasons, _) => (
+            phases::constant(calc, "skill-trigger-rate", value)?,
+            reasons,
+        ),
+        super::triggers::Outcome::Unsupported(reason) => {
+            calc.set_unsupported(Field::Speed, reason);
+            return Ok(());
+        }
+    };
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
     hit_dps(calc, average, speed)?;

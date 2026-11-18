@@ -111,7 +111,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] P6-7c3 rest: the relic's Nova (P6-8a, data), the minion's damage over time, spectres
 ## P6-8a: triggers
 - [x] P6-8a part 1: the shared handler (`poe1::triggers`: sources computed as their own skills, cooldown cap, trigger chance, PoB's rotation simulation), Cast On Critical Strike, Cast when Damage Taken, Cast when Stunned; `showAverage` a hit-scoped marker; Smite's aura and Arc as other gems; four fixtures; DIV-0175 to DIV-0180; `docs/phase-6/triggers.md`
-- [ ] P6-8a further configs: Cast while Channelling, Cast on Melee Kill, Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; the Holy Relic's Nova (data: skill level requirements)
+- [x] P6-8a part 2: Cast while Channelling (`CWCHandler`), Cast on Melee Kill, Cast on Ward Break; triggered damage (`TRIGGERED_DAMAGE`); Cyclone's unscalable movement buff; five fixtures; DIV-0181 to DIV-0184; `docs/phase-6/triggers.md`, "Part 2"
+- [ ] P6-8a further configs: Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; the Holy Relic's Nova (data: skill level requirements)
 ## P6-8b: mirages
 ## P6-9: the remaining gems (supports, marks, curse priority, exerts, banners, heralds)
 - [x] Order change (decision without the maintainer, D10): P6-9 before P6-7c, since every minion build's fields carry the summoning gem's `unmodelled-gem` until P6-9 models it, so P6-7c's minion hit fields could not be shown `Complete`
