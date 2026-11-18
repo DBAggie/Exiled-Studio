@@ -3192,6 +3192,12 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
+    // P6-10b part 11: Unwavering Stance (the keystone: "Cannot Evade enemy
+    // Attacks", `CannotEvade`; its "Cannot be Stunned" reaches no field).
+    (
+        "keystone_unwavering_stance",
+        &[(Quantity::Poe1(Poe1Quantity::CannotEvade), Op::Flag, 1.0)],
+    ),
     // P6-12: Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua`
     // 5066): `CullMultiplier`, which scales `CombinedDPS`
     // (`CalcOffence.lua` 3221, 6138), not the hit or `TotalDPS`.
@@ -3950,8 +3956,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("keystone_divine_shield", "keystone-defence"),
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
     ("keystone_mana_shield", "keystone-defence"),
-    // P6-11f: Unwavering Stance (the keystone node: cannot evade attacks, cannot be stunned): evade chance and stun, no slice field.
-    ("keystone_unwavering_stance", "evade"),
     (
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
         "flask",

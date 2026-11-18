@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 18,
+  "revision": 19,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 19 (Phase 6, P6-10b part 11): the chance to evade the enemy's attacks (EvadeChance, MeleeEvadeChance, ProjectileEvadeChance), applies present: our result has them with evasion.",
     "Revision 18 (Phase 6, P6-10b part 10): each type's damage taken over time multiplier (<Type>TakenDotMult), applies present: our result always has it.",
     "Revision 17 (Phase 6, P6-10b part 9): the main skill's leech rates (LifeLeechRate, EnergyShieldLeechRate, ManaLeechRate), applies present: our result has each when the skill's hit leeches the pool.",
     "Revision 16 (Phase 6, P6-10b part 8): the main skill's life and energy shield costs and their costs per second (LifeCost, ESCost, LifePerSecondCost, ESPerSecondCost), applies present: our result has the costs with a main skill, the costs per second with a cost and a computed speed.",
@@ -201,6 +202,9 @@
     {"id": "ColdTakenDotMult", "group": "defence", "pob_key": "ColdTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of cold damage taken over time, with resistance and base reduction."},
     {"id": "LightningTakenDotMult", "group": "defence", "pob_key": "LightningTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of lightning damage taken over time, with resistance and base reduction."},
     {"id": "ChaosTakenDotMult", "group": "defence", "pob_key": "ChaosTakenDotMult", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 10): the multiplier of chaos damage taken over time, with resistance and base reduction."},
+    {"id": "EvadeChance", "group": "defence", "pob_key": "EvadeChance", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 11): the chance to evade the enemy's attacks."},
+    {"id": "MeleeEvadeChance", "group": "defence", "pob_key": "MeleeEvadeChance", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 11): the chance to evade melee attacks."},
+    {"id": "ProjectileEvadeChance", "group": "defence", "pob_key": "ProjectileEvadeChance", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 11): the chance to evade projectile attacks."},
     {"id": "Minion.Life", "group": "minion", "pob_key": "Life", "pob_path": ["Minion", "Life"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.EnergyShield", "group": "minion", "pob_key": "EnergyShield", "pob_path": ["Minion", "EnergyShield"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.Armour", "group": "minion", "pob_key": "Armour", "pob_path": ["Minion", "Armour"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},

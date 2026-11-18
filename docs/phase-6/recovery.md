@@ -415,3 +415,28 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
   - No other field's value or state moved.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,764 tests and clippy pass.
+
+## Part 11: the chance to evade
+
+**What PoB does** (`CalcDefence.lua` 1049 to 1096):
+- **The evasion of each kind:** `MeleeEvasion` and `ProjectileEvasion` are `max(round(evasion x calcLib.mod(<Kind>Evasion)), 0)`.
+- **The special cases:** `CannotEvade` (Unwavering Stance) makes every chance 0; `AlwaysEvade` makes it 100.
+- **The enemy's accuracy:** `round(calcLib.val(enemyDB, "Accuracy"))`, the monster accuracy at the enemy's level (`CalcSetup.lua` 575) times its modifiers. Blind gives 20% less (`CalcPerform.lua` 831).
+- **Each kind's chance:** `max(0, min(95, (100 - (hitChance(evasion, accuracy) - EvadeChance BASE) x the enemy's hit chance mod) x calcLib.mod(EvadeChance, <Kind>EvadeChance)))`, where `hitChance` is `calcs.hitChance`.
+- **`EvadeChance`:** the melee chance when the two are equal.
+
+**The engine** (`poe1::evade`, phase `evade` after `primary-defences`; slice revision 19):
+- **The fields:** `evade-chance`, `melee-evade-chance`, `projectile-evade-chance`, present with evasion and the monster level.
+- **The shared formula:** `hit::pob_hit_chance` is `calcs.hitChance`, factored out of the character's own accuracy against the enemy.
+- **The quantities:**
+  - `EnemyAccuracy`: the configured Blind adds its less accuracy beside its less evasion (`damage_taken::conditions`).
+  - `CannotEvade`: Unwavering Stance's row; the stat was `NoEffect`, and its "Cannot be Stunned" reaches no field.
+- **Not modelled:** no stat of the kinds' evasion, of `EvadeChance`, or of the enemy's hit chance is mapped yet. Each is an unmapped stat, so a reason, and their values are PoB's defaults (1 and 0).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 9,826.
+  - The three fields equal PoB's in 182 builds; 21 are `partial` and 6 `indeterminate`.
+  - No other field's value or state moved.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,764 tests and clippy pass.

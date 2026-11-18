@@ -3392,7 +3392,7 @@
       {
         "field": "life-unreserved",
         "value": 1.0,
-        "node": 190,
+        "node": 191,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -3634,7 +3634,7 @@
       {
         "field": "mana-unreserved",
         "value": 0.0,
-        "node": 191,
+        "node": 192,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4395,7 +4395,7 @@
       {
         "field": "poe1.life-regen",
         "value": 0.0,
-        "node": 478,
+        "node": 479,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4637,7 +4637,7 @@
       {
         "field": "poe1.mana-regen",
         "value": 0.0,
-        "node": 458,
+        "node": 459,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -4885,7 +4885,7 @@
       {
         "field": "poe1.energy-shield-regen",
         "value": 0.0,
-        "node": 498,
+        "node": 499,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5127,7 +5127,7 @@
       {
         "field": "poe1.energy-shield-recharge",
         "value": 0.0,
-        "node": 507,
+        "node": 508,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5375,7 +5375,7 @@
       {
         "field": "poe1.energy-shield-recharge-delay",
         "value": 2.0,
-        "node": 512,
+        "node": 513,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5617,7 +5617,7 @@
       {
         "field": "poe1.movement-speed",
         "value": 1.0,
-        "node": 570,
+        "node": 571,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -5859,7 +5859,7 @@
       {
         "field": "poe1.effective-movement-speed",
         "value": 1.0,
-        "node": 575,
+        "node": 576,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -6106,7 +6106,7 @@
       {
         "field": "poe1.base-physical-damage-reduction",
         "value": 0.0,
-        "node": 196,
+        "node": 197,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -6354,7 +6354,7 @@
       {
         "field": "poe1.base-fire-damage-reduction",
         "value": 0.0,
-        "node": 217,
+        "node": 218,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -6602,7 +6602,7 @@
       {
         "field": "poe1.base-cold-damage-reduction",
         "value": 0.0,
-        "node": 210,
+        "node": 211,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -6850,7 +6850,7 @@
       {
         "field": "poe1.base-lightning-damage-reduction",
         "value": 0.0,
-        "node": 203,
+        "node": 204,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -7098,7 +7098,7 @@
       {
         "field": "poe1.base-chaos-damage-reduction",
         "value": 0.0,
-        "node": 222,
+        "node": 223,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -7346,7 +7346,7 @@
       {
         "field": "poe1.max-life-leech-rate",
         "value": 0.0,
-        "node": 521,
+        "node": 522,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -7594,7 +7594,7 @@
       {
         "field": "poe1.max-mana-leech-rate",
         "value": 0.0,
-        "node": 557,
+        "node": 558,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -7842,7 +7842,7 @@
       {
         "field": "poe1.max-energy-shield-leech-rate",
         "value": 0.0,
-        "node": 539,
+        "node": 540,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -8090,7 +8090,7 @@
       {
         "field": "poe1.max-life-leech-instance",
         "value": 0.0,
-        "node": 530,
+        "node": 531,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -8338,7 +8338,7 @@
       {
         "field": "poe1.max-mana-leech-instance",
         "value": 0.0,
-        "node": 566,
+        "node": 567,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -8586,7 +8586,7 @@
       {
         "field": "poe1.max-energy-shield-leech-instance",
         "value": 0.0,
-        "node": 548,
+        "node": 549,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -8834,7 +8834,7 @@
       {
         "field": "poe1.max-life-leech-rate-percent",
         "value": 0.0,
-        "node": 518,
+        "node": 519,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -9092,7 +9092,7 @@
       {
         "field": "poe1.physical-taken-dot-mult",
         "value": 1.0,
-        "node": 249,
+        "node": 250,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -9340,7 +9340,7 @@
       {
         "field": "poe1.fire-taken-dot-mult",
         "value": 1.6,
-        "node": 393,
+        "node": 394,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -9588,7 +9588,7 @@
       {
         "field": "poe1.cold-taken-dot-mult",
         "value": 1.6,
-        "node": 345,
+        "node": 346,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -9836,7 +9836,7 @@
       {
         "field": "poe1.lightning-taken-dot-mult",
         "value": 1.6,
-        "node": 297,
+        "node": 298,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -10084,7 +10084,7 @@
       {
         "field": "poe1.chaos-taken-dot-mult",
         "value": 1.6,
-        "node": 437,
+        "node": 438,
         "state": "indeterminate",
         "unsupported": [
           {
@@ -11791,6 +11791,11 @@
         "value": 0.0
       },
       {
+        "kind": "any",
+        "term": "step.flag",
+        "value": 0.0
+      },
+      {
         "kind": "sum",
         "term": "result",
         "children": [
@@ -11823,8 +11828,8 @@
         "kind": "max",
         "term": "step.reduction-at-least-0",
         "children": [
-          192,
-          193
+          193,
+          194
         ],
         "value": 0.0
       },
@@ -11840,8 +11845,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          194,
-          195
+          195,
+          196
         ],
         "value": 0.0
       },
@@ -11859,8 +11864,8 @@
         "kind": "sum",
         "term": "step.reduction-sum",
         "children": [
-          197,
-          198
+          198,
+          199
         ],
         "value": 0.0
       },
@@ -11876,8 +11881,8 @@
         "kind": "max",
         "term": "step.reduction-at-least-0",
         "children": [
-          199,
-          200
+          200,
+          201
         ],
         "value": 0.0
       },
@@ -11893,8 +11898,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          201,
-          202
+          202,
+          203
         ],
         "value": 0.0
       },
@@ -11912,8 +11917,8 @@
         "kind": "sum",
         "term": "step.reduction-sum",
         "children": [
-          204,
-          205
+          205,
+          206
         ],
         "value": 0.0
       },
@@ -11929,8 +11934,8 @@
         "kind": "max",
         "term": "step.reduction-at-least-0",
         "children": [
-          206,
-          207
+          207,
+          208
         ],
         "value": 0.0
       },
@@ -11946,8 +11951,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          208,
-          209
+          209,
+          210
         ],
         "value": 0.0
       },
@@ -11965,8 +11970,8 @@
         "kind": "sum",
         "term": "step.reduction-sum",
         "children": [
-          211,
-          212
+          212,
+          213
         ],
         "value": 0.0
       },
@@ -11982,8 +11987,8 @@
         "kind": "max",
         "term": "step.reduction-at-least-0",
         "children": [
-          213,
-          214
+          214,
+          215
         ],
         "value": 0.0
       },
@@ -11999,8 +12004,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          215,
-          216
+          216,
+          217
         ],
         "value": 0.0
       },
@@ -12021,8 +12026,8 @@
         "kind": "max",
         "term": "step.reduction-at-least-0",
         "children": [
-          218,
-          219
+          219,
+          220
         ],
         "value": 0.0
       },
@@ -12038,8 +12043,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          220,
-          221
+          221,
+          222
         ],
         "value": 0.0
       },
@@ -12087,10 +12092,10 @@
         "kind": "sum",
         "term": "step.taken-increased-sum",
         "children": [
-          223,
-          225,
-          227,
-          229
+          224,
+          226,
+          228,
+          230
         ],
         "value": 0.0
       },
@@ -12106,8 +12111,8 @@
         "kind": "quotient",
         "term": "step.taken-increased-part",
         "children": [
-          231,
-          232
+          232,
+          233
         ],
         "value": 0.0
       },
@@ -12123,8 +12128,8 @@
         "kind": "sum",
         "term": "step.taken-increased-factor",
         "children": [
-          234,
-          233
+          235,
+          234
         ],
         "value": 1.0
       },
@@ -12132,10 +12137,10 @@
         "kind": "product",
         "term": "step.taken-more",
         "children": [
-          224,
-          226,
-          228,
-          230
+          225,
+          227,
+          229,
+          231
         ],
         "value": 1.0
       },
@@ -12143,8 +12148,8 @@
         "kind": "product",
         "term": "step.taken",
         "children": [
-          235,
-          236
+          236,
+          237
         ],
         "value": 1.0
       },
@@ -12168,8 +12173,8 @@
         "kind": "quotient",
         "term": "step.resistance-kept",
         "children": [
-          238,
-          239
+          239,
+          240
         ],
         "value": 0.0
       },
@@ -12185,8 +12190,8 @@
         "kind": "difference",
         "term": "step.resistance-kept",
         "children": [
-          241,
-          240
+          242,
+          241
         ],
         "value": 1.0
       },
@@ -12202,8 +12207,8 @@
         "kind": "quotient",
         "term": "step.reduction-kept",
         "children": [
-          196,
-          243
+          197,
+          244
         ],
         "value": 0.0
       },
@@ -12219,8 +12224,8 @@
         "kind": "difference",
         "term": "step.reduction-kept",
         "children": [
-          245,
-          244
+          246,
+          245
         ],
         "value": 1.0
       },
@@ -12228,9 +12233,9 @@
         "kind": "product",
         "term": "step.dot-taken",
         "children": [
-          242,
-          246,
-          237
+          243,
+          247,
+          238
         ],
         "value": 1.0
       },
@@ -12246,8 +12251,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          247,
-          248
+          248,
+          249
         ],
         "value": 1.0
       },
@@ -12315,12 +12320,12 @@
         "kind": "sum",
         "term": "step.taken-increased-sum",
         "children": [
-          250,
-          252,
-          254,
-          256,
-          258,
-          260
+          251,
+          253,
+          255,
+          257,
+          259,
+          261
         ],
         "value": 0.0
       },
@@ -12336,8 +12341,8 @@
         "kind": "quotient",
         "term": "step.taken-increased-part",
         "children": [
-          262,
-          263
+          263,
+          264
         ],
         "value": 0.0
       },
@@ -12353,8 +12358,8 @@
         "kind": "sum",
         "term": "step.taken-increased-factor",
         "children": [
-          265,
-          264
+          266,
+          265
         ],
         "value": 1.0
       },
@@ -12362,12 +12367,12 @@
         "kind": "product",
         "term": "step.taken-more",
         "children": [
-          251,
-          253,
-          255,
-          257,
-          259,
-          261
+          252,
+          254,
+          256,
+          258,
+          260,
+          262
         ],
         "value": 1.0
       },
@@ -12375,8 +12380,8 @@
         "kind": "product",
         "term": "step.taken",
         "children": [
-          266,
-          267
+          267,
+          268
         ],
         "value": 1.0
       },
@@ -12396,7 +12401,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          269
+          270
         ],
         "value": -60.0
       },
@@ -12409,7 +12414,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          271
+          272
         ],
         "value": 1.0
       },
@@ -12422,8 +12427,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          272,
-          273
+          273,
+          274
         ],
         "value": 1.0
       },
@@ -12439,8 +12444,8 @@
         "kind": "max",
         "term": "step.modifier-at-least-zero",
         "children": [
-          274,
-          275
+          275,
+          276
         ],
         "value": 1.0
       },
@@ -12448,8 +12453,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          270,
-          276
+          271,
+          277
         ],
         "value": -60.0
       },
@@ -12457,7 +12462,7 @@
         "kind": "trunc",
         "term": "step.total",
         "children": [
-          277
+          278
         ],
         "value": -60.0
       },
@@ -12478,8 +12483,8 @@
         "kind": "min",
         "term": "step.maximum-capped",
         "children": [
-          279,
-          280
+          280,
+          281
         ],
         "value": 0.0
       },
@@ -12487,7 +12492,7 @@
         "kind": "trunc",
         "term": "step.max",
         "children": [
-          281
+          282
         ],
         "value": 0.0
       },
@@ -12503,7 +12508,7 @@
         "kind": "trunc",
         "term": "step.min",
         "children": [
-          283
+          284
         ],
         "value": -200.0
       },
@@ -12511,8 +12516,8 @@
         "kind": "min",
         "term": "step.capped",
         "children": [
-          278,
-          282
+          279,
+          283
         ],
         "value": -60.0
       },
@@ -12520,8 +12525,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          285,
-          284
+          286,
+          285
         ],
         "value": -60.0
       },
@@ -12537,8 +12542,8 @@
         "kind": "quotient",
         "term": "step.resistance-kept",
         "children": [
-          286,
-          287
+          287,
+          288
         ],
         "value": -0.6
       },
@@ -12554,8 +12559,8 @@
         "kind": "difference",
         "term": "step.resistance-kept",
         "children": [
-          289,
-          288
+          290,
+          289
         ],
         "value": 1.6
       },
@@ -12571,8 +12576,8 @@
         "kind": "quotient",
         "term": "step.reduction-kept",
         "children": [
-          203,
-          291
+          204,
+          292
         ],
         "value": 0.0
       },
@@ -12588,8 +12593,8 @@
         "kind": "difference",
         "term": "step.reduction-kept",
         "children": [
-          293,
-          292
+          294,
+          293
         ],
         "value": 1.0
       },
@@ -12597,9 +12602,9 @@
         "kind": "product",
         "term": "step.dot-taken",
         "children": [
-          290,
-          294,
-          268
+          291,
+          295,
+          269
         ],
         "value": 1.6
       },
@@ -12615,8 +12620,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          295,
-          296
+          296,
+          297
         ],
         "value": 1.6
       },
@@ -12684,12 +12689,12 @@
         "kind": "sum",
         "term": "step.taken-increased-sum",
         "children": [
-          298,
-          300,
-          302,
-          304,
-          306,
-          308
+          299,
+          301,
+          303,
+          305,
+          307,
+          309
         ],
         "value": 0.0
       },
@@ -12705,8 +12710,8 @@
         "kind": "quotient",
         "term": "step.taken-increased-part",
         "children": [
-          310,
-          311
+          311,
+          312
         ],
         "value": 0.0
       },
@@ -12722,8 +12727,8 @@
         "kind": "sum",
         "term": "step.taken-increased-factor",
         "children": [
-          313,
-          312
+          314,
+          313
         ],
         "value": 1.0
       },
@@ -12731,12 +12736,12 @@
         "kind": "product",
         "term": "step.taken-more",
         "children": [
-          299,
-          301,
-          303,
-          305,
-          307,
-          309
+          300,
+          302,
+          304,
+          306,
+          308,
+          310
         ],
         "value": 1.0
       },
@@ -12744,8 +12749,8 @@
         "kind": "product",
         "term": "step.taken",
         "children": [
-          314,
-          315
+          315,
+          316
         ],
         "value": 1.0
       },
@@ -12765,7 +12770,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          317
+          318
         ],
         "value": -60.0
       },
@@ -12778,7 +12783,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          319
+          320
         ],
         "value": 1.0
       },
@@ -12791,8 +12796,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          320,
-          321
+          321,
+          322
         ],
         "value": 1.0
       },
@@ -12808,8 +12813,8 @@
         "kind": "max",
         "term": "step.modifier-at-least-zero",
         "children": [
-          322,
-          323
+          323,
+          324
         ],
         "value": 1.0
       },
@@ -12817,8 +12822,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          318,
-          324
+          319,
+          325
         ],
         "value": -60.0
       },
@@ -12826,7 +12831,7 @@
         "kind": "trunc",
         "term": "step.total",
         "children": [
-          325
+          326
         ],
         "value": -60.0
       },
@@ -12847,8 +12852,8 @@
         "kind": "min",
         "term": "step.maximum-capped",
         "children": [
-          327,
-          328
+          328,
+          329
         ],
         "value": 0.0
       },
@@ -12856,7 +12861,7 @@
         "kind": "trunc",
         "term": "step.max",
         "children": [
-          329
+          330
         ],
         "value": 0.0
       },
@@ -12872,7 +12877,7 @@
         "kind": "trunc",
         "term": "step.min",
         "children": [
-          331
+          332
         ],
         "value": -200.0
       },
@@ -12880,8 +12885,8 @@
         "kind": "min",
         "term": "step.capped",
         "children": [
-          326,
-          330
+          327,
+          331
         ],
         "value": -60.0
       },
@@ -12889,8 +12894,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          333,
-          332
+          334,
+          333
         ],
         "value": -60.0
       },
@@ -12906,8 +12911,8 @@
         "kind": "quotient",
         "term": "step.resistance-kept",
         "children": [
-          334,
-          335
+          335,
+          336
         ],
         "value": -0.6
       },
@@ -12923,8 +12928,8 @@
         "kind": "difference",
         "term": "step.resistance-kept",
         "children": [
-          337,
-          336
+          338,
+          337
         ],
         "value": 1.6
       },
@@ -12940,8 +12945,8 @@
         "kind": "quotient",
         "term": "step.reduction-kept",
         "children": [
-          210,
-          339
+          211,
+          340
         ],
         "value": 0.0
       },
@@ -12957,8 +12962,8 @@
         "kind": "difference",
         "term": "step.reduction-kept",
         "children": [
-          341,
-          340
+          342,
+          341
         ],
         "value": 1.0
       },
@@ -12966,9 +12971,9 @@
         "kind": "product",
         "term": "step.dot-taken",
         "children": [
-          338,
-          342,
-          316
+          339,
+          343,
+          317
         ],
         "value": 1.6
       },
@@ -12984,8 +12989,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          343,
-          344
+          344,
+          345
         ],
         "value": 1.6
       },
@@ -13053,12 +13058,12 @@
         "kind": "sum",
         "term": "step.taken-increased-sum",
         "children": [
-          346,
-          348,
-          350,
-          352,
-          354,
-          356
+          347,
+          349,
+          351,
+          353,
+          355,
+          357
         ],
         "value": 0.0
       },
@@ -13074,8 +13079,8 @@
         "kind": "quotient",
         "term": "step.taken-increased-part",
         "children": [
-          358,
-          359
+          359,
+          360
         ],
         "value": 0.0
       },
@@ -13091,8 +13096,8 @@
         "kind": "sum",
         "term": "step.taken-increased-factor",
         "children": [
-          361,
-          360
+          362,
+          361
         ],
         "value": 1.0
       },
@@ -13100,12 +13105,12 @@
         "kind": "product",
         "term": "step.taken-more",
         "children": [
-          347,
-          349,
-          351,
-          353,
-          355,
-          357
+          348,
+          350,
+          352,
+          354,
+          356,
+          358
         ],
         "value": 1.0
       },
@@ -13113,8 +13118,8 @@
         "kind": "product",
         "term": "step.taken",
         "children": [
-          362,
-          363
+          363,
+          364
         ],
         "value": 1.0
       },
@@ -13134,7 +13139,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          365
+          366
         ],
         "value": -60.0
       },
@@ -13147,7 +13152,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          367
+          368
         ],
         "value": 1.0
       },
@@ -13160,8 +13165,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          368,
-          369
+          369,
+          370
         ],
         "value": 1.0
       },
@@ -13177,8 +13182,8 @@
         "kind": "max",
         "term": "step.modifier-at-least-zero",
         "children": [
-          370,
-          371
+          371,
+          372
         ],
         "value": 1.0
       },
@@ -13186,8 +13191,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          366,
-          372
+          367,
+          373
         ],
         "value": -60.0
       },
@@ -13195,7 +13200,7 @@
         "kind": "trunc",
         "term": "step.total",
         "children": [
-          373
+          374
         ],
         "value": -60.0
       },
@@ -13216,8 +13221,8 @@
         "kind": "min",
         "term": "step.maximum-capped",
         "children": [
-          375,
-          376
+          376,
+          377
         ],
         "value": 0.0
       },
@@ -13225,7 +13230,7 @@
         "kind": "trunc",
         "term": "step.max",
         "children": [
-          377
+          378
         ],
         "value": 0.0
       },
@@ -13241,7 +13246,7 @@
         "kind": "trunc",
         "term": "step.min",
         "children": [
-          379
+          380
         ],
         "value": -200.0
       },
@@ -13249,8 +13254,8 @@
         "kind": "min",
         "term": "step.capped",
         "children": [
-          374,
-          378
+          375,
+          379
         ],
         "value": -60.0
       },
@@ -13258,8 +13263,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          381,
-          380
+          382,
+          381
         ],
         "value": -60.0
       },
@@ -13275,8 +13280,8 @@
         "kind": "quotient",
         "term": "step.resistance-kept",
         "children": [
-          382,
-          383
+          383,
+          384
         ],
         "value": -0.6
       },
@@ -13292,8 +13297,8 @@
         "kind": "difference",
         "term": "step.resistance-kept",
         "children": [
-          385,
-          384
+          386,
+          385
         ],
         "value": 1.6
       },
@@ -13309,8 +13314,8 @@
         "kind": "quotient",
         "term": "step.reduction-kept",
         "children": [
-          217,
-          387
+          218,
+          388
         ],
         "value": 0.0
       },
@@ -13326,8 +13331,8 @@
         "kind": "difference",
         "term": "step.reduction-kept",
         "children": [
-          389,
-          388
+          390,
+          389
         ],
         "value": 1.0
       },
@@ -13335,9 +13340,9 @@
         "kind": "product",
         "term": "step.dot-taken",
         "children": [
-          386,
-          390,
-          364
+          387,
+          391,
+          365
         ],
         "value": 1.6
       },
@@ -13353,8 +13358,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          391,
-          392
+          392,
+          393
         ],
         "value": 1.6
       },
@@ -13402,10 +13407,10 @@
         "kind": "sum",
         "term": "step.taken-increased-sum",
         "children": [
-          394,
-          396,
-          398,
-          400
+          395,
+          397,
+          399,
+          401
         ],
         "value": 0.0
       },
@@ -13421,8 +13426,8 @@
         "kind": "quotient",
         "term": "step.taken-increased-part",
         "children": [
-          402,
-          403
+          403,
+          404
         ],
         "value": 0.0
       },
@@ -13438,8 +13443,8 @@
         "kind": "sum",
         "term": "step.taken-increased-factor",
         "children": [
-          405,
-          404
+          406,
+          405
         ],
         "value": 1.0
       },
@@ -13447,10 +13452,10 @@
         "kind": "product",
         "term": "step.taken-more",
         "children": [
-          395,
-          397,
-          399,
-          401
+          396,
+          398,
+          400,
+          402
         ],
         "value": 1.0
       },
@@ -13458,8 +13463,8 @@
         "kind": "product",
         "term": "step.taken",
         "children": [
-          406,
-          407
+          407,
+          408
         ],
         "value": 1.0
       },
@@ -13479,7 +13484,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          409
+          410
         ],
         "value": -60.0
       },
@@ -13492,7 +13497,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          411
+          412
         ],
         "value": 1.0
       },
@@ -13505,8 +13510,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          412,
-          413
+          413,
+          414
         ],
         "value": 1.0
       },
@@ -13522,8 +13527,8 @@
         "kind": "max",
         "term": "step.modifier-at-least-zero",
         "children": [
-          414,
-          415
+          415,
+          416
         ],
         "value": 1.0
       },
@@ -13531,8 +13536,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          410,
-          416
+          411,
+          417
         ],
         "value": -60.0
       },
@@ -13540,7 +13545,7 @@
         "kind": "trunc",
         "term": "step.total",
         "children": [
-          417
+          418
         ],
         "value": -60.0
       },
@@ -13561,8 +13566,8 @@
         "kind": "min",
         "term": "step.maximum-capped",
         "children": [
-          419,
-          420
+          420,
+          421
         ],
         "value": 0.0
       },
@@ -13570,7 +13575,7 @@
         "kind": "trunc",
         "term": "step.max",
         "children": [
-          421
+          422
         ],
         "value": 0.0
       },
@@ -13586,7 +13591,7 @@
         "kind": "trunc",
         "term": "step.min",
         "children": [
-          423
+          424
         ],
         "value": -200.0
       },
@@ -13594,8 +13599,8 @@
         "kind": "min",
         "term": "step.capped",
         "children": [
-          418,
-          422
+          419,
+          423
         ],
         "value": -60.0
       },
@@ -13603,8 +13608,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          425,
-          424
+          426,
+          425
         ],
         "value": -60.0
       },
@@ -13620,8 +13625,8 @@
         "kind": "quotient",
         "term": "step.resistance-kept",
         "children": [
-          426,
-          427
+          427,
+          428
         ],
         "value": -0.6
       },
@@ -13637,8 +13642,8 @@
         "kind": "difference",
         "term": "step.resistance-kept",
         "children": [
-          429,
-          428
+          430,
+          429
         ],
         "value": 1.6
       },
@@ -13654,8 +13659,8 @@
         "kind": "quotient",
         "term": "step.reduction-kept",
         "children": [
-          222,
-          431
+          223,
+          432
         ],
         "value": 0.0
       },
@@ -13671,8 +13676,8 @@
         "kind": "difference",
         "term": "step.reduction-kept",
         "children": [
-          433,
-          432
+          434,
+          433
         ],
         "value": 1.0
       },
@@ -13680,9 +13685,9 @@
         "kind": "product",
         "term": "step.dot-taken",
         "children": [
-          430,
-          434,
-          408
+          431,
+          435,
+          409
         ],
         "value": 1.6
       },
@@ -13698,8 +13703,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          435,
-          436
+          436,
+          437
         ],
         "value": 1.6
       },
@@ -13722,7 +13727,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          439
+          440
         ],
         "value": 0.0
       },
@@ -13730,7 +13735,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          440
+          441
         ],
         "value": 0.0
       },
@@ -13747,8 +13752,8 @@
         "term": "step.percent-of-pool",
         "children": [
           57,
-          442,
-          443
+          443,
+          444
         ],
         "value": 0.0
       },
@@ -13756,8 +13761,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          441,
-          444
+          442,
+          445
         ],
         "value": 0.0
       },
@@ -13770,7 +13775,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          446
+          447
         ],
         "value": 1.0
       },
@@ -13783,9 +13788,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          445,
-          447,
-          448
+          446,
+          448,
+          449
         ],
         "value": 0.0
       },
@@ -13798,7 +13803,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          450
+          451
         ],
         "value": 1.0
       },
@@ -13811,8 +13816,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          451,
-          452
+          452,
+          453
         ],
         "value": 1.0
       },
@@ -13820,8 +13825,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          449,
-          453
+          450,
+          454
         ],
         "value": 0.0
       },
@@ -13837,8 +13842,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          454,
-          455
+          455,
+          456
         ],
         "value": 0.0
       },
@@ -13846,7 +13851,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          456
+          457
         ],
         "value": 0.0
       },
@@ -13854,8 +13859,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          457,
-          455
+          458,
+          456
         ],
         "value": 0.0
       },
@@ -13873,7 +13878,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          459
+          460
         ],
         "value": 0.0
       },
@@ -13881,7 +13886,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          460
+          461
         ],
         "value": 0.0
       },
@@ -13898,8 +13903,8 @@
         "term": "step.percent-of-pool",
         "children": [
           45,
-          462,
-          463
+          463,
+          464
         ],
         "value": 0.0
       },
@@ -13907,8 +13912,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          461,
-          464
+          462,
+          465
         ],
         "value": 0.0
       },
@@ -13921,7 +13926,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          466
+          467
         ],
         "value": 1.0
       },
@@ -13934,9 +13939,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          465,
-          467,
-          468
+          466,
+          468,
+          469
         ],
         "value": 0.0
       },
@@ -13949,7 +13954,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          470
+          471
         ],
         "value": 1.0
       },
@@ -13962,8 +13967,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          471,
-          472
+          472,
+          473
         ],
         "value": 1.0
       },
@@ -13971,8 +13976,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          469,
-          473
+          470,
+          474
         ],
         "value": 0.0
       },
@@ -13988,8 +13993,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          474,
-          475
+          475,
+          476
         ],
         "value": 0.0
       },
@@ -13997,7 +14002,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          476
+          477
         ],
         "value": 0.0
       },
@@ -14005,8 +14010,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          477,
-          475
+          478,
+          476
         ],
         "value": 0.0
       },
@@ -14024,7 +14029,7 @@
         "kind": "sum",
         "term": "step.flat-sum",
         "children": [
-          479
+          480
         ],
         "value": 0.0
       },
@@ -14032,7 +14037,7 @@
         "kind": "sum",
         "term": "step.percent-sum",
         "children": [
-          480
+          481
         ],
         "value": 0.0
       },
@@ -14049,8 +14054,8 @@
         "term": "step.percent-of-pool",
         "children": [
           167,
-          482,
-          483
+          483,
+          484
         ],
         "value": 0.0
       },
@@ -14058,8 +14063,8 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          481,
-          484
+          482,
+          485
         ],
         "value": 0.0
       },
@@ -14072,7 +14077,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          486
+          487
         ],
         "value": 1.0
       },
@@ -14085,9 +14090,9 @@
         "kind": "product",
         "term": "step.regeneration",
         "children": [
-          485,
-          487,
-          488
+          486,
+          488,
+          489
         ],
         "value": 0.0
       },
@@ -14100,7 +14105,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          490
+          491
         ],
         "value": 1.0
       },
@@ -14113,8 +14118,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          491,
-          492
+          492,
+          493
         ],
         "value": 1.0
       },
@@ -14122,8 +14127,8 @@
         "kind": "product",
         "term": "step.unrounded",
         "children": [
-          489,
-          493
+          490,
+          494
         ],
         "value": 0.0
       },
@@ -14139,8 +14144,8 @@
         "kind": "product",
         "term": "step.round-scaled",
         "children": [
-          494,
-          495
+          495,
+          496
         ],
         "value": 0.0
       },
@@ -14148,7 +14153,7 @@
         "kind": "round-half-up",
         "term": "step.round-whole",
         "children": [
-          496
+          497
         ],
         "value": 0.0
       },
@@ -14156,8 +14161,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          497,
-          495
+          498,
+          496
         ],
         "value": 0.0
       },
@@ -14170,7 +14175,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          499
+          500
         ],
         "value": 1.0
       },
@@ -14188,7 +14193,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          502
+          503
         ],
         "value": 1.0
       },
@@ -14201,8 +14206,8 @@
         "kind": "product",
         "term": "step.recovery-rate",
         "children": [
-          503,
-          504
+          504,
+          505
         ],
         "value": 1.0
       },
@@ -14211,9 +14216,9 @@
         "term": "step.unrounded",
         "children": [
           167,
-          500,
           501,
-          505
+          502,
+          506
         ],
         "value": 0.0
       },
@@ -14221,7 +14226,7 @@
         "kind": "round-half-up",
         "term": "result",
         "children": [
-          506
+          507
         ],
         "value": 0.0
       },
@@ -14242,7 +14247,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          509
+          510
         ],
         "value": 1.0
       },
@@ -14255,8 +14260,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          508,
-          510
+          509,
+          511
         ],
         "value": 2.0
       },
@@ -14269,7 +14274,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          513
+          514
         ],
         "value": 0.0
       },
@@ -14282,7 +14287,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          515
+          516
         ],
         "value": 1.0
       },
@@ -14295,22 +14300,22 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          514,
-          516,
-          517
-        ],
-        "value": 0.0
-      },
-      {
-        "kind": "product",
-        "term": "step.of-pool",
-        "children": [
-          45,
+          515,
+          517,
           518
         ],
         "value": 0.0
       },
       {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          45,
+          519
+        ],
+        "value": 0.0
+      },
+      {
         "kind": {
           "constant": {
             "label": "percent"
@@ -14322,8 +14327,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          519,
-          520
+          520,
+          521
         ],
         "value": 0.0
       },
@@ -14336,7 +14341,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          522
+          523
         ],
         "value": 0.0
       },
@@ -14349,7 +14354,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          524
+          525
         ],
         "value": 1.0
       },
@@ -14362,9 +14367,9 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          523,
-          525,
-          526
+          524,
+          526,
+          527
         ],
         "value": 0.0
       },
@@ -14373,7 +14378,7 @@
         "term": "step.of-pool",
         "children": [
           45,
-          527
+          528
         ],
         "value": 0.0
       },
@@ -14389,8 +14394,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          528,
-          529
+          529,
+          530
         ],
         "value": 0.0
       },
@@ -14403,7 +14408,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          531
+          532
         ],
         "value": 0.0
       },
@@ -14416,7 +14421,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          533
+          534
         ],
         "value": 1.0
       },
@@ -14429,22 +14434,22 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          532,
-          534,
-          535
-        ],
-        "value": 0.0
-      },
-      {
-        "kind": "product",
-        "term": "step.of-pool",
-        "children": [
-          167,
+          533,
+          535,
           536
         ],
         "value": 0.0
       },
       {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          167,
+          537
+        ],
+        "value": 0.0
+      },
+      {
         "kind": {
           "constant": {
             "label": "percent"
@@ -14456,8 +14461,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          537,
-          538
+          538,
+          539
         ],
         "value": 0.0
       },
@@ -14470,7 +14475,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          540
+          541
         ],
         "value": 0.0
       },
@@ -14483,7 +14488,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          542
+          543
         ],
         "value": 1.0
       },
@@ -14496,9 +14501,9 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          541,
-          543,
-          544
+          542,
+          544,
+          545
         ],
         "value": 0.0
       },
@@ -14507,7 +14512,7 @@
         "term": "step.of-pool",
         "children": [
           167,
-          545
+          546
         ],
         "value": 0.0
       },
@@ -14523,8 +14528,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          546,
-          547
+          547,
+          548
         ],
         "value": 0.0
       },
@@ -14537,7 +14542,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          549
+          550
         ],
         "value": 0.0
       },
@@ -14550,7 +14555,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          551
+          552
         ],
         "value": 1.0
       },
@@ -14563,22 +14568,22 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          550,
-          552,
-          553
-        ],
-        "value": 0.0
-      },
-      {
-        "kind": "product",
-        "term": "step.of-pool",
-        "children": [
-          57,
+          551,
+          553,
           554
         ],
         "value": 0.0
       },
       {
+        "kind": "product",
+        "term": "step.of-pool",
+        "children": [
+          57,
+          555
+        ],
+        "value": 0.0
+      },
+      {
         "kind": {
           "constant": {
             "label": "percent"
@@ -14590,8 +14595,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          555,
-          556
+          556,
+          557
         ],
         "value": 0.0
       },
@@ -14604,7 +14609,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          558
+          559
         ],
         "value": 0.0
       },
@@ -14617,7 +14622,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          560
+          561
         ],
         "value": 1.0
       },
@@ -14630,9 +14635,9 @@
         "kind": "product",
         "term": "step.cap-percent",
         "children": [
-          559,
-          561,
-          562
+          560,
+          562,
+          563
         ],
         "value": 0.0
       },
@@ -14641,7 +14646,7 @@
         "term": "step.of-pool",
         "children": [
           57,
-          563
+          564
         ],
         "value": 0.0
       },
@@ -14657,8 +14662,8 @@
         "kind": "quotient",
         "term": "result",
         "children": [
-          564,
-          565
+          565,
+          566
         ],
         "value": 0.0
       },
@@ -14671,7 +14676,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          567
+          568
         ],
         "value": 1.0
       },
@@ -14684,8 +14689,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          568,
-          569
+          569,
+          570
         ],
         "value": 1.0
       },
@@ -14698,7 +14703,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          571
+          572
         ],
         "value": 1.0
       },
@@ -14714,8 +14719,8 @@
         "kind": "max",
         "term": "step.action-speed",
         "children": [
-          572,
-          573
+          573,
+          574
         ],
         "value": 1.0
       },
@@ -14723,8 +14728,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          570,
-          574
+          571,
+          575
         ],
         "value": 1.0
       }

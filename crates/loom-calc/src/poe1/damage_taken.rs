@@ -427,15 +427,21 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
             Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.to_owned(),
             }),
-            Ok(true) if input == BLINDED_INPUT => ingest.effect(Effect {
-                quantity: Quantity::Poe1(Poe1Quantity::EnemyEvasion),
-                op: Op::More,
-                value: BLIND_LESS_EVASION,
-                conditions: Conditions::none(),
-                source: Source::Config {
-                    input: input.to_owned(),
-                },
-            }),
+            Ok(true) if input == BLINDED_INPUT => {
+                // Blind's less evasion and, since P6-10b part 11, its less
+                // accuracy (`CalcPerform.lua` 831 and 832): the same value.
+                for quantity in [Poe1Quantity::EnemyEvasion, Poe1Quantity::EnemyAccuracy] {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(quantity),
+                        op: Op::More,
+                        value: BLIND_LESS_EVASION,
+                        conditions: Conditions::none(),
+                        source: Source::Config {
+                            input: input.to_owned(),
+                        },
+                    });
+                }
+            }
             Ok(true) => ingest.effect(Effect {
                 conditions: Conditions::none().with_all(flag),
                 ..taken(Op::Increased, INTIMIDATE_UNNERVE_DAMAGE_TAKEN, input)

@@ -24,6 +24,7 @@ pub mod costs;
 pub mod damage_taken;
 pub mod dot;
 pub mod enemy;
+pub mod evade;
 pub mod exposure;
 pub mod flasks;
 pub mod full_dps;
@@ -376,6 +377,12 @@ pub enum Poe1Quantity {
     /// `ElementalDamageTaken`, and their `WhenHit` and `OverTime` forms;
     /// P6-10b part 10): `Increased` and `More`, read by [`taken`].
     SelfDamageTaken(TakenWhen, TakenOf),
+    /// The enemy's accuracy rating (PoB's enemy `Accuracy`; P6-10b part
+    /// 11): `Increased` and `More` (Blind's), read by [`evade`].
+    EnemyAccuracy,
+    /// The character cannot evade (PoB's `CannotEvade`; P6-10b part 11): a
+    /// `Flag` [`evade`] reads.
+    CannotEvade,
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -742,6 +749,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LeechRate(p) => write!(f, "leech-rate.{}", p.name()),
             Self::InstantLeech(p) => write!(f, "instant-leech.{}", p.name()),
             Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
+            Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
+            Self::CannotEvade => f.write_str("cannot-evade"),
             Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
@@ -1037,6 +1046,14 @@ pub enum Poe1Field {
     /// The multiplier of a type's damage taken over time, with resistance
     /// and base reduction (PoB's `<Type>TakenDotMult`; P6-10b part 10).
     TakenDotMult(DamageType),
+    /// The chance to evade the enemy's attacks (PoB's `EvadeChance`; P6-10b
+    /// part 11). Present with evasion.
+    EvadeChance,
+    /// The chance to evade melee attacks (PoB's `MeleeEvadeChance`).
+    MeleeEvadeChance,
+    /// The chance to evade projectile attacks (PoB's
+    /// `ProjectileEvadeChance`).
+    ProjectileEvadeChance,
 }
 
 impl Poe1Field {
@@ -1072,6 +1089,9 @@ impl Poe1Field {
             Self::EnergyShieldCost => "energy-shield-cost",
             Self::LifePerSecondCost => "life-per-second-cost",
             Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
+            Self::EvadeChance => "evade-chance",
+            Self::MeleeEvadeChance => "melee-evade-chance",
+            Self::ProjectileEvadeChance => "projectile-evade-chance",
             Self::TakenDotMult(t) => match t {
                 DamageType::Physical => "physical-taken-dot-mult",
                 DamageType::Fire => "fire-taken-dot-mult",
@@ -1265,6 +1285,7 @@ mod tests {
                 "resistances",
                 "block",
                 "primary-defences",
+                "evade",
                 "unreserved",
                 "damage-reduction",
                 "damage-taken",

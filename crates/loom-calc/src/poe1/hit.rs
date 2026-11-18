@@ -1930,6 +1930,22 @@ fn accuracy_hit_chance(
     let evasion = phases::round(calc, evasion, Term::Step("enemy-evasion-rounded"))?;
     let zero = phases::constant(calc, "no-negative-evasion", 0.0)?;
     let evasion = phases::pair(calc, evasion, zero, Term::Step("enemy-evasion"), false)?;
+    pob_hit_chance(calc, evasion, accuracy, Term::Result)
+}
+
+/// PoB's `calcs.hitChance(evasion, accuracy)` (`CalcDefence.lua` 57 to 63)
+/// on settled values: `max(min(round(accuracy / (accuracy + (evasion / 5)
+/// ^ 0.9) x 125), 100), 5)`. The character's attacks against the enemy
+/// and the enemy's against the character (P6-10b part 11) read it.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn pob_hit_chance(
+    calc: &mut Calc<'_>,
+    evasion: Valued,
+    accuracy: Valued,
+    term: Term,
+) -> Result<Valued, CalcError> {
     // `accuracy / (accuracy + (evasion / 5) ^ 0.9) * 125`. Accuracy 0
     // against evasion 0 is 0 / 0 (NaN, as in PoB, whose result then rests
     // on Lua's `math.min`); the level and dexterity give every character
@@ -1946,7 +1962,7 @@ fn accuracy_hit_chance(
     let cap = phases::constant(calc, "hit-chance-cap", 100.0)?;
     let capped = phases::pair(calc, rounded, cap, Term::Step("hit-chance-capped"), true)?;
     let floor = phases::constant(calc, "hit-chance-floor", 5.0)?;
-    let value = phases::pair(calc, capped, floor, Term::Result, false)?;
+    let value = phases::pair(calc, capped, floor, term, false)?;
     Ok(value)
 }
 

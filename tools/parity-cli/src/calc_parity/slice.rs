@@ -30,8 +30,8 @@ pub const FORMAT: u32 = 1;
 /// revision 15 the leech caps (P6-10b part 7); revision 16 the life and
 /// energy shield costs (P6-10b part 8); revision 17 the leech rates (P6-10b
 /// part 9); revision 18 the damage taken over time multipliers (P6-10b part
-/// 10).
-pub const REVISION: u32 = 18;
+/// 10); revision 19 the evade chances (P6-10b part 11).
+pub const REVISION: u32 = 19;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -135,7 +135,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 40] = [
+pub const PRESENT_NAMES: [(&str, &str); 43] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -219,6 +219,10 @@ pub const PRESENT_NAMES: [(&str, &str); 40] = [
     ("ColdTakenDotMult", "poe1.cold-taken-dot-mult"),
     ("LightningTakenDotMult", "poe1.lightning-taken-dot-mult"),
     ("ChaosTakenDotMult", "poe1.chaos-taken-dot-mult"),
+    // Revision 19 (P6-10b part 11): the evade chances, with evasion.
+    ("EvadeChance", "poe1.evade-chance"),
+    ("MeleeEvadeChance", "poe1.melee-evade-chance"),
+    ("ProjectileEvadeChance", "poe1.projectile-evade-chance"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

@@ -140,6 +140,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-10b part 8: the life and energy shield costs (`costs`, slice revision 16; Lifetap, the life and mana mastery and its attack form, Lifetap's buff); fixtures `cost-lifetap-ice-nova-witch.xml`, `cost-life-share-ice-nova-witch.xml`, `cost-attack-life-share-smite-templar.xml`; DIV-0273 to DIV-0278; `docs/phase-6/recovery.md`, "Part 8"
 - [x] P6-10b part 9: the leech rates (`leech::rates`, slice revision 17; 32 leech rows from PoB's parse; Blood Rage's buff); fixtures `leech-ice-nova-witch.xml`, `leech-instant-cap-ice-nova-witch.xml`; DIV-0279 to DIV-0281; `docs/phase-6/recovery.md`, "Part 9"
 - [x] P6-10b part 10: damage taken over time (`poe1::taken`, slice revision 18; `phases::resistance_in` for the over-time resistance; 15 rows); each field equal to PoB in 175 builds; `docs/phase-6/recovery.md`, "Part 10"
+- [x] P6-10b part 11: the chance to evade (`poe1::evade`, slice revision 19; `hit::pob_hit_chance`; Blind's less accuracy; Unwavering Stance); equal to PoB in 182 builds; `docs/phase-6/recovery.md`, "Part 11"
 - [ ] P6-10b further parts: the enemy's hit and `<Type>TakenHitMult`, a dual wielder's leech, soul costs (bundle needs `VaalSouls`), degeneration (D7), the reduction against a hit, maximum hit and EHP
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`

@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 18] = [
+pub const PHASES: [Phase; 19] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -48,6 +48,10 @@ pub const PHASES: [Phase; 18] = [
     Phase {
         name: "primary-defences",
         run: primary_defences,
+    },
+    Phase {
+        name: "evade",
+        run: super::evade::phase,
     },
     Phase {
         name: "unreserved",
