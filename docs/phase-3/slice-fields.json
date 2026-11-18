@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 15,
+  "revision": 16,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 16 (Phase 6, P6-10b part 8): the main skill's life and energy shield costs and their costs per second (LifeCost, ESCost, LifePerSecondCost, ESPerSecondCost), applies present: our result has the costs with a main skill, the costs per second with a cost and a computed speed.",
     "Revision 15 (Phase 6, P6-10b part 7): the leech caps (MaxLifeLeechRate, MaxLifeLeechRatePercent, MaxLifeLeechInstance, MaxEnergyShieldLeechRate, MaxEnergyShieldLeechInstance, MaxManaLeechRate, MaxManaLeechInstance), applies present: our result has each with its pool, the percent always.",
     "Revision 14 (Phase 6, P6-12 part 2): the build's full damage per second (FullDPS), applies present: our result always has it.",
     "Revision 13 (Phase 6, P6-10b part 6): the main skill's mana cost per second (ManaPerSecondCost), applies present: our result has it with a cost and a computed speed.",
@@ -186,6 +187,10 @@
     {"id": "MaxEnergyShieldLeechInstance", "group": "defence", "pob_key": "MaxEnergyShieldLeechInstance", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 7): the largest recovery of one energy shield leech."},
     {"id": "MaxManaLeechRate", "group": "defence", "pob_key": "MaxManaLeechRate", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 7): mana's leech rate cap."},
     {"id": "MaxManaLeechInstance", "group": "defence", "pob_key": "MaxManaLeechInstance", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 7): the largest recovery of one mana leech."},
+    {"id": "LifeCost", "group": "offence", "pob_key": "LifeCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 8): the main skill's life cost, with mana's moved to life by Lifetap and the life and mana mastery."},
+    {"id": "ESCost", "group": "offence", "pob_key": "ESCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 8): the main skill's energy shield cost."},
+    {"id": "LifePerSecondCost", "group": "offence", "pob_key": "LifePerSecondCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 8): the life cost times the skill's speed."},
+    {"id": "ESPerSecondCost", "group": "offence", "pob_key": "ESPerSecondCost", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 8): the energy shield cost times the skill's speed."},
     {"id": "Minion.Life", "group": "minion", "pob_key": "Life", "pob_path": ["Minion", "Life"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.EnergyShield", "group": "minion", "pob_key": "EnergyShield", "pob_path": ["Minion", "EnergyShield"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},
     {"id": "Minion.Armour", "group": "minion", "pob_key": "Armour", "pob_path": ["Minion", "Armour"], "applies": "minion", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-7b2): the main skill's minion (PoB's output.Minion)."},

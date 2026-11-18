@@ -306,3 +306,44 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
   - No other field's value or state moved.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,763 tests and clippy pass. The bare Witch's test checks all seven values.
+
+## Part 8: the life and energy shield costs
+
+**What PoB does** (`CalcOffence.lua` 1677 to 1800): the upfront costs run in the order mana, life, energy shield, each as the mana cost did in part 4.
+- **The base:** each resource's base is the skill level's cost of that resource (`Life`, `ES`). Its final base is `floor(base x multiplier)`, plus mana's `ManaCostNoMult` for mana.
+- **The conversions:** in the first pass, before any modifier:
+  - With `CostLifeInsteadOfMana` (Lifetap, "Skills Cost Life instead of Mana"), life's final base gains mana's, and mana's becomes 0.
+  - Otherwise, with `HybridManaAndLifeCost_Life` ("Skills Cost Life instead of #% of Mana Cost", the attack form too) or `ManaCostAsLifeCost` above 0, life's gains `round(mana's x share / 100)`.
+  - Energy shield's works the same, with `CostESInsteadOfManaOrLife` or `ManaCostAsEnergyShieldCost`.
+- **The modifiers:** each resource's increased (its own and `Cost`), more, efficiency, and total, rounded as mana's.
+- **The hybrid's last step:** mana's cost then becomes `floor((1 - share / 100) x cost)`.
+- **Per second:** `<Resource>PerSecondCost` is the cost times the skill's speed.
+
+**The engine** (`costs`; slice revision 16):
+- **The fields:** `life-cost` and `energy-shield-cost` are present with a main skill, as `mana-cost` is. `life-per-second-cost` and `energy-shield-per-second-cost` are present with a cost and a computed speed.
+- **The conversion quantities:** `CostLifeInsteadOfMana`, `CostEnergyShieldInsteadOfManaOrLife`, `HybridLifeCost`, `ManaCostAsLifeCost`, and `ManaCostAsEnergyShieldCost`. With the life and energy shield `Cost` and `CostEfficiency`, they are skill quantities too, so Lifetap's stat acts on the skill it supports.
+- **The rows:**
+  - Lifetap's `base_skill_cost_life_instead_of_mana` and the mastery's `base_skill_cost_life_instead_of_mana_%` (both were `COST_REASONS`).
+  - The attack form `base_attack_skill_cost_life_instead_of_mana_%` (a hit row with attacks).
+  - `base_life_cost_+%`.
+  - Lifetap's "more Damage while you have the Lifetap buff", under the config's `buffLifetap` (`conditions::LIFETAP`; it left `NAMED_ONLY`, whose other name, the flask life recovery, reaches no slice field).
+- **Not modelled:**
+  - **Data the bundle lacks:** soul costs (PoB's `VaalSouls` column) wait for a data run.
+  - **Reasons:** rage and percent costs, and the Blood Magic keystone (which also removes mana and reserves life).
+  - **Partial in a community build:** Petrified Blood's life cost is an aura gem's stat.
+
+### Evidence
+
+- **Fixtures:** three new mechanic fixtures, each cost equal to PoB's:
+  - `cost-lifetap-ice-nova-witch.xml`: 69 life, 0 mana.
+  - `cost-life-share-ice-nova-witch.xml`: 6 life, 16 mana.
+  - `cost-attack-life-share-smite-templar.xml`: 5 life, 7 mana. Its Speed, DPS, and per-second costs carry Smite's Q11 rate: DIV-0273 to DIV-0278, `game-truth`.
+- **Public `calc-parity` on `b-ot`:** 208 builds, 277 expected, 0 unexpected; `Complete` fields 8,303.
+  - The life and energy shield costs equal PoB's in 152 builds.
+  - Boneshatter's, Cyclone's, and Flicker Strike's life costs (Lifetap or the mastery) equal PoB's in their partial builds.
+  - Holy Flame Totem's mana cost already differed before this part, from its unmodelled totem stats.
+- **Moved in partial builds:**
+  - RF Chieftain's damage over time and Elemental Hit's full DPS gain Lifetap's 20% more: both builds configure the buff.
+  - Four partial builds' mana costs moved toward PoB's.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,764 tests and clippy pass.

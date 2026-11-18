@@ -506,14 +506,14 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         assert_eq!(value(&r, field), v, "{field}");
         assert_eq!(state(&r, field), StateKind::Complete, "{field}");
     }
-    // The other 7 slice fields (the main skill's) and the mana cost (P6-10b)
-    // are not computed: the build has no skill.
+    // The other 7 slice fields (the main skill's) and the mana, life, and
+    // energy shield costs (P6-10b) are not computed: the build has no skill.
     let not_computed = r
         .fields
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 8);
+    assert_eq!(not_computed, 10);
     assert_eq!(r.state, StateKind::Unsupported);
 }
 

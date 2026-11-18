@@ -1308,6 +1308,16 @@
             }
           }
         ]
+      },
+      {
+        "field": "poe1.life-cost",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "poe1.energy-shield-cost",
+        "state": "unsupported",
+        "reason": "not-computed"
       }
     ],
     "graph": [

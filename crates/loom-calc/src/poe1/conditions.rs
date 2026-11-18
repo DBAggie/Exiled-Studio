@@ -80,6 +80,11 @@ pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
+/// PoB's `Condition:Lifetap`, from its config check `buffLifetap`
+/// (`ConfigOptions.lua`; P6-10b part 8: Lifetap's more damage while
+/// buffed).
+pub const LIFETAP: &str = "Lifetap";
+
 /// PoB's `Condition:ChannellingCyclone`, from its config check
 /// `channellingCycloneCheck` (`ConfigOptions.lua` 375; P6-8a: Cyclone's
 /// movement speed buff, `poe1::gems`).
@@ -90,6 +95,7 @@ pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
 /// one: the condition holds when any of its inputs is on (P6-11g).
 pub const CHECKS: &[(&str, &str)] = &[
     ("buffArcaneSurge", ARCANE_SURGE),
+    ("buffLifetap", LIFETAP),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     ("conditionBlockedAttackRecently", "BlockedAttackRecently"),

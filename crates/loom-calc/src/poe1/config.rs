@@ -257,7 +257,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
-    ("buffLifetap", &["Condition:Lifetap", "FlaskLifeRecovery"]),
     (
         "buffNgamahuFlamesAdvance",
         &["Condition:NgamahuFlamesAdvance"],

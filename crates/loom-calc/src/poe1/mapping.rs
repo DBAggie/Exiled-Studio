@@ -401,6 +401,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-10b part 8: "Attack Skills Cost Life instead of #% of Mana
+    // Cost" (`HybridManaAndLifeCost_Life` BASE with attacks).
+    (
+        "base_attack_skill_cost_life_instead_of_mana_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::HybridLifeCost),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 709: `EnemyBleedDuration` INC (P6-2c).
     (
         "base_bleed_duration_+%",
@@ -1745,6 +1757,17 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ManaCostNoMult
                     | Poe1Quantity::ManaCostEfficiency
                     | Poe1Quantity::CostEfficiency
+                    // The life and energy shield costs and their sources
+                    // (P6-10b part 8: Lifetap's).
+                    | Poe1Quantity::LifeCost
+                    | Poe1Quantity::EnergyShieldCost
+                    | Poe1Quantity::LifeCostEfficiency
+                    | Poe1Quantity::EnergyShieldCostEfficiency
+                    | Poe1Quantity::CostLifeInsteadOfMana
+                    | Poe1Quantity::CostEnergyShieldInsteadOfManaOrLife
+                    | Poe1Quantity::HybridLifeCost
+                    | Poe1Quantity::ManaCostAsLifeCost
+                    | Poe1Quantity::ManaCostAsEnergyShieldCost
                     // "Deal no ... Damage" (P6-7c2, Brutality's).
                     | Poe1Quantity::DealNo(..)
                     // P6-11j.
@@ -2203,6 +2226,13 @@ pub const STATE_ROWS: &[StateRow] = &[
             super::triggers::TRIGGERED_DAMAGE,
         )],
     ),
+    // P6-10b part 8: Lifetap's "more Damage while you have the Lifetap
+    // buff" (`Damage` MORE, `Condition` `Lifetap`, `sup_str.lua` 3514), the
+    // config's buff (`poe1::conditions`).
+    (
+        "support_lifetap_damage_+%_final_while_buffed",
+        &[(Quantity::Damage, Op::More, NONE, conditions::LIFETAP)],
+    ),
     // P6-10b part 5: "#% additional Physical Damage Reduction while
     // stationary" (`PhysicalDamageReduction` BASE, `Stationary`).
     (
@@ -2387,6 +2417,11 @@ pub const ROWS: &[Row] = &[
     ("base_evasion_rating", &[(Quantity::Evasion, Op::Base, 1.0)]),
     ("base_fire_damage_resistance_%", &[(FIRE, Op::Base, 1.0)]),
     ("base_intelligence", &[(INT, Op::Base, 1.0)]),
+    // P6-10b part 8: "#% increased Life Cost of Skills" (`LifeCost` INC).
+    (
+        "base_life_cost_+%",
+        &[(Quantity::Poe1(Poe1Quantity::LifeCost), Op::Increased, 1.0)],
+    ),
     // P6-10b: "Regenerate # Life per second" (`LifeRegen` BASE, the stat per minute).
     (
         "base_life_regeneration_rate_per_minute",
@@ -2498,6 +2533,22 @@ pub const ROWS: &[Row] = &[
             Op::Increased,
             1.0,
         )],
+    ),
+    // P6-10b part 8: "Skills Cost Life instead of Mana" (Lifetap;
+    // `CostLifeInsteadOfMana`).
+    (
+        "base_skill_cost_life_instead_of_mana",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CostLifeInsteadOfMana),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // P6-10b part 8: "Skills Cost Life instead of #% of Mana Cost"
+    // (`HybridManaAndLifeCost_Life` BASE).
+    (
+        "base_skill_cost_life_instead_of_mana_%",
+        &[(Quantity::Poe1(Poe1Quantity::HybridLifeCost), Op::Base, 1.0)],
     ),
     ("base_spell_block_%", &[(SPELL_BLOCK, Op::Base, 1.0)]),
     (
@@ -3666,9 +3717,6 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
 /// channelling or non-channelling skills' total (`SkillType` 48, no flag
 /// here).
 pub const COST_REASONS: &[&str] = &[
-    "base_attack_skill_cost_life_instead_of_mana_%",
-    "base_skill_cost_life_instead_of_mana",
-    "base_skill_cost_life_instead_of_mana_%",
     "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
     "local_flask_skill_mana_cost_+%_during_flask_effect",
@@ -5376,6 +5424,16 @@ mod tests {
                     Op::Base,
                     NONE,
                     conditions::STATIONARY,
+                )],
+            ),
+            // P6-10b part 8: Lifetap's more damage while buffed.
+            (
+                "support_lifetap_damage_+%_final_while_buffed",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    conditions::LIFETAP,
                 )],
             ),
             // P6-8a part 2: Cast while Channelling's triggered damage.

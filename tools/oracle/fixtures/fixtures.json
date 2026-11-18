@@ -2041,6 +2041,36 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "P6-8b: Burning Arrow with Mirage Archer: the mirage's copy of the skill with less damage and attack speed, its DPS in CombinedDPS. Speed, TotalDPS, IgniteDPS, and CombinedDPS carry the bow's Q11 attack rate (DIV-0185 to DIV-0188)."
+    },
+    {
+      "id": "cost-lifetap-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/cost-lifetap-ice-nova-witch.xml",
+      "sha256": "ab91248536426360bef2bb85152695ef00e57f173dc812205a5636d69f595767",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "FullDPS", "Int", "Life", "LifeCost", "LifePerSecondCost", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b part 8: Ice Nova with Lifetap: the skill costs life instead of mana (Lifetap's cost multiplier applied), the life cost per second at the cast rate, and Lifetap's more damage only with its buff configured."
+    },
+    {
+      "id": "cost-life-share-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/cost-life-share-ice-nova-witch.xml",
+      "sha256": "99bca753476b77cdc7638c00a6a2e3b54695fa29f7a2c5162c586967577f15d3",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "FullDPS", "Int", "Life", "LifeCost", "LifePerSecondCost", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "P6-10b part 8: Ice Nova with \"Skills Cost Life instead of 30% of Mana Cost\" and 15% reduced life cost: life's base share of the mana cost rounded, then reduced and rounded up; mana keeps floor(70%)."
+    },
+    {
+      "id": "cost-attack-life-share-smite-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/cost-attack-life-share-smite-templar.xml",
+      "sha256": "04a41b9b2e95883755b99483255e83e8670bf75a7652e4b55b7b6c969658a562",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "P6-10b part 8: Smite with \"Attack Skills Cost Life instead of 40% of Mana Cost\": the attack's life share. Speed, the DPS fields, and the costs per second carry the Q11 attack rate (DIV-0273 to DIV-0278)."
     }
   ]
 }

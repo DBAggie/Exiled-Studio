@@ -322,6 +322,31 @@ pub enum Poe1Quantity {
     /// A stat that changes the cost in a way the engine does not model
     /// (P6-10b; [`mapping::COST_REASONS`]): a `Flag` only [`costs`] reads.
     CostReason(&'static str),
+    /// A skill's life cost (PoB's `LifeCost`; P6-10b part 8): `Increased`,
+    /// `More`, and `Base` (the total), read by [`costs`].
+    LifeCost,
+    /// A skill's energy shield cost (PoB's `ESCost`; P6-10b part 8).
+    EnergyShieldCost,
+    /// Life cost efficiency (PoB's `LifeCostEfficiency`; P6-10b part 8).
+    LifeCostEfficiency,
+    /// Energy shield cost efficiency (PoB's `ESCostEfficiency`; P6-10b
+    /// part 8).
+    EnergyShieldCostEfficiency,
+    /// Skills cost life instead of mana (PoB's `CostLifeInsteadOfMana`;
+    /// P6-10b part 8): a `Flag` [`costs`] reads.
+    CostLifeInsteadOfMana,
+    /// Skills cost energy shield instead of mana or life (PoB's
+    /// `CostESInsteadOfManaOrLife`; P6-10b part 8): a `Flag`.
+    CostEnergyShieldInsteadOfManaOrLife,
+    /// The percent of the mana cost paid in life instead (PoB's
+    /// `HybridManaAndLifeCost_Life`; P6-10b part 8): `Base`.
+    HybridLifeCost,
+    /// A base life cost as a percent of the mana cost (PoB's
+    /// `ManaCostAsLifeCost`; P6-10b part 8): `Base`.
+    ManaCostAsLifeCost,
+    /// A base energy shield cost as a percent of the mana cost (PoB's
+    /// `ManaCostAsEnergyShieldCost`; P6-10b part 8): `Base`.
+    ManaCostAsEnergyShieldCost,
     /// A damage type's base damage reduction, percent (PoB's
     /// `<Type>DamageReduction` BASE; P6-10b part 5): read by [`reduction`].
     DamageReduction(DamageType),
@@ -667,6 +692,17 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ManaCostEfficiency => f.write_str("mana-cost-efficiency"),
             Self::CostEfficiency => f.write_str("cost-efficiency"),
             Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),
+            Self::LifeCost => f.write_str("life-cost"),
+            Self::EnergyShieldCost => f.write_str("energy-shield-cost"),
+            Self::LifeCostEfficiency => f.write_str("life-cost-efficiency"),
+            Self::EnergyShieldCostEfficiency => f.write_str("energy-shield-cost-efficiency"),
+            Self::CostLifeInsteadOfMana => f.write_str("cost-life-instead-of-mana"),
+            Self::CostEnergyShieldInsteadOfManaOrLife => {
+                f.write_str("cost-energy-shield-instead-of-mana-or-life")
+            }
+            Self::HybridLifeCost => f.write_str("hybrid-life-cost"),
+            Self::ManaCostAsLifeCost => f.write_str("mana-cost-as-life-cost"),
+            Self::ManaCostAsEnergyShieldCost => f.write_str("mana-cost-as-energy-shield-cost"),
             Self::HitReason(stat) => write!(f, "hit-reason.{stat}"),
             Self::DamageReduction(t) => write!(f, "damage-reduction.{}", t.name()),
             Self::ElementalDamageReduction => f.write_str("elemental-damage-reduction"),
@@ -889,6 +925,16 @@ pub enum Poe1Field {
     /// Life's leech rate cap in percent of life (PoB's
     /// `MaxLifeLeechRatePercent`; P6-10b part 7). Always present.
     MaxLifeLeechRatePercent,
+    /// The main skill's life cost (PoB's `LifeCost`; P6-10b part 8).
+    LifeCost,
+    /// The main skill's energy shield cost (PoB's `ESCost`; P6-10b part 8).
+    EnergyShieldCost,
+    /// The main skill's life cost per second (PoB's `LifePerSecondCost`;
+    /// P6-10b part 8). Present only with a cost and a computed speed.
+    LifePerSecondCost,
+    /// The main skill's energy shield cost per second (PoB's
+    /// `ESPerSecondCost`; P6-10b part 8).
+    EnergyShieldPerSecondCost,
 }
 
 impl Poe1Field {
@@ -920,6 +966,10 @@ impl Poe1Field {
                 Pool::EnergyShield => "max-energy-shield-leech-instance",
             },
             Self::MaxLifeLeechRatePercent => "max-life-leech-rate-percent",
+            Self::LifeCost => "life-cost",
+            Self::EnergyShieldCost => "energy-shield-cost",
+            Self::LifePerSecondCost => "life-per-second-cost",
+            Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
             Self::CombinedDps => "combined-dps",
             Self::BaseDamageReduction(t) => match t {
                 DamageType::Physical => "base-physical-damage-reduction",
