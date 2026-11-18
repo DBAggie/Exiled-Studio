@@ -90,7 +90,14 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 /// - "#% increased Effect of Buffs granted by your Golems" (P3-close;
 ///   PoB's `BuffEffect` INC tagged `SkillType.Golem`, `ModParser.lua`
 ///   "effect of buffs granted by your golems").
-pub const STATS: [ModifierRow; 9] = [
+pub const STATS: [ModifierRow; 10] = [
+    // P6-11k: "Auras from your Skills have #% increased Effect on you"
+    // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
+    (
+        "aura_effect_on_self_from_your_skills_+%",
+        Poe1Quantity::SkillAuraEffectOnSelf,
+        1.0,
+    ),
     (
         "base_life_reservation_efficiency_+%",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Life)),
@@ -147,6 +154,8 @@ pub struct Totals {
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
     pub aura_effect: f64,
+    /// `SkillAuraEffectOnSelf` INC: every aura buff on you (P6-11k).
+    pub aura_on_self: f64,
     /// `BuffEffect` INC of golem skills (P3-close).
     pub golem_buff_effect: f64,
     /// `CurseEffect` INC (P3-close).
@@ -198,6 +207,7 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
+                Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::Reserved(Some(_)) => {
@@ -244,6 +254,10 @@ impl Totals {
         }
         if aura && types.contains("Aura") && !types.contains("AppliesCurse") {
             inc += self.aura_effect;
+        }
+        // Every aura buff on you, untagged (`CalcPerform.lua` 2413; P6-11k).
+        if aura {
+            inc += self.aura_on_self;
         }
         1.0 + inc / 100.0
     }
@@ -551,6 +565,15 @@ mod tests {
         // type.
         assert_eq!(t.buff_scale(false, &types(&["Aura"]), 0.0), 1.0);
         assert_eq!(t.buff_scale(true, &types(&["Buff"]), 0.0), 1.0);
+        // P6-11k: the effect of your skills' auras on you, every aura buff,
+        // untagged; never a buff.
+        let s = Totals {
+            aura_on_self: 10.0,
+            ..t
+        };
+        assert_eq!(s.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.35);
+        assert_eq!(s.buff_scale(true, &types(&["Buff"]), 0.0), 1.1);
+        assert_eq!(s.buff_scale(false, &types(&["Aura"]), 0.0), 1.0);
         // P3-close: the golems' buff effect for a golem skill's buff, the
         // skill's own on top; neither for another skill.
         let g = Totals {

@@ -1132,6 +1132,26 @@ pub(super) fn primary_defence(
         }
         let base = piece(calc, slot, defence, &mut reasons)?;
         if base.value > 0.0 {
+            // A piece's own increase (P6-11k, PoB's `SlotName` tag): the
+            // piece's modifier adds it to the global increase; other pieces
+            // keep the shared modifier.
+            let own = Quantity::Poe1(Poe1Quantity::SlotIncreased(slot, defence));
+            let modifier = if has(calc, own) {
+                let slot_inc = sum(
+                    calc,
+                    own,
+                    Op::Increased,
+                    Term::Step("slot-increased"),
+                    &mut reasons,
+                )?;
+                let extra_inc = match extra {
+                    Some(e) => total(calc, &[e, slot_inc], Term::Step("extra-and-slot"))?,
+                    None => slot_inc,
+                };
+                defence_modifier(calc, quantity, Some(extra_inc), &mut reasons)?
+            } else {
+                modifier
+            };
             rows.push(product(calc, &[base, modifier], Term::Step(slot.row()))?);
         }
     }

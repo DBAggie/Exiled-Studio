@@ -271,3 +271,28 @@ Impale keeps its own reduction, as PoB's. Not modelled, so reasons where they ap
 - **Fixtures:** `smite-ignore-pdr-average-templar.xml` and `smite-ignore-pdr-max-templar.xml`. The average damage matches PoB in both; the Q11 speed is DIV-0127 to DIV-0132.
 - **Public `calc-parity`:** 188 builds, 131 expected differences, 0 unexpected; `Complete` fields 3,581. 2 values moved, both toward PoB (Cyclone).
 - **Corpus:** 0 unexpected, no value moved.
+
+## P6-11k: the equipped shield's defences, and the effect of your auras on you
+
+Two kinds of line, each checked against PoB's parse (`local/p6/parse2`):
+
+- **The equipped shield's defences:**
+  - "#% increased Energy Shield from Equipped Shield" (`shield_maximum_energy_shield_+%`) is PoB's `EnergyShield` INC tagged `SlotName` Weapon 2.
+  - "#% increased Defences from Equipped Shield" (`shield_armour_+%`) is PoB's `Defences` INC with the same tag.
+  - Both map to `Poe1Quantity::SlotIncreased(slot, defence)`. The second gives one row for each of armour, evasion, and energy shield.
+  - `phases::primary_defence` gives a piece with such an increase its own modifier: the global increase plus the piece's, times the more. Every other piece keeps the shared modifier, so builds without these lines keep their graphs.
+- **"Auras from your Skills have #% increased Effect on you"** (`aura_effect_on_self_from_your_skills_+%`) is PoB's `SkillAuraEffectOnSelf` INC.
+  - It has no skill type tag. PoB sums it for every aura buff on you (`CalcPerform.lua` 2413), and never for a buff or on a minion.
+  - It is `Poe1Quantity::SkillAuraEffectOnSelf`, a `skill_modifiers::STATS` row, and `Totals::buff_scale` adds it for every aura.
+
+**Left for later:** spell damage per 100 maximum mana (PoB's `PerStat` with a total limit, which the hit would read after mana) and "#% more maximum Life" with at least 6 life masteries (a count of allocated life masteries). They stay `unmapped-stat` reasons.
+
+**Evidence** (`local/p6/p6-11k/`):
+- **Fixture:** `ice-nova-shield-defences-aura-self-witch.xml`: a Twig Spirit Shield with both shield lines, and Discipline with 20% increased effect of your auras on you. EnergyShield 282 and its recharge 128, both equal to PoB's.
+- **Public `calc-parity`:** 195 builds, 131 expected differences, 0 unexpected; `Complete` fields 5,020.
+  - 9 values moved, all toward PoB: three builds' armour, energy shield, recharge, regeneration, and their hits.
+  - No state changed.
+- **Corpus:** 0 unexpected. 25 values moved, all toward PoB, 7 of them now equal (armour and evasion of shield builds). No state changed.
+- **data-parity:** unchanged (uncategorized 353).
+- **Tests:** a unit test of the aura on self in `buff_scale`; the real-bundle reservation and aura test lists the stat's text. Workspace tests, clippy, and the real-bundle tests pass.
+

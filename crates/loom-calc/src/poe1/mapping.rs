@@ -2730,6 +2730,50 @@ pub const ROWS: &[Row] = &[
             (CHAOS, Op::Base, 1.0),
         ],
     ),
+    // P6-11k: "#% increased Defences from Equipped Shield" (`Defences` INC,
+    // `SlotName` Weapon 2): each defence of the shield.
+    (
+        "shield_armour_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Weapon2,
+                    Defence::Armour,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Weapon2,
+                    Defence::Evasion,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Weapon2,
+                    Defence::EnergyShield,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+        ],
+    ),
+    // P6-11k: "#% increased Energy Shield from Equipped Shield"
+    // (`EnergyShield` INC, `SlotName` Weapon 2).
+    (
+        "shield_maximum_energy_shield_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                ArmourSlot::Weapon2,
+                Defence::EnergyShield,
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // Silver Flask's buff flag, "Onslaught" in PoB's base data (the line
     // PoB parses as the `Onslaught` condition, as the custom line); its
     // effect with flask effect is `poe1::flasks`' (P6-4b).

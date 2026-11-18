@@ -243,6 +243,15 @@ pub enum Poe1Quantity {
     /// tagged `Aura` and not `AppliesCurse`, P3-8l): `Increased`, read by
     /// [`skill_modifiers::Totals`] to scale the other gems' auras.
     NonCurseAuraEffect,
+    /// "Auras from your Skills have #% increased Effect on you" (PoB's
+    /// `SkillAuraEffectOnSelf`, P6-11k): `Increased`, read by
+    /// [`skill_modifiers::Totals`] for every aura buff on you.
+    SkillAuraEffectOnSelf,
+    /// A defence's increase from one equipped piece only (PoB's
+    /// `<Defence>` or `Defences` INC tagged `SlotName`, P6-11k: "#%
+    /// increased Energy Shield from Equipped Shield"): `Increased`, added to
+    /// that piece's modifier ([`phases`]).
+    SlotIncreased(ArmourSlot, Defence),
     /// "Your hits can't be Evaded" (PoB's `CannotBeEvaded`, P3-8m): a
     /// `Flag`; an attack's chance to hit is then 100 ([`hit`]).
     CannotBeEvaded,
@@ -605,6 +614,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Reserved(None) => f.write_str("reserved"),
             Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),
             Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
+            Self::SkillAuraEffectOnSelf => f.write_str("skill-aura-effect-on-self"),
+            Self::SlotIncreased(s, d) => write!(f, "slot-increased.{}.{}", s.row(), d.name()),
             Self::CannotBeEvaded => f.write_str("cannot-be-evaded"),
             Self::NeverCrit => f.write_str("never-crit"),
             Self::NoCritMultiplier => f.write_str("no-crit-multiplier"),
