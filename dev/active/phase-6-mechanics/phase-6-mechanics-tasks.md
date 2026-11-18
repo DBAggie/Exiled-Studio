@@ -131,4 +131,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11e PR #162 (base `feat/p6-11d-arrow-review`)
 - [x] P6-11f: block per 5% (`BlockPer5`, PoB's `PerStat`), evasion per frenzy charge, eight `NoEffect` rows; fixture `ice-nova-block-per-5-witch.xml`; `docs/phase-6/stat-mop-up.md`, "P6-11f" (PR #167)
 - [x] P6-11g: `BlockedRecently` from any of its three checks (`conditions::CHECKS` with several inputs per condition), the armour if Blocked Recently row, 26 `NoEffect` rows (regeneration, leech, recovery, recharge, costs, keystones without a field); fixture `smite-blocked-recently-no-effect-templar.xml` (Q11 DIV-0125, DIV-0126); `docs/phase-6/stat-mop-up.md`, "P6-11g"
+- [x] P6-11h: Glancing Blows (`BlockChance` MORE 100), the resolver's lone hidden stat assumed 1, `EnemyExplode` out of the gem table, the maintainer-run real-bundle tests passing again (`mapping::no_effect_by_rule`); fixture `ice-nova-glancing-blows-witch.xml`; `docs/phase-6/stat-mop-up.md`, "P6-11h"
 ## P6-12: combined and full DPS; report

@@ -623,7 +623,6 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
-    ("EnemyExplode", Kind::Inert),
     (
         "Enfeeble",
         Kind::Curse {

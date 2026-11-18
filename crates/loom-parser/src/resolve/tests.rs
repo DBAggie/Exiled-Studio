@@ -336,6 +336,17 @@ fn resolve_should_fill_stats_without_a_placeholder() {
         values(&resolve(&not_zero, "Cannot be Frozen")),
         vec![("a".to_owned(), hidden(Condition::Not(0), None))]
     );
+    // A lone stat shown without a number is not 0 (the game prints a
+    // description only when a stat of it is not 0): a keystone's line, any
+    // value, is assumed 1 (P6-11g).
+    let keystone = one_file(vec![desc(
+        &["keystone_glancing_blows"],
+        vec![variant(&[ANY], "Glancing Blows", &[])],
+    )]);
+    assert_eq!(
+        values(&resolve(&keystone, "Glancing Blows")),
+        vec![("keystone_glancing_blows".to_owned(), hidden(ANY, Some(1)))]
+    );
     let impossible = Condition::Range {
         min: Some(3),
         max: Some(1),

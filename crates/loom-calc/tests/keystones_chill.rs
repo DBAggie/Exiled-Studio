@@ -10,6 +10,7 @@ mod common;
 use loom_calc::StatMapping;
 use loom_calc::poe1::damage_taken::{CHILL_DEPENDS_ON, CHILL_STATS, SHOCK_STATS};
 use loom_calc::poe1::keystones::KEYSTONES;
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_domain::StatId;
 
@@ -18,7 +19,11 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 7] = [
+const TEXTS: [(&str, &str); 8] = [
+    (
+        "keystone_glancing_blows",
+        "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",
+    ),
     ("chill_effect_+%", "{0}% increased Effect of Chill"),
     (
         "cold_ailment_effect_+%",
@@ -152,6 +157,9 @@ fn real_keystone_and_chill_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
             loom_calc::StatMap::Effects(_) if ENEMY_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }

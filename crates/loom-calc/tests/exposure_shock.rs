@@ -10,6 +10,7 @@ mod common;
 use loom_calc::StatMapping;
 use loom_calc::poe1::damage_taken::{SHOCK_DEPENDS_ON, SHOCK_STATS};
 use loom_calc::poe1::exposure::{DEPENDS_ON, STATS};
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_domain::StatId;
 
@@ -94,6 +95,12 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// Recently".
 const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
 
+/// Rows whose text names shock but which map only another part (P3-8c):
+/// "#% chance to Freeze, Shock and Ignite" is the ignite chance; the
+/// engine computes no shock from a hit (only the config's and the
+/// guaranteed one), so its shock part reaches no field.
+const OTHER_PART_ROWS: &[&str] = &["chance_to_freeze_shock_ignite_%"];
+
 #[test]
 fn the_texts_should_name_the_rows() {
     let rows: Vec<&str> = STATS
@@ -174,9 +181,13 @@ fn real_exposure_and_shock_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
             // A row that reads the config's condition (P3-8n), never the
             // enemy's shock.
             loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if OTHER_PART_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

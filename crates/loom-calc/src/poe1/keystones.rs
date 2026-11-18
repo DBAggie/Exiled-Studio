@@ -1,5 +1,6 @@
 //! Keystones that change the main skill's hit (Phase 3 plan, step 8;
-//! P3-8m): Resolute Technique, Elemental Overload, and Bitter Frost.
+//! P3-8m): Resolute Technique, Elemental Overload, and Bitter Frost; and
+//! Glancing Blows' block (P6-11g, [`KEYSTONES`]).
 //!
 //! What PoB v2.67.2 does. A keystone node's lines are the passive tree's
 //! text (`passive_skill_stat_descriptions.txt`), each read by
@@ -122,6 +123,24 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             flag(Poe1Quantity::NoCritMultiplier),
             flag(Poe1Quantity::AilmentsNeverFromCrit),
         ],
+    ),
+    // Glancing Blows (P6-11g): "Chance to Block Attack Damage is doubled"
+    // is `BlockChance` MORE 100, which PoB's spell block also reads
+    // (`CalcDefence.lua` 709 to 713 take the `BlockChance` increases and
+    // mores); its "Chance to Block Spell Damage is doubled"
+    // (`SpellBlockChance` MORE) only scales projectile spell block, and "You
+    // take 65% of Damage from Blocked Hits" (`BlockEffect`) reaches no slice
+    // field.
+    (
+        "keystone_glancing_blows",
+        &[(
+            Quantity::BlockChance,
+            Op::More,
+            100.0,
+            Flags::NONE,
+            Flags::NONE,
+            None,
+        )],
     ),
     (
         "resolute_technique",

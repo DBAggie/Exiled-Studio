@@ -8,6 +8,7 @@
 mod common;
 
 use loom_calc::StatMapping;
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_calc::poe1::skill_modifiers::STATS;
 use loom_domain::StatId;
@@ -121,6 +122,9 @@ fn real_reservation_and_aura_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

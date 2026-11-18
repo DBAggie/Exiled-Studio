@@ -3138,15 +3138,21 @@ pub const NO_EFFECT_PREFIXES: &[(&str, &str)] = &[
     ),
 ];
 
+/// Whether `stat` has no effect by a rule rather than a [`NO_EFFECT`] row:
+/// a prefix of [`NO_EFFECT_PREFIXES`], or a skill's own stat with no
+/// output ([`super::skill_no_output`]).
+#[must_use]
+pub fn no_effect_by_rule(stat: &str) -> bool {
+    NO_EFFECT_PREFIXES.iter().any(|(p, _)| stat.starts_with(p))
+        || super::skill_no_output::contains(stat)
+}
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if NO_EFFECT
             .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .is_ok()
-            || NO_EFFECT_PREFIXES
-                .iter()
-                .any(|(p, _)| stat.as_str().starts_with(p))
-            || super::skill_no_output::contains(stat.as_str())
+            || no_effect_by_rule(stat.as_str())
         {
             return StatMap::NoEffect;
         }
