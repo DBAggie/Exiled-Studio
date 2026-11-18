@@ -50,7 +50,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
   - **P6-11c** (branch `feat/p6-11c-weapon-review`, stacked on P6-11b, PR #160): the P6-11b review: weapon flags on an attack's DoT, per-hand ailment flags, Intimidating Cry on the combined speed, `MainHandWeapon` gone, `KeywordFlag.Arrow`; bow fixture (`docs/phase-6/stat-mop-up.md`, "P6-11c").
   - **P6-11d** (branch `feat/p6-11d-arrow-review`, stacked on P6-11c, PR #161): the P6-11c review: arrow keyword from the active gem, an attack DoT's main-hand flags, tests (`docs/phase-6/stat-mop-up.md`, "P6-11d").
   - **P6-11e** (branch `feat/p6-11e-dot-weapon`, stacked on P6-11d, PR #162): the P6-11d review: an attack DoT's main hand as PoB's `getWeaponFlags`, reasons for an unusable or unknown hand (`docs/phase-6/stat-mop-up.md`, "P6-11e").
-  - **P6-7b1** (branch `feat/p6-7b1-minion-data`, stacked on P6-11e): the minion data after the maintainer's depot download of build 26530219 (2026-11-17, extract `local/extract/poe1/26530219-ot2`):
+  - **P6-7b1** (branch `feat/p6-7b1-minion-data`, stacked on P6-11e, PR #163): the minion data after the maintainer's depot download of build 26530219 (2026-11-17, extract `local/extract/poe1/26530219-ot2`):
     - the extractor reads every monster `.ot` as PoB does (manifest format 6);
     - `poe1/minions.json` gains `object_stats`;
     - export format 13 and data-parity table `minion_mods`;
