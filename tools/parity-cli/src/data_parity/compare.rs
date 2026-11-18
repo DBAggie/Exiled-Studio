@@ -1382,7 +1382,7 @@ const DAMAGE_FIXUPS: [(&str, f64); 3] = [
 /// its object type's `.ot` stats with the stat as the ID
 /// ([`loom_data::bundle::poe1::ObjectStats`]), unless the object type is
 /// `Metadata/Monsters/Monster`. A bundle built before P6-7b1 has no `.ot`
-/// stats, so every list with one differs.
+/// stats: one difference says so (field `object_stats`), not one per list.
 fn compare_minion_mods(out: &mut Comparison, bundle: &Bundle, export: &Export) {
     const T: &str = "minion_mods";
     let Some(m) = bundle.poe1.as_ref().and_then(|p| p.minions.as_ref()) else {
@@ -1391,6 +1391,16 @@ fn compare_minion_mods(out: &mut Comparison, bundle: &Bundle, export: &Export) {
         }
         return;
     };
+    if m.object_stats.is_none() && !export.minion_mods.is_empty() {
+        out.check(
+            T,
+            "*",
+            "object_stats",
+            json!("absent (bundle built before P6-7b1)"),
+            json!("present"),
+        );
+        return;
+    }
     let varieties: BTreeMap<&str, &loom_data::bundle::poe1::MinionVariety> =
         m.varieties.iter().map(|v| (v.id.as_str(), v)).collect();
     let mods: BTreeMap<&str, &loom_data::bundle::ModEntry> =
@@ -1412,6 +1422,7 @@ fn compare_minion_mods(out: &mut Comparison, bundle: &Bundle, export: &Export) {
             }
         }
         if !v.object_type.is_empty() && v.object_type != "Metadata/Monsters/Monster" {
+            // Present: checked above.
             let o = m
                 .object_stats(&v.object_type)
                 .unwrap_or(loom_data::bundle::poe1::ObjectStatsRef::NONE);

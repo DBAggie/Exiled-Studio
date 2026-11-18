@@ -377,6 +377,24 @@ fn minion_mods_should_compare_the_mod_list() {
     );
 }
 
+/// A bundle built before P6-7b1 has no `.ot` stats: one difference says
+/// so, not one per minion (P6-7b1 review).
+#[test]
+fn minion_mods_without_object_stats_should_be_one_difference() {
+    let mut export = equal_export();
+    export["minion_mods"] = json!({"Test/Monsters/Minion1": {}});
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let mut b = bundle("bundle-poe1");
+    if let Some(m) = b.poe1.as_mut().and_then(|p| p.minions.as_mut()) {
+        m.object_stats = None;
+    }
+    let comparison = compare::compare(&b, &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(
+        fields(&comparison.differences),
+        [("minion_mods", "*", "object_stats")]
+    );
+}
+
 #[test]
 fn rows_on_one_side_should_be_listed() {
     let mut export = equal_export();

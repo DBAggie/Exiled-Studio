@@ -136,21 +136,27 @@ pub struct MainSkill<'d> {
     pub types: BTreeSet<String>,
 }
 
+/// [`MainSkill::can_use`] for an active skill row (none: not restricted).
+fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
+    active
+        .is_none_or(|a| a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class))
+}
+
 impl<'d> MainSkill<'d> {
     /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
     /// `CalcActiveSkill.lua` 192 to 223; P6-11e review): the game lists the
     /// classes per active skill (none: any weapon; `Unarmed` for an empty
     /// hand). A skill without an active skill row is not restricted.
     ///
-    /// Not modelled: a support's own `weaponTypes` (PoB disables the
-    /// support, not the skill, for a weapon it cannot use) and
+    /// Not modelled: a support's own `weaponTypes` (PoB adds each applied
+    /// support's list, 287 to 291, and the weapon must be in every list),
     /// `countsAsAll1H` (a weapon that counts as every one-handed class,
-    /// Varunastra): the main hand's own class decides.
+    /// Varunastra, 200), and a minion skill's empty hand (`summonSkill`
+    /// ignores the weapon types, 296 to 299): the active skill's own list
+    /// and the hand's own class decide.
     #[must_use]
     pub fn can_use(&self, class: &str) -> bool {
-        self.active.is_none_or(|a| {
-            a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class)
-        })
+        can_use(self.active, class)
     }
 
     /// The active granted effect.
@@ -851,4 +857,34 @@ pub fn instances<'d>(skill: &MainSkill<'d>, data: &'d dyn CalcData) -> Vec<Insta
         .chain(&skill.supports)
         .map(|r| instance(r.effect, r.level, r.quality, data))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn active(classes: &[&str]) -> ActiveSkill {
+        ActiveSkill {
+            id: "TestSkill".to_owned(),
+            name: "Test Skill".to_owned(),
+            types: vec!["Attack".to_owned()],
+            minion_types: Vec::new(),
+            weapon_classes: classes.iter().map(|c| (*c).to_owned()).collect(),
+            manually_cast: true,
+        }
+    }
+
+    /// PoB's `weaponTypes` check for the active skill (P6-7b1 review): an
+    /// empty list or no row allows any weapon; a list allows its classes
+    /// only, `Unarmed` for an empty hand.
+    #[test]
+    fn can_use_should_follow_the_active_skills_weapon_classes() {
+        let any = active(&[]);
+        let axes = active(&["One Hand Axe", "Unarmed"]);
+        assert!(can_use(None, "Bow"));
+        assert!(can_use(Some(&any), "Bow"));
+        assert!(can_use(Some(&axes), "One Hand Axe"));
+        assert!(can_use(Some(&axes), "Unarmed"));
+        assert!(!can_use(Some(&axes), "Bow"));
+    }
 }

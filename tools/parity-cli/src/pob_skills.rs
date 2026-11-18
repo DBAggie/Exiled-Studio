@@ -255,8 +255,10 @@ pub fn generate_minions(export: &Value) -> Result<String, String> {
     out.push_str("use super::pob_minion::{PobMinion, PobMinionMod, Template};\n\n");
     out.push_str("/// Every minion PoB's templates emit, sorted by PoB's name.\n");
     out.push_str("pub static MINIONS: &[PobMinion] = &[\n");
-    // serde_json's map is sorted (no `preserve_order`).
-    for (name, t) in templates {
+    // Sorted by name here, whatever order the JSON map keeps.
+    let mut names: Vec<(&String, &Value)> = templates.iter().collect();
+    names.sort_by(|a, b| a.0.cmp(b.0));
+    for (name, t) in names {
         let text = |key: &str| t.get(key).and_then(Value::as_str);
         let file = match text("file") {
             Some("Minions") => "Template::Minions",
@@ -314,20 +316,31 @@ pub fn generate_minions(export: &Value) -> Result<String, String> {
     Ok(out)
 }
 
-/// Reads the export and writes the table [`generate`] (`minions: false`)
-/// or [`generate_minions`] (`minions: true`) gives.
+/// Reads the export and writes the skill table ([`generate`]).
 ///
 /// # Errors
-/// I/O, JSON, or the generator's.
-pub fn run(export: &Path, out: &Path, minions: bool) -> Result<bool, String> {
+/// I/O, JSON, or [`generate`]'s.
+pub fn run_skills(export: &Path, out: &Path) -> Result<bool, String> {
+    write_table(export, out, generate)
+}
+
+/// Reads the export and writes the minion table ([`generate_minions`]).
+///
+/// # Errors
+/// I/O, JSON, or [`generate_minions`]'s.
+pub fn run_minions(export: &Path, out: &Path) -> Result<bool, String> {
+    write_table(export, out, generate_minions)
+}
+
+fn write_table(
+    export: &Path,
+    out: &Path,
+    generator: fn(&Value) -> Result<String, String>,
+) -> Result<bool, String> {
     let text = std::fs::read_to_string(export).map_err(|e| format!("{}: {e}", export.display()))?;
     let json: Value =
         serde_json::from_str(&text).map_err(|e| format!("{}: {e}", export.display()))?;
-    let source = if minions {
-        generate_minions(&json)?
-    } else {
-        generate(&json)?
-    };
+    let source = generator(&json)?;
     std::fs::write(out, source).map_err(|e| format!("{}: {e}", out.display()))?;
     Ok(true)
 }

@@ -438,7 +438,11 @@ for _, file in ipairs({ "Minions", "Spectres" }) do
 		die(path .. " not found")
 	end
 	local state = { mods = {}, skills = {} }
+	local number = 0
 	local function emit()
+		if not state.name then
+			die(path .. ":" .. number .. ": #emit before #monster")
+		end
 		if minionTemplates[state.name] then
 			die("two templates for " .. state.name)
 		end
@@ -452,7 +456,6 @@ for _, file in ipairs({ "Minions", "Spectres" }) do
 			mods = list(state.mods),
 		}
 	end
-	local number = 0
 	for line in template:lines() do
 		number = number + 1
 		local spec, args = line:match("#(%a+) ?(.*)")

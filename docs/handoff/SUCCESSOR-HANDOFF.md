@@ -56,7 +56,8 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
     - export format 13 and data-parity table `minion_mods`;
     - generated `pob_minions.rs` and the skills' minion lists;
     - the P6-11e review.
-    No value changed (`docs/phase-6/minions.md`, "P6-7b1"). Next: P6-7b3a (minion base values and fields), then P6-7b3b, P6-7b4, P6-7c.
+    No value changed (`docs/phase-6/minions.md`, "P6-7b1").
+  - **P6-7b1b** (branch `feat/p6-7b1b-review`, stacked on P6-7b1): the P6-7b1 review (`docs/phase-6/minions.md`, "The P6-7b1 review"); no value changed. Next: P6-7b3a (minion base values and fields), then P6-7b3b, P6-7b4, P6-7c.
 - **Follow-ups without the maintainer (maintainer 2026-11-17: "Do all tasks you can complete without me"; branch `chore/follow-ups` from `dev` at `b42e49f`, PR #136, merged into `dev` 2026-11-17 as `6043a51`).** The open items earlier PRs left that need no maintainer input, in one PR:
   - **The installers carry the knowledge MCP server** (#123's follow-up): a Tauri sidecar (`crates/loom-tauri/tauri.knowledge.conf.json`, `tools/package/knowledge-sidecar.sh`), passed only by `release.yml` and CI's `package` job; the install checks find it, run it, and check it is removed (`install-windows.ps1`, `install-deb.sh`, new `appimage-sidecar.sh`). `install-windows.ps1` no longer takes the first `.exe` (the sidecar's name sorts first). Checked here: a local NSIS build lists `exiled-studio-knowledge-mcp.exe` and its uninstaller deletes it (not installed: this workstation has the released app). `docs/phase-5/packaging.md`, ADR-018's "Release" line.
   - **`search_mods`** renders only the mods it returns, and the text filter's lowercased game text once per process (`Loaded::mod_text`). On the schema 4 rules bundle, release: a text search 0.124 s before, 0.053 s the first time and 0.006 s after; results identical.

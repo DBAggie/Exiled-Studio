@@ -1637,10 +1637,10 @@ fn main() -> ExitCode {
             tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
         }
         [cmd, export, flag, out] if cmd == "pob-skills" && flag == "--out" => {
-            pob_skills::run(Path::new(export), Path::new(out), false)
+            pob_skills::run_skills(Path::new(export), Path::new(out))
         }
         [cmd, export, flag, out] if cmd == "pob-minions" && flag == "--out" => {
-            pob_skills::run(Path::new(export), Path::new(out), true)
+            pob_skills::run_minions(Path::new(export), Path::new(out))
         }
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),

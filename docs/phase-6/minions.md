@@ -54,7 +54,7 @@ PoB's mod list is not compared, because it includes the `.ot` stats.
 - load: 631 ms against 668 ms;
 - start: 743 ms against 783 ms (+40 ms).
 
-**Versions:** an older application reading a newer bundle ignores the file (the loader reads only the files it knows).
+**Versions:** an older application reading a newer bundle ignores the file (the loader reads only the files it knows). P6-7b1 changed the file's shape: "Bundle versions" below.
 
 **The P6-7a review (code-architecture-reviewer), applied in its own PR (P6-7a2):**
 - The converter fails on a variety without an ID or a type.
@@ -134,7 +134,7 @@ The data step of the minion actor (`dev/active/phase-6-mechanics/p6-7b-minion-ac
 `Minions::object_stats` is an optional list of `ObjectStats`, sorted by object type. Each entry is an object type a variety names, resolved as PoB does (`tools/parity-cli/src/minions.rs`):
 - **Chain order:** the type's file, then each superclass where its `extends` line stands. Repeats are kept: PoB adds each line, and a diamond reads its shared file twice.
 - **Stops:** at `Metadata/Monsters/Monster` and `nothing`, compared exactly as PoB does. File lookup ignores case, as PoB's `getFile` lowercases. A variety whose object type is `Metadata/Monsters/Monster` reads no `.ot` stats (`minions.lua` 220).
-- **Values** are read as whole numbers. A value that is not one goes in `values` as text, not dropped (ADR-015). PoB's `tonumber` gives nil for these, and its exporter would fail on such a minion. Build 26530219 has two such types: a commented-out line and mercenary dialogue scripts.
+- **Values** are read as whole numbers, since the bundle's pairs are integers. A value that is not one goes in `values` as text, not dropped (ADR-015). Build 26530219 has two such types, both script text: a commented-out line and mercenary dialogue. PoB's `tonumber` gives nil for script text, and its exporter would fail on such a minion. A decimal or hexadecimal number, which `tonumber` would read, would also go in `values`: it cannot be one of the integer pairs. The build has none.
 - **`unread`** names the first file a chain reaches that the extract does not hold: a template outside `Metadata/Monsters/`, such as `Metadata/Utility/InanimateObject` or NPC and trap bases. 12 targets reach no file: blight towers, traps, NPCs. No minion or spectre PoB has is among them.
 - **A loop fails the conversion**, since PoB's reader would not end. Build 26530219 has none.
 - **A type with nothing to carry is left out.** `None` (the field absent) means the bundle was built before P6-7b1: the `.ot` stats are unknown, not empty.
@@ -154,6 +154,8 @@ The data step of the minion actor (`dev/active/phase-6-mechanics/p6-7b-minion-ac
 - **Reading the template:** the export reads it as `Export/Main.lua` does, matching the first `#word` of a line anywhere in it. An unknown directive stops the run.
 - **The skill table:** `pob_skills.rs` gains each skill's `minions` and `add_minions` lists, in PoB's order (the first is the default). A test checks that every name a skill lists is in the minion table. Spectres are variety IDs (P6-7c). The exception is `GuardianRelicAll`, which PoB writes by hand (`Minions.txt` 183).
 - **Determinism:** both tables regenerate byte-identical.
+
+**Bundle versions:** `minions.json` changed shape additively. A bundle without `object_stats` still loads, with the stats unknown. `Minions` refuses unknown fields, though, so an application built after P6-7a and before P6-7b1 would refuse the new file. No released application reads `minions.json` (0.9.0 predates P6-7a), so no bundle schema change is needed.
 
 ### `data-parity`, table `minion_mods` (export format 13)
 
@@ -178,3 +180,18 @@ The run on the evidence bundle has 985 differences in all, 370 of them uncategor
   - Public `calc-parity`: 157 builds, 109 expected differences, 0 unexpected.
   - Corpus: 0 unexpected.
   - Both runs are byte-identical.
+
+## The P6-7b1 review (P6-7b1b)
+
+The code-architecture-reviewer found no blockers in #163. Applied:
+- **The monster base:** `Metadata/Monsters/Monster.ot` is an object template only. `is_monster_template` excludes it rather than leaving the choice to the order of checks in `Extraction::add`. A test pins this. The extract's output does not change, because the object templates already took the file.
+- **`MainSkill::can_use`:**
+  - It has its own test: no row, an empty list, a listed class, `Unarmed`, and an unlisted class.
+  - Its docs were wrong about supports and now follow PoB (`CalcActiveSkill.lua` 287 to 291): each applied support's `weaponTypes` joins the list, and the weapon must be in every one. That is not modelled, and neither is `countsAsAll1H` (200) or a minion skill ignoring the weapon types (296 to 299).
+- **Validator:** an `object_stats` entry that no variety names gives `BUNDLE_DANGLING_REF`, and an entry with nothing to carry gives `BUNDLE_VALUE_RANGE`. Each has a mutation test.
+- **`data-parity`:** a bundle without `object_stats` gives one difference (`minion_mods`, `*`, `object_stats`) instead of one per minion. A test covers it.
+- **Generator:** `pob-minions` sorts by name itself, and `run_skills` and `run_minions` replace a boolean switch.
+- **Export:** an `#emit` before any `#monster` stops the export with its line. The export's bytes are unchanged.
+- **Docs:** the bundle versions note and the decimal-value wording above.
+
+**Evidence:** both tables and the PoB export regenerate byte-identical, and `b-ot` has no findings. No calculation value or state changed (`local/p6/p6-7b1b` against `p6-7b1`).

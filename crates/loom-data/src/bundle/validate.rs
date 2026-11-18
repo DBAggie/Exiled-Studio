@@ -1060,6 +1060,17 @@ fn domain(b: &Bundle, report: &mut Report) {
                 "object stats not sorted by object type",
             );
         }
+        let (unnamed, empty) = p.minion_object_findings();
+        for at in unnamed {
+            report.add("BUNDLE_DANGLING_REF", at, "an object type no variety names");
+        }
+        for at in empty {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                at,
+                "an object type entry with nothing to carry",
+            );
+        }
         if let Some(sk) = &b.skills {
             let effects: BTreeSet<&str> =
                 sk.granted_effects.iter().map(|g| g.id.as_str()).collect();

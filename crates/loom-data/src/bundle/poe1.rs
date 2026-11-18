@@ -732,6 +732,29 @@ impl Poe1Section {
             .collect()
     }
 
+    /// The `.ot` entries the converter would not write (P6-7b1 review):
+    /// `(at, what)` for an object type no variety names (dangling) and for
+    /// an entry with nothing to carry (out of range).
+    pub(super) fn minion_object_findings(&self) -> (Vec<String>, Vec<String>) {
+        let Some(m) = &self.minions else {
+            return (Vec::new(), Vec::new());
+        };
+        let named: std::collections::BTreeSet<&str> =
+            m.varieties.iter().map(|v| v.object_type.as_str()).collect();
+        let mut dangling = Vec::new();
+        let mut empty = Vec::new();
+        for o in m.object_stats.iter().flatten() {
+            let at = format!("{MINIONS}:object_stats:{}", o.object_type);
+            if !named.contains(o.object_type.as_str()) {
+                dangling.push(at.clone());
+            }
+            if o.stats.is_empty() && o.values.is_empty() && o.unread.is_none() {
+                empty.push(at);
+            }
+        }
+        (dangling, empty)
+    }
+
     /// The minions' skills (granted effects), each with its variety, for
     /// the validator's reference check.
     pub(super) fn minion_skills(&self) -> Vec<(String, &str)> {

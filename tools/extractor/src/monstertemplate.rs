@@ -1,4 +1,5 @@
-//! Monster object templates (`Metadata/Monsters/**.ot`, Phase 6 P6-7b1):
+//! Monster object templates (`Metadata/Monsters/**.ot` but the monster base,
+//! [`is_monster_template`]; Phase 6 P6-7b1):
 //! the `.ot` stats of a minion, which PoB v2.67.2 exports into each
 //! minion's `modList` (`src/Export/Scripts/minions.lua` `getOTStats`, 41
 //! to 73).
@@ -47,10 +48,16 @@ pub const MONSTERS_DIR: &str = "metadata/monsters/";
 pub const EXTENSION: &str = ".ot";
 
 /// Whether `path` (as listed in the index) is a monster template: an `.ot`
-/// file anywhere under `Metadata/Monsters/`.
+/// file anywhere under `Metadata/Monsters/`, except the monster base
+/// (`Metadata/Monsters/Monster.ot`, [`crate::itemtype::MONSTER_TEMPLATE`]),
+/// which the object templates read (its default monster stats) and PoB's
+/// reader never reads (it stops there).
 #[must_use]
 pub fn is_monster_template(path: &str) -> bool {
     let path = path.to_ascii_lowercase();
+    if path == crate::itemtype::MONSTER_TEMPLATE {
+        return false;
+    }
     path.strip_prefix(MONSTERS_DIR)
         .and_then(|rest| rest.strip_suffix(EXTENSION))
         .is_some_and(|rest| !rest.is_empty() && !rest.ends_with('/'))
@@ -323,7 +330,8 @@ mod tests {
     #[test]
     fn monster_templates_should_be_every_ot_file_under_monsters() {
         for (path, wanted) in [
-            ("metadata/monsters/monster.ot", true),
+            ("metadata/monsters/monster.ot", false),
+            ("Metadata/Monsters/Monster.ot", false),
             ("Metadata/Monsters/Zombies/Zombie.ot", true),
             ("metadata/monsters/a/b/c/d.ot", true),
             ("metadata/monsters/.ot", false),

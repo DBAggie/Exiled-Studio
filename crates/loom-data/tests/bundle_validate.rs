@@ -990,7 +990,19 @@ fn socket_cap_mutations_should_each_give_their_code() {
 fn minion_mutations_should_each_give_their_code() {
     type Edit = fn(&mut Value);
     let path = "poe1/minions.json";
-    let cases: [(&str, Edit, &str); 7] = [
+    let cases: [(&str, Edit, &str); 9] = [
+        (
+            "object type no variety names (P6-7b1 review)",
+            |v| {
+                v["object_stats"][0]["object_type"] = json!("Test/Monsters/Zzz");
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "object type entry with nothing (P6-7b1 review)",
+            |v| v["object_stats"][0]["stats"] = json!([]),
+            "BUNDLE_VALUE_RANGE",
+        ),
         (
             "object type twice (P6-7b1)",
             |v| {
@@ -1002,10 +1014,15 @@ fn minion_mutations_should_each_give_their_code() {
         (
             "object stats out of order (P6-7b1)",
             |v| {
+                // A real entry for a real variety, only out of order.
+                let mut variety = v["varieties"][0].clone();
+                variety["id"] = json!("Test/Monsters/Minion2");
+                variety["object_type"] = json!("A");
+                v["varieties"].as_array_mut().unwrap().push(variety);
                 v["object_stats"]
                     .as_array_mut()
                     .unwrap()
-                    .push(json!({"object_type": "A", "stats": []}));
+                    .push(json!({"object_type": "A", "stats": [["x", 1]]}));
             },
             "BUNDLE_VALUE_RANGE",
         ),

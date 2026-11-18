@@ -2014,6 +2014,26 @@ mod tests {
         assert_eq!(out.manifest.problems(), ["Root: Failed"]);
     }
 
+    /// The monster base (`Metadata/Monsters/Monster.ot`) is an object
+    /// template (its default stats), never a monster template (P6-7b1
+    /// review): PoB's `.ot` reader stops there.
+    #[test]
+    fn the_monster_base_should_be_an_object_template_only() {
+        let schema = schema();
+        let base = "metadata/monsters/monster.ot";
+        let out = extract(&schema, &[(base, &template_file())]);
+        assert!(out.manifest.object_templates.files.contains_key(base));
+        assert!(!out.manifest.monster_templates.files.contains_key(base));
+        assert!(
+            out.files
+                .contains_key("object_templates/metadata/monsters/monster.ot.json")
+        );
+        assert!(
+            !out.files
+                .contains_key("monster_templates/metadata/monsters/monster.ot.json")
+        );
+    }
+
     #[test]
     fn problems_should_flag_a_graph_that_did_not_parse() {
         let schema = schema();
