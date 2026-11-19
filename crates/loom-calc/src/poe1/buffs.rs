@@ -380,8 +380,14 @@ pub const ONSLAUGHT_STAT: &str = "base_should_have_onslaught_from_stat";
 /// Adds the buffs the active config set or a modifier turns on (module
 /// docs). A check value that is not a boolean is a reason under its input
 /// (PoB reads any value other than `false` as on). Runs after every other
-/// source has been ingested.
-pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+/// source has been ingested. `settled` holds the calculation's settled
+/// conditions (`super::states::states`), which a conditional Onslaught
+/// flag reads (P6-11p).
+pub fn buffs(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     arcane_surge(set, ingest);
     convergence(set, ingest);
     consecrated_ground(set, ingest);
@@ -452,9 +458,9 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             None
         }
     };
-    // Every Onslaught flag is unconditional: the one mapping row has no
-    // condition (`flag_tests` pins it). A conditional one would be a new
-    // row, which must come with its condition here.
+    // An Onslaught flag that holds: unconditional (the modifier
+    // "Onslaught"), or under settled conditions that all hold (P6-11p: on
+    // kill, with `KilledRecently`).
     if source.is_none() {
         source = ingest
             .effects()
@@ -462,7 +468,13 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             .find(|e| {
                 e.quantity == Quantity::Poe1(Poe1Quantity::Onslaught)
                     && e.op == Op::Flag
-                    && e.conditions == Conditions::none()
+                    && e.value != 0.0
+                    && e.conditions.all == Flags::NONE
+                    && e.conditions.any == Flags::NONE
+                    && e.conditions
+                        .states
+                        .iter()
+                        .all(|(k, want)| settled.get(k) == Some(want))
             })
             .map(|e| e.source.clone());
     }
@@ -592,10 +604,14 @@ mod tests {
         let on = set(&[(CONVERGENCE_INPUT, ConfigValue::Boolean(true))]);
         let mut with_line = Ingest::new(&Poe1Mapping);
         with_line.effect(flag);
-        buffs(Some(&on), &mut with_line);
+        buffs(
+            Some(&on),
+            &std::collections::BTreeMap::new(),
+            &mut with_line,
+        );
         assert_eq!(more(&with_line), [CONVERGENCE_MORE]);
         let mut without = Ingest::new(&Poe1Mapping);
-        buffs(Some(&on), &mut without);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut without);
         assert!(more(&without).is_empty());
     }
 
@@ -616,7 +632,7 @@ mod tests {
             (ADRENALINE_INPUT, ConfigValue::Boolean(true)),
         ]);
         let mut ingest = Ingest::new(&Poe1Mapping);
-        buffs(Some(&on), &mut ingest);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut ingest);
         assert_eq!(
             values(&ingest, Quantity::Poe1(Poe1Quantity::ActionSpeed)),
             [TAILWIND_ACTION_SPEED]
@@ -628,7 +644,7 @@ mod tests {
         );
         let off = set(&[(TAILWIND_INPUT, ConfigValue::Boolean(false))]);
         let mut none = Ingest::new(&Poe1Mapping);
-        buffs(Some(&off), &mut none);
+        buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
         assert!(none.effects().is_empty());
         assert!(is_buff_input(TAILWIND_INPUT) && is_buff_input(ADRENALINE_INPUT));
     }

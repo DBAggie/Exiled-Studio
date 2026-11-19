@@ -2258,6 +2258,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::CRIT_RECENTLY,
         )],
     ),
+    // P6-11p: "#% chance to gain Onslaught for 4 seconds on Kill" (`Condition:Onslaught`
+    // FLAG, `Condition` `KilledRecently`): Onslaught while the config says
+    // you have killed recently (`poe1::buffs`).
+    (
+        "chance_to_gain_onslaught_on_kill_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Onslaught),
+            Op::Flag,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
     // P6-11o: "#% increased Critical Strike Chance while affected by Wrath".
     (
         "critical_strike_chance_+%_while_affected_by_wrath",
@@ -2489,6 +2501,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             "AffectedByHatred",
+        )],
+    ),
+    // P6-11p: "Gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
+    // FLAG, `Condition` `KilledRecently`): Onslaught while the config says
+    // you have killed recently (`poe1::buffs`).
+    (
+        "onslaught_time_granted_on_kill_ms",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Onslaught),
+            Op::Flag,
+            NONE,
+            conditions::KILLED_RECENTLY,
         )],
     ),
     // P6-11a: "#% increased Physical Attack Damage while holding a Shield":
@@ -6828,6 +6852,25 @@ mod tests {
             (
                 "spell_suppression_chance_%_while_affected_by_grace",
                 vec![config(SUPPRESSION, Op::Base, NONE, "AffectedByGrace")],
+            ),
+            // P6-11p: Onslaught on kill.
+            (
+                "chance_to_gain_onslaught_on_kill_%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Onslaught),
+                    Op::Flag,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
+            ),
+            (
+                "onslaught_time_granted_on_kill_ms",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Onslaught),
+                    Op::Flag,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
             ),
             // P6-10b part 8: Lifetap's more damage while buffed.
             (

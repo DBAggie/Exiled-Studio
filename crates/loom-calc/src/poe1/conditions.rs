@@ -86,11 +86,17 @@ pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 pub const BEEN_HIT_RECENTLY: &str = "BeenHitRecently";
 /// "if you haven't been Hit Recently": [`BEEN_HIT_RECENTLY`] negated.
 pub const NOT_HIT_RECENTLY: &str = "NotBeenHitRecently";
+/// "if you've Killed Recently" (PoB's `KilledRecently`, from
+/// `conditionKilledRecently`; P6-11p).
+pub const KILLED_RECENTLY: &str = "KilledRecently";
 /// "while moving" (PoB's `Moving`, from `conditionMoving`; P6-10b part 13).
 pub const MOVING: &str = "Moving";
 /// The count of hits taken recently, which sets [`BEEN_HIT_RECENTLY`]
 /// above 0 (`ConfigOptions.lua`).
 pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
+/// The count of enemies killed recently, which sets [`KILLED_RECENTLY`]
+/// above 0 (`ConfigOptions.lua`).
+pub const KILLED_RECENTLY_COUNT_INPUT: &str = "multiplierKilledRecently";
 
 /// The auras whose `AffectedBy<Name>` condition a row reads (P6-11o),
 /// each with its condition: PoB sets it while the aura affects the
@@ -135,6 +141,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
+    ("conditionKilledRecently", KILLED_RECENTLY),
     ("conditionMoving", MOVING),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
@@ -237,6 +244,24 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     let auras = super::gems::affected_by(input, &levels);
     for (name, condition) in AFFECTED_BY {
         out.insert(ConditionKey::new(condition), auras.contains(name));
+    }
+    // Killed recently: a kill count above 0 sets it too (PoB's
+    // `multiplierKilledRecently`, `ConfigOptions.lua`; P6-11p).
+    let key = ConditionKey::new(KILLED_RECENTLY);
+    let count = match set.and_then(|s| last(s, KILLED_RECENTLY_COUNT_INPUT, ConfigInputKind::Input))
+    {
+        None => Some(false),
+        Some(ConfigValue::Number(n)) => Some(n.value().0 > 0.0),
+        Some(_) => None,
+    };
+    match (out.get(&key).copied(), count) {
+        (Some(true), _) | (_, Some(true)) => {
+            out.insert(key, true);
+        }
+        (Some(false), Some(false)) => {}
+        _ => {
+            out.remove(&key);
+        }
     }
     // Hit recently: a count above 0 sets it too; "not hit recently" is its
     // negation, unsettled when it is (P6-10b part 13).

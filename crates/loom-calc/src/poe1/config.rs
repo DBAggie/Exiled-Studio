@@ -320,7 +320,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("conditionIgnited", &["Condition:Ignited"]),
     ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),
-    ("conditionKilledRecently", &["Condition:KilledRecently"]),
     (
         "conditionKilledUniqueEnemy",
         &["Condition:KilledUniqueEnemy"],
@@ -416,7 +415,9 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     (
         "multiplierKilledRecently",
-        &["Multiplier:EnemyKilledRecently", "Condition:KilledRecently"],
+        // Its condition is settled with the check's (P6-11p,
+        // `poe1::conditions`).
+        &["Multiplier:EnemyKilledRecently"],
     ),
     (
         "multiplierManaSpentRecently",

@@ -108,7 +108,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // after every source of their modifiers, before the enemy's damage
     // taken (rage's Intimidate).
     super::stacks::stacks(active_config(build), input.data, ingest);
-    super::buffs::buffs(active_config(build), ingest);
+    super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
