@@ -454,7 +454,6 @@ const NO_SLICE_NAMES: &[&str] = &[
     // Tempest Shield's shock immunity (P6-9e).
     "ShockImmune",
     "UsesWarcryPower",
-    "takenFromStoneGolemBeforeYou",
 ];
 
 /// PoB mod names a curse's `NoSlice` stat may give besides
@@ -667,6 +666,8 @@ fn pob_name(q: Quantity) -> String {
             "GuardAbsorbLimit".into()
         }
         Quantity::Poe1(Poe1Quantity::GuardAbsorbMax) => "Multiplier:GuardAbsorbMax".into(),
+        // Summon Stone Golem of Safeguarding's (P6-11ar).
+        Quantity::Poe1(Poe1Quantity::TakenFromStoneGolem) => "takenFromStoneGolemBeforeYou".into(),
         // Arctic Armour's (P6-11z).
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
             format!("{}DamageTakenWhenHit", title(t.name()))

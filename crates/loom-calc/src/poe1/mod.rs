@@ -308,6 +308,11 @@ pub enum Poe1Quantity {
     /// from the character's stats, which every active skill then has;
     /// read by [`damage_taken`] for the enemy's withered stacks.
     CanWither,
+    /// The share of melee damage taken from Summon Stone Golem of
+    /// Safeguarding's life before yours, percent (PoB's
+    /// `takenFromStoneGolemBeforeYou`; P6-11ar): `Base`, read by
+    /// [`enemy_hit`].
+    TakenFromStoneGolem,
     /// The effect of your Withered (PoB's `WitherEffect`; P6-11aq):
     /// `Increased`, read by [`damage_taken`].
     WitherEffect,
@@ -1027,6 +1032,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::CanWither => f.write_str("can-wither"),
+            Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
             Self::WitherEffect => f.write_str("wither-effect"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),

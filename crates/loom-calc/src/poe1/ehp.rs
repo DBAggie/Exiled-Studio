@@ -76,6 +76,8 @@ struct Pools {
     mana: f64,
     /// The shared guard left (P6-11ae).
     guard: f64,
+    /// Summon Stone Golem of Safeguarding's life left (P6-11ar).
+    golem: f64,
 }
 
 /// What the estimate reads of the character.
@@ -101,6 +103,10 @@ pub(super) struct Character {
     /// Eldritch Battery (PoB's `EnergyShieldProtectsMana`; P6-11ap): the
     /// shield takes mind over matter's share before mana, not the hit.
     pub(super) eb: bool,
+    /// Summon Stone Golem of Safeguarding's share of each hit, percent, and
+    /// its life (PoB's `alliesTakenBeforeYou.stoneGolem`; P6-11ar).
+    pub(super) golem_rate: f64,
+    pub(super) golem: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -141,6 +147,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut mana = pools.mana.max(0.0);
     let mut life = pools.life.max(0.0);
     let mut guard = pools.guard;
+    let mut golem = pools.golem;
     let life_pool = life_hit_pool(life, ch.max_life);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
@@ -179,7 +186,14 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             continue;
         };
         let bypass = if ty == DamageType::Chaos { 1.0 } else { 0.0 };
-        // The shared guard takes its share first (P6-11ae).
+        // An ally takes its share first (P6-11ar; `CalcDefence.lua` 266 to
+        // 277), floored after each take.
+        if golem > 0.0 {
+            let taken = (remainder * ch.golem_rate / 100.0).min(golem);
+            golem = crate::math::floor(golem - taken);
+            remainder -= taken;
+        }
+        // The shared guard takes its share next (P6-11ae).
         if guard > 0.0 {
             let taken = (remainder * ch.guard_rate / 100.0).min(guard);
             guard = crate::math::floor(guard - taken);
@@ -233,6 +247,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             energy_shield: crate::math::floor(energy_shield),
             mana: crate::math::floor(mana),
             guard,
+            golem,
         },
         crate::math::ceil(overkill),
     )
@@ -266,6 +281,7 @@ fn hits_to_die(
         energy_shield: ch.energy_shield,
         mana: ch.mana,
         guard: ch.guard,
+        golem: ch.golem,
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -490,6 +506,8 @@ mod tests {
             guard: 0.0,
             recoup: false,
             eb: false,
+            golem_rate: 0.0,
+            golem: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -518,17 +536,56 @@ mod tests {
             guard: 1000.0,
             recoup: false,
             eb: false,
+            golem_rate: 0.0,
+            golem: 0.0,
         };
         let pools = Pools {
             life: ch.life,
             energy_shield: 0.0,
             mana: 0.0,
             guard: ch.guard,
+            golem: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, overkill) = reduce(pools, &hit, &ch);
         assert_eq!((after.guard, after.life, overkill), (250.0, 1750.0, 0.0));
         let (after, _) = reduce(after, &hit, &ch);
         assert_eq!((after.guard, after.life), (0.0, 1000.0));
+    }
+
+    /// PoB's `reducePoolsByDamage` with an ally before you (P6-11ar): the
+    /// Stone Golem's 3.75% of a 1,000 hit (37.5, floored after the take,
+    /// 62 left of 100) before the guard's 50% of the rest; the next hit's
+    /// share is capped at what is left.
+    #[test]
+    fn an_ally_should_take_its_share_before_the_guard() {
+        let ch = Character {
+            life: 2000.0,
+            max_life: 2000.0,
+            energy_shield: 0.0,
+            mana: 0.0,
+            mom: [0.0; 5],
+            guard_rate: 50.0,
+            guard: 10_000.0,
+            recoup: false,
+            eb: false,
+            golem_rate: 3.75,
+            golem: 100.0,
+        };
+        let pools = Pools {
+            life: ch.life,
+            energy_shield: 0.0,
+            mana: 0.0,
+            guard: ch.guard,
+            golem: ch.golem,
+        };
+        let hit = [Some(1000.0), None, None, None, None];
+        let (after, _) = reduce(pools, &hit, &ch);
+        assert_eq!(after.golem, 62.0);
+        assert_eq!(after.guard, crate::math::floor(10_000.0 - 962.5 * 0.5));
+        let (after, _) = reduce(after, &hit, &ch);
+        assert_eq!(after.golem, 24.0);
+        let (after, _) = reduce(after, &hit, &ch);
+        assert_eq!(after.golem, 0.0);
     }
 }

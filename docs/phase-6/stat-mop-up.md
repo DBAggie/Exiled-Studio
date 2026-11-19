@@ -1097,3 +1097,40 @@ Both match PoB on every computed field.
 - **Corpus:** 0 unexpected; 5 values toward PoB, none away.
 - **Data parity:** `uncategorized` 353.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ar: Summon Stone Golem of Safeguarding's life before yours
+
+**PoB:**
+- **The stat:** the golem's buff stat `stone_golem_grants_melee_damage_removed_from_stone_golem_before_life_or_es_%` is `takenFromStoneGolemBeforeYou` BASE (`SkillStatMap.lua` 2087), scaled by buff effect.
+- **The golem's life** (`CalcPerform.lua` 3597 to 3677): with any such redirect, PoB computes the life of the first active skill's golem as a minion:
+  - `initMinionModDB`;
+  - the skill's and the buffs' minion modifiers;
+  - then `doActorAttribsConditions`, which runs `doActorLifeMana`.
+
+  The config input `TotalStoneGolemLife` overrides it.
+- **The pool** (`CalcDefence.lua` 2459 to 2473): the share is melee only.
+  - **Share by damage category:** all of the redirect under `Melee`, a quarter under `Average`, none otherwise.
+  - **Pool:** `buildAllyLifePools` makes a pool of the life with that share, at most 100%.
+- **Simulated hits** (`reducePoolsByDamage`, 266 to 277): the ally takes its share of each type's damage before aegis, guard, and energy shield, at most what is left, floored after each take. What is left carries to the next hit, as the guard.
+- **Maximum hit** (3147 to 3160): the pools are undone after the guard, in reverse order.
+
+**The engine:**
+- **The stat:** the golem's row is now `Poe1Quantity::TakenFromStoneGolem` BASE, a buff row scaled as the others. Before, it was a pool marker, so a reason.
+- **`enemy_hit::stone_golem_life`:**
+  - **Life:** the override when set (now an applied input). Otherwise, the build is computed with the first active Summon Stone Golem of Safeguarding as the main skill (nested, as `full_dps` does), and its minion `Life` is read with its reasons.
+  - **Inside a nested calculation:** no golem life is computed; an `ally-life` reason takes its place.
+- **Share:** a quarter of the sum, since the engine computes the estimate only under `Average`; another damage category is already a reason.
+- **`maximum_hit`:** adds the pool after the guard.
+- **`ehp`:** `Character.golem_rate` and `golem`, and `Pools.golem`, drained before the guard. Unit test `an_ally_should_take_its_share_before_the_guard`.
+- **Data parity:** `gem_effects` names the row `takenFromStoneGolemBeforeYou`; `uncategorized` stays 353.
+
+**New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
+- `stone-golem-ice-nova-witch.xml`: the golem in a second group, 90% reduced minion life, and 20,000 more life. The computed golem life limits the pool: physical maximum hit is 21,661, and total effective health pool is 14,373.96.
+- `stone-golem-override-ice-nova-witch.xml`: `TotalStoneGolemLife` 20. Physical maximum hit is 1,145.
+
+**Evidence** (`local/p6/p6-11ar/`):
+- **Public `calc-parity`:** 234 builds, 292 expected, 0 unexpected; match 15,194 to 15,360.
+- **Moved values:** 28 toward PoB, none away, 18 of them now equal to PoB; 12 fields went from partial to complete. The minion fixture `minion-summon-stone-golem-alt-y-witch.xml` now matches PoB's maximum hit and effective health pool.
+- **Corpus:** 0 unexpected; 30 values toward PoB, none away.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

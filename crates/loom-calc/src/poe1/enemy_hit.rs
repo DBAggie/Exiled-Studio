@@ -103,6 +103,75 @@ const UNMODELLED: [(&str, &str); 3] = [
     ("presetBossSkills", "None"),
 ];
 
+/// Summon Stone Golem of Safeguarding (P6-11ar): its granted effect, the
+/// config input that overrides its life (`ConfigOptions.lua` 809), and the
+/// share of its redirect under the `Average` damage category, the only one
+/// the engine computes (`CalcDefence.lua` 2463: melee only, so a quarter).
+const STONE_GOLEM: &str = "SummonStoneGolemAltY";
+/// The config input that overrides the golem's life.
+pub const STONE_GOLEM_LIFE_INPUT: &str = "TotalStoneGolemLife";
+const STONE_GOLEM_AVERAGE_SHARE: f64 = 0.25;
+
+/// The life of Summon Stone Golem of Safeguarding, the pool its redirect
+/// drains (P6-11ar; `CalcPerform.lua` 3597 to 3677): the config override
+/// when set, else the golem's `Life` computed with the build's first
+/// active Summon Stone Golem of Safeguarding as the main skill (PoB's
+/// `initMinionModDB`, the skill's and the buffs' minion modifiers, then
+/// `doActorAttribsConditions`, which the engine's minion actor follows),
+/// its reasons carried. `None`, with a reason, inside a nested calculation
+/// (which computes no other skill) or when the golem's life is not
+/// computed; `Some(0)` without such a skill.
+fn stone_golem_life(
+    calc: &Calc<'_>,
+    set: Option<&loom_domain::ConfigSet>,
+    reasons: &mut Reasons,
+) -> Option<f64> {
+    let input = *calc.input();
+    if let Some(ConfigValue::Number(n)) = set
+        .and_then(|s| super::config::last_input(s, STONE_GOLEM_LIFE_INPUT, ConfigInputKind::Input))
+    {
+        return Some(n.value().0);
+    }
+    let levels = super::gem_levels::GemLevels::from_effects(calc.store().effects());
+    let Some((g, a, skill)) = super::skill::active_skills(input.build, input.data, &levels)
+        .into_iter()
+        .find(|(_, _, s)| s.active_gem.effect.id == STONE_GOLEM)
+    else {
+        return Some(0.0);
+    };
+    let unmodelled = UnsupportedReason::UnmodelledSkill {
+        source: crate::source::Source::Gem {
+            group: g - 1,
+            gem: skill.active_gem.gem,
+        },
+        what: "ally-life",
+    };
+    if input.options.nested {
+        reasons.partial.insert(unmodelled);
+        return None;
+    }
+    let b = super::skill::with_main_skill(input.build, g, a);
+    let mut options = input.options.clone();
+    options.nested = true;
+    let sub = crate::input::CalcInput {
+        build: &b,
+        data: input.data,
+        options: &options,
+    };
+    let life = crate::calculate(&sub).ok().and_then(|r| {
+        let f = r
+            .fields
+            .get(&Field::Minion(crate::result::MinionField::Life))?;
+        super::triggers::carry(&f.state, reasons)
+            .then_some(f.value)
+            .flatten()
+    });
+    if life.is_none() {
+        reasons.partial.insert(unmodelled);
+    }
+    life
+}
+
 /// The fields of each type.
 const fn fields(ty: DamageType) -> [Field; 2] {
     [
@@ -690,6 +759,25 @@ fn maximum_hit(
     } else {
         0.0
     };
+    // Summon Stone Golem of Safeguarding's life before yours (P6-11ar;
+    // `CalcDefence.lua` 2459 to 2473): a quarter of the redirect under the
+    // `Average` category, its life the pool (`buildAllyLifePools`: both
+    // above 0, the share at most 100%).
+    let golem_rate = sum(
+        calc,
+        Poe1Quantity::TakenFromStoneGolem,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )? * STONE_GOLEM_AVERAGE_SHARE;
+    let (golem_rate, golem) = if golem_rate > 0.0 {
+        match stone_golem_life(calc, set, &mut pool_reasons) {
+            Some(l) if l > 0.0 => (golem_rate.min(100.0), l),
+            _ => (0.0, 0.0),
+        }
+    } else {
+        (0.0, 0.0)
+    };
     let half = life * 0.5;
     let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
@@ -739,6 +827,17 @@ fn maximum_hit(
             let share = guard_rate / 100.0;
             let protected = guard / share * (1.0 - share);
             pools[i] = (pools[i] - protected).max(0.0) + pools[i].min(protected) / (1.0 - share);
+        }
+        // The golem's pool, undone after the guard (3147 to 3160).
+        if golem > 0.0 {
+            if golem_rate >= 100.0 {
+                pools[i] += golem;
+            } else {
+                let share = golem_rate / 100.0;
+                let protected = golem / share * (1.0 - share);
+                pools[i] =
+                    (pools[i] - protected).max(0.0) + pools[i].min(protected) / (1.0 - share);
+            }
         }
     }
     let mut results = [None; 5];
@@ -947,6 +1046,8 @@ fn maximum_hit(
             guard,
             recoup,
             eb,
+            golem_rate,
+            golem,
         };
         super::ehp::estimate(
             calc,
@@ -1040,6 +1141,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::SuppressionLucky
                 | Poe1Quantity::ArmourEsRecoveryCap
                 | Poe1Quantity::EsProtectsMana
+                | Poe1Quantity::TakenFromStoneGolem
                 | Poe1Quantity::PseudoRecoup
         )
     )

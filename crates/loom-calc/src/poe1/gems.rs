@@ -1857,9 +1857,18 @@ pub const SKILLS: &[(&str, Kind)] = &[
             effect: EffectType::Buff,
             stats: &[
                 ("", GOLEM_CONDITION),
+                // P6-11ar: `takenFromStoneGolemBeforeYou` BASE
+                // (`SkillStatMap.lua` 2087), the golem's life a pool before
+                // yours (`poe1::enemy_hit`).
                 (
                     "stone_golem_grants_melee_damage_removed_from_stone_golem_before_life_or_es_%",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::TakenFromStoneGolem),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },

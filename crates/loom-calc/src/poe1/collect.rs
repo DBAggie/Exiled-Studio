@@ -1760,6 +1760,9 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::pantheon::is_input(&input.name)
         || super::gems::is_input(&input.name)
         || input.name == super::hit::PDR_MODE_INPUT
+        // The Stone Golem's life override (P6-11ar).
+        || (input.name == super::enemy_hit::STONE_GOLEM_LIFE_INPUT
+            && matches!(input.value, ConfigValue::Number(_)))
     {
         return InputUse::Applied;
     }
