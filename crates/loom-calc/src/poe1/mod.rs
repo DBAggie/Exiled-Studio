@@ -418,6 +418,11 @@ pub enum Poe1Quantity {
     /// The maximum fortification (PoB's `MaximumFortification` BASE; P6-10b
     /// part 12), read by [`enemy_hit`] while Fortified.
     MaximumFortification,
+    /// The share of damage taken from mana before life, percent (PoB's
+    /// `DamageTakenFromManaBeforeLife` and `<Type>DamageTakenFromManaBeforeLife`
+    /// BASE; P6-10b part 15: mind over matter), read by [`enemy_hit`] and
+    /// [`ehp`].
+    ManaBeforeLife(TakenOf),
     /// The share of a blocked hit's damage taken, percent (PoB's
     /// `BlockEffect` BASE; P6-10b part 14), read by [`ehp`].
     BlockEffect,
@@ -827,6 +832,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourAppliesTo(t) => write!(f, "armour-applies-to.{}", t.name()),
             Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
             Self::MaximumFortification => f.write_str("maximum-fortification"),
+            Self::ManaBeforeLife(o) => write!(f, "mana-before-life.{}", o.name()),
             Self::BlockEffect => f.write_str("block-effect"),
             Self::AvoidProjectiles => f.write_str("avoid-projectiles"),
             Self::EhpReason(stat) => write!(f, "ehp-reason.{stat}"),

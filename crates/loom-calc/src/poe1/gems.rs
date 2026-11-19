@@ -695,9 +695,6 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
-    // P6-9f: no global effect and no reservation in PoB's skill data (the
-    // skill is inert when it is not the main skill).
-    ("EnemyExplode", Kind::Inert),
     (
         "Enfeeble",
         Kind::Curse {

@@ -2739,6 +2739,16 @@ pub const ROWS: &[Row] = &[
         "base_cost_+%",
         &[(Quantity::Poe1(Poe1Quantity::Cost), Op::Increased, 1.0)],
     ),
+    // P6-10b part 15: "#% of Damage is taken from Mana before Life"
+    // (`DamageTakenFromManaBeforeLife` BASE, or the type's).
+    (
+        "base_damage_removed_from_mana_before_life_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::All)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 10: "#% increased Damage taken" (`DamageTaken` INC).
     (
         "base_damage_taken_+%",
@@ -3710,6 +3720,18 @@ pub const ROWS: &[Row] = &[
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
     ),
+    // P6-10b part 15: "#% of Lightning Damage is taken from Mana before Life"
+    // (`DamageTakenFromManaBeforeLife` BASE, or the type's).
+    (
+        "lightning_damage_%_taken_from_mana_before_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::Type(
+                DamageType::Lightning,
+            ))),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 12: "#% of Lightning Damage from Hits taken as Cold Damage" (`LightningDamageFromHitsTakenAsCold` BASE).
     (
         "lightning_damage_taken_%_as_cold",
@@ -3968,6 +3990,18 @@ pub const ROWS: &[Row] = &[
                 TakenWhen::Attack,
                 TakenOf::Type(DamageType::Physical),
             )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 15: "#% of Physical Damage is taken from Mana before Life"
+    // (`DamageTakenFromManaBeforeLife` BASE, or the type's).
+    (
+        "physical_damage_%_taken_from_mana_before_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::Type(
+                DamageType::Physical,
+            ))),
             Op::Base,
             1.0,
         )],
@@ -4784,11 +4818,11 @@ pub const ENEMY_HIT_REASONS: &[&str] =
     &["self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently"];
 
 /// Stats that change the pools maximum hit reads (P6-10b part 13), sorted:
-/// each maps to [`Poe1Quantity::PoolReason`]. PoB's text: the keystones
-/// Divine Shield and Mind over Matter, half of area damage taken.
+/// each maps to [`Poe1Quantity::PoolReason`]. PoB's text: the keystone
+/// Divine Shield, half of area damage taken. (Mind over Matter is a
+/// keystone row since P6-10b part 15.)
 pub const POOL_REASONS: &[&str] = &[
     "keystone_divine_shield",
-    "keystone_mana_shield",
     "take_half_area_damage_from_hit_%_chance",
 ];
 

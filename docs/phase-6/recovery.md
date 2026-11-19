@@ -554,3 +554,30 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Data parity:** `uncategorized` 353.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,766 tests and clippy pass.
+
+## Part 15: mind over matter
+
+**What PoB does** (`CalcDefence.lua` 188 to 427, 2303 to 2377):
+- **The share:** `sharedMindOverMatter = min(DamageTakenFromManaBeforeLife BASE, 100)`, and each type's own share `min(<Type>DamageTakenFromManaBeforeLife BASE, 100 - shared)`. Mind over Matter's keystone is the tree's "40% of Damage is taken from Mana before Life".
+- **Maximum hit:** the life pool gains the mana mind over matter can take (`calcMoMEBPool` without Eldritch Battery).
+  - `max = life / (1 - share) - life`;
+  - `usable = floor(min(mana unreserved, max))`;
+  - the used mana is `floor(min(max, usable))`.
+- **Hits to die:** after energy shield, `ceil(remainder x share)` of each hit comes from mana, held to the type's pool (`floor(min(max, mana))`), and every type's pool drops by it.
+
+**The engine** (slice unchanged):
+- **The quantity** is `ManaBeforeLife(TakenOf)`.
+- **The keystone:** `keystone_mana_shield` is a keystone row, BASE 40 (`keystones::MIND_OVER_MATTER`). It was a `PoolReason` marker.
+- **Three rows:** "#% of Damage is taken from Mana before Life", and its lightning and physical forms.
+- **Where it is read:** `enemy_hit::mom_hit_pool` for maximum hit, and the `ehp` pools (`Character::mana` and `mom`).
+- **Not modelled:** Eldritch Battery (energy shield protecting mana, an unmapped stat), the chaos form (PoB misreads it as `ChaosDamage`), and the shares conditioned on Clarity or being Focused (unmapped).
+
+### Evidence
+
+- **Fixtures:** two new mechanic fixtures, every field equal to PoB's:
+  - `mom-ice-nova-witch.xml`: 40%, +400 mana; maximum hits 1,875 and 1,150, EHP 1,243.13;
+  - `mom-physical-ice-nova-witch.xml`: 30% of physical damage; physical maximum hit 1,607, the others unchanged at 690.
+- **Public `calc-parity` on `b-ot`:** 212 builds, 280 expected, 0 unexpected; `Complete` fields 13,701. Eight values in partial builds moved toward PoB, none away.
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,766 tests and clippy pass. The maintainer-run tests on the evidence bundle pass too: the pantheon's soul stats list those parts 5 and 10 to 15 read, the keystone texts list Mind over Matter's, and Enemy Explode left P6-9f's inert skills (PoB's id is not one of the game's granted effects).

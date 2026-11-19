@@ -67,6 +67,7 @@ const TYPES: [DamageType; 5] = [
 struct Pools {
     life: f64,
     energy_shield: f64,
+    mana: f64,
 }
 
 /// What the estimate reads of the character.
@@ -77,6 +78,11 @@ pub(super) struct Character {
     pub(super) max_life: f64,
     /// `EnergyShieldRecoveryCap`.
     pub(super) energy_shield: f64,
+    /// `ManaUnreserved`.
+    pub(super) mana: f64,
+    /// Each type's share taken from mana before life (mind over matter, a
+    /// fraction).
+    pub(super) mom: [f64; 5],
 }
 
 /// One run of `numberOfHitsToDie`'s state shared with its recursive call.
@@ -95,17 +101,29 @@ fn life_hit_pool(life: f64, max_life: f64) -> f64 {
 fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f64) {
     let damage: [Option<f64>; 5] = damage.map(|d| d.filter(|&v| v > 0.0).map(crate::math::ceil));
     let mut energy_shield = pools.energy_shield.max(0.0);
+    let mut mana = pools.mana.max(0.0);
     let mut life = pools.life.max(0.0);
     let life_pool = life_hit_pool(life, ch.max_life);
-    // Each type's energy shield pool: all of it, or none for chaos (its
-    // bypass is 100%: `min(pool / 1 - pool, es)` is 0).
+    // Each type's mind over matter pool and energy shield pool: all of the
+    // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
+    // es)` is 0).
     let mut es_pools = [0.0; 5];
+    let mut mom_pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
+        let effect = ch.mom[i];
+        let max_mom = life_pool / (1.0 - effect) - life_pool;
+        let mom_pool = if effect < 1.0 {
+            max_mom.min(mana)
+        } else {
+            mana
+        };
+        let with_mana = life_pool + mom_pool;
         es_pools[i] = if ty == DamageType::Chaos {
-            crate::math::floor((life_pool / 1.0 - life_pool).min(energy_shield))
+            crate::math::floor((with_mana / 1.0 - with_mana).min(energy_shield))
         } else {
             crate::math::floor(energy_shield)
         };
+        mom_pools[i] = crate::math::floor(mom_pool);
     }
     let mut overkill = 0.0;
     for (i, ty) in TYPES.into_iter().enumerate() {
@@ -123,6 +141,18 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             energy_shield -= taken;
             remainder -= taken;
         }
+        let effect = ch.mom[i];
+        if effect > 0.0 {
+            let mom_damage = crate::math::ceil(remainder * effect);
+            let taken = crate::math::ceil(mom_damage.min(mom_pools[i]));
+            for (j, pool) in mom_pools.iter_mut().enumerate() {
+                if damage[j].is_some() {
+                    *pool = crate::math::floor((*pool - taken).max(0.0));
+                }
+            }
+            mana -= taken;
+            remainder -= taken;
+        }
         if life > 0.0 {
             let taken = remainder.min(life);
             life -= taken;
@@ -134,6 +164,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         Pools {
             life: crate::math::floor(life),
             energy_shield: crate::math::floor(energy_shield),
+            mana: crate::math::floor(mana),
         },
         crate::math::ceil(overkill),
     )
@@ -149,6 +180,7 @@ fn hits_to_die(damage_in: &[f64; 5], cycles: f64, run: &mut Run, ch: &Character)
     let mut pools = Pools {
         life: ch.life,
         energy_shield: ch.energy_shield,
+        mana: ch.mana,
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -318,6 +350,8 @@ mod tests {
             life: 1125.0,
             max_life: 1125.0,
             energy_shield: 0.0,
+            mana: 590.0,
+            mom: [0.0; 5],
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(&[14_885.9, 0.0, 0.0, 0.0, 0.0], 1.0, &mut run, &ch);

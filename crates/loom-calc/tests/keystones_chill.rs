@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 8] = [
+const TEXTS: [(&str, &str); 9] = [
     (
         "keystone_glancing_blows",
         "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",
@@ -40,6 +40,11 @@ const TEXTS: [(&str, &str); 8] = [
     (
         "keystone_elemental_overload",
         "Skills that have dealt a Critical Strike in the past 8 seconds deal 40% more Elemental Damage with Hits and Ailments\\nYour Critical Strikes do not deal extra Damage\\nAilments never count as being from Critical Strikes",
+    ),
+    // P6-10b part 15: Mind over Matter.
+    (
+        "keystone_mana_shield",
+        "40% of Damage is taken from Mana before Life",
     ),
     (
         "non_damaging_ailment_effect_+%",

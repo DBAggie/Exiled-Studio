@@ -558,13 +558,13 @@ fn maximum_hit(
             return Ok(());
         }
     }
-    let pool_reasons = phases::marker_reasons(
+    let mut pool_reasons = phases::marker_reasons(
         calc,
         |q| match q {
             Quantity::Poe1(Poe1Quantity::PoolReason(stat)) => Some(stat),
             _ => None,
         },
-        |_| false,
+        |q| matches!(q, Quantity::Poe1(Poe1Quantity::ManaBeforeLife(_))),
     );
     let value = |calc: &Calc<'_>, f: Field| calc.field(f).and_then(|r| r.value);
     let (Some(life), Some(unreserved), Some(es)) = (
@@ -577,14 +577,39 @@ fn maximum_hit(
     let recoverable = unreserved.max(1.0);
     let half = life * 0.5;
     let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
+    let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
+    // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
+    // the shared share, and each type's own on top of it.
+    let cx = calc.context(Flags::NONE);
+    let shared = sum(
+        calc,
+        Poe1Quantity::ManaBeforeLife(TakenOf::All),
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )?
+    .min(100.0);
+    let mut mom = [0.0; 5];
+    for (i, ty) in TYPES.into_iter().enumerate() {
+        let own = sum(
+            calc,
+            Poe1Quantity::ManaBeforeLife(TakenOf::Type(ty)),
+            Op::Base,
+            &cx,
+            &mut pool_reasons,
+        )?
+        .min(100.0 - shared);
+        mom[i] = (shared + own) / 100.0;
+    }
     let mut pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
         // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291).
         let bypass = if ty == DamageType::Chaos { 100.0 } else { 0.0 };
+        let with_mana = mom_hit_pool(life_pool, mom[i], mana);
         pools[i] = if bypass < 100.0 {
-            life_pool + es
+            with_mana + es
         } else {
-            life_pool
+            with_mana
         };
     }
     let mut results = [None; 5];
@@ -736,6 +761,8 @@ fn maximum_hit(
             life: recoverable,
             max_life: life,
             energy_shield: es,
+            mana,
+            mom,
         };
         super::ehp::estimate(
             calc,
@@ -747,6 +774,20 @@ fn maximum_hit(
         )?;
     }
     Ok(())
+}
+
+/// PoB's `calcMoMEBPool` without Eldritch Battery (`CalcDefence.lua` 2309
+/// to 2321): the life pool with the mana mind over matter can take
+/// (`floor(min(mana, life / (1 - share) - life))`).
+fn mom_hit_pool(life_pool: f64, share: f64, mana: f64) -> f64 {
+    let max_pool = if share < 1.0 {
+        life_pool / (1.0 - share) - life_pool
+    } else {
+        f64::INFINITY
+    };
+    let usable = crate::math::floor(mana.min(max_pool));
+    let used = crate::math::floor((max_pool - 0.0).min(usable));
+    life_pool + used
 }
 
 /// PoB's `data.misc.AvoidChanceCap`.

@@ -57,7 +57,7 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
 use crate::quantity::{DamageType, Op, Quantity};
 
-use super::Poe1Quantity;
+use super::{Poe1Quantity, TakenOf};
 
 /// The skill condition Elemental Overload's more damage needs (PoB's
 /// `CritInPast8Sec`): settled by the hit, true when its crit chance is not
@@ -86,6 +86,9 @@ const fn flag(q: Poe1Quantity) -> KeystoneEffect {
 
 /// The keystones, sorted by stat ID (a test checks the order), each read as
 /// PoB reads its lines (module docs). A keystone stat's value is 1, so each
+/// Mind over Matter's damage taken from mana before life, percent.
+pub const MIND_OVER_MATTER: f64 = 40.0;
+
 /// Glancing Blows' damage taken from blocked hits, percent (`ModParser`'s
 /// "you take (%d+)%% of damage from blocked hits", `BlockEffect` BASE).
 pub const GLANCING_BLOWS_BLOCK_EFFECT: f64 = 65.0;
@@ -155,6 +158,19 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
                 None,
             ),
         ],
+    ),
+    // Mind over Matter (P6-10b part 15): the tree's text "40% of Damage is
+    // taken from Mana before Life" (`DamageTakenFromManaBeforeLife` BASE).
+    (
+        "keystone_mana_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::All)),
+            Op::Base,
+            MIND_OVER_MATTER,
+            Flags::NONE,
+            Flags::NONE,
+            None,
+        )],
     ),
     (
         "resolute_technique",

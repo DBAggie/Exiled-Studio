@@ -878,6 +878,10 @@ mod tests {
             "lightning_damage_taken_+%",
             "marauder_hidden_ascendancy_damage_taken_+%_final",
             "passive_mastery_damage_taken_over_time_+%_final",
+            // P6-10b part 15: damage taken from mana before life (the
+            // character's pools, `poe1::enemy_hit`).
+            "lightning_damage_%_taken_from_mana_before_life",
+            "physical_damage_%_taken_from_mana_before_life",
             "physical_damage_taken_+%",
             // P6-10b part 12: the character's damage taken as another
             // type and flat damage taken (`poe1::enemy_hit`).

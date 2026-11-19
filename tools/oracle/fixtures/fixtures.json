@@ -2091,6 +2091,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "FullDPS", "Int", "Life", "LifeCost", "LifeLeechRate", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "P6-10b part 9: Ice Nova with 12% of Damage leeched as Life and 25% of Leech is Instant: the crit pass's leech held to the instance cap, the instant share at the cast rate."
+    },
+    {
+      "id": "mom-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/mom-ice-nova-witch.xml",
+      "sha256": "eb4f15557d7cb0ed3e096d61a41f4b6f4359c09e6b4e0c4baa0ccafe195f95e8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
+      "description": "P6-10b part 15: Ice Nova with 40% of Damage taken from Mana before Life and +400 maximum Mana: the mana mind over matter takes in the maximum hit (calcMoMEBPool) and the hits to die (reducePoolsByDamage)."
+    },
+    {
+      "id": "mom-physical-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/mom-physical-ice-nova-witch.xml",
+      "sha256": "b7ccb08e4fd4aa72fff9130980e5b31120372d5d0f92ea9ba4a30b7c8990f530",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
+      "description": "P6-10b part 15: Ice Nova with 30% of Physical Damage taken from Mana before Life: a type's own share, the other types' pools without it."
     }
   ]
 }
