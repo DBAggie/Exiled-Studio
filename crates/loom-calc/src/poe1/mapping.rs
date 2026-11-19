@@ -4497,6 +4497,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area_of_effect_+%_while_you_do_not_have_convergence",
         "area",
     ),
+    (
+        "attacks_number_of_additional_projectiles",
+        "projectile-count",
+    ),
     ("avoid_ailments_%_from_crit", "ailment-on-self"),
     // P6-11f: "#% chance to Avoid Elemental Ailments" (`AvoidElementalAilments` BASE): no slice field.
     ("avoid_all_elemental_status_%", "ailment-on-self"),
@@ -4516,6 +4520,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
+    ("base_charge_duration_+%", "charge-duration"),
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
     // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
     ("base_is_projectile", "skill type marker"),
@@ -4532,12 +4537,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
     // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
     ("base_number_of_golems_allowed", "golems"),
+    ("base_number_of_projectiles", "projectile-count"),
     // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
     ("base_number_of_skeletons_allowed", "minion-count"),
     // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
     ("base_number_of_zombies_allowed", "minion-count"),
     // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.
     ("base_projectile_speed_+%", "projectile-speed"),
+    ("base_secondary_skill_effect_duration", "skill-duration"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
     // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
     // own copy is read by PoB's skill stat map as the enemy's
@@ -4552,6 +4559,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     ("base_stun_recovery_+%", "stun"),
+    ("base_totem_duration", "totem-duration"),
+    ("base_trap_duration", "skill-duration"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
     ("cannot_be_blinded", "blind-on-self"),
@@ -4607,6 +4616,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
+    // P6-11u: the charges' count is the config's (`poe1::charges`).
+    ("charge_duration_+%", "charge-duration"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     (
@@ -4754,6 +4765,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
+    ("mine_duration_+%", "skill-duration"),
     // P6-7c3: a monster skill's penalty against the player's minions (the
     // Flame Golem's Immolate): PoB's stat map has no row for it.
     (
@@ -4763,6 +4775,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
+    // P6-11u: the projectile count (PoB `ProjectileCount`): it reaches DPS
+    // only with `SequentialProjectiles` (`CalcOffence.lua` 769 to 772), a
+    // skill base mod (unvetted) or Barrage's `projectiles_barrage`, a guard.
+    ("number_of_additional_projectiles", "projectile-count"),
+    // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
+    // lines, each a guard.
+    ("number_of_chains", "chain-count"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
         "ailment-on-self",
@@ -4798,6 +4817,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("show_number_of_projectiles", "display"),
+    // P6-11u: brands are not computed (`hit`).
+    ("sigil_duration_+%", "skill-duration"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -4808,6 +4829,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_cannot_be_stunned_before_contact_point", "display"),
+    // P6-11u: a skill effect duration (PoB `Duration`): read only by
+    // skill functions, base mods, stages, brands, and ailments that are
+    // skill effects, each a reason (`hit::pob_vetted`, `poe1::ailment`).
+    ("skill_effect_duration_+%", "skill-duration"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -4853,6 +4878,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_spell_boost_area_of_effect_+%_final_per_charge",
         "area",
     ),
+    // P6-11u: how long a totem lasts; no slice field.
+    ("totem_duration_+%", "totem-duration"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
@@ -4866,6 +4893,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // you, no field.
     ("unaffected_by_ignite", "ailment-on-self"),
     ("visual_hit_effect_elemental_is_holy", "display"),
+    (
+        "wand_attacks_fire_an_additional_projectile",
+        "projectile-count",
+    ),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
@@ -4917,6 +4948,23 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
     ),
+    // P6-11u: projectiles counted as chains.
+    (
+        "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
+        "number_of_additional_projectiles",
+    ),
+    // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
+    ("projectile_damage_+%_per_chain", "number_of_chains"),
+    (
+        "projectile_damage_+%_per_remaining_chain",
+        "number_of_chains",
+    ),
+    (
+        "projectile_non_chaos_damage_to_add_as_chaos_damage_%_per_chain",
+        "number_of_chains",
+    ),
+    // P6-11u: Barrage's `SequentialProjectiles`.
+    ("projectiles_barrage", "number_of_additional_projectiles"),
 ];
 
 /// Config inputs that would make a [`NO_EFFECT`] row reach a slice field:

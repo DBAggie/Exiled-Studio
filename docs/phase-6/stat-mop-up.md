@@ -510,3 +510,43 @@ A `PerStat` count is `floor(stat / div + 0.0001)` (`ModStore.lua` 458). `FireRes
 - **States:** 4 life regeneration fields became indeterminate, because they now read a per-charge line whose rolled value is unsettled. 4 cost fields became complete.
 - **Corpus:** 17 moved, all toward PoB; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11u: durations, projectile counts, and chains with no slice field
+
+These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a category. They were unmapped in 59 build-occurrences across the public set and the corpus; now they are unmapped in none.
+
+**PoB:**
+- **Skill duration** (`Duration`, `CalcOffence.lua` 1462 to 1530) reaches a damage output in these places:
+  - a skill function's stages or ticks (Blight's, Penance Brand of Dissipation's, Earthquake of Amplification's; `CalcPerform.lua` 2226 to 2252);
+  - a brand's activation count;
+  - `TotalDot` for stacking DoT;
+  - Trauma;
+  - an ailment that is a skill effect (`bleedIsSkillEffect` and kin).
+
+  The engine leaves each of these as a reason or not computed:
+  - an unvetted skill (`hit::pob_vetted`: functions, own stats, tagged base mods);
+  - brands not computed;
+  - `DotCanStack` not computed;
+  - Trauma Support not modelled;
+  - `poe1::ailment`'s `ailment-skill-data`.
+- **Projectile count** (`ProjectileCount`) reaches DPS only with `SequentialProjectiles` (769 to 772). That flag comes either from a skill's base mod, which leaves the skill unvetted, or from Barrage's `projectiles_barrage`, which is unmapped and so a reason.
+- **Chain count** (`ChainCountMax`) is read by the per-chain lines (`PerStat` `Chain` and `ChainRemaining`).
+- **Charge duration:** the charges' count is the config's (`poe1::charges`).
+- **Totem duration:** no slice field reads it.
+
+**The rows:**
+- **`skill-duration`:** `skill_effect_duration_+%`, `base_secondary_skill_effect_duration`, `sigil_duration_+%`, `base_trap_duration`, `mine_duration_+%`.
+- **`totem-duration`:** `totem_duration_+%`, `base_totem_duration`.
+- **`charge-duration`:** `charge_duration_+%`, `base_charge_duration_+%`. Both are also listed in the charges test's allowlist.
+- **`projectile-count`:** `number_of_additional_projectiles`, `base_number_of_projectiles`, `attacks_number_of_additional_projectiles`, `wand_attacks_fire_an_additional_projectile`.
+- **`chain-count`:** `number_of_chains`.
+
+**Guards** (`NO_EFFECT_DEPENDS_ON`; a maintainer-run test checks that each stays unmapped):
+- `projectiles_barrage` and `modifiers_to_number_of_projectiles_instead_apply_to_chaining` guard the projectile count.
+- `projectile_damage_+%_per_chain`, `projectile_damage_+%_per_remaining_chain`, and `projectile_non_chaos_damage_to_add_as_chaos_damage_%_per_chain` guard the chains.
+
+**Evidence** (`local/p6/p6-11u/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected; no value or state moved.
+- **Corpus:** no value or state moved; 0 unexpected.
+- **The stats:** unmapped in 0 build-occurrences, from 59.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

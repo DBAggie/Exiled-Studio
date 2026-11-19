@@ -543,8 +543,10 @@ mod tests {
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",
         "chance_to_gain_power_charge_when_block_%",
-        // A charge's duration (P6-11f, P6-11n): the count comes from the
-        // config.
+        // A charge's duration (P6-11f, P6-11n, P6-11u): the count comes
+        // from the config.
+        "base_charge_duration_+%",
+        "charge_duration_+%",
         "endurance_charge_duration_+%",
         "power_charge_duration_+%",
         // A chance to gain a charge (P6-11g): PoB does not parse it.

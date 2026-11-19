@@ -230,7 +230,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 &[per, points, hundredth],
                 Term::Step("increased-from-spell-block"),
             )?;
-            inc = phases::total(calc, &[inc, extra], Term::Step("increased-with-spell-block"))?;
+            inc = phases::total(
+                calc,
+                &[inc, extra],
+                Term::Step("increased-with-spell-block"),
+            )?;
         }
         let regen = phases::product(calc, &[base, inc, more], Term::Step("regeneration"))?;
         let rate = recovery_rate(calc, pool, &mut reasons)?;
