@@ -2630,11 +2630,19 @@ pub fn affected_by(input: &CalcInput<'_>, levels: &GemLevels) -> BTreeSet<&'stat
 /// 2773). Distinct by granted effect, as PoB by skill name.
 #[must_use]
 pub fn aura_or_herald_count(input: &CalcInput<'_>) -> usize {
+    let (heralds, auras) = herald_and_aura_counts(input);
+    heralds + auras
+}
+
+/// PoB's `Multiplier:Herald` and `Multiplier:AuraAffectingSelf` apart
+/// (P6-11af; [`aura_or_herald_count`]'s count).
+#[must_use]
+pub fn herald_and_aura_counts(input: &CalcInput<'_>) -> (usize, usize) {
     const GENEROSITY: [&str; 2] = ["SupportGenerosity", "SupportAwakenedGenerosity"];
     let build = input.build;
     let levels = GemLevels::none();
     let Ok(groups) = skill::active_groups(build) else {
-        return 0;
+        return (0, 0);
     };
     let main_group = skill::main_skill(build, input.data, &levels)
         .ok()
@@ -2662,7 +2670,7 @@ pub fn aura_or_herald_count(input: &CalcInput<'_>) -> usize {
             }
         }
     }
-    heralds.len() + auras.len()
+    (heralds.len(), auras.len())
 }
 
 /// What the table says about an active skill.

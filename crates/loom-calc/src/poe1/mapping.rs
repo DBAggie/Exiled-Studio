@@ -1684,6 +1684,17 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_controlled_destruction_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11af: Efficacy's "#% more Damage over Time" (`Damage` MORE,
+    // `ModFlag.Dot`) and its spell damage (`ModFlag.Spell`; `sup_int.lua`
+    // 1984 to 1989).
+    (
+        "support_efficacy_damage_over_time_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::DOT, NONE)],
+    ),
+    (
+        "support_efficacy_spell_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
     // P6-11n: "#% more Elemental Damage" (`ElementalDamage` MORE).
     (
         "support_gem_elemental_damage_+%_final",

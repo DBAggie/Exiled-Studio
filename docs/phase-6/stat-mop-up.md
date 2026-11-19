@@ -775,3 +775,24 @@ All three match PoB on every computed field (231), including each type's maximum
 - **Corpus:** 58 values moved, all toward PoB; 0 unexpected.
 - **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
 - **Tests:** a unit test checks the guard's share in `reduce`. The workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11af: Efficacy, and damage per herald
+
+**PoB:**
+- **Efficacy** (`sup_int.lua` 1984 to 1989): "#% more Damage over Time" is `Damage` MORE with `ModFlag.Dot`, and its spell damage is the same with `ModFlag.Spell`.
+- **Damage per herald:** "#% increased Damage for each Herald affecting you" is `Damage` INC with `Multiplier:Herald` (`ModParser.lua` 1397). That multiplier counts heralds alone, one per skill name (`CalcPerform.lua` 2112 to 2126).
+
+**The engine:**
+- **Efficacy's two stats:** hit rows (`mapping::HIT_ROWS`).
+- **Damage per herald:** `poe1::stacks` has a new kind, `Herald`, whose per-count effect is `Damage` INC. `gems::herald_and_aura_counts` returns the two counts that P6-11s's `aura_or_herald_count` adds together.
+
+**Left, with why:**
+- **Trap and Mine Damage Support:** its damage is `Damage` MORE with the trap and mine keyword flags, which the engine does not have. A trap or mine skill is `Partial` already (`hit::TRAP_MINE_REASON`).
+- **Multistrike's damage and speed:** with its repeats, which make the skill unvetted (`hit::pob_vetted`).
+
+**Evidence** (`local/p6/p6-11af/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected; match unchanged at 13,894.
+  - 4 values moved, all toward PoB: OccVortex's damage over time and essence-drain-contagion-occultist's full DPS. Their fields stay partial for other reasons.
+- **Corpus:** 2 values moved, both toward PoB; 0 unexpected.
+- **The stats:** no longer unmapped anywhere.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

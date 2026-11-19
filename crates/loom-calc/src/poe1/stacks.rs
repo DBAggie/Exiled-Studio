@@ -45,7 +45,9 @@
 //!   ("for each of your Aura or Herald Skills affecting you", `ModParser.lua`
 //!   1398), counted from the skills' types
 //!   ([`super::gems::aura_or_herald_count`]); "#% increased Damage for each
-//!   of your Aura or Herald Skills affecting you".
+//!   of your Aura or Herald Skills affecting you". `Multiplier:Herald`
+//!   alone ("for each Herald affecting you", 1397): "#% increased Damage
+//!   for each Herald affecting you" (P6-11af).
 //! - **Nearby enemies** (P6-11v; `ConfigOptions.lua` 1223 to 1231):
 //!   `Multiplier:NearbyEnemies` is the config's `multiplierNearbyEnemies`
 //!   plus `multiplierNearbyRareOrUniqueEnemies` (each a BASE in combat),
@@ -88,6 +90,8 @@ pub enum StackKind {
     NonInstantSpells,
     /// Aura and herald skills affecting you (P6-11s).
     AuraOrHerald,
+    /// Herald skills affecting you (P6-11af).
+    Herald,
     /// Nearby enemies (P6-11v).
     NearbyEnemies,
 }
@@ -103,6 +107,7 @@ impl StackKind {
             Self::Intensity => "intensity",
             Self::NonInstantSpells => "non-instant-spells",
             Self::AuraOrHerald => "aura-or-herald",
+            Self::Herald => "herald",
             Self::NearbyEnemies => "nearby-enemies",
         }
     }
@@ -233,6 +238,11 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "critical_strike_chance_+%_per_righteous_charge",
         StackKind::Inspiration,
         StackValue::Per(PerStack::CritChance),
+    ),
+    (
+        "damage_+%_for_each_herald_affecting_you",
+        StackKind::Herald,
+        StackValue::Per(PerStack::Damage),
     ),
     (
         "damage_+%_per_your_aura_or_herald_skill_affecting_you",
@@ -574,30 +584,33 @@ fn nearby_enemies(ingest: &mut Ingest<'_>, effects: &[Effect], count: f64, only_
 /// (P6-11s, module docs): the count from the skills, after every source of
 /// such effects.
 pub fn aura_or_herald(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
-    let effects: Vec<Effect> = ingest
-        .effects()
-        .iter()
-        .filter(|e| {
-            matches!(
-                e.quantity,
-                Quantity::Poe1(Poe1Quantity::Stack(
-                    StackKind::AuraOrHerald,
-                    StackValue::Per(_)
-                ))
-            ) && e.op == Op::Base
-                && e.conditions == Conditions::none()
-        })
-        .cloned()
-        .collect();
-    if effects.is_empty() {
+    let of = |ingest: &Ingest<'_>, kind: StackKind| -> Vec<Effect> {
+        ingest
+            .effects()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.quantity,
+                    Quantity::Poe1(Poe1Quantity::Stack(k, StackValue::Per(_))) if k == kind
+                ) && e.op == Op::Base
+                    && e.conditions == Conditions::none()
+            })
+            .cloned()
+            .collect()
+    };
+    let both = of(ingest, StackKind::AuraOrHerald);
+    let heralds_only = of(ingest, StackKind::Herald);
+    if both.is_empty() && heralds_only.is_empty() {
         return;
     }
+    let (heralds, auras) = super::gems::herald_and_aura_counts(input);
     #[expect(
         clippy::cast_precision_loss,
         reason = "a small count of skills, exact as f64"
     )]
-    let n = super::gems::aura_or_herald_count(input) as f64;
-    apply(ingest, &effects, multiplier(n), None);
+    let (heralds, auras) = (heralds as f64, auras as f64);
+    apply(ingest, &both, multiplier(heralds + auras), None);
+    apply(ingest, &heralds_only, multiplier(heralds), None);
 }
 
 /// Each effect per stack as its target times `count`, with its source (or
