@@ -841,10 +841,6 @@ mod tests {
         "cannot_be_shocked_while_at_maximum_power_charges",
         // The pantheon's souls (P3-12g): damage taken by you, its
         // reduction, and shock on you, not the enemy's.
-        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
-        "elemental_damage_taken_+%_if_been_hit_recently",
-        "elemental_damage_taken_+%_if_not_hit_recently",
-        "physical_damage_over_time_taken_+%_while_moving",
         "shocked_effect_on_self_+%",
     ];
 

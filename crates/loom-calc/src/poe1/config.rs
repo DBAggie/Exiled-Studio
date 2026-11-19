@@ -271,7 +271,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionAttackedRecently",
         &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],
     ),
-    ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
     (
         "conditionCastSpellRecently",
         &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],
@@ -328,7 +327,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("conditionLeeching", &["Condition:Leeching"]),
     ("conditionLowLife", &["Condition:LowLife"]),
-    ("conditionMoving", &["Condition:Moving"]),
     (
         "conditionSacrificeMinion",
         &["Condition:SacrificeMinionOnAttack"],
@@ -392,7 +390,9 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("meleeDistance", &["skillDist"]),
     (
         "multiplierBeenHitRecently",
-        &["Multiplier:BeenHitRecently", "Condition:BeenHitRecently"],
+        // Its condition is settled with the check's (P6-10b part 13,
+        // `poe1::conditions`).
+        &["Multiplier:BeenHitRecently"],
     ),
     (
         "multiplierChannelling",

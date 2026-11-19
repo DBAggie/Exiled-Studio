@@ -1165,12 +1165,12 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "molten_shell_damage_absorb_limit_%_of_armour",
-                    BuffStat::NoSlice("guard"),
+                    BuffStat::Defence("guard"),
                 ),
-                ("molten_shell_damage_absorbed_%", BuffStat::NoSlice("guard")),
+                ("molten_shell_damage_absorbed_%", BuffStat::Defence("guard")),
                 (
                     "molten_shell_max_damage_absorbed",
-                    BuffStat::NoSlice("guard"),
+                    BuffStat::Defence("guard"),
                 ),
             ],
         },
@@ -1451,9 +1451,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ("", BuffStat::NoSlice("ailment-on-self")),
                 (
                     "quick_guard_damage_absorb_limit",
-                    BuffStat::NoSlice("guard"),
+                    BuffStat::Defence("guard"),
                 ),
-                ("quick_guard_damage_absorbed_%", BuffStat::NoSlice("guard")),
+                ("quick_guard_damage_absorbed_%", BuffStat::Defence("guard")),
             ],
         },
     ),
@@ -1743,7 +1743,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ("", GOLEM_CONDITION),
                 (
                     "stone_golem_grants_melee_damage_removed_from_stone_golem_before_life_or_es_%",
-                    BuffStat::Defence("damage-taken"),
+                    BuffStat::Defence("guard"),
                 ),
             ],
         },
@@ -1816,12 +1816,12 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "molten_shell_damage_absorb_limit_%_of_armour",
-                    BuffStat::NoSlice("guard"),
+                    BuffStat::Defence("guard"),
                 ),
-                ("molten_shell_damage_absorbed_%", BuffStat::NoSlice("guard")),
+                ("molten_shell_damage_absorbed_%", BuffStat::Defence("guard")),
                 (
                     "molten_shell_max_damage_absorbed",
-                    BuffStat::NoSlice("guard"),
+                    BuffStat::Defence("guard"),
                 ),
             ],
         },
@@ -3324,10 +3324,16 @@ fn add_rows(
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
-            BuffStat::Defence(_) => {
+            BuffStat::Defence(category) => {
                 if *value != 0 {
+                    // A guard is a pool; the rest change the hit.
+                    let quantity = if category == "guard" {
+                        Poe1Quantity::PoolReason(id)
+                    } else {
+                        Poe1Quantity::EnemyHitReason(id)
+                    };
                     ingest.effect(Effect {
-                        quantity: Quantity::Poe1(Poe1Quantity::EnemyHitReason(id)),
+                        quantity: Quantity::Poe1(quantity),
                         op: Op::Flag,
                         value: 1.0,
                         conditions: Conditions::none(),

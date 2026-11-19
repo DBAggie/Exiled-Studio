@@ -48,9 +48,13 @@ const TYPES: [DamageType; 5] = [
 /// A graph error.
 pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     for ty in TYPES {
+        // Damage taken over time's markers (P6-10b part 13).
         let mut reasons = phases::marker_reasons(
             calc,
-            |_| None,
+            |q| match q {
+                Quantity::Poe1(Poe1Quantity::DotTakenReason(stat)) => Some(stat),
+                _ => None,
+            },
             |q| matches!(q, Quantity::Poe1(Poe1Quantity::SelfDamageTaken(..))),
         );
         let of = scopes(ty);

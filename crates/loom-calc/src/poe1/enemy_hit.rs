@@ -350,6 +350,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     } else {
         1.0
     };
+    let mut parts: [Option<TypeHit>; 5] = [None, None, None, None, None];
     for (i, ty) in TYPES.into_iter().enumerate() {
         let mut type_reasons = reasons.clone();
         let resist = if ty == DamageType::Physical {
@@ -476,6 +477,204 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             let result = phases::total(calc, &[node], Term::Result)?;
             calc.set_derived(field, phases::query(result, type_reasons.clone()), &deps);
         }
+        parts[i] = Some(TypeHit {
+            res_mult,
+            flat_dr: reduction.value / 100.0,
+            overwhelm,
+            flat,
+            after: taken_mult * suppress_mult,
+            effective_armour,
+            damage_reduction,
+            reasons: type_reasons,
+        });
+    }
+    maximum_hit(calc, set, &parts, &shares, max, damage_mult)
+}
+
+/// One type's values of the hit that maximum hit reads (PoB's
+/// `<Type>ResistTakenHitMulti`, the base reduction, overwhelm,
+/// `<Type>takenFlat`, `<Type>AfterReductionTakenHitMulti`,
+/// `<Type>EffectiveAppliedArmour`, `<Type>DamageReduction`).
+struct TypeHit {
+    res_mult: f64,
+    flat_dr: f64,
+    overwhelm: f64,
+    flat: f64,
+    after: f64,
+    effective_armour: f64,
+    damage_reduction: f64,
+    reasons: Reasons,
+}
+
+/// The config inputs that change the pools in a way not modelled: low
+/// life (`LifeRecoverable`) and low energy shield
+/// (`EnergyShieldRecoveryCap`).
+const POOL_INPUTS: [&str; 2] = ["conditionLowLife", "conditionLowEnergyShield"];
+
+/// The maximum hit of each type (P6-10b part 13): PoB's
+/// `<Type>MaximumHitTaken` and `SecondMinimalMaximumHitTaken`
+/// (`CalcDefence.lua` 2214 to 2556, 3120 to 3325).
+///
+/// What PoB does, without the pools the engine does not model (each such
+/// stat an unmapped one or a marker, so a reason):
+/// - `LifeRecoverable = max(LifeUnreserved, 1)`; its hit pool, with no
+///   life loss prevented, `max(life - half, 0) + min(life, half)`, `half`
+///   half of maximum life;
+/// - each type's total hit pool: the life pool, plus the energy shield
+///   (`EnergyShieldRecoveryCap`, the maximum) unless the type bypasses it
+///   (chaos does, 100%), plus ward, aegis, and guard (none);
+/// - for each type the hit converts to (the type itself without taken as):
+///   with no armour applied, `max(pool / share / (resMult x (1 -
+///   DamageReduction / 100)) - flat, 0) / takenMult`; with armour, PoB's
+///   quadratic in the raw hit, `floor(max(min(RAW, maxDR), noDR))`;
+/// - `<Type>MaximumHitTaken = round(min / enemy damage multiplier)`; a hit
+///   that converts (PoB's smoothing passes) is not computed;
+/// - `SecondMinimalMaximumHitTaken` the second smallest of the five.
+fn maximum_hit(
+    calc: &mut Calc<'_>,
+    set: Option<&loom_domain::ConfigSet>,
+    parts: &[Option<TypeHit>; 5],
+    shares: &[[f64; 5]; 5],
+    max: f64,
+    enemy_damage_mult: f64,
+) -> Result<(), CalcError> {
+    let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
+    let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
+    for name in POOL_INPUTS {
+        if super::conditions::check(set, name) != Some(false) {
+            for f in fields.into_iter().chain([second]) {
+                calc.set_unsupported(
+                    f,
+                    UnsupportedReason::UnmodelledConfig {
+                        input: name.to_owned(),
+                    },
+                );
+            }
+            return Ok(());
+        }
+    }
+    let pool_reasons = phases::marker_reasons(
+        calc,
+        |q| match q {
+            Quantity::Poe1(Poe1Quantity::PoolReason(stat)) => Some(stat),
+            _ => None,
+        },
+        |_| false,
+    );
+    let value = |calc: &Calc<'_>, f: Field| calc.field(f).and_then(|r| r.value);
+    let (Some(life), Some(unreserved), Some(es)) = (
+        value(calc, Field::Life),
+        value(calc, Field::LifeUnreserved),
+        value(calc, Field::EnergyShield),
+    ) else {
+        return Ok(());
+    };
+    let recoverable = unreserved.max(1.0);
+    let half = life * 0.5;
+    let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
+    let mut pools = [0.0; 5];
+    for (i, ty) in TYPES.into_iter().enumerate() {
+        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291).
+        let bypass = if ty == DamageType::Chaos { 100.0 } else { 0.0 };
+        pools[i] = if bypass < 100.0 {
+            life_pool + es
+        } else {
+            life_pool
+        };
+    }
+    let mut results = [None; 5];
+    for (i, ty) in TYPES.into_iter().enumerate() {
+        let Some(part) = &parts[i] else { continue };
+        let mut reasons = part.reasons.clone();
+        reasons.extend(&pool_reasons);
+        let mut part_min = f64::INFINITY;
+        let mut smoothing = false;
+        for (c, converted) in parts.iter().enumerate() {
+            let Some(conv) = converted else { continue };
+            let percent = shares[i][c];
+            if !(percent > 0.0 || conv.flat != 0.0) {
+                continue;
+            }
+            reasons.extend(&conv.reasons);
+            let multi = percent / 100.0;
+            let pool = pools[c];
+            let taken_multi = conv.after;
+            let hit = if multi <= 0.0 {
+                if conv.flat.max(0.0) * taken_multi >= pool {
+                    0.0
+                } else {
+                    f64::INFINITY
+                }
+            } else if conv.effective_armour == 0.0 && percent == 100.0 {
+                let dr_multi = conv.res_mult * (1.0 - conv.damage_reduction / 100.0);
+                (pool / multi / dr_multi - conv.flat).max(0.0) / taken_multi
+            } else {
+                let rx = conv.res_mult * multi;
+                let ow = conv.overwhelm / 100.0;
+                let armour = conv.effective_armour;
+                let a = 5.0 * (1.0 - conv.flat_dr + ow) * taken_multi * rx * rx;
+                let b = ((ow - conv.flat_dr) * armour * taken_multi
+                    - 5.0 * (pool - conv.flat * taken_multi))
+                    * rx;
+                let cc = -armour * (pool - conv.flat * taken_multi);
+                let raw = if a == 0.0 {
+                    f64::INFINITY
+                } else {
+                    (crate::math::sqrt((b * b - 4.0 * a * cc).max(0.0)) - b) / (2.0 * a)
+                };
+                let no_dr = pool / multi / conv.res_mult / taken_multi
+                    * (1.0 - conv.flat * taken_multi / pool);
+                let max_dr = no_dr / (1.0 - (max - conv.overwhelm) / 100.0);
+                smoothing |= percent != 100.0;
+                crate::math::floor(raw.min(max_dr).max(no_dr))
+            };
+            part_min = part_min.min(hit);
+        }
+        if smoothing {
+            calc.set_unsupported(fields[i], UnsupportedReason::NotComputed);
+            continue;
+        }
+        if !part_min.is_finite() {
+            continue;
+        }
+        let max_hit = crate::math::round_half_up(part_min / enemy_damage_mult);
+        results[i] = Some(max_hit);
+        let node = phases::constant(calc, "maximum-hit", max_hit)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(
+            fields[i],
+            phases::query(result, reasons),
+            &[
+                Field::Life,
+                Field::LifeUnreserved,
+                Field::EnergyShield,
+                Field::Poe1(Poe1Field::TakenHitMult(ty)),
+            ],
+        );
+    }
+    // The second smallest, in PoB's order.
+    if results.iter().all(Option::is_some) {
+        let mut minimum = f64::INFINITY;
+        let mut second_min = f64::INFINITY;
+        for v in results.into_iter().flatten() {
+            if v < minimum {
+                second_min = minimum;
+                minimum = v;
+            } else if v < second_min {
+                second_min = v;
+            }
+        }
+        let mut reasons = Reasons::new();
+        for f in fields {
+            if let Some(r) = calc.field(f)
+                && let crate::state::FieldState::Partial(p) = &r.state
+            {
+                reasons.partial.extend(p.iter().cloned());
+            }
+        }
+        let node = phases::constant(calc, "second-minimal-maximum-hit", second_min)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(second, phases::query(result, reasons), &fields);
     }
     Ok(())
 }

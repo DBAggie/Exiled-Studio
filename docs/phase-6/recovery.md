@@ -488,3 +488,36 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Data parity:** `uncategorized` 353.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,765 tests and clippy pass.
+
+## Part 13: maximum hit taken
+
+**What PoB does** (`CalcDefence.lua` 2214 to 2556 for the pools, 3120 to 3325 for the hit):
+- **The life pool:** `LifeRecoverable = max(LifeUnreserved, 1)`. With no life loss prevented, its hit pool is `max(life - half, 0) + min(life, half)`, where `half` is half of maximum life.
+- **Each type's total hit pool:** the life pool (Mind over Matter's mana aside), plus energy shield (`EnergyShieldRecoveryCap`) unless the type bypasses it (chaos does, 100%), plus ward, aegis, and guard.
+- **Each type's maximum hit:** for each type the hit is taken as:
+  - with no armour applied, `max(pool / share / (resMult x (1 - DamageReduction / 100)) - flat, 0) / takenMult`;
+  - with armour, PoB's quadratic in the raw hit, `floor(max(min(RAW, maxDR), noDR))`.
+- **The result:** `<Type>MaximumHitTaken = round(smallest / enemy damage multiplier)`. A hit split over types needs PoB's smoothing passes.
+- **`SecondMinimalMaximumHitTaken`:** the second smallest of the five, in PoB's order.
+
+**The engine** (`enemy_hit::maximum_hit`; slice revision 21):
+- **The fields:** `<type>-maximum-hit-taken` and `second-minimal-maximum-hit-taken`. A split hit is `NotComputed`.
+- **Not modelled config:** `conditionLowLife` and `conditionLowEnergyShield` are `unmodelled-config`.
+- **The markers,** split by the fields they change:
+  - **`EnemyHitReason`:** the hit's fields and maximum hit (Arctic Armour, Storm Barrier, Flesh and Stone, Enfeeble's damage, no extra crit damage if crit recently).
+  - **`PoolReason`:** maximum hit alone. The guard skills are `BuffStat::Defence("guard")` (eight entries, Stone Golem's damage removed among them), Mind over Matter and Divine Shield (former `NoEffect`), and half of area damage taken.
+  - **`DotTakenReason`:** damage taken over time alone (the caustic cloud line).
+- **Settled conditions:** "if you've been Hit Recently" (`conditionBeenHitRecently`, or `multiplierBeenHitRecently` above 0), its negation, and "while moving" (`conditionMoving`) are now settled conditions (`poe1::conditions`). This gives three state rows: elemental damage taken if hit or not hit recently, and physical damage over time taken while moving. Before, these were `NoEffect`.
+- **`NoEffect` again:** "no extra bleed damage while moving" (no field reads it).
+- **The math module** gains `sqrt` (correctly rounded).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 12,539.
+  - Each maximum hit equals PoB's in 168 builds (167 for physical and the second smallest).
+  - The hit recently and moving rows bring nine partial builds' taken multipliers to or toward PoB's (Inquisitor, Solaris's soul, Animate Guardian).
+  - One build's over-time multipliers became partial with Shakari's caustic cloud line.
+  - Two builds' hit fields became complete again (the Stone Golem's line is a pool marker).
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,765 tests and clippy pass.

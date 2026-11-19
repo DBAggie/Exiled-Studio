@@ -388,6 +388,13 @@ pub enum Poe1Quantity {
     /// model (P6-10b part 12; a gem's [`gems::BuffStat::Defence`]): a
     /// `Flag` only [`enemy_hit`] reads, as its fields' reason.
     EnemyHitReason(&'static str),
+    /// A stat that changes the pools maximum hit reads in a way the engine
+    /// does not model (P6-10b part 13: guard skills, Mind over Matter,
+    /// Divine Shield): a `Flag` only those fields read.
+    PoolReason(&'static str),
+    /// A stat that changes damage taken over time in a way the engine does
+    /// not model (P6-10b part 13): a `Flag` only [`taken`] reads.
+    DotTakenReason(&'static str),
     /// The enemy's crit chance against the character (PoB's
     /// `EnemyCritChance` INC; P6-10b part 12).
     EnemyCritChance,
@@ -794,6 +801,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
             Self::CannotEvade => f.write_str("cannot-evade"),
             Self::EnemyHitReason(stat) => write!(f, "enemy-hit-reason.{stat}"),
+            Self::PoolReason(stat) => write!(f, "pool-reason.{stat}"),
+            Self::DotTakenReason(stat) => write!(f, "dot-taken-reason.{stat}"),
             Self::EnemyCritChance => f.write_str("enemy-crit-chance"),
             Self::CritExtraDamageReduction => f.write_str("crit-extra-damage-reduction"),
             Self::EnemyDamage => f.write_str("enemy-damage"),
@@ -1116,6 +1125,12 @@ pub enum Poe1Field {
     /// The damage reduction against the enemy's hit of a type, armour
     /// included (PoB's `<Type>DamageReduction`; P6-10b part 12).
     DamageReduction(DamageType),
+    /// The largest enemy hit of a type the character survives (PoB's
+    /// `<Type>MaximumHitTaken`; P6-10b part 13).
+    MaximumHitTaken(DamageType),
+    /// The second smallest of the five (PoB's
+    /// `SecondMinimalMaximumHitTaken`; P6-10b part 13).
+    SecondMinimalMaximumHitTaken,
 }
 
 impl Poe1Field {
@@ -1159,6 +1174,14 @@ impl Poe1Field {
                 DamageType::Lightning => "lightning-taken-hit-mult",
                 DamageType::Chaos => "chaos-taken-hit-mult",
             },
+            Self::MaximumHitTaken(t) => match t {
+                DamageType::Physical => "physical-maximum-hit-taken",
+                DamageType::Fire => "fire-maximum-hit-taken",
+                DamageType::Cold => "cold-maximum-hit-taken",
+                DamageType::Lightning => "lightning-maximum-hit-taken",
+                DamageType::Chaos => "chaos-maximum-hit-taken",
+            },
+            Self::SecondMinimalMaximumHitTaken => "second-minimal-maximum-hit-taken",
             Self::DamageReduction(t) => match t {
                 DamageType::Physical => "physical-damage-reduction",
                 DamageType::Fire => "fire-damage-reduction",

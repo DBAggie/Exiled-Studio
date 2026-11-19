@@ -1981,6 +1981,9 @@ impl StatMapping for SkillMapping {
                                 | Poe1Quantity::CostReason(_)
                                 | Poe1Quantity::HitReason(_)
                                 | Poe1Quantity::ReductionReason(_)
+                                | Poe1Quantity::EnemyHitReason(_)
+                                | Poe1Quantity::PoolReason(_)
+                                | Poe1Quantity::DotTakenReason(_)
                         )
                     )
                 }) =>
@@ -2182,6 +2185,36 @@ pub const STATE_ROWS: &[StateRow] = &[
             (BLOCK, Op::Base, NONE, states::USING_SHIELD),
         ],
     ),
+    // P6-10b part 13: "#% increased Elemental Damage taken if you've been
+    // Hit Recently" (`ElementalDamageTaken` INC, `Condition`
+    // `BeenHitRecently`), the config's (`poe1::conditions`).
+    (
+        "elemental_damage_taken_+%_if_been_hit_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Elemental,
+            )),
+            Op::Increased,
+            NONE,
+            conditions::BEEN_HIT_RECENTLY,
+        )],
+    ),
+    // P6-10b part 13: "#% increased Elemental Damage taken if you haven't
+    // been Hit Recently" (`ElementalDamageTaken` INC, `Condition`
+    // `BeenHitRecently` negated).
+    (
+        "elemental_damage_taken_+%_if_not_hit_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Elemental,
+            )),
+            Op::Increased,
+            NONE,
+            conditions::NOT_HIT_RECENTLY,
+        )],
+    ),
     // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
     // Enemy is Nearby" (`EnergyShieldRegen` BASE, the stat per minute; PoB's
     // enemy `ActorCondition` on `NearbyRareOrUniqueEnemy` or `RareOrUnique`).
@@ -2283,6 +2316,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::ATTACK.union(Flags::PHYSICAL),
             states::USING_SHIELD,
+        )],
+    ),
+    // P6-10b part 13: "#% increased Physical Damage over Time taken while
+    // moving" (`PhysicalDamageTakenOverTime` INC, `Condition` `Moving`).
+    (
+        "physical_damage_over_time_taken_+%_while_moving",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Increased,
+            NONE,
+            conditions::MOVING,
         )],
     ),
     // P6-11a: "+#% Elemental Resistances while holding a Shield":
@@ -4217,10 +4264,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
-    (
-        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
-        "damage-taken",
-    ),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     (
@@ -4242,14 +4285,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
-    ),
-    (
-        "elemental_damage_taken_+%_if_been_hit_recently",
-        "damage-taken",
-    ),
-    (
-        "elemental_damage_taken_+%_if_not_hit_recently",
-        "damage-taken",
     ),
     // P3-8n: "Your Elemental Resistances cannot be lowered by Curses": only
     // curses on you lower them, from the `playerCursedWith*` inputs, which
@@ -4323,9 +4358,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
-    ("keystone_divine_shield", "keystone-defence"),
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
-    ("keystone_mana_shield", "keystone-defence"),
     (
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
         "flask",
@@ -4386,6 +4419,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "monster_penalty_against_minions_damage_+%_final_vs_player_minions",
         "monster",
     ),
+    // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
+    // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
@@ -4400,10 +4435,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
     // not modelled, a reason of their own) (P6-4b).
     ("phase_through_objects", "condition"),
-    (
-        "physical_damage_over_time_taken_+%_while_moving",
-        "damage-taken",
-    ),
     // P6-11m: reflected physical damage (unparsed).
     ("physical_damage_to_return_to_melee_attacker", "reflect"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
@@ -4422,10 +4453,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("recover_x_energy_shield_on_spell_block", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
-    (
-        "self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently",
-        "damage-taken",
-    ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
@@ -4490,7 +4517,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_spell_boost_area_of_effect_+%_final_per_charge",
         "area",
     ),
-    ("take_half_area_damage_from_hit_%_chance", "damage-taken"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
@@ -4614,6 +4640,29 @@ pub fn no_effect_by_rule(stat: &str) -> bool {
         || super::skill_no_output::contains(stat)
 }
 
+/// Stats that change the enemy's hit in a way the engine does not model
+/// (P6-10b parts 12 and 13), sorted: each maps to
+/// [`Poe1Quantity::EnemyHitReason`], the reason of the hit's fields and
+/// maximum hit alone. PoB's text: no extra damage from crits if crit
+/// recently (a condition).
+pub const ENEMY_HIT_REASONS: &[&str] =
+    &["self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently"];
+
+/// Stats that change the pools maximum hit reads (P6-10b part 13), sorted:
+/// each maps to [`Poe1Quantity::PoolReason`]. PoB's text: the keystones
+/// Divine Shield and Mind over Matter, half of area damage taken.
+pub const POOL_REASONS: &[&str] = &[
+    "keystone_divine_shield",
+    "keystone_mana_shield",
+    "take_half_area_damage_from_hit_%_chance",
+];
+
+/// Stats that change damage taken over time in a way the engine does not
+/// model (P6-10b part 13), sorted: each maps to
+/// [`Poe1Quantity::DotTakenReason`]. PoB's text: chaos damage taken over
+/// time while in a caustic cloud (a condition).
+pub const DOT_TAKEN_REASONS: &[&str] = &["chaos_damage_taken_over_time_+%_while_in_caustic_cloud"];
+
 /// Stats that change the main skill's mana cost in a way the engine does
 /// not model (P6-10b), sorted: each maps to [`Poe1Quantity::CostReason`],
 /// the mana cost field's reason alone. PoB's text for each
@@ -4728,6 +4777,15 @@ pub const HIT_REASONS: &[&str] = &["base_skill_show_average_damage_instead_of_dp
 /// `Flag` only that field's phase reads.
 #[must_use]
 pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
+    if let Ok(i) = ENEMY_HIT_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::EnemyHitReason(ENEMY_HIT_REASONS[i]));
+    }
+    if let Ok(i) = POOL_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::PoolReason(POOL_REASONS[i]));
+    }
+    if let Ok(i) = DOT_TAKEN_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::DotTakenReason(DOT_TAKEN_REASONS[i]));
+    }
     if let Ok(i) = REDUCTION_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::ReductionReason(REDUCTION_REASONS[i]));
     }
@@ -6078,6 +6136,8 @@ mod tests {
                         // P6-8a part 2: settled by the spell path from the
                         // trigger before the damage.
                         super::super::triggers::TRIGGERED_DAMAGE,
+                        // P6-10b part 13: the negation of a check's.
+                        conditions::NOT_HIT_RECENTLY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -6331,6 +6391,44 @@ mod tests {
                     Op::Base,
                     NONE,
                     conditions::STATIONARY,
+                )],
+            ),
+            // P6-10b part 13: damage taken if hit recently or not, and
+            // over time while moving.
+            (
+                "elemental_damage_taken_+%_if_been_hit_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::Always,
+                        TakenOf::Elemental,
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::BEEN_HIT_RECENTLY,
+                )],
+            ),
+            (
+                "elemental_damage_taken_+%_if_not_hit_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::Always,
+                        TakenOf::Elemental,
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::NOT_HIT_RECENTLY,
+                )],
+            ),
+            (
+                "physical_damage_over_time_taken_+%_while_moving",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::OverTime,
+                        TakenOf::Type(DamageType::Physical),
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::MOVING,
                 )],
             ),
             // P6-10b part 8: Lifetap's more damage while buffed.

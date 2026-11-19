@@ -80,6 +80,18 @@ pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
+/// "if you've been Hit Recently" (PoB's `BeenHitRecently`, from
+/// `conditionBeenHitRecently` or a `multiplierBeenHitRecently` above 0;
+/// P6-10b part 13).
+pub const BEEN_HIT_RECENTLY: &str = "BeenHitRecently";
+/// "if you haven't been Hit Recently": [`BEEN_HIT_RECENTLY`] negated.
+pub const NOT_HIT_RECENTLY: &str = "NotBeenHitRecently";
+/// "while moving" (PoB's `Moving`, from `conditionMoving`; P6-10b part 13).
+pub const MOVING: &str = "Moving";
+/// The count of hits taken recently, which sets [`BEEN_HIT_RECENTLY`]
+/// above 0 (`ConfigOptions.lua`).
+pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
+
 /// PoB's `Condition:Lifetap`, from its config check `buffLifetap`
 /// (`ConfigOptions.lua`; P6-10b part 8: Lifetap's more damage while
 /// buffed).
@@ -98,6 +110,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("buffLifetap", LIFETAP),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
+    ("conditionBeenHitRecently", BEEN_HIT_RECENTLY),
     ("conditionBlockedAttackRecently", "BlockedAttackRecently"),
     ("conditionBlockedAttackRecently", BLOCKED_RECENTLY),
     ("conditionBlockedRecently", BLOCKED_RECENTLY),
@@ -107,6 +120,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
+    ("conditionMoving", MOVING),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
     (
@@ -202,6 +216,28 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     };
     if let Some(v) = either {
         out.insert(ConditionKey::new(ENEMY_RARE_OR_UNIQUE_NEARBY), v);
+    }
+    // Hit recently: a count above 0 sets it too; "not hit recently" is its
+    // negation, unsettled when it is (P6-10b part 13).
+    let key = ConditionKey::new(BEEN_HIT_RECENTLY);
+    let count = match set.and_then(|s| last(s, HIT_RECENTLY_COUNT_INPUT, ConfigInputKind::Input)) {
+        None => Some(false),
+        Some(ConfigValue::Number(n)) => Some(n.value().0 > 0.0),
+        Some(_) => None,
+    };
+    let hit = match (out.get(&key).copied(), count) {
+        (Some(true), _) | (_, Some(true)) => Some(true),
+        (Some(false), Some(false)) => Some(false),
+        _ => None,
+    };
+    match hit {
+        Some(v) => {
+            out.insert(key, v);
+            out.insert(ConditionKey::new(NOT_HIT_RECENTLY), !v);
+        }
+        None => {
+            out.remove(&key);
+        }
     }
 }
 

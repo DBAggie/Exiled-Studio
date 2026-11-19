@@ -31,8 +31,9 @@ pub const FORMAT: u32 = 1;
 /// energy shield costs (P6-10b part 8); revision 17 the leech rates (P6-10b
 /// part 9); revision 18 the damage taken over time multipliers (P6-10b part
 /// 10); revision 19 the evade chances (P6-10b part 11); revision 20 the
-/// enemy's hit (P6-10b part 12).
-pub const REVISION: u32 = 20;
+/// enemy's hit (P6-10b part 12); revision 21 the maximum hit taken (P6-10b
+/// part 13).
+pub const REVISION: u32 = 21;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -136,7 +137,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 53] = [
+pub const PRESENT_NAMES: [(&str, &str); 59] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -239,6 +240,19 @@ pub const PRESENT_NAMES: [(&str, &str); 53] = [
         "poe1.lightning-damage-reduction",
     ),
     ("ChaosDamageReduction", "poe1.chaos-damage-reduction"),
+    // Revision 21 (P6-10b part 13): the maximum hit taken.
+    ("PhysicalMaximumHitTaken", "poe1.physical-maximum-hit-taken"),
+    ("FireMaximumHitTaken", "poe1.fire-maximum-hit-taken"),
+    ("ColdMaximumHitTaken", "poe1.cold-maximum-hit-taken"),
+    (
+        "LightningMaximumHitTaken",
+        "poe1.lightning-maximum-hit-taken",
+    ),
+    ("ChaosMaximumHitTaken", "poe1.chaos-maximum-hit-taken"),
+    (
+        "SecondMinimalMaximumHitTaken",
+        "poe1.second-minimal-maximum-hit-taken",
+    ),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

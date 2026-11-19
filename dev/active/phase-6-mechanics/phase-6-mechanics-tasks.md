@@ -142,7 +142,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-10b part 10: damage taken over time (`poe1::taken`, slice revision 18; `phases::resistance_in` for the over-time resistance; 15 rows); each field equal to PoB in 175 builds; `docs/phase-6/recovery.md`, "Part 10"
 - [x] P6-10b part 11: the chance to evade (`poe1::evade`, slice revision 19; `hit::pob_hit_chance`; Blind's less accuracy; Unwavering Stance); equal to PoB in 182 builds; `docs/phase-6/recovery.md`, "Part 11"
 - [x] P6-10b part 12: the enemy's hit (`poe1::enemy_hit`, slice revision 20; `CalcData::monster_damage`; 31 rows; fortification, delirium, Enfeeble; `BuffStat::Defence`); equal to PoB in 169 builds; `docs/phase-6/recovery.md`, "Part 12"
-- [ ] P6-10b further parts: maximum hit taken, EHP, a dual wielder's leech, soul costs (bundle needs `VaalSouls`), degeneration (D7), the reduction against a hit, maximum hit and EHP
+- [x] P6-10b part 13: maximum hit taken (`enemy_hit::maximum_hit`, slice revision 21; the three marker kinds; hit recently and moving settled); equal to PoB in 168 builds; `docs/phase-6/recovery.md`, "Part 13"
+- [ ] P6-10b further parts: EHP (`TotalEHP`, hits to die), a dual wielder's leech, soul costs (bundle needs `VaalSouls`), degeneration (D7), the reduction against a hit, maximum hit and EHP
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)
