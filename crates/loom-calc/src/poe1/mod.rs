@@ -33,6 +33,7 @@ pub mod full_dps;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
+pub mod item_supports;
 pub mod item_values;
 pub mod keystones;
 pub mod leech;
@@ -168,6 +169,11 @@ pub enum Poe1Quantity {
     /// item in a slot (P6-11q): `Base`, read by [`gem_levels::GemLevels`]
     /// for the gems of the groups in that slot.
     SocketedGemLevel(&'static str, gem_levels::GemSlot),
+    /// A support an item grants the gems in its slot, by the stat of
+    /// [`item_supports::ROWS`] (P6-11r): `Base`, the stat's value (the
+    /// support's level unless the row fixes it), read by
+    /// [`gem_levels::GemLevels`] for the groups in that slot.
+    ItemSupport(&'static str, gem_levels::GemSlot),
     /// A minion modifier (P3-8j): "Minions deal #% increased Damage" and
     /// kin, `Increased`. No minion is computed; only [`minions`] reads
     /// them, to give the character those a redirect names.
@@ -804,6 +810,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::SocketedGemLevel(stat, slot) => {
                 write!(f, "socketed-gem-level.{}.{stat}", slot.name())
+            }
+            Self::ItemSupport(stat, slot) => {
+                write!(f, "item-support.{}.{stat}", slot.name())
             }
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),

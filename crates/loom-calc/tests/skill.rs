@@ -705,3 +705,89 @@ fn real_gem_level_stats_should_have_pobs_keywords() {
         );
     }
 }
+
+/// Each item support row (P6-11r) names the gem its stat's English line
+/// names: the line is "... Supported by Level <n> <Name>", the bundle has
+/// a gem whose base item is "<Name> Support" (or "<Name>", a support),
+/// and the row's effects are that gem's first effect's support effects,
+/// as PoB's `extraSupport` adds them.
+/// Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_item_support_rows_should_name_their_gems() {
+    use loom_calc::poe1::item_supports::ROWS;
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let skills = data.skills.as_ref().unwrap();
+    let texts: Vec<(&str, &str)> = data
+        .stat_descriptions
+        .files()
+        .flat_map(|(_, f)| &f.descriptions)
+        .filter(|d| d.stats.len() == 1)
+        .flat_map(|d| {
+            d.variants
+                .iter()
+                .map(move |v| (d.stats[0].as_str(), v.text.as_str()))
+        })
+        .collect();
+    for (stat, level, effects) in ROWS {
+        // A stat can have several variants (one per value range): the row
+        // reads one whose level is the stat's value (`level` 0) or the
+        // fixed level.
+        let name = texts
+            .iter()
+            .filter(|(s, _)| *s == stat)
+            .find_map(|(_, text)| {
+                let (lead, rest) = text.split_once(" Supported by Level ")?;
+                let (n, name) = rest.split_once(' ')?;
+                let fits = if level == 0 {
+                    n.contains('{')
+                } else {
+                    n == level.to_string()
+                };
+                (lead.starts_with("Socketed ") && fits).then_some(name)
+            })
+            .unwrap_or_else(|| panic!("{stat}: no fitting text"));
+        // "<Name> Support" first, as PoB's `gemForBaseName` lookup.
+        let named = |wanted: &str| {
+            skills.gems.iter().find(|g| {
+                data.base_items
+                    .iter()
+                    .any(|b| b.id == g.base_item && b.name.eq_ignore_ascii_case(wanted))
+            })
+        };
+        // PoB's one hand entry in `gemIdLookup` (`ModParser.lua` 2033).
+        let name = if name == "Power Charge On Critical Strike" {
+            "Power Charge On Critical"
+        } else {
+            name
+        };
+        let gem = named(&format!("{name} Support"))
+            .or_else(|| named(name))
+            .unwrap_or_else(|| panic!("{stat}: no gem for {name}"));
+        let first = gem
+            .effects
+            .first()
+            .and_then(|id| skills.gem_effects.iter().find(|e| &e.id == id))
+            .unwrap_or_else(|| panic!("{stat}: no gem effect"));
+        // The gem's support effects (the bundle can list an active skill
+        // first, where PoB's gem table puts the support first).
+        let want: Vec<&str> = first
+            .granted_effect
+            .iter()
+            .chain(&first.additional_granted_effects)
+            .map(String::as_str)
+            .filter(|id| {
+                skills
+                    .granted_effects
+                    .iter()
+                    .any(|g| g.id == *id && g.support)
+            })
+            .collect();
+        assert_eq!(effects.to_vec(), want, "{stat}");
+    }
+}

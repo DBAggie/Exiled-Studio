@@ -2018,6 +2018,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportAwakenedViciousProjectiles", &[]),
     ("SupportAwakenedVoidManipulation", &[]),
     ("SupportBarrage", &[]),
+    // Blasphemy (P6-11r): the hex it supports becomes an aura (its types,
+    // so its curse priority and reservation), at its `CurseEffect` MORE
+    // ([`BLASPHEMY_CURSE_EFFECT_STAT`]); no global stat.
+    ("SupportBlasphemy", &[]),
     ("SupportBrutality", &[]),
     ("SupportBurningDamage", &[]),
     // Cast On Critical Strike's two parts (P6-8a; the awakened gem's attack
@@ -2160,6 +2164,10 @@ pub const LIFE_RESERVATION_SUPPORTS: &[&str] = &["SupportArrogance"];
 /// A curse gem's own curse effect stat (Despair's, a hex's quality):
 /// PoB's `CurseEffect` INC on the skill's own list (P6-9b).
 pub const OWN_CURSE_EFFECT_STAT: &str = "curse_effect_+%";
+
+/// Blasphemy's `CurseEffect` MORE on the curse it supports (P6-11r; PoB's
+/// `statMap`, a constant -25).
+pub const BLASPHEMY_CURSE_EFFECT_STAT: &str = "support_blasphemy_curse_effect_+%_final";
 
 /// A gem's own stats that scale the buff of the skill it is part of
 /// (PoB's `SkillStatMap.lua`: `golem_buff_effect_+%` 2089 is `BuffEffect`
@@ -3246,7 +3254,22 @@ fn one_skill(
                 .filter(|(stat, _)| stat == OWN_CURSE_EFFECT_STAT)
                 .map(|(_, v)| *v as f64)
                 .sum();
-            let scale = totals.curse_scale_with(own);
+            // The supports' `CurseEffect` MORE (Blasphemy's, P6-11r): PoB's
+            // `calcLib.mod` multiplies the increase by each more.
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "stat values are small integers, exact as f64"
+            )]
+            let more: f64 = s
+                .supports
+                .iter()
+                .flat_map(|sup| {
+                    skill::instance(sup.effect, sup.level, sup.quality, input.data).stats
+                })
+                .filter(|(stat, _)| stat == BLASPHEMY_CURSE_EFFECT_STAT)
+                .map(|(_, v)| 1.0 + v as f64 / 100.0)
+                .product();
+            let scale = totals.curse_scale_with(own) * more;
             if !instance.problems.is_empty() {
                 for p in &instance.problems {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
@@ -3682,7 +3705,27 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
         .supports
         .iter()
         .any(|sup| LIFE_RESERVATION_SUPPORTS.contains(&sup.effect.id.as_str()));
-    for r in &level.reservations {
+    // A support's own mana reservation share replaces the skill's (P6-11r:
+    // Blasphemy's; PoB sets `skillData.manaReservationPercent` from each
+    // support's level row, `CalcActiveSkill.lua` 516 and 517, the last
+    // one kept).
+    let from_support = s
+        .supports
+        .iter()
+        .filter_map(|sup| skill::effect_level(sup.effect, sup.level))
+        .filter_map(|l| {
+            l.reservations
+                .iter()
+                .find(|r| r.percent && r.resource == Resource::Mana)
+        })
+        .next_back();
+    let mut reservations: Vec<&loom_data::bundle::skills::Reservation> = level
+        .reservations
+        .iter()
+        .filter(|r| from_support.is_none() || !(r.percent && r.resource == Resource::Mana))
+        .collect();
+    reservations.extend(from_support);
+    for r in reservations {
         let pool = match r.resource {
             Resource::Mana if life_instead => Pool::Life,
             Resource::Mana => Pool::Mana,

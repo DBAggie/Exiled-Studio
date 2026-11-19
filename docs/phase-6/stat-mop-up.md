@@ -429,3 +429,37 @@ The 21 most frequent globally unmapped stats that PoB reads into no slice field 
 - **Socketed level stats:** unmapped in 1 build, from 22.
 - **Corpus:** 20 moved, 16 toward; 0 unexpected.
 - **Tests:** the unit tests for the slot rule and the table. The maintainer-run bundle test checks each row's keyword against its English text and the gem tags. The workspace tests and clippy pass.
+
+## P6-11r: supports an item grants
+
+**PoB** reads "Socketed Gems are Supported by Level N <Support>" (and the "Socketed <kind> Gems" and "Socketed Spells" forms) as `ExtraSupport` LIST modifiers `{ skillId, level }` tagged `SocketedIn` for the item's slot (`ModParser.lua` 2071 to 2104, 3371, 3372):
+- **The support:** the gem named "<name> Support", its granted effect and its secondary one when that is a support. A secondary effect that is a skill is an `ExtraSkill`.
+- **Adding them:** `CalcSetup.lua` 1525 to 1555 adds them to each group in the slot before the group's own supports, at the line's level and quality 0. A group an item grants gets none. No gem level modifier changes them.
+- **Joining:** the group's supports join by `addBestSupport` (338 to 367: the same granted effect is kept once, at the higher level, then the higher quality).
+- **The exclusion:** an item's support does not support a skill an item grants (`CalcTools.lua` 94).
+
+**The engine:**
+- **The table:** `loom_calc::poe1::item_supports::ROWS` has 203 rows, PoB's own parse of each stat's English line. A local script runs `modLib.parseMod` on the bundle's texts.
+  - 30 stats stay unmapped as reasons: 9 PoB does not parse, 19 that also grant a skill, and the two Chieftain lines that name a slot.
+  - A maintainer-run test checks every row against the bundle's texts and gems.
+- **Mapping and order:** on an item in an equipment slot, a row's stat maps to `Poe1Quantity::ItemSupport` for the slot (`gem_levels::InSlot`). `GemLevels` keeps them in order, and `skill`'s group effects put them first.
+  - Each one's gem index is past the group's gems, and `GemEffectRef::from_item` marks it.
+  - The group's supports join by PoB's `addBestSupport` (`skill::add_best`). PoB's `plusVersionOf` is not in the bundle.
+- **Blasphemy is modelled** (`gems::SUPPORTS`), because Heretic's Veil gives it:
+  - the hex it supports takes its types (an aura, so the aura curse priority, and a reservation);
+  - Blasphemy's `CurseEffect` MORE (-25%) on the curse;
+  - its level row's mana reservation share in place of the curse's (`CalcActiveSkill.lua` 516 and 517).
+  - Data parity's `gem_effects` table allows its added types and reservation; uncategorized stays 353.
+
+**PoB's supports checked:** the local probe on `penance-brand-ignite-elementalist.xml` lists PoB's main skill's supports with the item's Burning Damage at level 18. PoB's support cost multiplier, 2.8391, is 1.3 × 1.4 × 1.3 × 1.2: the item's support counts as the engine counts it.
+
+**Evidence** (`local/p6/p6-11r/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected; Complete 13,701, unchanged.
+- **Values:** 10 moved, 3 toward PoB.
+- **The seven that moved away:**
+  - `penance-brand-ignite-elementalist.xml`'s mana cost (57 to 75; PoB 45). The item's Burning Damage ×1.3 applies, as in PoB; the base cost differed before.
+  - `OccVortex.xml`'s evade chances and the EHP fields that follow them (8 to 6; PoB 13). Enfeeble now has Blasphemy's 25% less effect, as in PoB; the gap was there before.
+  - The same build's mana unreserved moved toward PoB (927 to -46; PoB 167). The two Blasphemy curses reserve 35% each. Heretic's Veil's "reduced reservation of socketed curse gems" and the build's Enlighten (an old skill ID) are reasons.
+- **Item support stats:** unmapped in 0 builds, from 10.
+- **Corpus:** 4 moved, 1 toward; the three mana costs rise by the item supports' multipliers. 0 unexpected.
+- **Tests:** the table's unit test; the maintainer-run rows test; the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

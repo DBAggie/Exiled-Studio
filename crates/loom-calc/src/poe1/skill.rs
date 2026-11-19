@@ -115,6 +115,9 @@ pub struct GemEffectRef<'d> {
     pub quality: i64,
     /// Whether the gem gains the socket colour bonus.
     pub socket: SocketMatch,
+    /// A support an item grants (P6-11r, [`super::item_supports`]): its
+    /// `gem` is past the group's gems.
+    pub from_item: bool,
 }
 
 /// The main skill.
@@ -441,6 +444,21 @@ pub fn type_expression(expr: &[String], types: &BTreeSet<String>, minion: &[Stri
     stack.into_iter().any(|v| v)
 }
 
+/// PoB's `addBestSupport` (`CalcSetup.lua` 338 to 367, P6-11r): a support
+/// whose granted effect is already in `list` replaces that one only with a
+/// higher level, or the same level and a higher quality; otherwise it
+/// joins the list. (`plusVersionOf` is not in the bundle.)
+fn add_best<'d>(list: &mut Vec<GemEffectRef<'d>>, support: GemEffectRef<'d>) {
+    match list.iter_mut().find(|o| o.effect.id == support.effect.id) {
+        Some(other) => {
+            if (support.level, support.quality) > (other.level, other.quality) {
+                *other = support;
+            }
+        }
+        None => list.push(support),
+    }
+}
+
 /// Whether `support` applies to an active effect with these types (module
 /// docs).
 fn supports(
@@ -593,6 +611,27 @@ fn group_effects<'d>(
         .slot
         .as_ref()
         .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
+    // The supports the slot's item grants come first, unless the group is
+    // an item's (P6-11r; PoB's `ExtraSupport`, `CalcSetup.lua` 1550 to
+    // 1555). Each has a gem index past the group's gems.
+    if let Some(slot) = slot
+        && attribute(&group.attributes, "source").is_none()
+    {
+        let count = group.gems.typed().count();
+        for (k, (id, level)) in levels.item_supports(slot).enumerate() {
+            if let Some(effect) = data.granted_effect(id).filter(|e| e.support) {
+                supports.push(GemEffectRef {
+                    gem: count + k,
+                    effect,
+                    level,
+                    bonus: 0,
+                    quality: 0,
+                    socket: SocketMatch::No,
+                    from_item: true,
+                });
+            }
+        }
+    }
     for (g, gem) in group.gems.typed().enumerate() {
         if !gem.enabled {
             continue;
@@ -613,9 +652,10 @@ fn group_effects<'d>(
                 bonus,
                 quality: i64::from(*gem.quality.value()) + socket.bonus(),
                 socket,
+                from_item: false,
             };
             if effect.support {
-                supports.push(r);
+                add_best(&mut supports, r);
             } else {
                 actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
             }
@@ -683,7 +723,7 @@ pub fn main_skill<'d>(
         .unwrap_or_default();
     let (mut applied, mut unapplied) = (Vec::new(), Vec::new());
     for s in group_supports {
-        if supports(s.effect, effect, from_gem, &types, minion) {
+        if (!s.from_item || from_gem) && supports(s.effect, effect, from_gem, &types, minion) {
             types.extend(s.effect.added_types.iter().cloned());
             applied.push(s);
         } else {
@@ -802,7 +842,7 @@ pub fn group_skills<'d>(
             .unwrap_or_default();
         let mut applied = Vec::new();
         for s in &group_supports {
-            if supports(s.effect, effect, from_gem, &types, minion) {
+            if (!s.from_item || from_gem) && supports(s.effect, effect, from_gem, &types, minion) {
                 types.extend(s.effect.added_types.iter().cloned());
                 applied.push(*s);
             }

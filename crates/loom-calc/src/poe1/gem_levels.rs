@@ -178,7 +178,10 @@ pub struct InSlot<'a> {
 
 impl StatMapping for InSlot<'_> {
     fn map(&self, stat: &StatId) -> StatMap {
-        match socketed_quantity(stat.as_str(), self.slot) {
+        // A support the item grants its socketed gems (P6-11r).
+        let support = super::item_supports::row(stat.as_str())
+            .map(|(id, _, _)| Quantity::Poe1(Poe1Quantity::ItemSupport(id, self.slot)));
+        match socketed_quantity(stat.as_str(), self.slot).or(support) {
             Some(quantity) => StatMap::Effects(vec![EffectTemplate {
                 quantity,
                 op: Op::Base,
@@ -273,6 +276,9 @@ pub struct GemLevels {
     totals: BTreeMap<&'static str, f64>,
     /// The socketed totals per slot and stat of [`SOCKETED_STATS`].
     socketed: BTreeMap<(GemSlot, &'static str), f64>,
+    /// The supports items grant (P6-11r): slot, row stat, level, in the
+    /// order the effects were added.
+    supports: Vec<(GemSlot, &'static str, i64)>,
 }
 
 impl GemLevels {
@@ -295,6 +301,7 @@ impl GemLevels {
     pub fn from_effects(effects: &[Effect]) -> Self {
         let mut totals = BTreeMap::new();
         let mut socketed = BTreeMap::new();
+        let mut supports = Vec::new();
         for e in effects {
             if matches!(e.source, Source::Gem { .. }) || e.op != Op::Base {
                 continue;
@@ -306,10 +313,42 @@ impl GemLevels {
                 Quantity::Poe1(Poe1Quantity::SocketedGemLevel(stat, slot)) => {
                     *socketed.entry((slot, stat)).or_insert(0.0) += e.value;
                 }
+                Quantity::Poe1(Poe1Quantity::ItemSupport(stat, slot)) => {
+                    let fixed = super::item_supports::row(stat).map_or(0, |(_, l, _)| l);
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "a gem level, a small integer stat value"
+                    )]
+                    let level = if fixed > 0 {
+                        fixed
+                    } else {
+                        e.value.round() as i64
+                    };
+                    supports.push((slot, stat, level));
+                }
                 _ => {}
             }
         }
-        Self { totals, socketed }
+        Self {
+            totals,
+            socketed,
+            supports,
+        }
+    }
+
+    /// The supports items grant the groups in `slot` (P6-11r): each
+    /// granted effect with its level, in PoB's order (the effects' order,
+    /// each row's effects in order).
+    pub fn item_supports(&self, slot: GemSlot) -> impl Iterator<Item = (&'static str, i64)> + '_ {
+        self.supports
+            .iter()
+            .filter(move |(s, _, _)| *s == slot)
+            .flat_map(|&(_, stat, level)| {
+                super::item_supports::row(stat)
+                    .map_or(&[][..], |(_, _, effects)| effects)
+                    .iter()
+                    .map(move |e| (*e, level))
+            })
     }
 
     /// The levels a gem with `tags` gains in a group in `slot` (`tags`
@@ -347,7 +386,7 @@ impl GemLevels {
     /// Whether the build has any gem level modifier.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.totals.is_empty() && self.socketed.is_empty()
+        self.totals.is_empty() && self.socketed.is_empty() && self.supports.is_empty()
     }
 }
 

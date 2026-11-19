@@ -489,6 +489,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // Automation triggers the skill it supports (close-out): the skill's
     // own kind says what it does.
     ("SupportAutomation", "Triggered"),
+    // Blasphemy makes the hex it supports an aura that reserves (P6-11r,
+    // `poe1::gems`): the curse takes the aura priority, and its reservation
+    // is Blasphemy's share (`RESERVING_SUPPORTS`).
+    ("SupportBlasphemy", "Aura"),
+    ("SupportBlasphemy", "HasReservation"),
     // The trigger supports the engine ports (P6-8a, `poe1::triggers`): the
     // trigger sets the supported spell's rate.
     ("SupportCastOnCritTriggered", "Triggered"),
@@ -501,6 +506,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
+
+/// Supports whose level rows carry a mana reservation share, which the
+/// engine takes in place of the supported skill's (P6-11r, `poe1::gems`'s
+/// reservation, as PoB's `CalcActiveSkill.lua` 516 and 517).
+const RESERVING_SUPPORTS: &[&str] = &["SupportBlasphemy"];
 
 /// Supports that add a minion to the skill they support, and the minion:
 /// its own skills grant the character nothing (Summon Phantasm: the
@@ -1152,6 +1162,11 @@ fn check_one(
             })
             .map(|(k, _)| k.clone())
             .collect();
+        let percent = if RESERVING_SUPPORTS.contains(&id) {
+            Vec::new()
+        } else {
+            percent
+        };
         out.check(
             TABLE,
             id,
