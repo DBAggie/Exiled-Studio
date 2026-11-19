@@ -154,6 +154,25 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             ),
         ],
     ),
+    // Eldritch Battery (P6-11ap): the tree's "Spend Energy Shield before
+    // Mana for Skill Mana Costs" (PoB parses it to nothing; the cost moves
+    // with the flag), "Energy Shield protects Mana instead of Life"
+    // (`EnergyShieldProtectsMana` FLAG), and "50% less Energy Shield
+    // Recharge Rate" (`EnergyShieldRecharge` MORE -50).
+    (
+        "keystone_eldritch_battery",
+        &[
+            flag(Poe1Quantity::EsProtectsMana),
+            (
+                Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
+    ),
     (
         "keystone_elemental_overload",
         &[

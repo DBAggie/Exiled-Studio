@@ -98,6 +98,9 @@ pub(super) struct Character {
     /// Any recoup (PoB's `anyRecoup` above 0; P6-11am): the mitigated
     /// estimate tracks recoupable damage, which limits its speed-up.
     pub(super) recoup: bool,
+    /// Eldritch Battery (PoB's `EnergyShieldProtectsMana`; P6-11ap): the
+    /// shield takes mind over matter's share before mana, not the hit.
+    pub(super) eb: bool,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -153,6 +156,16 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mana
         };
         let with_mana = life_pool + mom_pool;
+        if ch.eb && ty != DamageType::Chaos {
+            // `CalcDefence.lua` 254 to 256, with no bypass.
+            es_pools[i] = crate::math::floor(
+                max_mom
+                    .min(energy_shield)
+                    .min(with_mana / (1.0 - effect) - with_mana),
+            );
+            mom_pools[i] = crate::math::floor((max_mom - es_pools[i]).min(mom_pool));
+            continue;
+        }
         es_pools[i] = if ty == DamageType::Chaos {
             crate::math::floor((with_mana / 1.0 - with_mana).min(energy_shield))
         } else {
@@ -172,7 +185,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             guard = crate::math::floor(guard - taken);
             remainder -= taken;
         }
-        if energy_shield > 0.0 && bypass < 1.0 {
+        if energy_shield > 0.0 && bypass < 1.0 && !ch.eb {
             let taken = (remainder * (1.0 - bypass)).min(es_pools[i]);
             for (j, pool) in es_pools.iter_mut().enumerate() {
                 if damage[j].is_some() {
@@ -184,7 +197,20 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         }
         let effect = ch.mom[i];
         if effect > 0.0 {
-            let mom_damage = crate::math::ceil(remainder * effect);
+            let mut mom_damage = crate::math::ceil(remainder * effect);
+            // Eldritch Battery's shield takes the share first (`CalcDefence.lua`
+            // 330 to 339).
+            if ch.eb && energy_shield > 0.0 && bypass < 1.0 {
+                let taken = crate::math::ceil((mom_damage * (1.0 - bypass)).min(es_pools[i]));
+                for (j, pool) in es_pools.iter_mut().enumerate() {
+                    if damage[j].is_some() {
+                        *pool = crate::math::floor((*pool - taken).max(0.0));
+                    }
+                }
+                energy_shield -= taken;
+                remainder -= taken;
+                mom_damage -= taken;
+            }
             let taken = crate::math::ceil(mom_damage.min(mom_pools[i]));
             for (j, pool) in mom_pools.iter_mut().enumerate() {
                 if damage[j].is_some() {
@@ -463,6 +489,7 @@ mod tests {
             guard_rate: 0.0,
             guard: 0.0,
             recoup: false,
+            eb: false,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -490,6 +517,7 @@ mod tests {
             guard_rate: 75.0,
             guard: 1000.0,
             recoup: false,
+            eb: false,
         };
         let pools = Pools {
             life: ch.life,

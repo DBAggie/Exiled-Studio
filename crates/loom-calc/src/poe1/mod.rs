@@ -299,6 +299,11 @@ pub enum Poe1Quantity {
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
     ArmourEsRecoveryCap,
+    /// Energy shield protects mana instead of life (PoB's
+    /// `EnergyShieldProtectsMana`; P6-11ap, Eldritch Battery): a `Flag`,
+    /// read by [`enemy_hit`] and [`ehp`] for the pools and by [`costs`] for
+    /// the mana cost per second, paid with energy shield.
+    EsProtectsMana,
     /// Physical damage prevented regenerated as energy shield, percent
     /// (PoB's `PhysicalDamageMitigatedEnergyShieldPseudoRecoup`; P6-11am,
     /// Divine Shield): `Base`. It reaches no field itself; any recoup makes
@@ -1013,6 +1018,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
+            Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),

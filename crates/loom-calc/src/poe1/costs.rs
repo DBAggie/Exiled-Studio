@@ -261,6 +261,13 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let added = share_of(calc, mana, as_es)?;
         es = phases::total(calc, &[es, added], Term::Step("energy-shield-from-mana"))?;
     }
+    // Eldritch Battery (P6-11ap; `CalcOffence.lua` 5793 to 5825): the mana
+    // cost per second is paid with energy shield (`ESPerSecondCost`), and
+    // the energy shield cost's own is then skipped unless mana's cost is
+    // also moved to energy shield (a sum the engine leaves as a reason).
+    let eb = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsProtectsMana))
+        && flag(calc, Poe1Quantity::EsProtectsMana, flags, &mut reasons)?;
+    let mut es_from_mana = false;
     // The second pass: each resource's modifiers.
     for (r, final_base) in [
         (Resource::Mana, mana),
@@ -289,7 +296,25 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             cost = round(calc, scaled, false, Term::Result)?;
         }
         calc.set_derived(r.field(), phases::query(cost, reasons), &[]);
-        per_second(calc, &skill, r, cost, &source)?;
+        match r {
+            Resource::Mana if eb => {
+                es_from_mana = per_second(calc, &skill, r, Resource::EnergyShield, cost, &source)?;
+            }
+            Resource::EnergyShield if es_from_mana => {
+                if as_es.value != 0.0 && cost.value > 0.0 {
+                    calc.set_unsupported(
+                        r.per_second(),
+                        UnsupportedReason::UnmodelledSkill {
+                            source: source.clone(),
+                            what: "eldritch-battery-cost-per-second",
+                        },
+                    );
+                }
+            }
+            _ => {
+                per_second(calc, &skill, r, r, cost, &source)?;
+            }
+        }
     }
     Ok(())
 }
@@ -390,19 +415,20 @@ fn modified(
 /// above 0, the cost times the skill's `Speed` over its repeat count
 /// (each repeat is a use that costs nothing; P6-11aj). A trap's, a mine's, or a totem's (their throwing,
 /// laying, or placement speed) is not modelled and leaves the field
-/// unsupported; Eldritch Battery's energy shield cost instead is an
-/// unmapped stat, so a reason. No field without a cost or a computed
-/// `Speed`.
+/// unsupported. Eldritch Battery pays the mana cost with energy shield
+/// (`into`, P6-11ap). No field without a cost or a computed `Speed`.
+/// Whether PoB sets the field (its `<into>PerSecondHasCost`).
 fn per_second(
     calc: &mut Calc<'_>,
     skill: &super::skill::MainSkill<'_>,
     r: Resource,
+    into: Resource,
     cost: Valued,
     source: &Source,
-) -> Result<(), CalcError> {
-    let field = r.per_second();
+) -> Result<bool, CalcError> {
+    let field = into.per_second();
     if cost.value <= 0.0 {
-        return Ok(());
+        return Ok(false);
     }
     if ["Trapped", "RemoteMined", "SummonsTotem"]
         .iter()
@@ -415,7 +441,7 @@ fn per_second(
                 what: "cost-per-second",
             },
         );
-        return Ok(());
+        return Ok(true);
     }
     let Some(speed) = calc.field(Field::Speed).and_then(|r| {
         Some(Valued {
@@ -423,7 +449,7 @@ fn per_second(
             value: r.value?,
         })
     }) else {
-        return Ok(());
+        return Ok(false);
     };
     // PoB's `useSpeed = Speed / repeats`, then the cost times it.
     let repeats = phases::constant(calc, "repeats", super::repeats::count(calc))?;
@@ -446,7 +472,7 @@ fn per_second(
         phases::query(value, Reasons::new()),
         &[r.field(), Field::Speed],
     );
-    Ok(())
+    Ok(true)
 }
 
 /// Whether `quantity` is one the costs read.
@@ -468,6 +494,7 @@ const fn is_cost(quantity: Quantity) -> bool {
                 | Poe1Quantity::HybridLifeCost
                 | Poe1Quantity::ManaCostAsLifeCost
                 | Poe1Quantity::ManaCostAsEnergyShieldCost
+                | Poe1Quantity::EsProtectsMana
                 | Poe1Quantity::CostReason(_)
         )
     )

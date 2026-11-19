@@ -3705,6 +3705,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ap: "Energy Shield protects Mana instead of Life"
+    // (`EnergyShieldProtectsMana` FLAG).
+    (
+        "energy_shield_protects_mana",
+        &[(Quantity::Poe1(Poe1Quantity::EsProtectsMana), Op::Flag, 1.0)],
+    ),
     // P6-10b: "#% increased Energy Shield Recharge Rate"
     // (`EnergyShieldRecharge` INC).
     (

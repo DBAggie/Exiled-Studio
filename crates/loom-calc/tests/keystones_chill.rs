@@ -19,7 +19,12 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 12] = [
+const TEXTS: [(&str, &str); 13] = [
+    // P6-11ap: Eldritch Battery.
+    (
+        "keystone_eldritch_battery",
+        "Spend Energy Shield before Mana for Skill Mana Costs\\nEnergy Shield protects Mana instead of Life\\n50% less Energy Shield Recharge Rate",
+    ),
     (
         "keystone_glancing_blows",
         "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",

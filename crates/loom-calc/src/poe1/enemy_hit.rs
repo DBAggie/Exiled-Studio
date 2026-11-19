@@ -617,6 +617,14 @@ fn maximum_hit(
         pool_reasons.extend(&q.reasons);
         q.value != 0.0
     };
+    // Eldritch Battery (P6-11ap): energy shield protects mana instead of
+    // life. Checked with `has` first, so a build without it gains no node.
+    let eb = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsProtectsMana)) && {
+        let (store, graph) = calc.parts();
+        let q = store.flag(graph, Quantity::Poe1(Poe1Quantity::EsProtectsMana), &cx)?;
+        pool_reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
     let armour_value = value(calc, Field::Armour).unwrap_or(0.0);
     let low_es = super::conditions::check(set, LOW_ES_INPUT) == Some(true);
     let capping = (armour_cap && armour_value < es) || low_es;
@@ -711,8 +719,15 @@ fn maximum_hit(
     for (i, ty) in TYPES.into_iter().enumerate() {
         // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291).
         let bypass = if ty == DamageType::Chaos { 100.0 } else { 0.0 };
-        let with_mana = mom_hit_pool(life_pool, mom[i], mana);
-        pools[i] = if bypass < 100.0 {
+        let with_mana = mom_hit_pool(
+            life_pool,
+            mom[i],
+            mana,
+            (eb && bypass < 100.0).then_some(es),
+        );
+        // With Eldritch Battery the shield is in the mind over matter pool
+        // alone (`CalcDefence.lua` 2536 to 2552).
+        pools[i] = if bypass < 100.0 && !eb {
             with_mana + es
         } else {
             with_mana
@@ -931,6 +946,7 @@ fn maximum_hit(
             guard_rate,
             guard,
             recoup,
+            eb,
         };
         super::ehp::estimate(
             calc,
@@ -944,18 +960,25 @@ fn maximum_hit(
     Ok(())
 }
 
-/// PoB's `calcMoMEBPool` without Eldritch Battery (`CalcDefence.lua` 2309
-/// to 2321): the life pool with the mana mind over matter can take
-/// (`floor(min(mana, life / (1 - share) - life))`).
-fn mom_hit_pool(life_pool: f64, share: f64, mana: f64) -> f64 {
+/// PoB's `calcMoMEBPool` (`CalcDefence.lua` 2309 to 2321): the life pool
+/// with the mana mind over matter can take (`floor(min(mana, life / (1 -
+/// share) - life))`), and with Eldritch Battery (`es`, the shield of a type
+/// that does not bypass it; P6-11ap) the shield that protects that mana
+/// first, `floor(min(es, max, (life + mana) / (1 - share) - (life +
+/// mana)))`, the mana used then what the shield leaves of the maximum.
+fn mom_hit_pool(life_pool: f64, share: f64, mana: f64, es: Option<f64>) -> f64 {
     let max_pool = if share < 1.0 {
         life_pool / (1.0 - share) - life_pool
     } else {
         f64::INFINITY
     };
     let usable = crate::math::floor(mana.min(max_pool));
-    let used = crate::math::floor((max_pool - 0.0).min(usable));
-    life_pool + used
+    let shield = es.map_or(0.0, |es| {
+        let with_mana = life_pool + usable;
+        crate::math::floor(es.min(max_pool).min(with_mana / (1.0 - share) - with_mana))
+    });
+    let used = crate::math::floor((max_pool - shield).min(usable));
+    life_pool + used + shield
 }
 
 /// PoB's `data.misc.AvoidChanceCap`.
@@ -1016,6 +1039,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::BlockGain(_)
                 | Poe1Quantity::SuppressionLucky
                 | Poe1Quantity::ArmourEsRecoveryCap
+                | Poe1Quantity::EsProtectsMana
                 | Poe1Quantity::PseudoRecoup
         )
     )

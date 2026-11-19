@@ -1024,3 +1024,35 @@ Both match PoB on every computed field.
   - The build stays far below PoB's for other reasons (maximum hit 37,014 against 106,161).
 - **Corpus:** the same build moves the same way; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ap: Eldritch Battery
+
+**PoB:** the keystone's lines are:
+- "Spend Energy Shield before Mana for Skill Mana Costs": PoB parses it to nothing (`ModParser.lua` 2310). The cost moves with the next line's flag.
+- "Energy Shield protects Mana instead of Life" (`EnergyShieldProtectsMana`):
+  - **Pools:** the shield leaves the hit pool (`CalcDefence.lua` 2536 to 2552) and enters mind over matter's pool, before the mana (`calcMoMEBPool`, 2309 to 2321).
+  - **Simulated hits:** in `reducePoolsByDamage`, the shield takes mind over matter's share before mana does (254 to 256, 319 to 339).
+  - **Cost per second:** the mana cost per second becomes `ESPerSecondCost` (`CalcOffence.lua` 5793 to 5825).
+- "50% less Energy Shield Recharge Rate" (`EnergyShieldRecharge` MORE -50).
+
+**The engine:**
+- **Mapping:** a `keystones` row with a new flag `Poe1Quantity::EsProtectsMana` and the recharge MORE -50. The standalone stat `energy_shield_protects_mana` is a row with the same flag.
+- **`enemy_hit`:** `mom_hit_pool` is PoB's `calcMoMEBPool` in full. With the flag, the shield of a type that does not bypass it (all but chaos) is in that pool and not added to the hit pool. The flag is read only when present (`phases::has`), so no other build gains a graph node.
+- **`ehp`:** `Character.eb`. The pools start as PoB's, and the shield takes the mana share first.
+- **`costs`:** under the flag, the mana cost per second is set as `ESPerSecondCost`.
+  - **The energy shield cost's own per second:** PoB then skips it.
+  - **Mana cost also moved to energy shield:** PoB adds both, which the engine leaves as a reason (`eldritch-battery-cost-per-second`).
+- **Tests:** `tests/keystones_chill.rs` carries the keystone's text.
+
+**New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
+- `eldritch-battery-ice-nova-witch.xml`: the keystone without mind over matter. The shield is in no pool (maximum hit 1,125 physical), recharge is 134, and energy shield per second is 32.86.
+- `eldritch-battery-mom-ice-nova-witch.xml`: with 40% mind over matter. The shield fills the mana share first (maximum hit 1,875 physical, total effective health pool 1,448.3).
+
+**Evidence** (`local/p6/p6-11ap/`):
+- **Public `calc-parity`:** 230 builds, 292 expected, 0 unexpected; match 14,886 to 15,040 (the fixtures).
+- **Moved values:** 1 toward PoB (animate-guardian-guardian's recharge, 880 to 440 against PoB's 412).
+- **Corpus:** 0 unexpected; 9 values toward PoB, 7 away.
+  - The 7 away are one build's maximum hit and effective health pool. PoB applies the keystone there too: its `ESPerSecondCost` is set and the recharge moved toward it.
+  - That build already had less energy shield than PoB (457 against 680) and negative unreserved mana (-286 against 80). With the shield in mind over matter's pool, those gaps now show in the maximum hit.
+- **Data parity:** `uncategorized` 353, unchanged.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
