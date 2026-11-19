@@ -40,6 +40,12 @@
 //! - **Non-instant spells cast recently** (`ConfigOptions.lua` 1493): the
 //!   config's count; "#% increased Cast Speed for each different
 //!   Non-Instant Spell you've Cast Recently" (`ModParser.lua` 1850).
+//! - **Auras and heralds affecting you** (P6-11s; `CalcPerform.lua` 2112
+//!   to 2126): PoB's `Multiplier:Herald` plus `Multiplier:AuraAffectingSelf`
+//!   ("for each of your Aura or Herald Skills affecting you", `ModParser.lua`
+//!   1398), counted from the skills' types
+//!   ([`super::gems::aura_or_herald_count`]); "#% increased Damage for each
+//!   of your Aura or Herald Skills affecting you".
 //!
 //! A config value PoB would read otherwise than a number is a reason under
 //! its input. Other modifiers that read or change these counts (rage
@@ -71,6 +77,8 @@ pub enum StackKind {
     Intensity,
     /// Different non-instant spells cast recently.
     NonInstantSpells,
+    /// Aura and herald skills affecting you (P6-11s).
+    AuraOrHerald,
 }
 
 impl StackKind {
@@ -83,6 +91,7 @@ impl StackKind {
             Self::Momentum => "momentum",
             Self::Intensity => "intensity",
             Self::NonInstantSpells => "non-instant-spells",
+            Self::AuraOrHerald => "aura-or-herald",
         }
     }
 }
@@ -129,6 +138,8 @@ pub enum PerStack {
     ElementalDamageMore,
     /// More area damage (`Damage` MORE, `ModFlag.Area`).
     AreaDamageMore,
+    /// Increased damage (`Damage` INC).
+    Damage,
 }
 
 impl PerStack {
@@ -141,6 +152,7 @@ impl PerStack {
             Self::CritChance => "per.crit-chance",
             Self::ElementalDamageMore => "per.elemental-damage-more",
             Self::AreaDamageMore => "per.area-damage-more",
+            Self::Damage => "per.damage",
         }
     }
 
@@ -161,6 +173,7 @@ impl PerStack {
                 (Quantity::Damage, Op::More, Flags::NONE, Flags::ELEMENTAL)
             }
             Self::AreaDamageMore => (Quantity::Damage, Op::More, Flags::AREA, Flags::NONE),
+            Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE, Flags::NONE),
         }
     }
 }
@@ -182,6 +195,11 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "critical_strike_chance_+%_per_righteous_charge",
         StackKind::Inspiration,
         StackValue::Per(PerStack::CritChance),
+    ),
+    (
+        "damage_+%_per_your_aura_or_herald_skill_affecting_you",
+        StackKind::AuraOrHerald,
+        StackValue::Per(PerStack::Damage),
     ),
     (
         "elemental_damage_+%_final_per_righteous_charge",
@@ -444,6 +462,36 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Ok(Some(n)) => apply(ingest, &effects, multiplier(n), None),
         }
     }
+}
+
+/// Adds the effects per aura or herald skill affecting the character
+/// (P6-11s, module docs): the count from the skills, after every source of
+/// such effects.
+pub fn aura_or_herald(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::AuraOrHerald,
+                    StackValue::Per(_)
+                ))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "a small count of skills, exact as f64"
+    )]
+    let n = super::gems::aura_or_herald_count(input) as f64;
+    apply(ingest, &effects, multiplier(n), None);
 }
 
 /// Each effect per stack as its target times `count`, with its source (or

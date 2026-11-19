@@ -2472,6 +2472,50 @@ pub fn affected_by(input: &CalcInput<'_>, levels: &GemLevels) -> BTreeSet<&'stat
     out
 }
 
+/// PoB's `Multiplier:Herald` plus `Multiplier:AuraAffectingSelf`
+/// (P6-11s; `CalcPerform.lua` 2112 to 2126): over the skills of the main
+/// group and the enabled groups in an enabled slot, the distinct skills
+/// whose types (the supports' added ones included) hold `Herald`, and the
+/// distinct others that hold `Aura` but not `AuraAffectsEnemies` and that
+/// no Generosity supports (`auraCannotAffectSelf`, `sup_str.lua` 2706 and
+/// 2773). Distinct by granted effect, as PoB by skill name.
+#[must_use]
+pub fn aura_or_herald_count(input: &CalcInput<'_>) -> usize {
+    const GENEROSITY: [&str; 2] = ["SupportGenerosity", "SupportAwakenedGenerosity"];
+    let build = input.build;
+    let levels = GemLevels::none();
+    let Ok(groups) = skill::active_groups(build) else {
+        return 0;
+    };
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let (mut heralds, mut auras) = (BTreeSet::new(), BTreeSet::new());
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, &levels) {
+            let id = s.active_gem.effect.id.as_str();
+            if s.types.contains("Herald") {
+                heralds.insert(id);
+            } else if s.types.contains("Aura")
+                && !s.types.contains("AuraAffectsEnemies")
+                && !s
+                    .supports
+                    .iter()
+                    .any(|sup| GENEROSITY.contains(&sup.effect.id.as_str()))
+            {
+                auras.insert(id);
+            }
+        }
+    }
+    heralds.len() + auras.len()
+}
+
 /// What the table says about an active skill.
 #[must_use]
 pub fn kind(id: &str) -> Option<Kind> {

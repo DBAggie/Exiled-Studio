@@ -463,3 +463,21 @@ The 21 most frequent globally unmapped stats that PoB reads into no slice field 
 - **Item support stats:** unmapped in 0 builds, from 10.
 - **Corpus:** 4 moved, 1 toward; the three mana costs rise by the item supports' multipliers. 0 unexpected.
 - **Tests:** the table's unit test; the maintainer-run rows test; the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11s: damage per aura or herald affecting you
+
+**PoB** counts `Multiplier:Herald` and `Multiplier:AuraAffectingSelf` over the active skills (`CalcPerform.lua` 2112 to 2126):
+- a skill whose types hold `Herald` counts once per skill name;
+- otherwise a skill holding `Aura` counts once per name, but not when it also holds `AuraAffectsEnemies` or Generosity supports it (`auraCannotAffectSelf`).
+
+"for each of your Aura or Herald Skills affecting you" reads both (`ModParser.lua` 1398).
+
+**The engine:**
+- **The count:** `gems::aura_or_herald_count` counts the same over the main group and the enabled groups in an enabled slot, from each skill's types with its supports' added ones.
+- **The row:** `poe1::stacks` has a new kind, `AuraOrHerald`, whose per-count effect is `Damage` INC (`damage_+%_per_your_aura_or_herald_skill_affecting_you`). It is applied after the stacks.
+
+**Evidence** (`local/p6/p6-11s/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected; Complete 13,701; no value moved.
+- **Corpus:** 7 values moved, all toward PoB; 0 unexpected.
+- **The stat:** unmapped in 0 builds, from 6.
+- **Tests:** the workspace tests and clippy pass.
