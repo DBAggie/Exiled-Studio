@@ -582,7 +582,7 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - The stat is a state row (`mapping::STATE_ROWS`) and leaves `MOVEMENT_REASONS`.
 
 **Not done here, with why:** the other single-condition lines are not settled by a plain config check alone.
-- **Full life** (`FullLife`): PoB also derives it from the life left unreserved (`CalcPerform.lua` 76 to 83).
+- **Full life** (`FullLife`): PoB also derives it from the life left unreserved (`CalcPerform.lua` 76 to 83). Corrected in P6-11ai: only Chaos Inoculation sets it there.
 - **Life flask use** (`UsingLifeFlask`): PoB derives it from active flasks.
 - **Minion skill used recently** (`UsedMinionSkillRecently`): PoB also derives it from the main skill.
 - **Exposure inflicted recently** (`AppliedExposureRecently`): PoB derives it from exposure applied.
@@ -833,4 +833,22 @@ All three match PoB on every computed field (231), including each type's maximum
   - The rest of that gap is the build's own fire maximum (80, PoB 90): a reason the build already carried.
 - **Corpus:** 37 values moved, all toward PoB; 28 now equal it. 0 unexpected.
 - **The two stats:** no longer unmapped.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ai: on full life
+
+**PoB** sets `FullLife` from the config's `conditionFullLife` (`ConfigOptions.lua` 174). The only other source is Chaos Inoculation (`CalcPerform.lua` 79 to 83). P6-11w's note said it was also derived from the life left unreserved; that was wrong, and `FullLifePercentage` is a tooltip value alone (P6-11ad).
+- **Spell suppression:** "+#% chance to Suppress Spell Damage while on Full Life" is `SpellSuppressionChance` BASE with `FullLife`.
+- **Attack speed:** "#% increased Attack Speed when on Full Life" is `Speed` INC with attacks and `FullLife`.
+
+**The engine:**
+- **`poe1::conditions`:** settles `FullLife` from the check. The check leaves `config::NAMED_ONLY`.
+- **Chaos Inoculation:** its keystone stat is unmapped, so such a build is `Partial` everywhere.
+- **The two lines:** state rows (`mapping::STATE_ROWS`).
+
+**Evidence** (`local/p6/p6-11ai/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected; match unchanged at 13,894; no value moved.
+- **Corpus:** 5 values moved, 0 unexpected.
+  - **Toward PoB:** spell suppression from 54 to 64 (PoB 65), and the damage chance with it.
+  - **Away from PoB:** three of the same build's estimate fields, hits and total EHP. They were already above PoB's for other reasons, and the extra suppression raises them further. The build is `Partial`.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

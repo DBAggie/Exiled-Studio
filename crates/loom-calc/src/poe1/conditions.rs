@@ -18,6 +18,8 @@
 //!   `BlockedAttackRecently` and `BlockedSpellRecently`;
 //! - `conditionOnBurningGround`: `OnBurningGround` (1163; P6-11w; its
 //!   implied `Burning` is the UI's alone);
+//! - `conditionFullLife`: `FullLife` (174; P6-11ai; Chaos Inoculation's
+//!   too, whose keystone is unmapped);
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
 //! - `conditionEnemyLowLife`: the enemy's `LowLife` (1777; P6-9e, read by
 //!   Punishment's hex, `gems::SKILLS`);
@@ -96,6 +98,11 @@ pub const MOVING: &str = "Moving";
 /// "while on Burning Ground" (PoB's `OnBurningGround`, from
 /// `conditionOnBurningGround`, `ConfigOptions.lua` 1163; P6-11w).
 pub const ON_BURNING_GROUND: &str = "OnBurningGround";
+/// "while on Full Life" (PoB's `FullLife`, from `conditionFullLife`,
+/// `ConfigOptions.lua` 174; P6-11ai). PoB sets it otherwise only for Chaos
+/// Inoculation (`CalcPerform.lua` 79 to 83), whose keystone stat is
+/// unmapped, a reason on every field.
+pub const FULL_LIFE: &str = "FullLife";
 /// The count of hits taken recently, which sets [`BEEN_HIT_RECENTLY`]
 /// above 0 (`ConfigOptions.lua`).
 pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
@@ -146,6 +153,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
+    ("conditionFullLife", FULL_LIFE),
     ("conditionKilledRecently", KILLED_RECENTLY),
     ("conditionMoving", MOVING),
     ("conditionOnBurningGround", ON_BURNING_GROUND),
@@ -315,7 +323,7 @@ mod tests {
             "conditionAtCloseRange",
             &ConfigValue::String("x".into())
         ));
-        assert!(!handles("conditionFullLife", &ConfigValue::Boolean(true)));
+        assert!(handles("conditionFullLife", &ConfigValue::Boolean(true)));
         assert!(!handles("conditionStationary", &ConfigValue::Boolean(true)));
     }
 }

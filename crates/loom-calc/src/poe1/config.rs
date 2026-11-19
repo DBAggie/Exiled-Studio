@@ -77,9 +77,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   line 514); read by the skill stat map of the gems that grant it.
 /// - `bloodSandStance` moved to [`super::gems`] in the Phase 3 close-out
 ///   (Flesh and Stone's Blood Stance row reads it).
-/// - `conditionBeenHitRecently`, `conditionChilledEnemyRecently`,
-///   `conditionFullLife`: the condition of that name (lines 1375, 1339,
-///   174; the blocked-recently checks moved to [`super::conditions`] in
+/// - `conditionBeenHitRecently`, `conditionChilledEnemyRecently`: the
+///   condition of that name (lines 1375, 1339; `conditionFullLife` moved
+///   to [`super::conditions`] in P6-11ai; the blocked-recently checks moved to [`super::conditions`] in
 ///   P6-11g, as "+# Armour if you've Blocked Recently" reads them); the
 ///   calc modules read them
 ///   only through modifiers
@@ -313,7 +313,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
     ("conditionFocused", &["Condition:Focused"]),
-    ("conditionFullLife", &["Condition:FullLife"]),
     ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
     ("conditionHitRecently", &["Condition:HitRecently"]),
     (

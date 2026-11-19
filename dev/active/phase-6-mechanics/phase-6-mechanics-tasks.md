@@ -167,6 +167,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11k: the equipped shield's energy shield and defences (`Poe1Quantity::SlotIncreased`, a piece's own modifier), the effect of your auras on you (`SkillAuraEffectOnSelf`); fixture `ice-nova-shield-defences-aura-self-witch.xml`; 34 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11k"
 - [x] P6-11l: more maximum life with at least 6 Life Masteries (`PassiveKind::life_mastery`, `states::SIX_LIFE_MASTERIES`); three corpus builds' Life equal to PoB; `docs/phase-6/stat-mop-up.md`, "P6-11l"
 - [x] P6-11m: 21 `NoEffect` rows (PoB-parsed, no slice field); global unmapped pairs 418 to 407; `docs/phase-6/stat-mop-up.md`, "P6-11m"
+- [x] P6-11ai: on full life (`conditions::FULL_LIFE`); `docs/phase-6/stat-mop-up.md`, "P6-11ai"
 - [x] P6-11ah: fire resistance modifiers applying to cold and lightning (`poe1::resist_conversion`); `docs/phase-6/stat-mop-up.md`, "P6-11ah"
 - [x] P6-11ag: heralds' mana reservation efficiency (`skill_modifiers::Totals::reservation_for`); `docs/phase-6/stat-mop-up.md`, "P6-11ag"
 - [x] P6-11af: Efficacy as hit rows, damage per herald (`stacks::StackKind::Herald`); `docs/phase-6/stat-mop-up.md`, "P6-11af"

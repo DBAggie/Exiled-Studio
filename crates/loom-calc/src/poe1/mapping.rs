@@ -2255,6 +2255,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_SHIELD,
         )],
     ),
+    // P6-11ai: "+#% chance to Suppress Spell Damage while on Full Life"
+    // (`SpellSuppressionChance` BASE, `FullLife`) and "#% increased Attack
+    // Speed when on Full Life" (`Speed` INC with attacks, `FullLife`).
+    (
+        "attack_speed_+%_when_on_full_life",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::FULL_LIFE,
+        )],
+    ),
     // P6-11o: "#% increased Attack Speed while affected by Precision".
     (
         "attack_speed_+%_while_affected_by_precision",
@@ -2680,6 +2692,11 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "spell_suppression_chance_%_while_affected_by_grace",
         &[(SUPPRESSION, Op::Base, NONE, "AffectedByGrace")],
+    ),
+    // P6-11ai: see "attack_speed_+%_when_on_full_life".
+    (
+        "spell_suppression_chance_%_while_on_full_life",
+        &[(SUPPRESSION, Op::Base, NONE, conditions::FULL_LIFE)],
     ),
     (
         "staff_block_%",
@@ -7064,6 +7081,20 @@ mod tests {
                     NONE,
                     conditions::KILLED_RECENTLY,
                 )],
+            ),
+            // P6-11ai: on full life.
+            (
+                "attack_speed_+%_when_on_full_life",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::FULL_LIFE,
+                )],
+            ),
+            (
+                "spell_suppression_chance_%_while_on_full_life",
+                vec![config(SUPPRESSION, Op::Base, NONE, conditions::FULL_LIFE)],
             ),
             // P6-11w: movement speed on burning ground.
             (
