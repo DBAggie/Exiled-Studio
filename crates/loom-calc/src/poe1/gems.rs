@@ -393,13 +393,41 @@ pub const SKILLS: &[(&str, Kind)] = &[
             effect: EffectType::Buff,
             stats: &[
                 ("base_immune_to_freeze", BuffStat::NoSlice("freeze")),
+                // P6-11z: `<Type>DamageTakenWhenHit` MORE while
+                // `Stationary` (`act_dex.lua` 588 to 593).
                 (
                     "new_arctic_armour_fire_damage_taken_when_hit_+%_final",
-                    BuffStat::Defence("damage-taken"),
+                    BuffStat::WhenState {
+                        state: super::conditions::STATIONARY,
+                        var: "Stationary",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                                TakenWhen::Hit,
+                                TakenOf::Type(DamageType::Fire),
+                            )),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "new_arctic_armour_physical_damage_taken_when_hit_+%_final",
-                    BuffStat::Defence("damage-taken"),
+                    BuffStat::WhenState {
+                        state: super::conditions::STATIONARY,
+                        var: "Stationary",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                                TakenWhen::Hit,
+                                TakenOf::Type(DamageType::Physical),
+                            )),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
             ],
         },

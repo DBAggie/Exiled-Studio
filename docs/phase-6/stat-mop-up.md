@@ -643,3 +643,20 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **`data-parity`:** `gem_effects` 1,612 values compared, 0 differences; uncategorized 353, unchanged.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
 - **Not committed:** the first run, without the `SkillMapping` fix, put an `unmapped-stat` reason on every field of 3 builds.
+
+## P6-11z: Arctic Armour's damage taken while stationary
+
+**PoB** (`act_dex.lua` 588 to 593) reads Arctic Armour's `new_arctic_armour_physical_damage_taken_when_hit_+%_final` and its fire counterpart as `PhysicalDamageTakenWhenHit` and `FireDamageTakenWhenHit` MORE.
+- Each is a `Buff` with the `Stationary` condition. The config's `conditionStationary` count settles that condition (`poe1::conditions`, P6-10b).
+
+**The engine:** the two stats, which were `Defence` markers, are `BuffStat::WhenState` rows on `conditions::STATIONARY`. `data-parity` names them `<Type>DamageTakenWhenHit`.
+
+**Evidence** (`local/p6/p6-11z/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected.
+  - Match went from 13,563 to 13,607.
+  - 18 values moved, all toward PoB; 10 now equal it.
+  - 44 fields went from partial to complete.
+- **Corpus:** 17 values moved, all toward PoB; 1 now equals it. 0 unexpected.
+- **The two stats:** no longer unmapped anywhere; they were in 7 builds.
+- **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

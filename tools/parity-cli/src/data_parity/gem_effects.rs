@@ -657,6 +657,10 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)) => {
             "DamageTakenWhenHit".into()
         }
+        // Arctic Armour's (P6-11z).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
+            format!("{}DamageTakenWhenHit", title(t.name()))
+        }
         Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
         // P6-10b: regeneration.
         Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
