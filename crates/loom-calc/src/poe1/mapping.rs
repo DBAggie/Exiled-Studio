@@ -2060,6 +2060,8 @@ impl StatMapping for SkillMapping {
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
             || stat.as_str() == super::hit::DOUBLE_HITS_STAT
             || stat.as_str() == super::hit::ARROW_STAT
+            // A support's global effect: `poe1::gems` applies it (P6-11y).
+            || super::gems::is_support_global_stat(stat.as_str())
         {
             return StatMap::NoEffect;
         }
@@ -2086,8 +2088,8 @@ impl StatMapping for SkillMapping {
             {
                 StatMap::Effects(e)
             }
-            // A field's reason marker (P6-10b: Momentum's Swiftness): the
-            // stat's reason stays on that field.
+            // A field's reason marker (P6-10b): the stat's reason stays on
+            // that field.
             StatMap::Effects(e)
                 if e.iter().all(|t| {
                     matches!(
@@ -5102,8 +5104,8 @@ pub const COST_REASONS: &[&str] = &[
 /// low life, while ignited, and with no gems in the
 /// boots, each a config condition the engine does not settle; per
 /// summoned phantasm (`PerStat`); the armour movement penalties ignored;
-/// movement speed that cannot go below its base; and Momentum's
-/// Swiftness per stack removed.
+/// movement speed that cannot go below its base. Momentum's Swiftness is
+/// `poe1::gems`'s (P6-11y).
 pub const MOVEMENT_REASONS: &[&str] = &[
     "gain_movement_speed_+%_for_20_seconds_on_kill",
     "ignore_armour_movement_penalties",
@@ -5113,10 +5115,6 @@ pub const MOVEMENT_REASONS: &[&str] = &[
     "movement_velocity_+%_when_on_low_life",
     "movement_velocity_+%_while_ignited",
     "movement_velocity_+%_while_no_gems_in_boots",
-    // Momentum's Swiftness: `MovementSpeed` INC per the config's
-    // `MomentumSwiftnessStacks` (`Multiplier:MomentumStacksRemoved`), a
-    // count the engine does not read.
-    "support_momentum_movement_speed_+%_per_stack_removed",
 ];
 
 /// Stats that change a pool's regeneration in a way the engine does not
@@ -5945,6 +5943,13 @@ mod tests {
         assert_eq!(
             SkillMapping.map(&StatId::new("unknown_skill_stat")),
             StatMap::Unmapped
+        );
+        // A modelled support's global effect is `poe1::gems`'s (P6-11y).
+        assert_eq!(
+            SkillMapping.map(&StatId::new(
+                "support_momentum_movement_speed_+%_per_stack_removed"
+            )),
+            StatMap::NoEffect
         );
     }
 

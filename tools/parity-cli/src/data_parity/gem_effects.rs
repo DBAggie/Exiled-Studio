@@ -759,6 +759,10 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             rows,
             format!(" tags global {}", json!({ "effectCond": "SandStance" })),
         ),
+        BuffStat::PerCount { var, rows, .. } => (
+            rows,
+            format!(" tags {}", json!({ "type": "Multiplier", "var": var })),
+        ),
         BuffStat::Threshold(rows) => (
             rows,
             format!(
@@ -1059,6 +1063,7 @@ fn check_one(
             | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
             | BuffStat::SandStance(_)
+            | BuffStat::PerCount { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)
             | BuffStat::WhenState { .. }

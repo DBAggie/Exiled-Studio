@@ -256,6 +256,18 @@ pub enum BuffStat {
     /// (`CalcPerform.lua` 2266 to 2276), not the aura effect, even on an
     /// aura skill (Flesh and Stone; P6-11x).
     SandStance(&'static [HitEffect]),
+    /// Applies per the config count `input` (PoB's `Multiplier` tag on the
+    /// mod, `var` a multiplier only that input sets): the scaled value
+    /// times the count, nothing without it (Momentum's Swiftness per stack
+    /// removed, `MomentumSwiftnessStacks`, `ConfigOptions.lua` 543; P6-11y).
+    PerCount {
+        /// The config count.
+        input: &'static str,
+        /// PoB's multiplier name.
+        var: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies while unreserved life is at least 2 and mana at least 1
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
@@ -2110,19 +2122,20 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportMinionSpeed", &[]),
     (
         "SupportMomentum",
-        // Swiftness per the config's stacks removed: the movement fields'
-        // reason (P6-10b, `mapping::MOVEMENT_REASONS`).
+        // Swiftness per the config's stacks removed (P6-11y).
         &[(
             "support_momentum_movement_speed_+%_per_stack_removed",
-            BuffStat::Rows(&[(
-                Quantity::Poe1(Poe1Quantity::MovementReason(
-                    "support_momentum_movement_speed_+%_per_stack_removed",
-                )),
-                Op::Flag,
-                1.0,
-                NONE,
-                NONE,
-            )]),
+            BuffStat::PerCount {
+                input: MOMENTUM_REMOVED_INPUT,
+                var: "MomentumStacksRemoved",
+                rows: &[(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )],
+            },
         )],
     ),
     ("SupportMultipleTotems", &[]),
@@ -2396,6 +2409,9 @@ fn intimidating_terms(
 pub const NEARBY_ALLY_INPUT: &str = "multiplierNearbyAlly";
 /// The config input of the stance (`ConfigOptions.lua` 643).
 pub const STANCE_INPUT: &str = "bloodSandStance";
+/// The config count of Momentum stacks removed (Swiftness,
+/// `ConfigOptions.lua` 543; P6-11y).
+pub const MOMENTUM_REMOVED_INPUT: &str = "MomentumSwiftnessStacks";
 /// The config list of Pride's effect (`ConfigOptions.lua` 566: `MIN` or
 /// `MAX`; P6-9e).
 pub const PRIDE_INPUT: &str = "prideEffect";
@@ -2408,6 +2424,7 @@ pub fn is_input(name: &str) -> bool {
         "flameWallAddedDamage",
         STANCE_INPUT,
         PRIDE_INPUT,
+        MOMENTUM_REMOVED_INPUT,
     ]
     .contains(&name)
 }
@@ -3422,6 +3439,17 @@ fn supports_global(
     }
 }
 
+/// Whether `stat` is one of a modelled support's global stats
+/// ([`SUPPORTS`]): the main skill's supports apply them as any skill's do
+/// (`supports_global`), so on the skill itself they have no effect
+/// (`mapping::SkillMapping`; P6-11y).
+#[must_use]
+pub fn is_support_global_stat(stat: &str) -> bool {
+    SUPPORTS
+        .iter()
+        .any(|(_, table)| table.iter().any(|(id, _)| *id == stat))
+}
+
 /// The buff name of a support's global effect (its tag's `effectName`).
 fn support_buff_name(id: &str) -> &'static str {
     match id {
@@ -3472,6 +3500,7 @@ fn add_rows(
             continue;
         };
         let mut row_scale = scale;
+        let mut count = 1.0;
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
@@ -3530,6 +3559,28 @@ fn add_rows(
                 row_scale = buff_scale;
                 (rows, None)
             }
+            BuffStat::PerCount {
+                input: counted,
+                rows,
+                ..
+            } => {
+                match config.and_then(|set| last_input(set, counted, ConfigInputKind::Input)) {
+                    Some(ConfigValue::Number(n))
+                        if n.value().0.is_finite() && n.value().0 != 0.0 =>
+                    {
+                        count = n.value().0;
+                    }
+                    Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => continue,
+                    None => continue,
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: counted.to_owned(),
+                        });
+                        continue;
+                    }
+                }
+                (rows, None)
+            }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
             BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
@@ -3570,7 +3621,7 @@ fn add_rows(
         let value = *value as f64;
         for (i, &row) in rows.iter().enumerate() {
             let (quantity, op, divisor, ..) = row;
-            let scaled = skill_modifiers::scale(quantity, op, value / divisor, row_scale);
+            let scaled = skill_modifiers::scale(quantity, op, value / divisor, row_scale) * count;
             let entry = merged
                 .entry((name, id, i))
                 .or_insert((scaled, source.clone(), row, state));
@@ -3904,6 +3955,7 @@ mod tests {
                 | BuffStat::WhenInput { rows: e, .. }
                 | BuffStat::BloodStance(e)
                 | BuffStat::SandStance(e)
+                | BuffStat::PerCount { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }

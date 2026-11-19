@@ -617,3 +617,29 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **Sand Stance stat:** no longer unmapped anywhere; it was in 15 builds.
 - **`data-parity`:** `gem_effects` 1,611 values compared, 0 differences; uncategorized 353, unchanged.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11y: Momentum's Swiftness, and the main skill's support buffs
+
+**PoB:** Momentum Support's `support_momentum_movement_speed_+%_per_stack_removed` is a `Buff`: `MovementSpeed` INC with a `Multiplier` tag (`sup_dex.lua` 3132).
+- The multiplier is `MomentumStacksRemoved`. Only the config count `MomentumSwiftnessStacks` sets it (`ConfigOptions.lua` 543).
+
+**The engine:**
+- **`poe1::gems`:** a new `BuffStat::PerCount` takes the row's scaled value times the config count. It applies nothing without a count; a value that is not a number is an `unmodelled-config` reason.
+- **Momentum's stat:** now that row, where it was a `MovementReason` marker. It leaves `mapping::MOVEMENT_REASONS`, and `MomentumSwiftnessStacks` is an input `poe1::gems` reads.
+- **`data-parity` `gem_effects`:** reads the row as PoB's mod with its `Multiplier` tag.
+
+**Found on the way: the main skill's supports.**
+- The main skill's supports already apply their global effects through `poe1::gems` (`supports_global`). But `mapping::SkillMapping` also read their global stats as the skill's own, so a stat without a hit effect there was unmapped on every field.
+- That showed in the three builds where Momentum supports the main skill. Before, the stat's movement marker hid it.
+- `SkillMapping` now gives every modelled support's global stat (`gems::is_support_global_stat`) no effect on the skill. This also removes Infused Channelling's damage taken stat and Summon Phantasm's grants from those builds' main skill.
+
+**Evidence** (`local/p6/p6-11y/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected.
+  - Match went from 13,557 to 13,563.
+  - No value moved: no fixture sets the count.
+  - The movement fields of 3 builds went from partial to complete.
+- **Corpus:** unchanged; 0 unexpected.
+- **Momentum's stat:** no longer unmapped anywhere; it was in 11 builds.
+- **`data-parity`:** `gem_effects` 1,612 values compared, 0 differences; uncategorized 353, unchanged.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+- **Not committed:** the first run, without the `SkillMapping` fix, put an `unmapped-stat` reason on every field of 3 builds.
