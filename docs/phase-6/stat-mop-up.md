@@ -1056,3 +1056,44 @@ Both match PoB on every computed field.
   - That build already had less energy shield than PoB (457 against 680) and negative unreserved mana (-286 against 80). With the shield in mind over matter's pool, those gaps now show in the maximum hit.
 - **Data parity:** `uncategorized` 353, unchanged.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11aq: Withered on the enemy
+
+**PoB:**
+- **Can wither:** any active skill whose mod list has `Condition:CanWither` lets the enemy be withered (`CalcPerform.lua` 2704 to 2707). The flag comes from:
+  - `withered_on_hit_chance_%` and `withered_on_hit_for_2_seconds_%_chance` (`SkillStatMap.lua` 2202 to 2210; Withering Touch, Poisonous Concoction's quality, items);
+  - one skill's own stat map: Wither, Withering Step, Toxic Rain of Withering, Summon Void Spawn.
+- **Effect per stack:** each such skill gives `WitherEffectStack` MAX `floor(6 x (1 + WitherEffect / 100))`. A minion skill uses `MinionWitherEffect` instead.
+- **On the enemy** (812 to 815): `ChaosDamageTaken` INC of that effect per stack. The stacks are the `multiplierWitheredStackCount` input (`ConfigOptions.lua` 1813), at most 15.
+
+**The engine:**
+- **New quantities:** `Poe1Quantity::CanWither` (a flag) and `WitherEffect` (increased).
+- **Mapping:**
+  - `withered_effect_+%` becomes `WitherEffect` INC.
+  - The two chance stats set the `CanWither` flag. A gem's copy belongs to its own skill, and `gems::can_wither` reads it.
+  - New: "Adds # to # Chaos Damage to Spells" (`spell_minimum_added_chaos_damage`, `spell_maximum_added_chaos_damage`), as the other elements' rows (PoB's `ChaosMin`/`ChaosMax` BASE, spell keyword).
+- **`gems::can_wither`:** goes over the skills `affected_by` reads. A skill can wither when:
+  - the character has the flag, or
+  - its gem's or a support's stats at their levels hold one of the stats above.
+
+  It returns whether a player skill can and whether a minion skill can.
+- **`damage_taken::withered`:**
+  - **Effect per stack:** the larger of the player's `floor(6 x (1 + WitherEffect / 100))` and a minion skill's 6 (no mapping gives `MinionWitherEffect`).
+  - **Enemy damage taken:** it adds `EnemyTypeDamageTaken(Chaos)` INC of that effect times the stacks.
+  - **Unread conditions:** a conditional `WitherEffect` is a reason.
+  - **Bad stack values:** a stack count that is not a number is a reason only when a skill can wither.
+- **The input:** `multiplierWitheredStackCount` leaves `config::NAMED_ONLY`; `damage_taken` handles it.
+- **Withering Step:** now in `gems::SKILLS` as a buff whose two global effects are Elusive's (`Condition:CanBeElusive`, `ElusiveEffect`).
+  - Neither reaches a slice field: Elusive itself is the `buffElusive` named condition.
+  - **Data parity:** the two names join `gem_effects`' `NO_SLICE_NAMES`; `uncategorized` stays 353.
+
+**New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
+- `withered-step-ice-nova-witch.xml`: Withering Step in a second group, 20% increased Effect of Withered, 15 stacks. Chaos taken is 7% per stack: average hit 1,006.70, hit DPS 1,438.14.
+- `withered-touch-ice-nova-witch.xml`: Withering Touch on the main skill, 8 stacks. Average hit 863.72.
+
+**Evidence** (`local/p6/p6-11aq/`):
+- **Public `calc-parity`:** 232 builds, 292 expected, 0 unexpected; match 15,040 to 15,194 (the fixtures).
+- **Moved values:** 3 toward PoB, none away. essence-drain-contagion-occultist's `TotalDot` went from 157,676 to 346,888 against PoB's 2,141,187.
+- **Corpus:** 0 unexpected; 5 values toward PoB, none away.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

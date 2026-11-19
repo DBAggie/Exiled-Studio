@@ -415,6 +415,10 @@ const NO_SLICE_NAMES: &[&str] = &[
     "Condition:HaveFireGolem",
     "Condition:HaveLightningGolem",
     "Condition:HavePhysicalGolem",
+    // Withering Step's Elusive (P6-11aq): Elusive is the `buffElusive`
+    // input, a named condition; its effect acts only with it.
+    "Condition:CanBeElusive",
+    "ElusiveEffect",
     "DamageTakenWhenHit",
     "Dummy",
     // Smite's aura's shock chance (P6-8a): the engine applies shock only

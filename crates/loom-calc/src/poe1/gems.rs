@@ -2029,6 +2029,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("WhirlingBlades", Kind::Inert),
+    // Withering Step (P6-11aq): a buff with no reservation whose global
+    // effects are Elusive's, `Condition:CanBeElusive` (the stat-less base
+    // mod, `act_dex.lua` 17333) and `elusive_effect_+%` (its quality's
+    // `ElusiveEffect`): Elusive itself is the `buffElusive` input, a named
+    // condition (`config::NAMED_ONLY`), so neither reaches a slice field.
+    // Its withered stacks are `damage_taken`'s (`can_wither`).
+    (
+        "WitheringStep",
+        Kind::Buff {
+            name: "Withering Step",
+            effect: EffectType::Buff,
+            stats: &[
+                ("", BuffStat::NoSlice("elusive")),
+                ("elusive_effect_+%", BuffStat::NoSlice("elusive")),
+            ],
+        },
+    ),
     (
         "Wrath",
         Kind::Buff {
@@ -2727,6 +2744,66 @@ pub fn floor4(product: f64) -> f64 {
 
 /// Whether the item set's weapon set in use holds the group's slot (PoB's
 /// `slotEnabled`); a group without a slot is always in use.
+/// Whether an active skill can wither (P6-11aq; PoB's
+/// `Condition:CanWither` on a skill's mod list, `CalcPerform.lua` 2704):
+/// `(a skill that is not a minion skill can, a minion skill can)`, `None`
+/// when none can. The skills are [`affected_by`]'s; each can when
+/// `everyone` (the character's own flag, which every skill's mod list
+/// holds) or when its gem's or a support's stats at their levels hold a
+/// stat of [`super::damage_taken::CAN_WITHER_STATS`] or its own of
+/// [`super::damage_taken::CAN_WITHER_SKILL_STATS`] above 0. A minion skill
+/// is one PoB gives a minion (`minionList` or `addMinionList`).
+#[must_use]
+pub fn can_wither(input: &CalcInput<'_>, everyone: bool) -> Option<(bool, bool)> {
+    use super::damage_taken::{CAN_WITHER_SKILL_STATS, CAN_WITHER_STATS};
+    let build = input.build;
+    let levels = GemLevels::none();
+    let groups = skill::active_groups(build).ok()?;
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let (mut player, mut minion) = (false, false);
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        if skill::attribute(&group.attributes, "source").is_some() {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, &levels) {
+            let id = s.active_gem.effect.id.as_str();
+            let can = everyone
+                || std::iter::once(s.active_gem)
+                    .chain(s.supports.iter().copied())
+                    .any(|gem| {
+                        let instance =
+                            skill::instance(gem.effect, gem.level, gem.quality, input.data);
+                        instance.stats.iter().any(|(stat, value)| {
+                            *value > 0
+                                && (CAN_WITHER_STATS.contains(&stat.as_str())
+                                    || CAN_WITHER_SKILL_STATS
+                                        .iter()
+                                        .any(|(e, st)| *e == gem.effect.id && st == stat))
+                        })
+                    });
+            if !can {
+                continue;
+            }
+            let is_minion = super::pob_skill::skill(id)
+                .is_some_and(|p| !p.minions.is_empty() || !p.add_minions.is_empty());
+            if is_minion {
+                minion = true;
+            } else {
+                player = true;
+            }
+        }
+    }
+    (player || minion).then_some((player, minion))
+}
+
 fn slot_enabled(build: &Build, slot: Option<&str>) -> bool {
     let Some(slot) = slot else { return true };
     let second = super::collect::active_item_set(build)

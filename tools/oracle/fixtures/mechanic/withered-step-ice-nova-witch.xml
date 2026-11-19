@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11aq): a level 90 Witch casting Ice Nova (level 20) with chaos damage added to spells, Withering Step in a second group, 20% increased Effect of Withered, and 15 Withered stacks on the enemy: the enemy takes floor(6 x 1.2) = 7% increased chaos damage per stack.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem enableGlobal1="true" enableGlobal2="true" variantId="WitheringStep" count="1" quality="20" gemId="Metadata/Items/Gems/SkillGemWitheringStep" level="20" nameSpec="Withering Step" enabled="true" skillId="WitheringStep"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="multiplierWitheredStackCount" number="15"/>
+			<Input name="customMods" string="Adds 60 to 90 Chaos Damage to Spells
+20% increased Effect of Withered"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

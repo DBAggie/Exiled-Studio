@@ -220,11 +220,10 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
 ///   with a support that is not modelled), the enemy's `Debilitated` and
 ///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
-///   `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), the
-///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72), and the
-///   enemy's `Withered` stacks (`ChaosDamageTaken` only with
-///   `WitherEffectStack`, 812 to 815, which only unmapped stats and gems
-///   that are not modelled give).
+///   `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), and the
+///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72). The enemy's
+///   `Withered` stacks (`multiplierWitheredStackCount`) are
+///   [`super::damage_taken`]'s since P6-11aq (no longer in this list).
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -449,10 +448,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "Condition:UsedWarcryInPast8Seconds",
             "Condition:UsedSkillRecently",
         ],
-    ),
-    (
-        "multiplierWitheredStackCount",
-        &["enemy Multiplier:WitheredStack"],
     ),
     (
         "multiplierWitheredStackCountSelf",

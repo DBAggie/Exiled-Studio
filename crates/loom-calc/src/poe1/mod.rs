@@ -304,6 +304,13 @@ pub enum Poe1Quantity {
     /// read by [`enemy_hit`] and [`ehp`] for the pools and by [`costs`] for
     /// the mana cost per second, paid with energy shield.
     EsProtectsMana,
+    /// A skill can wither (PoB's `Condition:CanWither`; P6-11aq): a `Flag`
+    /// from the character's stats, which every active skill then has;
+    /// read by [`damage_taken`] for the enemy's withered stacks.
+    CanWither,
+    /// The effect of your Withered (PoB's `WitherEffect`; P6-11aq):
+    /// `Increased`, read by [`damage_taken`].
+    WitherEffect,
     /// Physical damage prevented regenerated as energy shield, percent
     /// (PoB's `PhysicalDamageMitigatedEnergyShieldPseudoRecoup`; P6-11am,
     /// Divine Shield): `Base`. It reaches no field itself; any recoup makes
@@ -1019,6 +1026,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
+            Self::CanWither => f.write_str("can-wither"),
+            Self::WitherEffect => f.write_str("wither-effect"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),

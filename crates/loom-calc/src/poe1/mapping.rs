@@ -1606,6 +1606,10 @@ pub const HIT_ROWS: &[HitRow] = &[
         )],
     ),
     (
+        "spell_maximum_added_chaos_damage",
+        &[(added(CHAOS_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
         "spell_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
@@ -1636,6 +1640,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "spell_maximum_base_physical_damage",
         &[(skill_base(PHYS, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_added_chaos_damage",
+        &[(added(CHAOS_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
     (
         "spell_minimum_added_cold_damage",
@@ -4683,6 +4691,27 @@ pub const ROWS: &[Row] = &[
     (
         "support_inspiration_mana_cost_+%_final",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
+    ),
+    // P6-11aq: "#% increased Effect of Withered" (`WitherEffect` INC; read
+    // by `poe1::damage_taken` for the enemy's withered stacks).
+    (
+        "withered_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::WitherEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-11aq: "#% chance to inflict Withered for 2 seconds on Hit" and its
+    // kin (`Condition:CanWither` FLAG, `SkillStatMap.lua` 2202 to 2210);
+    // a gem's is its skill's own, read by `poe1::gems::can_wither`.
+    (
+        "withered_on_hit_chance_%",
+        &[(Quantity::Poe1(Poe1Quantity::CanWither), Op::Flag, 1.0)],
+    ),
+    (
+        "withered_on_hit_for_2_seconds_%_chance",
+        &[(Quantity::Poe1(Poe1Quantity::CanWither), Op::Flag, 1.0)],
     ),
 ];
 

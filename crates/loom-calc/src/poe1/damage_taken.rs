@@ -110,14 +110,14 @@
 //! Everything else that sets the chill is a stat that stays a reason
 //! ([`CHILL_DEPENDS_ON`]) or a gem the engine does not model.
 
-use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
+use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
 use super::Poe1Quantity;
 use super::config::last_input as last;
 use super::enemy::{self, BossKind};
 use crate::condition::Flags;
 use crate::ingest::Ingest;
-use crate::input::CalcData;
+
 use crate::quantity::{DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::UnsupportedReason;
@@ -137,6 +137,28 @@ pub const INTIMIDATED_INPUT: &str = "conditionEnemyIntimidated";
 pub const UNNERVED_INPUT: &str = "conditionEnemyUnnerved";
 /// The check that blinds the enemy.
 pub const BLINDED_INPUT: &str = "conditionEnemyBlinded";
+/// The count of the enemy's Withered stacks (P6-11aq).
+pub const WITHERED_STACKS_INPUT: &str = "multiplierWitheredStackCount";
+/// Withered's chaos damage taken per stack, before its effect, and the
+/// stacks that count (`CalcPerform.lua` 812 to 815, 2704 to 2707).
+const WITHERED_BASE: f64 = 6.0;
+const WITHERED_STACK_LIMIT: f64 = 15.0;
+/// Stats any skill's stat map reads as `Condition:CanWither`
+/// (`SkillStatMap.lua` 2202 to 2210), sorted.
+pub const CAN_WITHER_STATS: &[&str] = &[
+    "withered_on_hit_chance_%",
+    "withered_on_hit_for_2_seconds_%_chance",
+];
+/// Stats one skill's own stat map reads as `Condition:CanWither`, by its
+/// granted effect, sorted: Summon Void Spawn (`other.lua` 4873), Toxic
+/// Rain of Withering (`act_dex.lua` 15117), Wither (`act_int.lua` 21243),
+/// Withering Step (`act_dex.lua` 17322).
+pub const CAN_WITHER_SKILL_STATS: &[(&str, &str)] = &[
+    ("SummonVoidSpawn", "void_spawn_withered_on_hit_chance_%"),
+    ("ToxicRainAltY", "toxic_rain_spores_apply_withered"),
+    ("Wither", "active_skill_withered_base_duration_ms"),
+    ("WitheringStep", "slither_wither_stacks"),
+];
 /// The check that puts the enemy on consecrated ground (P3-8n).
 pub const CONSECRATED_INPUT: &str = "conditionEnemyOnConsecratedGround";
 /// The check that ignites the enemy (P3-8n).
@@ -358,7 +380,8 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | BLINDED_INPUT
         | CONSECRATED_INPUT
         | IGNITED_INPUT
-        | CHILLED_SECONDS_INPUT => true,
+        | CHILLED_SECONDS_INPUT
+        | WITHERED_STACKS_INPUT => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -752,15 +775,81 @@ fn chill_damage_taken(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     }
 }
 
+/// The enemy's Withered stacks (P6-11aq; `CalcPerform.lua` 812 to 815,
+/// 2704 to 2707; `ConfigOptions.lua` 1813): when an active skill can
+/// wither, the configured stacks, at most 15, each give the enemy `effect`
+/// increased chaos damage taken, `effect` the largest of the skills':
+/// `floor(6 x (1 + WitherEffect / 100))`, a minion skill's
+/// `floor(6 x (1 + MinionWitherEffect / 100))` (no mapping gives the
+/// latter, so 6). A skill can wither when the character's stats say so
+/// ([`Poe1Quantity::CanWither`]) or its gems' stats at their levels hold
+/// [`CAN_WITHER_STATS`] or its own of [`CAN_WITHER_SKILL_STATS`].
+fn withered(input: &crate::input::CalcInput<'_>, set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let Some(set) = set else { return };
+    let stacks = match count(set, WITHERED_STACKS_INPUT) {
+        Ok(None) => return,
+        other => other,
+    };
+    // The character's own flag; a gem's stat is the skill's own, read by
+    // the scan below.
+    let everyone = unconditional(ingest, Poe1Quantity::CanWither, Op::Flag)
+        .any(|e| !matches!(e.source, Source::Gem { .. }));
+    let Some((player, minion)) = super::gems::can_wither(input, everyone) else {
+        return;
+    };
+    // A value that is not a finite number, read only when a skill can
+    // wither.
+    let Ok(Some(stacks)) = stacks else {
+        ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: WITHERED_STACKS_INPUT.to_owned(),
+        });
+        return;
+    };
+    let stacks = stacks.min(WITHERED_STACK_LIMIT);
+    let q = Quantity::Poe1(Poe1Quantity::WitherEffect);
+    let conditional: Vec<Source> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.conditions != Conditions::none())
+        .map(|e| e.source.clone())
+        .collect();
+    for source in conditional {
+        ingest.reason(UnsupportedReason::UnmodelledCondition {
+            condition: crate::condition::ConditionKey::new("wither-effect"),
+            quantity: q,
+            source,
+        });
+    }
+    let inc: f64 = unconditional(ingest, Poe1Quantity::WitherEffect, Op::Increased)
+        .map(|e| e.value)
+        .sum();
+    let player = player.then(|| crate::math::floor(WITHERED_BASE * (1.0 + inc / 100.0)));
+    let minion = minion.then_some(WITHERED_BASE);
+    let effect = player
+        .into_iter()
+        .chain(minion)
+        .fold(f64::NEG_INFINITY, f64::max);
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(DamageType::Chaos)),
+        op: Op::Increased,
+        value: effect * stacks,
+        conditions: Conditions::none(),
+        source: Source::Config {
+            input: WITHERED_STACKS_INPUT.to_owned(),
+        },
+    });
+}
+
 /// Adds the enemy's damage taken from the active config set and the
 /// skills' guaranteed chills (module docs). A value the engine does not
 /// read as PoB does is a reason under its input.
 pub fn damage_taken(
-    build: &Build,
+    input: &crate::input::CalcInput<'_>,
     set: Option<&ConfigSet>,
-    data: &dyn CalcData,
     ingest: &mut Ingest<'_>,
 ) {
+    let (build, data) = (input.build, input.data);
+    withered(input, set, ingest);
     chill_damage_taken(set, ingest);
     enemy_states(set, ingest);
     let Some(set) = set else { return };
