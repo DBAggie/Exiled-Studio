@@ -5463,8 +5463,9 @@ pub const MOVEMENT_REASONS: &[&str] = &[
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
 /// regeneration field's reason alone. PoB's text for each
-/// (`ModParser.lua`): life per fortification stack, per level, mana with
-/// exposure inflicted recently; energy shield per nearby corpse. Per
+/// (`ModParser.lua`): life per fortification stack, per level; energy
+/// shield per nearby corpse. (Mana with exposure inflicted recently is
+/// `poe1::exposure`'s since P6-11au.) Per
 /// endurance and power charge are [`super::charges`]'s, per uncapped fire
 /// resistance and per spell block chance [`super::regen`]'s (P6-11t).
 pub const REGEN_REASONS: &[(&str, Pool)] = &[
@@ -5475,10 +5476,6 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
         Pool::Life,
     ),
     ("life_regeneration_rate_per_minute_per_level", Pool::Life),
-    (
-        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
-        Pool::Mana,
-    ),
     // "For each nearby corpse, you and nearby Allies Regenerate #% of Energy
     // Shield per second" (PoB's `ExtraAura` per `NearbyCorpse`).
     (

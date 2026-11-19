@@ -703,6 +703,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("DominatingBlowAltX", Kind::Inert),
     ("DoubleStrike", Kind::Inert),
     ("Earthshatter", Kind::Inert),
+    // P6-11au: no global effect in PoB's skill data (`gem_effects`).
+    ("ElementalHitAltX", Kind::Inert),
     (
         "ElementalWeakness",
         Kind::Curse {
@@ -2280,6 +2282,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             },
         )],
     ),
+    // P6-11au: no global effect in PoB's skill data (`gem_effects`).
+    ("SupportMoreDuration", &[]),
     ("SupportMultipleTotems", &[]),
     ("SupportMultistrike", &[]),
     ("SupportOverexertion", &[]),

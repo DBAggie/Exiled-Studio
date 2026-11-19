@@ -600,6 +600,12 @@ pub enum Poe1Quantity {
     /// (PoB's `<Type>ExposureChance` 100 and the enemy's `<Type>Exposure`,
     /// P3-8n): `Base`, the exposure, read by [`exposure`].
     ExposureOnHit(DamageType),
+    /// A pool's regeneration, percent of the pool per minute, while you
+    /// have applied an exposure recently (PoB's `<Pool>RegenPercent` BASE
+    /// with `AppliedExposureRecently`; P6-11au): `Base`, turned into
+    /// [`Poe1Quantity::RegenPercent`] by [`exposure`] when an exposure is on
+    /// the enemy.
+    RegenIfExposureApplied(Pool),
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
@@ -1101,6 +1107,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AilmentElementalResistance => f.write_str("ailment-elemental-resistance"),
             Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
+            Self::RegenIfExposureApplied(p) => {
+                write!(f, "regen-if-exposure-applied.{}", p.name())
+            }
             Self::GrantedPassive => f.write_str("granted-passive"),
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),

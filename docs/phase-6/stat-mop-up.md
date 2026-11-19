@@ -1188,3 +1188,32 @@ Both match PoB on every computed field.
 - **Corpus:** 0 unexpected, no value moved.
 - **Data parity:** `uncategorized` 353.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11au: mana regeneration after inflicting exposure, two inert gems
+
+### Mana regeneration after inflicting exposure
+
+**PoB:** "Regenerate #% of Mana per second if you've inflicted Exposure Recently" is `ManaRegenPercent` BASE with `Condition:AppliedExposureRecently`. PoB sets that condition when any exposure is on the enemy (`CalcPerform.lua` 3570 to 3586). The stat comes from Mastermind of Discord (Elementalist).
+
+**The engine:**
+- **The row:** the stat is now a row of `exposure::STATS`, `Poe1Quantity::RegenIfExposureApplied(Mana)`, its value per minute. It is no longer a regeneration reason (`REGEN_REASONS`).
+- **`exposure()`:** notes whether it put an exposure on the enemy. If so, each such line becomes `RegenPercent(Mana)` at its value per second; otherwise it does nothing. A conditional line is a reason.
+- **Tests:** `tests/exposure_shock.rs` carries the text.
+
+**Why no mechanic fixture:**
+- The text's handler (`per_minute_to_per_second`) rounds to whole percents, so a typed custom line resolves to a range of values, an `unsettled-value` reason. The tree's notable has the exact value.
+- **The community Elementalists check both cases.** Three builds with an exposure now match PoB's mana regeneration (114.1, 170.1, 103.1). `ice-nova-elementalist-campaign-lab1`, without one, still matches (75.1).
+
+### Two inert gems
+
+`ElementalHitAltX` and `SupportMoreDuration` join `gems::SKILLS` and `gems::SUPPORTS` as inert: no global effect in PoB's skill data.
+- **Rejected:** the other candidates tried (Bear Trap, Blink Arrow, Mana Infused Staff, Pyroclast Mine of Sabotage, Vaal Blight, Hexpass, Living Lightning, Manaforged Arrows, Mark On Hit) have global effects, so `gem_effects` refused them; they stay `unmodelled-gem`.
+- **EnemyExplode** is PoB's own skill ID with no granted effect in the game's data; it stays out (`tests/enemy.rs`).
+
+**Evidence** (`local/p6/p6-11au/`):
+- **Public `calc-parity`:** 237 builds, 292 expected, 0 unexpected; match 15,600 to 15,602.
+- **Moved values:** 4 toward PoB, none away, 3 of them now equal to PoB; 2 fields went from partial to complete.
+  - The fourth, `lightning-trap-of-sparking-elementalist`, is 115.0 against PoB's 116.6 for its other reasons.
+- **Corpus:** 0 unexpected; 1 value toward PoB, now equal.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

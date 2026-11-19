@@ -131,7 +131,13 @@ type ExposureRow = (&'static str, &'static [Poe1Quantity]);
 ///   number, not one written "+5", which PoB would not parse while the
 ///   engine applies it. Every such stat rolls negative, so no build meets
 ///   the difference.
-pub const STATS: [ExposureRow; 11] = [
+///
+/// And (P6-11au) "Regenerate #% of Mana per second if you've inflicted
+/// Exposure Recently" (`ManaRegenPercent` BASE while
+/// `AppliedExposureRecently`, which PoB sets when an exposure is on the
+/// enemy, `CalcPerform.lua` 3585): its value per minute, turned into the
+/// regeneration per second by [`exposure`] then.
+pub const STATS: [ExposureRow; 12] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         &[chance(DamageType::Cold)],
@@ -179,6 +185,10 @@ pub const STATS: [ExposureRow; 11] = [
     (
         "lightning_skill_chance_to_inflict_lightning_exposure_%",
         &[chance(DamageType::Lightning)],
+    ),
+    (
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        &[Poe1Quantity::RegenIfExposureApplied(super::Pool::Mana)],
     ),
 ];
 
@@ -309,6 +319,9 @@ pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             }),
         }
     }
+    // PoB's `AppliedExposureRecently` (P6-11au): set when any exposure is
+    // on the enemy.
+    let mut applied = false;
     for (t, input) in CHECKS {
         let on_hit: Vec<Effect> = bases(ingest, Poe1Quantity::ExposureOnHit(t))
             .cloned()
@@ -364,6 +377,7 @@ pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         else {
             continue;
         };
+        applied = true;
         let mut added = vec![strongest];
         added.extend(
             bases(ingest, extra(None))
@@ -378,6 +392,39 @@ pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         );
         for e in added {
             ingest.effect(e);
+        }
+    }
+    // The regeneration while you have applied an exposure recently
+    // (P6-11au): each pool's lines become its regeneration then. A
+    // conditional one is a reason.
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::RegenIfExposureApplied(_))
+            )
+        })
+        .cloned()
+        .collect();
+    for e in lines {
+        let Quantity::Poe1(Poe1Quantity::RegenIfExposureApplied(pool)) = e.quantity else {
+            continue;
+        };
+        if e.op != Op::Base || e.conditions != Conditions::none() {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: e.source.clone(),
+                what: "regen-if-exposure",
+            });
+            continue;
+        }
+        if applied {
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::RegenPercent(pool)),
+                value: e.value / 60.0,
+                ..e
+            });
         }
     }
 }

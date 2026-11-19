@@ -16,7 +16,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 15] = [
+const TEXTS: [(&str, &str); 16] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -60,6 +60,11 @@ const TEXTS: [(&str, &str); 15] = [
     (
         "lightning_skill_chance_to_inflict_lightning_exposure_%",
         "Lightning Skills have a {0}% chance to apply Lightning Exposure on Hit",
+    ),
+    // P6-11au: mana regeneration while you have applied an exposure.
+    (
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        "Regenerate {}% of Mana per second if you've inflicted Exposure Recently",
     ),
     (
         "lightning_ailment_effect_+%",
