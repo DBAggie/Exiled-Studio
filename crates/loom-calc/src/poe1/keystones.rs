@@ -57,7 +57,7 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
 use crate::quantity::{DamageType, Op, Quantity};
 
-use super::{Poe1Quantity, TakenOf};
+use super::{Poe1Quantity, Pool, TakenOf};
 
 /// The skill condition Elemental Overload's more damage needs (PoB's
 /// `CritInPast8Sec`): settled by the hit, true when its crit chance is not
@@ -187,6 +187,32 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     // (`SpellBlockChance` MORE) only scales projectile spell block, and "You
     // take 65% of Damage from Blocked Hits" is `BlockEffect` BASE 65, which
     // the effective health pool reads (P6-10b part 14).
+    // Eternal Youth (P6-11ao): the tree's "50% less Life Regeneration Rate"
+    // (`LifeRegen` MORE -50), "50% less maximum Total Life Recovery per
+    // Second from Leech" (`MaxLifeLeechRate` MORE -50), and "Energy Shield
+    // Recharge instead applies to Life" (`EnergyShieldRechargeAppliesToLife`).
+    (
+        "keystone_eternal_youth",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Life)),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::EsRechargeAppliesToLife),
+        ],
+    ),
     (
         "keystone_glancing_blows",
         &[

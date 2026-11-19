@@ -518,6 +518,15 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
                 });
                 continue;
             }
+            // A keystone a Timeless jewel replaces (P6-11ao): its own lines
+            // do not apply, and the replacement is not modelled.
+            PassiveState::TimelessKeystone => {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *node },
+                    what: "timeless-keystone",
+                });
+                continue;
+            }
         }
         ingest.stats(&Source::Passive { node: *node }, &lines(stats));
         unread_lines(

@@ -284,13 +284,29 @@ fn recharge(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     )?;
     let rate = recovery_rate(calc, Pool::EnergyShield, &mut reasons)?;
     factors.extend([inc, more, rate]);
-    let raw = phases::product(calc, &factors, Term::Step("unrounded"))?;
-    let value = phases::round(calc, raw, Term::Result)?;
-    calc.set_derived(
-        Field::Poe1(Poe1Field::EnergyShieldRecharge),
-        phases::query(value, reasons),
-        &[Field::EnergyShield],
-    );
+    // Eternal Youth's recharge applies to life (P6-11ao; `CalcDefence.lua`
+    // 1325 to 1351): PoB sets `LifeRecharge` (no slice field) and no energy
+    // shield recharge; the delay stays.
+    let to_life = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsRechargeAppliesToLife)) && {
+        let cx = calc.context(crate::condition::Flags::NONE);
+        let (store, graph) = calc.parts();
+        let q = store.flag(
+            graph,
+            Quantity::Poe1(Poe1Quantity::EsRechargeAppliesToLife),
+            &cx,
+        )?;
+        reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
+    if !to_life {
+        let raw = phases::product(calc, &factors, Term::Step("unrounded"))?;
+        let value = phases::round(calc, raw, Term::Result)?;
+        calc.set_derived(
+            Field::Poe1(Poe1Field::EnergyShieldRecharge),
+            phases::query(value, reasons),
+            &[Field::EnergyShield],
+        );
+    }
     let base = phases::constant(calc, "recharge-delay", RECHARGE_DELAY)?;
     let (faster, _) = modifiers(
         calc,

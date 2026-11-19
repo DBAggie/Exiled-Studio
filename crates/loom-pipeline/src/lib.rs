@@ -20,7 +20,7 @@
 //! Core crate (ADR-016): no filesystem, clocks, threads, or environment.
 //! Errors carry the failing layer's stable code (ADR-014) and the step.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use loom_calc::{
     BaseName, CalcData, CalcInput, CalcOptions, CalcResult, ClusterPassive, PackNode, PackStats,
@@ -336,6 +336,67 @@ pub fn leaps(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Vec<Leap> {
     out
 }
 
+/// The stats of a Timeless jewel (its seed, version, conqueror keystone):
+/// each starts so (P6-11ao).
+const TIMELESS_PREFIX: &str = "local_unique_jewel_alternate_tree_";
+/// A Timeless jewel's base.
+const TIMELESS_BASE: &str = "Timeless Jewel";
+
+/// The keystones in the radius of a Timeless jewel socketed in `spec`
+/// (P6-11ao): each such jewel replaces every keystone in its radius with
+/// its conqueror's keystone, whatever its seed (PoB's timeless jewel
+/// conversion). A jewel is Timeless when its base is a Timeless Jewel or a
+/// selected line resolved to one of its stats; its radius is the one its `Radius:` line names. A jewel
+/// whose radius the tree does not have gives none.
+#[must_use]
+pub fn timeless_keystones(build: &Build, spec: &PassiveSpec, tree: &Tree) -> BTreeSet<u32> {
+    let mut out = BTreeSet::new();
+    for socket in spec.jewel_sockets.typed() {
+        let Some(item) = socket
+            .item
+            .and_then(|id| build.items.items().find(|i| i.id == id))
+        else {
+            continue;
+        };
+        let mut label = None;
+        // The base names it, else a line resolved to one of its stats.
+        let mut timeless = item.body.base.as_deref() == Some(TIMELESS_BASE);
+        for line in &item.body.lines {
+            match &line.kind {
+                LineKind::Spec { key, value, .. } if key == "Radius" => {
+                    label = Some(value.as_str());
+                }
+                LineKind::Modifier(m) if m.selected => {
+                    if let LineResolution::Resolved {
+                        result: Resolved::Stats(stats),
+                        ..
+                    } = &m.resolution
+                    {
+                        timeless |= stats
+                            .iter()
+                            .any(|s| s.stat.as_str().starts_with(TIMELESS_PREFIX));
+                    }
+                }
+                _ => {}
+            }
+        }
+        let Some(ring) = label.and_then(|l| tree.radius_named(l)) else {
+            continue;
+        };
+        if timeless {
+            out.extend(
+                loom_tree::poe1::radius::in_ring(tree, socket.node.0, ring, false)
+                    .into_iter()
+                    .filter(|n| {
+                        tree.node(*n)
+                            .is_some_and(|x| x.kind == loom_tree::graph::Kind::Keystone)
+                    }),
+            );
+        }
+    }
+    out
+}
+
 // The tree and the engine name cluster jewel nodes by the same bit.
 const _: () = assert!(loom_tree::poe1::CLUSTER_NODE_BIT == PassiveState::CLUSTER_NODE_BIT);
 
@@ -503,6 +564,7 @@ pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives 
     let held =
         loom_tree::poe1::radius::held(tree, &leaps(build, spec, tree), &allocated, &connected);
     connected.extend(held);
+    let timeless = timeless_keystones(build, spec, tree);
     let is_cluster = |n: u32| n & loom_tree::poe1::CLUSTER_NODE_BIT != 0;
     ResolvedPassives {
         nodes: nodes
@@ -511,6 +573,8 @@ pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives 
                 let c = now(*n);
                 let state = if is_cluster(c) && !in_subgraph.contains_key(&c) {
                     PassiveState::ClusterNode
+                } else if connected.contains(&c) && timeless.contains(&c) {
+                    PassiveState::TimelessKeystone
                 } else if connected.contains(&c) {
                     PassiveState::Connected
                 } else if tree.node(c).is_some_and(|x| x.expansion) && !in_subgraph.contains_key(&c)

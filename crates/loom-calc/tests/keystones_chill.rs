@@ -19,12 +19,17 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 11] = [
+const TEXTS: [(&str, &str); 12] = [
     (
         "keystone_glancing_blows",
         "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",
     ),
     ("chill_effect_+%", "{0}% increased Effect of Chill"),
+    // P6-11ao: Eternal Youth.
+    (
+        "keystone_eternal_youth",
+        "50% less Life Regeneration Rate\\n50% less maximum Total Life Recovery per Second from Leech\\nEnergy Shield Recharge instead applies to Life",
+    ),
     // P6-11an: Blood Magic.
     (
         "keystone_blood_magic",

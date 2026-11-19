@@ -309,6 +309,10 @@ pub enum Poe1Quantity {
     /// P6-11an, Blood Magic): a `Flag`, read by
     /// [`skill_modifiers::Totals`] for the other gems' reservation.
     ReserveLifeInsteadOfMana,
+    /// Energy shield recharge applies to life instead (PoB's
+    /// `EnergyShieldRechargeAppliesToLife`; P6-11ao, Eternal Youth): a
+    /// `Flag`; [`regen`] then sets no energy shield recharge.
+    EsRechargeAppliesToLife,
     /// The hit's repeat count as [`repeats`] settled it (PoB's
     /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
     Repeats,
@@ -1011,6 +1015,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
+            Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")

@@ -720,6 +720,11 @@ pub enum PassiveState {
     /// A node PoB generates from a socketed cluster jewel
     /// (`cluster-jewel-node`).
     ClusterNode,
+    /// A connected keystone in a socketed Timeless jewel's radius: the
+    /// jewel replaces it with its conqueror's keystone (PoB's timeless
+    /// jewel conversion), which the engine does not model
+    /// (`timeless-keystone`; P6-11ao).
+    TimelessKeystone,
 }
 
 impl PassiveState {

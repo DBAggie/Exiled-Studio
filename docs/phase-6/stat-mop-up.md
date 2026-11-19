@@ -992,3 +992,35 @@ Both match PoB on every computed field.
   - The build's life base was already over PoB's by 189 (1,923, PoB 1,734, its strength bonus included), which the missing more had hidden. The build is `Partial`.
 - **Corpus:** 21 values moved, all toward PoB; 5 now equal it. 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ao: Eternal Youth, and keystones a Timeless jewel replaces
+
+**PoB, Eternal Youth:** the keystone's lines are:
+- "50% less Life Regeneration Rate" (`LifeRegen` MORE -50);
+- "50% less maximum Total Life Recovery per Second from Leech" (`MaxLifeLeechRate` MORE -50);
+- "Energy Shield Recharge instead applies to Life" (`EnergyShieldRechargeAppliesToLife`). PoB then computes `LifeRecharge`, which is no slice field, and sets no `EnergyShieldRecharge`. The delay stays (`CalcDefence.lua` 1325 to 1371).
+
+**The engine, Eternal Youth:**
+- **The keystone row:** a `keystones` row with the three effects, as a new flag `Poe1Quantity::EsRechargeAppliesToLife`.
+- **`regen::recharge`:** sets no energy shield recharge when the flag is on. It checks with `phases::has` first, so a build without the flag gains no graph node.
+- **Tests:** `tests/keystones_chill.rs` carries the keystone's text.
+
+**Found on the way: Timeless jewels.**
+- Mapping the keystone moved four public builds away from PoB (Eternal Youth applied, PoB's leech still 20%). Each has a Timeless jewel (Glorious Vanity or Elegant Hubris) whose radius holds the keystone.
+- A Timeless jewel replaces every keystone in its radius with its conqueror's keystone, whatever its seed. Those builds allocate Eternal Youth for the replacement, and PoB never applies Eternal Youth's own lines.
+- **The fix:** `loom_pipeline::timeless_keystones` finds the keystones in the radius of each socketed Timeless jewel: its base is "Timeless Jewel", or a line resolved to a `local_unique_jewel_alternate_tree_*` stat, and its `Radius:` line names the ring.
+  - A connected keystone there is a new `PassiveState::TimelessKeystone`. `collect` turns it into an `unmodelled-passive` reason (`timeless-keystone`) instead of applying its lines.
+  - **Why the base check:** one build's Glorious Vanity resolved to no such stat, so the stat check alone missed it.
+  - The replacement keystones wait for the Timeless data run (a maintainer item).
+- **Confirmed in PoB's own output:**
+  - Eternal Youth dropped in those four builds leaves their leech at PoB's 20%.
+  - In penance-brand-ignite-elementalist, the replaced keystone is Mind over Matter. PoB's `sharedMindOverMatter` is 0 there too.
+
+**New mechanic fixture:** `eternal-youth-ice-nova-witch.xml` (the line "Eternal Youth", energy shield, and life regeneration), run through PoB v2.67.2 (3 of 3 runs identical). It matches PoB on every compared field: life regeneration 11.3, the leech rate at 10%, the recharge delay 1.6, and no energy shield recharge on either side.
+
+**Evidence** (`local/p6/p6-11ao/`):
+- **Public `calc-parity`:** 228 builds, 292 expected, 0 unexpected; match 14,810 to 14,886 (the fixture).
+- **Moved values:** 10 moved away from PoB, all the penance-brand build's estimate (its maximum hit and effective health pool lose Mind over Matter, which PoB does not apply either).
+  - The build stays far below PoB's for other reasons (maximum hit 37,014 against 106,161).
+- **Corpus:** the same build moves the same way; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
