@@ -799,6 +799,9 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         ),
         BuffStat::ConfigIs {
             condition, rows, ..
+        }
+        | BuffStat::CheckModCond {
+            condition, rows, ..
         } => (
             rows,
             format!(" tags global {}", json!({ "modCond": condition })),
@@ -1068,6 +1071,7 @@ fn check_one(
             | BuffStat::BloodStance(_)
             | BuffStat::SandStance(_)
             | BuffStat::PerCount { .. }
+            | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)
             | BuffStat::WhenState { .. }

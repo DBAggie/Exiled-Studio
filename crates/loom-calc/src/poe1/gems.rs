@@ -246,6 +246,19 @@ pub enum BuffStat {
         /// The rows.
         rows: &'static [HitEffect],
     },
+    /// Applies only when the config check `input` is on: it sets the
+    /// condition PoB's `modCond` names, which nothing else sets
+    /// (`CalcActiveSkill.lua` 806 drops a mod whose `modCond` fails;
+    /// Infused Channelling's `InfusionActive` from
+    /// `infusedChannellingInfusion`, `ConfigOptions.lua` 495; P6-11aa).
+    CheckModCond {
+        /// The config check.
+        input: &'static str,
+        /// PoB's `modCond`.
+        condition: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies in Blood Stance (PoB's `effectCond = "BloodStance"`, on
     /// unless the config's stance is Sand: `CalcSetup.lua` 538,
     /// `ConfigOptions.lua` 643).
@@ -2132,9 +2145,20 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportInfernalLegion", &[]),
     (
         "SupportInfusedChannelling",
+        // P6-11aa: `DamageTakenWhenHit` MORE while Infusion is active.
         &[(
             "support_storm_barrier_damage_taken_when_hit_+%_final_while_channelling",
-            BuffStat::Defence("damage-taken"),
+            BuffStat::CheckModCond {
+                input: INFUSION_INPUT,
+                condition: "InfusionActive",
+                rows: &[(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)),
+                    Op::More,
+                    1.0,
+                    NONE,
+                    NONE,
+                )],
+            },
         )],
     ),
     ("SupportInspiration", &[]),
@@ -2437,6 +2461,9 @@ fn intimidating_terms(
 pub const NEARBY_ALLY_INPUT: &str = "multiplierNearbyAlly";
 /// The config input of the stance (`ConfigOptions.lua` 643).
 pub const STANCE_INPUT: &str = "bloodSandStance";
+/// The config check of Infused Channelling's Infusion
+/// (`ConfigOptions.lua` 495; P6-11aa).
+pub const INFUSION_INPUT: &str = "infusedChannellingInfusion";
 /// The config count of Momentum stacks removed (Swiftness,
 /// `ConfigOptions.lua` 543; P6-11y).
 pub const MOMENTUM_REMOVED_INPUT: &str = "MomentumSwiftnessStacks";
@@ -2453,6 +2480,7 @@ pub fn is_input(name: &str) -> bool {
         STANCE_INPUT,
         PRIDE_INPUT,
         MOMENTUM_REMOVED_INPUT,
+        INFUSION_INPUT,
     ]
     .contains(&name)
 }
@@ -3561,6 +3589,9 @@ fn add_rows(
             }
             BuffStat::WhenInput {
                 input: check, rows, ..
+            }
+            | BuffStat::CheckModCond {
+                input: check, rows, ..
             } => {
                 let on = config.and_then(|set| last_input(set, check, ConfigInputKind::Input));
                 match on {
@@ -3981,6 +4012,7 @@ mod tests {
             let effects: &[HitEffect] = match b {
                 BuffStat::Rows(e)
                 | BuffStat::WhenInput { rows: e, .. }
+                | BuffStat::CheckModCond { rows: e, .. }
                 | BuffStat::BloodStance(e)
                 | BuffStat::SandStance(e)
                 | BuffStat::PerCount { rows: e, .. }

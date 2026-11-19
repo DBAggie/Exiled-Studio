@@ -1716,6 +1716,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::BLEED.union(Flags::POISON),
         )],
     ),
+    // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
+    // `sup_int.lua` 3895).
+    (
+        "support_storm_barrier_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
     (
         "sword_accuracy_rating",

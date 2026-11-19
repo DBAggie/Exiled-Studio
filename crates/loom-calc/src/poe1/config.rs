@@ -381,7 +381,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "heraldOfTheHivePressure",
         &["Multiplier:OtherworldlyPressure"],
     ),
-    ("infusedChannellingInfusion", &["Condition:InfusionActive"]),
     (
         "meatShieldEnemyNearYou",
         &["Condition:MeatShieldEnemyNearYou"],

@@ -660,3 +660,25 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **The two stats:** no longer unmapped anywhere; they were in 7 builds.
 - **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11aa: Infused Channelling
+
+**PoB** (`sup_int.lua` 3892 to 3897) reads two Infused Channelling stats.
+- **`support_storm_barrier_damage_taken_when_hit_+%_final_while_channelling`:** `DamageTakenWhenHit` MORE. It is a `Buff` whose `modCond` is `InfusionActive`. Only the config check `infusedChannellingInfusion` sets that condition (`ConfigOptions.lua` 495), and `CalcActiveSkill.lua` 806 drops a mod whose `modCond` fails.
+- **`support_storm_barrier_damage_+%_final`:** the supported skill's `Damage` MORE.
+
+**The engine:**
+- **`poe1::gems`:** a new `BuffStat::CheckModCond` applies its rows only when its config check is on. The damage taken stat, which was a `Defence` marker, is that row.
+- **`infusedChannellingInfusion`:** leaves `config::NAMED_ONLY` and is now an input `poe1::gems` reads.
+- **Infused Channelling's damage stat:** a hit row (`mapping::HIT_ROWS`).
+- **`data-parity` `gem_effects`:** reads the damage taken row with PoB's `modCond`.
+
+**Evidence** (`local/p6/p6-11aa/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected.
+  - Match went from 13,607 to 13,651.
+  - 40 values moved, all toward PoB; 15 now equal it.
+  - 44 fields went from partial to complete.
+- **Corpus:** unchanged; 0 unexpected.
+- **Infused Channelling's stats:** neither is unmapped anywhere now. The damage taken stat was in 4 builds and the damage stat in 4.
+- **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
