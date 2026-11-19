@@ -747,3 +747,31 @@ All three match PoB on every computed field (231), including each type's maximum
   - lightning-trap-of-sparking-elementalist sets the low life check. Its maximum hit and effective health pool are now computed, but they stay indeterminate because of the build's other reasons.
 - **Corpus:** 12 fields of the one build with the check go from unsupported or not computed to partial. 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ae: guard skills in the defence estimate
+
+**PoB** (`CalcDefence.lua` 2379 to 2395, 296 to 307, 3136 to 3146):
+- **The guard's rows:** a guard skill's rows are `unscalable` `Guard` buffs (Molten Shell and Vaal Molten Shell, `act_str.lua` 7545 to 7554; Steelskin, 10952 to 10957).
+  - `GuardAbsorbRate` BASE: the share of each hit the guard takes.
+  - `GuardAbsorbLimit` BASE: Steelskin's flat limit. Molten Shell's is a share of armour (`PerStat` `Armour`, `floor(Armour) x pct / 100`), at most `Multiplier:GuardAbsorbMax` in total.
+- **The effective health pool:** the shared guard takes its rate of each type's remaining damage, at most what is left of it, before energy shield. It is floored after each take, and what is left carries to the next hit.
+- **Maximum hit:** each type's pool becomes `max(pool - protected, 0) + min(pool, protected) / (1 - rate)`, with `protected = limit / rate x (1 - rate)`, or `pool + limit` at a rate of 100%.
+
+**The engine:**
+- **`poe1::gems`:** a new `BuffStat::Unscalable` takes scale 1 for its rows. The two Molten Shells' and Steelskin's guard stats, which were `Defence("guard")` pool markers, are such rows of four new quantities:
+  - `GuardAbsorbRate`;
+  - `GuardAbsorbLimit`;
+  - `GuardAbsorbPerArmour`;
+  - `GuardAbsorbMax`.
+- **The armour row:** Molten Shell's armour row keeps the guard's buff scale.
+- **The pools:** `enemy_hit` reads the four for the shared guard. `ehp` carries the guard through `reduce` and `hits_to_die`.
+- **Left as a reason:** a type's own guard has no modelled source. The Stone Golem's damage taken before you is an ally pool, which stays a pool marker.
+
+**Evidence** (`local/p6/p6-11ae/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected.
+  - Match went from 13,882 to 13,894.
+  - 30 values moved, all toward PoB; 10 now equal it.
+  - 12 fields went from partial to complete.
+- **Corpus:** 58 values moved, all toward PoB; 0 unexpected.
+- **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
+- **Tests:** a unit test checks the guard's share in `reduce`. The workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

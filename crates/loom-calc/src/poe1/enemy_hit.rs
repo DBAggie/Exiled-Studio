@@ -608,6 +608,50 @@ fn maximum_hit(
     } else {
         es
     };
+    // The shared guard (P6-11ae; `CalcDefence.lua` 2379 to 2395): its
+    // rate, and its limit, `GuardAbsorbLimit` BASE with Molten Shell's
+    // share of armour (`PerStat` `Armour`, at most `GuardAbsorbMax` in
+    // total). A type's own guard has no modelled source.
+    let guard_rate = sum(
+        calc,
+        Poe1Quantity::GuardAbsorbRate,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )?
+    .min(100.0);
+    let guard = if guard_rate > 0.0 {
+        let flat = sum(
+            calc,
+            Poe1Quantity::GuardAbsorbLimit,
+            Op::Base,
+            &cx,
+            &mut pool_reasons,
+        )?;
+        let per = sum(
+            calc,
+            Poe1Quantity::GuardAbsorbPerArmour,
+            Op::Base,
+            &cx,
+            &mut pool_reasons,
+        )?;
+        let of_armour = if per == 0.0 {
+            0.0
+        } else {
+            let cap = sum(
+                calc,
+                Poe1Quantity::GuardAbsorbMax,
+                Op::Base,
+                &cx,
+                &mut pool_reasons,
+            )?;
+            let armour = value(calc, Field::Armour).unwrap_or(0.0);
+            (per * crate::math::floor(armour + 0.0001)).min(cap)
+        };
+        flat + of_armour
+    } else {
+        0.0
+    };
     let half = life * 0.5;
     let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
@@ -643,6 +687,14 @@ fn maximum_hit(
         } else {
             with_mana
         };
+        // The guard (`CalcDefence.lua` 3136 to 3146).
+        if guard_rate >= 100.0 {
+            pools[i] += guard;
+        } else if guard_rate > 0.0 {
+            let share = guard_rate / 100.0;
+            let protected = guard / share * (1.0 - share);
+            pools[i] = (pools[i] - protected).max(0.0) + pools[i].min(protected) / (1.0 - share);
+        }
     }
     let mut results = [None; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
@@ -795,6 +847,8 @@ fn maximum_hit(
             energy_shield: es,
             mana,
             mom,
+            guard_rate,
+            guard,
         };
         super::ehp::estimate(
             calc,
@@ -873,6 +927,10 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::EnemyHitReason(_)
                 | Poe1Quantity::MaximumFortification
                 | Poe1Quantity::LowLifePercentage
+                | Poe1Quantity::GuardAbsorbRate
+                | Poe1Quantity::GuardAbsorbLimit
+                | Poe1Quantity::GuardAbsorbPerArmour
+                | Poe1Quantity::GuardAbsorbMax
         )
     )
 }

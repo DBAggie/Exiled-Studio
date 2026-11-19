@@ -133,7 +133,7 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 
 **On this branch** (no maintainer needed):
 - **The defence estimate:**
-  - mind over matter, guard, ward, aegis, life loss prevention, and recoup in the pools;
+  - ward, aegis, a type's own guard, allies' pools, life loss prevention, and recoup in the pools (the shared guard since P6-11ae, the low life and low energy shield checks since P6-11ad);
   - damage over time EHP;
   - conversion smoothing in maximum hit.
 - **A dual wielder's** ailments and leech.

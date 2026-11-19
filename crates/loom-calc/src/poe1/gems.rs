@@ -263,6 +263,10 @@ pub enum BuffStat {
     /// unless the config's stance is Sand: `CalcSetup.lua` 538,
     /// `ConfigOptions.lua` 643).
     BloodStance(&'static [HitEffect]),
+    /// Rows PoB marks `unscalable` on a skill whose other rows scale (a
+    /// guard's absorption, Molten Shell's beside its armour): scale 1
+    /// (P6-11ae).
+    Unscalable(&'static [HitEffect]),
     /// Applies in Sand Stance (PoB's `effectCond = "SandStance"`, set when
     /// the config's stance is Sand: `ConfigOptions.lua` 643 to 646) as a
     /// `Buff` on the character, not on minions: scaled by the buff effect
@@ -1234,14 +1238,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "base_physical_damage_reduction_rating",
                     BuffStat::Rows(&[(Quantity::Armour, Op::Base, 1.0, NONE, NONE)]),
                 ),
+                // P6-11ae: the guard (`act_str.lua` 7545 to 7554).
                 (
                     "molten_shell_damage_absorb_limit_%_of_armour",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbPerArmour),
+                        Op::Base,
+                        100.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
-                ("molten_shell_damage_absorbed_%", BuffStat::Defence("guard")),
+                (
+                    "molten_shell_damage_absorbed_%",
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbRate),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
                 (
                     "molten_shell_max_damage_absorbed",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbMax),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -1511,8 +1537,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
-    // Steelskin (P6-9e): a guard (module docs); nothing reaches a slice
-    // field, but it takes the non-Vaal guard slot.
+    // Steelskin (P6-9e): a guard (module docs) that takes the non-Vaal
+    // guard slot; its absorption reaches the defence estimate (P6-11ae).
     (
         "QuickGuard",
         Kind::Buff {
@@ -1520,11 +1546,27 @@ pub const SKILLS: &[(&str, Kind)] = &[
             effect: EffectType::Guard,
             stats: &[
                 ("", BuffStat::NoSlice("ailment-on-self")),
+                // P6-11ae: the guard (`act_str.lua` 10952 to 10957).
                 (
                     "quick_guard_damage_absorb_limit",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbLimit),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
-                ("quick_guard_damage_absorbed_%", BuffStat::Defence("guard")),
+                (
+                    "quick_guard_damage_absorbed_%",
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbRate),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
             ],
         },
     ),
@@ -1891,14 +1933,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "base_physical_damage_reduction_rating",
                     BuffStat::Rows(&[(Quantity::Armour, Op::Base, 1.0, NONE, NONE)]),
                 ),
+                // P6-11ae: the guard (`act_str.lua` 7545 to 7554).
                 (
                     "molten_shell_damage_absorb_limit_%_of_armour",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbPerArmour),
+                        Op::Base,
+                        100.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
-                ("molten_shell_damage_absorbed_%", BuffStat::Defence("guard")),
+                (
+                    "molten_shell_damage_absorbed_%",
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbRate),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
                 (
                     "molten_shell_max_damage_absorbed",
-                    BuffStat::Defence("guard"),
+                    BuffStat::Unscalable(&[(
+                        Quantity::Poe1(Poe1Quantity::GuardAbsorbMax),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -3559,6 +3623,10 @@ fn add_rows(
         let mut count = 1.0;
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
+            BuffStat::Unscalable(rows) => {
+                row_scale = 1.0;
+                (rows, None)
+            }
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
             BuffStat::Defence(category) => {
                 if *value != 0 {
@@ -4015,6 +4083,7 @@ mod tests {
                 | BuffStat::CheckModCond { rows: e, .. }
                 | BuffStat::BloodStance(e)
                 | BuffStat::SandStance(e)
+                | BuffStat::Unscalable(e)
                 | BuffStat::PerCount { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)

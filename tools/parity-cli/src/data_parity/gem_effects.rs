@@ -657,6 +657,12 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)) => {
             "DamageTakenWhenHit".into()
         }
+        // A guard's (P6-11ae).
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbRate) => "GuardAbsorbRate".into(),
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbLimit | Poe1Quantity::GuardAbsorbPerArmour) => {
+            "GuardAbsorbLimit".into()
+        }
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbMax) => "Multiplier:GuardAbsorbMax".into(),
         // Arctic Armour's (P6-11z).
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
             format!("{}DamageTakenWhenHit", title(t.name()))
@@ -762,6 +768,23 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         BuffStat::SandStance(rows) => (
             rows,
             format!(" tags global {}", json!({ "effectCond": "SandStance" })),
+        ),
+        // A guard's rows (P6-11ae): `unscalable`, Molten Shell's limit per
+        // armour with its `PerStat` tag (PoB's export keeps its stat alone).
+        BuffStat::Unscalable(rows) => (
+            rows,
+            if rows
+                .iter()
+                .any(|r| r.0 == Quantity::Poe1(Poe1Quantity::GuardAbsorbPerArmour))
+            {
+                format!(
+                    " tags {};global {}",
+                    json!({ "stat": "Armour", "type": "PerStat" }),
+                    json!({ "unscalable": true })
+                )
+            } else {
+                format!(" tags global {}", json!({ "unscalable": true }))
+            },
         ),
         BuffStat::PerCount { var, rows, .. } => (
             rows,
@@ -1070,6 +1093,7 @@ fn check_one(
             | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
             | BuffStat::SandStance(_)
+            | BuffStat::Unscalable(_)
             | BuffStat::PerCount { .. }
             | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)

@@ -448,6 +448,18 @@ pub enum Poe1Quantity {
     /// [`enemy_hit`] for `LifeRecoverable` with the config's
     /// `conditionLowLife`.
     LowLifePercentage,
+    /// The share of a hit a guard skill takes, percent (PoB's
+    /// `GuardAbsorbRate` BASE; P6-11ae), read by [`enemy_hit`].
+    GuardAbsorbRate,
+    /// A guard's absorb limit (PoB's `GuardAbsorbLimit` BASE; P6-11ae).
+    GuardAbsorbLimit,
+    /// A guard's absorb limit per point of armour, a fraction (PoB's
+    /// `GuardAbsorbLimit` BASE `PerStat` `Armour`, Molten Shell's; P6-11ae),
+    /// at most [`Self::GuardAbsorbMax`] in total.
+    GuardAbsorbPerArmour,
+    /// The total cap of [`Self::GuardAbsorbPerArmour`] (PoB's
+    /// `Multiplier:GuardAbsorbMax` BASE; P6-11ae).
+    GuardAbsorbMax,
     /// The share of damage taken from mana before life, percent (PoB's
     /// `DamageTakenFromManaBeforeLife` and `<Type>DamageTakenFromManaBeforeLife`
     /// BASE; P6-10b part 15: mind over matter), read by [`enemy_hit`] and
@@ -869,6 +881,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
             Self::MaximumFortification => f.write_str("maximum-fortification"),
             Self::LowLifePercentage => f.write_str("low-life-percentage"),
+            Self::GuardAbsorbRate => f.write_str("guard-absorb-rate"),
+            Self::GuardAbsorbLimit => f.write_str("guard-absorb-limit"),
+            Self::GuardAbsorbPerArmour => f.write_str("guard-absorb-per-armour"),
+            Self::GuardAbsorbMax => f.write_str("guard-absorb-max"),
             Self::ManaBeforeLife(o) => write!(f, "mana-before-life.{}", o.name()),
             Self::BlockEffect => f.write_str("block-effect"),
             Self::AvoidProjectiles => f.write_str("avoid-projectiles"),

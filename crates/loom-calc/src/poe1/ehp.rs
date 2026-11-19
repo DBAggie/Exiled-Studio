@@ -29,8 +29,12 @@
 //!   mitigated / (1 - not hit / 100)`; `TotalEHP = TotalNumberOfHits x` the
 //!   enemy's damage before its modifiers (`totalEnemyDamageIn`).
 //!
-//! Not modelled, each a reason (unmapped stats, markers, or config): mind
-//! over matter, guard, ward, aegis, allies taking damage, life loss
+//! - **Guard** (P6-11ae): the shared guard takes `GuardAbsorbRate`% of
+//!   each type's damage, at most what is left of it, before energy shield
+//!   (floored after each take), and what is left carries to the next hit.
+//!
+//! Not modelled, each a reason (unmapped stats, markers, or config): a
+//! type's own guard, ward, aegis, allies taking damage, life loss
 //! prevented, recoup, life, mana, or energy shield gained on block or
 //! suppression, dodge, avoiding all damage from hits or a type's damage,
 //! lucky or unlucky block and suppression, the enemy reducing block.
@@ -68,6 +72,8 @@ struct Pools {
     life: f64,
     energy_shield: f64,
     mana: f64,
+    /// The shared guard left (P6-11ae).
+    guard: f64,
 }
 
 /// What the estimate reads of the character.
@@ -83,6 +89,10 @@ pub(super) struct Character {
     /// Each type's share taken from mana before life (mind over matter, a
     /// fraction).
     pub(super) mom: [f64; 5],
+    /// The shared guard's absorb rate, percent, and its limit
+    /// (`sharedGuardAbsorbRate`, `sharedGuardAbsorb`; P6-11ae).
+    pub(super) guard_rate: f64,
+    pub(super) guard: f64,
 }
 
 /// One run of `numberOfHitsToDie`'s state shared with its recursive call.
@@ -103,6 +113,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut energy_shield = pools.energy_shield.max(0.0);
     let mut mana = pools.mana.max(0.0);
     let mut life = pools.life.max(0.0);
+    let mut guard = pools.guard;
     let life_pool = life_hit_pool(life, ch.max_life);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
@@ -131,6 +142,12 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             continue;
         };
         let bypass = if ty == DamageType::Chaos { 1.0 } else { 0.0 };
+        // The shared guard takes its share first (P6-11ae).
+        if guard > 0.0 {
+            let taken = (remainder * ch.guard_rate / 100.0).min(guard);
+            guard = crate::math::floor(guard - taken);
+            remainder -= taken;
+        }
         if energy_shield > 0.0 && bypass < 1.0 {
             let taken = (remainder * (1.0 - bypass)).min(es_pools[i]);
             for (j, pool) in es_pools.iter_mut().enumerate() {
@@ -165,6 +182,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             life: crate::math::floor(life),
             energy_shield: crate::math::floor(energy_shield),
             mana: crate::math::floor(mana),
+            guard,
         },
         crate::math::ceil(overkill),
     )
@@ -181,6 +199,7 @@ fn hits_to_die(damage_in: &[f64; 5], cycles: f64, run: &mut Run, ch: &Character)
         life: ch.life,
         energy_shield: ch.energy_shield,
         mana: ch.mana,
+        guard: ch.guard,
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -352,9 +371,38 @@ mod tests {
             energy_shield: 0.0,
             mana: 590.0,
             mom: [0.0; 5],
+            guard_rate: 0.0,
+            guard: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(&[14_885.9, 0.0, 0.0, 0.0, 0.0], 1.0, &mut run, &ch);
         assert!((hits - 1125.0 / 14_885.9).abs() < 1e-3, "{hits}");
+    }
+
+    /// PoB's `reducePoolsByDamage` with a shared guard (P6-11ae): a guard
+    /// of 1,000 taking 75% of a 1,000 hit keeps 250 and life takes 250;
+    /// the next hit's 750 share is capped at the 250 left.
+    #[test]
+    fn a_guard_should_take_its_share_first() {
+        let ch = Character {
+            life: 2000.0,
+            max_life: 2000.0,
+            energy_shield: 0.0,
+            mana: 0.0,
+            mom: [0.0; 5],
+            guard_rate: 75.0,
+            guard: 1000.0,
+        };
+        let pools = Pools {
+            life: ch.life,
+            energy_shield: 0.0,
+            mana: 0.0,
+            guard: ch.guard,
+        };
+        let hit = [Some(1000.0), None, None, None, None];
+        let (after, overkill) = reduce(pools, &hit, &ch);
+        assert_eq!((after.guard, after.life, overkill), (250.0, 1750.0, 0.0));
+        let (after, _) = reduce(after, &hit, &ch);
+        assert_eq!((after.guard, after.life), (0.0, 1000.0));
     }
 }
