@@ -89,8 +89,11 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   INC, `ModParser.lua` "effect of your curses");
 /// - "#% increased Effect of Buffs granted by your Golems" (P3-close;
 ///   PoB's `BuffEffect` INC tagged `SkillType.Golem`, `ModParser.lua`
-///   "effect of buffs granted by your golems").
-pub const STATS: [ModifierRow; 10] = [
+///   "effect of buffs granted by your golems");
+/// - "#% increased Mana Reservation Efficiency of Herald Skills" (P6-11ag;
+///   PoB's `ManaReservationEfficiency` INC tagged `SkillType.Herald`,
+///   `ModParser.lua` 1027 "of herald skills").
+pub const STATS: [ModifierRow; 11] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -116,6 +119,11 @@ pub const STATS: [ModifierRow; 10] = [
     ),
     ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
     ("golem_buff_effect_+%", Poe1Quantity::GolemBuffEffect, 1.0),
+    (
+        "herald_skills_mana_reservation_efficiency_+%",
+        Poe1Quantity::HeraldManaReservationEfficiency,
+        1.0,
+    ),
     (
         "mana_reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)),
@@ -150,6 +158,8 @@ pub struct Totals {
     pub life_efficiency: f64,
     /// `ManaReservationEfficiency` INC.
     pub mana_efficiency: f64,
+    /// `ManaReservationEfficiency` INC of herald skills (P6-11ag).
+    pub herald_mana_efficiency: f64,
     /// `Reserved` INC (no pool).
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
@@ -205,6 +215,7 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(None) => &mut t.efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Life)) => &mut t.life_efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
+                Poe1Quantity::HeraldManaReservationEfficiency => &mut t.herald_mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
@@ -239,6 +250,18 @@ impl Totals {
             inc: self.reserved,
             efficiency: crate::math::max(own + self.efficiency, -100.0),
         }
+    }
+
+    /// [`Self::reservation`] for a skill of `types`: a herald's mana
+    /// efficiency adds its own (P6-11ag).
+    #[must_use]
+    pub fn reservation_for(&self, pool: Pool, types: &BTreeSet<String>) -> ReservationTerms {
+        let mut terms = self.reservation(pool);
+        if pool == Pool::Mana && types.contains("Herald") && self.herald_mana_efficiency != 0.0 {
+            let own = self.mana_efficiency + self.herald_mana_efficiency;
+            terms.efficiency = crate::math::max(own + self.efficiency, -100.0);
+        }
+        terms
     }
 
     /// The scale of a buff of `effect` from a skill of `types` (module
@@ -542,6 +565,23 @@ mod tests {
             ..Totals::default()
         };
         assert_eq!(low.reservation(Pool::Mana).efficiency, -100.0);
+    }
+
+    /// A herald's own mana reservation efficiency adds to the mana and
+    /// generic ones for a skill typed `Herald` alone (P6-11ag).
+    #[test]
+    fn a_heralds_efficiency_should_apply_to_heralds_only() {
+        let t = Totals {
+            efficiency: 5.0,
+            mana_efficiency: 10.0,
+            herald_mana_efficiency: 20.0,
+            ..Totals::default()
+        };
+        let herald: BTreeSet<String> = ["Herald".to_owned()].into();
+        let aura: BTreeSet<String> = ["Aura".to_owned()].into();
+        assert_eq!(t.reservation_for(Pool::Mana, &herald).efficiency, 35.0);
+        assert_eq!(t.reservation_for(Pool::Mana, &aura).efficiency, 15.0);
+        assert_eq!(t.reservation_for(Pool::Life, &herald).efficiency, 5.0);
     }
 
     #[test]

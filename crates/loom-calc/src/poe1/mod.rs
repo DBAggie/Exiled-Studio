@@ -264,6 +264,11 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for the other
     /// gems' reservation.
     ReservationEfficiency(Option<Pool>),
+    /// Mana reservation efficiency of herald skills (PoB's
+    /// `ManaReservationEfficiency` INC tagged `SkillType.Herald`; P6-11ag):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for a skill typed
+    /// `Herald`.
+    HeraldManaReservationEfficiency,
     /// Reservation of a pool, or of both (PoB's `<Pool>Reserved` and
     /// `Reserved`, P3-8l): `Increased`, read as
     /// [`Self::ReservationEfficiency`].
@@ -912,6 +917,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ReservationEfficiency(None) => f.write_str("reservation-efficiency"),
             Self::ReservationEfficiency(Some(pool)) => {
                 write!(f, "reservation-efficiency.{}", pool.name())
+            }
+            Self::HeraldManaReservationEfficiency => {
+                f.write_str("herald-mana-reservation-efficiency")
             }
             Self::Reserved(None) => f.write_str("reserved"),
             Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),

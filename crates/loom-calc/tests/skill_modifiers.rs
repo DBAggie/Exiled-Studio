@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 10] = [
+const TEXTS: [(&str, &str); 11] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -49,6 +49,11 @@ const TEXTS: [(&str, &str); 10] = [
     (
         "golem_buff_effect_+%",
         "{0}% increased Effect of Buffs granted by your Golems",
+    ),
+    // P6-11ag: PoB's `ManaReservationEfficiency` tagged `SkillType.Herald`.
+    (
+        "herald_skills_mana_reservation_efficiency_+%",
+        "{0}% increased Mana Reservation Efficiency of Herald Skills",
     ),
     // P6-11k: PoB's `SkillAuraEffectOnSelf`.
     (

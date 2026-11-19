@@ -796,3 +796,19 @@ All three match PoB on every computed field (231), including each type's maximum
 - **Corpus:** 2 values moved, both toward PoB; 0 unexpected.
 - **The stats:** no longer unmapped anywhere.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ag: heralds' mana reservation efficiency
+
+**PoB:** "#% increased Mana Reservation Efficiency of Herald Skills" is `ManaReservationEfficiency` INC tagged `SkillType.Herald` (`ModParser.lua` 1027, "of herald skills"). A herald's reservation sums it with the other mana and generic efficiencies, through the skill's own config (`CalcActiveSkill.lua`'s reservation terms).
+
+**The engine:**
+- **`poe1::skill_modifiers`:** a new row of `Poe1Quantity::HeraldManaReservationEfficiency` (`STATS`, eleven rows).
+- **`Totals::reservation_for`:** adds the row to a herald's mana efficiency. `poe1::gems` reads each other gem's reservation through it.
+- **Tests:** `tests/skill_modifiers.rs` carries the row's game text, and a unit test checks the herald-only sum.
+
+**Evidence** (`local/p6/p6-11ag/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected; match unchanged at 13,894.
+  - 11 values moved, all toward PoB: penance-brand-ignite-elementalist's unreserved mana (-402 to 157, PoB 78) and the defence fields that read it. The build's fields stay partial for other reasons.
+- **Corpus:** 13 values moved, all toward PoB; 0 unexpected.
+- **The stat:** no longer unmapped anywhere.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
