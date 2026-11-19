@@ -609,6 +609,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11aj: Multistrike's repeats (`RepeatCount` BASE with a melee
+    // weapon or unarmed, `SkillStatMap.lua` 297; its `RequiresShield`
+    // alternative is not modelled: no such skill is a modelled attack).
+    (
+        "base_melee_attack_repeat_count",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatCount),
+            Op::Base,
+            1.0,
+            NONE,
+            Flags::WEAPON_MELEE.union(Flags::UNARMED),
+        )],
+    ),
     // P6-11n: "#% of Physical Damage Converted to Chaos Damage"
     // (`PhysicalDamageConvertToChaos` BASE).
     (
@@ -687,6 +700,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    // P6-11aj: Spell Echo's repeats (`RepeatCount` BASE, `ModFlag.Cast`,
+    // `SkillStatMap.lua` 294).
+    (
+        "base_spell_repeat_count",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatCount),
+            Op::Base,
+            1.0,
+            Flags::CAST,
+            NONE,
+        )],
     ),
     // P6-11n: the Berserker's "#% more Damage" (`Damage` MORE).
     (
@@ -1315,6 +1340,38 @@ pub const HIT_ROWS: &[HitRow] = &[
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-11aj: Multistrike's damage of each repeat (`RepeatOneDamage` to
+    // `RepeatThreeDamage` MORE with a melee weapon or unarmed).
+    (
+        "multistrike_damage_+%_final_on_first_repeat",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatDamage(1)),
+            Op::More,
+            1.0,
+            NONE,
+            Flags::WEAPON_MELEE.union(Flags::UNARMED),
+        )],
+    ),
+    (
+        "multistrike_damage_+%_final_on_second_repeat",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatDamage(2)),
+            Op::More,
+            1.0,
+            NONE,
+            Flags::WEAPON_MELEE.union(Flags::UNARMED),
+        )],
+    ),
+    (
+        "multistrike_damage_+%_final_on_third_repeat",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatDamage(3)),
+            Op::More,
+            1.0,
+            NONE,
+            Flags::WEAPON_MELEE.union(Flags::UNARMED),
+        )],
+    ),
     // P6-11n: the Occultist's "#% more Chaos Damage" (`ChaosDamage` MORE).
     (
         "occultist_chaos_damage_+%_final",
@@ -1536,6 +1593,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11aj: Awakened Spell Echo's final repeat's double damage
+    // (`RepeatFinalDoubleDamageChance` BASE, `ModFlag.Spell`).
+    (
+        "spell_echo_plus_chance_double_damage_%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatFinalDoubleDamageChance),
+            Op::Base,
+            1.0,
+            Flags::SPELL,
+            NONE,
+        )],
+    ),
     (
         "spell_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
@@ -1684,6 +1753,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_controlled_destruction_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11aj: Spell Echo's "#% more Damage" (`Damage` MORE) and the
+    // echoes' cast speed (`Speed` MORE, `ModFlag.Cast`).
+    (
+        "support_echo_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P6-11af: Efficacy's "#% more Damage over Time" (`Damage` MORE,
     // `ModFlag.Dot`) and its spell damage (`ModFlag.Spell`; `sup_int.lua`
     // 1984 to 1989).
@@ -1699,6 +1774,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_gem_elemental_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, Flags::ELEMENTAL)],
+    ),
+    // P6-11aj: Greater Spell Echo's damage per repeat
+    // (`RepeatPerRepeatDamage` MORE).
+    (
+        "support_greater_spell_echo_spell_damage_+%_final_per_repeat",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RepeatPerRepeatDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     (
         "support_melee_physical_damage_+%_final",
@@ -1725,6 +1812,27 @@ pub const HIT_ROWS: &[HitRow] = &[
             1.0,
             Flags::MELEE_HIT,
             Flags::BLEED.union(Flags::POISON),
+        )],
+    ),
+    (
+        "support_multicast_cast_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::CAST, NONE)],
+    ),
+    // P6-11aj: Multistrike's "#% less Attack Damage" (`Damage` MORE,
+    // `ModFlag.Attack`) and its attack speed with a melee weapon or
+    // unarmed (`Speed` MORE).
+    (
+        "support_multiple_attack_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "support_multiple_attacks_melee_attack_speed_+%_final",
+        &[(
+            Quantity::Speed,
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            Flags::WEAPON_MELEE.union(Flags::UNARMED),
         )],
     ),
     // P6-11ab: Rapid Decay's "#% more Damage over Time" (`Damage` MORE,
@@ -2034,6 +2142,11 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::SkillConversion(..)
                     | Poe1Quantity::Conversion(..)
                     | Poe1Quantity::DoubleDamageChance
+                    // The repeats (P6-11aj).
+                    | Poe1Quantity::RepeatCount
+                    | Poe1Quantity::RepeatDamage(_)
+                    | Poe1Quantity::RepeatPerRepeatDamage
+                    | Poe1Quantity::RepeatFinalDoubleDamageChance
                     | Poe1Quantity::Stack(..)
                     | Poe1Quantity::ArcaneSurgeCastSpeed
                     // Its mana regeneration (P6-10b).
@@ -4936,6 +5049,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
+    // P6-11aj: Multistrike's repeats choose nearby targets.
+    (
+        "repeat_target_selection_distance_from_initial_target_bias",
+        "targeting",
+    ),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
@@ -4980,6 +5098,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
+    ),
+    // P6-11aj: Greater Spell Echo's area per repeat (`RepeatPerRepeatAreaOfEffect`): the area, no slice field.
+    (
+        "support_greater_spell_echo_area_of_effect_+%_per_repeat",
+        "area",
     ),
     // P6-8b: the mirage's less attack speed, read by `poe1::combined` for
     // the mirage's copy alone.

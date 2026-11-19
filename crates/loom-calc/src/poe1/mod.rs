@@ -46,6 +46,7 @@ pub mod pantheon;
 pub mod pob_minion;
 pub mod reduction;
 pub mod regen;
+pub mod repeats;
 pub mod resist_conversion;
 #[rustfmt::skip]
 pub mod pob_minions;
@@ -270,6 +271,25 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for a skill typed
     /// `Herald`.
     HeraldManaReservationEfficiency,
+    /// The skill's additional repeats (PoB's `RepeatCount` BASE; P6-11aj),
+    /// read by [`repeats`].
+    RepeatCount,
+    /// The damage of the `n`th repeat (PoB's `RepeatOneDamage` to
+    /// `RepeatThreeDamage` MORE; P6-11aj).
+    RepeatDamage(u8),
+    /// Damage per repeat (PoB's `RepeatPerRepeatDamage` MORE; P6-11aj).
+    RepeatPerRepeatDamage,
+    /// The final repeat's chance to deal double damage (PoB's
+    /// `RepeatFinalDoubleDamageChance` BASE; P6-11aj).
+    RepeatFinalDoubleDamageChance,
+    /// The `Damage` MORE [`repeats`] derives (P6-11aj): read with the
+    /// hit's `Damage` MORE, apart from it (PoB multiplies it in without
+    /// rounding it with the skill's other `Damage` MORE: a PoB oracle
+    /// probe, `docs/phase-6/stat-mop-up.md`, "P6-11aj").
+    RepeatAverageDamage,
+    /// The hit's repeat count as [`repeats`] settled it (PoB's
+    /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
+    Repeats,
     /// The share of fire resistance modifiers that also apply to another
     /// type, percent (PoB's `FireMaxResConvertTo<To>` when the flag is
     /// `true`, else `FireResConvertTo<To>`, BASE; P6-11ah), read by
@@ -930,6 +950,12 @@ impl core::fmt::Display for Poe1Quantity {
                 if *max { "maximum" } else { "resistance" },
                 to.name()
             ),
+            Self::RepeatCount => f.write_str("repeat-count"),
+            Self::RepeatDamage(n) => write!(f, "repeat-damage.{n}"),
+            Self::RepeatPerRepeatDamage => f.write_str("repeat-per-repeat-damage"),
+            Self::RepeatFinalDoubleDamageChance => f.write_str("repeat-final-double-damage-chance"),
+            Self::Repeats => f.write_str("repeats"),
+            Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")
             }

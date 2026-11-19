@@ -31,8 +31,8 @@ Every count is from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11a
 
 ## The register
 
-`docs/parity/divergence-register.json` holds 281 entries: 280 `game-truth` and 1 `pob-bug`.
-- **Q11 entries (Phase 6 adds DIV-0102 to DIV-0281, except DIV-0111 to DIV-0113 and DIV-0174):** the game floors a weapon's attack time to whole milliseconds (Q11, answered in game 2026-11-12). Each attack fixture's `Speed` difference is carried into the fields that read it:
+`docs/parity/divergence-register.json` holds 293 entries: 292 `game-truth` and 1 `pob-bug` (DIV-0282 to DIV-0293, P6-11aj's Multistrike fixtures, are Q11 entries too).
+- **Q11 entries (Phase 6 adds DIV-0102 to DIV-0293, except DIV-0111 to DIV-0113 and DIV-0174):** the game floors a weapon's attack time to whole milliseconds (Q11, answered in game 2026-11-12). Each attack fixture's `Speed` difference is carried into the fields that read it:
   - the hit's DPS;
   - combined and full DPS;
   - triggers;
@@ -140,7 +140,7 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 - **The remaining gems** (P6-9) and config inputs (P6-8a's Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; General's Cry's mirages; Sacred Wisps).
 - **The minion's** damage over time and spectres (P6-7c3).
 - **The P6-11 tail:** 929 distinct stats, including the intended field markers.
-- **Repeats** (Multistrike, Spell Echo): PoB's averaged repeat damage and its repeat-scaled speed caps, crit, and costs (`CalcOffence.lua` 773 to 870). The engine assumes one repeat. Only 2 public builds carry a repeat stat.
+- **Repeats' other modes:** `FINAL` and `FINAL_DPS` (P6-11aj modelled the default `AVERAGE` and `NONE`).
 
 **Maintainer items:**
 - **Data runs:**

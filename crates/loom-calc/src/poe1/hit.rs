@@ -79,11 +79,15 @@
 //!
 //! Every factor PoB applies that is 1 or 0 without a stat the mapping does
 //! not know (other conversion and gain, luck, double damage, action speed,
-//! damage taken of one type or by projectiles, traps, and mines, repeats,
-//! the enemy's block, the hit chance modifier) is left out: a stat that
+//! damage taken of one type or by projectiles, traps, and mines, the
+//! enemy's block, the hit chance modifier) is left out: a stat that
 //! would change it is unmapped and makes the fields `Partial`. The default
 //! enemy's other modifiers reach no mapped stat
 //! (`poe1::enemy` module docs).
+//!
+//! Repeats (P6-11aj) are [`super::repeats`]'s: settled at the start of
+//! each hit, their averaged damage read with the `Damage` MORE, their
+//! count in the rate's caps.
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit
 //! (PoB's `skillFlags.hit`: a `Damage` or `Projectile` type), cast by the
@@ -349,8 +353,8 @@ const CRIT_CHANCE_CAP: f64 = 100.0;
 /// A spell's chance to hit: PoB's `AccuracyHitChance` is 100 for a
 /// spell, and nothing modelled lets the enemy block it.
 const SPELL_HIT_CHANCE: f64 = 100.0;
-/// PoB's `data.misc.ServerTickTime`; the rate cap is `1 / 0.033` (times
-/// the repeat count, 1).
+/// PoB's `data.misc.ServerTickTime`; the rate cap is `1 / 0.033` times
+/// the repeat count ([`super::repeats`]).
 const SERVER_TICK_TIME: f64 = 0.033;
 /// PoB's `data.misc.AccuracyPerDexBase`: accuracy rating per dexterity.
 const ACCURACY_PER_DEXTERITY: f64 = 2.0;
@@ -895,8 +899,12 @@ fn more(
 ) -> Result<Valued, CalcError> {
     // (skill list?, name order) -> effects.
     let mut groups: BTreeMap<(bool, usize), Vec<Effect>> = BTreeMap::new();
+    // The repeats' averaged damage (P6-11aj): its own group, after the
+    // names.
+    let repeat = Quantity::Poe1(Poe1Quantity::RepeatAverageDamage);
     for e in calc.store().effects() {
-        if e.quantity != quantity || e.op != Op::More {
+        let derived = quantity == Quantity::Damage && e.quantity == repeat;
+        if (e.quantity != quantity && !derived) || e.op != Op::More {
             continue;
         }
         match e.conditions.applies(cx) {
@@ -919,10 +927,8 @@ fn more(
         // (`Calc::set_skill_sources`); another gem's buff is the
         // character's (PoB's `modDB`; close-out).
         let skill = calc.is_skill_source(&e.source);
-        groups
-            .entry((!skill, name_order(e)))
-            .or_default()
-            .push(e.clone());
+        let order = if derived { 7 } else { name_order(e) };
+        groups.entry((!skill, order)).or_default().push(e.clone());
     }
     let mut lists: [Vec<Valued>; 2] = [Vec::new(), Vec::new()];
     for ((character, _), mut effects) in groups {
@@ -1033,6 +1039,8 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     // skill data too (parts, cast time overrides, skill functions, flags),
     // which the game data does not carry.
     let mut unvetted = Reasons::new();
+    // The repeats, before the damage and the rate (P6-11aj).
+    super::repeats::apply(calc, &spell.skill.types, &cx, &mut unvetted);
     if !spell.vetted {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
@@ -1368,6 +1376,9 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let off_flags = flags | attack.off_weapon_flags;
     let flags = flags | attack.weapon_flags;
     let mut unvetted = Reasons::new();
+    // The repeats in the skill's config, the main hand's flags (P6-11aj).
+    let skill_cx = calc.context(flags);
+    super::repeats::apply(calc, &attack.skill.types, &skill_cx, &mut unvetted);
     let id = attack.skill.effect().id.as_str();
     if !attack.known_parts {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
@@ -2167,9 +2178,9 @@ fn cast_rate(
 /// (`CalcOffence.lua` 274 to 288), the level's cooldown, rounded up to a
 /// server tick (`ceil(cooldown x tick rate) / tick rate`) unless the skill
 /// stores more than one use; then `Speed = min(Speed, 1 / Cooldown x
-/// Repeats)` (2357 to 2360). No cooldown recovery, added cooldown, or
-/// additional use stat is mapped (each is unmapped, a reason), and the
-/// repeat count is 1 (module docs). `None` without a cooldown.
+/// Repeats)` (2357 to 2360; the repeats in [`rate`]). No cooldown
+/// recovery, added cooldown, or additional use stat is mapped (each is
+/// unmapped, a reason). `None` without a cooldown.
 fn cooldown_limit(
     calc: &mut Calc<'_>,
     spell: &SpellSkill<'_>,
@@ -2281,8 +2292,16 @@ fn rate(
     } else {
         rate
     };
+    // Each repeat is a use: the caps are times the repeat count (P6-11aj;
+    // `CalcOffence.lua` 2359, 2367).
+    let repeats = super::repeats::count(calc);
+    let repeats = phases::constant(calc, "repeats", repeats)?;
     let rate = match limit {
-        Some(limit) => phases::pair(calc, rate, limit, Term::Step("cooldown-capped"), true)?,
+        Some(limit) => {
+            let limit =
+                phases::product(calc, &[limit, repeats], Term::Step("cooldown-rate-repeats"))?;
+            phases::pair(calc, rate, limit, Term::Step("cooldown-capped"), true)?
+        }
         None => rate,
     };
     // A channelled skill's rate is not capped (`CalcOffence.lua` 2366; P6-5).
@@ -2290,6 +2309,11 @@ fn rate(
         return Ok((rate, reasons));
     }
     let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+    let cap = phases::product(
+        calc,
+        &[cap, repeats],
+        Term::Step("server-tick-rate-repeats"),
+    )?;
     let value = phases::pair(calc, rate, cap, Term::Result, true)?;
     Ok((value, reasons))
 }

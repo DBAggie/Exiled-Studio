@@ -852,3 +852,42 @@ All three match PoB on every computed field (231), including each type's maximum
   - **Toward PoB:** spell suppression from 54 to 64 (PoB 65), and the damage chance with it.
   - **Away from PoB:** three of the same build's estimate fields, hits and total EHP. They were already above PoB's for other reasons, and the extra suppression raises them further. The build is `Partial`.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11aj: repeats (Multistrike and Spell Echo)
+
+**PoB** (`CalcOffence.lua` 774 to 870, 2359, 2367, 5803 to 5819):
+- **The count:** `Repeats = 1 + RepeatCount` BASE in the skill's config, for an attack or a spell that is not `Instant`, `Channel`, `Triggered`, `Retaliation`, or `NonRepeatable`.
+  - Multistrike's count needs a melee weapon or no weapon (`ModFlagOr`); Spell Echo's needs a cast.
+  - An attack's config carries the main hand's weapon flags (`CalcActiveSkill.lua` 455).
+- **The repeat mode:** the config's `repeatMode` is `AVERAGE` by default; every new config set has it (`ConfigTab.lua` 1237). In that mode:
+  - **Per repeat** (Greater Spell Echo): `Damage` MORE `value x (Repeats - 1) / 2`.
+  - **The final repeat's double damage** (Awakened Spell Echo): `DoubleDamageChance` `value / Repeats`.
+  - **Each repeat's own damage** (Multistrike's first to third): one `Damage` MORE of their sum over `Repeats`. That is 22% for Multistrike and 33% for Greater Multistrike.
+- **The rate:** each repeat is a use. The cooldown's and the server tick's caps are times `Repeats`, and the costs per second are `cost x Speed / Repeats`.
+
+**The engine:**
+- **`poe1::repeats`** settles the count at the start of each spell and attack hit and adds the derived effects to the actor's store, as PoB's `NewMod` does. This needs a new `Calc::add_effect`.
+  - The averaged damage is a quantity of its own (`RepeatAverageDamage`). The hit's MORE multiplies it in as a separate group.
+  - **Evidence for the separate group:** a PoB probe of the Multistrike fixture with `repeatMode` set to `NONE` gives lightning 281.75 against `AVERAGE`'s 343.5, a ratio of 1.22. So PoB does not round the 22% together with Multistrike's 20% less (0.976, not 0.98).
+- **`hit::rate`:** multiplies both caps by the count.
+- **`costs::per_second`:** divides `Speed` by it before the cost, in PoB's order.
+- **New rows:**
+  - Multistrike's and Spell Echo's stats are hit rows: the repeat counts, each repeat's damage, Greater Spell Echo's damage per repeat, Awakened Spell Echo's double damage, Multistrike's less damage and more speed, Spell Echo's more damage and cast speed.
+  - The repeats' target choice and Greater Spell Echo's area are `NoEffect`.
+- **Not modelled, each a reason:** the `FINAL` and `FINAL_DPS` modes (`unmodelled-config`); Multistrike's `RequiresShield` alternative (no such skill is a modelled attack); a trap's or a mine's repeats (those skills are `Partial` already).
+
+**New mechanic fixtures** (each run through PoB v2.67.2, 3 of 3 runs identical; `local/p6/fx-rep-oracle/`):
+- **Smite:** with Multistrike, and with Greater Multistrike.
+- **Ice Nova:** with Spell Echo, and with Greater Spell Echo.
+
+The two spells match PoB on every field. The two attacks match on everything except the rate's Q11 floor (attack time floored to whole milliseconds, answered in game) and the fields that read it: registered as DIV-0282 to DIV-0293 (`game-truth`).
+
+**Evidence** (`local/p6/p6-11aj/`):
+- **Public `calc-parity`:** 219 builds, 292 expected, 0 unexpected.
+  - Match went from 13,894 to 14,194: the four fixtures.
+  - 8 values moved, 7 toward PoB: shock-nova-archmage-hierophant's speed (4.30 to 6.62, PoB 8.16), DPS, and leech, and animate-guardian's full DPS.
+  - Away from PoB: shock nova's mana cost per second (202 to 156, PoB 2,951), by the division PoB makes. Its gap is the cost per cast, a reason the build already carried.
+- **Corpus:** 23 values moved, 19 toward PoB; 0 unexpected. The 4 away are in two partial builds:
+  - One build's attack speed: its skill is unvetted (`pob-skill-data`: PoB computes it from data the engine does not read).
+  - The average damage and mana cost per second of builds already far from PoB's.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

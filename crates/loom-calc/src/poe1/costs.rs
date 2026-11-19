@@ -387,8 +387,8 @@ fn modified(
 
 /// A resource's cost per second (P6-10b parts 6 and 8; PoB's
 /// `<Resource>PerSecondCost`, `CalcOffence.lua` 5794 to 5825): for a cost
-/// above 0, the cost times the skill's `Speed` (its repeat count 1, the
-/// hit's module docs). A trap's, a mine's, or a totem's (their throwing,
+/// above 0, the cost times the skill's `Speed` over its repeat count
+/// (each repeat is a use that costs nothing; P6-11aj). A trap's, a mine's, or a totem's (their throwing,
 /// laying, or placement speed) is not modelled and leaves the field
 /// unsupported; Eldritch Battery's energy shield cost instead is an
 /// unmapped stat, so a reason. No field without a cost or a computed
@@ -425,7 +425,22 @@ fn per_second(
     }) else {
         return Ok(());
     };
-    let value = phases::product(calc, &[cost, speed], Term::Result)?;
+    // PoB's `useSpeed = Speed / repeats`, then the cost times it.
+    let repeats = phases::constant(calc, "repeats", super::repeats::count(calc))?;
+    let use_speed = speed.value / repeats.value;
+    let node = calc.graph_mut().push(
+        Node::Quotient {
+            term: Term::Step("use-speed"),
+            a: speed.node,
+            b: repeats.node,
+        },
+        use_speed,
+    )?;
+    let use_speed = Valued {
+        node,
+        value: use_speed,
+    };
+    let value = phases::product(calc, &[cost, use_speed], Term::Result)?;
     calc.set_derived(
         field,
         phases::query(value, Reasons::new()),

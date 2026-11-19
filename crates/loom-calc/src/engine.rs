@@ -215,6 +215,14 @@ impl<'a> Calc<'a> {
         &self.current().store
     }
 
+    /// Adds an effect a phase derives to the current actor's store, as
+    /// PoB's calc modules add mods to a skill's list mid-calculation
+    /// (`NewMod`; P6-11aj: the repeats' damage). Queries made after see
+    /// it.
+    pub fn add_effect(&mut self, effect: crate::store::Effect) {
+        self.current_mut().store.add(effect);
+    }
+
     /// The graph, to combine query results.
     pub const fn graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
