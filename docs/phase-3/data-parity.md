@@ -142,6 +142,10 @@ PoB export format 14 writes `levelRequirement`, `vaalStoredUses`, `soulPreventio
 - 16 level requirements differ. All are monster or minion skills with a single level, whose requirement PoB's exporter takes from the stat set's level row instead (`Export/Scripts/skills.lua` 267). Rule `skills-level-requirement-single-level`, `pob-derivation`; each PoB value was checked against `GrantedEffectStatSetsPerLevel.PlayerLevelReq`.
 - `uncategorized` stays 353.
 
+## The cluster tables on build 26530219
+
+With `poe1/cluster_jewels.json` in the bundle (evidence bundle `b-cl`, `docs/tree/cluster-jewels.md`), the 353 cluster rows of PoB's are compared, and `uncategorized` is 0. The one difference left is PoB's notable order for the duplicated name Evil Eye: rule `cluster-notable-order-duplicate-name`.
+
 ## Not compared
 Listed in the summary's `not_compared`: interpolation kinds (level requirements and Vaal soul costs since data schema 5, above), PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

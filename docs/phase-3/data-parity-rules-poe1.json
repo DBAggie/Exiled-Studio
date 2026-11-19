@@ -818,6 +818,24 @@
         "game:GrantedEffectsPerLevel.PlayerLevelReq",
         "game:GrantedEffectStatSetsPerLevel.PlayerLevelReq"
       ]
+    },
+    {
+      "id": "cluster-notable-order-duplicate-name",
+      "category": "pob-derivation",
+      "table": "cluster_jewels",
+      "fields": [
+        "order"
+      ],
+      "keys": [
+        "notable|Evil Eye"
+      ],
+      "count": 1,
+      "evidence": "Two cluster notables are named Evil Eye (PassiveTreeExpansionSpecialSkills rows whose stats are rows 11454 and 11455). PoB's exporter writes notableSortOrder keyed by the notable's name, so its Lua table keeps the last one written (11455); the bundle keeps each special's own stat row, and data-parity compares by name with the first (11454).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/cluster.lua:63",
+        "v2.67.2:src/Data/ClusterJewels.lua:758",
+        "game:PassiveTreeExpansionSpecialSkills.Stat"
+      ]
     }
   ]
 }

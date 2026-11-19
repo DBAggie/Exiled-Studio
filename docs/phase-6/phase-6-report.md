@@ -145,7 +145,7 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 **Maintainer items:**
 - **Data runs:**
   - the timeless jewel data run (Q-P6-1 decided 2026-11-19: PoB's lookup tables, checked consistent with Vilsol's implementation; build 26530219's files are now on this workstation; `docs/phase-6/timeless.md`);
-  - the cluster jewel tables in a bundle;
+  - shipping the cluster jewel tables (made from build 26530219's extract on 2026-11-19, evidence bundle `b-cl`, data-parity `uncategorized` 0; `docs/tree/cluster-jewels.md`);
   - `VaalSouls` for soul costs;
   - the relic's Nova skill level requirements.
 - **Confirmation in game:** Vaal Summon Skeletons' minion level.
