@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 13,
+        "format": 14,
         "flasks": {},
         "minions": {},
         "minion_mods": {},

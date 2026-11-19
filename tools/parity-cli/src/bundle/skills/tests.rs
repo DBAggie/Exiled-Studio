@@ -458,7 +458,8 @@ fn poe1_shape_should_convert_with_its_columns() {
             vec!["Mana".to_owned(), "Life".to_owned()]
         )
     );
-    // Every counter is reached once or twice: two dangling references
+    // Every counter is reached once or twice but the level requirement's
+    // rounding (no `PlayerLevelReq` column here): two dangling references
     // (the gem's base, the second quality row's stat).
     assert_eq!(
         (s, dangling),
@@ -472,6 +473,7 @@ fn poe1_shape_should_convert_with_its_columns() {
                 rows_without_owner: 1,
                 dropped_stats: 2,
                 dropped_gems: 1,
+                level_requirements_rounded: 0,
             },
             2
         )

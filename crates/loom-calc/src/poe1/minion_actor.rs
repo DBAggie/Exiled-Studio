@@ -17,16 +17,20 @@
 //!   `minionUseBowAndQuiver`, `minionUseMainHandWeapon`: its defences come
 //!   from items, not modelled): `minion-items`;
 //! - a hostile minion (`#hostile`): `hostile-minion`;
-//! - a level PoB takes from the enemy, the character, or a support's level
-//!   requirement: `minion-level`.
+//! - a level PoB takes from a support's level requirement, or from the
+//!   enemy when the enemy model has a problem: `minion-level`.
 //!
-//! **Level** (`CalcActiveSkill.lua` 706 to 710): `skillData.minionLevel`,
-//! else the gem level's level requirement, clamped to 1 to 100. The bundle
-//! does not carry level requirements; the game's
-//! `base_display_minion_actor_level` stat is read instead (stat-ID first).
-//! It equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem
-//! levels; the 39 others are Vaal Summon Skeletons', where the game's stat
-//! is lower (a divergence when a fixture reaches it).
+//! **Level** (`CalcActiveSkill.lua` 706 to 711), clamped to 1 to 100: the
+//! enemy's level when the skill has `display_skill_minions_level_is_corpse_level`;
+//! the character's, at most the stat's value, with
+//! `minion_actor_level_is_user_level_up_to_maximum`; else
+//! `skillData.minionLevel`, else the gem level's level requirement. For the
+//! last the game's `base_display_minion_actor_level` stat is read first
+//! (stat-ID first) and the requirement, carried since data schema 5
+//! (`EffectLevel::level_requirement`), after. The stat equals PoB's level
+//! requirement at 1,822 of PoB's 1,861 minion gem levels; the 39 others are
+//! Vaal Summon Skeletons', where the game's stat is lower (DIV-0111 to
+//! DIV-0113, DIV-0174; the maintainer's in-game check is open).
 //!
 //! **Base values** (`Modules/CalcPerform.lua` `initMinionModDB`, 1119 to
 //! 1145; `calcs.initModDB`, `CalcSetup.lua` 18 to 27), source
@@ -148,12 +152,26 @@ const ITEM_SKILL_DATA: [&str; 2] = ["minionUseBowAndQuiver", "minionUseMainHandW
 /// The game's minion level stat ([`level`]).
 pub const LEVEL_STAT: &str = "base_display_minion_actor_level";
 
-/// The stats that set the minion's level from the enemy or the character
-/// (`SkillStatMap.lua` 307 to 312): not modelled.
-const LEVEL_FROM_OTHERS: [&str; 2] = [
-    "display_skill_minions_level_is_corpse_level",
-    "minion_actor_level_is_user_level_up_to_maximum",
-];
+/// The stat that sets the minion's level to the enemy's (`SkillStatMap.lua`
+/// 307, `minionLevelIsEnemyLevel`).
+const LEVEL_IS_ENEMY_LEVEL: &str = "display_skill_minions_level_is_corpse_level";
+/// The stat that sets the minion's level to the character's, at most its
+/// value (`SkillStatMap.lua` 310, `minionLevelIsPlayerLevel`: PoB's
+/// `mergeLevelMod` puts the stat's value in the skill data).
+const LEVEL_IS_PLAYER_LEVEL: &str = "minion_actor_level_is_user_level_up_to_maximum";
+
+/// What the minion's level reads besides the gem's stats (P6, gem level
+/// data).
+#[derive(Debug, Clone, Copy)]
+struct LevelSources {
+    /// The character's level (PoB's `build.characterLevel`, 1 to 100).
+    character: i64,
+    /// The enemy's level, `None` when the enemy model has a problem.
+    enemy: Option<i64>,
+    /// The gem level's character level requirement (data schema 5; 0 when
+    /// the bundle is older or the level has none).
+    requirement: i64,
+}
 
 /// Why the minion is not computed.
 fn not_computed(source: &Source, what: &'static str) -> UnsupportedReason {
@@ -286,8 +304,20 @@ fn collect(
         .ok_or_else(|| not_computed(source, "minion-data"))?;
     let gem = skill.active_gem;
     let instance = skill::instance(gem.effect, gem.level, gem.quality, data);
-    let level =
-        level(&instance.stats, pob, own).ok_or_else(|| not_computed(source, "minion-level"))?;
+    let enemy = super::enemy::enemy(input.build, data);
+    let sources = LevelSources {
+        character: input
+            .build
+            .character
+            .level
+            .as_ref()
+            .map_or(1, |l| i64::from(*l.value()))
+            .clamp(1, 100),
+        enemy: enemy.problems.is_empty().then_some(enemy.level),
+        requirement: skill::effect_level(gem.effect, gem.level).map_or(0, |l| l.level_requirement),
+    };
+    let level = level(&instance.stats, pob, own, sources)
+        .ok_or_else(|| not_computed(source, "minion-level"))?;
 
     let mapping = MinionMapping;
     let mut ingest = Ingest::new(&mapping);
@@ -934,12 +964,30 @@ const fn is_enemy_quantity(q: Quantity) -> bool {
     )
 }
 
-/// The minion's level (module docs), clamped to 1 to 100; `None` when PoB
-/// takes it from elsewhere.
-fn level(stats: &[(String, i64)], pob: Option<&PobSkill>, own: bool) -> Option<i64> {
+/// The minion's level (module docs; `CalcActiveSkill.lua` 707 to 711),
+/// clamped to 1 to 100, in PoB's order: the enemy's level with
+/// [`LEVEL_IS_ENEMY_LEVEL`]; the character's, at most the stat's value,
+/// with [`LEVEL_IS_PLAYER_LEVEL`]; PoB's `minionLevel`; else the gem
+/// level's. For the last the game's [`LEVEL_STAT`] comes first and the
+/// level requirement (data schema 5) after: they differ only at Vaal
+/// Summon Skeletons, where the game's stat is lower (DIV-0111 to
+/// DIV-0113, DIV-0174: the in-game check is open). `None` when the level
+/// comes from elsewhere (a support's minion) or is not known.
+fn level(
+    stats: &[(String, i64)],
+    pob: Option<&PobSkill>,
+    own: bool,
+    sources: LevelSources,
+) -> Option<i64> {
     let get = |id: &str| stats.iter().find(|(s, _)| s == id).map(|(_, v)| *v);
-    if !own || LEVEL_FROM_OTHERS.iter().any(|s| get(s).is_some()) {
+    if !own {
         return None;
+    }
+    if get(LEVEL_IS_ENEMY_LEVEL).is_some_and(|v| v != 0) {
+        return sources.enemy.map(|l| l.clamp(1, 100));
+    }
+    if let Some(cap) = get(LEVEL_IS_PLAYER_LEVEL).filter(|v| *v != 0) {
+        return Some(sources.character.min(cap).clamp(1, 100));
     }
     #[expect(
         clippy::cast_possible_truncation,
@@ -949,7 +997,8 @@ fn level(stats: &[(String, i64)], pob: Option<&PobSkill>, own: bool) -> Option<i
         .and_then(|p| p.skill_data("minionLevel"))
         .and_then(pob_skill::Value::num)
         .map(|n| n as i64);
-    let level = from_data.or_else(|| get(LEVEL_STAT))?;
+    let requirement = (sources.requirement > 0).then_some(sources.requirement);
+    let level = from_data.or_else(|| get(LEVEL_STAT)).or(requirement)?;
     Some(level.clamp(1, 100))
 }
 
@@ -1798,28 +1847,50 @@ mod tests {
         }
     }
 
-    /// The level: `minionLevel` skill data, else the game's level stat,
-    /// clamped; a support's minion or a level from others is not known.
+    /// The level (`CalcActiveSkill.lua` 707 to 711): the enemy's with the
+    /// corpse stat (unknown with an enemy problem), the character's at most
+    /// the cap with the player-level stat, else `minionLevel` skill data,
+    /// the game's level stat, then the level requirement (data schema 5);
+    /// clamped; a support's minion is not known.
     #[test]
-    fn the_level_should_be_the_games_stat_clamped() {
+    fn the_level_should_follow_pobs_order() {
         let stats = |v: &[(&str, i64)]| -> Vec<(String, i64)> {
             v.iter().map(|(s, n)| ((*s).to_owned(), *n)).collect()
         };
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, true), Some(66));
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 120)]), None, true), Some(100));
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, false), None);
-        assert_eq!(level(&stats(&[]), None, true), None);
+        let src = LevelSources {
+            character: 90,
+            enemy: Some(83),
+            requirement: 70,
+        };
+        let none = LevelSources {
+            requirement: 0,
+            ..src
+        };
         assert_eq!(
-            level(
-                &stats(&[
-                    (LEVEL_STAT, 66),
-                    ("display_skill_minions_level_is_corpse_level", 1)
-                ]),
-                None,
-                true
-            ),
-            None
+            level(&stats(&[(LEVEL_STAT, 66)]), None, true, src),
+            Some(66)
         );
+        assert_eq!(
+            level(&stats(&[(LEVEL_STAT, 120)]), None, true, src),
+            Some(100)
+        );
+        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, false, src), None);
+        // The requirement when the game's stat is absent.
+        assert_eq!(level(&stats(&[]), None, true, src), Some(70));
+        assert_eq!(level(&stats(&[]), None, true, none), None);
+        // The enemy's level with the corpse stat.
+        let corpse = stats(&[(LEVEL_STAT, 66), (LEVEL_IS_ENEMY_LEVEL, 1)]);
+        assert_eq!(level(&corpse, None, true, src), Some(83));
+        let no_enemy = LevelSources { enemy: None, ..src };
+        assert_eq!(level(&corpse, None, true, no_enemy), None);
+        // The character's, at most the stat's value.
+        let player = stats(&[(LEVEL_STAT, 66), (LEVEL_IS_PLAYER_LEVEL, 85)]);
+        assert_eq!(level(&player, None, true, src), Some(85));
+        let low = LevelSources {
+            character: 40,
+            ..src
+        };
+        assert_eq!(level(&player, None, true, low), Some(40));
     }
 
     /// PoB's exporter's class map (`minions.lua` 76 to 93): a class it

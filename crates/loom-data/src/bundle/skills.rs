@@ -160,6 +160,21 @@ pub struct EffectLevel {
     /// Reservations (empty: none).
     #[serde(default)]
     pub reservations: Vec<Reservation>,
+    /// The character level the gem level requires (`PlayerLevelReq`, a
+    /// float in the game's table, whole in every row; 0: none). Since data
+    /// schema 5 ([`super::GEM_LEVEL_SCHEMA`]).
+    #[serde(default)]
+    pub level_requirement: i64,
+    /// Vaal souls per use (`VaalSouls`; 0: none). Since data schema 5.
+    #[serde(default)]
+    pub vaal_souls: i64,
+    /// Vaal uses stored (`VaalStoredUses`; 0: none). Since data schema 5.
+    #[serde(default)]
+    pub vaal_stored_uses: i64,
+    /// Soul gain prevention after a use, milliseconds
+    /// (`SoulGainPreventionDuration`; 0: none). Since data schema 5.
+    #[serde(default)]
+    pub soul_gain_prevention: i64,
 }
 
 /// A stat a gem's quality gives (`GrantedEffectQualityStats`).

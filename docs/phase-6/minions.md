@@ -574,3 +574,31 @@ Applied:
 Noted: the minion's life and mana thresholds (`STAT_THRESHOLD`, `LIFE_THRESHOLD`) are never settled for it, so a gem row that needs them is the minion's reason.
 
 **Evidence:** public 186 builds and corpus 21, 0 unexpected, no compared value moved. Both runs are byte-identical. The sweep is unchanged, 0 unexpected.
+
+## Data schema 5: the minion's level from the gem's level requirement
+
+**The data:** the bundle's gem levels carry their character level requirement since data schema 5 (`docs/phase-3/data-parity.md`, "Data schema 5"). The evidence bundle is `local/p6/packs/b-gl`: `b-ot` with only `data/granted_effects.json` replaced, from a bundle built from the 26530219 extract. That file equals `b-ot`'s but for the four new fields. `bundle-check` reports no findings; the bundle is local and unsigned.
+
+**PoB's level rule** (`CalcActiveSkill.lua` 707 to 711):
+- the enemy's level with `minionLevelIsEnemyLevel` (`display_skill_minions_level_is_corpse_level`);
+- else the character's level, at most the skill data's value, with `minionLevelIsPlayerLevel` (`minion_actor_level_is_user_level_up_to_maximum`; `mergeLevelMod` puts the stat's value, 85, in place of the map's `true`);
+- else a support minion's level, `minionLevel`, or the gem level's level requirement;
+- clamped to 1 to 100.
+
+**The engine** (`minion_actor::level`) now follows it:
+- **Enemy level:** the enemy model's level, unless the model has a problem.
+- **Character level:** the build's level, at most the stat.
+- **Otherwise:** the game's `base_display_minion_actor_level` first, then the requirement.
+
+Before, the first two were `minion-level` reasons, and a gem without the game's stat had no level.
+
+**Vaal Summon Skeletons:** the game's stat stays first. It differs from PoB's requirement only there (DIV-0111 to DIV-0113, DIV-0174), and the maintainer's in-game check of the skeletons' level is open: it decides which value the engine takes.
+
+**Evidence** (`local/p6/d5/`, on `b-gl`):
+- **Public `calc-parity`:** 237 builds, 292 expected, 0 unexpected; match unchanged at 15,602.
+- **Newly computed minions:** 8 fields went from unsupported to partial: the item-granted Summon Elemental Relic and Summon Sentinel of Radiance, whose minions take the character's level. They stay partial for their builds' other reasons.
+- **Corpus:** 0 unexpected, no value moved.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on `b-gl`, and clippy pass.
+
+**Soul costs:** no slice field holds a Vaal skill's soul cost, so the bundle's `vaal_souls` is compared with PoB's but read by no field yet.

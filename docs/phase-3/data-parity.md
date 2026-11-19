@@ -127,8 +127,23 @@ On the `.ot` evidence bundle: 332 lists, 700 lines. Every `.ot` stat matches. Th
 
 Export format 13 also writes `minion_templates`, PoB's template directives. They are not compared: PoB's own data, which `pob-minions` copies into the engine's table.
 
+## Data schema 5: gem level requirements and Vaal souls (export format 14)
+
+Data schema 5 carries, per gem level (`GrantedEffectsPerLevel`):
+- the character level requirement (`PlayerLevelReq`);
+- the Vaal soul cost (`VaalSouls`);
+- the stored Vaal uses (`VaalStoredUses`);
+- the soul gain prevention (`SoulGainPreventionDuration`, milliseconds).
+
+PoB export format 14 writes `levelRequirement`, `vaalStoredUses`, `soulPreventionDuration`, and the `Soul` cost, all compared.
+
+**Result on the evidence bundle** (`b-gl`, build 26530219):
+- The soul costs, stored uses, and soul prevention durations equal PoB's.
+- 16 level requirements differ. All are monster or minion skills with a single level, whose requirement PoB's exporter takes from the stat set's level row instead (`Export/Scripts/skills.lua` 267). Rule `skills-level-requirement-single-level`, `pob-derivation`; each PoB value was checked against `GrantedEffectStatSetsPerLevel.PlayerLevelReq`.
+- `uncategorized` stays 353.
+
 ## Not compared
-Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
+Listed in the summary's `not_compared`: interpolation kinds (level requirements and Vaal soul costs since data schema 5, above), PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 
 ## Open for the maintainer
 - The 8 Vaal transfigured gem tag differences stay `patch-delta` without a patch-note line: **confirmed by the maintainer 2026-11-13** (PoB copies `GemEffects.Tags` verbatim, so only the game changed them; the tags do not enter the calc slice). Recorded in P3-12h.

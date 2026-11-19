@@ -44,6 +44,10 @@ fn level(n: i64, cooldown: i64) -> EffectLevel {
         attack_speed_multiplier: 0,
         attack_time: 0,
         reservations: Vec::new(),
+        level_requirement: 0,
+        vaal_souls: 0,
+        vaal_stored_uses: 0,
+        soul_gain_prevention: 0,
     }
 }
 

@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 13
+local FORMAT = 14
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -114,13 +114,15 @@ end
 -- GrantedEffects, GrantedEffectsPerLevel, GrantedEffectStatSets(PerLevel),
 -- GrantedEffectQualityStats (src/Export/Scripts/skills.lua).
 ---------------------------------------------------------------------------
--- Not copied: levelRequirement and Vaal soul costs (the bundle does not
--- carry them, P3-1a) and statInterpolation (kept raw until P3-9a).
+-- Not copied: statInterpolation (kept raw until P3-9a). Format 14 (data
+-- schema 5): levelRequirement, vaalStoredUses, soulPreventionDuration, and
+-- the Vaal soul cost (`cost.Soul`).
 local LEVEL_FIELDS = {
 	"critChance", "damageEffectiveness", "baseMultiplier",
 	"manaMultiplier", "attackSpeedMultiplier", "attackTime", "cooldown",
 	"storedUses", "manaReservationFlat", "manaReservationPercent",
 	"lifeReservationFlat", "lifeReservationPercent",
+	"levelRequirement", "vaalStoredUses", "soulPreventionDuration",
 }
 
 local function statPairs(rows)
@@ -213,9 +215,7 @@ for id, effect in pairs(data.skills) do
 		out.values = list(row)
 		local cost = {}
 		for resource, amount in pairs(row.cost or {}) do
-			if resource ~= "Soul" then
-				cost[resource] = amount
-			end
+			cost[resource] = amount
 		end
 		out.cost = cost
 		levels[tostring(level)] = out

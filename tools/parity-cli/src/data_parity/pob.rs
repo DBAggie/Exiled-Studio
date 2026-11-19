@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 13;
+pub const FORMAT: u32 = 14;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -444,8 +444,17 @@ pub struct Level {
     /// none).
     #[serde(deserialize_with = "list")]
     pub values: Vec<f64>,
-    /// `cost`, by resource (Vaal souls left out by the script).
+    /// `cost`, by resource (Vaal souls as `Soul` since format 14).
     pub cost: BTreeMap<String, f64>,
+    /// `levelRequirement` (format 14).
+    #[serde(default, rename = "levelRequirement")]
+    pub level_requirement: Option<f64>,
+    /// `vaalStoredUses` (format 14).
+    #[serde(default, rename = "vaalStoredUses")]
+    pub vaal_stored_uses: Option<f64>,
+    /// `soulPreventionDuration`, seconds (format 14).
+    #[serde(default, rename = "soulPreventionDuration")]
+    pub soul_prevention_duration: Option<f64>,
     /// `critChance`, percent.
     #[serde(default, rename = "critChance")]
     pub crit_chance: Option<f64>,

@@ -109,6 +109,11 @@ pub const TAGS: &str = "data/tags.json";
 /// has [`TAGS`] (B-2's tooltip). Readers gate on the manifest's
 /// `data_schema`, not on empty fields: an empty name is a mod without one.
 pub const AFFIX_SCHEMA: u32 = 4;
+/// The first data schema whose gem levels carry their character level
+/// requirement and Vaal soul costs (`skills::EffectLevel`; Phase 6, gem
+/// level data). Readers gate on the manifest's `data_schema`: 0 is also an
+/// older bundle's value.
+pub const GEM_LEVEL_SCHEMA: u32 = 5;
 /// The folder of stat-description files.
 pub const STAT_DESCRIPTIONS_DIR: &str = "stat_descriptions/";
 

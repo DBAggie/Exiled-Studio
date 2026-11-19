@@ -937,7 +937,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         // 3 since P3-8n: mods carry their implicit tags. 4 since B-2: mods
         // their affix name and level, bases their drop level and attribute
         // requirements, and `data/tags.json` (`bundle::AFFIX_SCHEMA`).
-        data_schema: bundle::AFFIX_SCHEMA,
+        data_schema: bundle::GEM_LEVEL_SCHEMA,
         game: game.clone(),
         source: provenance(&raw),
         files: entries,
