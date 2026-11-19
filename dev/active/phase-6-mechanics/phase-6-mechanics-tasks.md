@@ -167,6 +167,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11k: the equipped shield's energy shield and defences (`Poe1Quantity::SlotIncreased`, a piece's own modifier), the effect of your auras on you (`SkillAuraEffectOnSelf`); fixture `ice-nova-shield-defences-aura-self-witch.xml`; 34 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11k"
 - [x] P6-11l: more maximum life with at least 6 Life Masteries (`PassiveKind::life_mastery`, `states::SIX_LIFE_MASTERIES`); three corpus builds' Life equal to PoB; `docs/phase-6/stat-mop-up.md`, "P6-11l"
 - [x] P6-11m: 21 `NoEffect` rows (PoB-parsed, no slice field); global unmapped pairs 418 to 407; `docs/phase-6/stat-mop-up.md`, "P6-11m"
+- [x] P6-11ac: the eldritch block implicit (`monster_base_block_%`); `docs/phase-6/stat-mop-up.md`, "P6-11ac"
 - [x] P6-11ab: Rapid Decay and Swift Affliction as hit rows; `docs/phase-6/stat-mop-up.md`, "P6-11ab"
 - [x] P6-11aa: Infused Channelling (`gems::BuffStat::CheckModCond`, its damage as a hit row); `docs/phase-6/stat-mop-up.md`, "P6-11aa"
 - [x] P6-11z: Arctic Armour's damage taken while stationary; `docs/phase-6/stat-mop-up.md`, "P6-11z"

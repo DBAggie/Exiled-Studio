@@ -4143,6 +4143,10 @@ pub const ROWS: &[Row] = &[
         "mod_granted_passive_hash",
         &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],
     ),
+    // P6-11ac: the eldritch implicit "#% Chance to Block Attack Damage"
+    // resolves to this stat; PoB reads the line and the stat as
+    // `BlockChance` BASE (`ModParser.lua`, `SkillStatMap.lua` 434).
+    ("monster_base_block_%", &[(BLOCK, Op::Base, 1.0)]),
     // P6-9b: "You can apply an additional Curse" (`SkillStatMap.lua` 1317:
     // `EnemyCurseLimit` BASE); `poe1::gems` reads it for the curse slots.
     (

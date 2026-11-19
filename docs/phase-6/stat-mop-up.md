@@ -699,3 +699,18 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **Corpus:** 4 values moved, all toward PoB; 0 unexpected.
 - **The two stats:** no longer unmapped anywhere; each was in 6 builds.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ac: the eldritch block implicit
+
+**The stat:** the eldritch implicit "#% Chance to Block Attack Damage" resolves to `monster_base_block_%`. PoB reads the line, and the stat, as `BlockChance` BASE (`SkillStatMap.lua` 434). It is now a row (`mapping::ROWS`).
+
+**Looked at and left, with why:**
+- **`maximum_physical_attack_damage_+%_final`:** PoB parses "maximum physical attack damage" as `MaxPhysicalDamage` (`ModParser.lua` 711), which no calculation reads. In PoB it has no effect, but the game applies it. It stays a reason until there is evidence for a divergence entry.
+- **`withered_effect_+%`:** reaches a field only through `WitherEffectStack`, which every skill with `CanWither` adds (`CalcPerform.lua` 2704). That includes a skill Withering Touch supports, which `poe1::gems` models as a plain support. Settling it needs the wither sources first.
+- **`recover_x_energy_shield_on_spell_block`:** one of `EHP_REASONS`, an intended reason until the EHP pools are modelled.
+
+**Evidence** (`local/p6/p6-11ac/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected; match unchanged at 13,651.
+  - 18 values moved, all toward PoB; 3 now equal it. The moved fields are block, spell block, and the EHP fields that read them.
+- **Corpus:** 16 values moved, all toward PoB; 4 now equal it. 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
