@@ -335,9 +335,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     } else {
         1.0
     };
-    // Spell suppression.
+    // Spell suppression, its effective chance (P6-11al).
     let suppression =
         read(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)).map_or(0.0, |v| v.value);
+    let suppression = effective_suppression(calc, suppression, &cx, &mut reasons)?;
     let suppress_mult = if suppression >= 100.0 {
         let effect = (SUPPRESSION_EFFECT
             + sum(
@@ -880,7 +881,10 @@ fn maximum_hit(
             block: field(calc, Field::BlockChance),
             spell_block: field(calc, Field::Poe1(Poe1Field::SpellBlockChance)),
             block_effect,
-            suppression: field(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)),
+            suppression: {
+                let chance = field(calc, Field::Poe1(Poe1Field::SpellSuppressionChance));
+                effective_suppression(calc, chance, &cx, &mut reasons)?
+            },
             suppression_effect,
             melee_evade: field(calc, Field::Poe1(Poe1Field::MeleeEvadeChance)),
             projectile_evade: field(calc, Field::Poe1(Poe1Field::ProjectileEvadeChance)),
@@ -980,6 +984,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::GuardAbsorbPerArmour
                 | Poe1Quantity::GuardAbsorbMax
                 | Poe1Quantity::BlockGain(_)
+                | Poe1Quantity::SuppressionLucky
         )
     )
 }
@@ -1002,6 +1007,25 @@ fn sum(
     )?;
     reasons.extend(&q.reasons);
     Ok(q.value)
+}
+
+/// PoB's `EffectiveSpellSuppressionChance` (`CalcDefence.lua` 1131 to
+/// 1157; P6-11al): lucky, `(1 - (1 - chance)^2) x 100`. Unlucky, extreme
+/// luck, and Unexciting are unmapped stats, so reasons.
+fn effective_suppression(
+    calc: &mut Calc<'_>,
+    chance: f64,
+    cx: &crate::condition::QueryContext,
+    reasons: &mut Reasons,
+) -> Result<f64, CalcError> {
+    let (store, graph) = calc.parts();
+    let lucky = store.flag(graph, Quantity::Poe1(Poe1Quantity::SuppressionLucky), cx)?;
+    reasons.extend(&lucky.reasons);
+    if lucky.value == 0.0 {
+        return Ok(chance);
+    }
+    let p = chance / 100.0;
+    Ok((1.0 - (1.0 - p).powi(2)) * 100.0)
 }
 
 /// The `INC` sum and more product of the damage taken names. Each name's

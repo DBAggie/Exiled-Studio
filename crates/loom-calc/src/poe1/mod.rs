@@ -291,6 +291,10 @@ pub enum Poe1Quantity {
     /// `EnergyShieldOnBlock`, `EnergyShieldOnSpellBlock` BASE; P6-11ak),
     /// read by [`enemy_hit`] for the effective health pool.
     BlockGain(BlockGain),
+    /// The chance to suppress spell damage is lucky (PoB's
+    /// `SpellSuppressionChanceIsLucky`; P6-11al): a `Flag`, read by
+    /// [`enemy_hit`] for the effective chance.
+    SuppressionLucky,
     /// The hit's repeat count as [`repeats`] settled it (PoB's
     /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
     Repeats,
@@ -989,6 +993,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RepeatFinalDoubleDamageChance => f.write_str("repeat-final-double-damage-chance"),
             Self::Repeats => f.write_str("repeats"),
             Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
+            Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")

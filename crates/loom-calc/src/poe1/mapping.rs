@@ -4635,6 +4635,16 @@ pub const ROWS: &[Row] = &[
         "spell_block_%_per_5_attack_block",
         &[(Quantity::Poe1(Poe1Quantity::BlockPer5(true)), Op::Base, 1.0)],
     ),
+    // P6-11al: "Your chance to Suppress Spell Damage is Lucky" (PoB's
+    // `SpellSuppressionChanceIsLucky` FLAG); `enemy_hit` reads it.
+    (
+        "spell_suppression_chance_is_lucky",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SuppressionLucky),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // Stibnite Flask's buff, "20% more Evasion Rating" in PoB's base data:
     // `Evasion` MORE (P6-4b).
     (
@@ -5341,13 +5351,10 @@ pub const POOL_REASONS: &[&str] = &[
 
 /// Stats that change the effective health pool alone in a way the engine
 /// does not model (P6-10b part 14), sorted: each maps to
-/// [`Poe1Quantity::EhpReason`]. PoB's text: lucky spell suppression;
-/// P6-11n: damage taken recouped as mana (`ManaRecoup`). The gains on
+/// [`Poe1Quantity::EhpReason`]. PoB's text: P6-11n: damage taken recouped
+/// as mana (`ManaRecoup`). Lucky spell suppression is a row since P6-11al. The gains on
 /// block are [`Poe1Quantity::BlockGain`] rows since P6-11ak.
-pub const EHP_REASONS: &[&str] = &[
-    "damage_taken_goes_to_mana_%",
-    "spell_suppression_chance_is_lucky",
-];
+pub const EHP_REASONS: &[&str] = &["damage_taken_goes_to_mana_%"];
 
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to

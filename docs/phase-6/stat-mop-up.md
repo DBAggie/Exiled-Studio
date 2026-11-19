@@ -922,3 +922,25 @@ All three match PoB on every computed field (231). "+100 Life gained when you Bl
   - 21 values moved, all toward PoB: four builds' estimates (kinetic-fusillade-ballista, penance-brand-ignite, poisonous-concoction, shock-nova).
 - **Corpus:** 21 values moved, all toward PoB; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11al: lucky spell suppression
+
+**PoB** (`CalcDefence.lua` 1131 to 1157): "Chance to Suppress Spell Damage is Lucky" is `SpellSuppressionChanceIsLucky`.
+- **The effective chance:** in the effective mode, `EffectiveSpellSuppressionChance` becomes `(1 - (1 - chance)^2) x 100`.
+- **Who reads it:** the hit's suppression at 100% (2028) and the effective health pool's suppression share. The chance field itself is unchanged.
+
+**The engine:**
+- **The mapping:** the stat, which was an `EhpReason` marker, is a row of a new flag, `Poe1Quantity::SuppressionLucky`.
+- **`enemy_hit::effective_suppression`:** applies it at both reads.
+- **Left as reasons:** unlucky suppression, extreme luck, and Unexciting are unmapped stats.
+
+**New mechanic fixtures** (each run through PoB v2.67.2, 3 of 3 runs identical): `ehp-suppression-ice-nova-witch.xml` (40% suppression on a body armour) and `ehp-suppression-lucky-ice-nova-witch.xml` (the same, lucky).
+- Both match PoB on every computed field. With the lucky line, the damage chance goes from 92 to 87.2.
+- **Why a body armour:** "+#% chance to Suppress Spell Damage" is ambiguous as a custom line or on a ring. The game's descriptions give the same text to `base_spell_suppression_chance_%` and `base_spell_suppression_chance_150%_of_value`, and only a base whose mods roll the stat settles it.
+
+**Evidence** (`local/p6/p6-11al/`):
+- **Public `calc-parity`:** 224 builds, 292 expected, 0 unexpected.
+  - Match went from 14,425 to 14,579: the fixtures.
+  - 4 values moved, all toward PoB (kinetic-blast-of-clustering-necromancer's estimate).
+- **Corpus:** 12 values moved, all toward PoB; 3 now equal it. 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
