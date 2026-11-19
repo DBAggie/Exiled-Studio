@@ -512,10 +512,18 @@ struct TypeHit {
     reasons: Reasons,
 }
 
-/// The config inputs that change the pools in a way not modelled: low
-/// life (`LifeRecoverable`) and low energy shield
-/// (`EnergyShieldRecoveryCap`).
-const POOL_INPUTS: [&str; 2] = ["conditionLowLife", "conditionLowEnergyShield"];
+/// The config checks that lower the pools (P6-11ad; `CalcDefence.lua`
+/// 1061 and 2215 to 2220): low life caps `LifeRecoverable` at `Life x
+/// LowLifePercentage` (the threshold, else `LowPoolThreshold`), low
+/// energy shield caps `EnergyShieldRecoveryCap` at `EnergyShield x
+/// LowPoolThreshold`. A value that is not a boolean is a reason.
+const POOL_INPUTS: [&str; 2] = [LOW_LIFE_INPUT, LOW_ES_INPUT];
+/// The config check of low life.
+const LOW_LIFE_INPUT: &str = "conditionLowLife";
+/// The config check of low energy shield.
+const LOW_ES_INPUT: &str = "conditionLowEnergyShield";
+/// PoB's `data.misc.LowPoolThreshold` (`Data.lua` 233).
+const LOW_POOL_THRESHOLD: f64 = 0.5;
 
 /// The maximum hit of each type (P6-10b part 13): PoB's
 /// `<Type>MaximumHitTaken` and `SecondMinimalMaximumHitTaken`
@@ -548,7 +556,7 @@ fn maximum_hit(
     let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
     let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
     for name in POOL_INPUTS {
-        if super::conditions::check(set, name) != Some(false) {
+        if super::conditions::check(set, name).is_none() {
             for f in fields.into_iter().chain([second]) {
                 calc.set_unsupported(
                     f,
@@ -576,13 +584,35 @@ fn maximum_hit(
     ) else {
         return Ok(());
     };
-    let recoverable = unreserved.max(1.0);
+    let cx = calc.context(Flags::NONE);
+    let recoverable = if super::conditions::check(set, LOW_LIFE_INPUT) == Some(true) {
+        let threshold = sum(
+            calc,
+            Poe1Quantity::LowLifePercentage,
+            Op::Base,
+            &cx,
+            &mut pool_reasons,
+        )?;
+        let threshold = if threshold > 0.0 {
+            threshold
+        } else {
+            LOW_POOL_THRESHOLD
+        };
+        (life * threshold).min(unreserved)
+    } else {
+        unreserved
+    }
+    .max(1.0);
+    let es = if super::conditions::check(set, LOW_ES_INPUT) == Some(true) {
+        (es * LOW_POOL_THRESHOLD).min(es)
+    } else {
+        es
+    };
     let half = life * 0.5;
     let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
-    let cx = calc.context(Flags::NONE);
     let shared = sum(
         calc,
         Poe1Quantity::ManaBeforeLife(TakenOf::All),
@@ -842,6 +872,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::SelfDamageTaken(..)
                 | Poe1Quantity::EnemyHitReason(_)
                 | Poe1Quantity::MaximumFortification
+                | Poe1Quantity::LowLifePercentage
         )
     )
 }

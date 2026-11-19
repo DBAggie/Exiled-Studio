@@ -3963,6 +3963,19 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ad: "You count as on Low Life while at #% of maximum Life or
+    // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
+    // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
+    // from reservation (`CalcPerform.lua` 546), which no modelled
+    // modifier reads; [`super::enemy_hit`] reads it for `LifeRecoverable`.
+    (
+        "low_life_threshold_%_override",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LowLifePercentage),
+            Op::Base,
+            0.01,
+        )],
+    ),
     // "Magic Utility Flasks applied to you have #% increased Effect": PoB's
     // `MagicUtilityFlaskEffect` INC (`ModParser.lua` 5180); `poe1::flasks`
     // reads it (P6-4b).
@@ -4722,6 +4735,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("flask_recovery_speed_+%", "flask"),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
+    // P6-11ad: "You count as on Full Life while at #% of maximum Life or
+    // above" (`FullLifePercentage` BASE): PoB reads it only for the config
+    // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).
+    ("full_life_threshold_%_override", "life-threshold"),
     // P6-11m: endurance charges per second if hit recently (unparsed).
     (
         "gain_endurance_charge_per_second_if_have_been_hit_recently",

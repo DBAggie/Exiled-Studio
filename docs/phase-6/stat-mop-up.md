@@ -714,3 +714,36 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
   - 18 values moved, all toward PoB; 3 now equal it. The moved fields are block, spell block, and the EHP fields that read them.
 - **Corpus:** 16 values moved, all toward PoB; 4 now equal it. 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ad: low life and low energy shield in the pools, and the life thresholds
+
+**PoB** (`CalcDefence.lua` 1061 and 2215 to 2220):
+- **Low life:** with the config's `conditionLowLife`, `LifeRecoverable` is `min(Life x LowLifePercentage / 100, LifeUnreserved)`. `LowLifePercentage` is 100 times the `LowLifePercentage` BASE sum when above 0, else `data.misc.LowPoolThreshold` (0.5; `CalcPerform.lua` 74).
+- **Low energy shield:** with `conditionLowEnergyShield`, `EnergyShieldRecoveryCap` is `min(EnergyShield x 0.5, cap)`.
+- **The pools:** maximum hit and the effective health pool read both.
+- **The threshold lines:** "You count as on Low Life while at #% of maximum Life or below" is `LowLifePercentage` BASE, a fraction (`ModCache.lua` 12888). "You count as on Full Life while at #% of maximum Life or above" is `FullLifePercentage`, which PoB reads only for a config tooltip (`ConfigOptions.lua` 68).
+
+**The engine:**
+- **The pools** (`poe1::enemy_hit`): both checks now apply as PoB does. Before, either check turned maximum hit into a reason and left the effective health pool uncomputed.
+  - A value that is not a boolean is still an `unmodelled-config` reason.
+  - The new quantity `Poe1Quantity::LowLifePercentage` is read for the threshold.
+- **`low_life_threshold_%_override`:** a row of that quantity at scale 0.01. Its other use in PoB, the `LowLife` condition from reservation (`CalcPerform.lua` 546), reaches nothing modelled: no modelled modifier reads the character's `LowLife`.
+- **`full_life_threshold_%_override`:** a `NoEffect` row (`life-threshold`).
+- **`conditionLowEnergyShield`:** joins `config::NAMED_ONLY` beside `conditionLowLife`. Each sets only its named condition, beyond the pool cap now modelled.
+
+**New mechanic fixtures** (each run through PoB v2.67.2, 3 of 3 runs identical; `local/p6/fx-pools-oracle/`). Each adds "+300 to maximum Energy Shield" to the base Ice Nova Witch:
+- **`pools-low-life-ice-nova-witch.xml`:** the low life check on.
+- **`pools-low-life-threshold-ice-nova-witch.xml`:** the low life check with the 55% threshold line.
+- **`pools-low-energy-shield-ice-nova-witch.xml`:** the low energy shield check on.
+
+All three match PoB on every computed field (231), including each type's maximum hit, hits to die, and total EHP.
+
+**Fixed on the way:** this step first placed the new row after `monster_base_block_%` in `mapping::ROWS`. Its sorted lookup then missed P6-11ac's block row, moving 18 values away from PoB. The row now sits in sorted order; that run was not committed.
+
+**Evidence** (`local/p6/p6-11ad/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected.
+  - Match went from 13,651 to 13,882: the three fixtures' 231 fields.
+  - No other value moved.
+  - lightning-trap-of-sparking-elementalist sets the low life check. Its maximum hit and effective health pool are now computed, but they stay indeterminate because of the build's other reasons.
+- **Corpus:** 12 fields of the one build with the check go from unsupported or not computed to partial. 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

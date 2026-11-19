@@ -443,6 +443,11 @@ pub enum Poe1Quantity {
     /// The maximum fortification (PoB's `MaximumFortification` BASE; P6-10b
     /// part 12), read by [`enemy_hit`] while Fortified.
     MaximumFortification,
+    /// The share of maximum life at or below which you count as on low
+    /// life, a fraction (PoB's `LowLifePercentage` BASE; P6-11ad), read by
+    /// [`enemy_hit`] for `LifeRecoverable` with the config's
+    /// `conditionLowLife`.
+    LowLifePercentage,
     /// The share of damage taken from mana before life, percent (PoB's
     /// `DamageTakenFromManaBeforeLife` and `<Type>DamageTakenFromManaBeforeLife`
     /// BASE; P6-10b part 15: mind over matter), read by [`enemy_hit`] and
@@ -863,6 +868,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourAppliesTo(t) => write!(f, "armour-applies-to.{}", t.name()),
             Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
             Self::MaximumFortification => f.write_str("maximum-fortification"),
+            Self::LowLifePercentage => f.write_str("low-life-percentage"),
             Self::ManaBeforeLife(o) => write!(f, "mana-before-life.{}", o.name()),
             Self::BlockEffect => f.write_str("block-effect"),
             Self::AvoidProjectiles => f.write_str("avoid-projectiles"),

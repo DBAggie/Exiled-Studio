@@ -214,7 +214,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   them only through modifiers;
 /// - read only outside the slice: `LowLife` (a flask's instant recovery,
 ///   1605; the input itself in `CalcDefence.lua` 2216 and 2238, the life
-///   pools of the defence estimate), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
+///   pools of the defence estimate, which `poe1::enemy_hit` reads from the
+///   input since P6-11ad), `LowEnergyShield` (the input itself caps the
+///   energy shield pool, `CalcDefence.lua` 1061, read the same way), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
 ///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
 ///   with a support that is not modelled), the enemy's `Debilitated` and
 ///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
@@ -325,6 +327,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:KilledUniqueEnemy"],
     ),
     ("conditionLeeching", &["Condition:Leeching"]),
+    ("conditionLowEnergyShield", &["Condition:LowEnergyShield"]),
     ("conditionLowLife", &["Condition:LowLife"]),
     (
         "conditionSacrificeMinion",
