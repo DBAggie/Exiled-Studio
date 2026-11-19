@@ -164,6 +164,10 @@ pub enum Poe1Quantity {
     /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
     /// skills are set up, as PoB reads its `GemProperty` modifiers.
     GemLevel(&'static str),
+    /// A socketed gem level stat of [`gem_levels::SOCKETED_STATS`] on the
+    /// item in a slot (P6-11q): `Base`, read by [`gem_levels::GemLevels`]
+    /// for the gems of the groups in that slot.
+    SocketedGemLevel(&'static str, gem_levels::GemSlot),
     /// A minion modifier (P3-8j): "Minions deal #% increased Damage" and
     /// kin, `Increased`. No minion is computed; only [`minions`] reads
     /// them, to give the character those a redirect names.
@@ -798,6 +802,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
+            Self::SocketedGemLevel(stat, slot) => {
+                write!(f, "socketed-gem-level.{}.{stat}", slot.name())
+            }
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),

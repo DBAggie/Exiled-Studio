@@ -9,7 +9,7 @@ use loom_calc::CalcData;
 use std::collections::BTreeSet;
 
 use loom_calc::poe1::Poe1Mapping;
-use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS};
+use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS, SOCKETED_STATS};
 use loom_calc::poe1::skill::{
     InstanceProblem, KEYWORD_TYPES, SkillProblem, group_skills, instance, instances, keyword_flags,
     main_skill, type_expression, unknown_gems,
@@ -661,5 +661,47 @@ fn real_gem_level_stats_should_have_pobs_keywords() {
                 "{stat}: {w}"
             );
         }
+    }
+    // The socketed rows (P6-11q): the words between "Level of Socketed"
+    // and "Gems", as PoB's `"([%+%-]%d+)%%? to (%a+) of socketed ?([%a%-
+    // ]*) gems"` reads them (none: `all`); each a gem tag or one of
+    // `calcLib.gemIsType`'s words.
+    for (stat, word) in SOCKETED_STATS {
+        assert!(!gem_names.contains(word), "{stat}");
+        let found: BTreeSet<String> = texts
+            .iter()
+            .filter(|(s, _)| *s == stat)
+            .map(|(_, text)| {
+                let rest = text
+                    .split_once(" to Level of Socketed ")
+                    .map(|(_, r)| format!(" {r}"))
+                    .unwrap_or_else(|| panic!("{stat}: {text}"));
+                let phrase = rest
+                    .strip_suffix(" Gems")
+                    .unwrap_or_else(|| panic!("{stat}: {text}"))
+                    .trim()
+                    .to_lowercase();
+                if phrase.is_empty() {
+                    "all".to_owned()
+                } else {
+                    phrase
+                }
+            })
+            .collect();
+        // The hex stat's text says "Curse", as the curse stat's does.
+        assert_eq!(found, BTreeSet::from([word.to_owned()]), "{stat}");
+        assert!(
+            tags.contains(word)
+                || [
+                    "all",
+                    "skill",
+                    "aoe",
+                    "elemental",
+                    "non-vaal",
+                    "trap or mine"
+                ]
+                .contains(&word),
+            "{stat}: {word}"
+        );
     }
 }

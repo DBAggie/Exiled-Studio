@@ -587,6 +587,12 @@ fn group_effects<'d>(
 ) -> (Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>) {
     let mut actives: Vec<Candidate<'d>> = Vec::new();
     let mut supports: Vec<GemEffectRef<'d>> = Vec::new();
+    // The group's slot, whose item's socketed levels reach its gems
+    // (P6-11q).
+    let slot = group
+        .slot
+        .as_ref()
+        .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
     for (g, gem) in group.gems.typed().enumerate() {
         if !gem.enabled {
             continue;
@@ -597,7 +603,7 @@ fn group_effects<'d>(
         let Some((variant, effects)) = gem_variant(gem, data) else {
             continue;
         };
-        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()));
+        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot);
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {

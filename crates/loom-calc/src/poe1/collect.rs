@@ -46,7 +46,7 @@ use loom_domain::{
     ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
-use super::gem_levels::GemLevels;
+use super::gem_levels::{GemLevels, GemSlot, InSlot};
 use super::mapping::{
     OffHandWeaponMapping, PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping,
 };
@@ -873,7 +873,7 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 SlotKind::Lines => {}
             }
             match build.items.item(id) {
-                Some(item) => item_lines(item, ingest),
+                Some(item) => item_lines_in(item, GemSlot::of(slot), ingest),
                 None => ingest.reason(unmodelled("missing")),
             }
         }
@@ -1034,6 +1034,8 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
         slot: slot_name.to_owned(),
         what,
     };
+    let item_lines =
+        |item, ingest: &mut Ingest<'_>| item_lines_in(item, GemSlot::of(slot_name), ingest);
     let Some(name) = input.options.item_bases.get(&item.id) else {
         ingest.reason(unmodelled("no-base-name"));
         item_lines(item, ingest);
@@ -1124,8 +1126,22 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         }
     }
     match hand {
-        Hand::Main => item_lines_with(&WeaponMapping, item, ingest),
-        Hand::Off => item_lines_with(&OffHandWeaponMapping, item, ingest),
+        Hand::Main => item_lines_with(
+            &InSlot {
+                inner: &WeaponMapping,
+                slot: GemSlot::Weapon1,
+            },
+            item,
+            ingest,
+        ),
+        Hand::Off => item_lines_with(
+            &InSlot {
+                inner: &OffHandWeaponMapping,
+                slot: GemSlot::Weapon2,
+            },
+            item,
+            ingest,
+        ),
     }
     // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
     // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
@@ -1178,6 +1194,8 @@ fn armour_slot(
         slot: slot_name.to_owned(),
         what,
     };
+    let item_lines =
+        |item, ingest: &mut Ingest<'_>| item_lines_in(item, GemSlot::of(slot_name), ingest);
     let Some(name) = input.options.item_bases.get(&item.id) else {
         ingest.reason(unmodelled("no-base-name"));
         item_lines(item, ingest);
@@ -1424,13 +1442,36 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
-    item_lines_with(&PieceMapping { slot }, item, ingest);
+    item_lines_with(
+        &InSlot {
+            inner: &PieceMapping { slot },
+            slot: GemSlot::of_armour(slot),
+        },
+        item,
+        ingest,
+    );
 }
 
 /// An item's lines: modifier lines by their resolution; lines the import
 /// did not read are reasons.
 fn item_lines(item: &Item, ingest: &mut Ingest<'_>) {
     item_lines_with(&Poe1Mapping, item, ingest);
+}
+
+/// [`item_lines`] for an item in `slot`: its socketed gem levels act on
+/// the groups in an equipment slot (P6-11q, [`InSlot`]).
+fn item_lines_in(item: &Item, slot: Option<GemSlot>, ingest: &mut Ingest<'_>) {
+    match slot {
+        Some(slot) => item_lines_with(
+            &InSlot {
+                inner: &Poe1Mapping,
+                slot,
+            },
+            item,
+            ingest,
+        ),
+        None => item_lines(item, ingest),
+    }
 }
 
 /// [`item_lines`] through `mapping`.
