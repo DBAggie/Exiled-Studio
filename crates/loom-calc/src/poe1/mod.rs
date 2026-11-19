@@ -23,6 +23,7 @@ pub mod config;
 pub mod costs;
 pub mod damage_taken;
 pub mod dot;
+pub mod ehp;
 pub mod enemy;
 pub mod enemy_hit;
 pub mod evade;
@@ -417,6 +418,16 @@ pub enum Poe1Quantity {
     /// The maximum fortification (PoB's `MaximumFortification` BASE; P6-10b
     /// part 12), read by [`enemy_hit`] while Fortified.
     MaximumFortification,
+    /// The share of a blocked hit's damage taken, percent (PoB's
+    /// `BlockEffect` BASE; P6-10b part 14), read by [`ehp`].
+    BlockEffect,
+    /// The chance to avoid projectiles (PoB's `AvoidProjectilesChance` BASE;
+    /// P6-10b part 14), read by [`ehp`].
+    AvoidProjectiles,
+    /// A stat that changes the effective health pool alone in a way the
+    /// engine does not model (P6-10b part 14): a `Flag` only [`ehp`]'s
+    /// fields read.
+    EhpReason(&'static str),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -816,6 +827,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourAppliesTo(t) => write!(f, "armour-applies-to.{}", t.name()),
             Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
             Self::MaximumFortification => f.write_str("maximum-fortification"),
+            Self::BlockEffect => f.write_str("block-effect"),
+            Self::AvoidProjectiles => f.write_str("avoid-projectiles"),
+            Self::EhpReason(stat) => write!(f, "ehp-reason.{stat}"),
             Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
@@ -1131,6 +1145,21 @@ pub enum Poe1Field {
     /// The second smallest of the five (PoB's
     /// `SecondMinimalMaximumHitTaken`; P6-10b part 13).
     SecondMinimalMaximumHitTaken,
+    /// The enemy hits it takes to die (PoB's `NumberOfDamagingHits`;
+    /// P6-10b part 14).
+    NumberOfDamagingHits,
+    /// The same with block, suppression, and avoidance (PoB's
+    /// `NumberOfMitigatedDamagingHits`).
+    NumberOfMitigatedDamagingHits,
+    /// The same with the chance not to be hit (PoB's `TotalNumberOfHits`).
+    TotalNumberOfHits,
+    /// The chance a hit deals damage after block, suppression, and
+    /// avoidance (PoB's `ConfiguredDamageChance`).
+    ConfiguredDamageChance,
+    /// The chance not to be hit (PoB's `ConfiguredNotHitChance`).
+    ConfiguredNotHitChance,
+    /// The effective health pool (PoB's `TotalEHP`).
+    TotalEhp,
 }
 
 impl Poe1Field {
@@ -1182,6 +1211,12 @@ impl Poe1Field {
                 DamageType::Chaos => "chaos-maximum-hit-taken",
             },
             Self::SecondMinimalMaximumHitTaken => "second-minimal-maximum-hit-taken",
+            Self::NumberOfDamagingHits => "number-of-damaging-hits",
+            Self::NumberOfMitigatedDamagingHits => "number-of-mitigated-damaging-hits",
+            Self::TotalNumberOfHits => "total-number-of-hits",
+            Self::ConfiguredDamageChance => "configured-damage-chance",
+            Self::ConfiguredNotHitChance => "configured-not-hit-chance",
+            Self::TotalEhp => "total-ehp",
             Self::DamageReduction(t) => match t {
                 DamageType::Physical => "physical-damage-reduction",
                 DamageType::Fire => "fire-damage-reduction",

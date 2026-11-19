@@ -86,6 +86,10 @@ const fn flag(q: Poe1Quantity) -> KeystoneEffect {
 
 /// The keystones, sorted by stat ID (a test checks the order), each read as
 /// PoB reads its lines (module docs). A keystone stat's value is 1, so each
+/// Glancing Blows' damage taken from blocked hits, percent (`ModParser`'s
+/// "you take (%d+)%% of damage from blocked hits", `BlockEffect` BASE).
+pub const GLANCING_BLOWS_BLOCK_EFFECT: f64 = 65.0;
+
 /// value is the effect's.
 pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     (
@@ -129,18 +133,28 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     // (`CalcDefence.lua` 709 to 713 take the `BlockChance` increases and
     // mores); its "Chance to Block Spell Damage is doubled"
     // (`SpellBlockChance` MORE) only scales projectile spell block, and "You
-    // take 65% of Damage from Blocked Hits" (`BlockEffect`) reaches no slice
-    // field.
+    // take 65% of Damage from Blocked Hits" is `BlockEffect` BASE 65, which
+    // the effective health pool reads (P6-10b part 14).
     (
         "keystone_glancing_blows",
-        &[(
-            Quantity::BlockChance,
-            Op::More,
-            100.0,
-            Flags::NONE,
-            Flags::NONE,
-            None,
-        )],
+        &[
+            (
+                Quantity::BlockChance,
+                Op::More,
+                100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::BlockEffect),
+                Op::Base,
+                GLANCING_BLOWS_BLOCK_EFFECT,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
     ),
     (
         "resolute_technique",

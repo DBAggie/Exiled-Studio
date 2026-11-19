@@ -521,3 +521,36 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Data parity:** `uncategorized` 353.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,765 tests and clippy pass.
+
+## Part 14: the effective health pool
+
+**What PoB does** (`CalcDefence.lua` 188 to 427, 1645 to 1667, 2568 to 2913), for `Average`:
+- **Hits to die** (`numberOfHitsToDie`): with the pools full, each enemy hit of `<Type>TakenHit` (each part rounded up) drains energy shield first, unless the type bypasses it, then life (`calcs.reducePoolsByDamage`).
+  - It runs until life is 0 or for 50 iterations.
+  - After the first hit it runs itself on eight times the damage and counts `max((hits - 1) x 8 - 1, 1)` hits at once.
+  - The last hit's overkill over its damage is taken off; 10^8 damage survived is infinite.
+- **Mitigated hits:** each type's hit times `blockEffect x suppressionEffect x (1 - avoid / 100)`.
+  - `blockEffect = 1 - block x BlockEffect / 100`, where `block` is the four effective block chances averaged over 100.
+  - `suppressionEffect = 1 - chance / 2 x SpellSuppressionEffect / 100` below a 100% chance.
+  - `ConfiguredDamageChance` is 100 times the product; the hits are counted again unless it is 100.
+- **Not hit:** the four categories' chances not to be hit (evade, dodge, avoiding all damage, avoiding projectiles), averaged, give `ConfiguredNotHitChance`.
+  - `TotalNumberOfHits = mitigated / (1 - not hit / 100)`.
+  - `TotalEHP = TotalNumberOfHits x` the enemy's damage before its modifiers.
+
+**The engine** (`poe1::ehp`, from the enemy's hit; slice revision 22):
+- **The fields:** `number-of-damaging-hits`, `number-of-mitigated-damaging-hits`, `total-number-of-hits`, `configured-damage-chance`, `configured-not-hit-chance`, and `total-ehp`, present with every type's hit. An infinite estimate has no value.
+- **The pools:** life and energy shield (chaos bypasses it).
+- **The rows:**
+  - Glancing Blows' "You take 65% of Damage from Blocked Hits" is `BlockEffect` BASE 65 (`keystones`).
+  - "#% chance to avoid Projectiles" is `AvoidProjectiles` (was `NoEffect`).
+- **`EhpReason`:** a new marker, for life and energy shield gained on block and spell block, and lucky suppression (were `NoEffect`).
+- **Not modelled:** mind over matter, guard, ward, aegis, allies, life loss prevented, recoup, gains on block or suppression, dodge, avoiding all damage or a type's damage, lucky block, and the enemy reducing block. These are reasons: the markers of parts 12 to 14, or unmapped stats.
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 13,547.
+  - Each of the six fields equals PoB's in 168 builds, Glancing Blows' fixture included.
+  - No other field moved.
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,766 tests and clippy pass.

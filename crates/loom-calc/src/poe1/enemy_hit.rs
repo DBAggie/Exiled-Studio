@@ -266,9 +266,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let damage_mult = inc * more;
     // Each type's damage from the enemy.
     let mut enemy_damage = [0.0; 5];
+    let mut damage_in = 0.0;
     for (i, ty) in TYPES.into_iter().enumerate() {
         let name = format!("enemy{}Damage", pob_type(ty));
         let damage = number(&name).unwrap_or_else(|| placeholder(ty));
+        damage_in += damage;
         enemy_damage[i] = damage * damage_mult * crit_effect;
     }
     // Taken as (1802 to 1879): each type's shift table, the same type's
@@ -485,10 +487,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             after: taken_mult * suppress_mult,
             effective_armour,
             damage_reduction,
+            taken_hit,
             reasons: type_reasons,
         });
     }
-    maximum_hit(calc, set, &parts, &shares, max, damage_mult)
+    maximum_hit(calc, set, &parts, &shares, max, damage_mult, damage_in)
 }
 
 /// One type's values of the hit that maximum hit reads (PoB's
@@ -503,6 +506,7 @@ struct TypeHit {
     after: f64,
     effective_armour: f64,
     damage_reduction: f64,
+    taken_hit: f64,
     reasons: Reasons,
 }
 
@@ -537,6 +541,7 @@ fn maximum_hit(
     shares: &[[f64; 5]; 5],
     max: f64,
     enemy_damage_mult: f64,
+    damage_in: f64,
 ) -> Result<(), CalcError> {
     let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
     let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
@@ -676,8 +681,76 @@ fn maximum_hit(
         let result = phases::total(calc, &[node], Term::Result)?;
         calc.set_derived(second, phases::query(result, reasons), &fields);
     }
+    // The effective health pool (P6-10b part 14).
+    if parts.iter().all(Option::is_some) {
+        let mut reasons = pool_reasons.clone();
+        reasons.extend(&phases::marker_reasons(
+            calc,
+            |q| match q {
+                Quantity::Poe1(Poe1Quantity::EhpReason(stat)) => Some(stat),
+                _ => None,
+            },
+            |q| q == Quantity::Poe1(Poe1Quantity::AvoidProjectiles),
+        ));
+        let mut taken_hit = [0.0; 5];
+        for (i, p) in parts.iter().enumerate() {
+            if let Some(p) = p {
+                reasons.extend(&p.reasons);
+                taken_hit[i] = p.taken_hit;
+            }
+        }
+        let field = |calc: &Calc<'_>, f: Field| calc.field(f).and_then(|r| r.value).unwrap_or(0.0);
+        let cx = calc.context(Flags::NONE);
+        let suppression_effect = sum(
+            calc,
+            Poe1Quantity::SpellSuppressionEffect,
+            Op::Base,
+            &cx,
+            &mut reasons,
+        )?;
+        let avoid_projectiles = sum(
+            calc,
+            Poe1Quantity::AvoidProjectiles,
+            Op::Base,
+            &cx,
+            &mut reasons,
+        )?
+        .min(AVOID_CHANCE_CAP);
+        // `BlockEffect = 100 - BlockEffect BASE` (`CalcDefence.lua` 768).
+        let block_effect =
+            100.0 - sum(calc, Poe1Quantity::BlockEffect, Op::Base, &cx, &mut reasons)?;
+        let mitigation = super::ehp::Mitigation {
+            block: field(calc, Field::BlockChance),
+            spell_block: field(calc, Field::Poe1(Poe1Field::SpellBlockChance)),
+            block_effect,
+            suppression: field(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)),
+            suppression_effect,
+            melee_evade: field(calc, Field::Poe1(Poe1Field::MeleeEvadeChance)),
+            projectile_evade: field(calc, Field::Poe1(Poe1Field::ProjectileEvadeChance)),
+            avoid_projectiles,
+            attack_dodge: 0.0,
+            spell_dodge: 0.0,
+            avoid_all: 0.0,
+        };
+        let character = super::ehp::Character {
+            life: recoverable,
+            max_life: life,
+            energy_shield: es,
+        };
+        super::ehp::estimate(
+            calc,
+            &taken_hit,
+            damage_in,
+            &character,
+            &mitigation,
+            &reasons,
+        )?;
+    }
     Ok(())
 }
+
+/// PoB's `data.misc.AvoidChanceCap`.
+const AVOID_CHANCE_CAP: f64 = 75.0;
 
 /// PoB's name of a damage type (`dmgTypeList`).
 const fn pob_type(ty: DamageType) -> &'static str {

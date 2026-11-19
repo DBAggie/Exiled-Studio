@@ -1983,6 +1983,7 @@ impl StatMapping for SkillMapping {
                                 | Poe1Quantity::ReductionReason(_)
                                 | Poe1Quantity::EnemyHitReason(_)
                                 | Poe1Quantity::PoolReason(_)
+                                | Poe1Quantity::EhpReason(_)
                                 | Poe1Quantity::DotTakenReason(_)
                         )
                     )
@@ -2583,6 +2584,16 @@ pub const ROWS: &[Row] = &[
         "base_armour_applies_to_lightning_damage",
         &[(
             Quantity::Poe1(Poe1Quantity::ArmourAppliesTo(DamageType::Lightning)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 14: "#% chance to avoid Projectiles" (`AvoidProjectilesChance`
+    // BASE), the effective health pool's.
+    (
+        "base_avoid_projectiles_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AvoidProjectiles),
             Op::Base,
             1.0,
         )],
@@ -4161,7 +4172,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_maim_%_chance", "ailment-on-self"),
     ("base_aura_area_of_effect_+%", "area"),
     ("base_avoid_freeze_%", "ailment-on-self"),
-    ("base_avoid_projectiles_%_chance", "avoidance"),
     // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
     ("base_avoid_stun_%", "stun"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -4317,11 +4327,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
-    // P6-11m: energy shield recovered on block (`EnergyShieldOnBlock`).
-    (
-        "energy_shield_%_of_armour_rating_gained_on_block",
-        "recovery-on-block",
-    ),
     // P6-11m: "#% increased Flask Recovery rate" (`FlaskRecoveryRate`).
     ("flask_recovery_speed_+%", "flask"),
     ("fortify_duration_+%", "fortification"),
@@ -4447,10 +4452,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("rage_loss_delay_ms", "rage-duration"),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
-    // P6-11m: life recovered on block (`LifeOnBlock`): no slice field.
-    ("recover_%_of_maximum_life_on_block", "recovery-on-block"),
-    // P6-11g: "Recover # Energy Shield when you Block Spell Damage" (`EnergyShieldOnSpellBlock` BASE).
-    ("recover_x_energy_shield_on_spell_block", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
@@ -4477,10 +4478,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
-    // P6-11m: lucky suppression (`SpellSuppressionChanceIsLucky`): PoB
-    // reads it only into the effective chance (`CalcDefence.lua` 1134),
-    // not `SpellSuppressionChance`.
-    ("spell_suppression_chance_is_lucky", "effective-suppression"),
     // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
     ("spell_uncastable_if_triggerable", "trigger"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
@@ -4657,6 +4654,18 @@ pub const POOL_REASONS: &[&str] = &[
     "take_half_area_damage_from_hit_%_chance",
 ];
 
+/// Stats that change the effective health pool alone in a way the engine
+/// does not model (P6-10b part 14), sorted: each maps to
+/// [`Poe1Quantity::EhpReason`]. PoB's text: life and energy shield gained
+/// on block and spell block (`LifeOnBlock`, `EnergyShieldOnBlock`,
+/// `EnergyShieldOnSpellBlock`), lucky spell suppression.
+pub const EHP_REASONS: &[&str] = &[
+    "energy_shield_%_of_armour_rating_gained_on_block",
+    "recover_%_of_maximum_life_on_block",
+    "recover_x_energy_shield_on_spell_block",
+    "spell_suppression_chance_is_lucky",
+];
+
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to
 /// [`Poe1Quantity::DotTakenReason`]. PoB's text: chaos damage taken over
@@ -4779,6 +4788,9 @@ pub const HIT_REASONS: &[&str] = &["base_skill_show_average_damage_instead_of_dp
 pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
     if let Ok(i) = ENEMY_HIT_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::EnemyHitReason(ENEMY_HIT_REASONS[i]));
+    }
+    if let Ok(i) = EHP_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::EhpReason(EHP_REASONS[i]));
     }
     if let Ok(i) = POOL_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::PoolReason(POOL_REASONS[i]));
