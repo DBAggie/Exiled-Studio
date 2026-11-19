@@ -170,4 +170,4 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-12 part 1: `combined-dps` (`poe1::combined`, slice revision 10; Culling Strike's multiplier); a flag stat at 0 sets no flag (`smite-bleed-templar.xml`'s bleeding computed again); Q11 DIV-0133 to DIV-0173; `docs/phase-6/combined-dps.md`
 - [x] P6-12: a skill without a hit adds PoB's 0 (`combined::has_hit`); a skill PoB disables for the hands has no mana cost (`MainSkill::disabled_by_hands`), weapon types compared as PoB's (`skill::pob_weapon_type`); `docs/phase-6/recovery.md`, "A disabled skill's cost"
 - [x] P6-12 part 2: `full-dps` (`poe1::full_dps`, slice revision 14, `CalcOptions::nested`); 97 equal to PoB, 40 Q11 (DIV-0233 to DIV-0272); `docs/phase-6/combined-dps.md`, "Part 2"
-- [ ] P6-12 rest: the Phase 6 report `docs/phase-6/phase-6-report.md`
+- [x] P6-12: the Phase 6 report `docs/phase-6/phase-6-report.md` (at P6-11n: public 13,547 `Complete`, corpus 0; register 281; the gate not met yet; the bench re-checked, every budget met, `calculate` 6.7 to 64.9 ms from full DPS); updated as later steps land
