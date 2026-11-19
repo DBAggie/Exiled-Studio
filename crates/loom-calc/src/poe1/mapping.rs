@@ -1716,11 +1716,32 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::BLEED.union(Flags::POISON),
         )],
     ),
+    // P6-11ab: Rapid Decay's "#% more Damage over Time" (`Damage` MORE,
+    // `ModFlag.Dot`, `sup_dex.lua` 3854).
+    (
+        "support_rapid_decay_damage_over_time_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::DOT, NONE)],
+    ),
     // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
     (
         "support_storm_barrier_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
+    // P6-11ab: Swift Affliction's "#% more Skill Effect Duration and
+    // Duration of Damaging Ailments" (`SkillStatMap.lua` 705): `Duration`
+    // MORE, which nothing modelled reads (the `skill-duration` rows of
+    // `NO_EFFECT`; an ailment that is a skill effect is a reason), and
+    // `DamagingAilmentDuration` MORE.
+    (
+        "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentDuration),
+            Op::More,
+            1.0,
+            NONE,
+            DAMAGING_AILMENTS,
+        )],
     ),
     // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
     (

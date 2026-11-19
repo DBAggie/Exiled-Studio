@@ -682,3 +682,20 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **Infused Channelling's stats:** neither is unmapped anywhere now. The damage taken stat was in 4 builds and the damage stat in 4.
 - **`data-parity`:** `gem_effects` 0 differences; uncategorized 353, unchanged.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ab: Rapid Decay and Swift Affliction
+
+**PoB:**
+- **Rapid Decay's `support_rapid_decay_damage_over_time_+%_final`:** `Damage` MORE with `ModFlag.Dot` (`sup_dex.lua` 3854).
+- **Swift Affliction's `support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final`:** `Duration` MORE and `DamagingAilmentDuration` MORE (`SkillStatMap.lua` 705).
+
+**The engine:** both are hit rows (`mapping::HIT_ROWS`).
+- **Rapid Decay:** its row is `Damage` MORE with `Flags::DOT`.
+- **Swift Affliction:** its row is `AilmentDuration` MORE on the damaging ailments. Its `Duration` part is left out: nothing modelled reads a skill's duration (the `skill-duration` rows of `NO_EFFECT`), and an ailment that counts as a skill effect is already a reason (`poe1::ailment`).
+
+**Evidence** (`local/p6/p6-11ab/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected; match unchanged at 13,651.
+  - 8 values moved, all toward PoB: the damage over time of essence-drain-contagion-occultist, lacerate-bleed-gladiator, and rf-chieftain-life-stack. Their fields stay partial for other reasons.
+- **Corpus:** 4 values moved, all toward PoB; 0 unexpected.
+- **The two stats:** no longer unmapped anywhere; each was in 6 builds.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
