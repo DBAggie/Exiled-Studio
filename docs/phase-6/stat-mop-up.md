@@ -365,3 +365,29 @@ The 21 most frequent globally unmapped stats that PoB reads into no slice field 
   - Five moved away, all in `ethereal-knives-mines-assassin.xml`: the game's 30% less spell crit chance applies (PoB's parse reads it the same way). That build's distance from PoB is its other reasons (the forking crit among them).
 - **Corpus:** 0 unexpected.
 - **Tests:** the charge, damage taken, and flask guards list the new rows. The workspace's 1,766 tests and clippy pass.
+
+## P6-11o: lines while an aura affects you
+
+**PoB** sets `AffectedBy<Name>` while an aura affects the character (`CalcPerform.lua` 2417 to 2419; a Vaal aura's under its name without "Vaal "). Lines "while affected by <Aura>" read it.
+
+**The engine:**
+- **The settled conditions:** `gems::affected_by` lists the auras the gem table applies to the character, over the groups `arcane_surge_support` reads. `conditions::settle` settles `AffectedBy<Name>` for the seven auras the rows read (`conditions::AFFECTED_BY`): Anger, Determination, Grace, Hatred, Precision, Pride, Wrath.
+- **Twelve state rows,** each as PoB parses its line (mostly cluster jewel notables):
+  - Determination's armour;
+  - Precision's attack damage, attack speed, and crit multiplier;
+  - Wrath's crit chance and lightning penetration;
+  - Anger's crit multiplier;
+  - Hatred's added cold damage and cold penetration;
+  - Pride's physical damage;
+  - Grace's spell suppression.
+- **Left unmapped:** Hatred's additional crit chance (a permyriad value; state rows carry no divisor), and Pride's impale chance and stacks.
+
+**Evidence** (`local/p6/p6-11o/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected.
+- **Values:** 49 changed in partial or indeterminate builds; 43 moved toward PoB.
+- **The six that moved away** are `poisonous-concoction-of-bouncing-pathfinder.xml`'s suppression (87 to 100) and the hit fields and damage chance that follow it.
+  - The line is Unholy Grace's, a cluster jewel notable, while Grace affects the character.
+  - PoB's oracle run has 88; the build's own saved PoB stat is 100.
+  - The build carries the cluster reason (the evidence bundle has no cluster tables).
+- **Corpus:** 0 unexpected.
+- **Tests:** the state rows test reads the new conditions. The workspace's 1,766 tests, the maintainer-run tests on the evidence bundle, and clippy pass.

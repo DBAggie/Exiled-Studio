@@ -2426,6 +2426,44 @@ pub fn arcane_surge_support(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
     })
 }
 
+/// The auras the gem table applies to the character, by PoB's buff name
+/// (a Vaal aura's without "Vaal "; P6-11o): what PoB's `AffectedBy<Name>`
+/// conditions read (`CalcPerform.lua` 2417 to 2419). The groups are
+/// [`arcane_surge_support`]'s.
+#[must_use]
+pub fn affected_by(input: &CalcInput<'_>, levels: &GemLevels) -> BTreeSet<&'static str> {
+    let build = input.build;
+    let mut out = BTreeSet::new();
+    let Ok(groups) = skill::active_groups(build) else {
+        return out;
+    };
+    let main_group = skill::main_skill(build, input.data, levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        if skill::attribute(&group.attributes, "source").is_some() {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, levels) {
+            if let Some(Kind::Buff {
+                name,
+                effect: EffectType::Aura,
+                ..
+            }) = kind(&s.active_gem.effect.id)
+            {
+                out.insert(name.strip_prefix("Vaal ").unwrap_or(name));
+            }
+        }
+    }
+    out
+}
+
 /// What the table says about an active skill.
 #[must_use]
 pub fn kind(id: &str) -> Option<Kind> {

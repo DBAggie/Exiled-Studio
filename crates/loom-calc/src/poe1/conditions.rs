@@ -92,6 +92,21 @@ pub const MOVING: &str = "Moving";
 /// above 0 (`ConfigOptions.lua`).
 pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
 
+/// The auras whose `AffectedBy<Name>` condition a row reads (P6-11o),
+/// each with its condition: PoB sets it while the aura affects the
+/// character (`CalcPerform.lua` 2417 to 2419; a Vaal aura's too, its name
+/// without "Vaal "). Settled from the gem table's auras
+/// ([`super::gems::affected_by`]).
+pub const AFFECTED_BY: [(&str, &str); 7] = [
+    ("Anger", "AffectedByAnger"),
+    ("Determination", "AffectedByDetermination"),
+    ("Grace", "AffectedByGrace"),
+    ("Hatred", "AffectedByHatred"),
+    ("Precision", "AffectedByPrecision"),
+    ("Pride", "AffectedByPride"),
+    ("Wrath", "AffectedByWrath"),
+];
+
 /// PoB's `Condition:Lifetap`, from its config check `buffLifetap`
 /// (`ConfigOptions.lua`; P6-10b part 8: Lifetap's more damage while
 /// buffed).
@@ -216,6 +231,12 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     };
     if let Some(v) = either {
         out.insert(ConditionKey::new(ENEMY_RARE_OR_UNIQUE_NEARBY), v);
+    }
+    // The auras affecting the character (P6-11o).
+    let levels = super::gem_levels::GemLevels::none();
+    let auras = super::gems::affected_by(input, &levels);
+    for (name, condition) in AFFECTED_BY {
+        out.insert(ConditionKey::new(condition), auras.contains(name));
     }
     // Hit recently: a count above 0 sets it too; "not hit recently" is its
     // negation, unsettled when it is (P6-10b part 13).

@@ -2163,6 +2163,12 @@ pub const STATE_ROWS: &[StateRow] = &[
         "additional_staff_block_%",
         &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
     ),
+    // P6-11o: "+# to Armour while affected by Determination" (`Armour` BASE,
+    // `AffectedByDetermination`).
+    (
+        "armour_+_while_affected_by_determination",
+        &[(Quantity::Armour, Op::Base, NONE, "AffectedByDetermination")],
+    ),
     // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
     // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
     // keyword, `UsingShield` (as the staff row).
@@ -2173,6 +2179,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
             states::USING_SHIELD,
+        )],
+    ),
+    // P6-11o: "#% increased Attack Damage while affected by Precision".
+    (
+        "attack_damage_+%_while_affected_by_precision",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            "AffectedByPrecision",
         )],
     ),
     // P6-11a review: "#% increased Attack Damage while holding a Shield":
@@ -2196,6 +2212,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::KEYWORD_ATTACK,
             states::USING_SHIELD,
+        )],
+    ),
+    // P6-11o: "#% increased Attack Speed while affected by Precision".
+    (
+        "attack_speed_+%_while_affected_by_precision",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            "AffectedByPrecision",
         )],
     ),
     // P6-11a review: "#% increased Attack Speed while holding a Shield":
@@ -2232,6 +2258,11 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::CRIT_RECENTLY,
         )],
     ),
+    // P6-11o: "#% increased Critical Strike Chance while affected by Wrath".
+    (
+        "critical_strike_chance_+%_while_affected_by_wrath",
+        &[(Quantity::CritChance, Op::Increased, NONE, "AffectedByWrath")],
+    ),
     // P3-8n: "against Enemies that are on Full Life" (`ActorCondition` enemy
     // `FullLife`, ModParser.lua 1945), from the config (`poe1::conditions`).
     (
@@ -2251,6 +2282,22 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::ENEMY_RARE_OR_UNIQUE,
+        )],
+    ),
+    // P6-11o: "+#% to Critical Strike Multiplier while affected by Anger".
+    (
+        "critical_strike_multiplier_+_while_affected_by_anger",
+        &[(Quantity::CritMultiplier, Op::Base, NONE, "AffectedByAnger")],
+    ),
+    // P6-11o: "+#% to Critical Strike Multiplier while affected by
+    // Precision".
+    (
+        "critical_strike_multiplier_+_while_affected_by_precision",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            "AffectedByPrecision",
         )],
     ),
     // P3-8n: "if you've Shattered an Enemy Recently" (1935).
@@ -2400,6 +2447,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::STATIONARY,
         )],
     ),
+    // P6-11o: the maximum of "Adds # to # Cold Damage while affected by Hatred".
+    (
+        "maximum_added_cold_damage_while_affected_by_hatred",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Max),
+            Op::Base,
+            NONE,
+            "AffectedByHatred",
+        )],
+    ),
     // P3-8n: "#% increased maximum Life if there are no Life Modifiers on
     // Equipped Body Armour" (`Data/ModCache.lua` 3483: an `ItemCondition`
     // on the body armour's lines; the engine reads the mods' tags,
@@ -2422,6 +2479,16 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::MELEE.union(Flags::HIT),
             conditions::AT_CLOSE_RANGE,
+        )],
+    ),
+    // P6-11o: the minimum of "Adds # to # Cold Damage while affected by Hatred".
+    (
+        "minimum_added_cold_damage_while_affected_by_hatred",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Min),
+            Op::Base,
+            NONE,
+            "AffectedByHatred",
         )],
     ),
     // P6-11a: "#% increased Physical Attack Damage while holding a Shield":
@@ -2447,6 +2514,38 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::MOVING,
+        )],
+    ),
+    // P6-11o: "#% increased Physical Damage while affected by Pride".
+    (
+        "pride_physical_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::PHYSICAL,
+            "AffectedByPride",
+        )],
+    ),
+    // P6-11o: "Damage Penetrates #% Cold Resistance while affected by Hatred"
+    // (`ColdPenetration` BASE).
+    (
+        "reduce_enemy_cold_resistance_%_while_affected_by_hatred",
+        &[(
+            Quantity::Penetration(DamageType::Cold),
+            Op::Base,
+            NONE,
+            "AffectedByHatred",
+        )],
+    ),
+    // P6-11o: "Damage Penetrates #% Lightning Resistance while affected by
+    // Wrath" (`LightningPenetration` BASE).
+    (
+        "reduce_enemy_lightning_resistance_%_while_affected_by_wrath",
+        &[(
+            Quantity::Penetration(DamageType::Lightning),
+            Op::Base,
+            NONE,
+            "AffectedByWrath",
         )],
     ),
     // P6-11a: "+#% Elemental Resistances while holding a Shield":
@@ -2500,6 +2599,11 @@ pub const STATE_ROWS: &[StateRow] = &[
             Flags::SPELL,
             states::USING_STAFF,
         )],
+    ),
+    // P6-11o: "+#% chance to Suppress Spell Damage while affected by Grace".
+    (
+        "spell_suppression_chance_%_while_affected_by_grace",
+        &[(SUPPRESSION, Op::Base, NONE, "AffectedByGrace")],
     ),
     (
         "staff_block_%",
@@ -6328,7 +6432,9 @@ mod tests {
                         conditions::NOT_HIT_RECENTLY,
                     ]
                     .contains(state)
-                        || conditions::CHECKS.iter().any(|(_, c)| c == state),
+                        || conditions::CHECKS.iter().any(|(_, c)| c == state)
+                        // P6-11o: an aura affecting the character.
+                        || conditions::AFFECTED_BY.iter().any(|(_, c)| c == state),
                     "{id}: {state}"
                 );
             }
@@ -6618,6 +6724,110 @@ mod tests {
                     NONE,
                     conditions::MOVING,
                 )],
+            ),
+            // P6-11o: lines while an aura affects the character.
+            (
+                "armour_+_while_affected_by_determination",
+                vec![config(
+                    Quantity::Armour,
+                    Op::Base,
+                    NONE,
+                    "AffectedByDetermination",
+                )],
+            ),
+            (
+                "attack_damage_+%_while_affected_by_precision",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    "AffectedByPrecision",
+                )],
+            ),
+            (
+                "attack_speed_+%_while_affected_by_precision",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    "AffectedByPrecision",
+                )],
+            ),
+            (
+                "critical_strike_chance_+%_while_affected_by_wrath",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    "AffectedByWrath",
+                )],
+            ),
+            (
+                "critical_strike_multiplier_+_while_affected_by_anger",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    "AffectedByAnger",
+                )],
+            ),
+            (
+                "critical_strike_multiplier_+_while_affected_by_precision",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    "AffectedByPrecision",
+                )],
+            ),
+            (
+                "maximum_added_cold_damage_while_affected_by_hatred",
+                vec![config(
+                    Quantity::AddedDamage(DamageType::Cold, Bound::Max),
+                    Op::Base,
+                    NONE,
+                    "AffectedByHatred",
+                )],
+            ),
+            (
+                "minimum_added_cold_damage_while_affected_by_hatred",
+                vec![config(
+                    Quantity::AddedDamage(DamageType::Cold, Bound::Min),
+                    Op::Base,
+                    NONE,
+                    "AffectedByHatred",
+                )],
+            ),
+            (
+                "pride_physical_damage_+%",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::PHYSICAL,
+                    "AffectedByPride",
+                )],
+            ),
+            (
+                "reduce_enemy_cold_resistance_%_while_affected_by_hatred",
+                vec![config(
+                    Quantity::Penetration(DamageType::Cold),
+                    Op::Base,
+                    NONE,
+                    "AffectedByHatred",
+                )],
+            ),
+            (
+                "reduce_enemy_lightning_resistance_%_while_affected_by_wrath",
+                vec![config(
+                    Quantity::Penetration(DamageType::Lightning),
+                    Op::Base,
+                    NONE,
+                    "AffectedByWrath",
+                )],
+            ),
+            (
+                "spell_suppression_chance_%_while_affected_by_grace",
+                vec![config(SUPPRESSION, Op::Base, NONE, "AffectedByGrace")],
             ),
             // P6-10b part 8: Lifetap's more damage while buffed.
             (
