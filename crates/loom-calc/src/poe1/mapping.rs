@@ -2504,6 +2504,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             "AffectedByHatred",
         )],
     ),
+    // P6-11w: "#% increased Movement Speed while on Burning Ground"
+    // (`MovementSpeed` INC, `OnBurningGround`, the config's check).
+    (
+        "movement_speed_+%_while_on_burning_ground",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::ON_BURNING_GROUND,
+        )],
+    ),
     // P6-11p: "Gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
     // FLAG, `Condition` `KilledRecently`): Onslaught while the config says
     // you have killed recently (`poe1::buffs`).
@@ -5088,7 +5099,7 @@ pub const COST_REASONS: &[&str] = &[
 /// (P6-10b), sorted: each maps to [`Poe1Quantity::MovementReason`], the
 /// movement fields' reason alone. PoB's text for each (`ModParser.lua`):
 /// on kill (`KilledRecently`), during a flask's effect (`UsingFlask`), on
-/// burning ground, on low life, while ignited, and with no gems in the
+/// low life, while ignited, and with no gems in the
 /// boots, each a config condition the engine does not settle; per
 /// summoned phantasm (`PerStat`); the armour movement penalties ignored;
 /// movement speed that cannot go below its base; and Momentum's
@@ -5098,7 +5109,6 @@ pub const MOVEMENT_REASONS: &[&str] = &[
     "ignore_armour_movement_penalties",
     "movement_speed_+%_during_flask_effect",
     "movement_speed_+%_per_summoned_phantasm",
-    "movement_speed_+%_while_on_burning_ground",
     "movement_speed_cannot_be_reduced_below_base",
     "movement_velocity_+%_when_on_low_life",
     "movement_velocity_+%_while_ignited",
@@ -6953,6 +6963,16 @@ mod tests {
                     Op::Flag,
                     NONE,
                     conditions::KILLED_RECENTLY,
+                )],
+            ),
+            // P6-11w: movement speed on burning ground.
+            (
+                "movement_speed_+%_while_on_burning_ground",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::ON_BURNING_GROUND,
                 )],
             ),
             // P6-10b part 8: Lifetap's more damage while buffed.

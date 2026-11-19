@@ -572,3 +572,22 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **States:** 130 fields went from partial to complete.
 - **Corpus:** 13 moved, all toward PoB; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11w: movement speed on burning ground
+
+**PoB** reads "#% increased Movement Speed while on Burning Ground" as `MovementSpeed` INC with the `OnBurningGround` condition (`ModParser.lua` 1754). Only the config's check `conditionOnBurningGround` sets that condition (`ConfigOptions.lua` 1163). The check's implied `Burning` matters only to the UI.
+
+**The engine:**
+- `poe1::conditions` settles `OnBurningGround` from the check.
+- The stat is a state row (`mapping::STATE_ROWS`) and leaves `MOVEMENT_REASONS`.
+
+**Not done here, with why:** the other single-condition lines are not settled by a plain config check alone.
+- **Full life** (`FullLife`): PoB also derives it from the life left unreserved (`CalcPerform.lua` 76 to 83).
+- **Life flask use** (`UsingLifeFlask`): PoB derives it from active flasks.
+- **Minion skill used recently** (`UsedMinionSkillRecently`): PoB also derives it from the main skill.
+- **Exposure inflicted recently** (`AppliedExposureRecently`): PoB derives it from exposure applied.
+
+**Evidence** (`local/p6/p6-11w/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected. Match went from 13,533 to 13,535: 2 fields went from partial to complete, and no value moved.
+- **Corpus:** unchanged; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

@@ -16,6 +16,8 @@
 //!   `conditionBlockedSpellRecently`: `BlockedRecently`, set by any of the
 //!   three (1410 to 1420; P6-11g), and the last two's own
 //!   `BlockedAttackRecently` and `BlockedSpellRecently`;
+//! - `conditionOnBurningGround`: `OnBurningGround` (1163; P6-11w; its
+//!   implied `Burning` is the UI's alone);
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
 //! - `conditionEnemyLowLife`: the enemy's `LowLife` (1777; P6-9e, read by
 //!   Punishment's hex, `gems::SKILLS`);
@@ -91,6 +93,9 @@ pub const NOT_HIT_RECENTLY: &str = "NotBeenHitRecently";
 pub const KILLED_RECENTLY: &str = "KilledRecently";
 /// "while moving" (PoB's `Moving`, from `conditionMoving`; P6-10b part 13).
 pub const MOVING: &str = "Moving";
+/// "while on Burning Ground" (PoB's `OnBurningGround`, from
+/// `conditionOnBurningGround`, `ConfigOptions.lua` 1163; P6-11w).
+pub const ON_BURNING_GROUND: &str = "OnBurningGround";
 /// The count of hits taken recently, which sets [`BEEN_HIT_RECENTLY`]
 /// above 0 (`ConfigOptions.lua`).
 pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
@@ -143,6 +148,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionKilledRecently", KILLED_RECENTLY),
     ("conditionMoving", MOVING),
+    ("conditionOnBurningGround", ON_BURNING_GROUND),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
     (
