@@ -86,6 +86,9 @@ const fn flag(q: Poe1Quantity) -> KeystoneEffect {
 
 /// The keystones, sorted by stat ID (a test checks the order), each read as
 /// PoB reads its lines (module docs). A keystone stat's value is 1, so each
+/// Divine Shield's pseudo recoup, PoB's value (`ModCache.lua` 4760).
+pub const DIVINE_SHIELD_PSEUDO_RECOUP: f64 = 12.0;
+
 /// Mind over Matter's damage taken from mana before life, percent.
 pub const MIND_OVER_MATTER: f64 = 40.0;
 
@@ -103,6 +106,25 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             flag(Poe1Quantity::DealNo(DamageType::Fire)),
             flag(Poe1Quantity::DealNo(DamageType::Lightning)),
             flag(Poe1Quantity::DealNo(DamageType::Chaos)),
+        ],
+    ),
+    // Divine Shield (P6-11am): the tree's "Cannot Recover Energy Shield to
+    // above Armour" (`ArmourESRecoveryCap` FLAG) and "3% of Physical Damage
+    // prevented from Hits Recently is Regenerated as Energy Shield per
+    // second" (`PhysicalDamageMitigatedEnergyShieldPseudoRecoup` BASE 12,
+    // `ModCache.lua` 4760).
+    (
+        "keystone_divine_shield",
+        &[
+            flag(Poe1Quantity::ArmourEsRecoveryCap),
+            (
+                Quantity::Poe1(Poe1Quantity::PseudoRecoup),
+                Op::Base,
+                DIVINE_SHIELD_PSEUDO_RECOUP,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
         ],
     ),
     (

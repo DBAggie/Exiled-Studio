@@ -95,6 +95,9 @@ pub(super) struct Character {
     /// (`sharedGuardAbsorbRate`, `sharedGuardAbsorb`; P6-11ae).
     pub(super) guard_rate: f64,
     pub(super) guard: f64,
+    /// Any recoup (PoB's `anyRecoup` above 0; P6-11am): the mitigated
+    /// estimate tracks recoupable damage, which limits its speed-up.
+    pub(super) recoup: bool,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -105,6 +108,8 @@ pub(super) struct Gains {
     pub(super) life: f64,
     pub(super) mana: f64,
     pub(super) energy_shield: f64,
+    /// PoB's `LimitEHPSpeedup` for another cause (tracked recoup).
+    pub(super) limit: bool,
 }
 
 impl Gains {
@@ -276,7 +281,7 @@ fn hits_to_die(
         }
         iteration_multiplier = 1.0;
         if !cycles_ran && pools.life > 0.0 && run.iterations < MAX_ITERATIONS {
-            let speed_up = if gains.any() {
+            let speed_up = if gains.any() || gains.limit {
                 LIMITED_SPEED_UP
             } else {
                 SPEED_UP
@@ -366,17 +371,21 @@ pub(super) fn estimate(
     // more than one damaging hit, each times the block chance, spell
     // block's energy shield at half (`Average`). No gain on suppression is
     // mapped.
-    let gains = if damaging > 1.0 {
+    let mut gains = if damaging > 1.0 {
         Gains {
             life: m.life_on_block * block_chance,
             mana: 0.0,
             energy_shield: m.energy_shield_on_block * block_chance
                 + m.energy_shield_on_spell_block / 2.0 * block_chance,
+            limit: false,
         }
     } else {
         Gains::default()
     };
-    let mitigated = if damage_chance == 100.0 && !gains.any() {
+    // Tracked recoup (P6-11am; `CalcDefence.lua` 2828 to 2840): the run is
+    // made, its speed-up limited.
+    gains.limit = ch.recoup;
+    let mitigated = if damage_chance == 100.0 && !gains.any() && !gains.limit {
         damaging
     } else {
         let damage_in = taken_hit
@@ -453,6 +462,7 @@ mod tests {
             mom: [0.0; 5],
             guard_rate: 0.0,
             guard: 0.0,
+            recoup: false,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -479,6 +489,7 @@ mod tests {
             mom: [0.0; 5],
             guard_rate: 75.0,
             guard: 1000.0,
+            recoup: false,
         };
         let pools = Pools {
             life: ch.life,

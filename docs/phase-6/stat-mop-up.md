@@ -944,3 +944,27 @@ All three match PoB on every computed field (231). "+100 Life gained when you Bl
   - 4 values moved, all toward PoB (kinetic-blast-of-clustering-necromancer's estimate).
 - **Corpus:** 12 values moved, all toward PoB; 3 now equal it. 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11am: Divine Shield
+
+**PoB:** the keystone is `Keystone` LIST, so its node's lines apply.
+- **"Cannot Recover Energy Shield to above Armour"** is `ArmourESRecoveryCap`. With armour below energy shield, `EnergyShieldRecoveryCap` is the armour (`CalcDefence.lua` 1055 to 1063), and maximum hit and the effective health pool read that cap.
+- **"3% of Physical Damage prevented from Hits Recently is Regenerated as Energy Shield per second"** is `PhysicalDamageMitigatedEnergyShieldPseudoRecoup` BASE 12. It reaches no field we compute, but it makes `anyRecoup` above 0. The mitigated estimate then tracks recoupable damage: it is always rerun, at the limited speed-up of 4 (2828 to 2840).
+
+**The engine:**
+- **The keystone row:** `keystone_divine_shield` moves from `POOL_REASONS` to a `keystones` row with two effects, the flag `ArmourEsRecoveryCap` and `PseudoRecoup` BASE 12.
+- **`enemy_hit`:** caps the energy shield pool at armour, before the low energy shield check (P6-11ad), and passes on whether any recoup is present.
+- **`ehp`:** limits the mitigated run's speed-up when there is recoup.
+- **Tests:** `tests/keystones_chill.rs` carries the keystone's passive text.
+
+**New mechanic fixtures** (each run through PoB v2.67.2, 3 of 3 runs identical; the custom line "Divine Shield" resolves to the keystone stat):
+- **`ehp-divine-shield-capped-ice-nova-witch.xml`:** armour 500, below energy shield, so the cap applies.
+- **`ehp-divine-shield-ice-nova-witch.xml`:** armour above energy shield, so only the limited speed-up applies. The mitigated hits move from 6.88245 to 6.88379, as PoB's.
+
+Both match PoB on every computed field.
+
+**Evidence** (`local/p6/p6-11am/`):
+- **Public `calc-parity`:** 226 builds, 292 expected, 0 unexpected; match 14,579 to 14,733 (the fixtures).
+  - No other value moved: the public Divine Shield builds' estimate fields carry other reasons.
+- **Corpus:** 3 values moved, all toward PoB; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

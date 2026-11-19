@@ -19,12 +19,17 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 9] = [
+const TEXTS: [(&str, &str); 10] = [
     (
         "keystone_glancing_blows",
         "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",
     ),
     ("chill_effect_+%", "{0}% increased Effect of Chill"),
+    // P6-11am: Divine Shield.
+    (
+        "keystone_divine_shield",
+        "Cannot Recover Energy Shield to above Armour\\n3% of Physical Damage prevented from Hits Recently is Regenerated as Energy Shield per second",
+    ),
     (
         "cold_ailment_effect_+%",
         "{0}% increased Effect of Cold Ailments",

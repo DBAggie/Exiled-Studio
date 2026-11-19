@@ -295,6 +295,16 @@ pub enum Poe1Quantity {
     /// `SpellSuppressionChanceIsLucky`; P6-11al): a `Flag`, read by
     /// [`enemy_hit`] for the effective chance.
     SuppressionLucky,
+    /// Energy shield cannot be recovered above armour (PoB's
+    /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
+    /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
+    ArmourEsRecoveryCap,
+    /// Physical damage prevented regenerated as energy shield, percent
+    /// (PoB's `PhysicalDamageMitigatedEnergyShieldPseudoRecoup`; P6-11am,
+    /// Divine Shield): `Base`. It reaches no field itself; any recoup makes
+    /// PoB's estimate track recoupable damage, which limits its speed-up
+    /// (`ehp`).
+    PseudoRecoup,
     /// The hit's repeat count as [`repeats`] settled it (PoB's
     /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
     Repeats,
@@ -994,6 +1004,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Repeats => f.write_str("repeats"),
             Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
+            Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
+            Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")

@@ -5341,13 +5341,10 @@ pub const ENEMY_HIT_REASONS: &[&str] =
     &["self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently"];
 
 /// Stats that change the pools maximum hit reads (P6-10b part 13), sorted:
-/// each maps to [`Poe1Quantity::PoolReason`]. PoB's text: the keystone
-/// Divine Shield, half of area damage taken. (Mind over Matter is a
-/// keystone row since P6-10b part 15.)
-pub const POOL_REASONS: &[&str] = &[
-    "keystone_divine_shield",
-    "take_half_area_damage_from_hit_%_chance",
-];
+/// each maps to [`Poe1Quantity::PoolReason`]. PoB's text: half of area
+/// damage taken. (Mind over Matter is a keystone row since P6-10b part
+/// 15, Divine Shield since P6-11am.)
+pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 
 /// Stats that change the effective health pool alone in a way the engine
 /// does not model (P6-10b part 14), sorted: each maps to

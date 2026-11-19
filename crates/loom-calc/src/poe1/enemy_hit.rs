@@ -604,11 +604,40 @@ fn maximum_hit(
         unreserved
     }
     .max(1.0);
-    let es = if super::conditions::check(set, LOW_ES_INPUT) == Some(true) {
-        (es * LOW_POOL_THRESHOLD).min(es)
+    // `EnergyShieldRecoveryCap` (`CalcDefence.lua` 1055 to 1063): capped
+    // at armour with Divine Shield's flag (P6-11am) when armour is lower,
+    // then at half with the low energy shield check.
+    let armour_cap = {
+        let (store, graph) = calc.parts();
+        let q = store.flag(
+            graph,
+            Quantity::Poe1(Poe1Quantity::ArmourEsRecoveryCap),
+            &cx,
+        )?;
+        pool_reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
+    let armour_value = value(calc, Field::Armour).unwrap_or(0.0);
+    let low_es = super::conditions::check(set, LOW_ES_INPUT) == Some(true);
+    let capping = (armour_cap && armour_value < es) || low_es;
+    let es = if capping {
+        let cap = if armour_cap { armour_value } else { es };
+        if low_es {
+            (es * LOW_POOL_THRESHOLD).min(cap)
+        } else {
+            cap
+        }
     } else {
         es
     };
+    // Any recoup (PoB's `anyRecoup`): Divine Shield's pseudo recoup.
+    let recoup = sum(
+        calc,
+        Poe1Quantity::PseudoRecoup,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )? > 0.0;
     // The shared guard (P6-11ae; `CalcDefence.lua` 2379 to 2395): its
     // rate, and its limit, `GuardAbsorbLimit` BASE with Molten Shell's
     // share of armour (`PerStat` `Armour`, at most `GuardAbsorbMax` in
@@ -901,6 +930,7 @@ fn maximum_hit(
             mom,
             guard_rate,
             guard,
+            recoup,
         };
         super::ehp::estimate(
             calc,
@@ -985,6 +1015,8 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::GuardAbsorbMax
                 | Poe1Quantity::BlockGain(_)
                 | Poe1Quantity::SuppressionLucky
+                | Poe1Quantity::ArmourEsRecoveryCap
+                | Poe1Quantity::PseudoRecoup
         )
     )
 }
