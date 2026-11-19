@@ -481,3 +481,32 @@ The 21 most frequent globally unmapped stats that PoB reads into no slice field 
 - **Corpus:** 7 values moved, all toward PoB; 0 unexpected.
 - **The stat:** unmapped in 0 builds, from 6.
 - **Tests:** the workspace tests and clippy pass.
+
+## P6-11t: regeneration per charge and per stat, and channelling mana costs
+
+**PoB** parses each line with a tag (`ModParser.lua`; checked by the local parse script on the bundle's texts):
+- "Regenerate #% of Life per second per Endurance Charge": `LifeRegenPercent` BASE, `Multiplier` `EnduranceCharge`.
+- "#% increased Mana Regeneration Rate per Power Charge": `ManaRegen` INC, `Multiplier` `PowerCharge`.
+- "#% increased Mana Regeneration Rate per 1% Chance to Block Spell Damage": `ManaRegen` INC, `PerStat` `SpellBlockChance`.
+- "Regenerate # Life per second for each 1% Uncapped Fire Resistance": `LifeRegen` BASE, `PerStat` `FireResistTotal`.
+- "Non-Channelling Skills have +# to Total Mana Cost" and the channelling one: `ManaCost` BASE with a `SkillType` `Channel` tag (negated for the first).
+
+A `PerStat` count is `floor(stat / div + 0.0001)` (`ModStore.lua` 458). `FireResistTotal` is the resistance's truncated total before its cap (`CalcDefence.lua` 611), and `SpellBlockChance` is the capped chance (714). Both are computed before regeneration (1237).
+
+**The engine:**
+- **Per charge:** the two charge stats are rows of `poe1::charges::MODIFIERS`, with new per-charge targets: life regeneration percent per minute, and increased mana regeneration.
+- **Per stat:** two new quantities, `RegenPerFireResist` and `RegenIncPerSpellBlock`, are read by `poe1::regen`:
+  - the first adds to the flat sum per point of the fire resistance's total (`phases::resistance_parts`, which also returns the uncapped total);
+  - the second adds to the increase per point of the spell block chance field, which becomes a dependency of the regeneration field.
+- **Channelling costs:** `ManaCostChannelling(bool)` joins mana's total in `poe1::costs` when the main skill's `Channel` type matches.
+- **Scoping:** the regeneration quantities stay field-scoped (`elsewhere`), so a rolled value left unsettled is a reason on the regeneration fields only. The four stats are gone from `REGEN_REASONS`, and the two cost stats from `COST_REASONS`.
+
+**Evidence** (`local/p6/p6-11t/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected. Match went from 13,399 to 13,403.
+- **Values:** 26 moved, 25 toward PoB; 5 now equal PoB.
+- **The one value that moved away:** `ethereal-knives-mines-assassin.xml`'s mana cost (20 to 14; PoB 22).
+  - The item's "Non-Channelling Skills have -6 to Total Mana Cost" applies, as in PoB.
+  - Our cost before the total is 20 where PoB's is 28; that gap was there before.
+- **States:** 4 life regeneration fields became indeterminate, because they now read a per-charge line whose rolled value is unsettled. 4 cost fields became complete.
+- **Corpus:** 17 moved, all toward PoB; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

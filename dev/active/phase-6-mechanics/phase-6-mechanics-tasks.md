@@ -167,6 +167,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11k: the equipped shield's energy shield and defences (`Poe1Quantity::SlotIncreased`, a piece's own modifier), the effect of your auras on you (`SkillAuraEffectOnSelf`); fixture `ice-nova-shield-defences-aura-self-witch.xml`; 34 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11k"
 - [x] P6-11l: more maximum life with at least 6 Life Masteries (`PassiveKind::life_mastery`, `states::SIX_LIFE_MASTERIES`); three corpus builds' Life equal to PoB; `docs/phase-6/stat-mop-up.md`, "P6-11l"
 - [x] P6-11m: 21 `NoEffect` rows (PoB-parsed, no slice field); global unmapped pairs 418 to 407; `docs/phase-6/stat-mop-up.md`, "P6-11m"
+- [x] P6-11t: regeneration per charge and per stat (spell block, uncapped fire resistance), channelling mana costs; `docs/phase-6/stat-mop-up.md`, "P6-11t"
 - [x] P6-11s: damage per aura or herald affecting you (`stacks::AuraOrHerald`, `gems::aura_or_herald_count`); `docs/phase-6/stat-mop-up.md`, "P6-11s"
 - [x] P6-11r: supports an item grants (`item_supports::ROWS`, 203 rows from PoB's parse), PoB's `addBestSupport`, Blasphemy modelled; `docs/phase-6/stat-mop-up.md`, "P6-11r"
 - [x] P6-11q: socketed gem levels per slot (`gem_levels::SOCKETED_STATS`, `GemSlot`, `InSlot`), levels checked against PoB with a local probe; `docs/phase-6/stat-mop-up.md`, "P6-11q"

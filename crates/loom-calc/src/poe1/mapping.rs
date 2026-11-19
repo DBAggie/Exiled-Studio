@@ -2006,6 +2006,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ManaCost
                     | Poe1Quantity::Cost
                     | Poe1Quantity::ManaCostNoMult
+                    | Poe1Quantity::ManaCostChannelling(_)
                     | Poe1Quantity::ManaCostEfficiency
                     | Poe1Quantity::CostEfficiency
                     // The life and energy shield costs and their sources
@@ -3826,6 +3827,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11t: "Regenerate # Life per second for each 1% Uncapped Fire
+    // Resistance" (`LifeRegen` BASE, `PerStat` `FireResistTotal`; the stat
+    // per minute); [`super::regen`] reads it.
+    (
+        "life_regeneration_per_minute_per_1%_uncapped_fire_damage_resistance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPerFireResist(Pool::Life)),
+            Op::Base,
+            1.0 / 60.0,
+        )],
+    ),
     // P6-10b: "#% increased Life Regeneration rate" (`LifeRegen` INC).
     (
         "life_regeneration_rate_+%",
@@ -3955,6 +3967,17 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-11t: "#% increased Mana Regeneration Rate per 1% Chance to Block
+    // Spell Damage" (`ManaRegen` INC, `PerStat` `SpellBlockChance`);
+    // [`super::regen`] reads it.
+    (
+        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenIncPerSpellBlock(Pool::Mana)),
+            Op::Base,
             1.0,
         )],
     ),
@@ -4304,6 +4327,25 @@ pub const ROWS: &[Row] = &[
     (
         "silver_flask_display_onslaught",
         &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
+    ),
+    // P6-11t: "Non-Channelling Skills have +# to Total Mana Cost"
+    // (`ManaCost` BASE, `SkillType` `Channel` negated) and the channelling
+    // one; [`super::costs`] reads them for a main skill of that kind.
+    (
+        "skill_mana_cost_+_with_channelling_skills",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCostChannelling(true)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "skill_mana_cost_+_with_non_channelling_skills",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCostChannelling(false)),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11f: "+#% Chance to Block Spell Damage per 5% Chance to Block
     // Attack Damage" (`SpellBlockChance` BASE, `PerStat` `BlockChance`
@@ -4982,17 +5024,15 @@ pub const DOT_TAKEN_REASONS: &[&str] = &["chaos_damage_taken_over_time_+%_while_
 /// (`ModParser.lua`): costs paid in life or energy shield instead
 /// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), socketed
 /// attacks' total mana cost (`SocketedIn`), Manaweave's base cost from
-/// unreserved mana, a flask's or full energy shield's condition, and
-/// channelling or non-channelling skills' total (`SkillType` 48, no flag
-/// here).
+/// unreserved mana, and a flask's or full energy shield's condition.
+/// Channelling and non-channelling skills' total is
+/// [`Poe1Quantity::ManaCostChannelling`] (P6-11t).
 pub const COST_REASONS: &[&str] = &[
     "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
     "local_flask_skill_mana_cost_+%_during_flask_effect",
     "mana_cost_+%_while_on_full_energy_shield",
     "manaweave_cost_equals_%_unreserved_mana",
-    "skill_mana_cost_+_with_channelling_skills",
-    "skill_mana_cost_+_with_non_channelling_skills",
     "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
 ];
 
@@ -5028,10 +5068,10 @@ pub const MOVEMENT_REASONS: &[&str] = &[
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
 /// regeneration field's reason alone. PoB's text for each
-/// (`ModParser.lua`): life per fortification stack, per uncapped fire
-/// resistance (`PerStat`), per endurance charge, per level, per power
-/// charge, per spell block chance, with exposure inflicted recently;
-/// energy shield per nearby corpse.
+/// (`ModParser.lua`): life per fortification stack, per level, mana with
+/// exposure inflicted recently; energy shield per nearby corpse. Per
+/// endurance and power charge are [`super::charges`]'s, per uncapped fire
+/// resistance and per spell block chance [`super::regen`]'s (P6-11t).
 pub const REGEN_REASONS: &[(&str, Pool)] = &[
     // Per fortification stack: fortification is named only
     // (`config::NAMED_ONLY`), so this stays a reason, now on the field.
@@ -5039,20 +5079,7 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
         "life_regeneration_per_minute_%_per_fortification",
         Pool::Life,
     ),
-    (
-        "life_regeneration_per_minute_per_1%_uncapped_fire_damage_resistance",
-        Pool::Life,
-    ),
-    (
-        "life_regeneration_rate_per_minute_%_per_endurance_charge",
-        Pool::Life,
-    ),
     ("life_regeneration_rate_per_minute_per_level", Pool::Life),
-    (
-        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
-        Pool::Mana,
-    ),
-    ("mana_regeneration_rate_+%_per_power_charge", Pool::Mana),
     (
         "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
         Pool::Mana,
@@ -5266,6 +5293,16 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::RegenPercent(_)
                 | Poe1Quantity::RegenPercentPerMinute(_)
                 | Poe1Quantity::RegenPerMinute(_)
+                | Poe1Quantity::RegenIncPerSpellBlock(_)
+                | Poe1Quantity::RegenPerFireResist(_)
+                // Regeneration per charge (P6-11t).
+                | Poe1Quantity::Charge(
+                    _,
+                    super::charges::ChargeValue::Per(
+                        super::charges::PerCharge::LifeRegenPercentPerMinute
+                            | super::charges::PerCharge::ManaRegen,
+                    ),
+                )
                 | Poe1Quantity::RecoveryRate(_)
                 | Poe1Quantity::RegenReason(..)
                 | Poe1Quantity::EnergyShieldRecharge

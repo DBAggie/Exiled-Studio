@@ -615,6 +615,16 @@ pub(super) fn resistance_in(
     t: DamageType,
     base_flags: Flags,
 ) -> Result<(Valued, Reasons), CalcError> {
+    resistance_parts(calc, t, base_flags).map(|(value, _, reasons)| (value, reasons))
+}
+
+/// [`resistance_in`]'s value, its uncapped total (PoB's
+/// `<Type>ResistTotal`, truncated; P6-11t), and its reasons.
+pub(super) fn resistance_parts(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    base_flags: Flags,
+) -> Result<(Valued, Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let quantity = Quantity::Resistance(t);
     let base = {
@@ -673,7 +683,7 @@ pub(super) fn resistance_in(
 
     let capped = pair(calc, total, max, Term::Step("capped"), true)?;
     let value = pair(calc, capped, min, Term::Result, false)?;
-    Ok((value, reasons))
+    Ok((value, total, reasons))
 }
 
 /// PoB's `data.misc.MaxResistCap`: no maximum resistance above 90%.

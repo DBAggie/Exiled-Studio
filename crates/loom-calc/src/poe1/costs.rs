@@ -24,7 +24,10 @@
 //!   `calcLib.mod` of `<Resource>CostEfficiency` and `CostEfficiency`
 //!   (`(1 + inc / 100) x more`), held at 0 or above; plus the total, the
 //!   `BASE` sum of `<Resource>Cost` and `Cost`; never below 0. An
-//!   efficiency at or below 0 leaves the field unsupported;
+//!   efficiency at or below 0 leaves the field unsupported. Mana's total
+//!   also holds "Channelling Skills have +# to Total Mana Cost" or the
+//!   non-channelling one, by the main skill's `Channel` type (PoB's
+//!   `ManaCost` BASE with a `SkillType` tag; P6-11t);
 //! - mana's last, with `HybridManaAndLifeCost_Life` above 0: `floor((1 -
 //!   hybrid / 100) x cost)`.
 //!
@@ -183,6 +186,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     if skill.types.contains("Spell") {
         flags = flags | Flags::SPELL;
     }
+    let channelling = skill.types.contains("Channel");
     let mult = super::gems::support_multiplier(&skill.supports);
     let mult = phases::constant(calc, "support-cost-multiplier", mult)?;
     // The first pass: each resource's final base cost.
@@ -264,7 +268,8 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (Resource::EnergyShield, es),
     ] {
         let mut reasons = reasons.clone();
-        let Some(mut cost) = modified(calc, r, final_base, flags, &mut reasons)? else {
+        let Some(mut cost) = modified(calc, r, final_base, flags, channelling, &mut reasons)?
+        else {
             calc.set_unsupported(
                 r.field(),
                 UnsupportedReason::UnmodelledSkill {
@@ -297,12 +302,14 @@ fn share_of(calc: &mut Calc<'_>, mana: Valued, share: Valued) -> Result<Valued, 
 }
 
 /// A resource's cost from its final base cost (module docs, the second
-/// pass), or `None` when its efficiency is at or below 0.
+/// pass), or `None` when its efficiency is at or below 0. `channelling`:
+/// whether the main skill is a channelling skill (mana's total).
 fn modified(
     calc: &mut Calc<'_>,
     r: Resource,
     final_base: Valued,
     flags: Flags,
+    channelling: bool,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     let own = Quantity::Poe1(r.cost());
@@ -368,11 +375,12 @@ fn modified(
     )?;
     let total_own = sum(calc, own, Op::Base, flags, reasons)?;
     let total_any = sum(calc, any, Op::Base, flags, reasons)?;
-    cost = phases::total(
-        calc,
-        &[cost, total_own, total_any],
-        Term::Step("with-total"),
-    )?;
+    let mut terms = vec![cost, total_own, total_any];
+    let by_kind = Quantity::Poe1(Poe1Quantity::ManaCostChannelling(channelling));
+    if r == Resource::Mana && phases::has(calc, by_kind) {
+        terms.push(sum(calc, by_kind, Op::Base, flags, reasons)?);
+    }
+    cost = phases::total(calc, &terms, Term::Step("with-total"))?;
     let zero = phases::constant(calc, "no-negative-cost", 0.0)?;
     Ok(Some(phases::pair(calc, cost, zero, Term::Result, false)?))
 }

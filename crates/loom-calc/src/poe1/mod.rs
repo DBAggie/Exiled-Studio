@@ -207,6 +207,16 @@ pub enum Poe1Quantity {
     /// stat, which has no scale; P6-10b): `Base`, read by [`regen`] divided
     /// by 60.
     RegenPerMinute(Pool),
+    /// A pool's increased regeneration rate per 1% chance to block spell
+    /// damage (PoB's `<Pool>Regen` INC with `PerStat` `SpellBlockChance`,
+    /// P6-11t): `Base`, read by [`regen`] times the spell block chance,
+    /// floored.
+    RegenIncPerSpellBlock(Pool),
+    /// A pool's flat regeneration per second per 1% uncapped fire
+    /// resistance (PoB's `<Pool>Regen` BASE with `PerStat`
+    /// `FireResistTotal`, P6-11t): `Base`, read by [`regen`] times the
+    /// resistance's total, floored.
+    RegenPerFireResist(Pool),
     /// A stat that changes a pool's regeneration in a way the engine does
     /// not model (P6-10b; [`mapping::REGEN_REASONS`]): a `Flag` only
     /// [`regen`] reads, as that field's `unmapped-stat` reason, so the
@@ -327,6 +337,11 @@ pub enum Poe1Quantity {
     /// Mana cost added after the support multiplier (PoB's
     /// `ManaCostNoMult`; P6-10b): `Base`, read by [`costs`].
     ManaCostNoMult,
+    /// The total mana cost of channelling (`true`) or non-channelling
+    /// skills (PoB's `ManaCost` BASE with a `SkillType` `Channel` tag,
+    /// negated for `false`; P6-11t): `Base`, read by [`costs`] for a main
+    /// skill of that kind.
+    ManaCostChannelling(bool),
     /// Mana cost efficiency (PoB's `ManaCostEfficiency`; P6-10b):
     /// `Increased`, read by [`costs`].
     ManaCostEfficiency,
@@ -859,6 +874,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
             Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
+            Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
+            Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
             Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
             Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
@@ -895,6 +912,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ManaCost => f.write_str("mana-cost"),
             Self::Cost => f.write_str("cost"),
             Self::ManaCostNoMult => f.write_str("mana-cost-no-mult"),
+            Self::ManaCostChannelling(true) => f.write_str("mana-cost-channelling"),
+            Self::ManaCostChannelling(false) => f.write_str("mana-cost-non-channelling"),
             Self::ManaCostEfficiency => f.write_str("mana-cost-efficiency"),
             Self::CostEfficiency => f.write_str("cost-efficiency"),
             Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),

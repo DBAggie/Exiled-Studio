@@ -118,6 +118,11 @@ pub enum PerCharge {
     Evasion,
     /// Increased movement speed (`MovementSpeed` INC; P6-10b).
     MovementSpeed,
+    /// Life regeneration, percent of life per minute (`LifeRegenPercent`
+    /// BASE per second, read divided by 60; P6-11t).
+    LifeRegenPercentPerMinute,
+    /// Increased mana regeneration rate (`ManaRegen` INC; P6-11t).
+    ManaRegen,
 }
 
 impl PerCharge {
@@ -131,6 +136,8 @@ impl PerCharge {
             Self::CritMultiplier => "per.crit-multiplier",
             Self::Evasion => "per.evasion",
             Self::MovementSpeed => "per.movement-speed",
+            Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
+            Self::ManaRegen => "per.mana-regen",
         }
     }
 
@@ -146,6 +153,18 @@ impl PerCharge {
             Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
             Self::MovementSpeed => (
                 Quantity::Poe1(super::Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                Flags::NONE,
+            ),
+            Self::LifeRegenPercentPerMinute => (
+                Quantity::Poe1(super::Poe1Quantity::RegenPercentPerMinute(
+                    super::Pool::Life,
+                )),
+                Op::Base,
+                Flags::NONE,
+            ),
+            Self::ManaRegen => (
+                Quantity::Poe1(super::Poe1Quantity::Regen(super::Pool::Mana)),
                 Op::Increased,
                 Flags::NONE,
             ),
@@ -205,6 +224,16 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "evasion_rating_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::Evasion),
+    ),
+    (
+        "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::LifeRegenPercentPerMinute),
+    ),
+    (
+        "mana_regeneration_rate_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::ManaRegen),
     ),
     (
         "max_endurance_charges",
@@ -531,9 +560,6 @@ mod tests {
         // names flask "charges").
         "local_flask_gain_X_charges_on_consuming_ignited_corpse",
         "gain_power_charge_for_each_second_channeling_spell",
-        // Regeneration per charge: not a slice field.
-        "life_regeneration_rate_per_minute_%_per_endurance_charge",
-        "mana_regeneration_rate_+%_per_power_charge",
         // A skill's constant stat no stat map reads (P6-6a): not a charge
         // count.
         "skill_can_add_multiple_charges_per_action",

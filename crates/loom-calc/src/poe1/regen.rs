@@ -16,6 +16,13 @@
 //!   without `CannotRecoverLifeOutsideLeech`, an unmapped stat).
 //! - Zealot's Oath (1250 to 1259): life regenerates nothing; life's flat
 //!   and percent sums, each when above 0, are energy shield's too.
+//! - Per stat (P6-11t; PoB's `PerStat` tag, `floor(stat + 0.0001)` per
+//!   1%, `ModStore.lua` 458): "Regenerate # Life per second for each 1%
+//!   Uncapped Fire Resistance" adds to the flat sum per point of the fire
+//!   resistance's uncapped total (`FireResistTotal`, computed earlier in
+//!   `CalcDefence.lua`), and "#% increased Mana Regeneration Rate per 1%
+//!   Chance to Block Spell Damage" to the increase per point of the spell
+//!   block chance (the field, capped, as PoB's `output.SpellBlockChance`).
 //!
 //! Energy shield recharge (1325 to 1383), when nothing stops it (those
 //! stats are unmapped, reasons): `round(energy shield x base x (1 + inc /
@@ -36,6 +43,7 @@
 //! regeneration rate moved to another pool, regeneration conditioned on
 //! what the engine does not settle, and recharge applying to life.
 
+use super::charges::{ChargeValue, PerCharge};
 use super::phases::{self, Valued};
 use super::{Poe1Field, Poe1Quantity, Pool};
 use crate::condition::Flags;
@@ -113,6 +121,25 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 Term::Step("flat-per-second"),
             )?);
         }
+        let per_fire = Quantity::Poe1(Poe1Quantity::RegenPerFireResist(pool));
+        if phases::has(calc, per_fire) {
+            let per = phases::sum(
+                calc,
+                per_fire,
+                Op::Base,
+                Term::Step("per-fire-resistance"),
+                &mut reasons,
+            )?;
+            let (_, total, resist_reasons) =
+                phases::resistance_parts(calc, crate::quantity::DamageType::Fire, Flags::NONE)?;
+            reasons.extend(&resist_reasons);
+            let points = per_point(calc, total)?;
+            flat_terms.push(phases::product(
+                calc,
+                &[per, points],
+                Term::Step("flat-per-fire-resistance"),
+            )?);
+        }
         if pool == Pool::Mana
             && let Some(per_mana) = per_minute_constant(calc, MANA_BASE_STAT, &mut reasons)?
         {
@@ -176,20 +203,40 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             Term::Step("percent-of-pool"),
         )?;
         let base = phases::total(calc, &[flat, of_pool], Term::Base)?;
-        let (inc, more) = modifiers(
+        let (mut inc, more) = modifiers(
             calc,
             Quantity::Poe1(Poe1Quantity::Regen(pool)),
             &mut reasons,
         )?;
+        let per_block = Quantity::Poe1(Poe1Quantity::RegenIncPerSpellBlock(pool));
+        let mut deps = vec![pool_field];
+        if phases::has(calc, per_block)
+            && let Some((node, value)) = calc
+                .field(Field::Poe1(Poe1Field::SpellBlockChance))
+                .and_then(|f| Some((f.node?, f.value?)))
+        {
+            deps.push(Field::Poe1(Poe1Field::SpellBlockChance));
+            let per = phases::sum(
+                calc,
+                per_block,
+                Op::Base,
+                Term::Step("increased-per-spell-block"),
+                &mut reasons,
+            )?;
+            let points = per_point(calc, Valued { node, value })?;
+            let hundredth = phases::constant(calc, "percent", 0.01)?;
+            let extra = phases::product(
+                calc,
+                &[per, points, hundredth],
+                Term::Step("increased-from-spell-block"),
+            )?;
+            inc = phases::total(calc, &[inc, extra], Term::Step("increased-with-spell-block"))?;
+        }
         let regen = phases::product(calc, &[base, inc, more], Term::Step("regeneration"))?;
         let rate = recovery_rate(calc, pool, &mut reasons)?;
         let raw = phases::product(calc, &[regen, rate], Term::Step("unrounded"))?;
         let value = round_1(calc, raw)?;
-        calc.set_derived(
-            Field::Poe1(field),
-            phases::query(value, reasons),
-            &[pool_field],
-        );
+        calc.set_derived(Field::Poe1(field), phases::query(value, reasons), &deps);
     }
     recharge(calc)
 }
@@ -315,6 +362,21 @@ pub(super) fn recovery_rate(
     phases::product(calc, &[inc, more], Term::Step("recovery-rate"))
 }
 
+/// PoB's `PerStat` count with `div = 1`: `floor(stat + 0.0001)`.
+fn per_point(calc: &mut Calc<'_>, stat: Valued) -> Result<Valued, CalcError> {
+    let epsilon = phases::constant(calc, "per-stat-epsilon", 0.0001)?;
+    let raw = phases::total(calc, &[stat, epsilon], Term::Step("per-stat-raw"))?;
+    let value = (stat.value + 0.0001).floor();
+    let node = calc.graph_mut().push(
+        Node::Floor {
+            term: Term::Step("per-stat"),
+            of: raw.node,
+        },
+        value,
+    )?;
+    Ok(Valued { node, value })
+}
+
 /// Whether the regeneration of `pool` reads `quantity`.
 fn reads(quantity: Quantity, pool: Pool) -> bool {
     match quantity {
@@ -323,9 +385,16 @@ fn reads(quantity: Quantity, pool: Pool) -> bool {
             | Poe1Quantity::RegenPercent(p)
             | Poe1Quantity::RegenPercentPerMinute(p)
             | Poe1Quantity::RegenPerMinute(p)
+            | Poe1Quantity::RegenIncPerSpellBlock(p)
+            | Poe1Quantity::RegenPerFireResist(p)
             | Poe1Quantity::RecoveryRate(p)
             | Poe1Quantity::RegenReason(p, _),
         ) => p == pool,
+        // Regeneration per charge (P6-11t, [`super::charges`]).
+        Quantity::Poe1(Poe1Quantity::Charge(_, ChargeValue::Per(per))) => matches!(
+            (per, pool),
+            (PerCharge::LifeRegenPercentPerMinute, Pool::Life) | (PerCharge::ManaRegen, Pool::Mana)
+        ),
         _ => false,
     }
 }
