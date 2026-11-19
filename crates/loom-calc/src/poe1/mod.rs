@@ -608,6 +608,9 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
     /// buffs.
     GolemBuffEffect,
+    /// The effect of herald skills' buffs (PoB's `BuffEffect` INC tagged
+    /// `SkillType.Herald`; P6-11at), read by [`skill_modifiers`].
+    HeraldBuffEffect,
     /// "#% increased Effect of your Curses" (PoB's `CurseEffect` INC;
     /// P3-close): `Increased`, read by [`skill_modifiers::Totals`] for
     /// curse gems' effect on the enemy.
@@ -1100,6 +1103,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
             Self::GrantedPassive => f.write_str("granted-passive"),
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
+            Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),

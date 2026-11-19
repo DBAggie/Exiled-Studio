@@ -93,7 +93,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 /// - "#% increased Mana Reservation Efficiency of Herald Skills" (P6-11ag;
 ///   PoB's `ManaReservationEfficiency` INC tagged `SkillType.Herald`,
 ///   `ModParser.lua` 1027 "of herald skills").
-pub const STATS: [ModifierRow; 11] = [
+pub const STATS: [ModifierRow; 12] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -119,6 +119,13 @@ pub const STATS: [ModifierRow; 11] = [
     ),
     ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
     ("golem_buff_effect_+%", Poe1Quantity::GolemBuffEffect, 1.0),
+    // P6-11at: "#% increased Effect of Herald Buffs on you" (`BuffEffect`
+    // INC, `SkillType.Herald`, `ModParser.lua`).
+    (
+        "herald_effect_on_self_+%",
+        Poe1Quantity::HeraldBuffEffect,
+        1.0,
+    ),
     (
         "herald_skills_mana_reservation_efficiency_+%",
         Poe1Quantity::HeraldManaReservationEfficiency,
@@ -171,6 +178,8 @@ pub struct Totals {
     pub aura_on_self: f64,
     /// `BuffEffect` INC of golem skills (P3-close).
     pub golem_buff_effect: f64,
+    /// `BuffEffect` INC of herald skills (P6-11at).
+    pub herald_buff_effect: f64,
     /// `CurseEffect` INC (P3-close).
     pub curse_effect: f64,
     /// An effect of these quantities that [`Self::read`] cannot sum (a
@@ -231,6 +240,7 @@ impl Totals {
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
+                Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::Reserved(Some(_)) => {
                     t.unread = true;
@@ -285,6 +295,10 @@ impl Totals {
         let mut inc = own;
         if types.contains("Golem") {
             inc += self.golem_buff_effect;
+        }
+        // A herald's (P6-11at).
+        if types.contains("Herald") {
+            inc += self.herald_buff_effect;
         }
         if aura && types.contains("Aura") && !types.contains("AppliesCurse") {
             inc += self.aura_effect;
@@ -634,6 +648,13 @@ mod tests {
         assert_eq!(g.buff_scale(false, &types(&["Buff", "Golem"]), 20.0), 1.7);
         assert_eq!(g.buff_scale(false, &types(&["Buff"]), 20.0), 1.2);
         assert_eq!(g.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.25);
+        // P6-11at: a herald's buff effect, for a herald skill alone.
+        let h = Totals {
+            herald_buff_effect: 40.0,
+            ..t
+        };
+        assert_eq!(h.buff_scale(false, &types(&["Buff", "Herald"]), 0.0), 1.4);
+        assert_eq!(h.buff_scale(false, &types(&["Buff", "Golem"]), 0.0), 1.0);
         let c = Totals {
             curse_effect: 30.0,
             ..Totals::default()

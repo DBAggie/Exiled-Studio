@@ -1164,3 +1164,27 @@ Both match PoB on every computed field.
 - **Corpus:** 0 unexpected; 1 value toward PoB.
 - **Data parity:** `uncategorized` 353.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11at: herald buff effect, three rows of no effect
+
+**PoB and the engine, row by row:**
+
+| Stat | PoB | The engine |
+|---|---|---|
+| `herald_effect_on_self_+%` ("#% increased Effect of Herald Buffs on you") | `BuffEffect` INC tagged `SkillType.Herald` | New `Poe1Quantity::HeraldBuffEffect`, a `skill_modifiers` row (`Totals.herald_buff_effect`). `buff_scale` adds it for a skill typed `Herald`, as the golems' buff effect for a golem. It leaves `gems::DEPENDS_ON` |
+| `area_of_effect_+%_with_herald_skills` | `AreaOfEffect` INC, `SkillType.Herald` | `NoEffect` `area` |
+| `base_stun_threshold_reduction_+%` | `EnemyStunThreshold` INC, `mult = -1` | `NoEffect` `stun` |
+| `chance_to_unnerve_on_hit_%` | no stat map row and no parse, so no modifier; the enemy's Unnerve is the config's | `NoEffect` `ailment-chance`, listed in `damage_taken`'s test |
+
+**Tests:**
+- A unit assertion in `skill_modifiers`: a herald's scale 1.4 with 40%, none for a golem.
+- `tests/skill_modifiers.rs` carries the text.
+
+**New mechanic fixture:** `herald-effect-ice-nova-witch.xml` (Herald of Ice in a second group, 40% increased Effect of Herald Buffs on you). It was run through PoB v2.67.2 (3 of 3 runs identical) and matches PoB on every compared field: average hit 812.62, hit DPS 1,160.89.
+
+**Evidence** (`local/p6/p6-11at/`):
+- **Public `calc-parity`:** 237 builds, 292 expected, 0 unexpected; match 15,523 to 15,600 (the fixture).
+- **Moved values:** none; the builds with these stats are partial for other reasons.
+- **Corpus:** 0 unexpected, no value moved.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

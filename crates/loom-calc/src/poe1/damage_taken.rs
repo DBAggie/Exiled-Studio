@@ -1044,7 +1044,9 @@ mod tests {
             "blinds",
         ];
         // Blind on you, not the enemy's (the pantheon's Garukhan).
-        let listed = ["cannot_be_blinded"];
+        // P6-11at: a chance to unnerve on hit, from which PoB reads no
+        // modifier (the enemy's Unnerve is the config's).
+        let listed = ["cannot_be_blinded", "chance_to_unnerve_on_hit_%"];
         let ids = HIT_ROWS
             .iter()
             .map(|r| r.0)

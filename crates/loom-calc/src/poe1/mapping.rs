@@ -4833,6 +4833,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area_of_effect_+%_while_you_do_not_have_convergence",
         "area",
     ),
+    // P6-11at: "Herald Skills have #% increased Area of Effect"
+    // (`AreaOfEffect` INC, `SkillType.Herald`): area.
+    ("area_of_effect_+%_with_herald_skills", "area"),
     (
         "attacks_number_of_additional_projectiles",
         "projectile-count",
@@ -4897,6 +4900,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     ("base_stun_recovery_+%", "stun"),
+    // P6-11at: "Supported Skills have #% reduced Enemy Stun Threshold"
+    // (`EnemyStunThreshold` INC, `mult = -1`): stun, no slice field.
+    ("base_stun_threshold_reduction_+%", "stun"),
     ("base_totem_duration", "totem-duration"),
     ("base_trap_duration", "skill-duration"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
@@ -4954,6 +4960,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
+    // P6-11at: "#% chance to Unnerve Enemies for 4 seconds on Hit": PoB
+    // reads no modifier from it (no stat map row; Unnerve is the config's
+    // `conditionEnemyUnnerved`, `poe1::damage_taken`).
+    ("chance_to_unnerve_on_hit_%", "ailment-chance"),
     // P6-11u: the charges' count is the config's (`poe1::charges`).
     ("charge_duration_+%", "charge-duration"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),

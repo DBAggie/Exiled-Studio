@@ -2366,7 +2366,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "base_mana_reservation_+%",
     "base_skill_no_reservation",
     "buff_effect_on_self_+%",
-    "herald_effect_on_self_+%",
     "skill_buff_effect_+%",
     "summoned_phantasms_grant_buff",
 ];
