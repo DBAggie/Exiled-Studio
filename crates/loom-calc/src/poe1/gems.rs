@@ -695,6 +695,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("EnemyExplode", Kind::Inert),
     (
         "Enfeeble",
         Kind::Curse {
@@ -856,6 +859,12 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("ForbiddenRite", Kind::Inert),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("ForbiddenRiteAltX", Kind::Inert),
     ("FreezingPulse", Kind::Inert),
     ("Frenzy", Kind::Inert),
     (
@@ -1701,6 +1710,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("SummonRagingSpirit", Kind::Inert),
     ("SummonRagingSpiritAltX", Kind::Inert),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("SummonSentinelOfRadiance", Kind::Inert),
     ("SummonSkeletons", Kind::Inert),
     ("SummonSkeletonsAltX", Kind::Inert),
     ("SummonSkeletonsAltY", Kind::Inert),
@@ -1800,6 +1812,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("Tornado", Kind::Inert),
     ("ToxicRain", Kind::Inert),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("UniqueMirageWarriors", Kind::Inert),
     ("VaalDetonateDead", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
     ("VaalIceNova", Kind::Inert),
@@ -1885,6 +1900,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-9f: no global effect and no reservation in PoB's skill data (the
+    // skill is inert when it is not the main skill).
+    ("WhirlingBlades", Kind::Inert),
     (
         "Wrath",
         Kind::Buff {
@@ -1986,6 +2004,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             ),
         ],
     ),
+    // P6-9f: its aura effect is the supported aura's own scale term
+    // (`OWN_EFFECT_STATS`) and its life reservation
+    // `LIFE_RESERVATION_SUPPORTS`.
+    ("SupportArrogance", &[]),
     ("SupportAutomation", &[]),
     ("SupportAwakenedBrutality", &[]),
     ("SupportAwakenedCastOnCriticalStrike", &[]),
@@ -2131,6 +2153,12 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
 /// 0 (PoB's `SkillData` `manaReservationFlat` and kin, 0, tagged with the
 /// type): Guardian's Blessing on an aura (`sup_str.lua` 2807).
 pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[("SupportGuardiansBlessing", "Aura")];
+
+/// Supports whose skill reserves life instead of mana (PoB's
+/// `BloodMagicReserved`, `base_skill_reserve_life_instead_of_mana`;
+/// `CalcPerform.lua` 1955 to 1964: life's base reservation gains mana's,
+/// then each pool takes its own terms; P6-9f): Arrogance.
+pub const LIFE_RESERVATION_SUPPORTS: &[&str] = &["SupportArrogance"];
 
 /// A curse gem's own curse effect stat (Despair's, a hex's quality):
 /// PoB's `CurseEffect` INC on the skill's own list (P6-9b).
@@ -3615,8 +3643,13 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
         return;
     };
     let mult = support_multiplier(&s.supports);
+    let life_instead = s
+        .supports
+        .iter()
+        .any(|sup| LIFE_RESERVATION_SUPPORTS.contains(&sup.effect.id.as_str()));
     for r in &level.reservations {
         let pool = match r.resource {
+            Resource::Mana if life_instead => Pool::Life,
             Resource::Mana => Pool::Mana,
             Resource::Life => Pool::Life,
             Resource::Spirit => {

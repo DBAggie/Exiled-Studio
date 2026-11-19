@@ -275,6 +275,8 @@ const ALLOWED_MINIONS: &[&str] = &[
     "SummonLightningGolem",
     "SummonRagingSpirit",
     "SummonRagingSpiritAltX",
+    // P6-9f: its minion's template has no skill (PoB's `GuardianSentinel`).
+    "SummonSentinelOfRadiance",
     "SummonSkeletons",
     "SummonSkeletonsAltX",
     "SummonSkeletonsAltY",
@@ -312,6 +314,9 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // what it does.
     ("SupportAutomation", "triggered"),
     ("SupportAutomation", "triggeredByAutomation"),
+    // P6-9f: Arrogance's reservation of life instead of mana, which
+    // `gems::LIFE_RESERVATION_SUPPORTS` reads (a mod name, not a key).
+    ("SupportArrogance", "BloodMagicReserved"),
     ("SupportGuardiansBlessing", "lifeReservationFlat"),
     ("SupportGuardiansBlessing", "lifeReservationPercent"),
     ("SupportGuardiansBlessing", "manaReservationFlat"),
@@ -324,6 +329,20 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // Molten Shell's reflected fire damage (P6-9e): its own hit's data.
     ("MoltenShell", "moltenShellReflect"),
     ("VaalMoltenShell", "moltenShellReflect"),
+    // P6-9f: inert skills' own data, read only when each is the main skill:
+    // Forbidden Rite's damage from life and energy shield and its cost to
+    // the caster, the Sentinel's minion level, the Mirage Warriors'
+    // trigger, Whirling Blades' double hit when dual wielding.
+    ("ForbiddenRite", "SelfDamageTakenES"),
+    ("ForbiddenRite", "SelfDamageTakenLife"),
+    ("ForbiddenRite", "energyShieldDealtAsChaos"),
+    ("ForbiddenRite", "lifeDealtAsChaos"),
+    ("ForbiddenRiteAltX", "SelfDamageTakenES"),
+    ("ForbiddenRiteAltX", "energyShieldDealtAsChaos"),
+    ("SummonSentinelOfRadiance", "minionLevelIsPlayerLevel"),
+    ("UniqueMirageWarriors", "triggered"),
+    ("UniqueMirageWarriors", "triggeredBySaviour"),
+    ("WhirlingBlades", "doubleHitsWhenDualWielding"),
     // A Vaal skill's soul gain prevention duration (P6-9e): no slice field.
     ("VaalMoltenShell", "skillEffectAppliesToSoulGainPrevention"),
     // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
@@ -1064,7 +1083,9 @@ fn check_one(
             if own_effect.contains(&s.stat.as_str()) {
                 continue;
             }
-            if key.is_some_and(|k| ALLOWED_BLOCKED.contains(&(id, k))) {
+            if key.is_some_and(|k| ALLOWED_BLOCKED.contains(&(id, k)))
+                || ALLOWED_BLOCKED.contains(&(id, m.name.as_str()))
+            {
                 continue;
             }
             let bad = BLOCKED_NAMES.contains(&m.name.as_str())

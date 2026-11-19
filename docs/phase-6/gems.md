@@ -228,3 +228,28 @@ Left, with why:
 - **m4:** the socket index uses the gem's position among typed gems. It differs from PoB's only with untyped gems or a repeated curse gem in one group.
 - **m7:** the register has only `accepted` and `retired`. DIV-0111 to DIV-0113 note that confirmation in game is a maintainer item.
 
+## P6-9f: Arrogance and six inert skills
+
+**Arrogance** (`SupportArrogance`; PoB's `CalcPerform.lua` 1955 to 1964):
+- **Its reservation:** the supported skill reserves life instead of mana. Life's base reservation gains mana's, and each pool takes its own terms (`gems::LIFE_RESERVATION_SUPPORTS`, read in `reservation`).
+- **Its aura effect** is the supported aura's own scale term (`OWN_EFFECT_STATS`, as before).
+- **Data parity:** `gem_effects` allows its `BloodMagicReserved` mod. Allowances now also match a mod name, not only a skill-data key.
+
+**Six inert skills.** PoB's skill data gives each no global effect and no reservation, so as a skill that is not the main one each changes nothing:
+- **The skills:** Enemy Explode, Forbidden Rite and its AltX, Summon Sentinel of Radiance, the Mirage Warriors, Whirling Blades.
+- **Data parity:** `gem_effects` allows their own skill data (Forbidden Rite's damage and cost from life and energy shield, the Sentinel's minion level, the Mirage Warriors' trigger, Whirling Blades' double hit), read only when each is the main skill. The Sentinel's minion template has no skill.
+
+**Not yet:** Eternal Blessing, Skitterbots, Raise Spectre, the relics, the warcries' power, and the other skills with their own buffs.
+- Some of those reasons come from gems without a `gemId` (skills an item grants), which the tables cannot reach.
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected.
+- **Arrogance's builds** (all partial):
+  - `ethereal-knives-mines-assassin.xml`'s unreserved life and mana regeneration now equal PoB's (2,471 and 118.8).
+  - `kinetic-fusillade-ballista-hierophant.xml`'s unreserved life is closer: 3,448 against PoB's 3,548, from 3,821.
+  - Their maximum hit and effective health pool follow that life. Where PoB's pools hold more than the engine models (mind over matter, guard), those values moved away from PoB's.
+- **Values:** 29 moved toward PoB, 18 away (those dependents).
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,766 tests and clippy pass.
