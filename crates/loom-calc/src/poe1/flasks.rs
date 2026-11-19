@@ -172,7 +172,14 @@ impl StatMapping for FlaskMapping {
             return StatMap::NoEffect;
         }
         if id.starts_with("local_") || id.starts_with("old_do_not_use_local_") {
-            return StatMap::Unmapped;
+            // A flask line the game's mapping reads as `NoEffect` (P6-11m:
+            // the amount and rate recovered, charges on crit, taunt, the
+            // ignited enemies' lines) is `NoEffect` here too; any other
+            // local line is a reason.
+            return match Poe1Mapping.map(stat) {
+                StatMap::NoEffect => StatMap::NoEffect,
+                _ => StatMap::Unmapped,
+            };
         }
         Poe1Mapping.map(stat)
     }
@@ -485,10 +492,15 @@ mod tests {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
             assert_eq!(map(&life, s), StatMap::Unmapped);
         }
-        // A local line no row reads stays a reason (recovery: P6-10b).
+        // A local line no row reads stays a reason; one the game's
+        // mapping reads as `NoEffect` (P6-11m) is `NoEffect` (P6-11n).
+        assert_eq!(
+            map(&life, "local_flask_area_of_consecrated_ground_+%"),
+            StatMap::Unmapped
+        );
         assert_eq!(
             map(&life, "local_flask_amount_to_recover_+%"),
-            StatMap::Unmapped
+            StatMap::NoEffect
         );
         // Each alias reads as its global stat, and that stat is mapped.
         assert!(ALIASES.windows(2).all(|w| w[0].0 < w[1].0));

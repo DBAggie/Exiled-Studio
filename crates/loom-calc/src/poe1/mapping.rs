@@ -269,9 +269,33 @@ pub const HIT_ROWS: &[HitRow] = &[
         "area_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::AREA, NONE)],
     ),
+    // P6-11n: the Assassin's "#% more Critical Strike Chance with
+    // Spells" (`CritChance` MORE, `ModFlag.Spell`).
+    (
+        "assassin_ascendancy_spell_critical_strike_chance_+%_final",
+        &[(Quantity::CritChance, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    // P6-11n: "#% increased Critical Strike Chance with Attacks" (`CritChance`
+    // INC, `ModFlag.Attack`).
+    (
+        "attack_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-11n: "+#% to Critical Strike Multiplier with Attacks" (`CritMultiplier`
+    // BASE, `ModFlag.Attack`).
+    (
+        "attack_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
     (
         "attack_damage_+%",
@@ -585,6 +609,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11n: "#% of Physical Damage Converted to Chaos Damage"
+    // (`PhysicalDamageConvertToChaos` BASE).
+    (
+        "base_physical_damage_%_to_convert_to_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Conversion(PHYS, CHAOS_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P3-8n: "#% of Physical Damage Converted to Fire Damage"
     // (`PhysicalDamageConvertToFire` BASE), conversion that is not the
     // skill's own.
@@ -592,6 +628,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_physical_damage_%_to_convert_to_fire",
         &[(
             Quantity::Poe1(Poe1Quantity::Conversion(PHYS, FIRE_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // P6-11n: "#% of Physical Damage Converted to Lightning Damage"
+    // (`PhysicalDamageConvertToLightning` BASE), as the fire one.
+    (
+        "base_physical_damage_%_to_convert_to_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Conversion(PHYS, LIGHTNING_T)),
             Op::Base,
             1.0,
             NONE,
@@ -639,6 +687,11 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    // P6-11n: the Berserker's "#% more Damage" (`Damage` MORE).
+    (
+        "berserker_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
     // PoB `SkillStatMap.lua` 995: `BleedChance` BASE with `ModFlag.Attack`
     // (P6-2c).
@@ -968,6 +1021,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-11n: "+#% to Critical Strike Multiplier with Elemental Skills"
+    // (`CritMultiplier` BASE, the fire, cold, and lightning keywords).
+    (
+        "elemental_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            NONE,
+            Flags::SKILL_ELEMENTAL,
+        )],
+    ),
     (
         "elemental_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, Flags::ELEMENTAL)],
@@ -1198,6 +1263,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "maximum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-11n: "#% increased Melee Attack Speed" (`Speed` INC, `ModFlag.Attack`
+    // and `ModFlag.Melee`).
+    (
+        "melee_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK.union(Flags::MELEE),
+            NONE,
+        )],
+    ),
     (
         "melee_critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, Flags::MELEE, NONE)],
@@ -1238,6 +1315,16 @@ pub const HIT_ROWS: &[HitRow] = &[
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-11n: the Occultist's "#% more Chaos Damage" (`ChaosDamage` MORE).
+    (
+        "occultist_chaos_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::CHAOS, NONE)],
+    ),
+    // P6-11n: the Occultist's "#% more Cold Damage" (`ColdDamage` MORE).
+    (
+        "occultist_cold_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::COLD, NONE)],
+    ),
     // P6-11b: "+#% to Critical Strike Multiplier with One Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon1H`, `WeaponMelee`, `Hit`.
     (
         "one_handed_melee_critical_strike_multiplier_+",
@@ -1248,6 +1335,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::WEAPON_1H
                 .union(Flags::WEAPON_MELEE)
                 .union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11n: "#% increased Physical Attack Damage" (`PhysicalDamage` INC,
+    // `ModFlag.Attack`).
+    (
+        "physical_attack_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK.union(Flags::PHYSICAL),
             NONE,
         )],
     ),
@@ -1368,6 +1467,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             Flags::WEAPON,
+            NONE,
+        )],
+    ),
+    // P6-11n: the skill's own physical conversion to chaos
+    // (`SkillPhysicalDamageConvertToChaos` BASE), as the cold one.
+    (
+        "skill_physical_damage_%_to_convert_to_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, CHAOS_T)),
+            Op::Base,
+            1.0,
+            NONE,
             NONE,
         )],
     ),
@@ -1572,6 +1683,11 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_controlled_destruction_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+    // P6-11n: "#% more Elemental Damage" (`ElementalDamage` MORE).
+    (
+        "support_gem_elemental_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, Flags::ELEMENTAL)],
     ),
     (
         "support_melee_physical_damage_+%_final",
@@ -3820,6 +3936,19 @@ pub const ROWS: &[Row] = &[
         "number_of_additional_curses_allowed",
         &[(Quantity::Poe1(Poe1Quantity::CurseLimit), Op::Base, 1.0)],
     ),
+    // P6-11n: "#% less Damage taken from Damage Over Time" (`DamageTakenOverTime`
+    // MORE).
+    (
+        "passive_mastery_damage_taken_over_time_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::All,
+            )),
+            Op::More,
+            1.0,
+        )],
+    ),
     // P3-8n: "Enemies permanently take #% increased Damage for each second
     // they've ever been Chilled by you, up to a maximum of 10%" (3812;
     // `poe1::damage_taken`).
@@ -4327,6 +4456,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
+    // P6-11n: "#% increased Life Recovered" by flasks (`FlaskLifeRecovery`
+    // INC): no field.
+    ("flask_life_to_recover_+%", "flask"),
     // P6-11m: "#% increased Flask Recovery rate" (`FlaskRecoveryRate`).
     ("flask_recovery_speed_+%", "flask"),
     ("fortify_duration_+%", "fortification"),
@@ -4442,6 +4574,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("phase_through_objects", "condition"),
     // P6-11m: reflected physical damage (unparsed).
     ("physical_damage_to_return_to_melee_attacker", "reflect"),
+    // P6-11n: "#% increased Power Charge Duration"
+    // (`PowerChargesDuration` INC): the charges come from the config.
+    ("power_charge_duration_+%", "charge-duration"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
@@ -4523,6 +4658,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "pvp",
     ),
     ("unaffected_by_burning_ground", "ground-on-self"),
+    // P6-11n: "Unaffected by Ignite" (`SelfIgniteEffect` MORE -100): ignite on
+    // you, no field.
+    ("unaffected_by_ignite", "ailment-on-self"),
     ("visual_hit_effect_elemental_is_holy", "display"),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
@@ -4658,10 +4796,14 @@ pub const POOL_REASONS: &[&str] = &[
 /// does not model (P6-10b part 14), sorted: each maps to
 /// [`Poe1Quantity::EhpReason`]. PoB's text: life and energy shield gained
 /// on block and spell block (`LifeOnBlock`, `EnergyShieldOnBlock`,
-/// `EnergyShieldOnSpellBlock`), lucky spell suppression.
+/// `EnergyShieldOnSpellBlock`), lucky spell suppression; P6-11n: damage
+/// taken recouped as mana (`ManaRecoup`).
 pub const EHP_REASONS: &[&str] = &[
+    "damage_taken_goes_to_mana_%",
     "energy_shield_%_of_armour_rating_gained_on_block",
+    "life_gained_on_block",
     "recover_%_of_maximum_life_on_block",
+    "recover_X_life_on_block",
     "recover_x_energy_shield_on_spell_block",
     "spell_suppression_chance_is_lucky",
 ];

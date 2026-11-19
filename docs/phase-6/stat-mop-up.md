@@ -335,3 +335,33 @@ The 21 most frequent globally unmapped stats that PoB reads into no slice field 
 - **Reasons:** the global unmapped (build, stat) pairs went from 418 to 407.
 - 0 unexpected.
 - **Tests:** the charge guard lists the five charge rows.
+
+## P6-11n
+
+**The flask mapping honours `NoEffect` rows.** A flask's own line the game's mapping reads as `NoEffect` (P6-11m's amount and rate recovered, charges on crit, taunt, the ignited enemies' lines) was still `Unmapped` through the flask mapping. It is now `NoEffect` there too (`flasks::FlaskMapping`); any other local line stays a reason.
+
+**Rows,** each as PoB parses its line (`local/p6/parse2`, the global unmapped stats of the public builds and the corpus):
+- **Hit rows:**
+  - physical attack damage (`PhysicalDamage` INC, attacks); attack crit chance and multiplier; the elemental skills' crit multiplier (`CritMultiplier` BASE, the elemental keywords);
+  - physical damage converted to lightning or chaos (`Conversion`), the skill's own physical conversion to chaos (`SkillConversion`);
+  - the Occultist's more chaos and cold damage, the Berserker's more damage, more elemental damage;
+  - the Assassin's Mystical Infusion (30% less spell crit chance, `CritChance` MORE with spells);
+  - melee attack speed.
+- **A damage over time row:** the mastery's less damage taken over time (`SelfDamageTaken` over time, MORE).
+- **`NoEffect`:** "Unaffected by Ignite" (ignite on you), flask life recovered, power charge duration.
+- **`EhpReason` markers:** damage taken recouped as mana, and life gained on block (two lines).
+
+**Left unmapped on purpose** (each reaches a field in a way the engine does not model yet):
+- skill effect duration (ailments that are skill effects, ground effects);
+- projectile counts;
+- the life thresholds (they move PoB's automatic low life condition);
+- the herald, mark, sigil, and brand lines (skill types);
+- resistance conversion;
+- the monster block line.
+
+**Evidence** (`local/p6/p6-11n/`):
+- **Public `calc-parity`:** 210 builds, 280 expected, 0 unexpected.
+- **Values:** 60 changed in partial or indeterminate builds; 52 toward PoB, 3 the same.
+  - Five moved away, all in `ethereal-knives-mines-assassin.xml`: the game's 30% less spell crit chance applies (PoB's parse reads it the same way). That build's distance from PoB is its other reasons (the forking crit among them).
+- **Corpus:** 0 unexpected.
+- **Tests:** the charge, damage taken, and flask guards list the new rows. The workspace's 1,766 tests and clippy pass.
