@@ -63,7 +63,7 @@
 use super::Poe1Quantity;
 use crate::condition::Flags;
 use crate::ingest::Ingest;
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::store::Effect;
 
 /// A kind of minion modifier: one the character can take on (damage and
@@ -102,6 +102,12 @@ pub enum MinionValue {
     /// The minion's cooldown recovery (PoB's `CooldownRecovery`): no
     /// minion field reads it.
     CooldownRecovery,
+    /// The minion's added damage of a type, one bound (PoB's `<Type>Min`
+    /// and `<Type>Max` BASE; P6-11as).
+    AddedDamage(DamageType, Bound),
+    /// The minion's chance to deal double damage (PoB's
+    /// `DoubleDamageChance`; P6-11as).
+    DoubleDamageChance,
 }
 
 impl MinionValue {
@@ -138,6 +144,19 @@ impl MinionValue {
             Self::LifeRegen => "life-regen",
             Self::MovementSpeed => "movement-speed",
             Self::CooldownRecovery => "cooldown-recovery",
+            Self::AddedDamage(t, b) => match (t, b) {
+                (DamageType::Physical, Bound::Min) => "added-physical-min",
+                (DamageType::Physical, Bound::Max) => "added-physical-max",
+                (DamageType::Fire, Bound::Min) => "added-fire-min",
+                (DamageType::Fire, Bound::Max) => "added-fire-max",
+                (DamageType::Cold, Bound::Min) => "added-cold-min",
+                (DamageType::Cold, Bound::Max) => "added-cold-max",
+                (DamageType::Lightning, Bound::Min) => "added-lightning-min",
+                (DamageType::Lightning, Bound::Max) => "added-lightning-max",
+                (DamageType::Chaos, Bound::Min) => "added-chaos-min",
+                (DamageType::Chaos, Bound::Max) => "added-chaos-max",
+            },
+            Self::DoubleDamageChance => "double-damage-chance",
         }
     }
 
@@ -168,6 +187,8 @@ impl MinionValue {
             Self::MaximumResistance(t) => Quantity::MaximumResistance(t),
             Self::BlockChance => Quantity::BlockChance,
             Self::SpellBlockChance => Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+            Self::AddedDamage(t, b) => Quantity::AddedDamage(t, b),
+            Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
             Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
             Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
         };
@@ -214,7 +235,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 32] = [
+pub const STATS: [MinionRow; 35] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -274,6 +295,12 @@ pub const STATS: [MinionRow; 32] = [
         "minion_cast_speed_+%",
         &[(minion(MinionValue::CastSpeed), INC, 1.0)],
     ),
+    // P6-11as: "Minions have #% chance to deal Double Damage"
+    // (`MinionModifier` `DoubleDamageChance` BASE).
+    (
+        "minion_chance_to_deal_double_damage_%",
+        &[(minion(MinionValue::DoubleDamageChance), BASE, 1.0)],
+    ),
     (
         "minion_chaos_resistance_%",
         &[(minion(MinionValue::Resistance(CHAOS)), BASE, 1.0)],
@@ -309,6 +336,24 @@ pub const STATS: [MinionRow; 32] = [
     (
         "minion_fire_damage_resistance_%",
         &[(minion(MinionValue::Resistance(FIRE)), BASE, 1.0)],
+    ),
+    // P6-11as: "Minions deal # to # additional <Type> Damage"
+    // (`MinionModifier` `<Type>Min` and `<Type>Max` BASE, no flags).
+    (
+        "minion_global_maximum_added_cold_damage",
+        &[(
+            minion(MinionValue::AddedDamage(COLD, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_cold_damage",
+        &[(
+            minion(MinionValue::AddedDamage(COLD, Bound::Min)),
+            BASE,
+            1.0,
+        )],
     ),
     (
         "minion_life_regeneration_rate_per_minute_%",

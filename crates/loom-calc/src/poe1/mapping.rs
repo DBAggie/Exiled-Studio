@@ -3619,6 +3619,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11as: "#% of Damage taken Recouped as Mana" (`ManaRecoup` BASE):
+    // read by `poe1::enemy_hit` as PoB's `anyRecoup`.
+    (
+        "damage_taken_goes_to_mana_%",
+        &[(Quantity::Poe1(Poe1Quantity::ManaRecoup), Op::Base, 1.0)],
+    ),
     // P6-10b part 10: "#% increased Damage taken from Damage Over Time"
     // (`DamageTakenOverTime` INC).
     (
@@ -4811,6 +4817,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `base_projectile_speed_+%`.
     ("always_pierce", "pierce"),
     ("always_shock", "ailment-chance"),
+    // P6-11as: "#% increased Area of Effect per Endurance Charge"
+    // (`AreaOfEffect` INC per `EnduranceCharge`): area, as
+    // `base_skill_area_of_effect_+%`.
+    ("area_of_effect_+%_per_endurance_charge", "area"),
     // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
     // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
     ("area_of_effect_+%_while_wielding_bow", "area"),
@@ -4834,6 +4844,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
     ("base_aura_area_of_effect_+%", "area"),
+    // P6-11as: "#% chance to Avoid being Chilled": chill on you.
+    ("base_avoid_chill_%", "ailment-on-self"),
     ("base_avoid_freeze_%", "ailment-on-self"),
     // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
     ("base_avoid_stun_%", "stun"),
@@ -5008,6 +5020,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // above" (`FullLifePercentage` BASE): PoB reads it only for the config
     // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).
     ("full_life_threshold_%_override", "life-threshold"),
+    // P6-11as: "Gain # Life when you Stun an Enemy": PoB leaves the line
+    // unparsed (`ModCache.lua`), and a gain on stun reaches no slice field.
+    ("gain_X_life_on_stun", "recovery"),
     // P6-11m: endurance charges per second if hit recently (unparsed).
     (
         "gain_endurance_charge_per_second_if_have_been_hit_recently",
@@ -5179,6 +5194,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("spell_maximum_action_distance_+%", "targeting"),
     // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
     ("spell_uncastable_if_triggerable", "trigger"),
+    // P6-11as: "#% increased Stun Duration on Enemies per Endurance
+    // Charge" (`EnemyStunDuration` INC): no slice field.
+    ("stun_duration_+%_per_endurance_charge", "stun"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
     ("stun_threshold_+%", "stun"),
     // P6-8b: read by `poe1::combined` (the mirage count).
@@ -5386,7 +5404,7 @@ pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 /// [`Poe1Quantity::EhpReason`]. PoB's text: P6-11n: damage taken recouped
 /// as mana (`ManaRecoup`). Lucky spell suppression is a row since P6-11al. The gains on
 /// block are [`Poe1Quantity::BlockGain`] rows since P6-11ak.
-pub const EHP_REASONS: &[&str] = &["damage_taken_goes_to_mana_%"];
+pub const EHP_REASONS: &[&str] = &[];
 
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to

@@ -6,12 +6,12 @@ mod common;
 
 use loom_calc::poe1::Poe1Quantity;
 use loom_calc::poe1::minions::{DEPENDS_ON, MinionValue, STATS};
-use loom_calc::quantity::{DamageType, Op};
+use loom_calc::quantity::{Bound, DamageType, Op};
 
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 32] = [
+const TEXTS: [(&str, &str); 35] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -69,6 +69,10 @@ const TEXTS: [(&str, &str); 32] = [
         "Minions have {0}% increased Cast Speed",
     ),
     (
+        "minion_chance_to_deal_double_damage_%",
+        "Minions have {0}% chance to deal Double Damage",
+    ),
+    (
         "minion_chaos_resistance_%",
         "Minions have {0:+d}% to Chaos Resistance",
     ),
@@ -96,6 +100,14 @@ const TEXTS: [(&str, &str); 32] = [
     (
         "minion_fire_damage_resistance_%",
         "Minions have {0:+d}% to Fire Resistance",
+    ),
+    (
+        "minion_global_maximum_added_cold_damage",
+        "Minions deal {0} to {1} additional Cold Damage",
+    ),
+    (
+        "minion_global_minimum_added_cold_damage",
+        "Minions deal {0} to {1} additional Cold Damage",
     ),
     (
         "minion_life_regeneration_rate_per_minute_%",
@@ -139,8 +151,9 @@ const TEXTS: [(&str, &str); 32] = [
     ),
 ];
 
-/// The kinds and ops a text names (PoB's reading of it).
-fn kinds_of(text: &str) -> Vec<(MinionValue, Op)> {
+/// The kinds and ops a text names (PoB's reading of it); a description of
+/// two stats (added damage's bounds) names the bound by its stat.
+fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
     let op = if text.starts_with("Increases and Reductions") {
         Op::Flag
     } else if text.contains("% more ") {
@@ -156,7 +169,16 @@ fn kinds_of(text: &str) -> Vec<(MinionValue, Op)> {
             .map(|t| (f(t), op))
             .collect()
     };
-    if text.contains("Attack and Cast Speed") {
+    if text.contains("additional Cold Damage") {
+        let bound = if stat.contains("minimum") {
+            Bound::Min
+        } else {
+            Bound::Max
+        };
+        vec![(MinionValue::AddedDamage(DamageType::Cold, bound), op)]
+    } else if text.contains("Double Damage") {
+        vec![(MinionValue::DoubleDamageChance, op)]
+    } else if text.contains("Attack and Cast Speed") {
         vec![(MinionValue::AttackSpeed, op), (MinionValue::CastSpeed, op)]
     } else if text.contains("Attack Speed") {
         vec![(MinionValue::AttackSpeed, op)]
@@ -228,7 +250,7 @@ fn every_row_should_follow_its_text() {
                 other => panic!("{stat}: {other:?}"),
             })
             .collect();
-        assert_eq!(kinds, kinds_of(text), "{stat}");
+        assert_eq!(kinds, kinds_of(stat, text), "{stat}");
     }
 }
 
@@ -249,11 +271,12 @@ fn real_minion_stats_should_have_these_texts() {
         .stat_descriptions
         .files()
         .flat_map(|(_, f)| &f.descriptions)
-        .filter(|d| d.stats.len() == 1)
         .flat_map(|d| {
-            d.variants
-                .iter()
-                .map(move |v| (d.stats[0].as_str(), v.text.as_str()))
+            d.stats.iter().flat_map(move |s| {
+                d.variants
+                    .iter()
+                    .map(move |v| (s.as_str(), v.text.as_str()))
+            })
         })
         .collect();
     for (stat, text) in TEXTS {

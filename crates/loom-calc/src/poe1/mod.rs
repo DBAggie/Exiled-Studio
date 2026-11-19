@@ -322,6 +322,9 @@ pub enum Poe1Quantity {
     /// PoB's estimate track recoupable damage, which limits its speed-up
     /// (`ehp`).
     PseudoRecoup,
+    /// Damage taken recouped as mana, percent (PoB's `ManaRecoup`;
+    /// P6-11as): `Base`, read by [`enemy_hit`] for `anyRecoup`.
+    ManaRecoup,
     /// Skills reserve life instead of mana (PoB's `BloodMagicReserved`;
     /// P6-11an, Blood Magic): a `Flag`, read by
     /// [`skill_modifiers::Totals`] for the other gems' reservation.
@@ -1035,6 +1038,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
             Self::WitherEffect => f.write_str("wither-effect"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
+            Self::ManaRecoup => f.write_str("mana-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),

@@ -539,6 +539,10 @@ mod tests {
     const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
         // Chances to gain a charge: PoB's calc never reads them.
         "add_frenzy_charge_on_kill_%_chance",
+        // P6-11as: area and stun duration per endurance charge (no slice
+        // field).
+        "area_of_effect_+%_per_endurance_charge",
+        "stun_duration_+%_per_endurance_charge",
         "add_power_charge_on_kill_%_chance",
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",

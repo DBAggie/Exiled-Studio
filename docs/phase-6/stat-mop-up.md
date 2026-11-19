@@ -1134,3 +1134,33 @@ Both match PoB on every computed field.
 - **Corpus:** 0 unexpected; 30 values toward PoB, none away.
 - **Data parity:** `uncategorized` 353.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11as: minion added damage and double damage, mana recoup, four rows of no effect
+
+**PoB and the engine, row by row:**
+
+| Stat | PoB | The engine |
+|---|---|---|
+| `minion_global_minimum_added_cold_damage`, `minion_global_maximum_added_cold_damage` ("Minions deal # to # additional Cold Damage") | `MinionModifier` `ColdMin`/`ColdMax` BASE, no flags | New `MinionValue::AddedDamage(type, bound)`, the minion's `AddedDamage` |
+| `minion_chance_to_deal_double_damage_%` | `MinionModifier` `DoubleDamageChance` BASE | New `MinionValue::DoubleDamageChance`, the minion's `DoubleDamageChance` |
+| `damage_taken_goes_to_mana_%` ("#% of Damage taken Recouped as Mana") | `ManaRecoup` BASE; with the mana recovery rate it counts in `anyRecoup` (`CalcDefence.lua` 1385 to 1400), which turns on the estimate's recoup tracking | New `Poe1Quantity::ManaRecoup` (was an `EhpReason` marker). `enemy_hit` adds it, times the mana recovery rate, to the pseudo recoup for `Character.recoup` |
+| `area_of_effect_+%_per_endurance_charge` | `AreaOfEffect` INC per charge | `NoEffect` `area`, as `base_skill_area_of_effect_+%` |
+| `base_avoid_chill_%` | chill on you | `NoEffect` `ailment-on-self` |
+| `gain_X_life_on_stun` | the line is left unparsed | `NoEffect` `recovery` |
+| `stun_duration_+%_per_endurance_charge` | `EnemyStunDuration` INC | `NoEffect` `stun` |
+
+**Tests:**
+- `tests/minions.rs` carries the three new rows' texts. Its real-bundle check now reads descriptions of two stats too.
+- The charges and damage-taken tests list the new rows they meet.
+- `tests/keystones_chill.rs` lists `base_avoid_chill_%`.
+
+**New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
+- `minion-added-cold-double-damage-witch.xml`: Raise Zombie's hit with both lines. Minion average hit 201.15, minion hit DPS 171.93.
+- `mana-recoup-ice-nova-witch.xml`: mana recoup with more life and mana. Total effective health pool 2,736.81.
+
+**Evidence** (`local/p6/p6-11as/`):
+- **Public `calc-parity`:** 236 builds, 292 expected, 0 unexpected; match 15,360 to 15,523.
+- **Moved values:** 5 toward PoB, none away. Two minion builds' full DPS moved, and boneshatter-juggernaut's effective health pool.
+- **Corpus:** 0 unexpected; 1 value toward PoB.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

@@ -707,14 +707,29 @@ fn maximum_hit(
     } else {
         es
     };
-    // Any recoup (PoB's `anyRecoup`): Divine Shield's pseudo recoup.
-    let recoup = sum(
+    // Any recoup (PoB's `anyRecoup`, `CalcDefence.lua` 1385 to 1465):
+    // Divine Shield's pseudo recoup, and mana recoup times the mana
+    // recovery rate (P6-11as; read only when present).
+    let pseudo = sum(
         calc,
         Poe1Quantity::PseudoRecoup,
         Op::Base,
         &cx,
         &mut pool_reasons,
-    )? > 0.0;
+    )?;
+    let mana_recoup = if phases::has(calc, Quantity::Poe1(Poe1Quantity::ManaRecoup)) {
+        let base = sum(
+            calc,
+            Poe1Quantity::ManaRecoup,
+            Op::Base,
+            &cx,
+            &mut pool_reasons,
+        )?;
+        base * super::regen::recovery_rate(calc, super::Pool::Mana, &mut pool_reasons)?.value
+    } else {
+        0.0
+    };
+    let recoup = pseudo + mana_recoup > 0.0;
     // The shared guard (P6-11ae; `CalcDefence.lua` 2379 to 2395): its
     // rate, and its limit, `GuardAbsorbLimit` BASE with Molten Shell's
     // share of armour (`PerStat` `Armour`, at most `GuardAbsorbMax` in
@@ -1143,6 +1158,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::EsProtectsMana
                 | Poe1Quantity::TakenFromStoneGolem
                 | Poe1Quantity::PseudoRecoup
+                | Poe1Quantity::ManaRecoup
         )
     )
 }

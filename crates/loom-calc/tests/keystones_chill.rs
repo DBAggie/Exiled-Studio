@@ -84,6 +84,8 @@ const TEXTS: [(&str, &str); 13] = [
 const NO_EFFECT_NAMING: &[&str] = &[
     "active_skill_base_secondary_area_of_effect_radius",
     "active_skill_secondary_area_of_effect_description_mode",
+    // P6-11as: avoiding chill on you.
+    "base_avoid_chill_%",
     "chill_effectiveness_on_self_+%",
     "cold_ailment_duration_+%",
 ];
