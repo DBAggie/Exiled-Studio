@@ -2,7 +2,7 @@
 
 Phase 6 is the PoE1 mechanics expansion with the stat mop-up (`dev/active/phase-6-mechanics/`). The maintainer asked for it on 2026-11-17: "do phase 6 in full without stopping. We can do gate testing after."
 
-This report is P6-12's: the counts, the register, the gate checklist, and the performance budgets re-checked. It records the state at PR #167's commit `f366c65` (P6-11n) and is updated as later steps land.
+This report is P6-12's: the counts, the register, the gate checklist, and the performance budgets re-checked. It was first written at PR #167's commit `f366c65` (P6-11n). The counts and the reasons below are updated to P6-11ac (`a1676a8`); the Phase 3 and Phase 6 set figures and the performance record are still P6-11n's.
 
 **Verdict: the gate is not met yet.**
 - Gate item 1 holds: every `Complete` field equals PoB's or is registered.
@@ -11,22 +11,23 @@ This report is P6-12's: the counts, the register, the gate checklist, and the pe
 
 ## The counts
 
-Every count is from `local/p6/p6-11n/`, made by `sh local/p6/evidence.sh p6-11n` on `local/p6/packs/b-ot` (the evidence bundle with the tree packs 3_25 to 3_28).
+Every count is from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11ac` on `local/p6/packs/b-ot` (the evidence bundle with the tree packs 3_25 to 3_28).
 
 | Set | Builds | Fields `Complete` | Partial | Unsupported | Indeterminate | calc-parity unexpected |
 |---|---|---|---|---|---|---|
 | Public, start (P6-0b, 2026-11-17) | 136 | 2,270 | 386 | 482 | 102 | 0 |
-| Public, now | 210 (209 calculate; one is the expected failure) | 13,547 | 1,925 | 812 | 443 | 0 |
+| Public, at P6-11n | 210 (209 calculate; one is the expected failure) | 13,547 | 1,925 | 812 | 443 | 0 |
+| Public, now (P6-11ac) | 212 (211 calculate; one is the expected failure) | 13,953 | 1,669 | 816 | 447 | 0 |
 | Corpus, start | 21 | 0 | 193 | 141 | 170 | 0 |
 | Corpus, now | 21 | 0 | 791 | 124 | 749 | 0 |
 
-- **The Phase 3 set** (the 24 fields every document carries):
+- **The Phase 3 set** (the 24 fields every document carries; at P6-11n):
   - Public: 3,090 `Complete` of 4,180, against 2,270 of 3,240 at the start. The new fixtures are mostly complete builds.
   - Corpus: 0 of 420.
-- **The Phase 6 set** (slice revisions 3 to 22, each field present when it applies):
+- **The Phase 6 set** (slice revisions 3 to 22, each field present when it applies; at P6-11n):
   - Public: 10,457 `Complete`.
   - Every computed field that is complete equals PoB's or is registered.
-- **Public calc-parity:** 280 expected differences, 0 unexpected.
+- **Public calc-parity:** 280 expected differences, 0 unexpected. Fields matching PoB: 13,535 at P6-11w, 13,651 at P6-11ac.
 
 ## The register
 
@@ -49,20 +50,20 @@ Every count is from `local/p6/p6-11n/`, made by `sh local/p6/evidence.sh p6-11n`
    - a mechanic still open (a dual wielder's ailments and leech, traps', mines', and totems' own rates, conversion smoothing in maximum hit, the config inputs below); or
    - not computed for the build's main skill (no hit, no skill).
 3. **The `Complete` counts rise.**
-   - Public: met, 2,270 to 13,547.
+   - Public: met, 2,270 to 13,953.
    - Corpus: not met, still 0. Every corpus build carries unmapped stats and unmodelled gems: 21 of 21 builds for each.
 
 ### The remaining reasons (the closed list)
 
-Counted once per build, on the `life` field (a build-wide reason reaches every field). Public 209 builds, corpus 21:
+Counted once per build, on the `life` field's reasons in all three of its lists (unsupported, indeterminate, partial); a build-wide reason reaches every field. Public 211 builds, corpus 21 (P6-11ac):
 
 | Reason | Public builds | Corpus builds | What it is |
 |---|---|---|---|
-| `unmapped-stat` | 26 | 21 | 925 distinct stats the engine does not map, across both sets (the P6-11 tail: skill effect duration, projectile counts, heralds, marks, brands, sigils, resistance conversions, Eldritch Battery, Eternal Youth, socketed gem levels, granted notables, many uniques' own lines). |
+| `unmapped-stat` | 26 | 21 | 929 distinct stats across both sets, on any field. These include the field markers (`EhpReason`, `PoolReason`, ...), which are reasons by design. The rest is the P6-11 tail: heralds, marks, brands, sigils, resistance conversions, Eldritch Battery, Eternal Youth, granted notables, guards and Molten Shell, and many uniques' own lines. |
 | `unmodelled-gem` | 26 | 21 | A gem of the active set the engine does not model: Frostblink, Second Wind, Toxic Rain, Reflection, Sniper's Mark, Immortal Call, Flame Wall, Spellslinger, Eternal Blessing, Raise Spectre, and others (the rest of P6-9), and the supports linked to them. |
-| `unmodelled-config` | 28 inputs | 16 inputs | Config inputs no step models yet: the minion's own charges and conditions, brands attached, Feeding Frenzy, Alchemist's Genius, ground effects on the enemy, Toxic Rain and Storm Rain overlaps. |
-| `unresolved-line` | 33 | 19 | Item or tree lines the resolver cannot settle: no template, ambiguous, or no variant fits (ADR-015). |
-| `unmodelled-passive` | 29 | 19 | Cluster jewel nodes: the evidence bundle has no cluster tables, which wait for the maintainer's extraction. Also unconnected nodes and unresolved tree lines. |
+| `unmodelled-config` | 14 (28 inputs) | 12 (16 inputs) | Config inputs no step models yet: the minion's own charges and conditions, brands attached, Feeding Frenzy, Alchemist's Genius, ground effects on the enemy, Toxic Rain and Storm Rain overlaps. |
+| `unresolved-line` | 22 | 12 | Item or tree lines the resolver cannot settle: no template, ambiguous, or no variant fits (ADR-015). |
+| `unmodelled-passive` | 21 | 12 | Cluster jewel nodes: the evidence bundle has no cluster tables, which wait for the maintainer's extraction. Also unconnected nodes and unresolved tree lines. |
 | `tree-version` | 5 | 10 | A build saved on a tree the bundle does not carry (3_13, 3_15, 3_22, 3_23, 3_26 alternate). |
 | `scaled-line`, `excluded-line`, `unread-line`, `unsettled-value` | 12, 10, 1, 1 | 4, 5, 0, 0 | Item lines PoB itself scales or skips (P3-8b). |
 | `unmodelled-item` | 9 | 6 | Abyssal sockets, flask bases, ambiguous bases, flask merges, a jewel limit, a slot. |
@@ -114,7 +115,18 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
   - the enemy's hit;
   - maximum hit;
   - the effective health pool.
-- **P6-11:** the stat mop-up batches a to n.
+- **P6-11:** the stat mop-up batches a to ac (`docs/phase-6/stat-mop-up.md`). Since P6-11n:
+  - P6-11o to P6-11s: lines while an aura affects you, Onslaught on kill, socketed gem levels, supports an item grants, and damage per aura or herald;
+  - P6-11t: regeneration per charge and per stat, and channelling mana costs;
+  - P6-11u: durations, projectile counts, and chains as `NoEffect` with guards;
+  - P6-11v: nearby enemies;
+  - P6-11w: burning ground;
+  - P6-11x: Flesh and Stone's Sand Stance, and fortification rounded with the other hit MOREs;
+  - P6-11y: Momentum's Swiftness, and the main skill's support buffs left to `poe1::gems`;
+  - P6-11z: Arctic Armour;
+  - P6-11aa: Infused Channelling;
+  - P6-11ab: Rapid Decay and Swift Affliction;
+  - P6-11ac: the eldritch block implicit.
 - **P6-12:** combined and full DPS, and this report.
 
 ## Still open
@@ -127,7 +139,8 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 - **A dual wielder's** ailments and leech.
 - **The remaining gems** (P6-9) and config inputs (P6-8a's Spellslinger, Arcanist Brand, Mark on Hit, Hextouch, Cast on Death, item triggers; General's Cry's mirages; Sacred Wisps).
 - **The minion's** damage over time and spectres (P6-7c3).
-- **The P6-11 tail:** 925 distinct stats.
+- **The P6-11 tail:** 929 distinct stats, including the intended field markers.
+- **Repeats** (Multistrike, Spell Echo): PoB's averaged repeat damage and its repeat-scaled speed caps, crit, and costs (`CalcOffence.lua` 773 to 870). The engine assumes one repeat. Only 2 public builds carry a repeat stat.
 
 **Maintainer items:**
 - **Data runs:**
