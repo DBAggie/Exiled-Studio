@@ -128,7 +128,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] P6-9 remaining: warcry power (Battlemage's, Ancestral, Infernal, Seismic Cry), Eternal Blessing, Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 - [x] P6-10a part 1: extraction roots `TIMELESS_TABLES_POE1` (the three tables read; 718 rows as PoB's export); `docs/phase-6/timeless.md`
-- [ ] Maintainer: the data run on build 26530219's files (this workstation's install is 26694821) and the decision on the seed algorithm's source (Q-P6-1: GPL reference not allowed; MIT ports exist); then `poe1/timeless.json`, its `data-parity` table, and the port
+- [x] Q-P6-1 decided 2026-11-19: PoB's lookup tables, not a ported generator (the "MIT" ports are GPL-3.0 or unlicensed); plan decision 11 amended; the local consistency check: PoB's tables and Vilsol's agree on all 149,920 sampled lookups (`docs/phase-6/timeless.md`)
+- [x] Build 26530219's full depot on this workstation (`local/b2/steam-26530219`, validated 2026-11-19)
+- [ ] The data run with the timeless roots (maintainer); then `poe1/timeless.json`, PoB's lookup tables in a compact form in the bundle, their `data-parity` tables, and the engine's replaced nodes and keystones
 ## P6-10b: recovery and defence outputs
 - [x] P6-10b part 1: life and mana regeneration (`poe1::regen`, fields `life-regen` and `mana-regen`, slice revision 6; Arcane Surge, consecrated ground, the stationary and stopped-DoT state rows; `mapping::REGEN_REASONS` and `elsewhere` keep reasons on these fields); fixtures `ice-nova-regeneration-witch.xml`, `ice-nova-arcane-surge-regeneration-witch.xml`; every regeneration value equal to PoB; `docs/phase-6/recovery.md`
 - [x] P6-10b part 2: energy shield regeneration, recharge, and delay (slice revision 7), Zealot's Oath, the rare or unique enemy nearby condition (`conditions::ENEMY_RARE_OR_UNIQUE_NEARBY`); fixtures `ice-nova-energy-shield-recovery-witch.xml`, `ice-nova-zealots-oath-witch.xml`; every energy shield value equal to PoB; `docs/phase-6/recovery.md`, "Part 2"

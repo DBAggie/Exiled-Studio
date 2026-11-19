@@ -144,7 +144,7 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 
 **Maintainer items:**
 - **Data runs:**
-  - the timeless jewel data run, and Q-P6-1 (the seed algorithm's source: the known reference is GPL);
+  - the timeless jewel data run (Q-P6-1 decided 2026-11-19: PoB's lookup tables, checked consistent with Vilsol's implementation; build 26530219's files are now on this workstation; `docs/phase-6/timeless.md`);
   - the cluster jewel tables in a bundle;
   - `VaalSouls` for soul costs;
   - the relic's Nova skill level requirements.
