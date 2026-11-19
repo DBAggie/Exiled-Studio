@@ -34,7 +34,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_calc::poe1::gems::{self, BuffStat, Kind};
-use loom_calc::poe1::{LeechSource, Poe1Quantity, Pool};
+use loom_calc::poe1::{LeechSource, Poe1Quantity, Pool, TakenOf, TakenWhen};
 use loom_calc::{Flags, Op, Quantity};
 use serde_json::{Value, json};
 
@@ -653,6 +653,10 @@ fn pob_name(q: Quantity) -> String {
             format!("{}DamageTaken", title(t.name()))
         }
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) => "ArcaneSurgeCastSpeed".into(),
+        // Flesh and Stone's Sand Stance (P6-11x).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)) => {
+            "DamageTakenWhenHit".into()
+        }
         Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
         // P6-10b: regeneration.
         Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
@@ -750,6 +754,10 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         BuffStat::BloodStance(rows) => (
             rows,
             format!(" tags global {}", json!({ "effectCond": "BloodStance" })),
+        ),
+        BuffStat::SandStance(rows) => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": "SandStance" })),
         ),
         BuffStat::Threshold(rows) => (
             rows,
@@ -1050,6 +1058,7 @@ fn check_one(
             BuffStat::Reason(_)
             | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
+            | BuffStat::SandStance(_)
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)
             | BuffStat::WhenState { .. }

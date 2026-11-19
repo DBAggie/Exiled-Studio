@@ -402,10 +402,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         ) {
             of.push(TakenOf::Elemental);
         }
-        let (hit_inc, mut hit_more) = taken_modifiers(
+        let (hit_inc, hit_more) = taken_modifiers(
             calc,
             &of,
             &[TakenWhen::Always, TakenWhen::Hit],
+            fortify_more,
             &cx,
             &mut type_reasons,
         )?;
@@ -413,6 +414,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             calc,
             &[TakenOf::All],
             &[TakenWhen::Spell],
+            1.0,
             &cx,
             &mut type_reasons,
         )?;
@@ -420,10 +422,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             calc,
             &[TakenOf::All],
             &[TakenWhen::Attack],
+            1.0,
             &cx,
             &mut type_reasons,
         )?;
-        hit_more *= fortify_more;
         let spell = ((1.0 + (hit_inc + spell_inc) / 100.0) * (hit_more * spell_more)).max(0.0);
         let attack = ((1.0 + (hit_inc + attack_inc) / 100.0) * (hit_more * attack_more)).max(0.0);
         let taken_mult = (spell + attack) / 2.0;
@@ -864,11 +866,17 @@ fn sum(
     Ok(q.value)
 }
 
-/// The `INC` sum and more product of the damage taken names.
+/// The `INC` sum and more product of the damage taken names. Each name's
+/// more product is rounded to two decimals (PoB's `MoreInternal`);
+/// `hit_all` multiplies `DamageTakenWhenHit`'s before its rounding:
+/// fortification's MORE is a mod of that name (`CalcPerform.lua` 648),
+/// rounded with the others (P6-11x: 20 stacks and Sand Stance's -14 are
+/// `round(0.8 x 0.86, 2) = 0.69`).
 fn taken_modifiers(
     calc: &mut Calc<'_>,
     of: &[TakenOf],
     when: &[TakenWhen],
+    hit_all: f64,
     cx: &crate::condition::QueryContext,
     reasons: &mut Reasons,
 ) -> Result<(f64, f64), CalcError> {
@@ -879,11 +887,17 @@ fn taken_modifiers(
             let q = Quantity::Poe1(Poe1Quantity::SelfDamageTaken(*w, *o));
             let (store, graph) = calc.parts();
             let i = store.sum(graph, q, Op::Increased, cx, Term::Step("taken-increased"))?;
-            let m = store.more_rounded(graph, q, cx)?;
             reasons.extend(&i.reasons);
-            reasons.extend(&m.reasons);
             inc += i.value;
-            more *= m.value;
+            if (*w, *o) == (TakenWhen::Hit, TakenOf::All) && hit_all != 1.0 {
+                let m = store.more(graph, q, cx)?;
+                reasons.extend(&m.reasons);
+                more *= crate::math::round_half_up(m.value * hit_all * 100.0) / 100.0;
+            } else {
+                let m = store.more_rounded(graph, q, cx)?;
+                reasons.extend(&m.reasons);
+                more *= m.value;
+            }
         }
     }
     Ok((inc, more))

@@ -591,3 +591,29 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected. Match went from 13,533 to 13,535: 2 fields went from partial to complete, and no value moved.
 - **Corpus:** unchanged; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11x: Flesh and Stone's Sand Stance, and fortification's rounding
+
+**PoB** (`act_str.lua` 4380): in Sand Stance, Flesh and Stone's `flesh_stone_sand_stance_damage_taken_+%_final_from_distance_from_enemy_hits` is `DamageTakenWhenHit` MORE.
+- Its tag is a `Buff` with `effectCond = "SandStance"`. The config's `bloodSandStance` set to `SAND` sets that condition (`ConfigOptions.lua` 643).
+- As a `Buff`, it scales by the buff effect (`CalcPerform.lua` 2266 to 2276), not the aura effect, though the skill is an aura. It does not reach minions.
+
+**The engine:**
+- **`poe1::gems`:** a new `BuffStat::SandStance` applies its rows only in Sand Stance and never to minions. The rows take the buff scale: `add_rows` now gets the skill's own scale and the buff scale.
+- **Flesh and Stone's Sand Stance stat:** was a `Defence` marker (an `unmapped-stat` reason on the enemy hit fields); it is now that row.
+- **`data-parity` `gem_effects`:** reads the row as PoB's `DamageTakenWhenHit` with `effectCond` `SandStance`.
+
+**Found on the way: fortification's rounding.**
+- PoB's `MoreInternal` rounds each mod name's MORE product to two decimals. Fortification's MORE is a `DamageTakenWhenHit` mod (`CalcPerform.lua` 648), so PoB rounds it together with Sand Stance: with 20 stacks, `round(0.8 x 0.86, 2) = 0.69`.
+- The engine multiplied fortification in after rounding (0.688). `enemy_hit::taken_modifiers` now multiplies it into `DamageTakenWhenHit`'s product before rounding.
+- The first run, without this fix, gave smite-inquisitor-act5 15 unexpected differences; that run was not committed.
+
+**Evidence** (`local/p6/p6-11x/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected.
+  - Match went from 13,535 to 13,557.
+  - 85 values moved, all toward PoB; 25 now equal it.
+  - 22 fields went from partial to complete.
+- **Corpus:** 56 values moved, all toward PoB; 7 now equal it. 0 unexpected.
+- **Sand Stance stat:** no longer unmapped anywhere; it was in 15 builds.
+- **`data-parity`:** `gem_effects` 1,611 values compared, 0 differences; uncategorized 353, unchanged.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

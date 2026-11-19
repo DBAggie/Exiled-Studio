@@ -115,7 +115,7 @@ use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
 use super::skill_modifiers::{self, Totals};
 use super::sockets;
-use super::{LeechSource, Poe1Quantity, Pool, ReservationKind};
+use super::{LeechSource, Poe1Quantity, Pool, ReservationKind, TakenOf, TakenWhen};
 use crate::condition::{ConditionKey, Flags};
 use crate::ingest::Ingest;
 use crate::input::{CalcData, CalcInput, Resource};
@@ -250,6 +250,12 @@ pub enum BuffStat {
     /// unless the config's stance is Sand: `CalcSetup.lua` 538,
     /// `ConfigOptions.lua` 643).
     BloodStance(&'static [HitEffect]),
+    /// Applies in Sand Stance (PoB's `effectCond = "SandStance"`, set when
+    /// the config's stance is Sand: `ConfigOptions.lua` 643 to 646) as a
+    /// `Buff` on the character, not on minions: scaled by the buff effect
+    /// (`CalcPerform.lua` 2266 to 2276), not the aura effect, even on an
+    /// aura skill (Flesh and Stone; P6-11x).
+    SandStance(&'static [HitEffect]),
     /// Applies while unreserved life is at least 2 and mana at least 1
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
@@ -820,7 +826,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "flesh_stone_sand_stance_damage_taken_+%_final_from_distance_from_enemy_hits",
-                    BuffStat::Defence("damage-taken"),
+                    BuffStat::SandStance(&[(
+                        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)),
+                        Op::More,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
             ],
         },
@@ -3063,7 +3075,7 @@ pub fn minion_buffs(
                         &s.active_gem,
                         name,
                         stats,
-                        scale,
+                        (scale, scale),
                         config,
                         true,
                         &mut merged,
@@ -3229,6 +3241,12 @@ fn one_skill(
             } else {
                 totals.buff_scale(aura, &s.types, own)
             };
+            // An aura skill's `Buff` rows (Sand Stance) take the buff effect.
+            let buff_scale = if aura && !UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
+                totals.buff_scale(false, &s.types, own_effect(input, s, false))
+            } else {
+                scale
+            };
             if effect == EffectType::Guard {
                 collected
                     .guards
@@ -3241,7 +3259,7 @@ fn one_skill(
                 &s.active_gem,
                 name,
                 stats,
-                scale,
+                (scale, buff_scale),
                 config,
                 false,
                 &mut collected.merged,
@@ -3256,7 +3274,7 @@ fn one_skill(
                 &s.active_gem,
                 name,
                 stats,
-                1.0,
+                (1.0, 1.0),
                 config,
                 false,
                 &mut collected.merged,
@@ -3272,7 +3290,7 @@ fn one_skill(
                 &s.active_gem,
                 name,
                 stats,
-                1.0,
+                (1.0, 1.0),
                 config,
                 false,
                 &mut collected.merged,
@@ -3395,7 +3413,7 @@ fn supports_global(
             sup,
             name,
             table,
-            scale,
+            (scale, scale),
             config,
             false,
             &mut collected.merged,
@@ -3415,7 +3433,9 @@ fn support_buff_name(id: &str) -> &'static str {
     }
 }
 
-/// One gem instance's rows of `table` into `merged` at `scale`.
+/// One gem instance's rows of `table` into `merged` at `scales`: the
+/// skill's own effect scale, and the buff effect scale its
+/// [`BuffStat::SandStance`] rows take.
 #[expect(clippy::too_many_arguments, reason = "the merge's inputs")]
 fn add_rows(
     input: &CalcInput<'_>,
@@ -3423,7 +3443,7 @@ fn add_rows(
     r: &GemEffectRef<'_>,
     name: &'static str,
     table: &'static [(&'static str, BuffStat)],
-    scale: f64,
+    (scale, buff_scale): (f64, f64),
     config: Option<&ConfigSet>,
     for_minion: bool,
     merged: &mut Merged,
@@ -3451,6 +3471,7 @@ fn add_rows(
         let Some(&(id, b)) = table.iter().find(|(id, _)| id == stat) else {
             continue;
         };
+        let mut row_scale = scale;
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
@@ -3502,6 +3523,13 @@ fn add_rows(
                 }
                 (rows, None)
             }
+            BuffStat::SandStance(rows) => {
+                if stance_blood || for_minion {
+                    continue;
+                }
+                row_scale = buff_scale;
+                (rows, None)
+            }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
             BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
@@ -3542,7 +3570,7 @@ fn add_rows(
         let value = *value as f64;
         for (i, &row) in rows.iter().enumerate() {
             let (quantity, op, divisor, ..) = row;
-            let scaled = skill_modifiers::scale(quantity, op, value / divisor, scale);
+            let scaled = skill_modifiers::scale(quantity, op, value / divisor, row_scale);
             let entry = merged
                 .entry((name, id, i))
                 .or_insert((scaled, source.clone(), row, state));
@@ -3875,6 +3903,7 @@ mod tests {
                 BuffStat::Rows(e)
                 | BuffStat::WhenInput { rows: e, .. }
                 | BuffStat::BloodStance(e)
+                | BuffStat::SandStance(e)
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }

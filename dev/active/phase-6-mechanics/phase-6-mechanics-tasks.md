@@ -167,6 +167,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11k: the equipped shield's energy shield and defences (`Poe1Quantity::SlotIncreased`, a piece's own modifier), the effect of your auras on you (`SkillAuraEffectOnSelf`); fixture `ice-nova-shield-defences-aura-self-witch.xml`; 34 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11k"
 - [x] P6-11l: more maximum life with at least 6 Life Masteries (`PassiveKind::life_mastery`, `states::SIX_LIFE_MASTERIES`); three corpus builds' Life equal to PoB; `docs/phase-6/stat-mop-up.md`, "P6-11l"
 - [x] P6-11m: 21 `NoEffect` rows (PoB-parsed, no slice field); global unmapped pairs 418 to 407; `docs/phase-6/stat-mop-up.md`, "P6-11m"
+- [x] P6-11x: Flesh and Stone's Sand Stance (`gems::BuffStat::SandStance`), fortification rounded with `DamageTakenWhenHit`; `docs/phase-6/stat-mop-up.md`, "P6-11x"
 - [x] P6-11w: movement speed on burning ground (`conditions::ON_BURNING_GROUND`); `docs/phase-6/stat-mop-up.md`, "P6-11w"
 - [x] P6-11v: nearby enemies (`stacks::NearbyEnemies`, Lunaris's three lines); `docs/phase-6/stat-mop-up.md`, "P6-11v"
 - [x] P6-11u: durations, projectile counts, and chains as `NoEffect` with guards; `docs/phase-6/stat-mop-up.md`, "P6-11u"
