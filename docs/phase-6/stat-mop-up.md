@@ -891,3 +891,34 @@ The two spells match PoB on every field. The two attacks match on everything exc
   - One build's attack speed: its skill is unvetted (`pob-skill-data`: PoB computes it from data the engine does not read).
   - The average damage and mana cost per second of builds already far from PoB's.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ak: life and energy shield gained on block in the effective health pool
+
+**PoB** (`CalcDefence.lua` 1525 to 1532, 2569 to 2730, 2747 to 2840):
+- **The gains:** `LifeOnBlock`, `EnergyShieldOnBlock`, and `EnergyShieldOnSpellBlock` BASE. A percent line ("Recover #% of Life when you Block", "Recover Energy Shield equal to #% of Armour when you Block") is `PercentStat`: `ceil(stat x percent / 100)` per mod.
+- **When they count:** with more than one damaging hit, the mitigated estimate gains each hit's worth times the average block chance; spell block's energy shield is halved for `Average`.
+  - Each pool is capped at its maximum after each hit.
+  - An accelerated iteration first gains `gainMult - 1` hits' worth, capped at `gainMult` times the maximum.
+- **Two rules a PoB oracle probe showed:**
+  - **The speed-up:** with gains it is limited to 4 (`LimitEHPSpeedup`, 2837).
+  - **The top-level clamp:** the mitigated run sets `MissingLifeBeforeEnemyHit` and `MissingManaBeforeEnemyHit` to 0, a true value in Lua. So at its top level life and mana go back to at most their caps before each hit, which drops most of an accelerated life gain. The recursion does not carry the fields, and energy shield is never clamped.
+  - **How the probe was made:** a copy of the oracle adapter (local, not committed) wrapped `calcs.reducePoolsByDamage` to log each call. A model with both rules gives PoB's numbers to the last digit.
+
+**The engine:**
+- **The mapping:** the five on-block stats, which were `EhpReason` markers, are rows of `Poe1Quantity::BlockGain` (flat life, percent of life, energy shield on spell block, energy shield as a percent of armour).
+- **`enemy_hit`:** sums them per effect.
+- **`ehp::hits_to_die`:** applies the gains, the limited speed-up, and the clamp.
+
+**New mechanic fixtures** (each run through PoB v2.67.2, 3 of 3 runs identical; `local/p6/fx-block-oracle/`). Each is an Ice Nova Witch with life, energy shield, armour, and 40% block against a non-boss enemy:
+- **`ehp-block-none-ice-nova-witch.xml`:** no gain (the reference).
+- **`ehp-life-on-block-ice-nova-witch.xml`:** life on block.
+- **`ehp-energy-shield-on-block-ice-nova-witch.xml`:** energy shield on block.
+
+All three match PoB on every computed field (231). "+100 Life gained when you Block" does not resolve, since the game's text has no sign, so the fixture uses "100 Life gained when you Block", which PoB reads the same.
+
+**Evidence** (`local/p6/p6-11ak/`):
+- **Public `calc-parity`:** 222 builds, 292 expected, 0 unexpected.
+  - Match went from 14,194 to 14,425: the fixtures' 231 fields.
+  - 21 values moved, all toward PoB: four builds' estimates (kinetic-fusillade-ballista, penance-brand-ignite, poisonous-concoction, shock-nova).
+- **Corpus:** 21 values moved, all toward PoB; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

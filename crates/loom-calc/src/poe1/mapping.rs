@@ -3663,6 +3663,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
+    (
+        "energy_shield_%_of_armour_rating_gained_on_block",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(
+                super::BlockGain::EnergyShieldPercentOfArmour,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b: "#% faster start of Energy Shield Recharge"
     // (`EnergyShieldRechargeFaster` INC).
     (
@@ -3959,6 +3970,15 @@ pub const ROWS: &[Row] = &[
                 1.0,
             ),
         ],
+    ),
+    // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
+    (
+        "life_gained_on_block",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(super::BlockGain::Life)),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-10b part 9: "#% of Damage Leeched as Life" (`DamageLifeLeech` BASE).
     (
@@ -4492,6 +4512,33 @@ pub const ROWS: &[Row] = &[
                 TakenWhen::ProjectileAttack,
                 TakenOf::Type(DamageType::Physical),
             )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
+    (
+        "recover_%_of_maximum_life_on_block",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(super::BlockGain::LifePercent)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
+    (
+        "recover_X_life_on_block",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(super::BlockGain::Life)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
+    (
+        "recover_x_energy_shield_on_spell_block",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(super::BlockGain::EnergyShieldSpell)),
             Op::Base,
             1.0,
         )],
@@ -5294,17 +5341,11 @@ pub const POOL_REASONS: &[&str] = &[
 
 /// Stats that change the effective health pool alone in a way the engine
 /// does not model (P6-10b part 14), sorted: each maps to
-/// [`Poe1Quantity::EhpReason`]. PoB's text: life and energy shield gained
-/// on block and spell block (`LifeOnBlock`, `EnergyShieldOnBlock`,
-/// `EnergyShieldOnSpellBlock`), lucky spell suppression; P6-11n: damage
-/// taken recouped as mana (`ManaRecoup`).
+/// [`Poe1Quantity::EhpReason`]. PoB's text: lucky spell suppression;
+/// P6-11n: damage taken recouped as mana (`ManaRecoup`). The gains on
+/// block are [`Poe1Quantity::BlockGain`] rows since P6-11ak.
 pub const EHP_REASONS: &[&str] = &[
     "damage_taken_goes_to_mana_%",
-    "energy_shield_%_of_armour_rating_gained_on_block",
-    "life_gained_on_block",
-    "recover_%_of_maximum_life_on_block",
-    "recover_X_life_on_block",
-    "recover_x_energy_shield_on_spell_block",
     "spell_suppression_chance_is_lucky",
 ];
 

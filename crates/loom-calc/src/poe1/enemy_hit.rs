@@ -59,7 +59,7 @@ use loom_domain::{ConfigInputKind, ConfigValue};
 
 use super::enemy::{self, BossKind};
 use super::phases::{self, Valued};
-use super::{Poe1Field, Poe1Quantity, TakenOf, TakenWhen};
+use super::{BlockGain, Poe1Field, Poe1Quantity, TakenOf, TakenWhen};
 use crate::condition::Flags;
 use crate::engine::Calc;
 use crate::error::CalcError;
@@ -828,7 +828,55 @@ fn maximum_hit(
         // `BlockEffect = 100 - BlockEffect BASE` (`CalcDefence.lua` 768).
         let block_effect =
             100.0 - sum(calc, Poe1Quantity::BlockEffect, Op::Base, &cx, &mut reasons)?;
+        // The gains on block (P6-11ak; `CalcDefence.lua` 1525 to 1532): a
+        // flat sum, and each percent mod `ceil(stat x percent / 100)`
+        // (PoB's `PercentStat`).
+        let armour = value(calc, Field::Armour).unwrap_or(0.0);
+        let gain = |calc: &mut Calc<'_>, g: BlockGain, of: f64, reasons: &mut Reasons| {
+            let q = Quantity::Poe1(Poe1Quantity::BlockGain(g));
+            let mut total = 0.0;
+            for e in calc.store().effects() {
+                if e.quantity != q || e.op != Op::Base {
+                    continue;
+                }
+                match e.conditions.applies(&cx) {
+                    crate::condition::Applies::Yes => {
+                        total += if of > 0.0 {
+                            crate::math::ceil(e.value * of / 100.0)
+                        } else {
+                            e.value
+                        };
+                    }
+                    crate::condition::Applies::No => {}
+                    crate::condition::Applies::Unknown(keys) => {
+                        for condition in keys {
+                            reasons
+                                .partial
+                                .insert(UnsupportedReason::UnmodelledCondition {
+                                    condition,
+                                    quantity: q,
+                                    source: e.source.clone(),
+                                });
+                        }
+                    }
+                }
+            }
+            total
+        };
+        let life_on_block = gain(calc, BlockGain::Life, 0.0, &mut reasons)
+            + gain(calc, BlockGain::LifePercent, life, &mut reasons);
+        let energy_shield_on_block = gain(
+            calc,
+            BlockGain::EnergyShieldPercentOfArmour,
+            armour,
+            &mut reasons,
+        );
+        let energy_shield_on_spell_block =
+            gain(calc, BlockGain::EnergyShieldSpell, 0.0, &mut reasons);
         let mitigation = super::ehp::Mitigation {
+            life_on_block,
+            energy_shield_on_block,
+            energy_shield_on_spell_block,
             block: field(calc, Field::BlockChance),
             spell_block: field(calc, Field::Poe1(Poe1Field::SpellBlockChance)),
             block_effect,
@@ -931,6 +979,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::GuardAbsorbLimit
                 | Poe1Quantity::GuardAbsorbPerArmour
                 | Poe1Quantity::GuardAbsorbMax
+                | Poe1Quantity::BlockGain(_)
         )
     )
 }

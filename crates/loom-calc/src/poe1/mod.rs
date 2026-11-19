@@ -287,6 +287,10 @@ pub enum Poe1Quantity {
     /// rounding it with the skill's other `Damage` MORE: a PoB oracle
     /// probe, `docs/phase-6/stat-mop-up.md`, "P6-11aj").
     RepeatAverageDamage,
+    /// What the character recovers when it blocks (PoB's `LifeOnBlock`,
+    /// `EnergyShieldOnBlock`, `EnergyShieldOnSpellBlock` BASE; P6-11ak),
+    /// read by [`enemy_hit`] for the effective health pool.
+    BlockGain(BlockGain),
     /// The hit's repeat count as [`repeats`] settled it (PoB's
     /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
     Repeats,
@@ -630,6 +634,35 @@ pub enum Pool {
     EnergyShield,
 }
 
+/// A recovery on block (P6-11ak; PoB's text, `ModParser.lua` 382 to 4717).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BlockGain {
+    /// Life, flat (`LifeOnBlock` BASE).
+    Life,
+    /// Life, a percent of maximum life (`LifeOnBlock` BASE 1 with
+    /// `PercentStat` `Life`: `ceil(Life x percent / 100)` per mod).
+    LifePercent,
+    /// Energy shield on blocking spell damage, flat
+    /// (`EnergyShieldOnSpellBlock` BASE).
+    EnergyShieldSpell,
+    /// Energy shield, a percent of armour (`EnergyShieldOnBlock` BASE 1
+    /// with `PercentStat` `Armour`).
+    EnergyShieldPercentOfArmour,
+}
+
+impl BlockGain {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Life => "life",
+            Self::LifePercent => "life-percent",
+            Self::EnergyShieldSpell => "energy-shield-spell",
+            Self::EnergyShieldPercentOfArmour => "energy-shield-percent-of-armour",
+        }
+    }
+}
+
 /// When a damage taken modifier applies (P6-10b part 10).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TakenWhen {
@@ -955,6 +988,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RepeatPerRepeatDamage => f.write_str("repeat-per-repeat-damage"),
             Self::RepeatFinalDoubleDamageChance => f.write_str("repeat-final-double-damage-chance"),
             Self::Repeats => f.write_str("repeats"),
+            Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")

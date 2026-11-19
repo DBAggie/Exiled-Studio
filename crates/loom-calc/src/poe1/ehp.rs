@@ -50,6 +50,8 @@ use crate::state::Reasons;
 
 /// PoB's `data.misc.ehpCalcSpeedUp`.
 const SPEED_UP: f64 = 8.0;
+/// PoB's limited speed-up (`LimitEHPSpeedup`, P6-11ak).
+const LIMITED_SPEED_UP: f64 = 4.0;
 /// PoB's `data.misc.ehpCalcMaxDamage`.
 const MAX_DAMAGE: f64 = 100_000_000.0;
 /// PoB's `data.misc.ehpCalcMaxIterationsToCalc`.
@@ -93,6 +95,23 @@ pub(super) struct Character {
     /// (`sharedGuardAbsorbRate`, `sharedGuardAbsorb`; P6-11ae).
     pub(super) guard_rate: f64,
     pub(super) guard: f64,
+}
+
+/// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
+/// `ManaWhenHit`, `EnergyShieldWhenHit`; P6-11ak): block's gains times the
+/// block chance.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub(super) struct Gains {
+    pub(super) life: f64,
+    pub(super) mana: f64,
+    pub(super) energy_shield: f64,
+}
+
+impl Gains {
+    /// Whether any gain is not 0 (PoB's `GainWhenHit`).
+    fn any(&self) -> bool {
+        self.life != 0.0 || self.mana != 0.0 || self.energy_shield != 0.0
+    }
 }
 
 /// One run of `numberOfHitsToDie`'s state shared with its recursive call.
@@ -188,8 +207,24 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     )
 }
 
-/// PoB's `numberOfHitsToDie` (module docs), `cycles` its acceleration.
-fn hits_to_die(damage_in: &[f64; 5], cycles: f64, run: &mut Run, ch: &Character) -> f64 {
+/// PoB's `numberOfHitsToDie` (module docs), `cycles` its acceleration,
+/// `gains` what each hit gives back (P6-11ak: before each accelerated
+/// iteration, `gainMult - 1` hits' worth; after each hit, one, each pool
+/// at most its cap). With gains PoB limits the speed-up to 4
+/// (`LimitEHPSpeedup`, `CalcDefence.lua` 2682, 2837). `clamp`: the
+/// mitigated run's top level, where PoB's `MissingLifeBeforeEnemyHit` and
+/// `MissingManaBeforeEnemyHit` are 0, a true value in Lua: before each
+/// hit, life and mana go back to at most their caps (2661 to 2666), which
+/// drops the life and mana an accelerated iteration gained above them (a
+/// PoB oracle probe matches it; the recursion does not carry the fields).
+fn hits_to_die(
+    damage_in: &[f64; 5],
+    cycles: f64,
+    run: &mut Run,
+    ch: &Character,
+    gains: Gains,
+    clamp: bool,
+) -> f64 {
     let mut num_hits: f64 = damage_in.iter().sum();
     if num_hits == 0.0 {
         return f64::INFINITY;
@@ -213,17 +248,42 @@ fn hits_to_die(damage_in: &[f64; 5], cycles: f64, run: &mut Run, ch: &Character)
             damage[i] = (d > 0.0).then_some(d * iteration_multiplier);
             damage_total += d;
         }
+        if gains.any() && (iteration_multiplier > 1.0 || cycles > 1.0) {
+            let mult = iteration_multiplier * cycles;
+            pools.life = (pools.life + gains.life * (mult - 1.0)).min(mult * ch.life);
+            pools.mana = (pools.mana + gains.mana * (mult - 1.0)).min(mult * ch.mana);
+            pools.energy_shield = (pools.energy_shield + gains.energy_shield * (mult - 1.0))
+                .min(mult * ch.energy_shield);
+        }
+        if clamp {
+            if pools.life > 0.0 {
+                pools.life = pools.life.min(ch.life);
+            }
+            if pools.mana > 0.0 {
+                pools.mana = pools.mana.min(ch.mana);
+            }
+        }
         let (next, over) = reduce(pools, &damage, ch);
         pools = next;
         overkill = over;
         if pools.life > 0.0 && damage_total >= MAX_DAMAGE {
             return f64::INFINITY;
         }
+        if gains.any() && pools.life > 0.0 {
+            pools.life = (pools.life + gains.life).min(ch.life);
+            pools.mana = (pools.mana + gains.mana).min(ch.mana);
+            pools.energy_shield = (pools.energy_shield + gains.energy_shield).min(ch.energy_shield);
+        }
         iteration_multiplier = 1.0;
         if !cycles_ran && pools.life > 0.0 && run.iterations < MAX_ITERATIONS {
-            let faster = damage_in.map(|d| d * SPEED_UP);
-            let n = hits_to_die(&faster, cycles * SPEED_UP, run, ch);
-            iteration_multiplier = ((n - 1.0) * SPEED_UP - 1.0).max(1.0);
+            let speed_up = if gains.any() {
+                LIMITED_SPEED_UP
+            } else {
+                SPEED_UP
+            };
+            let faster = damage_in.map(|d| d * speed_up);
+            let n = hits_to_die(&faster, cycles * speed_up, run, ch, gains, false);
+            iteration_multiplier = ((n - 1.0) * speed_up - 1.0).max(1.0);
             if iteration_multiplier == f64::INFINITY {
                 return f64::INFINITY;
             }
@@ -261,6 +321,12 @@ pub(super) struct Mitigation {
     pub(super) projectile_evade: f64,
     /// `AvoidProjectilesChance` (capped).
     pub(super) avoid_projectiles: f64,
+    /// Life gained on block, energy shield gained on block, and energy
+    /// shield gained on blocking spell damage (PoB's `LifeOnBlock`,
+    /// `EnergyShieldOnBlock`, `EnergyShieldOnSpellBlock`; P6-11ak).
+    pub(super) life_on_block: f64,
+    pub(super) energy_shield_on_block: f64,
+    pub(super) energy_shield_on_spell_block: f64,
     /// `EffectiveAttackDodgeChance`, `EffectiveSpellDodgeChance`, and
     /// `AvoidAllDamageFromHitsChance` (none of their stats is mapped: 0).
     pub(super) attack_dodge: f64,
@@ -281,7 +347,7 @@ pub(super) fn estimate(
     reasons: &Reasons,
 ) -> Result<(), CalcError> {
     let mut run = Run { iterations: 0 };
-    let damaging = hits_to_die(taken_hit, 1.0, &mut run, ch);
+    let damaging = hits_to_die(taken_hit, 1.0, &mut run, ch, Gains::default(), false);
     // Block, suppression, avoidance (`Average`).
     let block_chance = (m.block + m.block + m.spell_block + m.spell_block) / 4.0 / 100.0;
     let block_effect = 1.0 - block_chance * m.block_effect / 100.0;
@@ -296,13 +362,27 @@ pub(super) fn estimate(
     // projectile avoidance goes to the chance not to be hit.
     let average_avoid = 0.0;
     let damage_chance = 100.0 * (block_effect * suppression_effect * (1.0 - average_avoid / 100.0));
-    let mitigated = if damage_chance == 100.0 {
+    // The gains on block (P6-11ak; `CalcDefence.lua` 2759 to 2766): with
+    // more than one damaging hit, each times the block chance, spell
+    // block's energy shield at half (`Average`). No gain on suppression is
+    // mapped.
+    let gains = if damaging > 1.0 {
+        Gains {
+            life: m.life_on_block * block_chance,
+            mana: 0.0,
+            energy_shield: m.energy_shield_on_block * block_chance
+                + m.energy_shield_on_spell_block / 2.0 * block_chance,
+        }
+    } else {
+        Gains::default()
+    };
+    let mitigated = if damage_chance == 100.0 && !gains.any() {
         damaging
     } else {
         let damage_in = taken_hit
             .map(|d| d * (block_effect * suppression_effect * (1.0 - average_avoid / 100.0)));
         let mut run = Run { iterations: 0 };
-        hits_to_die(&damage_in, 1.0, &mut run, ch)
+        hits_to_die(&damage_in, 1.0, &mut run, ch, gains, damaging > 1.0)
     };
     // Not hit (1645 to 1667).
     let melee = 100.0
@@ -375,7 +455,14 @@ mod tests {
             guard: 0.0,
         };
         let mut run = Run { iterations: 0 };
-        let hits = hits_to_die(&[14_885.9, 0.0, 0.0, 0.0, 0.0], 1.0, &mut run, &ch);
+        let hits = hits_to_die(
+            &[14_885.9, 0.0, 0.0, 0.0, 0.0],
+            1.0,
+            &mut run,
+            &ch,
+            Gains::default(),
+            false,
+        );
         assert!((hits - 1125.0 / 14_885.9).abs() < 1e-3, "{hits}");
     }
 
