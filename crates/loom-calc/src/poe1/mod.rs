@@ -46,6 +46,7 @@ pub mod pantheon;
 pub mod pob_minion;
 pub mod reduction;
 pub mod regen;
+pub mod resist_conversion;
 #[rustfmt::skip]
 pub mod pob_minions;
 pub mod pob_skill;
@@ -269,6 +270,11 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for a skill typed
     /// `Herald`.
     HeraldManaReservationEfficiency,
+    /// The share of fire resistance modifiers that also apply to another
+    /// type, percent (PoB's `FireMaxResConvertTo<To>` when the flag is
+    /// `true`, else `FireResConvertTo<To>`, BASE; P6-11ah), read by
+    /// [`resist_conversion`].
+    ResistConvert(bool, crate::quantity::DamageType),
     /// Reservation of a pool, or of both (PoB's `<Pool>Reserved` and
     /// `Reserved`, P3-8l): `Increased`, read as
     /// [`Self::ReservationEfficiency`].
@@ -918,6 +924,12 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ReservationEfficiency(Some(pool)) => {
                 write!(f, "reservation-efficiency.{}", pool.name())
             }
+            Self::ResistConvert(max, to) => write!(
+                f,
+                "resist-convert.{}.{}",
+                if *max { "maximum" } else { "resistance" },
+                to.name()
+            ),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")
             }

@@ -812,3 +812,25 @@ All three match PoB on every computed field (231), including each type's maximum
 - **Corpus:** 13 values moved, all toward PoB; 0 unexpected.
 - **The stat:** no longer unmapped anywhere.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11ah: fire resistance modifiers applying to cold and lightning
+
+**PoB** (`calcs.resistances`, `CalcDefence.lua` 513 to 556), before it computes the resistances:
+- **Maximum:** "Modifiers to Maximum Fire Resistance also apply to Maximum Cold and Lightning Resistances" is `FireMaxResConvertTo<Cold|Lightning>` BASE 100. It adds the `FireResistMax` BASE mods not from the base to each target at that rate.
+- **Resistance:** "Modifiers to Fire Resistance also apply to Cold and Lightning Resistances at #% of their Value" is `FireResConvertTo<...>` BASE. It adds the `FireResist` BASE mods not from the base (the resistance penalty), and every `FireResist` INC and MORE mod, at that rate.
+- **Which mods count:** only mods named `FireResist`, so `ElementalResist` and `ElementalResistMax` mods do not. They are tabulated with no skill config.
+
+**The engine:**
+- **The pass:** `poe1::resist_conversion` runs after every source of resistance modifiers, buffs included. The two stats are rows of a new quantity, `Poe1Quantity::ResistConvert(maximum, to)`. The maximum stat has no placeholder, so the resolver reads it as 1, and its row scales by 100.
+- **All-elemental lines:** the engine reads an elemental line as three effects. A fire effect is therefore left out when the same source gives cold and lightning the same op, value, and conditions: an all-elemental line, Purity of Elements, the bandit's 15.
+- **Left out as PoB does:** effects that need query flags, the character's base maximum, and the penalty.
+- **A conditional rate:** an `unmodelled-skill` reason (`resistance-conversion`) on every field.
+- **Tests:** a unit test checks the conversion and these exclusions.
+
+**Evidence** (`local/p6/p6-11ah/`):
+- **Public `calc-parity`:** 215 builds, 280 expected, 0 unexpected; match unchanged at 13,894.
+  - 13 values moved, all toward PoB: rf-chieftain-life-stack's cold resistance (31 to 80, PoB 90) and lightning resistance (-9 to 80, PoB 90), and the defence fields that read them.
+  - The rest of that gap is the build's own fire maximum (80, PoB 90): a reason the build already carried.
+- **Corpus:** 37 values moved, all toward PoB; 28 now equal it. 0 unexpected.
+- **The two stats:** no longer unmapped.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

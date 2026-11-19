@@ -4167,6 +4167,42 @@ pub const ROWS: &[Row] = &[
         "mod_granted_passive_hash",
         &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],
     ),
+    // P6-11ah: "Modifiers to Fire Resistance also apply to Cold and
+    // Lightning Resistances at #% of their Value" (`FireResConvertToCold`
+    // and `FireResConvertToLightning` BASE, `ModCache.lua` 10303) and
+    // "Modifiers to Maximum Fire Resistance also apply to Maximum Cold and
+    // Lightning Resistances" (no placeholder: the resolver's 1; PoB's 100,
+    // 10305); [`super::resist_conversion`] applies them.
+    (
+        "modifiers_to_fire_resistance_also_apply_to_cold_lightning_resistance_at_%_value",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::ResistConvert(false, DamageType::Cold)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::ResistConvert(false, DamageType::Lightning)),
+                Op::Base,
+                1.0,
+            ),
+        ],
+    ),
+    (
+        "modifiers_to_maximum_fire_resistance_apply_to_maximum_cold_and_lightning_resistance",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::ResistConvert(true, DamageType::Cold)),
+                Op::Base,
+                100.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::ResistConvert(true, DamageType::Lightning)),
+                Op::Base,
+                100.0,
+            ),
+        ],
+    ),
     // P6-11ac: the eldritch implicit "#% Chance to Block Attack Damage"
     // resolves to this stat; PoB reads the line and the stat as
     // `BlockChance` BASE (`ModParser.lua`, `SkillStatMap.lua` 434).

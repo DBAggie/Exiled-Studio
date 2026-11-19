@@ -116,6 +116,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // effect and minimum (P3-8k).
     super::exposure::exposure(active_config(build), ingest);
     super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
+    // After every source of resistance modifiers, buffs included (P6-11ah).
+    super::resist_conversion::resist_conversion(ingest);
     // A mirage's copy of the main skill (P6-8b): its less damage and speed.
     if let Some(m) = input.options.mirage {
         #[expect(
