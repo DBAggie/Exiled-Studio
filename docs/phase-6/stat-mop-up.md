@@ -550,3 +550,25 @@ These 14 stats are mapped `NoEffect` in `mapping::NO_EFFECT`, each with a catego
 - **Corpus:** no value or state moved; 0 unexpected.
 - **The stats:** unmapped in 0 build-occurrences, from 59.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11v: nearby enemies
+
+**PoB:**
+- **The count** (`ConfigOptions.lua` 1223 to 1231): `Multiplier:NearbyEnemies` is the BASE sum of the config's `multiplierNearbyEnemies` and `multiplierNearbyRareOrUniqueEnemies` (a `countAllowZero`).
+- **The condition:** `Condition:OnlyOneNearbyEnemy` holds when the first count is exactly 1.
+- **The lines:** Lunaris's soul (`Data/Pantheons.lua` 69 to 102) gives three:
+  - "#% additional Physical Damage Reduction for each nearby Enemy, up to 8%", and the same for movement speed. These carry the tag `{ Multiplier NearbyEnemies, limit, limitTotal }` (`ModParser.lua` 1913), so each line's total is `min(value x count, 8)`.
+  - "#% additional Physical Damage Reduction while there is only one nearby Enemy" carries `limit = 1` and the condition (1774).
+
+**The engine:**
+- **The stack kind:** `poe1::stacks` has a new kind, `NearbyEnemies`, with three per-stack targets (physical damage reduction BASE, movement speed INC).
+- **The total limit:** 8, the stat descriptions' fixed text.
+- **The inputs:** `multiplierNearbyEnemies` becomes a `stacks` input and leaves `config::NAMED_ONLY`. `multiplierNearbyRareOrUniqueEnemies` keeps its other names.
+- **The reason tables:** the three stats leave `MOVEMENT_REASONS` and `REDUCTION_REASONS`. Movement speed per nearby enemy stays scoped to the movement fields.
+
+**Evidence** (`local/p6/p6-11v/`):
+- **Public `calc-parity`:** 212 builds, 280 expected, 0 unexpected. Match went from 13,403 to 13,533.
+- **Values:** 72 moved, all toward PoB; 35 now equal PoB.
+- **States:** 130 fields went from partial to complete.
+- **Corpus:** 13 moved, all toward PoB; 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

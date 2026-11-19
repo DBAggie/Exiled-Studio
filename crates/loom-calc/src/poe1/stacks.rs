@@ -46,6 +46,15 @@
 //!   1398), counted from the skills' types
 //!   ([`super::gems::aura_or_herald_count`]); "#% increased Damage for each
 //!   of your Aura or Herald Skills affecting you".
+//! - **Nearby enemies** (P6-11v; `ConfigOptions.lua` 1223 to 1231):
+//!   `Multiplier:NearbyEnemies` is the config's `multiplierNearbyEnemies`
+//!   plus `multiplierNearbyRareOrUniqueEnemies` (each a BASE in combat),
+//!   and `Condition:OnlyOneNearbyEnemy` holds when the first is 1. Lunaris's
+//!   "for each nearby Enemy, up to 8%" lines (`ModParser.lua` 1913: the
+//!   tag's `limitTotal`, so `min(value x count, 8)`) on physical damage
+//!   reduction and movement speed, and "while there is only one nearby
+//!   Enemy" (1774: `limit = 1` with the condition) on physical damage
+//!   reduction.
 //!
 //! A config value PoB would read otherwise than a number is a reason under
 //! its input. Other modifiers that read or change these counts (rage
@@ -79,6 +88,8 @@ pub enum StackKind {
     NonInstantSpells,
     /// Aura and herald skills affecting you (P6-11s).
     AuraOrHerald,
+    /// Nearby enemies (P6-11v).
+    NearbyEnemies,
 }
 
 impl StackKind {
@@ -92,6 +103,7 @@ impl StackKind {
             Self::Intensity => "intensity",
             Self::NonInstantSpells => "non-instant-spells",
             Self::AuraOrHerald => "aura-or-herald",
+            Self::NearbyEnemies => "nearby-enemies",
         }
     }
 }
@@ -140,6 +152,15 @@ pub enum PerStack {
     AreaDamageMore,
     /// Increased damage (`Damage` INC).
     Damage,
+    /// Physical damage reduction (`PhysicalDamageReduction` BASE), its total
+    /// at most 8 (P6-11v).
+    PhysicalReductionUpTo8,
+    /// Increased movement speed (`MovementSpeed` INC), its total at most 8
+    /// (P6-11v).
+    MovementSpeedUpTo8,
+    /// Physical damage reduction while only one enemy is nearby
+    /// (`PhysicalDamageReduction` BASE, P6-11v).
+    PhysicalReductionIfOnlyOne,
 }
 
 impl PerStack {
@@ -153,6 +174,9 @@ impl PerStack {
             Self::ElementalDamageMore => "per.elemental-damage-more",
             Self::AreaDamageMore => "per.area-damage-more",
             Self::Damage => "per.damage",
+            Self::PhysicalReductionUpTo8 => "per.physical-reduction-up-to-8",
+            Self::MovementSpeedUpTo8 => "per.movement-speed-up-to-8",
+            Self::PhysicalReductionIfOnlyOne => "per.physical-reduction-if-only-one",
         }
     }
 
@@ -174,6 +198,20 @@ impl PerStack {
             }
             Self::AreaDamageMore => (Quantity::Damage, Op::More, Flags::AREA, Flags::NONE),
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE, Flags::NONE),
+            Self::PhysicalReductionUpTo8 | Self::PhysicalReductionIfOnlyOne => (
+                Quantity::Poe1(Poe1Quantity::DamageReduction(
+                    crate::quantity::DamageType::Physical,
+                )),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::MovementSpeedUpTo8 => (
+                Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
         }
     }
 }
@@ -218,9 +256,24 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
     ),
     ("maximum_rage", StackKind::Rage, StackValue::Maximum),
     (
+        "movement_speed_+%_per_nearby_enemy",
+        StackKind::NearbyEnemies,
+        StackValue::Per(PerStack::MovementSpeedUpTo8),
+    ),
+    (
         "nearby_enemies_are_intimidated_while_you_have_rage",
         StackKind::Rage,
         StackValue::Intimidate,
+    ),
+    (
+        "physical_damage_reduction_%_if_only_one_enemy_nearby",
+        StackKind::NearbyEnemies,
+        StackValue::Per(PerStack::PhysicalReductionIfOnlyOne),
+    ),
+    (
+        "physical_damage_reduction_%_per_nearby_enemy",
+        StackKind::NearbyEnemies,
+        StackValue::Per(PerStack::PhysicalReductionUpTo8),
     ),
     (
         "support_momentum_attack_speed_+%_per_stack",
@@ -258,14 +311,20 @@ pub const MOMENTUM_INPUT: &str = "MomentumStacks";
 pub const INTENSITY_INPUT: &str = "intensifyIntensity";
 /// The config's non-instant spells input.
 pub const SPELLS_INPUT: &str = "multiplierNonInstantSpellCastRecently";
+/// The config's nearby enemies input (P6-11v).
+pub const NEARBY_INPUT: &str = "multiplierNearbyEnemies";
+/// The total limit of Lunaris's "for each nearby Enemy, up to 8%" (the
+/// stat descriptions' fixed text; P6-11v).
+pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 5] = [
+pub const INPUTS: [&str; 6] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
     INTENSITY_INPUT,
     SPELLS_INPUT,
+    NEARBY_INPUT,
 ];
 
 /// Whether `input` is one this module reads.
@@ -461,6 +520,53 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Ok(None) => {}
             Ok(Some(n)) => apply(ingest, &effects, multiplier(n), None),
         }
+    }
+
+    // Nearby enemies (P6-11v): both counts, the rare or unique one also
+    // when 0 (`countAllowZero`).
+    let effects = per(ingest, StackKind::NearbyEnemies);
+    if !effects.is_empty() {
+        let rare_input = super::conditions::NEARBY_RARE_OR_UNIQUE_INPUT;
+        match (
+            count(set, NEARBY_INPUT, false),
+            count(set, rare_input, true),
+        ) {
+            (Err(()), _) => ingest.reason(reason(NEARBY_INPUT)),
+            (_, Err(())) => ingest.reason(reason(rare_input)),
+            (Ok(nearby), Ok(rare)) => {
+                let n = multiplier(nearby.unwrap_or(0.0) + rare.unwrap_or(0.0));
+                let only_one = nearby == Some(1.0);
+                nearby_enemies(ingest, &effects, n, only_one);
+            }
+        }
+    }
+}
+
+/// The nearby enemies' effects (module docs): `count` enemies, and whether
+/// only one is nearby.
+fn nearby_enemies(ingest: &mut Ingest<'_>, effects: &[Effect], count: f64, only_one: bool) {
+    for e in effects {
+        let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity else {
+            continue;
+        };
+        let value = match p {
+            PerStack::PhysicalReductionUpTo8 | PerStack::MovementSpeedUpTo8 => {
+                (e.value * count).min(NEARBY_LIMIT_TOTAL)
+            }
+            PerStack::PhysicalReductionIfOnlyOne if only_one => e.value * count.min(1.0),
+            _ => 0.0,
+        };
+        if value == 0.0 {
+            continue;
+        }
+        let (quantity, op, all, any) = p.target();
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions: Conditions::none().with_all(all).with_any(any),
+            source: e.source.clone(),
+        });
     }
 }
 

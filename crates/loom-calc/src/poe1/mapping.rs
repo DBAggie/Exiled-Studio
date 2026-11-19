@@ -5090,17 +5090,13 @@ pub const COST_REASONS: &[&str] = &[
 /// on kill (`KilledRecently`), during a flask's effect (`UsingFlask`), on
 /// burning ground, on low life, while ignited, and with no gems in the
 /// boots, each a config condition the engine does not settle; per
-/// summoned phantasm (`PerStat`) and per nearby enemy (the config's
-/// count, limited); the armour movement penalties ignored;
+/// summoned phantasm (`PerStat`); the armour movement penalties ignored;
 /// movement speed that cannot go below its base; and Momentum's
 /// Swiftness per stack removed.
 pub const MOVEMENT_REASONS: &[&str] = &[
     "gain_movement_speed_+%_for_20_seconds_on_kill",
     "ignore_armour_movement_penalties",
     "movement_speed_+%_during_flask_effect",
-    // Lunaris's soul: `Multiplier:NearbyEnemies` with a limit, a config
-    // count the engine does not read.
-    "movement_speed_+%_per_nearby_enemy",
     "movement_speed_+%_per_summoned_phantasm",
     "movement_speed_+%_while_on_burning_ground",
     "movement_speed_cannot_be_reduced_below_base",
@@ -5142,15 +5138,12 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
 
 /// Stats that change the base damage reduction in a way the engine does not
 /// model, sorted (P6-10b part 5): PoB's `PhysicalDamageReduction` BASE per
-/// nearby enemy, per hit taken recently, and with only one enemy nearby
-/// (`ModParser.lua`; multipliers and a condition the engine does not
-/// settle). A field marker ([`field_marker`]) read by
+/// hit taken recently (`ModParser.lua`; a multiplier the engine does not
+/// settle). Per nearby enemy and with only one enemy nearby are
+/// [`super::stacks`]'s (P6-11v). A field marker ([`field_marker`]) read by
 /// [`super::reduction`] alone.
-pub const REDUCTION_REASONS: &[&str] = &[
-    "physical_damage_reduction_%_if_only_one_enemy_nearby",
-    "physical_damage_reduction_%_per_hit_you_have_taken_recently",
-    "physical_damage_reduction_%_per_nearby_enemy",
-];
+pub const REDUCTION_REASONS: &[&str] =
+    &["physical_damage_reduction_%_per_hit_you_have_taken_recently"];
 
 /// Stats that change a hit's rate or DPS in a way the engine does not model,
 /// sorted (P6-8a): PoB's `showAverage` (`SkillStatMap.lua` 136), which
@@ -5356,6 +5349,11 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::EnergyShieldRecharge
                 | Poe1Quantity::EnergyShieldRechargeFaster
                 | Poe1Quantity::MovementSpeed
+                // Movement speed per nearby enemy (P6-11v).
+                | Poe1Quantity::Stack(
+                    super::stacks::StackKind::NearbyEnemies,
+                    super::stacks::StackValue::Per(super::stacks::PerStack::MovementSpeedUpTo8),
+                )
                 | Poe1Quantity::MovementReason(_)
                 | Poe1Quantity::CostReason(_),
             ) => true,
