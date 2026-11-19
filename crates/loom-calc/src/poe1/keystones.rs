@@ -98,6 +98,33 @@ pub const GLANCING_BLOWS_BLOCK_EFFECT: f64 = 65.0;
 
 /// value is the effect's.
 pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
+    // Blood Magic (P6-11an): the tree's "Removes all mana" (`Mana` MORE
+    // -100), "10% more maximum Life" (`Life` MORE 10), "Skills Cost Life
+    // instead of Mana" (`CostLifeInsteadOfMana` FLAG), and "Skills Reserve
+    // Life instead of Mana" (`BloodMagicReserved` FLAG).
+    (
+        "keystone_blood_magic",
+        &[
+            (
+                Quantity::Mana,
+                Op::More,
+                -100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Life,
+                Op::More,
+                10.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::CostLifeInsteadOfMana),
+            flag(Poe1Quantity::ReserveLifeInsteadOfMana),
+        ],
+    ),
     (
         "keystone_cold_purist",
         &[

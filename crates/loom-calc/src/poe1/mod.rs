@@ -305,6 +305,10 @@ pub enum Poe1Quantity {
     /// PoB's estimate track recoupable damage, which limits its speed-up
     /// (`ehp`).
     PseudoRecoup,
+    /// Skills reserve life instead of mana (PoB's `BloodMagicReserved`;
+    /// P6-11an, Blood Magic): a `Flag`, read by
+    /// [`skill_modifiers::Totals`] for the other gems' reservation.
+    ReserveLifeInsteadOfMana,
     /// The hit's repeat count as [`repeats`] settled it (PoB's
     /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
     Repeats,
@@ -1006,6 +1010,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
+            Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {
                 f.write_str("herald-mana-reservation-efficiency")

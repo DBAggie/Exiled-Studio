@@ -968,3 +968,27 @@ Both match PoB on every computed field.
   - No other value moved: the public Divine Shield builds' estimate fields carry other reasons.
 - **Corpus:** 3 values moved, all toward PoB; 0 unexpected.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11an: Blood Magic
+
+**PoB** reads the keystone's lines:
+- "Removes all mana" is `Mana` MORE -100.
+- "10% more maximum Life" is `Life` MORE 10.
+- "Skills Cost Life instead of Mana" is `CostLifeInsteadOfMana`.
+- "Skills Reserve Life instead of Mana" is `BloodMagicReserved`: a skill's mana reservation goes to life (`CalcPerform.lua` 1955 to 1964).
+
+**The engine:**
+- **The keystone row:** a `keystones` row with the four effects. The cost flag is the one P6-10b part 8 reads.
+- **The reservation flag:** a new `Poe1Quantity::ReserveLifeInsteadOfMana` that `skill_modifiers::Totals` reads. `poe1::gems` then reserves life for every other skill's mana reservation, as it already did for Arrogance.
+- **Tests:** `tests/keystones_chill.rs` carries the keystone's text. `tests/skill_modifiers.rs` accepts the flag among the stats that name reservation.
+
+**New mechanic fixture:** `blood-magic-ice-nova-witch.xml`, Ice Nova with Anger and the line "Blood Magic", run through PoB v2.67.2 (3 of 3 runs identical). It matches PoB on every compared field: life 1,238, mana 0, unreserved life 619, the life cost 23.
+
+**Evidence** (`local/p6/p6-11an/`):
+- **Public `calc-parity`:** 227 builds, 292 expected, 0 unexpected; match 14,733 to 14,810.
+- **Moved values:** 41 moved, 36 toward PoB, 9 now equal.
+  - The 5 away are lacerate-bleed-gladiator's life and the fields that read it (3,865 to 4,252, PoB 3,834).
+  - PoB's breakdown has the same ×1.10 more: 1,734 base × 2.01 increased × 1.10.
+  - The build's life base was already over PoB's by 189 (1,923, PoB 1,734, its strength bonus included), which the missing more had hidden. The build is `Partial`.
+- **Corpus:** 21 values moved, all toward PoB; 5 now equal it. 0 unexpected.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.

@@ -148,6 +148,15 @@ fn real_reservation_and_aura_stats_should_be_covered() {
                         )
                     )
                 }) => {}
+            // Blood Magic (P6-11an): its "Skills Reserve Life instead of
+            // Mana" is the flag `skill_modifiers::Totals` reads.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().any(|t| {
+                    t.quantity
+                        == loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::ReserveLifeInsteadOfMana,
+                        )
+                }) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

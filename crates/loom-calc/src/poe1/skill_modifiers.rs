@@ -160,6 +160,9 @@ pub struct Totals {
     pub mana_efficiency: f64,
     /// `ManaReservationEfficiency` INC of herald skills (P6-11ag).
     pub herald_mana_efficiency: f64,
+    /// Skills reserve life instead of mana (`BloodMagicReserved`, an
+    /// unconditional flag; P6-11an).
+    pub reserve_life: bool,
     /// `Reserved` INC (no pool).
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
@@ -211,6 +214,14 @@ impl Totals {
             let Quantity::Poe1(q) = e.quantity else {
                 continue;
             };
+            if q == Poe1Quantity::ReserveLifeInsteadOfMana {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.reserve_life = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
             let sum = match q {
                 Poe1Quantity::ReservationEfficiency(None) => &mut t.efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Life)) => &mut t.life_efficiency,

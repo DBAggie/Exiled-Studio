@@ -3959,10 +3959,10 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
         return;
     };
     let mult = support_multiplier(&s.supports);
-    let life_instead = s
-        .supports
-        .iter()
-        .any(|sup| LIFE_RESERVATION_SUPPORTS.contains(&sup.effect.id.as_str()));
+    let life_instead = totals.reserve_life
+        || s.supports
+            .iter()
+            .any(|sup| LIFE_RESERVATION_SUPPORTS.contains(&sup.effect.id.as_str()));
     // A support's own mana reservation share replaces the skill's (P6-11r:
     // Blasphemy's; PoB sets `skillData.manaReservationPercent` from each
     // support's level row, `CalcActiveSkill.lua` 516 and 517, the last
