@@ -2522,6 +2522,24 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 12: "Armour also applies to Chaos Damage taken from Hits" (`ArmourAppliesToChaosDamageTaken` BASE).
+    (
+        "base_armour_applies_to_chaos_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArmourAppliesTo(DamageType::Chaos)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "Armour also applies to Lightning Damage taken from Hits" (`ArmourAppliesToLightningDamageTaken` BASE).
+    (
+        "base_armour_applies_to_lightning_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArmourAppliesTo(DamageType::Lightning)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 9: "Cannot Leech Life" (`CannotLeechLife` FLAG).
     (
         "base_cannot_leech_life",
@@ -2622,6 +2640,19 @@ pub const ROWS: &[Row] = &[
     ),
     ("base_evasion_rating", &[(Quantity::Evasion, Op::Base, 1.0)]),
     ("base_fire_damage_resistance_%", &[(FIRE, Op::Base, 1.0)]),
+    // P6-10b part 12: "#% of Fire Damage from Hits taken as Physical Damage" (`FireDamageFromHitsTakenAsPhysical` BASE).
+    (
+        "base_fire_hit_damage_taken_%_as_physical",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Fire),
+                DamageType::Physical,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     ("base_intelligence", &[(INT, Op::Base, 1.0)]),
     // P6-10b part 8: "#% increased Life Cost of Skills" (`LifeCost` INC).
     (
@@ -2753,6 +2784,17 @@ pub const ROWS: &[Row] = &[
             1.0 / 60.0,
         )],
     ),
+    // P6-10b part 12: "+# to maximum Fortification" (`MaximumFortification`
+    // BASE): while Fortified, the stacks the enemy's hit reads
+    // (`poe1::enemy_hit`); modifiers per fortification stay unmapped.
+    (
+        "base_max_fortification",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MaximumFortification),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "base_maximum_all_resistances_%",
         &[
@@ -2822,6 +2864,15 @@ pub const ROWS: &[Row] = &[
             (LIGHTNING, Op::Base, 1.0),
         ],
     ),
+    // P6-10b part 12: "You take #% reduced Extra Damage from Critical Strikes" (`ReduceCritExtraDamage` BASE).
+    (
+        "base_self_critical_strike_multiplier_-%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritExtraDamageReduction),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // "Onslaught" (PoB `ModParser.lua` 3973: `Condition:Onslaught`): a flag
     // `poe1::buffs` turns into Onslaught's speed once (P3-12j).
     (
@@ -2854,6 +2905,15 @@ pub const ROWS: &[Row] = &[
         &[(Quantity::Poe1(Poe1Quantity::HybridLifeCost), Op::Base, 1.0)],
     ),
     ("base_spell_block_%", &[(SPELL_BLOCK, Op::Base, 1.0)]),
+    // P6-10b part 12: "Prevent +#% of Suppressed Spell Damage" (`SpellSuppressionEffect` BASE).
+    (
+        "base_spell_damage_%_suppressed",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellSuppressionEffect),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "base_spell_suppression_chance_%",
         &[(SUPPRESSION, Op::Base, 1.0)],
@@ -2875,6 +2935,18 @@ pub const ROWS: &[Row] = &[
         "chance_to_block_attack_damage_per_5%_chance_to_block_on_equipped_shield_+%",
         &[(
             Quantity::Poe1(Poe1Quantity::BlockPer5(false)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "+# Chaos Damage taken" (`ChaosDamageTaken` BASE).
+    (
+        "chaos_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::Type(DamageType::Chaos),
+            )),
             Op::Base,
             1.0,
         )],
@@ -2903,6 +2975,32 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 12: "#% of Chaos Damage taken as Fire Damage" (`ChaosDamageTakenAsFire` BASE).
+    (
+        "chaos_hit_and_dot_damage_%_taken_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Chaos),
+                DamageType::Fire,
+                false,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Chaos Damage taken as Lightning Damage" (`ChaosDamageTakenAsLightning` BASE).
+    (
+        "chaos_hit_and_dot_damage_%_taken_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Chaos),
+                DamageType::Lightning,
+                false,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "cold_and_chaos_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
@@ -2910,6 +3008,44 @@ pub const ROWS: &[Row] = &[
     (
         "cold_and_lightning_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
+    ),
+    // P6-10b part 12: "#% of Cold Damage from Hits taken as Fire Damage" (`ColdDamageFromHitsTakenAsFire` BASE).
+    (
+        "cold_damage_taken_%_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Cold),
+                DamageType::Fire,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Cold Damage from Hits taken as Lightning Damage" (`ColdDamageFromHitsTakenAsLightning` BASE).
+    (
+        "cold_damage_taken_%_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Cold),
+                DamageType::Lightning,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "+# Cold Damage taken from Hits" (`ColdDamageTakenWhenHit` BASE).
+    (
+        "cold_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Hit,
+                TakenOf::Type(DamageType::Cold),
+            )),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-10b part 10: "#% increased Cold Damage taken" (`ColdDamageTaken` INC).
     (
@@ -2920,6 +3056,32 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Type(DamageType::Cold),
             )),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Cold Damage taken as Fire Damage" (`ColdDamageTakenAsFire` BASE).
+    (
+        "cold_hit_and_dot_damage_%_taken_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Cold),
+                DamageType::Fire,
+                false,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Cold Damage taken as Lightning Damage" (`ColdDamageTakenAsLightning` BASE).
+    (
+        "cold_hit_and_dot_damage_%_taken_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Cold),
+                DamageType::Lightning,
+                false,
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -2969,6 +3131,19 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
+    // P6-10b part 12: "#% of Elemental Damage from Hits taken as Chaos Damage" (`ElementalDamageFromHitsTakenAsChaos` BASE).
+    (
+        "elemental_damage_taken_%_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Elemental,
+                DamageType::Chaos,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 10: "#% increased Elemental Damage taken" (`ElementalDamageTaken` INC).
     (
         "elemental_damage_taken_+%",
@@ -2978,6 +3153,19 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Elemental,
             )),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Elemental Damage from Hits taken as Physical Damage" (`ElementalDamageFromHitsTakenAsPhysical` BASE).
+    (
+        "elemental_hit_damage_taken_%_as_physical",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Elemental,
+                DamageType::Physical,
+                true,
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -3075,6 +3263,44 @@ pub const ROWS: &[Row] = &[
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
+    // P6-10b part 12: "#% of Fire Damage from Hits taken as Cold Damage" (`FireDamageFromHitsTakenAsCold` BASE).
+    (
+        "fire_damage_taken_%_as_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Fire),
+                DamageType::Cold,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Fire Damage from Hits taken as Lightning Damage" (`FireDamageFromHitsTakenAsLightning` BASE).
+    (
+        "fire_damage_taken_%_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Fire),
+                DamageType::Lightning,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "+# Fire Damage taken from Hits" (`FireDamageTakenWhenHit` BASE).
+    (
+        "fire_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Hit,
+                TakenOf::Type(DamageType::Fire),
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 10: "#% increased Fire Damage taken" (`FireDamageTaken` INC).
     (
         "fire_damage_taken_+%",
@@ -3084,6 +3310,19 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Type(DamageType::Fire),
             )),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Fire Damage taken as Lightning Damage" (`FireDamageTakenAsLightning` BASE).
+    (
+        "fire_hit_and_dot_damage_%_taken_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Fire),
+                DamageType::Lightning,
+                false,
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -3297,6 +3536,32 @@ pub const ROWS: &[Row] = &[
         "lightning_and_chaos_damage_resistance_%",
         &[(LIGHTNING, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
     ),
+    // P6-10b part 12: "#% of Lightning Damage from Hits taken as Cold Damage" (`LightningDamageFromHitsTakenAsCold` BASE).
+    (
+        "lightning_damage_taken_%_as_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Lightning),
+                DamageType::Cold,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Lightning Damage from Hits taken as Fire Damage" (`LightningDamageFromHitsTakenAsFire` BASE).
+    (
+        "lightning_damage_taken_%_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Lightning),
+                DamageType::Fire,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 10: "#% increased Lightning Damage taken" (`LightningDamageTaken` INC).
     (
         "lightning_damage_taken_+%",
@@ -3306,6 +3571,19 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Type(DamageType::Lightning),
             )),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Lightning Damage taken as Fire Damage" (`LightningDamageTakenAsFire` BASE).
+    (
+        "lightning_hit_and_dot_damage_%_taken_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Lightning),
+                DamageType::Fire,
+                false,
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -3495,9 +3773,85 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10b part 12: "+# Physical Damage taken from Attack Hits" (`PhysicalDamageTakenFromAttacks` BASE).
+    (
+        "physical_attack_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Attack,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "physical_damage_reduction_rating_+%",
         &[(Quantity::Armour, Op::Increased, 1.0)],
+    ),
+    // P6-10b part 12: "#% of Physical Damage from Hits taken as Chaos Damage" (`PhysicalDamageFromHitsTakenAsChaos` BASE).
+    (
+        "physical_damage_taken_%_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Physical),
+                DamageType::Chaos,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Physical Damage from Hits taken as Cold Damage" (`PhysicalDamageFromHitsTakenAsCold` BASE).
+    (
+        "physical_damage_taken_%_as_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Physical),
+                DamageType::Cold,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Physical Damage from Hits taken as Fire Damage" (`PhysicalDamageFromHitsTakenAsFire` BASE).
+    (
+        "physical_damage_taken_%_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Physical),
+                DamageType::Fire,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Physical Damage from Hits taken as Lightning Damage" (`PhysicalDamageFromHitsTakenAsLightning` BASE).
+    (
+        "physical_damage_taken_%_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Physical),
+                DamageType::Lightning,
+                true,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "+# Physical Damage taken from Hits" (`PhysicalDamageTakenWhenHit` BASE).
+    (
+        "physical_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Hit,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-10b part 10: "#% increased Physical Damage taken" (`PhysicalDamageTaken` INC).
     (
@@ -3508,6 +3862,31 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Type(DamageType::Physical),
             )),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "#% of Physical Damage taken as Fire Damage" (`PhysicalDamageTakenAsFire` BASE).
+    (
+        "physical_hit_and_dot_damage_%_taken_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageTakenAs(
+                TakenOf::Type(DamageType::Physical),
+                DamageType::Fire,
+                false,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-10b part 12: "+# Physical Damage taken from Projectile Attacks" (`PhysicalDamageTakenFromProjectileAttacks` BASE).
+    (
+        "physical_ranged_attack_damage_taken_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::ProjectileAttack,
+                TakenOf::Type(DamageType::Physical),
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -3659,12 +4038,9 @@ pub struct Poe1Mapping;
 /// [`super::gem_levels`] (P3-8i), minion modifiers but those of
 /// [`super::minions`] (P3-8j, with the redirects to the player), and staff
 /// or shield
-/// conditioned block and damage. P3-8n adds fortification's maximum (the
-/// modifiers per fortification are its guards in
-/// [`NO_EFFECT_DEPENDS_ON`]) and `base_self_critical_strike_multiplier_-%`
-/// (the tree's line is the crits you take; PoB's skill stat map reads a
-/// curse gem's copy as the enemy's `SelfCritMultiplier`, and no curse gem
-/// is modelled, so none is ingested). A stat that makes one of these rows matter is
+/// conditioned block and damage. (P3-8n's fortification maximum and
+/// `base_self_critical_strike_multiplier_-%` left this table in P6-10b
+/// part 12: the enemy's hit reads both.) A stat that makes one of these rows matter is
 /// itself unmapped, so the fields stay `Partial` while it is in the
 /// build: rage regenerated per life or mana regenerated (PoB
 /// `ModParser.lua` `RageRegen` per `LifeRegen`, then rage's damage),
@@ -3759,11 +4135,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_life_gain_per_target", "recovery"),
     // P6-11g: "Gain # Life per Enemy Killed" (`LifeOnKill` BASE).
     ("base_life_gained_on_enemy_death", "recovery"),
-    // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
-    // counts fortification only while Fortified (`buffFortification`, a named
-    // condition), and then only damage taken when hit and modifiers per
-    // fortification read the count ([`NO_EFFECT_DEPENDS_ON`]).
-    ("base_max_fortification", "fortification"),
     // P6-11m: minion duration (`Duration` INC for minion skills): no slice
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
@@ -3782,7 +4153,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // own copy is read by PoB's skill stat map as the enemy's
     // `SelfCritMultiplier`; no curse gem is modelled (`poe1::gems`), so it is
     // never ingested.
-    ("base_self_critical_strike_multiplier_-%", "crit-on-self"),
     // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
     // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
     ("base_skill_area_of_effect_+%", "area"),
@@ -4034,8 +4404,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "physical_damage_over_time_taken_+%_while_moving",
         "damage-taken",
     ),
-    ("physical_damage_taken_%_as_fire", "damage-taken"),
-    ("physical_damage_taken_%_as_lightning", "damage-taken"),
     // P6-11m: reflected physical damage (unparsed).
     ("physical_damage_to_return_to_melee_attacker", "reflect"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
@@ -4163,23 +4531,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     // P3-8n: damage from a mana cost (PoB `PercentStat` of `ManaCost`).
-    // P3-8n: modifiers per fortification (`FortificationStacks`).
-    (
-        "armour_evasion_rating_+%_final_per_fortification_above_20",
-        "base_max_fortification",
-    ),
-    (
-        "attack_damage_+%_while_you_have_at_least_20_fortification",
-        "base_max_fortification",
-    ),
-    (
-        "attack_speed_+%_per_fortification",
-        "base_max_fortification",
-    ),
-    (
-        "attack_speed_+%_per_fortification_above_20",
-        "base_max_fortification",
-    ),
     // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
     (
         "damage_+%_per_active_golem",
@@ -4200,10 +4551,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
-    ),
-    (
-        "spell_suppression_chance_%_per_fortification",
-        "base_max_fortification",
     ),
 ];
 

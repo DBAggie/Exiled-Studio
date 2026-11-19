@@ -631,6 +631,9 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
         Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
+        // P6-10b parts 11 and 12: a curse's on the enemy.
+        Quantity::Poe1(Poe1Quantity::EnemyAccuracy) => "Accuracy".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),
         // P6-10b part 9: leech.
         Quantity::Poe1(Poe1Quantity::DamageLeech(p, source)) => {
             let pool = match p {
@@ -755,7 +758,9 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             rows,
             format!(" tags global {}", json!({ "modCond": condition })),
         ),
-        BuffStat::NoSlice(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => return Vec::new(),
+        BuffStat::NoSlice(_) | BuffStat::Defence(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => {
+            return Vec::new();
+        }
     };
     // A field's reason marker (P6-10b: warcry power): PoB's mod is not
     // modelled, so there is nothing to compare.
@@ -973,7 +978,7 @@ fn check_one(
                 .flat_map(|s| s.mods.iter())
         };
         match b {
-            BuffStat::NoSlice(_) => {
+            BuffStat::NoSlice(_) | BuffStat::Defence(_) => {
                 // Only the global mods form the buff; a skill's other mods
                 // act on itself (close-out: base mods share the stat "").
                 let bad: Vec<String> = mods()

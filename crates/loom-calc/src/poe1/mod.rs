@@ -24,6 +24,7 @@ pub mod costs;
 pub mod damage_taken;
 pub mod dot;
 pub mod enemy;
+pub mod enemy_hit;
 pub mod evade;
 pub mod exposure;
 pub mod flasks;
@@ -383,6 +384,32 @@ pub enum Poe1Quantity {
     /// The character cannot evade (PoB's `CannotEvade`; P6-10b part 11): a
     /// `Flag` [`evade`] reads.
     CannotEvade,
+    /// A stat that changes the enemy's hit in a way the engine does not
+    /// model (P6-10b part 12; a gem's [`gems::BuffStat::Defence`]): a
+    /// `Flag` only [`enemy_hit`] reads, as its fields' reason.
+    EnemyHitReason(&'static str),
+    /// The enemy's crit chance against the character (PoB's
+    /// `EnemyCritChance` INC; P6-10b part 12).
+    EnemyCritChance,
+    /// Less extra damage taken from crits (PoB's `ReduceCritExtraDamage`
+    /// BASE; P6-10b part 12).
+    CritExtraDamageReduction,
+    /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
+    /// `Increased` (delirium's) and `More`.
+    EnemyDamage,
+    /// A share of a type's damage taken as another (PoB's
+    /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and
+    /// their `FromHits` forms when the flag is set; P6-10b part 12): `Base`.
+    DamageTakenAs(TakenOf, DamageType, bool),
+    /// The percent of armour that applies to a type's damage taken (PoB's
+    /// `ArmourAppliesTo<Type>DamageTaken`; P6-10b part 12): `Base`.
+    ArmourAppliesTo(DamageType),
+    /// The suppressed spell damage prevented (PoB's `SpellSuppressionEffect`
+    /// BASE; P6-10b part 12).
+    SpellSuppressionEffect,
+    /// The maximum fortification (PoB's `MaximumFortification` BASE; P6-10b
+    /// part 12), read by [`enemy_hit`] while Fortified.
+    MaximumFortification,
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -516,6 +543,17 @@ pub enum TakenWhen {
     Hit,
     /// Over time (PoB's `DamageTakenOverTime`).
     OverTime,
+    /// From attacks (PoB's `AttackDamageTaken` INC and MORE,
+    /// `DamageTakenFromAttacks` BASE; P6-10b part 12).
+    Attack,
+    /// From projectile attacks (PoB's `<Type>DamageTakenFromProjectileAttacks`
+    /// BASE).
+    ProjectileAttack,
+    /// From spells (PoB's `SpellDamageTaken` INC and MORE,
+    /// `DamageTakenFromSpells` BASE).
+    Spell,
+    /// From spell projectiles (PoB's `DamageTakenFromSpellProjectiles` BASE).
+    SpellProjectile,
 }
 
 impl TakenWhen {
@@ -526,6 +564,10 @@ impl TakenWhen {
             Self::Always => "always",
             Self::Hit => "hit",
             Self::OverTime => "over-time",
+            Self::Attack => "attack",
+            Self::ProjectileAttack => "projectile-attack",
+            Self::Spell => "spell",
+            Self::SpellProjectile => "spell-projectile",
         }
     }
 }
@@ -751,6 +793,20 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
             Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
             Self::CannotEvade => f.write_str("cannot-evade"),
+            Self::EnemyHitReason(stat) => write!(f, "enemy-hit-reason.{stat}"),
+            Self::EnemyCritChance => f.write_str("enemy-crit-chance"),
+            Self::CritExtraDamageReduction => f.write_str("crit-extra-damage-reduction"),
+            Self::EnemyDamage => f.write_str("enemy-damage"),
+            Self::DamageTakenAs(from, to, hits) => write!(
+                f,
+                "damage-taken-as.{}.{}{}",
+                from.name(),
+                to.name(),
+                if *hits { ".hits" } else { "" }
+            ),
+            Self::ArmourAppliesTo(t) => write!(f, "armour-applies-to.{}", t.name()),
+            Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
+            Self::MaximumFortification => f.write_str("maximum-fortification"),
             Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
@@ -1054,6 +1110,12 @@ pub enum Poe1Field {
     /// The chance to evade projectile attacks (PoB's
     /// `ProjectileEvadeChance`).
     ProjectileEvadeChance,
+    /// The multiplier of the enemy's hit of a type, after every mitigation
+    /// (PoB's final `<Type>TakenHitMult`; P6-10b part 12).
+    TakenHitMult(DamageType),
+    /// The damage reduction against the enemy's hit of a type, armour
+    /// included (PoB's `<Type>DamageReduction`; P6-10b part 12).
+    DamageReduction(DamageType),
 }
 
 impl Poe1Field {
@@ -1090,6 +1152,20 @@ impl Poe1Field {
             Self::LifePerSecondCost => "life-per-second-cost",
             Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
             Self::EvadeChance => "evade-chance",
+            Self::TakenHitMult(t) => match t {
+                DamageType::Physical => "physical-taken-hit-mult",
+                DamageType::Fire => "fire-taken-hit-mult",
+                DamageType::Cold => "cold-taken-hit-mult",
+                DamageType::Lightning => "lightning-taken-hit-mult",
+                DamageType::Chaos => "chaos-taken-hit-mult",
+            },
+            Self::DamageReduction(t) => match t {
+                DamageType::Physical => "physical-damage-reduction",
+                DamageType::Fire => "fire-damage-reduction",
+                DamageType::Cold => "cold-damage-reduction",
+                DamageType::Lightning => "lightning-damage-reduction",
+                DamageType::Chaos => "chaos-damage-reduction",
+            },
             Self::MeleeEvadeChance => "melee-evade-chance",
             Self::ProjectileEvadeChance => "projectile-evade-chance",
             Self::TakenDotMult(t) => match t {
@@ -1289,6 +1365,7 @@ mod tests {
                 "unreserved",
                 "damage-reduction",
                 "damage-taken",
+                "enemy-hit",
                 "regeneration",
                 "leech",
                 "movement",

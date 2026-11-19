@@ -786,7 +786,22 @@ pub fn damage_taken(
         None => {}
         Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => {}
         Some(ConfigValue::String(s)) => match DELIRIUM.iter().find(|(v, _)| v == s) {
-            Some(&(_, more)) => ingest.effect(taken(Op::More, more, DELIRIUM_INPUT)),
+            Some(&(_, more)) => {
+                ingest.effect(taken(Op::More, more, DELIRIUM_INPUT));
+                // Its increased damage of the enemy (`Damage` INC 6, 12,
+                // 18, 24, 30: 6/16 of the less damage taken,
+                // `ConfigOptions.lua` 2222 to 2243), which only the enemy's
+                // hit reads (P6-10b part 12).
+                ingest.effect(Effect {
+                    quantity: Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                    op: Op::Increased,
+                    value: -more * 6.0 / 16.0,
+                    conditions: Conditions::none(),
+                    source: Source::Config {
+                        input: DELIRIUM_INPUT.to_owned(),
+                    },
+                });
+            }
             None => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: DELIRIUM_INPUT.to_owned(),
             }),
@@ -824,9 +839,6 @@ mod tests {
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
         "cannot_be_shocked_while_at_maximum_power_charges",
-        // Damage taken by you, as another type: not the enemy's.
-        "physical_damage_taken_%_as_fire",
-        "physical_damage_taken_%_as_lightning",
         // The pantheon's souls (P3-12g): damage taken by you, its
         // reduction, and shock on you, not the enemy's.
         "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
@@ -870,6 +882,34 @@ mod tests {
             "lightning_damage_taken_+%",
             "marauder_hidden_ascendancy_damage_taken_+%_final",
             "physical_damage_taken_+%",
+            // P6-10b part 12: the character's damage taken as another
+            // type and flat damage taken (`poe1::enemy_hit`).
+            "base_fire_hit_damage_taken_%_as_physical",
+            "chaos_damage_taken_+",
+            "chaos_hit_and_dot_damage_%_taken_as_fire",
+            "chaos_hit_and_dot_damage_%_taken_as_lightning",
+            "cold_damage_taken_%_as_fire",
+            "cold_damage_taken_%_as_lightning",
+            "cold_damage_taken_+",
+            "cold_hit_and_dot_damage_%_taken_as_fire",
+            "cold_hit_and_dot_damage_%_taken_as_lightning",
+            "elemental_damage_taken_%_as_chaos",
+            "elemental_hit_damage_taken_%_as_physical",
+            "fire_damage_taken_%_as_cold",
+            "fire_damage_taken_%_as_lightning",
+            "fire_damage_taken_+",
+            "fire_hit_and_dot_damage_%_taken_as_lightning",
+            "lightning_damage_taken_%_as_cold",
+            "lightning_damage_taken_%_as_fire",
+            "lightning_hit_and_dot_damage_%_taken_as_fire",
+            "physical_attack_damage_taken_+",
+            "physical_damage_taken_%_as_chaos",
+            "physical_damage_taken_%_as_cold",
+            "physical_damage_taken_%_as_fire",
+            "physical_damage_taken_%_as_lightning",
+            "physical_damage_taken_+",
+            "physical_hit_and_dot_damage_%_taken_as_fire",
+            "physical_ranged_attack_damage_taken_+",
         ];
         for id in ids {
             assert!(

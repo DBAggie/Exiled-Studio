@@ -440,3 +440,51 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
   - No other field's value or state moved.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,764 tests and clippy pass.
+
+## Part 12: the enemy's hit
+
+**What PoB does** (`calcs.buildDefenceEstimations`, `CalcDefence.lua` 1635 to 2105), for the config's default damage category, `Average`:
+- **The enemy's crit:**
+  - The chance is the config's `enemyCritChance` or its placeholder (5), times `(1 + EnemyCritChance INC / 100 + the enemy's CritChance INC / 100)`, times `(1 - ConfiguredEvadeChance / 100)`, held between 0 and 100.
+  - `ConfiguredEvadeChance` for `Average` is `(MeleeEvadeChance + ProjectileEvadeChance) / 4`, PoB's own sum over four.
+  - The effect is `1 + chance / 100 x damage / 100 x (1 - CritExtraDamageReduction / 100)`. `damage` is the config's `enemyCritDamage`, or the monster constant `base_critical_strike_multiplier` - 100, plus the enemy's `CritMultiplier` BASE.
+- **The enemy's damage of each type:** the config's `enemy<Type>Damage`, or the placeholder `enemyIsBoss` sets.
+  - The placeholder is `round(monster damage x 1.5 x mult)` at the boss kind's level, physical alone for a non-boss.
+  - `mult` is 1 for a non-boss, 4/4.4 for a boss, 8/4.4 for a Pinnacle boss (84), and 10/4.25 for an Uber boss (85).
+  - Chaos is the rounded value over 2.5, or over 4 for the Uber boss.
+  - It is multiplied by the enemy's damage modifier and the crit effect.
+- **The enemy's penetration:** the config's `enemy<Type>Pen` or the placeholder: 3 for a Pinnacle boss's elements, 8 for an Uber boss's.
+- **Taken as:** each type's shares moved to another type (hits and over time), the rest `max(100 - moved, 0)`.
+- **The hit,** for each type:
+  - `resMult = 1 - (resist - pen) / 100`.
+  - The armour's reduction is `calcs.armourReduction(armour x applies / 100, damage x resMult)`; physical's `applies` is 100 (`CalcDefence.lua` 1497). It is held to the maximum, added to the base reduction, and held to the maximum again.
+  - `reductMult = 1 - max(min(max, total - overwhelm), 0) / 100`, and `<Type>DamageReduction = 100 - reductMult x 100`.
+  - `takenMult` is the mean of the type's spell and attack multipliers from hits. Fortification's `DamageTakenWhenHit` MORE `-stacks` applies while Fortified (`CalcPerform.lua` 632 to 653).
+  - `TakenHit = max(damage x (resMult x reductMult) + flat, 0) x takenMult x suppression`, and `<Type>TakenHitMult = TakenHit / damage` (0 without damage).
+  - `suppression` is `1 - effect / 100 / 2` at a 100% suppression chance, else 1.
+
+**The engine** (`poe1::enemy_hit`, phase `enemy-hit`; slice revision 20):
+- **The fields:** `<type>-taken-hit-mult` and `<type>-damage-reduction`, present with armour and the evade chances.
+- **The monster damage table:** `CalcData::monster_damage` is the bundle's `monster_levels` damage (f32, as PoB's table).
+- **The quantities:** `EnemyCritChance`, `CritExtraDamageReduction`, `EnemyDamage`, `DamageTakenAs(from, to, hits)`, `ArmourAppliesTo`, `SpellSuppressionEffect`, `MaximumFortification`, and `SelfDamageTaken`'s attack, projectile attack, spell, and spell projectile forms.
+- **The rows:** 31 from PoB's parse, three of them former `NoEffect` rows:
+  - "You take #% reduced Extra Damage from Critical Strikes";
+  - physical damage taken as fire;
+  - physical damage taken as lightning.
+- **Fortification:** `base_max_fortification` is now a row, so its `NO_EFFECT_DEPENDS_ON` guards are gone; the per-fortification lines stay unmapped.
+- **Delirium** adds its increased enemy damage (6 to 30).
+- **Enfeeble:**
+  - Its accuracy line is the enemy's `EnemyAccuracy` INC, which also moves the evade chance.
+  - Its two damage lines are `BuffStat::Defence` markers: PoB conditions them on the enemy being rare or unique or not.
+- **`BuffStat::Defence`:** a gem stat that reaches only the enemy's hit, a marker those fields read as an `unmapped-stat` reason. As `NoSlice` elsewhere, and in `gem_effects`. Arctic Armour, Flesh and Stone, the Stone Golem, and Storm Barrier use it too.
+- **Not modelled:** another damage category, an unlucky estimate, a boss skill preset, the enemy's impale, armour based on ward, ignored resistances or reductions, and the enemy's modifiers the engine does not carry. The config inputs are `unmodelled-config`; the stats are reasons.
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected; `Complete` fields 11,516.
+  - Each of the ten fields equals PoB's in 169 builds; `smite-charges-templar.xml` has 10 fortification stacks.
+  - OccVortex's evade chance moved toward PoB's with Enfeeble's accuracy (2 to 8; PoB 13, the build `indeterminate`).
+  - No other field moved.
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,765 tests and clippy pass.

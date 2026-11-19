@@ -143,8 +143,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   and `FortificationStacks` OVERRIDE in combat (lines 1039, 1042).
 ///   `CalcSetup.lua` (94) turns the condition into the `Fortified` flag;
 ///   `CalcPerform.lua` (659 to 680) then sets the stacks (the override or
-///   the maximum), `DamageTakenWhenHit` MORE per stack (damage taken, not a
-///   slice field), the `HaveMaximumFortification` flag, and one more
+///   the maximum), `DamageTakenWhenHit` MORE per stack (since P6-10b part
+///   12 the enemy's hit, [`super::enemy_hit`], reads the check and the
+///   override itself), the `HaveMaximumFortification` flag, and one more
 ///   `BuffOnSelf`; 3889 exports the stacks to a party (not a slice
 ///   field). Every other reader is a modifier (per fortification, while
 ///   fortified, at maximum fortification, per buff on you).
@@ -805,20 +806,19 @@ mod tests {
             .chain(ROWS.iter().map(|r| r.0))
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        // P6-10b part 12: the maximum, which the enemy's hit reads while
+        // Fortified (`poe1::enemy_hit`, reading the check itself).
         for id in ids {
-            assert!(!id.contains("fortif"), "{id}: revisit NAMED_ONLY");
+            assert!(
+                !id.contains("fortif") || id == "base_max_fortification",
+                "{id}: revisit NAMED_ONLY"
+            );
         }
         // `NoEffect` rows naming fortification, each checked: a chance to
         // fortify, its duration; none reaches a slice field. Regeneration
         // per stack is a `mapping::REGEN_REASONS` entry (P6-10b): the life
         // regeneration field's reason, never a value.
-        let checked = [
-            // The maximum (P3-8n): its readers per fortification are
-            // `mapping::NO_EFFECT_DEPENDS_ON` guards.
-            "base_max_fortification",
-            "chance_to_fortify_on_melee_hit_+%",
-            "fortify_duration_+%",
-        ];
+        let checked = ["chance_to_fortify_on_melee_hit_+%", "fortify_duration_+%"];
         for (id, _) in crate::poe1::mapping::NO_EFFECT {
             assert!(
                 !id.contains("fortif") || checked.contains(id),

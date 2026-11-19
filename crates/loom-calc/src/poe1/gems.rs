@@ -222,6 +222,12 @@ pub enum BuffStat {
     Rows(&'static [HitEffect]),
     /// Reaches no slice field: a category, as `NO_EFFECT`'s.
     NoSlice(&'static str),
+    /// Reaches only the enemy's hit on the character (P6-10b part 12), in a
+    /// way the engine does not model: a marker
+    /// ([`Poe1Quantity::EnemyHitReason`]) those fields read as an
+    /// `unmapped-stat` reason when the stat is not 0. As `NoSlice` for
+    /// everything else.
+    Defence(&'static str),
     /// Reaches a slice field in a way the engine does not model: an
     /// `unmodelled-skill` reason with this name when the stat is not 0
     /// (P6-10b: Enduring Cry's regeneration per warcry power).
@@ -371,11 +377,11 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ("base_immune_to_freeze", BuffStat::NoSlice("freeze")),
                 (
                     "new_arctic_armour_fire_damage_taken_when_hit_+%_final",
-                    BuffStat::NoSlice("damage-taken"),
+                    BuffStat::Defence("damage-taken"),
                 ),
                 (
                     "new_arctic_armour_physical_damage_taken_when_hit_+%_final",
-                    BuffStat::NoSlice("damage-taken"),
+                    BuffStat::Defence("damage-taken"),
                 ),
             ],
         },
@@ -694,15 +700,27 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Curse {
             name: "Enfeeble",
             stats: &[
-                // The enemy's accuracy and damage: no slice field.
-                ("accuracy_rating_+%", BuffStat::NoSlice("enemy-offence")),
+                // P6-10b parts 11 and 12: the enemy's accuracy (the
+                // evade chance); its damage, which PoB conditions on the
+                // enemy being rare or unique or not, a marker for the
+                // enemy's hit.
+                (
+                    "accuracy_rating_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyAccuracy),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
                 (
                     "enfeeble_damage_+%_final",
-                    BuffStat::NoSlice("enemy-offence"),
+                    BuffStat::Defence("enemy-offence"),
                 ),
                 (
                     "enfeeble_damage_+%_vs_rare_or_unique_final",
-                    BuffStat::NoSlice("enemy-offence"),
+                    BuffStat::Defence("enemy-offence"),
                 ),
             ],
         },
@@ -802,7 +820,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "flesh_stone_sand_stance_damage_taken_+%_final_from_distance_from_enemy_hits",
-                    BuffStat::NoSlice("damage-taken"),
+                    BuffStat::Defence("damage-taken"),
                 ),
             ],
         },
@@ -1725,7 +1743,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ("", GOLEM_CONDITION),
                 (
                     "stone_golem_grants_melee_damage_removed_from_stone_golem_before_life_or_es_%",
-                    BuffStat::NoSlice("damage-taken"),
+                    BuffStat::Defence("damage-taken"),
                 ),
             ],
         },
@@ -2041,7 +2059,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
         "SupportInfusedChannelling",
         &[(
             "support_storm_barrier_damage_taken_when_hit_+%_final_while_channelling",
-            BuffStat::NoSlice("damage-taken"),
+            BuffStat::Defence("damage-taken"),
         )],
     ),
     ("SupportInspiration", &[]),
@@ -3306,6 +3324,18 @@ fn add_rows(
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
             BuffStat::NoSlice(_) | BuffStat::Gated(_) => continue,
+            BuffStat::Defence(_) => {
+                if *value != 0 {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(Poe1Quantity::EnemyHitReason(id)),
+                        op: Op::Flag,
+                        value: 1.0,
+                        conditions: Conditions::none(),
+                        source: source.clone(),
+                    });
+                }
+                continue;
+            }
             BuffStat::Reason(what) => {
                 if *value != 0 {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
@@ -3689,7 +3719,10 @@ mod tests {
                 | BuffStat::WhenState { rows: e, .. }
                 | BuffStat::MinionOnly(e)
                 | BuffStat::ConfigIs { rows: e, .. } => e,
-                BuffStat::NoSlice(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => &[],
+                BuffStat::NoSlice(_)
+                | BuffStat::Defence(_)
+                | BuffStat::Gated(_)
+                | BuffStat::Reason(_) => &[],
             };
             for e in effects {
                 assert!(!early.contains(&e.0), "{stat}");
@@ -3712,6 +3745,9 @@ mod tests {
                         | Poe1Quantity::EnemyAilmentDuration
                         | Poe1Quantity::EnemyProjectileDamageTaken
                         | Poe1Quantity::EnemyPhysicalDamageReduction
+                        // P6-10b parts 11 and 12: its accuracy and damage.
+                        | Poe1Quantity::EnemyAccuracy
+                        | Poe1Quantity::EnemyDamage
                 )
             )
         };
@@ -3760,7 +3796,7 @@ mod tests {
             if let Kind::Warcry { stats, .. } = k {
                 assert!(
                     stats.iter().all(|(_, b)| match b {
-                        BuffStat::NoSlice(_) | BuffStat::Reason(_) => true,
+                        BuffStat::NoSlice(_) | BuffStat::Defence(_) | BuffStat::Reason(_) => true,
                         BuffStat::Rows(rows) => marker(rows),
                         _ => false,
                     }),

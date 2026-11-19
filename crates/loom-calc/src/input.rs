@@ -125,6 +125,14 @@ pub trait CalcData {
         None
     }
 
+    /// The game's monster damage at a level (`DefaultMonsterStats`, PoB's
+    /// `monsterDamageTable`; P6-10b part 12): `None` (the default) when the
+    /// data has none.
+    fn monster_damage(&self, level: i64) -> Option<f64> {
+        let _ = level;
+        None
+    }
+
     /// The mods by an implicit tag (P3-8n): the stat sets of the mods that
     /// carry `tag`, and every stat of a mod that does not. `None` (the
     /// default) when the data carries no implicit tags (a bundle before
@@ -438,6 +446,15 @@ impl CalcData for Bundle {
             evasion: row.evasion,
             accuracy: row.accuracy,
         })
+    }
+
+    fn monster_damage(&self, level: i64) -> Option<f64> {
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(f64::from(row.damage))
     }
 
     fn mod_stats(&self, id: &str) -> Option<Vec<(String, i64)>> {
