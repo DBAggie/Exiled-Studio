@@ -1398,3 +1398,15 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 - **Corpus:** unchanged.
 
 **Recorded, not done:** damage with hits against chilled enemies (the enemy's `Chilled` condition is no engine state).
+
+## P6-11be: reflect, a minion recovery on death, explode, hexproof
+
+**`NoEffect`, each checked against PoB's parse:**
+- reflected lightning damage (unparsed);
+- "Minions Recover #% of Life on Minion Death" (unparsed);
+- the cursed enemies' explosion (PoB's `ExplodeMod`, read only by its own `EnemyExplode` skill, which no modelled build includes);
+- "Your Hexes can affect Hexproof Enemies" (no input or modelled modifier makes the enemy hexproof).
+
+**Left as reasons:** Crush on full-life enemies and aggravated bleeding. PoB parses neither, but in the game they act on the enemy's physical damage reduction and the bleed.
+
+**Evidence:** public and corpus 0 unexpected, no value moved (those builds have other reasons).

@@ -131,6 +131,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11bb: charge stats of several kinds (`charges::MULTI`); fixture `ice-nova-total-charges-lines-witch.xml`; public 80 toward, 41 now equal (`docs/phase-6/stat-mop-up.md`, "P6-11bb")
 - [x] P6-11bc: rage on attack hit, minion area, avoid shock for all ailments; public 11 toward (`docs/phase-6/stat-mop-up.md`, "P6-11bc")
 - [x] P6-11bd: bleeding's DoT multiplier; stun and minion aggression `NoEffect`; public 4 toward (`docs/phase-6/stat-mop-up.md`, "P6-11bd")
+- [x] P6-11be: reflect, minion recovery on death, explode, hexproof `NoEffect` (`docs/phase-6/stat-mop-up.md`, "P6-11be")
 - [ ] Damage against chilled enemies (the enemy's `Chilled` as a state)
 - [ ] The socketed gems' cost and reservation multiplier (per item, as P6-11q's socketed gem levels); damage while leeching (the `Leeching` condition from four checks and PoB's automatic case)
 - [ ] Stats read per a computed value ("#% increased Spell Damage per 100 Maximum Mana, up to 60%", 4 public builds): PoB's `PerStat` on a pool; the engine has no mid-calculation effect with the pool's node as its provenance (design needed: a phase term in the hit as `phases::per_5` does for block)

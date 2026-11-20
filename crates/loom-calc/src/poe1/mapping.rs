@@ -5970,6 +5970,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
+    // P6-11be: "Cursed Enemies you or your Minions Kill have a #% chance
+    // to Explode" (PoB's `ExplodeMod`): read only by PoB's own explosion
+    // skill (`EnemyExplode`), which reaches a field only as the main skill or
+    // in full DPS, and which no modelled build includes (tasks file).
+    (
+        "explode_cursed_enemies_for_25%_life_as_chaos_on_kill_chance_%",
+        "explode",
+    ),
     // P6-11n: "#% increased Life Recovered" by flasks (`FlaskLifeRecovery`
     // INC): no field.
     ("flask_life_to_recover_+%", "flask"),
@@ -6018,6 +6026,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "has_avoid_shock_as_avoid_all_elemental_ailments",
         "ailment-on-self",
     ),
+    // P6-11be: "Your Hexes can affect Hexproof Enemies"
+    // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
+    // hexproof, so curses already apply.
+    ("ignore_hexproof", "curse"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
     // P3-8n: the stats that add damage from a mana cost stay unmapped
@@ -6074,17 +6086,33 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_gained_on_attack_hit_if_used_mana_flask_in_past_10_seconds",
         "recovery",
     ),
+    // P6-11be: "Reflects # to # Lightning Damage to Melee Attackers" (PoB
+    // parses none of it): damage dealt back, no slice field.
+    (
+        "maximum_lightning_damage_to_return_to_melee_attacker",
+        "reflect",
+    ),
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
     ("mine_duration_+%", "skill-duration"),
+    (
+        "minimum_lightning_damage_to_return_to_melee_attacker",
+        "reflect",
+    ),
     ("minion_attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("minion_attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
     // P6-11bd: "Minions are Aggressive": PoB parses none of it, and no
     // slice field reads a minion's aggression.
     ("minion_larger_aggro_radius", "minion-behaviour"),
+    // P6-11be: "Minions Recover #% of Life on Minion Death" (PoB parses
+    // none of it): a recovery on an event, no slice field.
+    (
+        "minion_recover_%_maximum_life_on_minion_death",
+        "recovery-event",
+    ),
     // P6-11bc: "Minions have #% increased Area of Effect" (the minion's
     // `AreaOfEffect` INC): area, as `base_skill_area_of_effect_+%` (the
     // minion's radius outputs are no slice field either).
