@@ -2005,6 +2005,14 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         (Quantity::EnergyShield, Op::Increased, 1.0, NONE, NONE),
                         (Quantity::Armour, Op::Increased, 1.0, NONE, NONE),
                         (Quantity::Evasion, Op::Increased, 1.0, NONE, NONE),
+                        // P6-11ek: Iron Reflexes counts it once.
+                        (
+                            Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                            Op::Increased,
+                            1.0,
+                            NONE,
+                            NONE,
+                        ),
                     ]),
                 ),
             ],

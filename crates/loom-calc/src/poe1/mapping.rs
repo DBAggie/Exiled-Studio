@@ -3862,6 +3862,12 @@ pub const STATE_ROWS: &[StateRow] = &[
         &[
             (Quantity::Armour, Op::Increased, NONE, conditions::LEECHING),
             (Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING),
+            (
+                Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                Op::Increased,
+                NONE,
+                conditions::LEECHING,
+            ),
         ],
     ),
     // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
@@ -4234,6 +4240,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
             (Quantity::Armour, Op::Increased, NONE, states::USING_STAFF),
             (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
+            (
+                Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                Op::Increased,
+                NONE,
+                states::USING_STAFF,
+            ),
         ],
     ),
     // P6-11a: "+#% Chance to Block Attack Damage while Dual Wielding or
@@ -5956,6 +5968,12 @@ pub const ROWS: &[Row] = &[
         &[
             (Quantity::Armour, Op::Increased, 1.0),
             (Quantity::Evasion, Op::Increased, 1.0),
+            // P6-11ek: Iron Reflexes counts it once.
+            (
+                Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                Op::Increased,
+                1.0,
+            ),
         ],
     ),
     (
@@ -6070,6 +6088,12 @@ pub const ROWS: &[Row] = &[
             (Quantity::EnergyShield, Op::Increased, 1.0),
             (Quantity::Armour, Op::Increased, 1.0),
             (Quantity::Evasion, Op::Increased, 1.0),
+            // P6-11ek: Iron Reflexes counts it once.
+            (
+                Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                Op::Increased,
+                1.0,
+            ),
         ],
     ),
     // P6-10b: "#% more Mana Cost of Skills" (`ManaCost` MORE).
@@ -8936,6 +8960,32 @@ mod tests {
                 "{stat}"
             );
         }
+        // A row that increases both armour and evasion also carries the
+        // shared marker, which Iron Reflexes' modifier subtracts once; no
+        // row has a more of both (P6-11ek, `phases::iron_reflexes_modifier`).
+        let shared = Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared);
+        let check = |stat: &str, effects: &[(Quantity, Op)]| {
+            let has = |q: Quantity, op: Op| effects.contains(&(q, op));
+            if has(Quantity::Armour, Op::Increased) && has(Quantity::Evasion, Op::Increased) {
+                assert!(has(shared, Op::Increased), "{stat}");
+            }
+            assert!(
+                !(has(Quantity::Armour, Op::More) && has(Quantity::Evasion, Op::More)),
+                "{stat}"
+            );
+        };
+        for (stat, rows) in ROWS {
+            let effects: Vec<_> = rows.iter().map(|r| (r.0, r.1)).collect();
+            check(stat, &effects);
+        }
+        for (stat, rows) in STATE_ROWS {
+            let effects: Vec<_> = rows.iter().map(|r| (r.0, r.1)).collect();
+            check(stat, &effects);
+        }
+        for (stat, rows) in HIT_ROWS {
+            let effects: Vec<_> = rows.iter().map(|r| (r.0, r.1)).collect();
+            check(stat, &effects);
+        }
         // A field marker is read before every table (P6-11ei: a state row
         // under a marker would never apply).
         for (stat, _) in STATE_ROWS {
@@ -9329,7 +9379,15 @@ mod tests {
         );
         assert_eq!(
             effects("evasion_and_physical_damage_reduction_rating_+%"),
-            [(armour, Op::Increased, 1.0), (evasion, Op::Increased, 1.0)]
+            [
+                (armour, Op::Increased, 1.0),
+                (evasion, Op::Increased, 1.0),
+                (
+                    Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                    Op::Increased,
+                    1.0
+                )
+            ]
         );
     }
 
@@ -9516,7 +9574,12 @@ mod tests {
             [
                 (Quantity::EnergyShield, Op::Increased, 1.0),
                 (Quantity::Armour, Op::Increased, 1.0),
-                (Quantity::Evasion, Op::Increased, 1.0)
+                (Quantity::Evasion, Op::Increased, 1.0),
+                (
+                    Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                    Op::Increased,
+                    1.0
+                )
             ]
         );
     }
@@ -9930,6 +9993,11 @@ mod tests {
                     staff(Quantity::EnergyShield, Op::Increased, NONE),
                     staff(Quantity::Armour, Op::Increased, NONE),
                     staff(Quantity::Evasion, Op::Increased, NONE),
+                    staff(
+                        Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                        Op::Increased,
+                        NONE,
+                    ),
                 ],
             ),
             (
@@ -10293,6 +10361,12 @@ mod tests {
                 vec![
                     (Quantity::Armour, Op::Increased, NONE, conditions::LEECHING),
                     (Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING),
+                    (
+                        Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+                        Op::Increased,
+                        NONE,
+                        conditions::LEECHING,
+                    ),
                 ],
             ),
             (

@@ -402,7 +402,16 @@ fn chaos_inoculation(
     calc: &mut Calc<'_>,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
-    let q = Quantity::Poe1(Poe1Quantity::ChaosInoculation);
+    flag_of(calc, Poe1Quantity::ChaosInoculation, reasons)
+}
+
+/// A character flag when it is on (P6-11ek): its node, value 1.
+fn flag_of(
+    calc: &mut Calc<'_>,
+    flag: Poe1Quantity,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(flag);
     if !has(calc, q) {
         return Ok(None);
     }
@@ -1277,13 +1286,21 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             Term::Step("energy-shield-increases"),
         )?),
     };
-    let dex_bonus = bonus(
-        calc,
-        Field::Dexterity,
-        0.2,
-        "fifth",
-        "evasion-from-dexterity",
-    )?;
+    // Iron Reflexes' "Dexterity provides no bonus to Evasion Rating"
+    // (`NoDexBonusToEvasion`, `CalcPerform.lua` 509; P6-11ek).
+    let mut no_dex_reasons = Reasons::new();
+    let dex_bonus =
+        if flag_of(calc, Poe1Quantity::NoDexBonusToEvasion, &mut no_dex_reasons)?.is_some() {
+            None
+        } else {
+            bonus(
+                calc,
+                Field::Dexterity,
+                0.2,
+                "fifth",
+                "evasion-from-dexterity",
+            )?
+        };
     // Life gained as energy shield (P6-11dd): one more row of energy
     // shield, which reads life's base and so strength.
     let mut life_reasons = Reasons::new();
@@ -1445,6 +1462,17 @@ pub(super) fn primary_defence(
     life_row: Option<Valued>,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
+    // Iron Reflexes (P6-11ek): evasion's rows go to armour.
+    let iron_reflexes = if matches!(defence, Defence::Armour | Defence::Evasion) {
+        flag_of(calc, Poe1Quantity::IronReflexes, &mut reasons)?
+    } else {
+        None
+    };
+    if let (Defence::Evasion, Some(flag)) = (defence, iron_reflexes) {
+        let zero = constant(calc, "iron-reflexes-evasion", 0.0)?;
+        let value = product(calc, &[flag, zero], Term::Result)?;
+        return Ok((value, reasons));
+    }
     let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
     let mut rows = Vec::new();
     for slot in ArmourSlot::ALL {
@@ -1512,11 +1540,140 @@ pub(super) fn primary_defence(
     if base.value > 0.0 {
         rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
     }
+    if let Some(flag) = iron_reflexes {
+        iron_reflexes_rows(calc, flag, &mut rows, &mut reasons)?;
+    }
     rows.extend(life_row);
     let sum = total(calc, &rows, Term::Step("slots"))?;
     let rounded = round(calc, sum, Term::Step("rounded"))?;
     let value = at_least(calc, rounded, "minimum", 0.0)?;
     Ok((value, reasons))
+}
+
+/// Iron Reflexes' armour rows (P6-11ek; `CalcDefence.lua` 919 to 923 and
+/// 980 to 984): each piece's evasion, then the global evasion base, times
+/// [`iron_reflexes_modifier`], after armour's own rows as in PoB.
+fn iron_reflexes_rows(
+    calc: &mut Calc<'_>,
+    flag: Valued,
+    rows: &mut Vec<Valued>,
+    reasons: &mut Reasons,
+) -> Result<(), CalcError> {
+    let shared = iron_reflexes_modifier(calc, None, reasons)?;
+    for slot in ArmourSlot::ALL {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) {
+            continue;
+        }
+        let base = piece(calc, slot, Defence::Evasion, reasons)?;
+        if base.value > 0.0 {
+            let own = [Defence::Armour, Defence::Evasion]
+                .iter()
+                .any(|d| has(calc, Quantity::Poe1(Poe1Quantity::SlotIncreased(slot, *d))));
+            let modifier = if own {
+                iron_reflexes_modifier(calc, Some(slot), reasons)?
+            } else {
+                shared
+            };
+            rows.push(product(
+                calc,
+                &[base, modifier, flag],
+                Term::Step("slot.conversion.evasion-to-armour"),
+            )?);
+        }
+    }
+    let flat = sum(
+        calc,
+        Quantity::Evasion,
+        Op::Base,
+        Term::Step("evasion-base-effects"),
+        reasons,
+    )?;
+    if flat.value > 0.0 {
+        rows.push(product(
+            calc,
+            &[flat, shared, flag],
+            Term::Step("slot.conversion.evasion-to-armour"),
+        )?);
+    }
+    Ok(())
+}
+
+/// Iron Reflexes' modifier (P6-11ek): PoB's `calcLib.mod(modDB, slotCfg,
+/// "Armour", "Evasion", "ArmourAndEvasion", "Defences")`. The engine maps
+/// each shared increase to both `Armour` and `Evasion`, and to
+/// [`Poe1Quantity::ArmourAndEvasionShared`], so the increase is armour's
+/// plus evasion's less the shared, each counted once; with `slot`, that
+/// piece's own increases of both. The more product is armour's times
+/// evasion's (no row has a more of both; the mapping's tests check it).
+fn iron_reflexes_modifier(
+    calc: &mut Calc<'_>,
+    slot: Option<ArmourSlot>,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let mut terms = vec![
+        sum(
+            calc,
+            Quantity::Armour,
+            Op::Increased,
+            Term::Step("armour-increased-effects"),
+            reasons,
+        )?,
+        sum(
+            calc,
+            Quantity::Evasion,
+            Op::Increased,
+            Term::Step("evasion-increased-effects"),
+            reasons,
+        )?,
+    ];
+    if let Some(slot) = slot {
+        for d in [Defence::Armour, Defence::Evasion] {
+            let own = Quantity::Poe1(Poe1Quantity::SlotIncreased(slot, d));
+            if has(calc, own) {
+                terms.push(sum(
+                    calc,
+                    own,
+                    Op::Increased,
+                    Term::Step("slot-increased"),
+                    reasons,
+                )?);
+            }
+        }
+    }
+    let both = total(calc, &terms, Term::Step("increased-both"))?;
+    let shared = sum(
+        calc,
+        Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
+        Op::Increased,
+        Term::Step("shared-increased-effects"),
+        reasons,
+    )?;
+    let inc = binary(calc, Binary::Difference, both, shared, "increased-sum")?;
+    let inc = factor(calc, inc, Term::Increased)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let armour_more = store.more_rounded(graph, Quantity::Armour, &cx)?;
+    let evasion_more = store.more_rounded(graph, Quantity::Evasion, &cx)?;
+    reasons.extend(&armour_more.reasons);
+    reasons.extend(&evasion_more.reasons);
+    product(
+        calc,
+        &[
+            inc,
+            Valued {
+                node: armour_more.node,
+                value: armour_more.value,
+            },
+            Valued {
+                node: evasion_more.node,
+                value: evasion_more.value,
+            },
+        ],
+        Term::Step("modifier"),
+    )
 }
 
 /// Whether the helmet, gloves, and boots are each equipped with armour and

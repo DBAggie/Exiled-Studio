@@ -2724,3 +2724,23 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
+## P6-11ek: Iron Reflexes
+
+**PoB:**
+- The tree's "Converts all Evasion Rating to Armour. Dexterity provides no bonus to Evasion Rating" is `IronReflexes` and `NoDexBonusToEvasion` FLAG (`ModParser.lua` 2230).
+- With `IronReflexes`, each armour piece's evasion and the global evasion base go to armour, times `calcLib.mod(modDB, slotCfg, "Armour", "Evasion", "ArmourAndEvasion", "Defences")` (`CalcDefence.lua` 919 to 923, 980 to 984). Evasion keeps nothing from them.
+- With `NoDexBonusToEvasion`, Dexterity adds no evasion increase (`CalcPerform.lua` 509).
+
+**The engine:**
+- **Keystone:** `keystone_iron_reflexes` in `poe1::keystones`, two new flags (`Poe1Quantity::IronReflexes`, `NoDexBonusToEvasion`).
+- **Defences** (`phases::primary_defence`): with the flag, evasion is 0 (the flag's node times 0). Armour gains a row per piece's evasion and one for the global evasion base, after its own rows as in PoB (`iron_reflexes_rows`). Dexterity's evasion bonus is skipped with the second flag.
+- **The modifier counts each increase once.** The engine maps PoB's `ArmourAndEvasion` and `Defences` increases to both `Armour` and `Evasion`, so adding the two would count them twice. Each such row now also adds to a marker, `Poe1Quantity::ArmourAndEvasionShared`, and the modifier is armour's increase plus evasion's less the marker's. The rows: "#% increased Evasion Rating and Armour", "#% increased Global Defences", armour and evasion while leeching, defences while wielding a staff, and the Stone Golem's buff. The more product is armour's times evasion's.
+- **Guard:** a mapping test checks that every row of `ROWS`, `STATE_ROWS`, and `HIT_ROWS` that increases both armour and evasion carries the marker, and that no row has a more of both. The gem tables' rows are checked by reading (the Stone Golem's is the only one).
+- A piece's own increases (PoB's `SlotName` tag) of armour and of evasion are both in that piece's modifier.
+- The keystone's text is checked against the real bundle (`tests/keystones_chill.rs`).
+
+**Evidence** (`b-ct`, against P6-11ej's run): a Lacerate Gladiator with the keystone.
+- **Public:** 0 unexpected. 8 values moved, all toward PoB, one now equal. Evasion 8,571 to 0 (PoB 0); armour 5,080 to 20,393 (PoB 37,055); physical damage reduction 32 to 66 (PoB 80); the physical hit multiplier and the defence estimates follow. The armour still differs because of the build's other unresolved lines (Supreme Prodigy's and the tinctures' keystones among them).
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+

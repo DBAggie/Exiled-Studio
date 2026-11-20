@@ -279,6 +279,16 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     // (`MinLightningDamage` MORE -50), and "Cannot deal non-Lightning
     // Damage" (`DealNoPhysical`, `DealNoCold`, `DealNoFire`, `DealNoChaos`;
     // `ModCache.lua` 5945, 8049).
+    // Iron Reflexes (P6-11ek): the tree's "Converts all Evasion Rating to
+    // Armour. Dexterity provides no bonus to Evasion Rating" (`IronReflexes`
+    // and `NoDexBonusToEvasion` FLAG; `ModParser.lua` 2230).
+    (
+        "keystone_iron_reflexes",
+        &[
+            flag(Poe1Quantity::IronReflexes),
+            flag(Poe1Quantity::NoDexBonusToEvasion),
+        ],
+    ),
     (
         "keystone_lightning_purist",
         &[

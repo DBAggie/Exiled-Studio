@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 16] = [
+const TEXTS: [(&str, &str); 17] = [
     // P6-11ap: Eldritch Battery.
     (
         "keystone_eldritch_battery",
@@ -60,6 +60,11 @@ const TEXTS: [(&str, &str); 16] = [
     (
         "keystone_elemental_overload",
         "Skills that have dealt a Critical Strike in the past 8 seconds deal 40% more Elemental Damage with Hits and Ailments\\nYour Critical Strikes do not deal extra Damage\\nAilments never count as being from Critical Strikes",
+    ),
+    // P6-11ek: Iron Reflexes.
+    (
+        "keystone_iron_reflexes",
+        "Converts all Evasion Rating to Armour. Dexterity provides no bonus to Evasion Rating",
     ),
     // P6-11ej: Chaos Inoculation.
     (

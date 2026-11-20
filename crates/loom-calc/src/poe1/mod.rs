@@ -401,6 +401,18 @@ pub enum Poe1Quantity {
     /// read by [`phases`]: life is 1 (`CalcPerform.lua` 81), and life
     /// gained as energy shield adds 1 (`CalcDefence.lua` 1027).
     ChaosInoculation,
+    /// Iron Reflexes (PoB's `IronReflexes`; P6-11ek): a `Flag`, read by
+    /// [`phases`]: every evasion row goes to armour (`CalcDefence.lua` 919,
+    /// 980).
+    IronReflexes,
+    /// Dexterity grants no evasion (PoB's `NoDexBonusToEvasion`; P6-11ek):
+    /// a `Flag`, read by [`phases`] (`CalcPerform.lua` 509).
+    NoDexBonusToEvasion,
+    /// The increases that are both armour's and evasion's (PoB's
+    /// `ArmourAndEvasion` and `Defences` INC; P6-11ek): each such row also
+    /// adds to `Armour` and `Evasion`, and to this marker, which only Iron
+    /// Reflexes' modifier reads to count them once.
+    ArmourAndEvasionShared,
     /// A skill can wither (PoB's `Condition:CanWither`; P6-11aq): a `Flag`
     /// from the character's stats, which every active skill then has;
     /// read by [`damage_taken`] for the enemy's withered stacks.
@@ -1239,6 +1251,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),
+            Self::IronReflexes => f.write_str("iron-reflexes"),
+            Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
+            Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),
             Self::CanWither => f.write_str("can-wither"),
             Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
             Self::WitherEffect => f.write_str("wither-effect"),
