@@ -2228,6 +2228,30 @@ pub const HIT_ROWS: &[HitRow] = &[
         "melee_weapon_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::MELEE, NONE)],
     ),
+    // P6-11ee: "#% increased Critical Strike Chance with Mines" (`CritChance`
+    // INC with `KeywordFlag.Mine`).
+    (
+        "mine_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_MINE,
+            NONE,
+        )],
+    ),
+    // P6-11ee: "+#% to Critical Strike Multiplier with Mines"
+    // (`CritMultiplier` BASE with `KeywordFlag.Mine`).
+    (
+        "mine_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_MINE,
+            NONE,
+        )],
+    ),
     // P6-11bk: "#% increased Mine Damage" (`Damage` INC, `KeywordFlag.Mine`).
     (
         "mine_damage_+%",
@@ -2238,6 +2262,34 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::KEYWORD_MINE,
             NONE,
         )],
+    ),
+    // P6-11ee: "Mine Damage Penetrates #% Elemental Resistances"
+    // (`ElementalPenetration` BASE with `KeywordFlag.Mine`).
+    (
+        "mine_damage_penetrates_%_elemental_resistance",
+        &[
+            (
+                Quantity::Penetration(FIRE_T),
+                Op::Base,
+                1.0,
+                Flags::KEYWORD_MINE,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(COLD_T),
+                Op::Base,
+                1.0,
+                Flags::KEYWORD_MINE,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                Flags::KEYWORD_MINE,
+                NONE,
+            ),
+        ],
     ),
     // P6-11cy: "#% increased Mine Throwing Speed" (`MineLayingSpeed` INC).
     (
@@ -4288,6 +4340,28 @@ pub const STATE_ROWS: &[StateRow] = &[
                 conditions::ENEMY_CURSED,
             ),
         ],
+    ),
+    // P6-11ee: "#% increased Movement Speed if you've dealt a Critical Strike
+    // Recently" (`MovementSpeed` INC, `CritRecently`).
+    (
+        "movement_speed_+%_if_crit_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::CRIT_RECENTLY,
+        )],
+    ),
+    // P6-11ee: "#% increased Movement Speed while holding a Shield"
+    // (`MovementSpeed` INC, `UsingShield`).
+    (
+        "movement_speed_+%_while_holding_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            states::USING_SHIELD,
+        )],
     ),
     // P6-11w: "#% increased Movement Speed while on Burning Ground"
     // (`MovementSpeed` INC, `OnBurningGround`, the config's check).
@@ -6410,6 +6484,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ee: "#% increased maximum Life, Mana and Global Energy Shield"
+    // (`Life`, `Mana`, `EnergyShield` INC).
+    (
+        "maximum_life_mana_and_energy_shield_+%",
+        &[
+            (Quantity::Life, Op::Increased, 1.0),
+            (Quantity::Mana, Op::Increased, 1.0),
+            (Quantity::EnergyShield, Op::Increased, 1.0),
+        ],
+    ),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
     // P6-10b part 7: "#% increased Maximum Recovery per Mana Leech"
     // (`MaxManaLeechInstance` INC; PoB's skill map reads the life and
@@ -7352,6 +7436,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
     ("lightning_arrow_radius_+%", "area"),
+    // P6-11ee: lines no slice field reads: an item's attribute requirements,
+    // flask automation and on-use effects, maim's effect, a mercenary's
+    // unique slots, a corpse's life, minions' taunt and defensive stance.
+    ("local_attribute_requirements_+%", "no-slice"),
     // P6-11dj: "Can be Anointed": an item property PoB reads only to offer the
     // anoint; the anoint's passive is the item's own line (P3-8n).
     ("local_can_be_anointed", "display"),
@@ -7384,6 +7472,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_flask_recovery_speed_+%", "flask"),
     // P6-11m: a flask's taunt on use (unparsed).
     ("local_flask_taunt_enemies_on_use_radius", "flask"),
+    ("local_flask_use_causes_area_knockback", "no-slice"),
+    ("local_flask_use_causes_monster_flee_chance_%", "no-slice"),
+    ("local_flask_use_on_adjacent_flask_use", "no-slice"),
+    ("local_flask_use_on_flask_effect_ended", "no-slice"),
+    (
+        "local_flask_use_on_hitting_rare_unique_enemy_while_inactive",
+        "no-slice",
+    ),
     // P6-11br: gem experience (PoB does not parse it).
     ("local_gem_experience_gain_+%", "gem-experience"),
     // Its effect on the sockets' order is `poe1::sockets`' (a reason).
@@ -7419,6 +7515,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "charge-gain",
     ),
     ("magic_utility_flasks_cannot_be_removed", "flask"),
+    ("maim_effect_+%", "no-slice"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks" (`ManaOnHit` BASE).
     ("mana_gain_per_target", "recovery"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks if you've used a Mana Flask in the past 10 seconds" (`ManaOnHit` BASE).
@@ -7426,6 +7523,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_gained_on_attack_hit_if_used_mana_flask_in_past_10_seconds",
         "recovery",
     ),
+    ("maximum_life_+%_for_corpses_you_create", "no-slice"),
     // P6-11be: "Reflects # to # Lightning Damage to Melee Attackers" (PoB
     // parses none of it): damage dealt back, no slice field.
     (
@@ -7437,6 +7535,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
+    ("mercenary_can_use_unique_amulet", "no-slice"),
+    ("mercenary_can_use_unique_belt", "no-slice"),
+    ("mercenary_can_use_unique_gloves", "no-slice"),
+    ("mercenary_can_use_unique_helmet", "no-slice"),
     ("mine_duration_+%", "skill-duration"),
     // P6-11cy: the trap and mine supports' player-versus-player scaling.
     ("mine_override_pvp_scaling_time_ms", "pvp"),
@@ -7446,6 +7548,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("minion_attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("minion_attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
+    ("minion_chance_to_taunt_on_hit_%", "no-slice"),
     // P6-11bd: "Minions are Aggressive": PoB parses none of it, and no
     // slice field reads a minion's aggression.
     ("minion_larger_aggro_radius", "minion-behaviour"),
@@ -7466,6 +7569,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // minion's radius outputs are no slice field either).
     ("minion_skill_area_of_effect_+%", "area"),
     ("minion_spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
+    ("minions_are_defensive", "no-slice"),
     // P6-7c3: a monster skill's penalty against the player's minions (the
     // Flame Golem's Immolate): PoB's stat map has no row for it.
     (
@@ -10088,6 +10192,26 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11ee: movement speed after a crit and while holding a
+            // shield.
+            (
+                "movement_speed_+%_if_crit_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::CRIT_RECENTLY,
+                )],
+            ),
+            (
+                "movement_speed_+%_while_holding_shield",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    states::USING_SHIELD,
                 )],
             ),
             // P6-11ed: crit multiplier with a rare or unique enemy nearby.

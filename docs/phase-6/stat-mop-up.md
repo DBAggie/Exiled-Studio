@@ -2593,3 +2593,20 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11ee: mines' crits and penetration; movement speed; fourteen `NoEffect` lines
+
+**PoB:**
+- **Mines:** "#% increased Critical Strike Chance with Mines", "+#% to Critical Strike Multiplier with Mines", and "Mine Damage Penetrates #% Elemental Resistances" are `CritChance` INC, `CritMultiplier` BASE, and `ElementalPenetration` BASE with `KeywordFlag.Mine`.
+- **Movement speed:** "... Movement Speed if you've dealt a Critical Strike Recently" and "... while holding a Shield" are `MovementSpeed` INC under `CritRecently` and `UsingShield`.
+- "#% increased maximum Life, Mana and Global Energy Shield" is `Life`, `Mana`, and `EnergyShield` INC.
+
+**The engine:**
+- **Rows:** three `HIT_ROWS` rows, two `STATE_ROWS` rows, and a `ROWS` row.
+- **`NoEffect`** (`no-slice`): an item's attribute requirements, flask automation and on-use effects, maim's effect, a mercenary's unique slots, a corpse's life, minions' taunt and defensive stance.
+
+**Evidence** (`b-ct`, against P6-11ed's run):
+- **Public:** 0 unexpected. 32 values moved, 31 toward PoB: a mine Assassin's crits and damage, a Berserker's movement speed, and a Flicker Strike Berserker's life, mana, energy shield, and defences.
+- **One moved away:** that Berserker's energy shield recharge (90 to 106, against PoB's 0) follows its energy shield, which moved toward PoB. PoB's recharge is 0 for a reason the engine does not model yet.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+
