@@ -2294,3 +2294,30 @@ The support was in `gems::SUPPORTS` with no global effect, but its stats were re
   - Two of its values moved away: the attack rate (2.15 to 1.93 against PoB's 2.18) and the life cost per second that follows it. They carry the support's less attack speed, which PoB applies too; the rate is partial on other modifiers.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11do: Void Manipulation and Power Charge On Critical
+
+P6-11dm made these supports known in more builds; their stats were reasons.
+
+**PoB:**
+- Void Manipulation's `support_void_manipulation_chaos_damage_+%_final` is `ChaosDamage` MORE.
+- Power Charge On Critical's `support_power_charge_on_crit_damage_+%_final_per_power_charge` is `Damage` MORE per `Multiplier:PowerCharge` (`sup_int.lua` 5604).
+- Its chance to gain a power charge on crit is never read by PoB's calculation; the count is the config's.
+
+**The engine:**
+- **Void Manipulation:** a `HIT_ROWS` row (`Damage` MORE with `Flags::CHAOS`).
+- **The per-charge damage:**
+  - `charges::PerCharge::MoreDamage` (`Damage` MORE), and a `MODIFIERS` row for the support's stat.
+  - The main skill's mapping (`SkillMapping`) now keeps a per-charge row whose effect is a hit quantity. The charge phase turns it into that effect times the count, so it stays the main skill's, as PoB's `skillModList` entry.
+- **The chance:** a `NoEffect` row (`charge-gain-chance`), listed in the charges test's `NoEffect` rows that name a charge.
+
+**Fixtures:**
+- `smite-void-manipulation-templar.xml`: Smite with Void Manipulation and added chaos damage to attacks.
+- `smite-power-charge-on-crit-templar.xml`: Smite with Power Charge On Critical and three power charges.
+
+Every computed field equals PoB's but Q11's attack rate (DIV-0414 to DIV-0424).
+
+**Evidence** (`b-ct`, against P6-11dn's run):
+- **Public:** 0 unexpected; 12 values toward PoB, none away.
+- **Corpus:** 0 unexpected; 5 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

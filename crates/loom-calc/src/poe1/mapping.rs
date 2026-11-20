@@ -2969,6 +2969,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_trap_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::KEYWORD_TRAP, NONE)],
     ),
+    // P6-11do: Void Manipulation's more chaos damage (`sup_dex.lua`:
+    // `ChaosDamage` MORE).
+    (
+        "support_void_manipulation_chaos_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::CHAOS, NONE)],
+    ),
     // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
     (
         "sword_accuracy_rating",
@@ -3453,6 +3459,21 @@ impl StatMapping for SkillMapping {
         }
         match Poe1Mapping.map(stat) {
             StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
+                StatMap::Effects(e)
+            }
+            // A per-charge row whose effect is a hit's (P6-11do, Power
+            // Charge On Critical's more damage per power charge): the
+            // charge phase turns it into that effect times the count, so it
+            // stays the main skill's, as PoB's `skillModList` entry.
+            StatMap::Effects(e)
+                if e.iter().all(|t| match t.quantity {
+                    Quantity::Poe1(Poe1Quantity::Charge(
+                        _,
+                        super::charges::ChargeValue::Per(p),
+                    )) => is_hit_quantity(p.target().0),
+                    _ => false,
+                }) =>
+            {
                 StatMap::Effects(e)
             }
             // A gem's minion modifiers (P3-8j): only the main skill's gems
@@ -6738,6 +6759,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: a chance to gain a frenzy charge on kill (Disciple of the
     // Slaughter): as the power charge's, PoB never reads it.
     ("add_frenzy_charge_on_kill_%_chance", "charge-gain-chance"),
+    // P6-11do: Power Charge On Critical's chance to gain a power charge on crit
+    // (PoB's calc never reads it; the count is the config's).
+    ("add_power_charge_on_critical_strike_%", "charge-gain-chance"),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the

@@ -123,6 +123,9 @@ pub enum PerCharge {
     AttackSpeed,
     /// Increased damage (`Damage` INC).
     Damage,
+    /// More damage (`Damage` MORE; P6-11do: Power Charge On Critical's,
+    /// a support's stat the main skill's mapping keeps).
+    MoreDamage,
     /// Increased spell damage (`Damage` INC with `ModFlag.Spell`).
     SpellDamage,
     /// Increased critical strike chance (`CritChance` INC).
@@ -158,6 +161,7 @@ impl PerCharge {
         match self {
             Self::AttackSpeed => "per.attack-speed",
             Self::Damage => "per.damage",
+            Self::MoreDamage => "per.more-damage",
             Self::SpellDamage => "per.spell-damage",
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
@@ -179,6 +183,7 @@ impl PerCharge {
         match self {
             Self::AttackSpeed => (Quantity::Speed, Op::Increased, Flags::ATTACK),
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE),
+            Self::MoreDamage => (Quantity::Damage, Op::More, Flags::NONE),
             Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL),
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
@@ -397,6 +402,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "spell_damage_+%_per_power_charge",
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::SpellDamage),
+    ),
+    // P6-11do: Power Charge On Critical's more damage per power charge
+    // (`sup_int.lua` 5604: `Damage` MORE per `Multiplier:PowerCharge`).
+    (
+        "support_power_charge_on_crit_damage_+%_final_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::MoreDamage),
     ),
 ];
 
@@ -714,6 +726,9 @@ mod tests {
         "area_of_effect_+%_per_endurance_charge",
         "stun_duration_+%_per_endurance_charge",
         "add_power_charge_on_kill_%_chance",
+        // P6-11do: Power Charge On Critical's chance (the count is the
+        // config's).
+        "add_power_charge_on_critical_strike_%",
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",
         // P6-11cz: flask charges, not power, frenzy, or endurance charges.
