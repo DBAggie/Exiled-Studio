@@ -1987,7 +1987,10 @@ fn a_group_with_a_source_should_be_a_reason() {
 }
 
 #[test]
-fn a_main_skill_that_reserves_should_be_a_reason() {
+/// A main skill that reserves reserves as any skill (P6-11et; PoB's
+/// reservation loop over `activeSkillList`, the main skill included):
+/// no reason, its flat amount off the unreserved mana.
+fn a_main_skill_that_reserves_should_reserve() {
     let mut data = Data::new();
     for e in &mut data.effects {
         if e.id == "IceNova" {
@@ -2011,10 +2014,8 @@ fn a_main_skill_that_reserves_should_be_a_reason() {
         options: &options,
     };
     let r = calculate(&input).unwrap_or_else(|e| panic!("{e}"));
-    assert_eq!(
-        gem_reasons(&r),
-        ["skill reservation Gem { group: 0, gem: 0 }"]
-    );
+    assert!(gem_reasons(&r).is_empty(), "{:?}", gem_reasons(&r));
+    assert_eq!(value(&r, Field::ManaUnreserved), mana(&r) - 5.0);
 }
 
 // ------------------------------------------------- socket colour (P3-12i)

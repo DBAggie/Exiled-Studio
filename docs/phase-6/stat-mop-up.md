@@ -2883,3 +2883,17 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - The hash lines are no longer reasons in any of the five builds with the jewels.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11et: mines' cost as reservation; the main skill's reservation
+
+**PoB:** every active skill that reserves, the main skill included, reserves in one loop (`CalcPerform.lua` 1940 on). A skill supported by Blastchain Mine, High-Impact Mine, or Locus Mine has `remote_mined_by_support` (`SkillStatMap.lua` 1838: `ManaCostGainAsReservation`, `LifeCostGainAsReservation`), so its flat reservation is `ManaCostBase` plus its level's mana cost, and the same for life (1946 to 1953). The game's own mine skills carry their reservation in their level data, equal to their cost.
+
+**The engine:**
+- **Mine supports:** `gems::COST_AS_RESERVATION_SUPPORTS`. With one of them, the level's mana and life costs replace the flat reservation of each pool. No row the engine maps gives `ManaCostBase` or `LifeCostBase`.
+- **The main skill:** reserves as any skill (`gems::reservation`). Its `reservation` reason (P3-12h) is gone.
+- **Test:** the hit test `a_main_skill_that_reserves_should_reserve` (was `..._should_be_a_reason`) checks that a reserving main skill has no reason and that its flat amount comes off the unreserved mana.
+
+**Evidence** (`b-ct`, against P6-11es's run):
+- **Public:** 0 unexpected. A mine Assassin's unreserved mana moved toward PoB (578 to 552, PoB 174), and its `reservation` reason, on 77 fields, is gone. The rest of the gap is the build's other reservation lines.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

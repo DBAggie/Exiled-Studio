@@ -2577,6 +2577,17 @@ pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[
 /// then each pool takes its own terms; P6-9f): Arrogance.
 pub const LIFE_RESERVATION_SUPPORTS: &[&str] = &["SupportArrogance"];
 
+/// The supports whose `remote_mined_by_support` stat flags
+/// `ManaCostGainAsReservation` and `LifeCostGainAsReservation` (P6-11et;
+/// `SkillStatMap.lua` 1838; PoB's skill data: `sup_dex.lua` 2672,
+/// `sup_int.lua` 3192 and 5695): the supported skill's level cost is its
+/// flat reservation (`CalcPerform.lua` 1946 to 1953).
+pub const COST_AS_RESERVATION_SUPPORTS: [&str; 3] = [
+    "SupportBlastchainMine",
+    "SupportHighImpactMine",
+    "SupportLocusMine",
+];
+
 /// A curse gem's own curse effect stat (Despair's, a hex's quality):
 /// PoB's `CurseEffect` INC on the skill's own list (P6-9b).
 pub const OWN_CURSE_EFFECT_STAT: &str = "curse_effect_+%";
@@ -3505,12 +3516,9 @@ pub fn gems(
                     group: g,
                     gem: s.active_gem.gem,
                 };
-                if reserves(&s.types) {
-                    ingest.reason(UnsupportedReason::UnmodelledSkill {
-                        source: source.clone(),
-                        what: "reservation",
-                    });
-                }
+                // Its reservation as any skill's (P6-11et; PoB's loop over
+                // `activeSkillList`, the main skill included).
+                reservation(s, &source, totals, ingest);
                 // PoB's skill list holds the main skill too.
                 guaranteed_chill(&s.types, source, ingest);
                 socket_reasons(g, s, ingest);
@@ -4690,12 +4698,33 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
                 .find(|r| r.percent && r.resource == Resource::Mana)
         })
         .next_back();
-    let mut reservations: Vec<&loom_data::bundle::skills::Reservation> = level
+    let mut reservations: Vec<loom_data::bundle::skills::Reservation> = level
         .reservations
         .iter()
         .filter(|r| from_support.is_none() || !(r.percent && r.resource == Resource::Mana))
+        .cloned()
         .collect();
-    reservations.extend(from_support);
+    reservations.extend(from_support.cloned());
+    // A mine support's cost as reservation (P6-11et): the level's mana and
+    // life costs replace the flat reservation of each (PoB's
+    // `ManaCostBase` and `LifeCostBase` sums, which no row the engine maps
+    // gives, plus the level cost).
+    if s.supports
+        .iter()
+        .any(|sup| COST_AS_RESERVATION_SUPPORTS.contains(&sup.effect.id.as_str()))
+    {
+        for (cost, resource) in [("Mana", Resource::Mana), ("Life", Resource::Life)] {
+            let Some(c) = level.costs.iter().find(|c| c.resource == cost) else {
+                continue;
+            };
+            reservations.retain(|r| r.percent || r.resource != resource);
+            reservations.push(loom_data::bundle::skills::Reservation {
+                resource,
+                percent: false,
+                amount: c.amount,
+            });
+        }
+    }
     for r in reservations {
         let pool = match r.resource {
             Resource::Mana if life_instead => Pool::Life,
