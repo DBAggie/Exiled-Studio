@@ -3543,6 +3543,31 @@ pub const STATE_ROWS: &[StateRow] = &[
             "AffectedByPride",
         )],
     ),
+    // P6-11bj: "Recover #% of Energy Shield when you Block Spell Damage while
+    // wielding a Staff" (`EnergyShieldOnSpellBlock` BASE, `PercentStat`
+    // `EnergyShield`, `UsingStaff`; read by `enemy_hit`).
+    (
+        "recover_%_energy_shield_when_you_block_spell_damage_while_wielding_a_staff",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(
+                super::BlockGain::EnergyShieldSpellPercent,
+            )),
+            Op::Base,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
+    // P6-11bj: "Recover #% of Life when you Block Attack Damage while wielding
+    // a Staff" (`LifeOnBlock` BASE, `PercentStat` `Life`, `UsingStaff`).
+    (
+        "recover_%_life_when_you_block_attack_damage_while_wielding_a_staff",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockGain(super::BlockGain::LifePercent)),
+            Op::Base,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
     // P6-11o: "Damage Penetrates #% Cold Resistance while affected by Hatred"
     // (`ColdPenetration` BASE).
     (
@@ -8464,6 +8489,29 @@ mod tests {
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
+                )],
+            ),
+            // P6-11bj.
+            (
+                "recover_%_energy_shield_when_you_block_spell_damage_while_wielding_a_staff",
+                vec![(
+                    Quantity::Poe1(Poe1Quantity::BlockGain(
+                        super::super::BlockGain::EnergyShieldSpellPercent,
+                    )),
+                    Op::Base,
+                    NONE,
+                    states::USING_STAFF,
+                )],
+            ),
+            (
+                "recover_%_life_when_you_block_attack_damage_while_wielding_a_staff",
+                vec![(
+                    Quantity::Poe1(Poe1Quantity::BlockGain(
+                        super::super::BlockGain::LifePercent,
+                    )),
+                    Op::Base,
+                    NONE,
+                    states::USING_STAFF,
                 )],
             ),
             // P6-11ba.

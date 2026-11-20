@@ -1458,3 +1458,15 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 - **Public:** 0 unexpected; Flicker Strike's unreserved mana toward PoB.
 - **Away:** two values (Elemental Hit's and Ethereal Knives' unreserved mana). Their unreserved mana was already far above PoB's, with many reasons on the field.
 - **Corpus:** unchanged.
+
+## P6-11bj: life and energy shield recovered on block while wielding a staff
+
+"Recover #% of Life when you Block Attack Damage while wielding a Staff" and "Recover #% of Energy Shield when you Block Spell Damage while wielding a Staff" are PoB's `LifeOnBlock` and `EnergyShieldOnSpellBlock` BASE with `PercentStat` (`Life`, `EnergyShield`) and the condition `UsingStaff`.
+- The life line is a `STATE_ROWS` row: `BlockGain::LifePercent` (P6-11ak's) under `states::USING_STAFF`.
+- The energy shield line needs a new gain, `BlockGain::EnergyShieldSpellPercent`. `enemy_hit` reads it as a percent of maximum energy shield, rounded up as the other percent gains, and adds it to the flat energy shield on spell block.
+
+**Fixture** `ehp-staff-recover-on-block-ice-nova-witch.xml`: a Quarterstaff, block chance, and both lines. Every computed field equals PoB's (77 match).
+
+**Evidence** (`b-ct`, against P6-11bi's run):
+- **Public:** 0 unexpected; 6 values toward PoB (two staff builds' effective health pool and hits to die), none away.
+- **Corpus:** unchanged.

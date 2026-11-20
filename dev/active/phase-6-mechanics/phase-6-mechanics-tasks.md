@@ -136,6 +136,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11bg: the frenzy charges' maximum from the power charges' (`ChargeValue::MaximumFromPower`); fixture `ice-nova-frenzy-max-from-power-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bg")
 - [x] P6-11bh: the minion's added damage of every type (`docs/phase-6/stat-mop-up.md`, "P6-11bh")
 - [x] P6-11bi: the socketed skills' cost and reservation multiplier (`SocketedCostMultiplier`, `cost_mores`); fixture `ice-nova-socketed-cost-multiplier-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bi")
+- [x] P6-11bj: life and energy shield recovered on block while wielding a staff (`BlockGain::EnergyShieldSpellPercent`); fixture `ehp-staff-recover-on-block-ice-nova-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bj")
 - [ ] Damage while leeching (the `Leeching` condition from four checks and PoB's automatic case)
 - [ ] Stats read per a computed value ("#% increased Spell Damage per 100 Maximum Mana, up to 60%", 4 public builds): PoB's `PerStat` on a pool; the engine has no mid-calculation effect with the pool's node as its provenance (design needed: a phase term in the hit as `phases::per_5` does for block)
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it

@@ -719,6 +719,10 @@ pub enum BlockGain {
     /// Energy shield on blocking spell damage, flat
     /// (`EnergyShieldOnSpellBlock` BASE).
     EnergyShieldSpell,
+    /// Energy shield on blocking spell damage, a percent of maximum energy
+    /// shield (`EnergyShieldOnSpellBlock` BASE 1 with `PercentStat`
+    /// `EnergyShield`; P6-11bj).
+    EnergyShieldSpellPercent,
     /// Energy shield, a percent of armour (`EnergyShieldOnBlock` BASE 1
     /// with `PercentStat` `Armour`).
     EnergyShieldPercentOfArmour,
@@ -732,6 +736,7 @@ impl BlockGain {
             Self::Life => "life",
             Self::LifePercent => "life-percent",
             Self::EnergyShieldSpell => "energy-shield-spell",
+            Self::EnergyShieldSpellPercent => "energy-shield-spell-percent",
             Self::EnergyShieldPercentOfArmour => "energy-shield-percent-of-armour",
         }
     }

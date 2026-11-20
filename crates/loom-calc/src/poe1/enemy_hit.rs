@@ -1042,8 +1042,15 @@ fn maximum_hit(
             armour,
             &mut reasons,
         );
+        let energy_shield = value(calc, Field::EnergyShield).unwrap_or(0.0);
         let energy_shield_on_spell_block =
-            gain(calc, BlockGain::EnergyShieldSpell, 0.0, &mut reasons);
+            gain(calc, BlockGain::EnergyShieldSpell, 0.0, &mut reasons)
+                + gain(
+                    calc,
+                    BlockGain::EnergyShieldSpellPercent,
+                    energy_shield,
+                    &mut reasons,
+                );
         let mitigation = super::ehp::Mitigation {
             life_on_block,
             energy_shield_on_block,
