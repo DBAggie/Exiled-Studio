@@ -2838,7 +2838,9 @@ pub const HIT_ROWS: &[HitRow] = &[
             Quantity::Damage,
             Op::More,
             1.0,
-            Flags::ATTACK.union(Flags::PROJECTILE).union(Flags::PHYSICAL),
+            Flags::ATTACK
+                .union(Flags::PROJECTILE)
+                .union(Flags::PHYSICAL),
             NONE,
         )],
     ),
@@ -6815,7 +6817,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("add_frenzy_charge_on_kill_%_chance", "charge-gain-chance"),
     // P6-11do: Power Charge On Critical's chance to gain a power charge on crit
     // (PoB's calc never reads it; the count is the config's).
-    ("add_power_charge_on_critical_strike_%", "charge-gain-chance"),
+    (
+        "add_power_charge_on_critical_strike_%",
+        "charge-gain-chance",
+    ),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
@@ -7011,7 +7016,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("curse_effect_on_self_+%", "curse-on-self"),
     // P6-11dl: Cyclone's area per additional melee range (`AreaOfEffect` INC per
     // `AdditionalMeleeRange`): area, no slice field.
-    ("cyclone_area_of_effect_+%_per_additional_melee_range", "area"),
+    (
+        "cyclone_area_of_effect_+%_per_additional_melee_range",
+        "area",
+    ),
     // P6-11cf: "Damage cannot be Reflected" (PoB: reflected damage taken, which no
     // slice field reads).
     ("damage_cannot_be_reflected", "reflect"),
@@ -7075,7 +7083,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // group PoB adds with source "Explode"), which no game gem grants: the
     // gem table skips a group with a source (`poe1::gems`), and the gem is
     // `unmodelled-gem` as a main skill or in full DPS.
-    ("explode_enemies_for_500%_life_as_fire_on_kill_%_chance", "explosion"),
+    (
+        "explode_enemies_for_500%_life_as_fire_on_kill_%_chance",
+        "explosion",
+    ),
     // P6-11dj: reflected fire damage to melee attackers (unparsed in PoB; damage
     // to attackers, no slice field), as the physical one.
     ("fire_damage_to_return_to_melee_attacker", "reflect"),
@@ -7229,7 +7240,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("minion_larger_aggro_radius", "minion-behaviour"),
     // P6-11dr: "Minions Leech #% of Damage as Life" (a `MinionModifier` of
     // `DamageLifeLeech`): no slice field reads a minion's leech.
-    ("minion_life_leech_from_any_damage_permyriad", "minion-leech"),
+    (
+        "minion_life_leech_from_any_damage_permyriad",
+        "minion-leech",
+    ),
     // P6-11be: "Minions Recover #% of Life on Minion Death" (PoB parses
     // none of it): a recovery on an event, no slice field.
     (

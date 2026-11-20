@@ -319,6 +319,10 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // Automation's trigger of the skill it supports, whose own kind says
     // what it does.
     ("SupportAutomation", "triggered"),
+    // P6-11dy: Autoexertion uses its warcry automatically; the warcry's own
+    // kind and Autoexertion's buff rule (`gems::AUTOEXERTION_SUPPORT`) say
+    // what it does.
+    ("SupportAutoexertion", "triggeredByAutoexertion"),
     ("SupportAutomation", "triggeredByAutomation"),
     // P6-9f: Arrogance's reservation of life instead of mana, which
     // `gems::LIFE_RESERVATION_SUPPORTS` reads (a mod name, not a key).
@@ -518,6 +522,10 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // Automation triggers the skill it supports (close-out): the skill's
     // own kind says what it does.
     ("SupportAutomation", "Triggered"),
+    // P6-11dy: Autoexertion triggers its warcry, which reserves its share
+    // (`RESERVING_SUPPORTS`).
+    ("SupportAutoexertion", "Triggered"),
+    ("SupportAutoexertion", "HasReservation"),
     // Blasphemy makes the hex it supports an aura that reserves (P6-11r,
     // `poe1::gems`): the curse takes the aura priority, and its reservation
     // is Blasphemy's share (`RESERVING_SUPPORTS`).
@@ -543,7 +551,7 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
 /// Supports whose level rows carry a mana reservation share, which the
 /// engine takes in place of the supported skill's (P6-11r, `poe1::gems`'s
 /// reservation, as PoB's `CalcActiveSkill.lua` 516 and 517).
-const RESERVING_SUPPORTS: &[&str] = &["SupportBlasphemy"];
+const RESERVING_SUPPORTS: &[&str] = &["SupportAutoexertion", "SupportBlasphemy"];
 
 /// Supports that add a minion to the skill they support, and the minion:
 /// its own skills grant the character nothing (Summon Phantasm: the

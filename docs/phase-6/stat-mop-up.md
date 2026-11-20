@@ -2481,3 +2481,28 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 
 **Evidence** (`b-ct`, against P6-11dw's run): public and corpus 0 unexpected; no value moved (the builds with it have other reasons). The workspace tests and clippy pass.
 
+## P6-11dy: Autoexertion
+
+**Found:** Autoexertion's gem grants a second support, `SupportAutoexertion`, which the gem table lacked. A warcry it supports therefore had an unmodelled support and was skipped (Hextouch's case, P6-11ds).
+
+**PoB** (`sup_str.lua`):
+- `SupportAutoexertion` uses the warcry automatically (`triggeredByAutoexertion`).
+- `CannotShareWarcryBuffs`: the warcry's buff does not apply to you (`CalcPerform.lua` 2326). Its exerts are counted before that check.
+- It reserves its level's share of mana (20%) and gives the warcry a fixed mana cost.
+
+**The engine:**
+- `SupportAutoexertion` joins `gems::SUPPORTS` (`gems::AUTOEXERTION_SUPPORT`).
+- A warcry it supports applies no rows to you. Its supports' global effects and its reservation are read as for any skill; the reservation takes the support's share, as Blasphemy's (P6-11r).
+- **data-parity `gem_effects`:** allowances for the trigger and the added types, and the support in `RESERVING_SUPPORTS`. `uncategorized` 0.
+
+**Fixture** `smite-autoexertion-templar.xml`: Smite with Battlemage's Cry and Autoexertion in their own group. The crit buff is gone and the unreserved mana equals PoB's; every computed field equals PoB's but Q11's attack rate (DIV-0466 to DIV-0471).
+
+**Evidence** (`b-ct`, against P6-11dx's run):
+- **Public:** 0 unexpected; 3 values moved, 2 toward PoB.
+- **One moved away:** a Slayer's unreserved mana (41 to -85, against PoB's -18). Autoexertion's reservation for its General's Cry, checked by removing the gem on a local copy:
+  - PoB reserves 118 for it: 20% of 714 mana at 21% efficiency.
+  - The engine reserves 126: 20% at the build's 11%, the factor of its other skills.
+  - PoB's extra 10% efficiency for this warcry comes from no stat the engine sees. Open (tasks file).
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

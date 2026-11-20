@@ -218,7 +218,12 @@ fn real_supports_under_old_skill_ids_should_be_found_by_name() {
         0,
     );
     enlighten.name = Some("Enlighten".to_owned());
-    let nova = gem(Some("Metadata/Items/Gems/SkillGemIceNova"), "IceNova", 20, 0);
+    let nova = gem(
+        Some("Metadata/Items/Gems/SkillGemIceNova"),
+        "IceNova",
+        20,
+        0,
+    );
     let b = build(vec![group(vec![enlighten, nova])], 1);
     let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
     let supports: Vec<_> = m.supports.iter().map(|s| s.effect.id.as_str()).collect();

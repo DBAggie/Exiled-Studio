@@ -2374,6 +2374,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // (`OWN_EFFECT_STATS`) and its life reservation
     // `LIFE_RESERVATION_SUPPORTS`.
     ("SupportArrogance", &[]),
+    // Autoexertion's warcry part (P6-11dy; `sup_str.lua`): its warcry shares
+    // no buff ([`AUTOEXERTION_SUPPORT`]), reserves Autoexertion's share
+    // (its level rows), and costs a fixed amount of mana no slice field
+    // reads; no global stat.
+    ("SupportAutoexertion", &[]),
     ("SupportAutomation", &[]),
     ("SupportAwakenedBrutality", &[]),
     ("SupportAwakenedCastOnCriticalStrike", &[]),
@@ -2575,6 +2580,10 @@ pub const MARK_CURSE_EFFECT_STAT: &str = "mark_skills_curse_effect_+%";
 /// Blasphemy's `CurseEffect` MORE on the curse it supports (P6-11r; PoB's
 /// `statMap`, a constant -25).
 pub const BLASPHEMY_CURSE_EFFECT_STAT: &str = "support_blasphemy_curse_effect_+%_final";
+
+/// Autoexertion's part that supports a warcry (P6-11dy): the warcry is used
+/// automatically and shares no buff (PoB's `CannotShareWarcryBuffs`).
+pub const AUTOEXERTION_SUPPORT: &str = "SupportAutoexertion";
 
 /// Hextouch's less curse effect on the hex it supports (P6-11ds; PoB's
 /// `CurseEffect` MORE of `SupportCurseOnHitCurse`, `sup_int.lua` 1500).
@@ -3953,6 +3962,18 @@ fn one_skill(
             );
         }
         Kind::Warcry { name, stats } => {
+            // Autoexertion's warcries share no buff (P6-11dy; PoB's
+            // `CannotShareWarcryBuffs` flag, `CalcPerform.lua` 2326): their
+            // rows do not apply to you. Their exerts and reservation are read
+            // elsewhere, as for any warcry.
+            if s.supports
+                .iter()
+                .any(|sup| sup.effect.id == AUTOEXERTION_SUPPORT)
+            {
+                supports_global(input, g, s, totals, config, collected, ingest);
+                reservation(s, &active_source, totals, ingest);
+                return;
+            }
             // Its buff effect, power, and uptime (P6-11bs): without them
             // (a level missing, a value not read) its power rows are a
             // reason and its other rows act at scale 1, which no slice

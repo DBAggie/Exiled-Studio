@@ -1327,9 +1327,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
-            Self::SpellBlockPerOvercappedBlock => {
-                f.write_str("spell-block-per-overcapped-block")
-            }
+            Self::SpellBlockPerOvercappedBlock => f.write_str("spell-block-per-overcapped-block"),
             Self::ImpaleAdditionalDurationChance => {
                 f.write_str("impale-additional-duration-chance")
             }

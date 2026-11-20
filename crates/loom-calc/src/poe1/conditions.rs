@@ -346,9 +346,7 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         out.insert(key, true);
     }
     // The enemy marked (P6-11de): only where the skill list settles it.
-    if let Some(v) =
-        super::gems::marks_enemy(input, &super::gem_levels::GemLevels::none())
-    {
+    if let Some(v) = super::gems::marks_enemy(input, &super::gem_levels::GemLevels::none()) {
         out.insert(ConditionKey::new(ENEMY_MARKED), v);
     }
     // Affected by a herald (P6-11ct): PoB's herald count above 0.
