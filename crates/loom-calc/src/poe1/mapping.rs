@@ -6724,7 +6724,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_number_of_projectiles", "projectile-count"),
     // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
     ("base_number_of_skeletons_allowed", "minion-count"),
-    // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count\nno slice field reads, as the zombies' and skeletons'.
+    // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count
+    // no slice field reads, as the zombies' and skeletons'.
     ("base_number_of_spectres_allowed", "minion-count"),
     // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
     ("base_number_of_zombies_allowed", "minion-count"),
@@ -6821,7 +6822,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
-    // P6-11cf: "Damage cannot be Reflected" (PoB: reflected damage taken, which no\nslice field reads).
+    // P6-11cf: "Damage cannot be Reflected" (PoB: reflected damage taken, which no
+    // slice field reads).
     ("damage_cannot_be_reflected", "reflect"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
@@ -6953,7 +6955,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_flask_amount_to_recover_+%", "flask"),
     // P6-11bz: the radius of a flask's consecrated ground (PoB does not parse it).
     ("local_flask_area_of_consecrated_ground_+%", "area"),
-    // P6-11br: whether magic utility flask effects can be removed, and\nflask charges during the effect (PoB does not parse them; the effects\napply while the flask is on, as the config sets).
+    // P6-11br: whether magic utility flask effects can be removed, and
+    // flask charges during the effect (PoB does not parse them; the effects
+    // apply while the flask is on, as the config sets).
     (
         "local_flask_cannot_gain_charges_during_flask_effect",
         "flask",
@@ -7041,6 +7045,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
+    // P6-11dg: "Bow Attacks fire an additional Arrow" (PoB's `ProjectileCount` BASE with
+    // `ModFlag.Bow`): as the projectile count, read only with
+    // `SequentialProjectiles` (Barrage's `projectiles_barrage`, a guard).
+    ("number_of_additional_arrows", "projectile-count"),
     // P6-11u: the projectile count (PoB `ProjectileCount`): it reaches DPS
     // only with `SequentialProjectiles` (`CalcOffence.lua` 769 to 772), a
     // skill base mod (unvetted) or Barrage's `projectiles_barrage`, a guard.
@@ -7169,11 +7177,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_spell_boost_area_of_effect_+%_final_per_charge",
         "area",
     ),
-    // P6-11cj: Empower's "Supported Skills have +# to Level": the active gem's\nlevel, read by `skill::supported_level`, not a modifier.
+    // P6-11cj: Empower's "Supported Skills have +# to Level": the active gem's
+    // level, read by `skill::supported_level`, not a modifier.
     ("supported_active_skill_gem_level_+", "gem-level"),
-    // P6-11ck: Enhance's "Supported Skills have +#% to Quality": the active\ngem's quality, read by `skill::supported_level`.
+    // P6-11ck: Enhance's "Supported Skills have +#% to Quality": the active
+    // gem's quality, read by `skill::supported_level`.
     ("supported_active_skill_gem_quality_%", "gem-level"),
-    // P6-11cl: the awakened supports' "Supported <type> Skills have +# to Level":\nthe active gem's level for a skill of that type, read by\n`skill::supported_level` (`SUPPORTED_TYPED_LEVEL_STATS`).
+    // P6-11cl: the awakened supports' "Supported <type> Skills have +# to Level":
+    // the active gem's level for a skill of that type, read by
+    // `skill::supported_level` (`SUPPORTED_TYPED_LEVEL_STATS`).
     ("supported_aura_skill_gem_level_+", "gem-level"),
     ("supported_chaos_skill_gem_level_+", "gem-level"),
     ("supported_cold_skill_gem_level_+", "gem-level"),
@@ -7218,7 +7230,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 ];
 
 /// Stats that would make a [`NO_EFFECT`] row reach a slice field: `(stat,
-/// row)`, sorted by stat. A row's `NoEffect` holds only while these stay
+/// row)`, sorted by stat, then row (a stat may guard several rows). A row's `NoEffect` holds only while these stay
 /// reasons (`unmapped-stat`), so the fields are `Partial` whenever one is
 /// in the build; mapping one (even as `NoEffect`) must revisit the row (a
 /// test checks each is `Unmapped` through every mapping).
@@ -7272,6 +7284,8 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "projectile_non_chaos_damage_to_add_as_chaos_damage_%_per_chain",
         "number_of_chains",
     ),
+    // P6-11dg: Barrage's, for the bows' additional arrows.
+    ("projectiles_barrage", "number_of_additional_arrows"),
     // P6-11u: Barrage's `SequentialProjectiles`.
     ("projectiles_barrage", "number_of_additional_projectiles"),
 ];
@@ -8364,7 +8378,7 @@ mod tests {
 
     #[test]
     fn a_no_effect_rows_dependencies_should_stay_unmapped() {
-        assert!(NO_EFFECT_DEPENDS_ON.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(NO_EFFECT_DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
         let piece = PieceMapping {
             slot: ArmourSlot::Helmet,
         };

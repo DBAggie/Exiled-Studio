@@ -2151,3 +2151,17 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 10 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dg: the bows' additional arrows
+
+**PoB** reads "Bow Attacks fire an additional Arrow" (`number_of_additional_arrows`) as `ProjectileCount` BASE with `ModFlag.Bow`. P6-11u found that the projectile count reaches a slice field only with `SequentialProjectiles`, which Barrage's `projectiles_barrage` sets.
+
+**The engine:**
+- a `NoEffect` row (`projectile-count`), guarded by `projectiles_barrage` in `NO_EFFECT_DEPENDS_ON`, as `number_of_additional_projectiles` is;
+- the guard table now allows one stat to guard several rows: it is sorted by stat, then row, and only tests read it.
+
+**Also fixed:** six earlier `NO_EFFECT` comments (P6-11br, P6-11cd, P6-11cf, P6-11cj to P6-11cl) held a literal `\n` where a line break was meant.
+
+**Evidence** (`b-ct`, against P6-11df's run): public and corpus 0 unexpected; no value moved. The workspace tests and clippy pass.
+
+**Not done:** "#% more Damage taken from other Enemies near your Marked Enemy" (Focal Point, 4 builds). PoB leaves it unparsed, so it applies nothing; the game applies it. It stays a reason (tasks file).
+
