@@ -2660,3 +2660,24 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Not exercised:** no build has the crit chance line with its blocked check settled false, so `NOT_BLOCKED_RECENTLY` moved no value. The state rows test checks the row and its condition.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11eh: traps' and totems' crits; traps and mines per charge; eighteen `NoEffect` lines
+
+**PoB:**
+- **Crits:** "#% increased Critical Strike Chance with Traps" and "+#% to Critical Strike Multiplier with Traps" are `CritChance` INC and `CritMultiplier` BASE with `KeywordFlag.Trap`. "#% increased Critical Strike Chance with Totem Skills" is `CritChance` INC with `KeywordFlag.Totem`.
+- **Per charge** (`SkillStatMap.lua` 1792 to 1843): trap throwing speed and mine throwing speed per frenzy charge (`TrapThrowingSpeed`, `MineLayingSpeed` INC); trap crit multiplier and mine crit chance per power charge (`CritMultiplier` BASE with `KeywordFlag.Trap`, `CritChance` INC with `KeywordFlag.Mine`).
+
+**The engine:**
+- **Rows:** three `HIT_ROWS` rows. `poe1::charges` gains four `PerCharge` targets (`TrapThrowingSpeed`, `MineLayingSpeed`, `TrapCritMultiplier`, `MineCritChance`) and their modifier rows.
+- **`NoEffect`:**
+  - `charge-gain-chance`: chances to gain a charge on casting a curse, on hitting a unique, rare, or marked enemy, and on blocking a spell; the chance to lose a frenzy charge on a travel skill. PoB parses none of them; the counts are the config's. All six are listed in `charges`' checked `NoEffect` rows.
+  - `recovery`: energy shield recovered on block.
+  - `no-slice`: totems' range and placement speed (`TotemPlacementSpeed`, which only PoB's own output reads), stun avoidance on kill, a rare monster's mods on kill, blight towers' range, strike skills' targeting distance, a projectile's contact position, reflected cold damage, and totems' taunt.
+  - `display`: Blight's stack limit.
+  - `projectile-count`: "#% increased Projectile Fork angle". PoB parses it as `ProjectileCount` INC (from "Projectile" in its text), which no slice field reads either.
+- **Left as reasons:** the keystones Iron Reflexes, Chaos Inoculation, Pain Attunement, Acrobatics, and Lightning Purist (one build each). Each changes defences or needs a condition (`LowLife`) the engine does not settle yet; each is its own step. Crit chance against shocked enemies and against enemies with lightning exposure needs the enemy's shock and exposure as conditions.
+
+**Evidence** (`b-ct`, against P6-11eg's run):
+- **Public:** 0 unexpected. 26 values moved, all toward PoB, and one is now equal: a Lightning Trap Elementalist's crit multiplier (3.53 to 4.79, equal to PoB). The others are that build's, a mine Assassin's, a Holy Flame Totem Hierophant's, and a ballista Hierophant's crit chance, speed, and damage.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+

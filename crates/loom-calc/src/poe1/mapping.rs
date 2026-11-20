@@ -3232,6 +3232,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11eh: "#% increased Critical Strike Chance with Totem Skills"
+    // (`CritChance` INC with `KeywordFlag.Totem`).
+    (
+        "totem_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_TOTEM,
+            NONE,
+        )],
+    ),
     // P6-11cf: totem skills' crit multiplier, attack speed, and trap damage
     // (PoB: `CritMultiplier` BASE, `Speed` INC with `ModFlag.Attack`, `Damage`
     // INC, each with its `KeywordFlag`; P6-11bk's keywords).
@@ -3297,6 +3309,30 @@ pub const HIT_ROWS: &[HitRow] = &[
                 NONE,
             ),
         ],
+    ),
+    // P6-11eh: "#% increased Critical Strike Chance with Traps" (`CritChance`
+    // INC with `KeywordFlag.Trap`).
+    (
+        "trap_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_TRAP,
+            NONE,
+        )],
+    ),
+    // P6-11eh: "+#% to Critical Strike Multiplier with Traps"
+    // (`CritMultiplier` BASE with `KeywordFlag.Trap`).
+    (
+        "trap_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_TRAP,
+            NONE,
+        )],
     ),
     (
         "trap_damage_+%",
@@ -7345,7 +7381,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`EnemyStunThreshold` INC, `mult = -1`): stun, no slice field.
     ("base_stun_threshold_reduction_+%", "stun"),
     ("base_totem_duration", "totem-duration"),
+    // P6-11eh: lines no slice field reads: totems' range and placement speed
+    // (`TotemPlacementSpeed`, PoB's own output only), stun avoidance on kill,
+    // a rare monster's mods on kill, blight towers, strike targeting distance,
+    // a projectile's contact position, reflected cold damage, totems' taunt.
+    ("base_totem_range", "no-slice"),
     ("base_trap_duration", "skill-duration"),
+    ("blight_scout_tower_range_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
     ("can_have_active_mercenary_follower", "no-slice"),
@@ -7448,6 +7490,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("chill_duration_+%", "no-slice"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
+    ("cold_damage_to_return_to_melee_attacker", "no-slice"),
     (
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
@@ -7476,6 +7519,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("disable_skill_if_melee_attack", "skill type marker"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
+    // P6-11eh: Blight's stack limit shown on the item.
+    ("display_max_blight_stacks", "display"),
     // P6-11ed: display-only lines: gem experience (unparsed in PoB), extra gore,
     // ignite's visual variant, a dummy display stat.
     ("dummy_stat_display_nothing", "display"),
@@ -7492,6 +7537,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "elemental_resistance_cannot_be_lowered_by_curses",
         "curse-on-self",
     ),
+    ("enchantment_boots_stun_avoid_%_on_kill", "no-slice"),
     // P6-11f: "#% increased Endurance Charge Duration": the charges come from the config; no slice field.
     ("endurance_charge_duration_+%", "charge-duration"),
     // P6-11m: a chance to gain an endurance charge on kill (PoB: unparsed).
@@ -7515,6 +7561,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
         "enemy-regeneration",
     ),
+    // P6-11eh: "Recover #% of Energy Shield when you Block" (PoB does not
+    // parse it): no recovery field reads a block.
+    ("energy_shield_%_gained_on_block", "recovery"),
     // P6-11be: "Cursed Enemies you or your Minions Kill have a #% chance
     // to Explode" (PoB's `ExplodeMod`): read only by PoB's own explosion
     // skill (`EnemyExplode`), which reaches a field only as the main skill or
@@ -7533,6 +7582,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "explosion",
     ),
     ("extra_gore", "display"),
+    ("extra_target_targeting_distance_+%", "no-slice"),
     // P6-11dj: reflected fire damage to melee attackers (unparsed in PoB; damage
     // to attackers, no slice field), as the physical one.
     ("fire_damage_to_return_to_melee_attacker", "reflect"),
@@ -7543,6 +7593,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("flask_life_to_recover_+%", "flask"),
     // P6-11m: "#% increased Flask Recovery rate" (`FlaskRecoveryRate`).
     ("flask_recovery_speed_+%", "flask"),
+    // P6-11eh: "#% increased Projectile Fork angle": PoB parses it as
+    // `ProjectileCount` INC (its text's "Projectile"), which no slice field
+    // reads either.
+    ("forking_angle_+%", "projectile-count"),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
     // P6-11ad: "You count as on Full Life while at #% of maximum Life or
@@ -7557,6 +7611,21 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_endurance_charge_per_second_if_have_been_hit_recently",
         "charge-gain",
     ),
+    // P6-11eh: chances to gain a charge on a curse, on hitting a unique, rare,
+    // or marked enemy, on blocking a spell, and to lose a frenzy charge on a
+    // travel skill (PoB parses none; the counts are the config's).
+    (
+        "gain_frenzy_charge_on_hitting_marked_enemy_%",
+        "charge-gain-chance",
+    ),
+    (
+        "gain_frenzy_charge_on_hitting_rare_or_unique_enemy_%",
+        "charge-gain-chance",
+    ),
+    (
+        "gain_frenzy_charge_on_hitting_unique_enemy_%",
+        "charge-gain-chance",
+    ),
     // P6-11m: a chance to gain maximum endurance charges (PoB reads only a
     // partial `EnduranceChargesMax` with leftover text; charges come from
     // the config).
@@ -7568,10 +7637,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_power_charge_for_each_second_channeling_spell",
         "charge-gain-chance",
     ),
+    ("gain_power_charge_on_curse_cast_%", "charge-gain-chance"),
     (
         "gain_power_charge_on_non_critical_strike_%",
         "charge-gain-chance",
     ),
+    ("gain_rare_monster_mods_on_kill_ms", "no-slice"),
     // P3-8n: Inspiration's charge gain; PoB maps no modifier (its charges are
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
@@ -7700,6 +7771,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "tree-allocation",
     ),
     (
+        "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
+        "charge-gain-chance",
+    ),
+    (
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
     ),
@@ -7813,8 +7888,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`PowerChargesDuration` INC): the charges come from the config.
     ("power_charge_duration_+%", "charge-duration"),
     ("power_charge_on_block_%_chance", "charge-gain-chance"),
+    ("power_charge_on_spell_block_%_chance", "charge-gain-chance"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
+    ("projectile_uses_contact_position", "no-slice"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
     (
         "quality_display_active_skill_area_damage_quality_negated_from_gem",
@@ -7876,6 +7953,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("stun_threshold_+%", "stun"),
     // P6-8b: read by `poe1::combined` (the mirage count).
     ("summon_mirage_archer_on_hit", "mirage"),
+    ("summon_totem_cast_speed_+%", "no-slice"),
     // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
     // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
     // regeneration); its cast speed and spell damage are `poe1::buffs`.
@@ -7942,6 +8020,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("totem_duration_+%", "totem-duration"),
     ("totem_elemental_resistance_%", "no-slice"),
     ("totem_life_+%", "no-slice"),
+    ("totem_placement_range_+%", "no-slice"),
+    (
+        "totems_taunt_enemies_around_them_for_x_seconds_when_summoned",
+        "no-slice",
+    ),
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),

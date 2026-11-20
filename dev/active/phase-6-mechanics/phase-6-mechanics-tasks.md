@@ -211,6 +211,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ee: mines' crits and penetration, movement speed after a crit and with a shield, maximum life, mana, and energy shield, fourteen `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11ee")
 - [x] P6-11ef: cold conversion, elemental penetration, added fire and cold to spells and attacks, trap and mine throwing speed, totems' cast speed, wand damage per power charge, six `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11ef")
 - [x] P6-11eg: crits by whether you have blocked recently (`conditions::NOT_BLOCKED_RECENTLY`), movement speed during a flask effect, nineteen `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11eg")
+- [x] P6-11eh: traps' and totems' crits, trap and mine speed and crits per charge, eighteen `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11eh")
+- [ ] Keystones left as reasons (one build each): Iron Reflexes, Chaos Inoculation, Pain Attunement (needs a settled `LowLife`), Acrobatics, Lightning Purist (Roiling Tempest)
 - [ ] Two conditions on one state row: "#% increased Area Damage while wielding a Two Handed Melee Weapon" (`UsingTwoHandedWeapon` and `UsingMeleeWeapon`)
 - [ ] Curse and travel skill flags: "Curse Skills have #% increased Cast Speed" (`KeywordFlag.Curse`), "#% increased Cooldown Recovery Rate of Travel Skills" (`SkillType.Travel`)
 - [ ] Autoexertion's reservation in a community Slayer: PoB reserves 118 for its General's Cry (20% of 714 at 21% efficiency), the engine 126 (the build's 11%, as its other skills). Find PoB's extra 10% efficiency for that warcry

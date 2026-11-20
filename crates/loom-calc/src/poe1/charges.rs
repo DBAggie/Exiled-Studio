@@ -133,6 +133,16 @@ pub enum PerCharge {
     /// Increased wand damage (`Damage` INC with `ModFlag.Wand` and `Hit`;
     /// P6-11ef).
     WandDamage,
+    /// Increased trap throwing speed (`TrapThrowingSpeed` INC; P6-11eh).
+    TrapThrowingSpeed,
+    /// Increased mine throwing speed (`MineLayingSpeed` INC; P6-11eh).
+    MineLayingSpeed,
+    /// Critical strike multiplier with traps (`CritMultiplier` BASE with
+    /// `KeywordFlag.Trap`; P6-11eh).
+    TrapCritMultiplier,
+    /// Increased critical strike chance with mines (`CritChance` INC with
+    /// `KeywordFlag.Mine`; P6-11eh).
+    MineCritChance,
     /// Increased critical strike chance (`CritChance` INC).
     CritChance,
     /// Critical strike multiplier (`CritMultiplier` BASE).
@@ -170,6 +180,10 @@ impl PerCharge {
             Self::MoreDamage => "per.more-damage",
             Self::SpellDamage => "per.spell-damage",
             Self::WandDamage => "per.wand-damage",
+            Self::TrapThrowingSpeed => "per.trap-throwing-speed",
+            Self::MineLayingSpeed => "per.mine-laying-speed",
+            Self::TrapCritMultiplier => "per.trap-crit-multiplier",
+            Self::MineCritChance => "per.mine-crit-chance",
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
             Self::Evasion => "per.evasion",
@@ -198,6 +212,18 @@ impl PerCharge {
                 Op::Increased,
                 Flags::WAND.union(Flags::HIT),
             ),
+            Self::TrapThrowingSpeed => (
+                Quantity::Poe1(super::Poe1Quantity::TrapThrowingSpeed),
+                Op::Increased,
+                Flags::NONE,
+            ),
+            Self::MineLayingSpeed => (
+                Quantity::Poe1(super::Poe1Quantity::MineLayingSpeed),
+                Op::Increased,
+                Flags::NONE,
+            ),
+            Self::TrapCritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::KEYWORD_TRAP),
+            Self::MineCritChance => (Quantity::CritChance, Op::Increased, Flags::KEYWORD_MINE),
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
             Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
@@ -407,6 +433,22 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeKind::Frenzy,
         ChargeValue::MaximumFromPower,
     ),
+    // P6-11eh: "#% increased Critical Strike Chance per Power Charge when used
+    // by Mines" (`SkillStatMap.lua` 1842: `CritChance` INC with
+    // `KeywordFlag.Mine` per `Multiplier:PowerCharge`).
+    (
+        "mine_critical_strike_chance_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::MineCritChance),
+    ),
+    // P6-11eh: "#% increased Mine Throwing Speed per Frenzy Charge"
+    // (`SkillStatMap.lua` 1826: `MineLayingSpeed` INC per
+    // `Multiplier:FrenzyCharge`).
+    (
+        "mine_throwing_speed_+%_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::MineLayingSpeed),
+    ),
     (
         "movement_velocity_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
@@ -437,6 +479,22 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "support_power_charge_on_crit_damage_+%_final_per_power_charge",
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::MoreDamage),
+    ),
+    // P6-11eh: "+#% to Critical Strike Multiplier per Power Charge when used
+    // by Traps" (`SkillStatMap.lua` 1801: `CritMultiplier` BASE with
+    // `KeywordFlag.Trap` per `Multiplier:PowerCharge`).
+    (
+        "trap_critical_strike_multiplier_+_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::TrapCritMultiplier),
+    ),
+    // P6-11eh: "#% increased Trap Throwing Speed per Frenzy Charge"
+    // (`SkillStatMap.lua` 1792: `TrapThrowingSpeed` INC per
+    // `Multiplier:FrenzyCharge`).
+    (
+        "trap_throwing_speed_+%_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::TrapThrowingSpeed),
     ),
     // P6-11ef: "#% increased Wand Damage per Power Charge" (`Damage` INC
     // with `ModFlag.Wand` and `Hit` per `Multiplier:PowerCharge`).
@@ -766,6 +824,14 @@ mod tests {
         // strike (the counts are the config's), and flask charges.
         "chance_to_gain_endurance_charge_on_block_%",
         "power_charge_on_block_%_chance",
+        // P6-11eh: more chances to gain a charge, and to lose one on a
+        // travel skill (PoB parses none; the counts are the config's).
+        "gain_power_charge_on_curse_cast_%",
+        "gain_frenzy_charge_on_hitting_unique_enemy_%",
+        "gain_frenzy_charge_on_hitting_rare_or_unique_enemy_%",
+        "gain_frenzy_charge_on_hitting_marked_enemy_%",
+        "power_charge_on_spell_block_%_chance",
+        "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
         "gain_power_charge_on_non_critical_strike_%",
         "charges_gained_+%",
         "flask_charges_used_+%",
