@@ -1434,3 +1434,13 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence:**
 - **Public:** 0 unexpected; 8 values toward PoB (a Cospris build's speed and damage), none away.
 - **Corpus:** unchanged.
+
+## P6-11bh: the minion's added damage of every type
+
+"Minions deal # to # additional <Type> Damage" for physical, fire, lightning, and chaos, as P6-11as did for cold (`minions::STATS`, `MinionValue::AddedDamage`: PoB's `MinionModifier` `<Type>Min` and `<Type>Max` BASE, no flags). The minion test checks each row against its game text.
+
+**Also fixed:** the `keystones_chill` maintainer test lists P6-11bf's row (`damage_+%_vs_chilled_enemies`).
+
+**Evidence:**
+- **Public:** 0 unexpected; 1 value toward PoB (Animate Guardian's full DPS), none away.
+- **Corpus:** unchanged.

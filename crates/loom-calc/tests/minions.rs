@@ -11,7 +11,7 @@ use loom_calc::quantity::{Bound, DamageType, Op};
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 35] = [
+const TEXTS: [(&str, &str); 43] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -102,12 +102,44 @@ const TEXTS: [(&str, &str); 35] = [
         "Minions have {0:+d}% to Fire Resistance",
     ),
     (
+        "minion_global_maximum_added_chaos_damage",
+        "Minions deal {0} to {1} additional Chaos Damage",
+    ),
+    (
         "minion_global_maximum_added_cold_damage",
         "Minions deal {0} to {1} additional Cold Damage",
     ),
     (
+        "minion_global_maximum_added_fire_damage",
+        "Minions deal {0} to {1} additional Fire Damage",
+    ),
+    (
+        "minion_global_maximum_added_lightning_damage",
+        "Minions deal {0} to {1} additional Lightning Damage",
+    ),
+    (
+        "minion_global_maximum_added_physical_damage",
+        "Minions deal {0} to {1} additional Physical Damage",
+    ),
+    (
+        "minion_global_minimum_added_chaos_damage",
+        "Minions deal {0} to {1} additional Chaos Damage",
+    ),
+    (
         "minion_global_minimum_added_cold_damage",
         "Minions deal {0} to {1} additional Cold Damage",
+    ),
+    (
+        "minion_global_minimum_added_fire_damage",
+        "Minions deal {0} to {1} additional Fire Damage",
+    ),
+    (
+        "minion_global_minimum_added_lightning_damage",
+        "Minions deal {0} to {1} additional Lightning Damage",
+    ),
+    (
+        "minion_global_minimum_added_physical_damage",
+        "Minions deal {0} to {1} additional Physical Damage",
     ),
     (
         "minion_life_regeneration_rate_per_minute_%",
@@ -169,13 +201,22 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
             .map(|t| (f(t), op))
             .collect()
     };
-    if text.contains("additional Cold Damage") {
+    let added = [
+        ("additional Physical Damage", DamageType::Physical),
+        ("additional Fire Damage", DamageType::Fire),
+        ("additional Cold Damage", DamageType::Cold),
+        ("additional Lightning Damage", DamageType::Lightning),
+        ("additional Chaos Damage", DamageType::Chaos),
+    ]
+    .into_iter()
+    .find(|(words, _)| text.contains(words));
+    if let Some((_, t)) = added {
         let bound = if stat.contains("minimum") {
             Bound::Min
         } else {
             Bound::Max
         };
-        vec![(MinionValue::AddedDamage(DamageType::Cold, bound), op)]
+        vec![(MinionValue::AddedDamage(t, bound), op)]
     } else if text.contains("Double Damage") {
         vec![(MinionValue::DoubleDamageChance, op)]
     } else if text.contains("Attack and Cast Speed") {

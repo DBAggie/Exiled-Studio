@@ -235,7 +235,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 35] = [
+pub const STATS: [MinionRow; 43] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -337,8 +337,16 @@ pub const STATS: [MinionRow; 35] = [
         "minion_fire_damage_resistance_%",
         &[(minion(MinionValue::Resistance(FIRE)), BASE, 1.0)],
     ),
-    // P6-11as: "Minions deal # to # additional <Type> Damage"
-    // (`MinionModifier` `<Type>Min` and `<Type>Max` BASE, no flags).
+    (
+        "minion_global_maximum_added_chaos_damage",
+        &[(
+            minion(MinionValue::AddedDamage(CHAOS, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ), // P6-11as (cold) and P6-11bh (the other types): "Minions deal # to #
+    // additional <Type> Damage" (`MinionModifier` `<Type>Min` and
+    // `<Type>Max` BASE, no flags).
     (
         "minion_global_maximum_added_cold_damage",
         &[(
@@ -348,9 +356,65 @@ pub const STATS: [MinionRow; 35] = [
         )],
     ),
     (
+        "minion_global_maximum_added_fire_damage",
+        &[(
+            minion(MinionValue::AddedDamage(FIRE, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_maximum_added_lightning_damage",
+        &[(
+            minion(MinionValue::AddedDamage(LIGHTNING, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_maximum_added_physical_damage",
+        &[(
+            minion(MinionValue::AddedDamage(DamageType::Physical, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_chaos_damage",
+        &[(
+            minion(MinionValue::AddedDamage(CHAOS, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
         "minion_global_minimum_added_cold_damage",
         &[(
             minion(MinionValue::AddedDamage(COLD, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_fire_damage",
+        &[(
+            minion(MinionValue::AddedDamage(FIRE, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_lightning_damage",
+        &[(
+            minion(MinionValue::AddedDamage(LIGHTNING, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_physical_damage",
+        &[(
+            minion(MinionValue::AddedDamage(DamageType::Physical, Bound::Min)),
             BASE,
             1.0,
         )],

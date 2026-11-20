@@ -94,6 +94,8 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// `poe1::damage_taken`'s `enemy_states`): resistances of an ignited or
 /// chilled enemy, damage taken per second chilled.
 const ENEMY_ROWS: &[&str] = &[
+    // P6-11bf: hit damage while the enemy is chilled (`damage_taken`).
+    "damage_+%_vs_chilled_enemies",
     "ignites_and_chill_apply_elemental_resistance_+",
     "permanent_damage_+%_per_second_of_chill",
 ];
