@@ -2,7 +2,7 @@
 
 Phase 6 is the PoE1 mechanics expansion with the stat mop-up (`dev/active/phase-6-mechanics/`). The maintainer asked for it on 2026-11-17: "do phase 6 in full without stopping. We can do gate testing after."
 
-This report is P6-12's: the counts, the register, the gate checklist, and the performance budgets re-checked. It was first written at PR #167's commit `f366c65` (P6-11n). The counts and the reasons below are updated to P6-11ac (`a1676a8`); the Phase 3 and Phase 6 set figures and the performance record are still P6-11n's.
+This report is P6-12's: the counts, the register, the gate checklist, and the performance budgets re-checked. It was first written at PR #167's commit `f366c65` (P6-11n). The counts table and the register are updated to P6-11az (`fd5f3ff`); the reasons table is P6-11ac's (`a1676a8`); the Phase 3 and Phase 6 set figures and the performance record are still P6-11n's.
 
 **Verdict: the gate is not met yet.**
 - Gate item 1 holds: every `Complete` field equals PoB's or is registered.
@@ -11,15 +11,17 @@ This report is P6-12's: the counts, the register, the gate checklist, and the pe
 
 ## The counts
 
-Every count is from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11ac` on `local/p6/packs/b-ot` (the evidence bundle with the tree packs 3_25 to 3_28).
+The P6-11ac counts are from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11ac` on `local/p6/packs/b-ot` (the evidence bundle with the tree packs 3_25 to 3_28). The P6-11az counts are from `local/p6/dv/` on `local/p6/packs/b-ct`, which adds data schema 5, the cluster, Timeless, and tattoo tables, and the stats' scalability (`docs/phase-6/timeless.md`, `docs/phase-6/tattoos.md`, `docs/phase-6/stat-mop-up.md`, "P6-11ax").
 
 | Set | Builds | Fields `Complete` | Partial | Unsupported | Indeterminate | calc-parity unexpected |
 |---|---|---|---|---|---|---|
 | Public, start (P6-0b, 2026-11-17) | 136 | 2,270 | 386 | 482 | 102 | 0 |
 | Public, at P6-11n | 210 (209 calculate; one is the expected failure) | 13,547 | 1,925 | 812 | 443 | 0 |
-| Public, now (P6-11ac) | 212 (211 calculate; one is the expected failure) | 13,953 | 1,669 | 816 | 447 | 0 |
+| Public, at P6-11ac | 212 (211 calculate; one is the expected failure) | 13,953 | 1,669 | 816 | 447 | 0 |
+| Public, now (P6-11az) | 253 (252 calculate; one is the expected failure) | 17,146 | 1,658 | 888 | 460 | 0 |
 | Corpus, start | 21 | 0 | 193 | 141 | 170 | 0 |
-| Corpus, now | 21 | 0 | 791 | 124 | 749 | 0 |
+| Corpus, at P6-11ac | 21 | 0 | 791 | 124 | 749 | 0 |
+| Corpus, now (P6-11az) | 21 | 0 | 804 | 118 | 749 | 0 |
 
 - **The Phase 3 set** (the 24 fields every document carries; at P6-11n):
   - Public: 3,090 `Complete` of 4,180, against 2,270 of 3,240 at the start. The new fixtures are mostly complete builds.
@@ -27,11 +29,11 @@ Every count is from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11a
 - **The Phase 6 set** (slice revisions 3 to 22, each field present when it applies; at P6-11n):
   - Public: 10,457 `Complete`.
   - Every computed field that is complete equals PoB's or is registered.
-- **Public calc-parity:** 280 expected differences, 0 unexpected. Fields matching PoB: 13,535 at P6-11w, 13,651 at P6-11ac.
+- **Public calc-parity:** 300 expected differences, 0 unexpected (P6-11az). Fields matching PoB: 13,535 at P6-11w, 13,651 at P6-11ac, 16,822 at P6-11az.
 
 ## The register
 
-`docs/parity/divergence-register.json` holds 293 entries: 292 `game-truth` and 1 `pob-bug` (DIV-0282 to DIV-0293, P6-11aj's Multistrike fixtures, are Q11 entries too).
+`docs/parity/divergence-register.json` holds 301 entries: 298 `game-truth`, 2 `pob-bug` (DIV-0294 and DIV-0295, PoB's per-second rounding of an Abyss jewel's per-minute rolls, `docs/phase-6/timeless.md`, "Part 4"), and 1 retired `pob-bug` (DIV-0282 to DIV-0293, P6-11aj's Multistrike fixtures, and DIV-0296 to DIV-0301, P6-11ay's bow fixture, are Q11 entries too).
 - **Q11 entries (Phase 6 adds DIV-0102 to DIV-0293, except DIV-0111 to DIV-0113 and DIV-0174):** the game floors a weapon's attack time to whole milliseconds (Q11, answered in game 2026-11-12). Each attack fixture's `Speed` difference is carried into the fields that read it:
   - the hit's DPS;
   - combined and full DPS;
@@ -50,7 +52,7 @@ Every count is from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.sh p6-11a
    - a mechanic still open (a dual wielder's ailments and leech, traps', mines', and totems' own rates, conversion smoothing in maximum hit, the config inputs below); or
    - not computed for the build's main skill (no hit, no skill).
 3. **The `Complete` counts rise.**
-   - Public: met, 2,270 to 13,953.
+   - Public: met, 2,270 to 17,146 (P6-11az).
    - Corpus: not met, still 0. Every corpus build carries unmapped stats and unmodelled gems: 21 of 21 builds for each.
 
 ### The remaining reasons (the closed list)
