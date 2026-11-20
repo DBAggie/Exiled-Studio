@@ -338,3 +338,15 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11bs's run):
 - **Public:** 0 unexpected; 7 values toward PoB, none away (a Juggernaut's Boneshatter, among others).
 - **Corpus:** 0 unexpected; 1 value toward PoB, none away.
+
+## P6-11ci: the character's warcry speed
+
+PoB's warcry cast time (`calcWarcryCastTime`, `CalcOffence.lua` 289 to 298) reads `calcLib.mod(skillModList, "WarcrySpeed")`, the warcry's gems' and the character's "#% increased Warcry Speed" (`WarcrySpeed` INC, `KeywordFlag.Warcry`). Intimidating Cry's exerted attacks read it through their uptime (P6-9e).
+
+What the engine does:
+- `skill_modifiers::SkillTiming::WarcrySpeed` (a `STATS` row) sums the character's warcry speed into `Totals`.
+- `gems::intimidating_terms` adds it to the gems' warcry speed.
+
+**Fixture** `smite-intimidating-cry-warcry-speed-templar.xml`: Smite with Intimidating Cry in another group and 30% increased warcry speed. The differences are Q11's floored attack rate (`DIV-0346` to `DIV-0353`). They include the average damage, through the exerted attacks' uptime, as `DIV-0056` registers.
+
+**Evidence** (`b-ct`, against P6-11ch's run): public and corpus 0 unexpected; no value moved (no build pairs the line with Intimidating Cry).

@@ -2654,6 +2654,7 @@ const SERVER_TICK_RATE: f64 = 1.0 / 0.033;
 fn intimidating_terms(
     input: &CalcInput<'_>,
     s: &GroupSkill<'_>,
+    totals: &Totals,
 ) -> Option<[(WarcryValue, f64); 4]> {
     let r = &s.active_gem;
     let level = skill::effect_level(r.effect, r.level)?;
@@ -2695,7 +2696,10 @@ fn intimidating_terms(
     if stored <= 1.0 {
         cooldown = crate::math::ceil(cooldown * SERVER_TICK_RATE) / SERVER_TICK_RATE;
     }
-    let cast_rate = 1.0 / WARCRY_CAST_TIME * (1.0 + stat("warcry_speed_+%") / 100.0);
+    // The gems' warcry speed and the character's (P6-11ci; PoB's
+    // `calcLib.mod(skillModList, "WarcrySpeed")`).
+    let cast_rate =
+        1.0 / WARCRY_CAST_TIME * (1.0 + (stat("warcry_speed_+%") + totals.warcry_speed) / 100.0);
     Some([
         (
             WarcryValue::Exerts,
@@ -3601,7 +3605,7 @@ fn one_skill(
     ) && !collected.intimidating
     {
         collected.intimidating = true;
-        match intimidating_terms(input, s) {
+        match intimidating_terms(input, s, totals) {
             Some(terms) => {
                 for (v, value) in terms {
                     ingest.effect(Effect {

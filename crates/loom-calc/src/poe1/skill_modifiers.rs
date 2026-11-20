@@ -89,6 +89,8 @@ pub enum SkillTiming {
     WarcryBuffEffect,
     /// `WarcryPower` INC ("increased total Power counted by Warcries").
     WarcryPower,
+    /// `WarcrySpeed` INC of warcries ("Warcry Speed"; P6-11ci).
+    WarcrySpeed,
 }
 
 impl SkillTiming {
@@ -102,6 +104,7 @@ impl SkillTiming {
             Self::WarcryCooldownRecovery => "warcry-cooldown-recovery",
             Self::WarcryBuffEffect => "warcry-buff-effect",
             Self::WarcryPower => "warcry-power",
+            Self::WarcrySpeed => "warcry-speed",
         }
     }
 }
@@ -131,7 +134,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 18] = [
+pub const STATS: [ModifierRow; 19] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -214,6 +217,13 @@ pub const STATS: [ModifierRow; 18] = [
         Poe1Quantity::SkillTiming(SkillTiming::WarcryPower),
         1.0,
     ),
+    // P6-11ci: "#% increased Warcry Speed" (`WarcrySpeed` INC,
+    // `KeywordFlag.Warcry`).
+    (
+        "warcry_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcrySpeed),
+        1.0,
+    ),
 ];
 
 /// The effects of a stat of [`STATS`]: `(quantity, op, scale)`.
@@ -262,6 +272,8 @@ pub struct Totals {
     pub warcry_buff_effect: f64,
     /// `WarcryPower` INC.
     pub warcry_power: f64,
+    /// `WarcrySpeed` INC of warcries (P6-11ci).
+    pub warcry_speed: f64,
     /// An effect of these quantities that [`Self::read`] cannot sum (a
     /// condition, another op, a pool's `Reserved`): no row makes one (a
     /// test), so a later row that does is a reason, not a silent drop.
@@ -329,6 +341,7 @@ impl Totals {
                     SkillTiming::WarcryCooldownRecovery => &mut t.warcry_cooldown_recovery,
                     SkillTiming::WarcryBuffEffect => &mut t.warcry_buff_effect,
                     SkillTiming::WarcryPower => &mut t.warcry_power,
+                    SkillTiming::WarcrySpeed => &mut t.warcry_speed,
                 },
                 Poe1Quantity::Reserved(Some(_)) => {
                     t.unread = true;
