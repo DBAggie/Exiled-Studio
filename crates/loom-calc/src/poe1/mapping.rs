@@ -5496,7 +5496,25 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-11ad: "You count as on Low Life while at #% of maximum Life or
-    // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
+    // P6-11bz: a flask's "Consecrated Ground created during Effect applies #%
+    // increased Damage taken to Enemies" and "Enemies Ignited by you during
+    // Effect take #% increased Damage" (`poe1::flasks::FLASK_ROWS`).
+    (
+        "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ConsecratedEnemyDamageTaken),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    (
+        "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::IgnitedEnemyDamageTaken),
+            Op::Increased,
+            1.0,
+        )],
+    ), // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
     // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
     // from reservation (`CalcPerform.lua` 546), which no modelled
     // modifier reads; [`super::enemy_hit`] reads it for `LifeRecoverable`.
@@ -6505,6 +6523,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
+    // P6-11bz: the radius of a flask's consecrated ground (PoB does not parse it).
+    ("local_flask_area_of_consecrated_ground_+%", "area"),
     // P6-11br: whether magic utility flask effects can be removed, and\nflask charges during the effect (PoB does not parse them; the effects\napply while the flask is on, as the config sets).
     (
         "local_flask_cannot_gain_charges_during_flask_effect",

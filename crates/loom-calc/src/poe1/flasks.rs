@@ -140,6 +140,13 @@ pub const ALIASES: &[(&str, &str)] = &[
     ),
 ];
 
+/// Flask lines with a row of their own in the character's mapping
+/// (P6-11bz), sorted.
+pub const FLASK_ROWS: &[&str] = &[
+    "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
+    "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
+];
+
 /// The mapping of a flask's own lines (module docs). Not modelled: a
 /// pasted base buff line on the item, which PoB drops (`Classes/Item.lua`
 /// 515, `flaskBuffLines`); neither PoB's saved items nor the game's copies
@@ -170,6 +177,11 @@ impl StatMapping for FlaskMapping {
             || (!self.recovery && DURATION_STATS.contains(&id))
         {
             return StatMap::NoEffect;
+        }
+        // A flask line with a row of its own (P6-11bz): the enemy's damage
+        // taken while ignited or on consecrated ground.
+        if FLASK_ROWS.contains(&id) {
+            return Poe1Mapping.map(stat);
         }
         if id.starts_with("local_") || id.starts_with("old_do_not_use_local_") {
             // A flask line the game's mapping reads as `NoEffect` (P6-11m:
@@ -495,9 +507,17 @@ mod tests {
         // A local line no row reads stays a reason; one the game's
         // mapping reads as `NoEffect` (P6-11m) is `NoEffect` (P6-11n).
         assert_eq!(
-            map(&life, "local_flask_area_of_consecrated_ground_+%"),
+            map(
+                &life,
+                "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect"
+            ),
             StatMap::Unmapped
         );
+        // Its own rows (P6-11bz).
+        assert!(FLASK_ROWS.windows(2).all(|w| w[0] < w[1]));
+        for s in FLASK_ROWS {
+            assert!(matches!(map(&life, s), StatMap::Effects(_)), "{s}");
+        }
         assert_eq!(
             map(&life, "local_flask_amount_to_recover_+%"),
             StatMap::NoEffect

@@ -152,6 +152,17 @@ pub enum Poe1Quantity {
     /// body armour's armour and energy shield rows when the three pieces
     /// each have both.
     BodyArmourIfHybridPieces,
+    /// The enemy's damage taken while ignited (P6-11bz; a flask's "Enemies
+    /// Ignited by you during Effect take #% increased Damage", PoB's
+    /// `EnemyModifier` `DamageTaken` INC with the enemy's `Ignited`):
+    /// `Increased`, read by [`damage_taken`] under the config's check.
+    IgnitedEnemyDamageTaken,
+    /// The enemy's damage taken on consecrated ground, unscaled by the
+    /// ground's effect (P6-11bz; a flask's "Consecrated Ground created during
+    /// Effect applies #% increased Damage taken to Enemies", PoB's
+    /// `EnemyModifier` `DamageTaken` INC with `OnConsecratedGround`):
+    /// `Increased`, read by [`damage_taken`] under the config's check.
+    ConsecratedEnemyDamageTaken,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1035,6 +1046,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
+            Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
+            Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

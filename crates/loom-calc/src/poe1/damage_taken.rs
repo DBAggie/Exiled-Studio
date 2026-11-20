@@ -702,6 +702,31 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             (Ok(_), Ok(_)) => {}
         }
     }
+    // P6-11bz: a flask's damage taken while the enemy is ignited or on
+    // consecrated ground, each under the config's check.
+    for (quantity, input) in [
+        (Poe1Quantity::IgnitedEnemyDamageTaken, IGNITED_INPUT),
+        (Poe1Quantity::ConsecratedEnemyDamageTaken, CONSECRATED_INPUT),
+    ] {
+        let lines: Vec<Effect> = unconditional(ingest, quantity, Op::Increased)
+            .cloned()
+            .collect();
+        if lines.is_empty() {
+            continue;
+        }
+        match set.map_or(Ok(false), |s| check(s, input)) {
+            Err(()) => ingest.reason(reason(input)),
+            Ok(false) => {}
+            Ok(true) => {
+                for e in &lines {
+                    ingest.effect(Effect {
+                        source: e.source.clone(),
+                        ..taken_effect(Op::Increased, e.value)
+                    });
+                }
+            }
+        }
+    }
     // P6-11bf: damage with hits against a chilled enemy ([`chilled`]).
     let vs_chilled: Vec<Effect> =
         unconditional(ingest, Poe1Quantity::DamageVsChilled, Op::Increased)
@@ -975,6 +1000,9 @@ mod tests {
         // ignite's chance (`poe1::ailment`), never the enemy's shock.
         let read_here = [
             "consecrated_ground_enemy_damage_taken_+%",
+            // P6-11bz: a flask's, read here under the config's checks.
+            "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
+            "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
             "chance_to_freeze_shock_ignite_%",
             // P6-11as: damage you take recouped as mana (`poe1::enemy_hit`).
             "damage_taken_goes_to_mana_%",

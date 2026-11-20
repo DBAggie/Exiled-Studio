@@ -1668,3 +1668,24 @@ What the engine does:
 - **Public:** 0 unexpected; 40 values toward PoB, 1 now equal (a Penance Brand build's armour, 25,366).
 - **Away:** 4 values, all on fields with other reasons. One build's energy shield recharge rose with its energy shield, which is still below PoB's. Three of another build's defence estimate values moved by under 0.01%.
 - **Corpus:** 0 unexpected; 43 toward PoB, 19 now equal, 3 away (the same estimate, by under 0.01%).
+
+## P6-11bz: a flask's enemy damage taken on consecrated ground and while ignited
+
+Two flask lines are PoB's `EnemyModifier` `DamageTaken` INC:
+- "Consecrated Ground created during Effect applies #% increased Damage taken to Enemies", with the enemy's `OnConsecratedGround`;
+- "Enemies Ignited by you during Effect take #% increased Damage", with the enemy's `Ignited`.
+
+The consecrated ground line is not scaled by the ground's effect, unlike the global "Consecrated Ground you create applies ..." (P3-8n). So it is a quantity of its own and not an alias.
+
+What the engine does:
+- `Poe1Quantity::ConsecratedEnemyDamageTaken` and `IgnitedEnemyDamageTaken` are `ROWS` rows.
+- `flasks::FLASK_ROWS` lets the flask mapping read them, as other local lines are reasons.
+- `damage_taken::enemy_states` adds each as the enemy's damage taken under the config's check (`conditionEnemyOnConsecratedGround`, `conditionEnemyIgnited`). The damage-taken guard lists both.
+- "Consecrated Ground created by this Flask has Tripled Radius" is `NoEffect` (`area`; PoB does not parse it).
+
+**Fixture** `ice-nova-flask-enemy-damage-taken-witch.xml`: a magic Sulphur Flask and Ruby Flask, both active, with both checks on. Every computed field equals PoB's; the hit is 1.2 times the same build without the lines.
+
+**Evidence** (`b-ct`, against P6-11by's run):
+- **Public:** 0 unexpected; 12 values toward PoB, none away.
+- **Unsettled rolls:** two builds carry the consecrated ground line on a flask whose roll the item does not settle. Their 141 fields went from partial (the stat unmapped) to indeterminate (its unsettled value), as P6-11bq's.
+- **Corpus:** unchanged.
