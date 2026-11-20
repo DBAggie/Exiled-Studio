@@ -6358,6 +6358,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_number_of_projectiles", "projectile-count"),
     // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
     ("base_number_of_skeletons_allowed", "minion-count"),
+    // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count\nno slice field reads, as the zombies' and skeletons'.
+    ("base_number_of_spectres_allowed", "minion-count"),
     // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
     ("base_number_of_zombies_allowed", "minion-count"),
     // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.

@@ -1740,3 +1740,9 @@ Every computed field of both equals PoB's.
 **Evidence** (`b-ct`, against P6-11cb's run):
 - **Public:** 0 unexpected; 13 values toward PoB, 2 now equal, none away.
 - **Corpus:** 0 unexpected; 2 toward PoB. One build's poison DPS is now computed, indeterminate for the build's older tree version.
+
+## P6-11cd: the spectre limit
+
+"+# to maximum number of Spectres" is PoB's `ActiveSpectreLimit`. As the zombie and skeleton limits (P6-11m), it is a count no slice field reads, so it is a `NoEffect` row (`minion-count`).
+
+**Evidence** (`b-ct`, against P6-11cc's run): public and corpus 0 unexpected; no value or state moved (those builds' fields have other reasons).
