@@ -994,6 +994,8 @@ mod tests {
         "cast_on_damage_taken_threshold",
         "base_chance_to_shock_%",
         "base_chance_to_shock_%_from_skill",
+        // P6-11em: the chance to be frozen, shocked, and ignited: yours.
+        "chance_to_be_frozen_shocked_ignited_%",
         // Shock on you: not the enemy's.
         "base_avoid_shock_%",
         "has_avoid_shock_as_avoid_all_elemental_ailments",

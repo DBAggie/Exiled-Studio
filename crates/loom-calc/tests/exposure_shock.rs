@@ -93,6 +93,8 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
+    // P6-11em: the chance to be frozen, shocked, and ignited: yours.
+    "chance_to_be_frozen_shocked_ignited_%",
     "lightning_ailment_duration_+%",
     "shocked_effect_on_self_+%",
 ];

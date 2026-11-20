@@ -4040,6 +4040,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::CRIT_RECENTLY,
         )],
     ),
+    // P6-11em: "+#% Chance to Block Spell Damage if you've Cast a Spell
+    // Recently" (`SpellBlockChance` BASE, `CastSpellRecently`).
+    (
+        "chance_to_block_spells_%_if_cast_a_spell_recently",
+        &[(SPELL_BLOCK, Op::Base, NONE, conditions::CAST_SPELL_RECENTLY)],
+    ),
     // P6-11ba: "#% Chance to Block Spell Damage if you were Damaged by a Hit
     // Recently": `SpellBlockChance` BASE, `BeenHitRecently` (the config's).
     (
@@ -7409,6 +7415,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.
     ("base_projectile_speed_+%", "projectile-speed"),
     ("base_secondary_skill_effect_duration", "skill-duration"),
+    // P6-11em: ignite duration on you and the chance to be frozen, shocked,
+    // and ignited (PoB parses neither): no slice field.
+    ("base_self_ignite_duration_-%", "ailment-on-self"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
     // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
     // own copy is read by PoB's skill stat map as the enemy's
@@ -7494,6 +7503,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("chaining_range_+%", "no-slice"),
+    ("chance_to_be_frozen_shocked_ignited_%", "ailment-on-self"),
     (
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
@@ -7772,6 +7782,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11m: a flask's recovery rate (`FlaskRecoveryRate`).
     ("local_flask_recovery_speed_+%", "flask"),
+    // P6-11em: a flask's stun recovery while healing (PoB does not parse it).
+    ("local_flask_stun_recovery_+%_while_healing", "stun"),
     // P6-11m: a flask's taunt on use (unparsed).
     ("local_flask_taunt_enemies_on_use_radius", "flask"),
     ("local_flask_use_causes_area_knockback", "no-slice"),
@@ -7818,6 +7830,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     (
         "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
+        "charge-gain-chance",
+    ),
+    // P6-11em: "#% chance to lose a Power Charge when you gain Elusive" (PoB
+    // parses it to nothing; the count is the config's).
+    (
+        "lose_a_power_charge_when_you_gain_elusive_%_chance",
         "charge-gain-chance",
     ),
     (
@@ -7946,6 +7964,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("rage_loss_delay_ms", "rage-duration"),
     // P6-11br: projectile directions (PoB does not parse it).
     ("random_projectile_direction", "targeting"),
+    // P6-11em: "Recover #% of Energy Shield over 1 second when you take
+    // Physical Damage from an Enemy Hit" (PoB does not parse it): no recovery
+    // field reads a hit taken.
+    (
+        "recover_%_energy_shield_over_1_second_when_you_take_physical_damage_from_enemy_hits",
+        "recovery",
+    ),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
     // P6-11eg: "Recover #% of Mana on Kill" and "... of Energy Shield on Kill"
@@ -10611,6 +10636,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11em: spell block after casting a spell.
+            (
+                "chance_to_block_spells_%_if_cast_a_spell_recently",
+                vec![config(
+                    SPELL_BLOCK,
+                    Op::Base,
+                    NONE,
+                    conditions::CAST_SPELL_RECENTLY,
                 )],
             ),
             // P6-11ei: movement speed on low life and while ignited.

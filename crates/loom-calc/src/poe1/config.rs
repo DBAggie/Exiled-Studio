@@ -172,10 +172,10 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// `CalcTriggers.lua`, `CalcActiveSkill.lua`, `CalcTools.lua`, `Calcs.lua`,
 /// `CalcMirages.lua`, `CalcBreakdown.lua`):
 ///
-/// - `conditionCastSpellRecently`: `Condition:CastSpellRecently` with
-///   `Condition:UsedSkillRecently` (line 1489); no calc module reads them.
-///   `conditionUsedMinionSkillRecently` (1526) left this list in P6-11cm:
-///   a check `poe1::conditions` settles, read by a minion modifier.
+/// - `conditionUsedMinionSkillRecently` (1526) left this list in P6-11cm,
+///   `conditionAttackedRecently` and `conditionCastSpellRecently` (1485,
+///   1489) in P6-11em: checks `poe1::conditions` settles, read by
+///   modifiers. Their implied `UsedSkillRecently` is no row's.
 /// - `conditionKilledRecently`: `Condition:KilledRecently` (line 1270);
 ///   only `CalcTriggers.lua` (1136, 1156) reads it, for trigger skills
 ///   (other gems, reasons).
@@ -270,14 +270,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Multiplier:NearbyNonGolemMinion"],
     ),
     ("changedStance", &["Condition:ChangedStanceRecently"]),
-    (
-        "conditionAttackedRecently",
-        &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],
-    ),
-    (
-        "conditionCastSpellRecently",
-        &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],
-    ),
     (
         "conditionCausedBleedingRecently",
         &["Condition:CausedBleedingRecently"],

@@ -2762,3 +2762,25 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
+## P6-11em: attacked and cast a spell recently; spell block; five `NoEffect` lines
+
+**PoB:**
+- `AttackedRecently` and `CastSpellRecently` come from their checks (`ConfigOptions.lua` 1485, 1489). The main skill also sets them (`CalcPerform.lua` 240 to 245): a skill not triggered and not a trap, mine, or totem sets `AttackedRecently` with its `attack` flag, else `CastSpellRecently` with its `spell` flag. `UsedMinionSkillRecently` (P6-11cm) comes from the same block.
+- "+#% Chance to Block Spell Damage if you've Cast a Spell Recently" is `SpellBlockChance` BASE under `CastSpellRecently`.
+
+**The engine:**
+- **Conditions:** `conditions::ATTACKED_RECENTLY` and `CAST_SPELL_RECENTLY` are settled from their checks, or set by the main skill. `used_minion_skill`'s reading of the main skill is now `main_skill_recently`, which gives the three together. The two inputs leave `config::NAMED_ONLY`. Their implied `UsedSkillRecently` is no row's.
+- **Row:** one `STATE_ROWS` row, spell block after casting a spell.
+- **`NoEffect`:**
+  - `ailment-on-self`: ignite duration on you, and the chance to be frozen, shocked, and ignited. PoB parses neither. The second is listed in the shock tests' checked `NoEffect` rows (`damage_taken`, `tests/exposure_shock.rs`).
+  - `recovery`: energy shield recovered when you take physical damage from a hit (PoB does not parse it).
+  - `stun`: a flask's stun recovery while healing.
+  - `charge-gain-chance`: losing a power charge on gaining Elusive.
+- **Left as reasons:** the "you and nearby allies" lines under these conditions (PoB's `ExtraAura`, scaled by the aura effect on you), and attack speed per enemy in close range (a condition with a count).
+- `loom-app`'s workflow test used `conditionCastSpellRecently` as an input with no effect; it now uses `conditionImpaledRecently`.
+
+**Evidence** (`b-ct`, against P6-11el's run):
+- **Public:** 0 unexpected. 5 values moved, all toward PoB: a Penance Brand Elementalist's spell block (71 to 78, equal to PoB) and configured damage chance (equal to PoB), and its defence estimates. Its main skill is a spell, so it has cast a spell recently, as in PoB.
+- **Corpus:** 0 unexpected. 5 values moved, all toward PoB, two now equal: another Penance Brand build, the same fields.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+

@@ -832,6 +832,8 @@ mod tests {
         "gain_frenzy_charge_on_hitting_marked_enemy_%",
         "power_charge_on_spell_block_%_chance",
         "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
+        // P6-11em: losing a power charge on gaining Elusive.
+        "lose_a_power_charge_when_you_gain_elusive_%_chance",
         "gain_power_charge_on_non_critical_strike_%",
         "charges_gained_+%",
         "flask_charges_used_+%",

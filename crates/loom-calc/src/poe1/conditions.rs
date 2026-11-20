@@ -59,6 +59,13 @@ use crate::input::CalcInput;
 /// "if you've used a Minion Skill Recently" (PoB's `UsedMinionSkillRecently`;
 /// P6-11cm): its check, or the main skill (module docs).
 pub const USED_MINION_SKILL_RECENTLY: &str = "UsedMinionSkillRecently";
+/// "if you've Attacked Recently" (PoB's `AttackedRecently`; P6-11em): its
+/// check (`ConfigOptions.lua` 1485), or a main skill that attacks
+/// ([`main_skill_recently`]).
+pub const ATTACKED_RECENTLY: &str = "AttackedRecently";
+/// "if you've Cast a Spell Recently" (PoB's `CastSpellRecently`; P6-11em):
+/// its check (1489), or a main skill that is a spell and no attack.
+pub const CAST_SPELL_RECENTLY: &str = "CastSpellRecently";
 
 /// "if you've used a Life Flask in the past 10 seconds", "during effect of
 /// any Life Flask" (PoB's `UsingLifeFlask`; P6-11cq): from the active
@@ -210,12 +217,16 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("buffLifetap", LIFETAP),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
+    // P6-11em: attacked recently; the main skill too (`settle`).
+    ("conditionAttackedRecently", ATTACKED_RECENTLY),
     ("conditionBeenHitRecently", BEEN_HIT_RECENTLY),
     ("conditionBlockedAttackRecently", "BlockedAttackRecently"),
     ("conditionBlockedAttackRecently", BLOCKED_RECENTLY),
     ("conditionBlockedRecently", BLOCKED_RECENTLY),
     ("conditionBlockedSpellRecently", BLOCKED_RECENTLY),
     ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
+    // P6-11em: cast a spell recently; the main skill too (`settle`).
+    ("conditionCastSpellRecently", CAST_SPELL_RECENTLY),
     ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyBleeding", ENEMY_BLEEDING),
     ("conditionEnemyBurning", ENEMY_BURNING),
@@ -259,16 +270,38 @@ pub const CHECKS: &[(&str, &str)] = &[
 /// certain; `Some(false)` without one (PoB's empty main skill).
 #[must_use]
 pub fn used_minion_skill(input: &CalcInput<'_>) -> Option<bool> {
+    main_skill_recently(input).map(|r| r.minion)
+}
+
+/// What the main skill makes the character have done recently (PoB's
+/// `doActorMisc`, `CalcPerform.lua` 240 to 251), for a skill not
+/// triggered and not a trap, mine, or totem: attacked (PoB's `attack`
+/// flag), else cast a spell (`spell`), and used a minion skill (`minion`,
+/// not `permanentMinion`). `None` when the main skill is not certain; all
+/// `false` without one (PoB's empty main skill).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct MainSkillRecently {
+    /// `AttackedRecently`.
+    pub attacked: bool,
+    /// `CastSpellRecently`.
+    pub cast_spell: bool,
+    /// `UsedMinionSkillRecently`.
+    pub minion: bool,
+}
+
+/// [`MainSkillRecently`] for the build's main skill.
+#[must_use]
+pub fn main_skill_recently(input: &CalcInput<'_>) -> Option<MainSkillRecently> {
     use super::skill::{self, SkillProblem};
     // Gem levels do not decide the skill's types or supports.
     let levels = super::gem_levels::GemLevels::none();
     let skill = match skill::main_skill(input.build, input.data, &levels) {
         Ok(s) => s,
-        Err(SkillProblem::NoActiveSkill) => return Some(false),
+        Err(SkillProblem::NoActiveSkill) => return Some(MainSkillRecently::default()),
         Err(_) => return None,
     };
     let Some(pob) = super::pob_skill::skill(&skill.active_gem.effect.id) else {
-        return Some(false);
+        return Some(MainSkillRecently::default());
     };
     let placed = ["Trapped", "RemoteMined", "SummonsTotem"]
         .iter()
@@ -277,7 +310,15 @@ pub fn used_minion_skill(input: &CalcInput<'_>) -> Option<bool> {
         super::triggers::kind(&skill),
         super::triggers::Kind::NotTriggered
     );
-    Some(pob.flag("minion") && !pob.flag("permanentMinion") && !placed && !triggered)
+    if placed || triggered {
+        return Some(MainSkillRecently::default());
+    }
+    let attacked = pob.flag("attack");
+    Some(MainSkillRecently {
+        attacked,
+        cast_spell: !attacked && pob.flag("spell"),
+        minion: pob.flag("minion") && !pob.flag("permanentMinion"),
+    })
 }
 
 /// A check's value: `Some(false)` when unset or off, `None` for a value
@@ -352,15 +393,23 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         }
     }
     // A minion skill used recently (P6-11cm): the check or the main skill.
-    let key = ConditionKey::new(USED_MINION_SKILL_RECENTLY);
-    if out.get(&key).copied() == Some(false) {
-        match used_minion_skill(input) {
-            Some(false) => {}
-            Some(true) => {
-                out.insert(key, true);
-            }
-            None => {
-                out.remove(&key);
+    // Attacked and cast a spell recently (P6-11em): the same.
+    let recently = main_skill_recently(input);
+    for (name, from_skill) in [
+        (USED_MINION_SKILL_RECENTLY, recently.map(|r| r.minion)),
+        (ATTACKED_RECENTLY, recently.map(|r| r.attacked)),
+        (CAST_SPELL_RECENTLY, recently.map(|r| r.cast_spell)),
+    ] {
+        let key = ConditionKey::new(name);
+        if out.get(&key).copied() == Some(false) {
+            match from_skill {
+                Some(false) => {}
+                Some(true) => {
+                    out.insert(key, true);
+                }
+                None => {
+                    out.remove(&key);
+                }
             }
         }
     }
