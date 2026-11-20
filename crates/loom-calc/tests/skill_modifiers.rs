@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 12] = [
+const TEXTS: [(&str, &str); 18] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -59,6 +59,26 @@ const TEXTS: [(&str, &str); 12] = [
     (
         "herald_skills_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Herald Skills",
+    ),
+    // P6-11bs: PoB's `BuffEffect` with `KeywordFlag.Warcry`, read by the
+    // warcries' scale (`skill_modifiers::Totals::warcry_buff_effect`).
+    ("warcry_buff_effect_+%", "{0}% increased Warcry Buff Effect"),
+    (
+        "base_cooldown_speed_+%",
+        "{0}% increased Cooldown Recovery Rate",
+    ),
+    (
+        "skill_effect_duration_+%",
+        "{0}% increased Skill Effect Duration",
+    ),
+    (
+        "warcry_cooldown_speed_+%",
+        "{0}% increased Warcry Cooldown Recovery Rate",
+    ),
+    ("warcry_duration_+%", "{0}% increased Warcry Duration"),
+    (
+        "warcry_monster_power_+%",
+        "{0}% increased total Power counted by Warcries",
     ),
     // P6-11k: PoB's `SkillAuraEffectOnSelf`.
     (

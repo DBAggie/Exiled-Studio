@@ -643,6 +643,10 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
     /// buffs.
     GolemBuffEffect,
+    /// A skill's duration, cooldown, or a warcry's buff or power modifier
+    /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
+    /// warcries alone.
+    SkillTiming(skill_modifiers::SkillTiming),
     /// The effect of herald skills' buffs (PoB's `BuffEffect` INC tagged
     /// `SkillType.Herald`; P6-11at), read by [`skill_modifiers`].
     HeraldBuffEffect,
@@ -1157,6 +1161,7 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::GrantedPassive => f.write_str("granted-passive"),
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
+            Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),

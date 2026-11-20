@@ -267,6 +267,18 @@ pub enum BuffStat {
     /// guard's absorption, Molten Shell's beside its armour): scale 1
     /// (P6-11ae).
     Unscalable(&'static [HitEffect]),
+    /// A warcry's rows per warcry power (P6-11bs; PoB's `GlobalEffect` tag
+    /// with `div` and `limit`, `CalcPerform.lua` 2327 to 2331): scaled by
+    /// `floor(min(power, limit) / div)` with the warcry's buff effect and
+    /// uptime ([`warcry_terms`]).
+    PerPower {
+        /// Power per step.
+        div: f64,
+        /// The power counted at most.
+        limit: f64,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies in Sand Stance (PoB's `effectCond = "SandStance"`, set when
     /// the config's stance is Sand: `ConfigOptions.lua` 643 to 646) as a
     /// `Buff` on the character, not on minions: scaled by the buff effect
@@ -738,20 +750,21 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Warcry {
             name: "Enduring Cry",
             stats: &[
-                // Per 5 warcry power, which the engine does not model: the
-                // life regeneration field's reason (P6-10b).
+                // Per 5 warcry power up to 25 (P6-11bs; PoB's
+                // `LifeRegenPercent` BASE, the stat per minute: `div = 60`).
                 (
                     "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
-                    BuffStat::Rows(&[(
-                        Quantity::Poe1(Poe1Quantity::RegenReason(
-                            Pool::Life,
-                            "enduring_cry_life_regeneration_rate_per_minute_%_per_5_power_up_to_cap",
-                        )),
-                        Op::Flag,
-                        1.0,
-                        NONE,
-                        NONE,
-                    )]),
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 25.0,
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::Life)),
+                            Op::Base,
+                            60.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "warcry_count_power_from_enemies",
@@ -1189,19 +1202,21 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Warcry {
             name: "Intimidating Cry",
             stats: &[
-                // Per 5 warcry power, which the engine does not model: the
-                // movement fields' reason (P6-10b).
+                // Per 5 warcry power up to 30 (P6-11bs; PoB's
+                // `MovementSpeed` INC).
                 (
                     "intimidating_cry_movement_speed_+%_per_5_power_up_to_cap",
-                    BuffStat::Rows(&[(
-                        Quantity::Poe1(Poe1Quantity::MovementReason(
-                            "intimidating_cry_movement_speed_+%_per_5_power_up_to_cap",
-                        )),
-                        Op::Flag,
-                        1.0,
-                        NONE,
-                        NONE,
-                    )]),
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 30.0,
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                            Op::Increased,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "warcry_count_power_from_enemies",
@@ -2505,6 +2520,130 @@ impl WarcryValue {
     }
 }
 
+/// The config's warcry power (`ConfigOptions.lua` 732: `WarcryPower`
+/// OVERRIDE; a count, applied when not 0, else its placeholder when not
+/// 0, `ConfigTab.lua` 1088 to 1093).
+pub const WARCRY_POWER_INPUT: &str = "multiplierWarcryPower";
+
+/// The warcry power a boss enemy gives (`ConfigOptions.lua` 2097, 2132,
+/// 2166: `WarcryPower` BASE 20 for the Boss, Pinnacle, and Uber kinds).
+const BOSS_WARCRY_POWER: f64 = 20.0;
+
+/// A warcry's terms (P6-11bs; `CalcPerform.lua` 2311 to 2350).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WarcryTerms {
+    /// `(1 + inc / 100) x more`: `inc` the gem's own buff effect and the
+    /// character's warcry buff effect; `more` 1.
+    pub scale: f64,
+    /// The power: the config's override, else `max(base x (1 + inc / 100),
+    /// minimum)`, `base` 20 against a boss, `inc` the character's.
+    pub power: f64,
+    /// `min(duration / cooldown, 1)` (2336): `duration` PoB's
+    /// `calcSkillDuration` (`CalcOffence.lua` 300 to 313: `(base + BASE) x
+    /// max(calcLib.mod(Duration), 0)`), `cooldown` the level's over
+    /// `calcLib.mod(CooldownRecovery)` (no server tick rounding here).
+    pub uptime: f64,
+}
+
+/// The stats of a warcry's gems PoB reads as its `Duration` MORE
+/// (`SkillStatMap.lua` 694 to 707).
+const DURATION_MORE_STATS: &[&str] = &[
+    "active_skill_quality_duration_+%_final",
+    "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final",
+];
+
+/// A warcry's terms ([`WarcryTerms`]), or the reason the engine cannot
+/// read them.
+///
+/// # Errors
+/// The `unmodelled-skill` name: `warcry-power` for a config power that is
+/// not a number, `warcry-uptime` for a missing level or a stat the terms
+/// do not read.
+pub fn warcry_terms(
+    input: &CalcInput<'_>,
+    s: &GroupSkill<'_>,
+    totals: &Totals,
+    config: Option<&ConfigSet>,
+) -> Result<WarcryTerms, &'static str> {
+    let r = &s.active_gem;
+    let level = skill::effect_level(r.effect, r.level).ok_or("warcry-uptime")?;
+    let mut stats: Vec<(String, i64)> = Vec::new();
+    for g in std::iter::once(r).chain(&s.supports) {
+        let instance = skill::instance(g.effect, g.level, g.quality, input.data);
+        if !instance.problems.is_empty() {
+            return Err("warcry-uptime");
+        }
+        stats.extend(instance.stats);
+    }
+    let stat = |id: &str| {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "stat values are small integers, exact as f64"
+        )]
+        let v = stats
+            .iter()
+            .filter(|(s, _)| s == id)
+            .map(|(_, v)| *v as f64)
+            .sum::<f64>();
+        v
+    };
+    // A flat cooldown change (`CooldownRecovery` BASE) is not read.
+    if stat("base_cooldown_modifier_ms") != 0.0 {
+        return Err("warcry-uptime");
+    }
+    // The power.
+    let number = |kind| match config.and_then(|set| last_input(set, WARCRY_POWER_INPUT, kind)) {
+        None => Ok(None),
+        Some(ConfigValue::Number(n)) if n.value().0.is_finite() => {
+            Ok((n.value().0 != 0.0).then_some(n.value().0))
+        }
+        Some(_) => Err("warcry-power"),
+    };
+    let power = match number(ConfigInputKind::Input)? {
+        Some(p) => p,
+        None => match number(ConfigInputKind::Placeholder)? {
+            Some(p) => p,
+            None => {
+                let base = if super::enemy::enemy(input.build, input.data).kind
+                    == super::enemy::BossKind::None
+                {
+                    0.0
+                } else {
+                    BOSS_WARCRY_POWER
+                };
+                crate::math::max(base * (1.0 + totals.warcry_power / 100.0), 0.0)
+            }
+        },
+    };
+    // The duration.
+    let base = stat("base_skill_effect_duration") / 1000.0;
+    let inc = stat("skill_effect_duration_+%") + totals.duration + totals.warcry_duration;
+    let more = DURATION_MORE_STATS
+        .iter()
+        .fold(1.0, |m, id| m * (1.0 + stat(id) / 100.0));
+    let duration = base * crate::math::max((1.0 + inc / 100.0) * more, 0.0);
+    // The cooldown.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "a cooldown in milliseconds, exact as f64"
+    )]
+    let cooldown_ms = level.cooldown as f64;
+    let recovery = 1.0
+        + (stat("base_cooldown_speed_+%")
+            + stat("warcry_cooldown_speed_+%")
+            + totals.cooldown_recovery
+            + totals.warcry_cooldown_recovery)
+            / 100.0;
+    let cooldown = cooldown_ms / 1000.0 / recovery;
+    let uptime = crate::math::min(duration / cooldown, 1.0);
+    let scale = 1.0 + (own_effect(input, s, false) + totals.warcry_buff_effect) / 100.0;
+    Ok(WarcryTerms {
+        scale,
+        power,
+        uptime,
+    })
+}
+
 /// PoB's base warcry cast time, seconds (`CalcSetup.lua` 57).
 pub const WARCRY_CAST_TIME: f64 = 0.8;
 /// PoB's server tick rate (`Modules/Data.lua` 231: `1 / 0.033`).
@@ -2593,6 +2732,7 @@ pub fn is_input(name: &str) -> bool {
         PRIDE_INPUT,
         MOMENTUM_REMOVED_INPUT,
         INFUSION_INPUT,
+        WARCRY_POWER_INPUT,
     ]
     .contains(&name)
 }
@@ -3336,6 +3476,7 @@ pub fn minion_buffs(
                         (scale, scale),
                         config,
                         true,
+                        None,
                         &mut merged,
                         ingest,
                     );
@@ -3520,6 +3661,7 @@ fn one_skill(
                 (scale, buff_scale),
                 config,
                 false,
+                None,
                 &mut collected.merged,
                 ingest,
             );
@@ -3535,22 +3677,37 @@ fn one_skill(
                 (1.0, 1.0),
                 config,
                 false,
+                None,
                 &mut collected.merged,
                 ingest,
             );
         }
         Kind::Warcry { name, stats } => {
-            // Warcry power and uptime scale only rows of its own; none
-            // reaches a slice field (a test).
+            // Its buff effect, power, and uptime (P6-11bs): without them
+            // (a level missing, a value not read) its power rows are a
+            // reason and its other rows act at scale 1, which no slice
+            // field reads (a test).
+            let terms = warcry_terms(input, s, totals, config);
+            let scale = match terms {
+                Ok(t) => t.scale,
+                Err(what) => {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: active_source.clone(),
+                        what,
+                    });
+                    1.0
+                }
+            };
             add_rows(
                 input,
                 g,
                 &s.active_gem,
                 name,
                 stats,
-                (1.0, 1.0),
+                (scale, 1.0),
                 config,
                 false,
+                terms.ok(),
                 &mut collected.merged,
                 ingest,
             );
@@ -3685,6 +3842,7 @@ fn supports_global(
             (scale, scale),
             config,
             false,
+            None,
             &mut collected.merged,
             ingest,
         );
@@ -3726,6 +3884,7 @@ fn add_rows(
     (scale, buff_scale): (f64, f64),
     config: Option<&ConfigSet>,
     for_minion: bool,
+    warcry: Option<WarcryTerms>,
     merged: &mut Merged,
     ingest: &mut Ingest<'_>,
 ) {
@@ -3755,6 +3914,16 @@ fn add_rows(
         let mut count = 1.0;
         let (rows, state): (&[HitEffect], Option<(&'static str, bool)>) = match b {
             BuffStat::Rows(rows) => (rows, None),
+            // Only a warcry with its terms (P6-11bs): `(1 + inc / 100) x
+            // more x bonus x uptime` (`CalcPerform.lua` 2347).
+            BuffStat::PerPower { div, limit, rows } => {
+                let Some(w) = warcry else {
+                    continue;
+                };
+                let bonus = crate::math::floor(crate::math::min(w.power, limit) / div);
+                row_scale = scale * bonus * w.uptime;
+                (rows, None)
+            }
             BuffStat::Unscalable(rows) => {
                 row_scale = 1.0;
                 (rows, None)
@@ -3873,6 +4042,11 @@ fn add_rows(
                 (rows, None)
             }
         };
+        if let Some(w) = warcry
+            && !matches!(b, BuffStat::PerPower { .. })
+        {
+            row_scale = row_scale * 1.0 * w.uptime;
+        }
         #[expect(
             clippy::cast_precision_loss,
             reason = "stat values are small integers, exact as f64"
@@ -4221,6 +4395,7 @@ mod tests {
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }
                 | BuffStat::MinionOnly(e)
+                | BuffStat::PerPower { rows: e, .. }
                 | BuffStat::ConfigIs { rows: e, .. } => e,
                 BuffStat::NoSlice(_)
                 | BuffStat::Defence(_)
@@ -4301,6 +4476,8 @@ mod tests {
                     stats.iter().all(|(_, b)| match b {
                         BuffStat::NoSlice(_) | BuffStat::Defence(_) | BuffStat::Reason(_) => true,
                         BuffStat::Rows(rows) => marker(rows),
+                        // Scaled by power and uptime (P6-11bs).
+                        BuffStat::PerPower { .. } => true,
                         _ => false,
                     }),
                     "{id}"

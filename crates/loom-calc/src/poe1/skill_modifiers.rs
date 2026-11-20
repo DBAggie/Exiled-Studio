@@ -72,6 +72,40 @@ use crate::ingest::Ingest;
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::store::Conditions;
 
+/// A modifier of a skill's duration or cooldown, or of a warcry's buff
+/// or power (P6-11bs), each PoB's INC: warcries read them for their
+/// uptime and power ([`super::gems`]); nothing else does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SkillTiming {
+    /// `Duration` INC, untagged ("Skill Effect Duration").
+    Duration,
+    /// `Duration` INC of warcries (`KeywordFlag.Warcry`).
+    WarcryDuration,
+    /// `CooldownRecovery` INC, untagged ("Cooldown Recovery Rate").
+    CooldownRecovery,
+    /// `CooldownRecovery` INC of warcries.
+    WarcryCooldownRecovery,
+    /// `BuffEffect` INC of warcries ("Warcry Buff Effect").
+    WarcryBuffEffect,
+    /// `WarcryPower` INC ("increased total Power counted by Warcries").
+    WarcryPower,
+}
+
+impl SkillTiming {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Duration => "duration",
+            Self::WarcryDuration => "warcry-duration",
+            Self::CooldownRecovery => "cooldown-recovery",
+            Self::WarcryCooldownRecovery => "warcry-cooldown-recovery",
+            Self::WarcryBuffEffect => "warcry-buff-effect",
+            Self::WarcryPower => "warcry-power",
+        }
+    }
+}
+
 /// One stat's quantity (`Increased`) and scale.
 type ModifierRow = (&'static str, Poe1Quantity, f64);
 
@@ -93,12 +127,21 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 /// - "#% increased Mana Reservation Efficiency of Herald Skills" (P6-11ag;
 ///   PoB's `ManaReservationEfficiency` INC tagged `SkillType.Herald`,
 ///   `ModParser.lua` 1027 "of herald skills").
-pub const STATS: [ModifierRow; 12] = [
+/// - P6-11bs: "#% increased Cooldown Recovery Rate", "#% increased Skill
+///   Effect Duration", and the warcries' duration, cooldown recovery, buff
+///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
+///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
+pub const STATS: [ModifierRow; 18] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
         "aura_effect_on_self_from_your_skills_+%",
         Poe1Quantity::SkillAuraEffectOnSelf,
+        1.0,
+    ),
+    (
+        "base_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::CooldownRecovery),
         1.0,
     ),
     (
@@ -146,6 +189,31 @@ pub const STATS: [ModifierRow; 12] = [
         Poe1Quantity::ReservationEfficiency(None),
         -2.0,
     ),
+    (
+        "skill_effect_duration_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::Duration),
+        1.0,
+    ),
+    (
+        "warcry_buff_effect_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryBuffEffect),
+        1.0,
+    ),
+    (
+        "warcry_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryCooldownRecovery),
+        1.0,
+    ),
+    (
+        "warcry_duration_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryDuration),
+        1.0,
+    ),
+    (
+        "warcry_monster_power_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryPower),
+        1.0,
+    ),
 ];
 
 /// The effects of a stat of [`STATS`]: `(quantity, op, scale)`.
@@ -182,6 +250,18 @@ pub struct Totals {
     pub herald_buff_effect: f64,
     /// `CurseEffect` INC (P3-close).
     pub curse_effect: f64,
+    /// `Duration` INC, untagged (P6-11bs).
+    pub duration: f64,
+    /// `Duration` INC of warcries.
+    pub warcry_duration: f64,
+    /// `CooldownRecovery` INC, untagged.
+    pub cooldown_recovery: f64,
+    /// `CooldownRecovery` INC of warcries.
+    pub warcry_cooldown_recovery: f64,
+    /// `BuffEffect` INC of warcries.
+    pub warcry_buff_effect: f64,
+    /// `WarcryPower` INC.
+    pub warcry_power: f64,
     /// An effect of these quantities that [`Self::read`] cannot sum (a
     /// condition, another op, a pool's `Reserved`): no row makes one (a
     /// test), so a later row that does is a reason, not a silent drop.
@@ -242,6 +322,14 @@ impl Totals {
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
                 Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
+                Poe1Quantity::SkillTiming(timing) => match timing {
+                    SkillTiming::Duration => &mut t.duration,
+                    SkillTiming::WarcryDuration => &mut t.warcry_duration,
+                    SkillTiming::CooldownRecovery => &mut t.cooldown_recovery,
+                    SkillTiming::WarcryCooldownRecovery => &mut t.warcry_cooldown_recovery,
+                    SkillTiming::WarcryBuffEffect => &mut t.warcry_buff_effect,
+                    SkillTiming::WarcryPower => &mut t.warcry_power,
+                },
                 Poe1Quantity::Reserved(Some(_)) => {
                     t.unread = true;
                     continue;
@@ -332,6 +420,10 @@ impl Totals {
 fn high_precision(quantity: Quantity, op: Op) -> Option<u8> {
     match (quantity, op) {
         (Quantity::CritChance, Op::Base) => Some(2),
+        // P6-11bs: `<Pool>RegenPercent` BASE at 2, `<Pool>Regen` BASE at 1
+        // (`Modules/Data.lua` 437 to 454).
+        (Quantity::Poe1(Poe1Quantity::RegenPercent(_)), Op::Base) => Some(2),
+        (Quantity::Poe1(Poe1Quantity::Regen(_)), Op::Base) => Some(1),
         _ => None,
     }
 }
@@ -495,12 +587,15 @@ mod tests {
     /// groups' gems never reach a mapping.
     #[test]
     fn a_gems_modifiers_should_be_reasons() {
-        for (stat, ..) in STATS {
-            assert_eq!(
-                SkillMapping.map(&StatId::new(stat)),
-                StatMap::Unmapped,
-                "{stat}"
-            );
+        for (stat, q, _) in STATS {
+            // A skill's own duration reaches no slice field through its
+            // hit (P6-11bs; it was a `NoEffect` row before).
+            let want = if q == Poe1Quantity::SkillTiming(SkillTiming::Duration) {
+                StatMap::NoEffect
+            } else {
+                StatMap::Unmapped
+            };
+            assert_eq!(SkillMapping.map(&StatId::new(stat)), want, "{stat}");
         }
     }
 

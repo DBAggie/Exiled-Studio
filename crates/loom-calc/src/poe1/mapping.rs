@@ -3130,6 +3130,18 @@ impl StatMapping for SkillMapping {
             {
                 StatMap::Effects(e)
             }
+            // A skill's own duration (P6-11bs): no slice field reads it
+            // through the hit, as before the warcries read the character's.
+            StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    t.quantity
+                        == Quantity::Poe1(Poe1Quantity::SkillTiming(
+                            super::skill_modifiers::SkillTiming::Duration,
+                        ))
+                }) =>
+            {
+                StatMap::NoEffect
+            }
             StatMap::Effects(_) => StatMap::Unmapped,
             other => other,
         }
@@ -6516,7 +6528,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: a skill effect duration (PoB `Duration`): read only by
     // skill functions, base mods, stages, brands, and ailments that are
     // skill effects, each a reason (`hit::pob_vetted`, `poe1::ailment`).
-    ("skill_effect_duration_+%", "skill-duration"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.

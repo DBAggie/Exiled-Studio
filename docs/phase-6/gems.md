@@ -283,3 +283,34 @@ The support is in `gems::SUPPORTS` with no global stat.
 After that: 1,645 values compared, 0 differences, uncategorized 0.
 
 **Not modelled: PoB-only skills.** `EnemyExplode` ("On Kill Monster Explosion", in 6 public builds) has no game granted effect of that ID, so its gem is `unmodelled-gem` before any table is read (tasks file).
+
+## P6-11bs: warcry power and uptime
+
+PoB v2.67.2 scales a warcry's buff (`CalcPerform.lua` 2311 to 2350) by `(1 + inc / 100) x more x bonus x uptime`:
+- `inc` is the warcry's `BuffEffect`, `BuffEffectOnSelf`, and `BuffEffectOnPlayer` INC.
+- `bonus` is `floor(min(power, limit) / div)` for a mod whose `GlobalEffect` tag has a `div`, else 1.
+- `uptime` is `min(duration / cooldown, 1)`.
+
+The terms:
+- **Power:** the config's `multiplierWarcryPower` override, applied when not 0, else its placeholder when not 0 (`ConfigTab.lua` 1088 to 1093). Otherwise `max(base x (1 + inc / 100), minimum)`: `base` is 20 against the Boss, Pinnacle, and Uber kinds (`ConfigOptions.lua` 2097, 2132, 2166), `inc` is "increased total Power counted by Warcries".
+- **Duration:** PoB's `calcSkillDuration` (`CalcOffence.lua` 300 to 313): the gem's `base_skill_effect_duration` times `max(calcLib.mod(Duration), 0)`. This version has no server tick rounding.
+- **Cooldown:** the level's over `calcLib.mod(CooldownRecovery)`.
+
+What the engine does:
+- `gems::warcry_terms` computes the three terms from the warcry's gems' stats and the character's.
+- The character's are the new `skill_modifiers::SkillTiming` sums in `Totals`, from six stats PoB reads as INC: "Skill Effect Duration", "Cooldown Recovery Rate", warcry duration, warcry cooldown recovery, warcry buff effect, and total power. The warcry ones carry `KeywordFlag.Warcry`.
+- `skill_effect_duration_+%` leaves `NO_EFFECT`. Through a skill's own gems it stays no effect (the skill mapping's rule); the other five stay reasons there.
+- A new `BuffStat::PerPower { div, limit, rows }` holds a row per power. `add_rows` scales it by the bonus and the uptime, and a warcry's other rows by the uptime.
+- Enduring Cry's life regeneration (`RegenPercent` BASE, the stat over 60, step 5 up to 25) and Intimidating Cry's movement speed (`MovementSpeed` INC, step 5 up to 30) are such rows. Each was a field's reason marker before.
+- A flat cooldown change (`base_cooldown_modifier_ms`), a missing level, or a power that is not a number is an `unmodelled-skill` reason (`warcry-uptime` or `warcry-power`).
+- **Scaling:** PoB scales `<Pool>RegenPercent` BASE at precision 2 and `<Pool>Regen` BASE at precision 1 (`Modules/Data.lua` 437 to 454). `skill_modifiers::scale` now does too. Clarity's, Vitality's, and the golems' regeneration were scaled with the default rule before.
+
+**Fixtures:** every computed field of both equals PoB's.
+- `ice-nova-warcry-power-witch.xml`: both cries at the boss's power 20.
+- `ice-nova-warcry-power-config-witch.xml`: the config's power 12, with lines of warcry duration, skill effect duration, warcry cooldown recovery, and warcry buff effect.
+
+**data-parity** (`gem_effects`): 1,647 values compared, the two new rows with their `div` and `limit` among them, 0 differences.
+
+**Evidence** (`b-ct`, against P6-11br's run):
+- **Public:** 0 unexpected. 11 values moved toward PoB, 6 now equal, none away. 6 fields went from partial to complete: the Inquisitor builds' movement speed and a Chieftain's, plus three builds' life regeneration.
+- **Corpus:** 0 unexpected; 5 values toward PoB, 1 now equal, none away.

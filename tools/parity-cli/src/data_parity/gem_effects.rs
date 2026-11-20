@@ -823,6 +823,19 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             ),
         ),
         BuffStat::MinionOnly(rows) => (rows, String::new()),
+        // A warcry's rows per power (P6-11bs): PoB's `GlobalEffect` tag
+        // carries the step and the cap.
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "the step and the cap are small whole numbers"
+        )]
+        BuffStat::PerPower { div, limit, rows } => (
+            rows,
+            format!(
+                " tags global {}",
+                json!({ "div": *div as i64, "limit": *limit as i64 })
+            ),
+        ),
         BuffStat::WhenState { var, rows, .. } => (
             rows,
             format!(
@@ -1117,6 +1130,7 @@ fn check_one(
             | BuffStat::LifeThreshold(_)
             | BuffStat::WhenState { .. }
             | BuffStat::MinionOnly(_)
+            | BuffStat::PerPower { .. }
             | BuffStat::ConfigIs { .. } => {}
         }
     }
