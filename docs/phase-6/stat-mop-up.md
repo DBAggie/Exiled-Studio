@@ -3106,3 +3106,21 @@ Their exerted attacks' mods (`SeismicExertedAttacks`, `AncestralExertedAttacks`,
 - **Reasons:** item-granted Precision and Vulnerability no longer appear among the unmodelled gems.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ff: an item's skills with the slot's supports
+
+**PoB** (`ModParser.lua` 2046 to 2062, 3275 to 3367): the grant's wording sets `noSupports`.
+- "Grants (Level #) <skill>", "Trigger(s) / Cast(s) Level # <skill> ...", and "Use Level # ..." take the slot's supports.
+- "Curse Enemies with ..." and the triggered grants without a level ("Cast / Trigger <skill> on <event>", "... when Hit", "... when your Skills or Minions Kill", "... when you take a Critical Strike") are `noSupports`.
+
+With supports, every support socketed in the slot's other groups joins the skill, the best of each kind (`CalcSetup.lua` 1690 to 1710).
+
+**The engine:**
+- **`gems::grant_supports`** reads the grant lines of the item the group's `source` names (`Item:<id>:...`), through `grant_kind`. When all agree, the group is built: `granted_view` alone for `noSupports`, `granted_view_with_supports` otherwise, with the slot's other gems after the active one; `skill::group_skills` keeps the supports that fit.
+- **Still reasons:** an item with both kinds of grant line, or none, or one not found.
+- **Test:** `grant_lines_should_say_whether_supports_join`.
+
+**Evidence** (`b-ct`, against P6-11fe's run):
+- **Public:** 0 unexpected. 8 values moved, all toward PoB: a General's Cry Berserker's damage (average 521,698 to 587,458, PoB 604,979) and a mine Assassin's, each from an item's skill now with its slot's supports.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

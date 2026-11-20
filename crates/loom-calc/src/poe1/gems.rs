@@ -3689,8 +3689,21 @@ pub fn gems(
             // [`granted_view`]).
             let from_item = skill::attribute(&group.attributes, "source")
                 .is_some_and(|s| s.starts_with("Item"));
-            if from_item && !slot_supports(&groups, g, input.data) {
-                let view = granted_view(group);
+            let grant = if from_item {
+                if slot_supports(&groups, g, input.data) {
+                    grant_supports(build, group)
+                } else {
+                    Some(false)
+                }
+            } else {
+                None
+            };
+            if let Some(with_supports) = grant {
+                let view = if with_supports {
+                    granted_view_with_supports(group, &groups, g)
+                } else {
+                    granted_view(group)
+                };
                 let skills = skill::group_skills(&view, &[], input.data, levels);
                 for s in &skills {
                     let is_main = main.is_some_and(|(mg, m)| {
@@ -3795,6 +3808,81 @@ fn granted_view(group: &SocketGroup) -> SocketGroup {
         view.gems.push(gem);
     }
     view
+}
+
+/// [`granted_view`] with every gem of the slot's other groups (not of the
+/// group's source) after the active gem (P6-11ff; `CalcSetup.lua` 1690 to
+/// 1710): PoB adds each socketed support of the slot; the skill's matching
+/// then keeps the supports that fit, the best of each kind
+/// ([`skill::group_skills`]).
+fn granted_view_with_supports(
+    group: &SocketGroup,
+    groups: &[&SocketGroup],
+    g: usize,
+) -> SocketGroup {
+    let mut view = granted_view(group);
+    let source = skill::attribute(&group.attributes, "source");
+    for (o, other) in groups.iter().enumerate() {
+        if o == g
+            || other.slot != group.slot
+            || skill::attribute(&other.attributes, "source") == source
+        {
+            continue;
+        }
+        for gem in other.gems.typed().filter(|gem| gem.enabled) {
+            view.gems.push(gem.clone());
+        }
+    }
+    view
+}
+
+/// Whether PoB adds the slot's supports to an item's granted skill
+/// (P6-11ff; `ModParser.lua` 2046 to 2062, 3275 to 3367): `Some(true)` when
+/// the item's grant lines all take supports ("Grants ...", "Trigger(s) /
+/// Cast(s) Level # ...", "Use Level # ..."), `Some(false)` when they are
+/// all `noSupports` ("Curse Enemies with ...", and the triggered grants
+/// without a level: "Cast / Trigger ... on <event>", "... when Hit", "...
+/// when your Skills or Minions Kill", "... when you take a Critical
+/// Strike"), `None` when the item is not found, has no grant line, or has
+/// both kinds (the build file does not say which line made the group).
+fn grant_supports(build: &Build, group: &SocketGroup) -> Option<bool> {
+    let source = skill::attribute(&group.attributes, "source")?;
+    let id: u32 = source
+        .strip_prefix("Item:")?
+        .split(':')
+        .next()?
+        .parse()
+        .ok()?;
+    let item = build.items.item(loom_domain::ItemId(id))?;
+    let mut kinds = std::collections::BTreeSet::new();
+    for (_, m) in item.body.modifiers() {
+        if m.selected
+            && let Some(kind) = grant_kind(&m.text)
+        {
+            kinds.insert(kind);
+        }
+    }
+    match kinds.len() {
+        1 => kinds.into_iter().next(),
+        _ => None,
+    }
+}
+
+/// A grant line's kind ([`grant_supports`]): `Some(true)` when PoB adds
+/// the slot's supports to the skill it grants, `Some(false)` for
+/// `noSupports`, `None` for another line.
+fn grant_kind(text: &str) -> Option<bool> {
+    let t = text.to_lowercase();
+    let triggered = (t.starts_with("cast") || t.starts_with("trigger") || t.starts_with("use"))
+        && (t.contains(" on ") || t.contains(" when "));
+    let levelled = t.contains(" level ");
+    if t.starts_with("curse enemies with") || (triggered && !levelled) {
+        Some(false)
+    } else if t.starts_with("grants ") || (triggered && levelled) {
+        Some(true)
+    } else {
+        None
+    }
 }
 
 /// Whether another group in group `g`'s slot, not of its source, holds an
@@ -5065,6 +5153,30 @@ mod tests {
         WEAPON_ROWS, WeaponMapping,
     };
     use loom_domain::StatId;
+
+    /// A grant line's kind (P6-11ff), as PoB's patterns.
+    #[test]
+    fn grant_lines_should_say_whether_supports_join() {
+        assert_eq!(grant_kind("Grants Level 20 Precision Skill"), Some(true));
+        assert_eq!(grant_kind("Grants Summon Harbinger Skill"), Some(true));
+        assert_eq!(
+            grant_kind("Trigger Level 20 Raise Spiders on Kill"),
+            Some(true)
+        );
+        assert_eq!(
+            grant_kind("Curse Enemies with Assassin's Mark on Hit"),
+            Some(false)
+        );
+        assert_eq!(
+            grant_kind("Curse Enemies with Level 12 Vulnerability on Hit"),
+            Some(false)
+        );
+        assert_eq!(
+            grant_kind("Trigger Commandment of Frost on Kill"),
+            Some(false)
+        );
+        assert_eq!(grant_kind("+20 to maximum Life"), None);
+    }
 
     /// `AurasAffectEnemies` (P6-11er): an ally aura's resistance row goes
     /// on the enemy, its maximum resistance does nothing there, another row
