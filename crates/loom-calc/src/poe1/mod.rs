@@ -405,6 +405,9 @@ pub enum Poe1Quantity {
     /// [`phases`]: every evasion row goes to armour (`CalcDefence.lua` 919,
     /// 980).
     IronReflexes,
+    /// "Auras from your Skills which affect Allies also affect Enemies"
+    /// (PoB's `AurasAffectEnemies`; P6-11er): a `Flag`, read by [`gems`].
+    AurasAffectEnemies,
     /// Acrobatics (PoB's `ConvertSpellSuppressionToSpellDodge`; P6-11el): a
     /// `Flag`. Spell suppression is 0 ([`phases`]), and half of its chance is
     /// the chance to dodge spell hits, at most 75% ([`enemy_hit`]).
@@ -1256,6 +1259,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),
             Self::IronReflexes => f.write_str("iron-reflexes"),
+            Self::AurasAffectEnemies => f.write_str("auras-affect-enemies"),
             Self::SuppressionToSpellDodge => f.write_str("suppression-to-spell-dodge"),
             Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
             Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),

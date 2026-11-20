@@ -2847,3 +2847,21 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
   - both builds' defence estimates moved toward PoB.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11er: auras that also affect enemies
+
+**PoB:** with `AurasAffectEnemies` ("Auras from your Skills which affect Allies also affect Enemies"), each aura buff that affects allies is also a debuff on the enemy (`CalcPerform.lua` 2451 to 2464). Its mods are scaled by the skill's `AuraEffect` and `BuffEffect` INC and MORE, without the terms for the effect on you. The enemy's resistance reads the debuff's `<Type>Resist`. Its maximum reads only the config and the constant (`calcResistForType`), so a maximum resistance mod does nothing there.
+
+**The engine:**
+- **Flag:** `Poe1Quantity::AurasAffectEnemies`, mapped from `base_aura_skills_affecting_allies_also_affect_enemies`.
+- **`gems::auras_on_enemy`:** each aura of `EffectType::Aura` that does not itself affect enemies (`AuraAffectsEnemies`) is recorded with its first skill. With the flag, its merged rows go on the enemy: a resistance row as `EnemyResistance`, which the hit adds to the enemy's base; a maximum resistance row as nothing; any other row as an `aura-on-enemy` reason.
+- **The scale:** the merged rows carry the character's scale. It equals the debuff's when the aura effect on you (`SkillAuraEffectOnSelf`) is 0; otherwise each aura is an `aura-on-enemy-scale` reason.
+- **Unit test:** `ally_auras_should_go_on_the_enemy_with_the_flag` covers the flag, the resistance, the maximum, another row, and the effect on you.
+
+**Evidence** (`b-ct`, against P6-11eq's run):
+- **Public and corpus:** 0 unexpected; no value moved.
+- **The three builds with the flag:**
+  - A Penance Brand Elementalist now has Purity of Ice's cold resistance on the enemy, but deals no cold damage, so nothing moved.
+  - A Facebreaker Luminary has no active ally aura: its Precision's group is not active in its item set.
+  - The flag stat is no longer a reason in any of the three, a corpus build among them.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -3310,10 +3310,10 @@ fn slot_enabled(build: &Build, slot: Option<&str>) -> bool {
 /// The largest scaled value of each buff row, by buff name, then stat,
 /// then row (`mergeBuff` compares each mod after its skill's scale), with
 /// the gem it came from first, the row, and the row's state condition.
-type Merged = BTreeMap<
-    (&'static str, &'static str, usize),
-    (f64, Source, HitEffect, Option<(&'static str, bool)>),
->;
+/// One merged row: its value, source, row, and the state it needs.
+type MergedRow = (f64, Source, HitEffect, Option<(&'static str, bool)>);
+
+type Merged = BTreeMap<(&'static str, &'static str, usize), MergedRow>;
 
 /// One curse of the skill list: its name, its source, and its scaled rows.
 struct CurseApplied {
@@ -3436,6 +3436,9 @@ struct Collected {
     rallying_cry: Option<Source>,
     /// Whether an Intimidating Cry's terms are in.
     intimidating: bool,
+    /// The aura buffs that affect allies, by name, each with its first
+    /// skill (P6-11er: `AurasAffectEnemies` puts them on the enemy too).
+    ally_auras: BTreeMap<&'static str, Source>,
 }
 
 /// Adds the other gems' reservation, buffs, debuffs, and curses, and their
@@ -3582,6 +3585,7 @@ fn apply(
         guards,
         lightning_golems,
         rallying_cry,
+        ally_auras,
         ..
     } = collected;
     // Guards: PoB's slots (module docs).
@@ -3596,7 +3600,9 @@ fn apply(
         &mut merged,
         ingest,
     );
-    for (value, source, (quantity, op, _, all, any), state) in merged.into_values() {
+    let on_enemy = auras_on_enemy(totals, &ally_auras, &merged, ingest);
+    for (value, source, (quantity, op, _, all, any), state) in merged.into_values().chain(on_enemy)
+    {
         let mut conditions = Conditions::none().with_all(all).with_any(any);
         if let Some((key, on)) = state {
             conditions = conditions.with_state(ConditionKey::new(key), on);
@@ -3671,6 +3677,62 @@ fn apply(
             });
         }
     }
+}
+
+/// The aura rows on the enemy (P6-11er; `CalcPerform.lua` 2451 to 2464):
+/// with `AurasAffectEnemies`, each aura that affects allies is also a
+/// debuff on the enemy, its mods scaled by the skill's `AuraEffect` and
+/// `BuffEffect` alone. The engine's merged rows carry the character's
+/// scale, which adds the aura effect on you; when that is 0 the two are
+/// equal, otherwise each aura is an `aura-on-enemy-scale` reason. A
+/// resistance row is the enemy's resistance (`EnemyResistance`, which the
+/// hit adds to the enemy's base); a maximum resistance row is nothing on
+/// the enemy, as PoB's enemy maximum reads only the config and its
+/// constant (`calcResistForType`); any other row is an `aura-on-enemy`
+/// reason.
+fn auras_on_enemy(
+    totals: &Totals,
+    ally_auras: &BTreeMap<&'static str, Source>,
+    merged: &Merged,
+    ingest: &mut Ingest<'_>,
+) -> Vec<MergedRow> {
+    let flag = Quantity::Poe1(Poe1Quantity::AurasAffectEnemies);
+    let on = ingest
+        .effects()
+        .iter()
+        .any(|e| e.quantity == flag && e.conditions == Conditions::none() && e.value != 0.0);
+    if !on || ally_auras.is_empty() {
+        return Vec::new();
+    }
+    if totals.aura_on_self != 0.0 {
+        for source in ally_auras.values() {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what: "aura-on-enemy-scale",
+            });
+        }
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for ((name, _, _), (value, source, (quantity, op, scale, all, any), state)) in merged {
+        let Some(aura) = ally_auras.get(name) else {
+            continue;
+        };
+        match (quantity, op) {
+            (Quantity::Resistance(t), Op::Base) => out.push((
+                *value,
+                source.clone(),
+                (enemy_res(*t), Op::Base, *scale, *all, *any),
+                *state,
+            )),
+            (Quantity::MaximumResistance(_), _) => {}
+            _ => ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: aura.clone(),
+                what: "aura-on-enemy",
+            }),
+        }
+    }
+    out
 }
 
 /// The skill's own scale terms: the sum of its gems' [`OWN_EFFECT_STATS`]
@@ -3964,6 +4026,14 @@ fn one_skill(
             if effect == EffectType::Guard {
                 collected
                     .guards
+                    .entry(name)
+                    .or_insert_with(|| active_source.clone());
+            }
+            // An aura on you and your allies (PoB's `buff.type == "Aura"`,
+            // `CalcPerform.lua` 2451): not one that affects enemies itself.
+            if aura && !s.types.contains("AuraAffectsEnemies") {
+                collected
+                    .ally_auras
                     .entry(name)
                     .or_insert_with(|| active_source.clone());
             }
@@ -4680,6 +4750,80 @@ mod tests {
         WEAPON_ROWS, WeaponMapping,
     };
     use loom_domain::StatId;
+
+    /// `AurasAffectEnemies` (P6-11er): an ally aura's resistance row goes
+    /// on the enemy, its maximum resistance does nothing there, another row
+    /// is a reason; nothing without the flag, or with the aura effect on you.
+    #[test]
+    fn ally_auras_should_go_on_the_enemy_with_the_flag() {
+        let source = Source::Gem { group: 0, gem: 0 };
+        let mut auras = BTreeMap::new();
+        auras.insert("Purity of Ice", source.clone());
+        let mut merged: Merged = BTreeMap::new();
+        let res = (
+            Quantity::Resistance(DamageType::Cold),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        );
+        let max = (
+            Quantity::MaximumResistance(DamageType::Cold),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        );
+        let acc = (Quantity::Accuracy, Op::Base, 1.0, NONE, NONE);
+        merged.insert(
+            ("Purity of Ice", "res", 0),
+            (20.0, source.clone(), res, None),
+        );
+        merged.insert(
+            ("Purity of Ice", "max", 0),
+            (2.0, source.clone(), max, None),
+        );
+        merged.insert(("Other", "res", 0), (30.0, source.clone(), res, None));
+        let flag = |i: &mut Ingest<'_>| {
+            i.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::AurasAffectEnemies),
+                op: Op::Flag,
+                value: 1.0,
+                conditions: Conditions::none(),
+                source: source.clone(),
+            });
+        };
+        let totals = Totals::default();
+        // Without the flag: nothing.
+        let mut i = Ingest::new(&Poe1Mapping);
+        assert!(auras_on_enemy(&totals, &auras, &merged, &mut i).is_empty());
+        // With it: the resistance alone, as the enemy's.
+        let mut i = Ingest::new(&Poe1Mapping);
+        flag(&mut i);
+        let out = auras_on_enemy(&totals, &auras, &merged, &mut i);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].0, 20.0);
+        assert_eq!(out[0].2.0, enemy_res(DamageType::Cold));
+        assert!(i.finish().1.partial.is_empty());
+        // Another row is a reason.
+        merged.insert(
+            ("Purity of Ice", "acc", 0),
+            (5.0, source.clone(), acc, None),
+        );
+        let mut i = Ingest::new(&Poe1Mapping);
+        flag(&mut i);
+        let _ = auras_on_enemy(&totals, &auras, &merged, &mut i);
+        assert_eq!(i.finish().1.partial.len(), 1);
+        // The aura effect on you: a reason, nothing on the enemy.
+        let totals = Totals {
+            aura_on_self: 10.0,
+            ..Totals::default()
+        };
+        let mut i = Ingest::new(&Poe1Mapping);
+        flag(&mut i);
+        assert!(auras_on_enemy(&totals, &auras, &merged, &mut i).is_empty());
+        assert_eq!(i.finish().1.partial.len(), 1);
+    }
 
     fn sorted_unique<T: Ord>(ids: &[T]) -> bool {
         ids.windows(2).all(|w| w[0] < w[1])

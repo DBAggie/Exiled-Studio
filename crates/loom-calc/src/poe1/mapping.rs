@@ -5204,6 +5204,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11er: "Auras from your Skills which affect Allies also affect
+    // Enemies" (`AurasAffectEnemies` FLAG), read by `poe1::gems`.
+    (
+        "base_aura_skills_affecting_allies_also_affect_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AurasAffectEnemies),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b part 14: "#% chance to avoid Projectiles" (`AvoidProjectilesChance`
     // BASE), the effective health pool's.
     (
