@@ -6591,6 +6591,21 @@ impl StatMapping for Poe1Mapping {
                 conditions: Conditions::none(),
             }]);
         }
+        if let Ok(i) = super::charges::MULTI.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                super::charges::MULTI[i]
+                    .1
+                    .iter()
+                    .map(|&(kind, value)| EffectTemplate {
+                        quantity: Quantity::Poe1(Poe1Quantity::Charge(kind, value)),
+                        op: Op::Base,
+                        scale: 1.0,
+                        divisor: 1.0,
+                        conditions: Conditions::none(),
+                    })
+                    .collect(),
+            );
+        }
         if let Some((kind, value)) = super::charges::modifier(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
                 quantity: Quantity::Poe1(Poe1Quantity::Charge(kind, value)),

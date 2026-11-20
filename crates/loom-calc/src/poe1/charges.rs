@@ -172,6 +172,32 @@ impl PerCharge {
     }
 }
 
+/// Charge stats that are several of [`MODIFIERS`]' effects at once
+/// (P6-11bb), sorted by stat ID, each as PoB reads its text:
+/// - "+# to Maximum Power Charges and Maximum Endurance Charges":
+///   `PowerChargesMax` and `EnduranceChargesMax` BASE;
+/// - "#% increased Damage per Endurance, Frenzy or Power Charge":
+///   `Damage` INC per `TotalCharges` (`PerStat`), which PoB sums from
+///   the three kinds (`Modules/CalcPerform.lua` 1081), so a per-charge
+///   damage effect of each.
+pub const MULTI: &[(&str, &[(ChargeKind, ChargeValue)])] = &[
+    (
+        "damage_+%_per_frenzy_power_or_endurance_charge",
+        &[
+            (ChargeKind::Endurance, ChargeValue::Per(PerCharge::Damage)),
+            (ChargeKind::Frenzy, ChargeValue::Per(PerCharge::Damage)),
+            (ChargeKind::Power, ChargeValue::Per(PerCharge::Damage)),
+        ],
+    ),
+    (
+        "maximum_power_and_endurance_charges_+",
+        &[
+            (ChargeKind::Power, ChargeValue::Maximum),
+            (ChargeKind::Endurance, ChargeValue::Maximum),
+        ],
+    ),
+];
+
 /// The charge modifiers the engine models (module docs), sorted by stat
 /// ID, each checked against PoB v2.67.2's reading of its game text
 /// (`Modules/ModParser.lua`: "maximum power charges" `PowerChargesMax`
@@ -516,6 +542,15 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
 mod tests {
     use super::*;
     use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};
+
+    #[test]
+    fn multi_stats_should_be_sorted_and_apart_from_the_single_ones() {
+        assert!(MULTI.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, effects) in MULTI {
+            assert!(modifier(id).is_none(), "{id}");
+            assert!(effects.len() > 1, "{id}");
+        }
+    }
 
     #[test]
     fn charge_inputs_should_be_known_and_not_named_only() {

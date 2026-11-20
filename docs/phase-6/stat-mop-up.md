@@ -1359,3 +1359,15 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence** (`b-ct`, against P6-11az's run):
 - **Public:** 0 unexpected; 6 values toward PoB, none away, 2 now equal (Arakaali's spell block is now PoB's 78).
 - **Corpus:** no value moved.
+
+## P6-11bb: charge stats of several kinds
+
+`charges::MULTI`: a stat that is several of the charge module's effects at once, as PoB reads its text.
+- **"+# to Maximum Power Charges and Maximum Endurance Charges":** `PowerChargesMax` and `EnduranceChargesMax` BASE.
+- **"#% increased Damage per Endurance, Frenzy or Power Charge":** `Damage` INC per `TotalCharges` (`PerStat`). PoB sums `TotalCharges` from the three kinds (`CalcPerform.lua` 1081), so the stat is a per-charge damage effect of each kind.
+
+**Fixture** `ice-nova-total-charges-lines-witch.xml`: every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-9g's run):
+- **Public:** 0 unexpected; 80 values toward PoB, none away, 41 now equal.
+- **Corpus:** unchanged.
