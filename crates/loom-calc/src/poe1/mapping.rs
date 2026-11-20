@@ -1816,6 +1816,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11ed: "#% increased Damage with Two Handed Weapons" (`Damage` INC
+    // with `ModFlag.Weapon2H` and `Hit`).
+    (
+        "damage_+%_with_two_handed_weapons",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 752: `Damage` INC with `ModFlag.Dot` (P6-1).
     (
         "damage_over_time_+%",
@@ -3854,6 +3866,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::ENEMY_FULL_LIFE,
+        )],
+    ),
+    // P6-11ed: "+#% Critical Strike Multiplier while a Rare or Unique Enemy
+    // is Nearby" (`CritMultiplier` BASE, enemy `NearbyRareOrUniqueEnemy`
+    // or `RareOrUnique`: P6-10b's condition).
+    (
+        "critical_strike_multiplier_+_if_rare_or_unique_enemy_nearby",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
         )],
     ),
     // P6-11dp: "+#% to Critical Strike Multiplier against Bleeding Enemies"
@@ -7196,6 +7220,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("disable_skill_if_melee_attack", "skill type marker"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
+    // P6-11ed: display-only lines: gem experience (unparsed in PoB), extra gore,
+    // ignite's visual variant, a dummy display stat.
+    ("dummy_stat_display_nothing", "display"),
     ("earthquake_radius_+%", "area"),
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
@@ -7249,6 +7276,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "explode_enemies_for_500%_life_as_fire_on_kill_%_chance",
         "explosion",
     ),
+    ("extra_gore", "display"),
     // P6-11dj: reflected fire damage to melee attackers (unparsed in PoB; damage
     // to attackers, no slice field), as the physical one.
     ("fire_damage_to_return_to_melee_attacker", "reflect"),
@@ -7285,6 +7313,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: Inspiration's charge gain; PoB maps no modifier (its charges are
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
+    ("gem_experience_gain_+%", "display"),
     ("global_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("gloves_freeze_proliferation_radius", "freeze"),
     // P6-11g: "Ignites you inflict spread to other Enemies within # metre": PoB does not parse it.
@@ -7300,6 +7329,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "has_avoid_shock_as_avoid_all_elemental_ailments",
         "ailment-on-self",
     ),
+    ("ignite_art_variation", "display"),
     // P6-11be: "Your Hexes can affect Hexproof Enemies"
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
     // hexproof, so curses already apply.
@@ -10058,6 +10088,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11ed: crit multiplier with a rare or unique enemy nearby.
+            (
+                "critical_strike_multiplier_+_if_rare_or_unique_enemy_nearby",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                 )],
             ),
             // P6-11ec: block and attack speed after a crit, attack damage

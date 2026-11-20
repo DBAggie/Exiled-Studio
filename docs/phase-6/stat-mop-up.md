@@ -2574,3 +2574,22 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11ed: two-handed damage; crit multiplier near a rare or unique enemy
+
+**PoB:**
+- "#% increased Damage with Two Handed Weapons": `Damage` INC with `ModFlag.Weapon2H` and `Hit`.
+- "+#% Critical Strike Multiplier while a Rare or Unique Enemy is Nearby": `CritMultiplier` BASE with the enemy's `NearbyRareOrUniqueEnemy` or `RareOrUnique`, the condition P6-10b settles.
+
+**The engine:**
+- **Rows:** a `HIT_ROWS` row and a `STATE_ROWS` row.
+- **`NoEffect` (`display`):** gem experience (unparsed in PoB), extra gore, ignite's visual variant, and a dummy display stat.
+
+**Not done:** "#% increased Damage taken while Leeching" is unparsed in PoB, so it applies nothing there; the game applies it. It stays a reason (tasks file).
+
+**Fixture** `smite-two-handed-rare-nearby-templar.xml`: Smite with its two-handed Siege Axe and both lines; PoB's default enemy is a boss, so rare or unique. Every computed field equals PoB's but Q11's attack rate (DIV-0478 to DIV-0483).
+
+**Evidence** (`b-ct`, against P6-11ec's run):
+- **Public:** 0 unexpected; 5 values toward PoB (a mine Assassin's crit multiplier and damage), none away.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+
