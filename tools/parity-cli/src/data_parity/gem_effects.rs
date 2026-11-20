@@ -311,6 +311,13 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
     ("IntimidatingCry", "Warcry Intimidating Cry"),
     ("RallyingCry", "Buff Rallying Cry"),
     ("RallyingCry", "Warcry Rallying Cry"),
+    // P6-11fd.
+    ("AncestralCry", "Buff Ancestral Cry"),
+    ("AncestralCry", "Warcry Ancestral Cry"),
+    ("InfernalCry", "Buff Infernal Cry"),
+    ("InfernalCry", "Warcry Infernal Cry"),
+    ("SeismicCry", "Buff Seismic Cry"),
+    ("SeismicCry", "Warcry Seismic Cry"),
 ];
 
 /// Support mods outside the buff the engine models, with why: Guardian's
@@ -434,6 +441,8 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 /// damage taken by you).
 const NO_SLICE_NAMES: &[&str] = &[
     "AreaOfEffect",
+    // P6-11fd: Seismic Cry's stun threshold.
+    "StunThreshold",
     "ArcaneSurgeManaRegen",
     // Summon Carrion Golem's and Summon Chaos Golem's (P6-9e).
     "Condition:HaveCarrionGolem",
@@ -790,6 +799,11 @@ fn title(word: &str) -> String {
 /// increased as `Defences`.
 fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
     use loom_calc::DamageType as D;
+    // The engine's marker of an increase shared by armour and evasion
+    // (P6-11ek: Iron Reflexes counts it once) is no PoB mod of its own.
+    let shared = Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared);
+    let kept: Vec<Row> = effects.iter().copied().filter(|e| e.0 != shared).collect();
+    let effects = kept.as_slice();
     let res = |t| Quantity::Poe1(Poe1Quantity::EnemyResistance(t));
     let same = |qs: [Quantity; 3]| {
         effects.len() == 3
@@ -805,6 +819,10 @@ fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
     let own = Quantity::Resistance;
     if same([own(D::Fire), own(D::Cold), own(D::Lightning)]) {
         return Some(format!("ElementalResist {kind} []"));
+    }
+    let max = Quantity::MaximumResistance;
+    if same([max(D::Fire), max(D::Cold), max(D::Lightning)]) {
+        return Some(format!("ElementalResistMax {kind} []"));
     }
     if same([Quantity::EnergyShield, Quantity::Armour, Quantity::Evasion]) {
         return Some(format!("Defences {kind} []"));

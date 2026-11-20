@@ -231,7 +231,6 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Minion damage "if you've used a Minion Skill Recently": done in P6-11cm.
 - [x] P6-11bs: warcry power and uptime (`gems::warcry_terms`, `BuffStat::PerPower`, `skill_modifiers::SkillTiming`); Enduring Cry's regeneration and Intimidating Cry's movement speed; fixtures `ice-nova-warcry-power-witch.xml`, `ice-nova-warcry-power-config-witch.xml` (`docs/phase-6/gems.md`, "P6-11bs")
 - [x] P6-11bt: Ruthless (`hit::ruthless_effect`); fixture `smite-ruthless-bleed-templar.xml` (Q11 DIV-0320 to DIV-0326) (`docs/phase-6/gems.md`, "P6-11bt")
-- [ ] Warcry rest: Seismic Cry's armour, exertion for Seismic, Battlemage's, Ancestral, Infernal Cry (their gems are not modelled)
 - [ ] Spellslinger (the supported spell reserves and triggers from wand attacks), Frost Shield (stages, the enemy in its globe), Blood and Sand, Bear Trap, mines
 - [ ] P6-9 remaining: Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
@@ -337,6 +336,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11fa: trap and mine throw counts (`MineThrowCount`, `TrapThrowCount`, `minesPerThrow`, `trapsPerThrow`); the `trap-mine-data` reason retired; the Ice Nova trap fixture complete and equal to PoB (`docs/phase-6/stat-mop-up.md`, "P6-11fa")
 - [x] P6-11fb: the timeless additions' remaining lines: 22 spell added damage rows (shield, two-handed, plain), conditional crit, damage, penetration, regeneration, movement, Onslaught rows (`NOT_CRIT_RECENTLY`, `NOT_KILLED_RECENTLY`), projectile attack damage, energy shield per power charge, four devotion readers (`docs/phase-6/stat-mop-up.md`, "P6-11fb")
 - [x] P6-11fc: minions' ignite, bleed, and poison chances (`MinionValue::AilmentChance`); their flat life regeneration `NoEffect` (`docs/phase-6/stat-mop-up.md`, "P6-11fc")
+- [x] P6-11fd: Seismic, Ancestral, and Infernal Cry (`gems::Kind::Warcry`, per warcry power); `data-parity`'s `gem_effects` knows them, and its `collapse` skips P6-11ek's shared marker (`uncategorized` 0) (`docs/phase-6/stat-mop-up.md`, "P6-11fd")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

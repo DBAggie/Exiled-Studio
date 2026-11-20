@@ -3064,3 +3064,23 @@ Every stat of the timeless data (`poe1/timeless.json`: 395 stats, the conquests'
 **Evidence** (`b-ct`, against P6-11fb's run):
 - **Public and corpus:** 0 unexpected; no value moved. No build's minions carry these lines.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fd: Seismic, Ancestral, and Infernal Cry; two `data-parity` fixes
+
+**PoB** (`act_str.lua`): each is a warcry whose global mods are `Warcry` effects scaled by warcry power:
+- **Seismic Cry:** `Armour` MORE per 5 power up to 25; `StunThreshold` INC.
+- **Ancestral Cry:** `ElementalResist` BASE per 5 power up to 30; `ElementalResistMax` BASE per 10 power up to 30.
+- **Infernal Cry:** `PhysicalDamageGainAsFire` BASE per 5 power up to 25.
+
+Their exerted attacks' mods (`SeismicExertedAttacks`, `AncestralExertedAttacks`, `InfernalExertedAttacks`, Seismic's slam area) act on the skill's own list, not as global mods, and reach no slice field.
+
+**The engine:**
+- **Gems:** three `gems::Kind::Warcry` entries with `BuffStat::PerPower` rows, as Battlemage's Cry (P6-11dx). Seismic's stun threshold and the three warcries' power from enemies are `NoSlice`.
+- **`data-parity` (`gem_effects`):** the three warcries' `Buff` and `Warcry` identities join `EXTRA_BUFFS`, as the other warcries'. `StunThreshold` joins `NO_SLICE_NAMES`. `collapse` writes the three maximum resistances as `ElementalResistMax`.
+- **A fix to P6-11ek:** `collapse` now skips the shared armour and evasion marker. The Stone Golem's buff row has carried it since P6-11ek, and P6-11ek did not run `data-parity`, so its `Defences` row showed as a difference. `data-parity`: `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fc's run):
+- **Public:** 0 unexpected. A Boneshatter Juggernaut's unreserved mana went from 198 to 66, equal to PoB: its Autoexertion now reserves for the newly modelled warcries.
+- **One moved away:** a Facebreaker Luminary's unreserved mana (14 to -80, PoB 42) carries its warcries' reservation too. Its helmet's `{custom}` lines, a 9-10% mana reservation efficiency and more maximum mana, are applied by PoB and excluded by the engine, as for the Slayer (P6-11eu). The `{custom}` decision settles it.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests (the `data-parity` tool's included), loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

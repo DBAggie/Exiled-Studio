@@ -370,6 +370,82 @@ const GOLEM_CONDITION: BuffStat = BuffStat::NoSlice("golem-condition");
 pub const SKILLS: &[(&str, Kind)] = &[
     ("Absolution", Kind::Inert),
     ("AbsolutionAltX", Kind::Inert),
+    // P6-11fd: Ancestral Cry (`act_str.lua` 281): elemental resistances per
+    // 5 warcry power up to 30 (`ElementalResist` BASE) and their maxima per
+    // 10 power up to 30 (`ElementalResistMax` BASE), `Warcry` effects. Its
+    // exerted attacks strike more enemies, which no slice field reads.
+    (
+        "AncestralCry",
+        Kind::Warcry {
+            name: "Ancestral Cry",
+            stats: &[
+                (
+                    "ancestral_cry_elemental_resist_%_per_5_power_up_to_cap",
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 30.0,
+                        rows: &[
+                            (
+                                Quantity::Resistance(DamageType::Fire),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                            (
+                                Quantity::Resistance(DamageType::Cold),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                            (
+                                Quantity::Resistance(DamageType::Lightning),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                        ],
+                    },
+                ),
+                (
+                    "ancestral_cry_maximum_elemental_resist_%_per_10_power_up_to_cap",
+                    BuffStat::PerPower {
+                        div: 10.0,
+                        limit: 30.0,
+                        rows: &[
+                            (
+                                Quantity::MaximumResistance(DamageType::Fire),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                            (
+                                Quantity::MaximumResistance(DamageType::Cold),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                            (
+                                Quantity::MaximumResistance(DamageType::Lightning),
+                                Op::Base,
+                                1.0,
+                                NONE,
+                                NONE,
+                            ),
+                        ],
+                    },
+                ),
+                (
+                    "warcry_count_power_from_enemies",
+                    BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
     (
         "Anger",
         Kind::Buff {
@@ -1342,6 +1418,39 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fd: Infernal Cry (`act_str.lua` 6853): physical damage gained as
+    // fire per 5 warcry power up to 25 (`PhysicalDamageGainAsFire` BASE, a
+    // `Warcry` effect). Its exerted attacks' Combust and its explosion on
+    // death reach no slice field.
+    (
+        "InfernalCry",
+        Kind::Warcry {
+            name: "Infernal Cry",
+            stats: &[
+                (
+                    "infernal_cry_physical_damage_%_to_add_as_fire_per_5_power_up_to_cap",
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 25.0,
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::GainAs(
+                                DamageType::Physical,
+                                DamageType::Fire,
+                            )),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
+                ),
+                (
+                    "warcry_count_power_from_enemies",
+                    BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
     (
         "IntimidatingCry",
         Kind::Warcry {
@@ -1800,6 +1909,33 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("RollingMagma", Kind::Inert),
     ("SearingBond", Kind::Inert),
+    // P6-11fd: Seismic Cry (`act_str.lua` 9667): more armour per 5 warcry
+    // power up to 25 (`Armour` MORE, a `Warcry` effect). Its stun threshold
+    // and its exerted slams' area reach no slice field.
+    (
+        "SeismicCry",
+        Kind::Warcry {
+            name: "Seismic Cry",
+            stats: &[
+                (
+                    "seismic_cry_armour_+%_final_per_5_power_up_to_cap",
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 25.0,
+                        rows: &[(Quantity::Armour, Op::More, 1.0, NONE, NONE)],
+                    },
+                ),
+                (
+                    "seismic_cry_stun_threshold_+%_per_5_power_up_to_cap",
+                    BuffStat::NoSlice("stun"),
+                ),
+                (
+                    "warcry_count_power_from_enemies",
+                    BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
     // Smite's aura (P6-8a: Smite beside the main skill, as Cast On Critical
