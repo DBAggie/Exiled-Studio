@@ -1990,3 +1990,19 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cw: attack damage per 450 armour
+
+**PoB** reads "#% increased Attack Damage per 450 Armour" as `Damage` INC with `ModFlag.Attack` and a `PerStat` tag of `Armour`, `div` 450, no limit (`ModCache`). `PerStat` reads the actor's computed `Armour`, so the value is `floor(Armour / 450 + 0.0001) × value`, one term of the hit's increased sum.
+
+**The engine:**
+- `hit::DAMAGE_PER_STAT` generalizes P6-11bw's spell damage per 100 maximum mana. Each entry gives a quantity, the flag the hit needs, the field, the step, and the limit. The new entry is `Poe1Quantity::AttackDamagePer450Armour` on the armour field (computed in `primary-defences`, before the hits).
+- `hit::per_stat` builds the term for each entry; both of the hit's damage sums take every term that applies.
+- The graph's step names for the mana term are now `per-stat-*`. Its value is unchanged: the P6-11bw fixture still equals PoB's.
+
+**Fixture** `smite-attack-damage-per-armour-templar.xml`: Smite with +5000 armour and the line at 2%. Its average damage equals PoB's. The attack rate's Q11 rounding is registered as DIV-0372 to DIV-0377.
+
+**Evidence** (`b-ct`, against P6-11cv's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; 17 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

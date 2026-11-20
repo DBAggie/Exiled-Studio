@@ -141,6 +141,9 @@ pub enum Poe1Quantity {
     /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
     /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
     SpellDamagePer100Mana,
+    /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
+    /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
+    AttackDamagePer450Armour,
     /// A chance to treat the enemy's elemental resistances as inverted
     /// (P6-11bx; PoB's `HitsInvertEleResChance` CHANCE, the stat over 100):
     /// `Base`, a fraction, read by the hit's effective resistance.
@@ -1079,6 +1082,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
+            Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),

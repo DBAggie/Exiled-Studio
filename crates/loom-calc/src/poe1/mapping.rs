@@ -307,6 +307,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11cw: "#% increased Attack Damage per 450 Armour" (`Damage` INC,
+    // `ModFlag.Attack`, `PerStat` `Armour` `div` 450): the hit's computed
+    // term (`hit::DAMAGE_PER_STAT`).
+    (
+        "attack_damage_+%_per_450_physical_damage_reduction_rating",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AttackDamagePer450Armour),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     // P6-10b: "#% increased Mana Cost of Attacks" (`ManaCost` INC,
     // `SkillType` Attack).
     (
@@ -2456,6 +2469,8 @@ pub const HIT_ROWS: &[HitRow] = &[
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
     ),
     // P6-11bw: "#% increased Spell Damage per 100 Maximum Mana, up to 40%"
+    // (P6-11cw: `hit::DAMAGE_PER_STAT`, with the attack damage per 450
+    // armour, `attack_damage_+%_per_450_physical_damage_reduction_rating`)
     // (the game's text; `Damage` INC, `ModFlag.Spell`, `PerStat` `Mana`
     // `div` 100 `limit` 40 `limitTotal`): the hit's computed term (`hit::spell_damage_per_mana`).
     (
