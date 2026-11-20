@@ -134,7 +134,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 20] = [
+pub const STATS: [ModifierRow; 21] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -175,6 +175,13 @@ pub const STATS: [ModifierRow; 20] = [
     (
         "herald_skills_mana_reservation_efficiency_+%",
         Poe1Quantity::HeraldManaReservationEfficiency,
+        1.0,
+    ),
+    // P6-11ey: "#% increased Mana Reservation Efficiency of Skills that
+    // throw Mines" (`ManaReservationEfficiency` INC, `KeywordFlag.Mine`).
+    (
+        "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
+        Poe1Quantity::MineManaReservationEfficiency,
         1.0,
     ),
     (
@@ -252,6 +259,8 @@ pub struct Totals {
     pub mana_efficiency: f64,
     /// `ManaReservationEfficiency` INC of herald skills (P6-11ag).
     pub herald_mana_efficiency: f64,
+    /// `ManaReservationEfficiency` INC of skills that throw mines (P6-11ey).
+    pub mine_mana_efficiency: f64,
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
@@ -337,6 +346,7 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Life)) => &mut t.life_efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
                 Poe1Quantity::HeraldManaReservationEfficiency => &mut t.herald_mana_efficiency,
+                Poe1Quantity::MineManaReservationEfficiency => &mut t.mine_mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
@@ -385,12 +395,22 @@ impl Totals {
     }
 
     /// [`Self::reservation`] for a skill of `types`: a herald's mana
-    /// efficiency adds its own (P6-11ag).
+    /// efficiency adds its own (P6-11ag), and a mine skill's its own
+    /// (P6-11ey, the `RemoteMined` type: PoB's mine keyword).
     #[must_use]
     pub fn reservation_for(&self, pool: Pool, types: &BTreeSet<String>) -> ReservationTerms {
         let mut terms = self.reservation(pool);
-        if pool == Pool::Mana && types.contains("Herald") && self.herald_mana_efficiency != 0.0 {
-            let own = self.mana_efficiency + self.herald_mana_efficiency;
+        if pool != Pool::Mana {
+            return terms;
+        }
+        let mut own = self.mana_efficiency;
+        if types.contains("Herald") {
+            own += self.herald_mana_efficiency;
+        }
+        if types.contains("RemoteMined") {
+            own += self.mine_mana_efficiency;
+        }
+        if own != self.mana_efficiency {
             terms.efficiency = crate::math::max(own + self.efficiency, -100.0);
         }
         terms

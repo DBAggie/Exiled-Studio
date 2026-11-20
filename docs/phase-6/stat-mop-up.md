@@ -2963,3 +2963,28 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 **Evidence** (`b-ct`, against P6-11ew's run):
 - **Public and corpus:** 0 unexpected; no value moved. No build's computed main skill is a cooldown spell with a recovery line.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ey: mines' reservation efficiency; High-Impact Mine's damage
+
+**PoB:**
+- "#% increased Mana Reservation Efficiency of Skills that throw Mines" is `ManaReservationEfficiency` INC with `KeywordFlag.Mine`, which a mined skill has.
+- High-Impact Mine (`sup_int.lua`, `SupportHighImpactMine`) maps `support_remote_mine_2_damage_+%_final` to `Damage` MORE: -55% at level 20 in PoB's table and the game's.
+- Its double damage near mines is an `AuraDebuff` on the enemy, stacked per active mine (`effectStackVar` `ActiveMineCount`), at most 100%.
+
+**The engine:**
+- **Reservation:** `Poe1Quantity::MineManaReservationEfficiency`, a `skill_modifiers::STATS` row. `Totals::reservation_for` adds it for a `RemoteMined` skill, as it adds a herald's for a `Herald` skill (P6-11ag).
+- **Damage:** a `HIT_ROWS` row for High-Impact Mine's more damage.
+- **`NoEffect` (`no-slice`):** the mine supports' own stats: thrown as a mine (the types carry it), the cost as reservation (read by the support's ID, P6-11et), the mine's duration, detonation time, and PvP scaling. No PoB calc module reads them.
+- **Texts:** the efficiency line is checked against the real bundle (`tests/skill_modifiers.rs`), and the cost-as-reservation line is listed there.
+- **Left as reasons:**
+  - the double damage near mines (the enemy's debuff per active mine);
+  - "Mines have #% increased Detonation Speed" and "... a #% chance to be Detonated an Additional Time" (PoB leaves both unparsed);
+  - the crits per mine detonated (PoB leaves "for each Mine Detonated" unparsed and skips the line);
+  - the effect of auras from mines.
+
+**Evidence** (`b-ct`, against P6-11ex's run):
+- **Public:** 0 unexpected. **5 values moved away,** all in a mine Assassin.
+  - Its damage (240,503 to 108,224 average, PoB 3,074,566) now carries High-Impact Mine's 55% less damage, which PoB applies too. The engine was already far below PoB; the double damage near mines and the mine count, not modelled, are the bulk of the gap.
+  - Its unreserved mana (552 to 560, PoB 174) now has the mine efficiency, which PoB applies too. The gap is its other reservations.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

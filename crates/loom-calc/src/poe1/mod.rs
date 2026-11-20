@@ -763,6 +763,11 @@ pub enum Poe1Quantity {
     /// a `SkillType` tag; P6-11ex: travel skills): `Increased`, with the
     /// type's flag, read by the main skill's cooldown ([`hit`]) alone.
     TypedCooldownRecovery,
+    /// Mana reservation efficiency of skills that throw mines (PoB's
+    /// `ManaReservationEfficiency` INC with `KeywordFlag.Mine`; P6-11ey):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for `RemoteMined`
+    /// skills.
+    MineManaReservationEfficiency,
     /// The effect of herald skills' buffs (PoB's `BuffEffect` INC tagged
     /// `SkillType.Herald`; P6-11at), read by [`skill_modifiers`].
     HeraldBuffEffect,
@@ -1355,6 +1360,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
+            Self::MineManaReservationEfficiency => f.write_str("mine-mana-reservation-efficiency"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::MarkCurseEffect => f.write_str("mark-curse-effect"),

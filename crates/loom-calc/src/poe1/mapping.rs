@@ -3099,6 +3099,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_rapid_decay_damage_over_time_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::DOT, NONE)],
     ),
+    // P6-11ey: High-Impact Mine's "Supported Skills deal #% more Damage"
+    // (`sup_int.lua`: `Damage` MORE).
+    (
+        "support_remote_mine_2_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P6-11bt: Ruthless (`SupportRuthless`, `Data/Skills/sup_str.lua` 4694 to
     // 4708): `RuthlessBlowHitMultiplier`, `RuthlessBlowMaxCount`, and
     // `RuthlessBlowAilmentMultiplier` BASE, the multipliers with
@@ -7543,6 +7549,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
     ("base_skill_effect_duration", "skill-duration"),
+    // P6-11ey: the mine supports' own stats: the skill thrown as a mine (its
+    // types carry it), the cost as reservation (read by the support's ID,
+    // `gems::COST_AS_RESERVATION_SUPPORTS`), the mine's duration, detonation
+    // time, and PvP scaling (no PoB calc module reads them).
+    ("base_skill_is_mined", "no-slice"),
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     ("base_stun_recovery_+%", "stun"),
@@ -7838,6 +7849,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
     // hexproof, so curses already apply.
     ("ignore_hexproof", "curse"),
+    ("is_remote_mine", "no-slice"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
     // P3-8n: the stats that add damage from a mana cost stay unmapped
@@ -8092,6 +8104,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("recover_%_maximum_mana_on_kill", "recovery"),
     ("recover_energy_shield_%_on_kill", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
+    ("remote_mined_by_support", "no-slice"),
     // P6-11aj: Multistrike's repeats choose nearby targets.
     (
         "repeat_target_selection_distance_from_initial_target_bias",
@@ -8170,6 +8183,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_momentum_stack_while_channelling_base_ms",
         "channelling",
+    ),
+    (
+        "support_remote_mine_2_base_mine_detonation_time_ms",
+        "no-slice",
+    ),
+    ("support_remote_mine_2_base_mine_duration", "no-slice"),
+    (
+        "support_remote_mine_2_mine_override_pvp_scaling_time_ms",
+        "no-slice",
     ),
     // P6-11bt: Ruthless's stun duration (`baseStunDuration`).
     (

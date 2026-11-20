@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 20] = [
+const TEXTS: [(&str, &str); 21] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -60,6 +60,11 @@ const TEXTS: [(&str, &str); 20] = [
         "herald_skills_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Herald Skills",
     ),
+    // P6-11ey: PoB's `ManaReservationEfficiency` with `KeywordFlag.Mine`.
+    (
+        "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
+        "{0}% increased Mana Reservation Efficiency of Skills that throw Mines",
+    ),
     // P6-11bs: PoB's `BuffEffect` with `KeywordFlag.Warcry`, read by the
     // warcries' scale (`skill_modifiers::Totals::warcry_buff_effect`).
     ("warcry_buff_effect_+%", "{0}% increased Warcry Buff Effect"),
@@ -97,7 +102,12 @@ const TEXTS: [(&str, &str); 20] = [
 /// buffs, each checked to reach no slice field (`poe1::mapping::NO_EFFECT`'s
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
-const NO_EFFECT_NAMING: &[&str] = &["base_aura_area_of_effect_+%"];
+const NO_EFFECT_NAMING: &[&str] = &[
+    "base_aura_area_of_effect_+%",
+    // P6-11ey: the mine supports' cost as reservation, read by the
+    // support's ID (`gems::COST_AS_RESERVATION_SUPPORTS`).
+    "remote_mined_by_support",
+];
 
 #[test]
 fn the_texts_should_name_the_rows() {
