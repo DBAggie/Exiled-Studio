@@ -1272,3 +1272,20 @@ Found while tracing the Strength gaps tattoos made visible (`docs/phase-6/tattoo
 - **Tests:** the workspace tests, the maintainer-run tests on `b-ct`, clippy, and the wasm32 check pass.
 
 **Not compared:** the `scalable` flags against PoB's `modScalability` (a `data-parity` table could; PoB keys its data by description text, not by stat).
+
+## P6-11ay: added damage with a weapon type, avoid shock and ignite
+
+The Abyss jewels' additions (`docs/phase-6/timeless.md`, "Part 4") and quivers' implicits carry these.
+
+**Rows:**
+- **64 `HIT_ROWS`:** "# to # Added <Type> Damage with <Weapon> Attacks" (`attack_<minimum|maximum>_added_<type>_damage_with_<weapon>`) for every damage type and weapon the bundle names: axes, bows, claws, daggers, maces (and sceptres), staves, swords, wands.
+  - Each is `added(<type>, <bound>)` BASE on the weapon's flag and `Hit`, PoB's `["with <weapon> attacks"] = { flags = bor(ModFlag.<Weapon>, ModFlag.Hit) }` (`ModParser.lua` 905 to 945). P6-11b had the sword and wand ones.
+  - Left out: the rage, per-trauma, and "with weapons" variants (other mechanics).
+- **`NoEffect` (`ailment-on-self`):** `base_avoid_ignite_%` and `base_avoid_shock_%`. Avoid shock is listed with the shock rows `poe1::damage_taken` checks: it is shock on you, not the enemy's.
+- **Test:** `mapping::tests` checks six of the new rows' flags.
+
+**Fixture** `burning-arrow-weapon-added-damage-templar.xml`: Burning Arrow with a Short Bow and custom lines adding damage with each weapon type. The bow lines reach the hit and the others do not.
+- 73 fields equal PoB's.
+- Six differ as every bow fixture does: the attack rate floored to whole milliseconds (Q11), registered as DIV-0296 to DIV-0301 (`game-truth`).
+
+**Evidence** (`b-ct`, against P6-11ax's run): public and corpus 0 unexpected, no value moved; no build has these stats outside the fixture.

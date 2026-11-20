@@ -68,4 +68,6 @@ PoB applies all four, and all 77 computed fields match.
 ## Left
 
 - The gaps tattoos made visible: Cyclone's and Lightning Trap's Strength, and other builds' attributes and pools.
+  - **Lightning Trap:** its Mageblood's catalysed Strength; equal to PoB's since P6-11ax (`docs/phase-6/stat-mop-up.md`).
+  - **Cyclone:** its staff's `{custom}` line `+(25-28) to Strength and Intelligence` (27 at its roll), which PoB applies. The importer excludes `{custom}` item lines by Spike B's plan (`special-case/pob-custom`; ADR-015 Amendment 2 covers config custom lines only), so the field stays partial with that reason. Applying them would change that decision; it is the maintainer's.
 - Overrides that grant a skill (`tattoo-skill`): none in the public or corpus builds.

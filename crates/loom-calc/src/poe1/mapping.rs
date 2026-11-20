@@ -317,13 +317,217 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_chaos_damage",
         &[(added(CHAOS_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_chaos_damage_with_bows",
+        &[(
+            added(CHAOS_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_chaos_damage_with_claws",
+        &[(
+            added(CHAOS_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_chaos_damage_with_daggers",
+        &[(
+            added(CHAOS_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_axes",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_bows",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_claws",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_daggers",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_maces",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_staves",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_swords",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Wand Attacks": BASE,
+    // `ModFlag.Wand` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_cold_damage_with_wand",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_maximum_added_fire_damage",
         &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_axes",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_bow",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_claws",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_daggers",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_maces",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_fire_damage_with_staves",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
     ),
     // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
     (
@@ -351,6 +555,90 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_axes",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_bows",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_claws",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_daggers",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_maces",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_staves",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_lightning_damage_with_swords",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
     (
         "attack_maximum_added_lightning_damage_with_wand",
@@ -366,17 +654,317 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_physical_damage",
         &[(added(PHYS, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_axes",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_bow",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_claws",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_daggers",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_maces",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_staves",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_swords",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Wand Attacks": BASE,
+    // `ModFlag.Wand` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_maximum_added_physical_damage_with_wands",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_minimum_added_chaos_damage",
         &[(added(CHAOS_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_chaos_damage_with_bows",
+        &[(
+            added(CHAOS_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_chaos_damage_with_claws",
+        &[(
+            added(CHAOS_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_chaos_damage_with_daggers",
+        &[(
+            added(CHAOS_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_minimum_added_cold_damage",
         &[(added(COLD_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_axes",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_bows",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_claws",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_daggers",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_maces",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_staves",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_swords",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Wand Attacks": BASE,
+    // `ModFlag.Wand` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_cold_damage_with_wand",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     (
         "attack_minimum_added_fire_damage",
         &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_axes",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_bow",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_claws",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_daggers",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_maces",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_fire_damage_with_staves",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
     ),
     // P6-11b: "# to # Added ... Damage with Sword Attacks": BASE, `ModFlag.Sword` and `Hit`.
     (
@@ -404,6 +992,90 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_axes",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_bows",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_claws",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_daggers",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_maces",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_staves",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_lightning_damage_with_swords",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // P6-11b: "# to # Added ... Damage with Wand Attacks": BASE, `ModFlag.Wand` and `Hit`.
     (
         "attack_minimum_added_lightning_damage_with_wand",
@@ -418,6 +1090,102 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_minimum_added_physical_damage",
         &[(added(PHYS, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
+    // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_axes",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::AXE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Bow Attacks": BASE,
+    // `ModFlag.Bow` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_bow",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::BOW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Claw Attacks": BASE,
+    // `ModFlag.Claw` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_claws",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::CLAW.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Dagger Attacks": BASE,
+    // `ModFlag.Dagger` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_daggers",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::DAGGER.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Mace or Sceptre Attacks": BASE,
+    // `ModFlag.Mace` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_maces",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::MACE.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Staff Attacks": BASE,
+    // `ModFlag.Staff` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_staves",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::STAFF.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Sword Attacks": BASE,
+    // `ModFlag.Sword` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_swords",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::SWORD.union(Flags::HIT),
+            NONE,
+        )],
+    ),
+    // P6-11ay: "# to # Added ... Damage with Wand Attacks": BASE,
+    // `ModFlag.Wand` and `Hit` (PoB's "with ... attacks").
+    (
+        "attack_minimum_added_physical_damage_with_wands",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            1.0,
+            Flags::WAND.union(Flags::HIT),
+            NONE,
+        )],
     ),
     (
         "attack_speed_+%",
@@ -4860,7 +5628,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11as: "#% chance to Avoid being Chilled": chill on you.
     ("base_avoid_chill_%", "ailment-on-self"),
     ("base_avoid_freeze_%", "ailment-on-self"),
+    // P6-11ay: "#% chance to Avoid being Ignited" (`AvoidIgnite` BASE), an
+    // Abyss jewel's addition: no slice field.
+    ("base_avoid_ignite_%", "ailment-on-self"),
     ("base_avoid_poison_%", "ailment-on-self"),
+    // P6-11ay: "#% chance to Avoid being Shocked" (`AvoidShock` BASE): no
+    // slice field (the enemy's shock is the config's).
+    ("base_avoid_shock_%", "ailment-on-self"),
     // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
     ("base_avoid_stun_%", "stun"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -6303,6 +7077,52 @@ mod tests {
                 all(Flags::WAND | Flags::HIT)
             )]
         );
+        // P6-11ay: every weapon's "with ... Attacks" (`ModFlag` of the
+        // weapon and `Hit`; PoB's `flags=131076` for a bow).
+        for (stat, weapon, t, b) in [
+            (
+                "attack_maximum_added_chaos_damage_with_bows",
+                Flags::BOW,
+                CHAOS_T,
+                MAX,
+            ),
+            (
+                "attack_minimum_added_fire_damage_with_staves",
+                Flags::STAFF,
+                FIRE_T,
+                MIN,
+            ),
+            (
+                "attack_minimum_added_cold_damage_with_maces",
+                Flags::MACE,
+                COLD_T,
+                MIN,
+            ),
+            (
+                "attack_minimum_added_physical_damage_with_claws",
+                Flags::CLAW,
+                PHYS,
+                MIN,
+            ),
+            (
+                "attack_maximum_added_lightning_damage_with_axes",
+                Flags::AXE,
+                LIGHTNING_T,
+                MAX,
+            ),
+            (
+                "attack_minimum_added_chaos_damage_with_daggers",
+                Flags::DAGGER,
+                CHAOS_T,
+                MIN,
+            ),
+        ] {
+            assert_eq!(
+                hit(stat),
+                [(added(t, b), Op::Base, 1.0, all(weapon | Flags::HIT))],
+                "{stat}"
+            );
+        }
     }
 
     #[test]
