@@ -149,6 +149,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] Stats read per a computed value ("#% increased Spell Damage per 100 Maximum Mana, up to 60%", 4 public builds): PoB's `PerStat` on a pool; the engine has no mid-calculation effect with the pool's node as its provenance (design needed: a phase term in the hit as `phases::per_5` does for block)
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it
 - [x] P6-11bs: warcry power and uptime (`gems::warcry_terms`, `BuffStat::PerPower`, `skill_modifiers::SkillTiming`); Enduring Cry's regeneration and Intimidating Cry's movement speed; fixtures `ice-nova-warcry-power-witch.xml`, `ice-nova-warcry-power-config-witch.xml` (`docs/phase-6/gems.md`, "P6-11bs")
+- [x] P6-11bt: Ruthless (`hit::ruthless_effect`); fixture `smite-ruthless-bleed-templar.xml` (Q11 DIV-0320 to DIV-0326) (`docs/phase-6/gems.md`, "P6-11bt")
 - [ ] Warcry rest: Seismic Cry's armour, exertion for Seismic, Battlemage's, Ancestral, Infernal Cry (their gems are not modelled)
 - [ ] Spellslinger (the supported spell reserves and triggers from wand attacks), Frost Shield (stages, the enemy in its globe), Blood and Sand, Bear Trap, mines
 - [ ] P6-9 remaining: Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")

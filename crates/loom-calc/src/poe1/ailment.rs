@@ -694,6 +694,18 @@ pub(super) fn damaging(
             hit::percent_of(calc, scaled, Term::Base)?
         }
     };
+    // Ruthless's ailment effect on bleed and poison (`CalcOffence.lua`
+    // 4451, 4721; P6-11bt), summed with the hit's context as PoB's `cfg`.
+    let base = match ailment {
+        Ailment::Bleed | Ailment::Poison => {
+            match hit::ruthless_effect(calc, &hit_cx, super::RuthlessValue::Ailment, &mut reasons)?
+            {
+                Some(r) => phases::product(calc, &[base, r], Term::Step("ruthless-ailment"))?,
+                None => base,
+            }
+        }
+        Ailment::Ignite => base,
+    };
 
     // Step 7: effect, rate, the active ailments, the enemy.
     let effect = modifier(

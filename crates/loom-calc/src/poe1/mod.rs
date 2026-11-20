@@ -132,6 +132,10 @@ pub enum Poe1Quantity {
     /// other types convert to it; with a type, `Min<Type>Damage` and
     /// `Max<Type>Damage` MORE and INC, on the sum after it.
     BoundDamage(Option<DamageType>, Bound),
+    /// Ruthless's terms (P6-11bt; PoB's `RuthlessBlowMaxCount`,
+    /// `RuthlessBlowHitMultiplier`, `RuthlessBlowAilmentMultiplier` BASE):
+    /// read by the hit ([`hit::ruthless_effect`]) and its bleed and poison.
+    Ruthless(RuthlessValue),
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -752,6 +756,30 @@ impl BlockGain {
     }
 }
 
+/// A term of Ruthless (P6-11bt, [`Poe1Quantity::Ruthless`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum RuthlessValue {
+    /// Every this many uses is a Ruthless blow (`RuthlessBlowMaxCount`).
+    MaxCount,
+    /// The blow's hit damage, more in percent (`RuthlessBlowHitMultiplier`).
+    Hit,
+    /// The blow's bleed and poison damage, more in percent
+    /// (`RuthlessBlowAilmentMultiplier`).
+    Ailment,
+}
+
+impl RuthlessValue {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::MaxCount => "max-count",
+            Self::Hit => "hit",
+            Self::Ailment => "ailment",
+        }
+    }
+}
+
 /// When a damage taken modifier applies (P6-10b part 10).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TakenWhen {
@@ -982,6 +1010,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
+            Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

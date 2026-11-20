@@ -2868,6 +2868,75 @@ fn armour_effect(
     difference(calc, one, share, Term::Step("enemy-effect"))
 }
 
+/// The config's Ruthless mode (`ConfigOptions.lua` 954: `AVERAGE`, the
+/// default, or `MAX`; P6-11bt).
+pub const RUTHLESS_MODE_INPUT: &str = "ruthlessSupportMode";
+
+/// Ruthless's effect on the hit or its bleed and poison (P6-11bt;
+/// `CalcOffence.lua` 2889 to 2909): with a count above 0, the chance
+/// `round(100 / count)` in the average mode, and the effect `1 - chance /
+/// 100 + chance / 100 x (1 + multiplier / 100)`; `None` without a count,
+/// so a hit without Ruthless keeps its graph. The `MAX` mode (chance 100
+/// and the DPS divided by the count) is a reason.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn ruthless_effect(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    value: super::RuthlessValue,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let count_q = Quantity::Poe1(Poe1Quantity::Ruthless(super::RuthlessValue::MaxCount));
+    if !phases::has(calc, count_q) {
+        return Ok(None);
+    }
+    let count = sum_in(
+        calc,
+        count_q,
+        Op::Base,
+        cx,
+        Term::Step("ruthless-count"),
+        reasons,
+    )?;
+    if count.value <= 0.0 {
+        return Ok(None);
+    }
+    let set = super::collect::active_config(calc.input().build);
+    match set.and_then(|s| {
+        super::config::last_input(s, RUTHLESS_MODE_INPUT, loom_domain::ConfigInputKind::Input)
+    }) {
+        None => {}
+        Some(loom_domain::ConfigValue::String(m)) if m == "AVERAGE" => {}
+        Some(_) => {
+            reasons.partial.insert(UnsupportedReason::UnmodelledConfig {
+                input: RUTHLESS_MODE_INPUT.to_owned(),
+            });
+        }
+    }
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let share = quotient(calc, hundred, count, Term::Step("ruthless-share"))?;
+    let chance = phases::round(calc, share, Term::Step("ruthless-chance"))?;
+    let multiplier = sum_in(
+        calc,
+        Quantity::Poe1(Poe1Quantity::Ruthless(value)),
+        Op::Base,
+        cx,
+        Term::Step("ruthless-multiplier"),
+        reasons,
+    )?;
+    let multiplier = phases::factor(calc, multiplier, Term::Step("ruthless-more"))?;
+    let chance = percent(calc, chance, Term::Step("ruthless-chance-share"))?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let rest = difference(calc, one, chance, Term::Step("ruthless-rest"))?;
+    let blow = phases::product(calc, &[chance, multiplier], Term::Step("ruthless-blow"))?;
+    Ok(Some(phases::total(
+        calc,
+        &[rest, blow],
+        Term::Step("ruthless-effect"),
+    )?))
+}
+
 /// The config list of how a chance to ignore the enemy's physical damage
 /// reduction counts (`ConfigOptions.lua` 955: `MIN`, `AVERAGE`, `MAX`;
 /// `AVERAGE` by default).
@@ -3532,6 +3601,20 @@ fn passes(
     )?;
     let conversion = conversion(calc, &cx, reasons)?;
     let scaled = double_damage(calc, &cx, shape.exert_uptime, reasons)?;
+    // Ruthless's hit effect joins `allMult` after the scaled damage effect
+    // (`CalcOffence.lua` 3352; P6-11bt).
+    let scaled = match (
+        scaled,
+        ruthless_effect(calc, &cx, super::RuthlessValue::Hit, reasons)?,
+    ) {
+        (s, None) => s,
+        (None, Some(r)) => Some(r),
+        (Some(s), Some(r)) => Some(phases::product(
+            calc,
+            &[s, r],
+            Term::Step("ruthless-scaled"),
+        )?),
+    };
     let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;

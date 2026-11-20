@@ -6056,7 +6056,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6076,7 +6076,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6096,7 +6096,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6116,7 +6116,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6136,7 +6136,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6156,7 +6156,7 @@
         "Loom fixture smite-rage-on-hit-with-axes-templar.xml (P6-11bm): Smite with rage on hit with axes"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6176,7 +6176,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6196,7 +6196,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6216,7 +6216,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6236,7 +6236,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6256,7 +6256,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6276,7 +6276,7 @@
         "Loom fixture smite-volatility-min-max-physical-templar.xml (P6-11bo): Smite with Volatility and the physical range lines"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6296,7 +6296,7 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6316,7 +6316,7 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6336,7 +6336,7 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6356,7 +6356,7 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6376,7 +6376,7 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
       "status": "accepted"
     },
     {
@@ -6396,7 +6396,147 @@
         "Loom fixture smite-gain-as-extra-templar.xml (P6-11bp): Smite with gain as extra damage"
       ],
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
-      "added": "2026-11-18",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0320",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.4705,
+      "successor_value": 1.4655172413793103,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0321",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 474.692840376371,
+      "successor_value": 473.08435357421865,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0322",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/BleedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 238.32854330620563,
+      "successor_value": 237.52097200140088,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0323",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 20.587,
+      "successor_value": 20.517241379310345,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0324",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 713.0213836825767,
+      "successor_value": 710.6053255756195,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0325",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 713.0213836825767,
+      "successor_value": 710.6053255756195,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0326",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-ruthless-bleed-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "474.7",
+      "successor_value": "473.1",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-ruthless-bleed-templar.xml (P6-11bt): Smite with Ruthless and bleed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-20",
       "status": "accepted"
     }
   ]

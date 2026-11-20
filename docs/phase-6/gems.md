@@ -314,3 +314,27 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11br's run):
 - **Public:** 0 unexpected. 11 values moved toward PoB, 6 now equal, none away. 6 fields went from partial to complete: the Inquisitor builds' movement speed and a Chieftain's, plus three builds' life regeneration.
 - **Corpus:** 0 unexpected; 5 values toward PoB, 1 now equal, none away.
+
+## P6-11bt: Ruthless
+
+Ruthless (`SupportRuthless`, `Data/Skills/sup_str.lua` 4685 to 4720) makes every third use of a melee strike or slam a Ruthless blow.
+
+What PoB does (`CalcOffence.lua` 2889 to 2909):
+- It reads `RuthlessBlowMaxCount` BASE (the constant 3), and `RuthlessBlowHitMultiplier` and `RuthlessBlowAilmentMultiplier` BASE with `ModFlag.Melee`.
+- In the average mode (`ruthlessSupportMode`, the default), the chance is `round(100 / count)`. Each effect is `1 - chance / 100 + chance / 100 x (1 + multiplier / 100)`.
+- The hit's effect joins `allMult` after the scaled damage effect (3352). The ailment effect multiplies bleed's and poison's base (4451, 4721), not ignite's.
+
+What the engine does:
+- `Poe1Quantity::Ruthless` carries the three terms as `HIT_ROWS` rows, read by the skill mapping as hit quantities.
+- `hit::ruthless_effect` computes an effect only when a count is present, so a hit without Ruthless keeps its graph.
+- The hit multiplies its scaled damage effect by the hit effect. `ailment` multiplies bleed's and poison's base by the ailment effect, summed with the hit's context as PoB's `cfg`.
+- The `MAX` mode (chance 100, the DPS divided by the count) is an `unmodelled-config` reason.
+- The stun duration override is `NoEffect` (`stun`).
+
+**Fixture** `smite-ruthless-bleed-templar.xml`: Smite with Ruthless, a Siege Axe, and a 25% chance to bleed. The hit and the bleed equal PoB's. The differences are Q11's floored attack rate (`DIV-0320` to `DIV-0326`); the bleed's DPS follows the rate, as `DIV-0137` already registers.
+
+**Register:** the `added` date of the Q11 entries `DIV-0302` to `DIV-0319` is corrected to 2026-11-20. The helper had a fixed date.
+
+**Evidence** (`b-ct`, against P6-11bs's run):
+- **Public:** 0 unexpected; 7 values toward PoB, none away (a Juggernaut's Boneshatter, among others).
+- **Corpus:** 0 unexpected; 1 value toward PoB, none away.

@@ -2670,7 +2670,40 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_rapid_decay_damage_over_time_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::DOT, NONE)],
     ),
-    // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
+    // P6-11bt: Ruthless (`SupportRuthless`, `Data/Skills/sup_str.lua` 4694 to
+    // 4708): `RuthlessBlowHitMultiplier`, `RuthlessBlowMaxCount`, and
+    // `RuthlessBlowAilmentMultiplier` BASE, the multipliers with
+    // `ModFlag.Melee`.
+    (
+        "support_ruthless_big_hit_damage_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Ruthless(super::RuthlessValue::Hit)),
+            Op::Base,
+            1.0,
+            Flags::MELEE,
+            NONE,
+        )],
+    ),
+    (
+        "support_ruthless_big_hit_max_count",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Ruthless(super::RuthlessValue::MaxCount)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    (
+        "support_ruthless_blow_ailment_damage_from_melee_hits_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Ruthless(super::RuthlessValue::Ailment)),
+            Op::Base,
+            1.0,
+            Flags::MELEE,
+            NONE,
+        )],
+    ), // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
     (
         "support_storm_barrier_damage_+%_final",
@@ -3005,6 +3038,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                 Poe1Quantity::SkillBaseDamage(..)
                     // An end of the damage range (P6-11bo: Volatility's).
                     | Poe1Quantity::BoundDamage(..)
+                    // Ruthless (P6-11bt).
+                    | Poe1Quantity::Ruthless(_)
                     | Poe1Quantity::SkillConversion(..)
                     | Poe1Quantity::Conversion(..)
                     // Gain as extra (P6-11bp; PoB's `SkillStatMap.lua` 925
@@ -6576,6 +6611,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_momentum_stack_while_channelling_base_ms",
         "channelling",
+    ),
+    // P6-11bt: Ruthless's stun duration (`baseStunDuration`).
+    (
+        "support_ruthless_big_hit_stun_base_duration_override_ms",
+        "stun",
     ),
     // P3-8n: Intensify's area per intensity (`AreaOfEffect` MORE): area.
     (
