@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 14;
+pub const FORMAT: u32 = 15;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -75,6 +75,9 @@ pub struct Export {
     pub flavour_text: Vec<FlavourEntry>,
     /// `data.clusterJewels` (format 9, passive tree plan T-i).
     pub cluster_jewels: ClusterJewels,
+    /// Timeless jewels (format 15, P6-10a).
+    #[serde(default)]
+    pub timeless: Option<PobTimeless>,
     /// The tree.
     pub tree: Tree,
 }
@@ -802,4 +805,76 @@ pub fn parse(bytes: &[u8]) -> Result<Export, String> {
         ));
     }
     Ok(export)
+}
+
+/// A legion table row (`LegionPassives.lua`, format 15).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionRow {
+    /// The ID.
+    pub id: String,
+    /// Each stat's range.
+    #[serde(default)]
+    pub stats: BTreeMap<String, LegionRange>,
+}
+
+/// A stat's range.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionRange {
+    /// The lowest roll (PoB's display unit: per minute stats per second,
+    /// per-myriad ones as a percent).
+    pub min: f64,
+    /// The highest roll, likewise.
+    pub max: f64,
+}
+
+/// A node's index (`nodeIDList`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionIndex {
+    /// Its index.
+    pub index: u32,
+    /// Its bytes in Glorious Vanity's table.
+    pub size: u32,
+}
+
+/// A jewel type.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionJewel {
+    /// Its name.
+    pub name: String,
+    /// The lowest seed (Elegant Hubris's divided).
+    pub seed_min: u32,
+    /// The highest seed.
+    pub seed_max: u32,
+    /// The zlib stream's Adler-32 trailer.
+    #[serde(default)]
+    pub adler32: Option<u32>,
+}
+
+/// Timeless jewels (format 15).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PobTimeless {
+    /// `legion.additions`, in order.
+    #[serde(deserialize_with = "list")]
+    pub additions: Vec<LegionRow>,
+    /// `legion.nodes`, in order.
+    #[serde(deserialize_with = "list")]
+    pub nodes: Vec<LegionRow>,
+    /// `timelessJewelAdditions`.
+    pub additions_count: u32,
+    /// `nodeIDList.size`.
+    pub node_count: u32,
+    /// `nodeIDList.sizeNotable`.
+    pub notable_count: u32,
+    /// Each node's index, by node.
+    pub node_index: BTreeMap<String, LegionIndex>,
+    /// Each jewel type's local-to-global IDs.
+    #[serde(default)]
+    pub local_to_global: BTreeMap<String, BTreeMap<String, u32>>,
+    /// The jewel types, by index.
+    pub jewels: BTreeMap<String, LegionJewel>,
 }

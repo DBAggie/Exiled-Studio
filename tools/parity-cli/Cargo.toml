@@ -9,6 +9,8 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
+# Inflating PoB's timeless jewel results (P6-10a, `timeless-pack`).
+miniz_oxide = { version = "0.9", default-features = false, features = ["with-alloc"] }
 loom-domain.workspace = true
 loom-calc.workspace = true
 loom-data.workspace = true

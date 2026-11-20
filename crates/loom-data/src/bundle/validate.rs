@@ -1115,6 +1115,88 @@ fn domain(b: &Bundle, report: &mut Report) {
         if let Some(c) = &p.cluster_jewels {
             cluster_domain(b, c, report);
         }
+        timeless_domain(b, p, report);
+    }
+}
+
+/// The timeless jewels' files (P6-10a): every stat the extracted tables
+/// name exists and each row is on one row number (`BUNDLE_DANGLING_REF`,
+/// `BUNDLE_DUPLICATE_ID`); the results' mapping needs the extracted
+/// tables, names each results file the manifest lists with that file's
+/// SHA-256, and gives each non-Abyss file the length its layout has
+/// (`BUNDLE_TIMELESS`; [`super::timeless::TimelessLuts::expected_len`]);
+/// node indices are unique and below the node count.
+fn timeless_domain(b: &Bundle, p: &super::poe1::Poe1Section, report: &mut Report) {
+    use super::timeless::{TIMELESS, TIMELESS_DIR, TIMELESS_LUTS};
+    if let Some(t) = &p.timeless {
+        let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
+        let rows = |it: &mut dyn Iterator<Item = u32>| -> Vec<String> {
+            it.map(|r| r.to_string()).collect()
+        };
+        let passive_rows = rows(&mut t.passives.iter().map(|x| x.row));
+        duplicates(report, TIMELESS, passive_rows.iter().map(String::as_str));
+        let addition_rows = rows(&mut t.additions.iter().map(|x| x.row));
+        duplicates(report, TIMELESS, addition_rows.iter().map(String::as_str));
+        let named = t
+            .passives
+            .iter()
+            .map(|x| (&x.id, &x.stats))
+            .chain(t.additions.iter().map(|x| (&x.id, &x.stats)));
+        for (id, list) in named {
+            for s in list.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+                report.add(
+                    "BUNDLE_DANGLING_REF",
+                    format!("{TIMELESS}:{id}"),
+                    format!("stat {} does not exist", s.stat),
+                );
+            }
+        }
+    }
+    let Some(l) = &p.timeless_luts else {
+        return;
+    };
+    if p.timeless.is_none() {
+        report.add(
+            "BUNDLE_TIMELESS",
+            TIMELESS_LUTS,
+            format!("no {TIMELESS} to index"),
+        );
+    }
+    let indices: Vec<String> = l.nodes.iter().map(|n| n.index.to_string()).collect();
+    duplicates(report, TIMELESS_LUTS, indices.iter().map(String::as_str));
+    for n in l.nodes.iter().filter(|n| n.index >= l.node_count) {
+        report.add(
+            "BUNDLE_TIMELESS",
+            format!("{TIMELESS_LUTS}:nodes:{}", n.node),
+            format!("index {} past the node count {}", n.index, l.node_count),
+        );
+    }
+    for j in &l.jewels {
+        let at = format!("{TIMELESS_LUTS}:jewels:{}", j.jewel);
+        let Some(f) = b.manifest.files.iter().find(|f| f.path == j.file) else {
+            report.add(
+                "BUNDLE_TIMELESS",
+                at,
+                format!("{} is not in the manifest", j.file),
+            );
+            continue;
+        };
+        if !j.file.starts_with(TIMELESS_DIR) || f.sha256 != j.sha256 {
+            report.add(
+                "BUNDLE_TIMELESS",
+                at.clone(),
+                format!("{} is not the file named", j.file),
+            );
+        }
+        if let Some(len) = l.expected_len(j)
+            && f.size != len
+        {
+            report.add(
+                "BUNDLE_TIMELESS",
+                at,
+                format!("{} has {} bytes, its layout {len}", j.file, f.size),
+            );
+        }
     }
 }
 

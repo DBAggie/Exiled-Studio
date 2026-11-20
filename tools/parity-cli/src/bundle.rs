@@ -883,6 +883,18 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(radii.len()),
             );
         }
+        // Timeless jewels' extracted tables (P6-10a); PoB's results are
+        // added by `timeless-pack`.
+        if let Some(t) = crate::timeless::rows(read)? {
+            let n = t.passives.len() + t.additions.len() + t.tree_versions.len();
+            put(
+                &mut files,
+                &mut rows,
+                loom_data::bundle::timeless::TIMELESS,
+                to_json(&t)?,
+                Some(n),
+            );
+        }
         if let Some(c) = cluster_jewels::rows(read, extract.set.files().map(|(_, f)| f))? {
             let n = c.jewels.len() + c.skills.len() + c.specials.len() + c.slots.len();
             put(

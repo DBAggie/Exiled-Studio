@@ -836,6 +836,84 @@
         "v2.67.2:src/Data/ClusterJewels.lua:758",
         "game:PassiveTreeExpansionSpecialSkills.Stat"
       ]
+    },
+    {
+      "id": "timeless-pob-dat-errors",
+      "category": "pob-derivation",
+      "table": "timeless",
+      "fields": [
+        "id"
+      ],
+      "keys": [
+        "addition|59",
+        "addition|62",
+        "addition|77",
+        "addition|89",
+        "node|97",
+        "node|98"
+      ],
+      "count": 6,
+      "evidence": "PoB's legion exporter rewrites six game IDs it treats as mislabelled (its datErrors table): the two Militant Faith charge notables swap power and frenzy by their names, and four additions are renamed (faster_burn to faster_ignite, physical_taken_as_fire to rage_on_melee_hit, ailment_avoid to stun_avoid, flask_effect to alchemists_genius). The bundle keeps the game's IDs; the engine reads the rows' stats, which agree.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:7",
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:59",
+        "game:AlternatePassiveSkills.Id",
+        "game:AlternatePassiveAdditions.Id"
+      ]
+    },
+    {
+      "id": "timeless-display-units",
+      "category": "representation",
+      "table": "timeless",
+      "fields": [
+        "stat.*"
+      ],
+      "keys": [
+        "addition|43",
+        "addition|47",
+        "addition|91",
+        "addition|102",
+        "addition|109",
+        "addition|173",
+        "addition|199",
+        "addition|207",
+        "addition|208",
+        "addition|246",
+        "addition|247",
+        "addition|285",
+        "addition|287",
+        "addition|301",
+        "addition|308",
+        "addition|309",
+        "addition|316",
+        "addition|327",
+        "addition|328",
+        "node|43",
+        "node|46",
+        "node|49",
+        "node|52",
+        "node|55",
+        "node|59",
+        "node|60",
+        "node|65",
+        "node|193",
+        "node|194",
+        "node|232",
+        "node|233",
+        "node|270",
+        "node|271",
+        "node|306",
+        "node|307",
+        "node|341",
+        "node|342"
+      ],
+      "count": 74,
+      "evidence": "PoB's legion exporter stores each stat range in the unit its description shows: per-myriad leech as a percent (divided by 100), per-minute regeneration per second (divided by 60, base_mana_regeneration_rate_per_minute's 33 shown rounded to 0.6), milliseconds as seconds, and a stat worded \"reduced\" as its positive magnitude with min and max swapped. The bundle keeps the game's raw values; every difference is one of these conversions (checked on the 26530219 extract).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:113",
+        "game:AlternatePassiveSkills.Stat1Min",
+        "game:AlternatePassiveAdditions.Stat1Min"
+      ]
     }
   ]
 }

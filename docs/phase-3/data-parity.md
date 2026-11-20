@@ -146,6 +146,15 @@ PoB export format 14 writes `levelRequirement`, `vaalStoredUses`, `soulPreventio
 
 With `poe1/cluster_jewels.json` in the bundle (evidence bundle `b-cl`, `docs/tree/cluster-jewels.md`), the 353 cluster rows of PoB's are compared, and `uncategorized` is 0. The one difference left is PoB's notable order for the duplicated name Evil Eye: rule `cluster-notable-order-duplicate-name`.
 
+## Timeless jewels (export format 15, P6-10a)
+
+Table `timeless` compares:
+- the bundle's extracted timeless tables against PoB's `LegionPassives.lua`;
+- the results' mapping against PoB's `NodeIndexMapping.lua`;
+- each shipped results file's Adler-32 against PoB's zip trailer.
+
+Its 80 differences on `b-tl` are PoB's ID rewrites (`timeless-pob-dat-errors`) and PoB's display units (`timeless-display-units`); `docs/phase-6/timeless.md`, "Part 2".
+
 ## Not compared
 Listed in the summary's `not_compared`: interpolation kinds (level requirements and Vaal soul costs since data schema 5, above), PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

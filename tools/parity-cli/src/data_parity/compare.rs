@@ -387,6 +387,7 @@ pub fn compare(
     export: &Export,
     passive_scope: &str,
     bosses: &[Boss],
+    timeless_adlers: &std::collections::BTreeMap<String, u32>,
 ) -> Result<Comparison, String> {
     let (Some(skills), Some(passives), Some(properties)) =
         (&bundle.skills, &bundle.passives, &bundle.properties)
@@ -411,6 +412,7 @@ pub fn compare(
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
+    super::timeless::compare_timeless(&mut out, bundle, export, timeless_adlers);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()

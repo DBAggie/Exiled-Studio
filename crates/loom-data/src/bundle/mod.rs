@@ -38,6 +38,7 @@ pub mod poe1;
 pub mod properties;
 pub mod skills;
 mod source;
+pub mod timeless;
 pub mod tree_layout;
 pub mod tree_packs;
 pub mod tree_sprites;

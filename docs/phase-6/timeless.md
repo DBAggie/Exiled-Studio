@@ -90,3 +90,50 @@ So no implementation of the generator can ship under the project's MIT licence (
 3. **The engine:** the replaced and added nodes in a Timeless jewel's radius, and the replacement keystones (P6-11ao's `TimelessKeystone` reason).
 
 Until then, a timeless jewel stays the reason it is today: its stats are unmapped, and the nodes it changes are not modelled.
+
+## Part 2: the tables in the bundle (2026-11-19)
+
+The plan is `dev/active/phase-6-mechanics/p6-10a-timeless-plan.md`, decided by the maintainer: all 11 types ship, loaded only when needed.
+
+**The extraction:** `local/extract/poe1/26530219-p6`, from build 26530219's full depot (`local/b2/steam-26530219`, validated by DepotDownloader 2026-11-19), read through `local/b2/steam-26530219-full` (a junction with the stand-in `appmanifest_238960.acf`).
+- The game index SHA-256 is the evidence bundles' (`d23c7899…`).
+- 109 tables, all `Ok`.
+- `AlternatePassiveSkills` has 381 rows, `AlternatePassiveAdditions` 337, `AlternateTreeVersions` 12 (rows 1 to 11 are PoB's jewel types 1 to 11).
+
+**The bundle files** (`loom_data::bundle::timeless`):
+- **`poe1/timeless.json`** (written by `bundle`, `tools/parity-cli/src/timeless.rs`): the three extracted tables.
+  - PoB's `Export/spec.lua` names the columns the schema leaves unnamed (stats 3 to 6, the conqueror index and version, the tree versions' replacement flags), so those are read by position, after the named columns are checked at theirs.
+- **`poe1/timeless_luts.json`** (written by the new `loom-parity-cli timeless-pack <bundle> <pob-src> <pob-version> --out <dir>`):
+  - PoB's `NodeIndexMapping.lua` (1,937 nodes, 454 notables, the local-to-global IDs);
+  - the jewel types and seed ranges from `Modules/Data.lua`;
+  - each results file's SHA-256.
+- **`poe1/timeless/<Type>.bin`**: each `Data/TimelessJewelData/<Type>.zip` (or its parts) inflated, byte for byte: 466 MB for the 11 types.
+- **Loading:** `Bundle::load` reads the two JSON files and never the `.bin` files. The app will read one type's file when a build socketes that jewel (plan decision T2).
+- **Reader:** `loom_data::bundle::timeless::read` ports PoB's `readLUT` for the six non-Abyss types, with unit tests. Glorious Vanity's layout was checked on PoB's file: its length is the node count times the seeds plus every node's size, and each node's size is the sum of its seeds' lengths (all 1,937).
+
+**The validator** (`BUNDLE_TIMELESS`):
+- **Extracted tables:** their stats exist, and each row number appears once.
+- **The mapping needs the extracted tables.** Each jewel's file is in the manifest under `poe1/timeless/` with the SHA-256 the mapping names, and each non-Abyss file has its layout's length.
+- **Node indices** are unique and below the node count.
+
+**PoB's export, format 15** (`tools/oracle/data/pob_data.lua`), adds `timeless`:
+- `LegionPassives.lua`'s rows (ID and stat ranges), the node index mapping, and the jewel types and seed ranges;
+- each zip's Adler-32 trailer, which is the checksum of its inflated bytes, read without inflating.
+
+**Data parity, table `timeless`** (`tools/parity-cli/src/data_parity/timeless.rs`):
+- **What it compares:** the extracted rows against PoB's legion rows, the mapping against PoB's, and each shipped `.bin`'s Adler-32 (computed by `data-parity` from the file) against PoB's trailer.
+- **On the evidence bundle `b-tl`:** 7,041 rows, 80 differences, all categorized; all 11 checksums equal.
+  - **6 IDs:** PoB's exporter rewrites six game IDs it treats as mislabelled (its `datErrors`, `legionPassives.lua` 7 to 55). Rule `timeless-pob-dat-errors`, `pob-derivation`.
+  - **74 stat range values:** PoB stores ranges in the unit their descriptions show (per-myriad as a percent, per minute per second, milliseconds as seconds, a "reduced" stat as its positive magnitude). Every one was checked to be such a conversion. Rule `timeless-display-units`, `representation`.
+- `uncategorized` stays 0.
+
+**Evidence bundle** `local/p6/packs/b-tl`:
+- `b-cl` plus `poe1/timeless.json`, then `timeless-pack` with PoB v2.67.2.
+- 609 MB on disk. `bundle-check` reports no findings; it is local and unsigned.
+
+**Calculation:** no value or state changed on `b-tl` (public 0 unexpected, corpus 0 unexpected, against `b-cl`): the engine does not read the tables yet.
+
+**Next:** the engine (plan steps 2 to 4):
+- the app reading a type's file on demand;
+- the jewel's type, seed, and conqueror from its lines;
+- the replaced and added nodes in its radius, and the conqueror's keystone.

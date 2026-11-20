@@ -34,6 +34,9 @@
 //!   use (`MonsterVarieties`, `MonsterTypes`, Phase 6 P6-7a; [`Minions`]),
 //!   and the `.ot` stats of their object types (P6-7b1, [`ObjectStats`]):
 //!   the data a minion or a spectre is computed from.
+//! - `poe1/timeless.json`, `poe1/timeless_luts.json`, `poe1/timeless/`:
+//!   timeless jewels (Phase 6 P6-10a, [`super::timeless`]); the results
+//!   files are never loaded here.
 //! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
 //!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
 //!   applies an active flask's buff).
@@ -653,6 +656,11 @@ pub struct Poe1Section {
     pub flasks: Option<Vec<Flask>>,
     /// Monster varieties and types (`None` when the file is absent).
     pub minions: Option<Minions>,
+    /// Timeless jewels' tables (`None` when the file is absent; P6-10a).
+    pub timeless: Option<super::timeless::Timeless>,
+    /// How to read the timeless jewels' results (`None` when the file is
+    /// absent; the results themselves are read on demand, never here).
+    pub timeless_luts: Option<super::timeless::TimelessLuts>,
 }
 
 impl Poe1Section {
@@ -1023,6 +1031,16 @@ impl Poe1Section {
             },
             minions: if listed(MINIONS) {
                 Some(json(source, MINIONS)?)
+            } else {
+                None
+            },
+            timeless: if listed(super::timeless::TIMELESS) {
+                Some(json(source, super::timeless::TIMELESS)?)
+            } else {
+                None
+            },
+            timeless_luts: if listed(super::timeless::TIMELESS_LUTS) {
+                Some(json(source, super::timeless::TIMELESS_LUTS)?)
             } else {
                 None
             },

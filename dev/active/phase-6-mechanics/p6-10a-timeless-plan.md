@@ -25,7 +25,7 @@ The results are kept in PoB's own byte layout, as `readLUT` reads it. The engine
 
 **T1. Ship the results in the data bundle.**
 - **Files:** `poe1/timeless/<type>.bin`, one per jewel type, in PoB's inflated layout, compressed by the bundle's zip.
-- **Size:** about +30 MB to download, +66 MB on disk.
+- **Size:** the five original types about +30 MB to download and +66 MB on disk; all 11 about +178 MB and +466 MB.
 - **Decided:** all 11 types. Their sizes inflated: Glorious Vanity 51.7 MB; Lethal Pride, Brutal Restraint, Militant Faith, Elegant Hubris, Heroic Tragedy about 3.6 MB each; the Abyss jewels 73 to 103 MB each.
 
 **T2. Load the results only when a build needs them.**
