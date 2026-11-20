@@ -2784,3 +2784,18 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected. 5 values moved, all toward PoB, two now equal: another Penance Brand build, the same fields.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
+## P6-11en: the hands' weapon types; two-handed area damage and impales
+
+**PoB:** each hand's weapon type sets `UsingMeleeWeapon`, `UsingOneHandedWeapon`, or `UsingTwoHandedWeapon` from `data.weaponTypeInfo` (`CalcPerform.lua` 150 to 214; `Modules/Data.lua` 550 to 566). An empty main hand is the unarmed `None` type: melee and one-handed. The off hand counts only with a weapon in it.
+- "#% increased Area Damage while wielding a Two Handed Melee Weapon" is `Damage` INC with `ModFlag.Area` under `UsingTwoHandedWeapon` and `UsingMeleeWeapon`.
+- "#% chance to Impale Enemies on Hit with Two Handed Weapons" and "#% increased Effect of Impales you inflict with Two Handed Weapons" are `ImpaleChance` BASE and `ImpaleEffect` INC with `ModFlag.Weapon2H` and `Hit`.
+
+**The engine:**
+- **States** (`poe1::states`): `USING_MELEE_WEAPON`, `USING_ONE_HANDED_WEAPON`, and `USING_TWO_HANDED_WEAPON` from both hands, each hand typed as PoB's table (`hand_kinds`, with `skill::pob_weapon_type`). A hand whose item is not known, or a class PoB does not type, leaves all three unsettled. `USING_TWO_HANDED_MELEE_WEAPON` is both at once: the engine's key for PoB's two conditions on one modifier, since a state row reads one.
+- **Rows:** a `STATE_ROWS` row for the area damage, two `HIT_ROWS` rows for the impales. The impale effect row is listed in `gems`' checked rows, as the plain impale effect is.
+- **Left as a reason:** "#% increased Effect of Impales you inflict with Two Handed Weapons on Non-Impaled Enemies". PoB leaves "on Non-Impaled Enemies" unparsed and so skips the line (`Item.lua` 2504).
+
+**Evidence** (`b-ct`, against P6-11em's run):
+- **Public:** 0 unexpected. 3 values moved, all toward PoB: a Cyclone Slayer's impale DPS and the DPS totals on it.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** a unit test of the hand kinds; the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

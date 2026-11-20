@@ -148,7 +148,7 @@ pub struct MainSkill<'d> {
 /// list, and the item bases' `type` for a held weapon (a Warstaff is a
 /// `Staff`, a Rune Dagger a `Dagger`). None: a class PoB has no weapon type
 /// for (a shield, a quiver).
-fn pob_weapon_type(class: &str) -> Option<&'static str> {
+pub(super) fn pob_weapon_type(class: &str) -> Option<&'static str> {
     Some(match class {
         "Claw" => "Claw",
         "Dagger" | "Rune Dagger" => "Dagger",

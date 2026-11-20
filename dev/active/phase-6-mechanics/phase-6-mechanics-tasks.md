@@ -218,7 +218,6 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11el: Acrobatics: suppression 0, half of it as spell dodge up to 75%, read by the estimate's chance not to be hit (`docs/phase-6/stat-mop-up.md`, "P6-11el"). The keystones the public and corpus builds left are all mapped.
 - [x] P6-11em: attacked and cast a spell recently from their checks or the main skill (`conditions::main_skill_recently`), spell block after casting a spell, five `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11em")
 - [ ] PoB's `ExtraAura` lines ("you and nearby Allies ..."), scaled by the aura effect on you (`CalcPerform.lua` 3352 to 3362)
-- [ ] Two conditions on one state row: "#% increased Area Damage while wielding a Two Handed Melee Weapon" (`UsingTwoHandedWeapon` and `UsingMeleeWeapon`)
 - [ ] Curse and travel skill flags: "Curse Skills have #% increased Cast Speed" (`KeywordFlag.Curse`), "#% increased Cooldown Recovery Rate of Travel Skills" (`SkillType.Travel`)
 - [ ] Autoexertion's reservation in a community Slayer: PoB reserves 118 for its General's Cry (20% of 714 at 21% efficiency), the engine 126 (the build's 11%, as its other skills). Find PoB's extra 10% efficiency for that warcry
 - [ ] PoB's full DPS pass with Blood and Sand present gives the main skill another value than its main calculation (Smite's Area Hit: 128.11 against 128.02 in Blood Stance, 95.85 against 96.27 in Sand Stance; equal without Blood and Sand). Find the cause in `Modules/Calcs.lua`'s full DPS environment before a build with both is compared on `FullDPS`
@@ -330,6 +329,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11p: Onslaught on kill, `KilledRecently` settled from the check and the kill count; `docs/phase-6/stat-mop-up.md`, "P6-11p"
 - [x] P6-11o: `AffectedBy<Aura>` settled from the gem table's auras (`gems::affected_by`, `conditions::AFFECTED_BY`), 12 state rows; `docs/phase-6/stat-mop-up.md`, "P6-11o"
 - [x] P6-11n: the flask mapping honours `NoEffect` rows; 13 hit rows, a damage over time row, 3 `NoEffect` rows, 3 `EhpReason` markers; 52 values toward PoB; `docs/phase-6/stat-mop-up.md`, "P6-11n"
+- [x] P6-11en: the hands' weapon types (`UsingMeleeWeapon`, `UsingOneHandedWeapon`, `UsingTwoHandedWeapon`), area damage with a two-handed melee weapon, two-handed impales (`docs/phase-6/stat-mop-up.md`, "P6-11en")
 ## P6-12: combined and full DPS; report
 - [x] P6-12 part 1: `combined-dps` (`poe1::combined`, slice revision 10; Culling Strike's multiplier); a flag stat at 0 sets no flag (`smite-bleed-templar.xml`'s bleeding computed again); Q11 DIV-0133 to DIV-0173; `docs/phase-6/combined-dps.md`
 - [x] P6-12: a skill without a hit adds PoB's 0 (`combined::has_hit`); a skill PoB disables for the hands has no mana cost (`MainSkill::disabled_by_hands`), weapon types compared as PoB's (`skill::pob_weapon_type`); `docs/phase-6/recovery.md`, "A disabled skill's cost"

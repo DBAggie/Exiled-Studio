@@ -1234,6 +1234,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11en: "#% chance to Impale Enemies on Hit with Two Handed Weapons"
+    // (`ImpaleChance` BASE with `ModFlag.Weapon2H` and `Hit`).
+    (
+        "attacks_with_two_handed_weapons_impale_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::WEAPON_2H.union(Flags::HIT),
+            NONE,
+        )],
+    ),
     // P6-11b: "Axe Attacks deal #% increased Damage with Ailments": `Damage` INC, `ModFlag.Axe` and `Ailment`.
     (
         "axe_ailment_damage_+%",
@@ -2108,6 +2120,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             NONE,
+            NONE,
+        )],
+    ),
+    // P6-11en: "#% increased Effect of Impales you inflict with Two Handed
+    // Weapons" (`ImpaleEffect` INC with `ModFlag.Weapon2H` and `Hit`).
+    (
+        "impale_inflicted_by_two_handed_weapons_debuff_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleEffect),
+            Op::Increased,
+            1.0,
+            Flags::WEAPON_2H.union(Flags::HIT),
             NONE,
         )],
     ),
@@ -4941,6 +4965,18 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "support_lifetap_damage_+%_final_while_buffed",
         &[(Quantity::Damage, Op::More, NONE, conditions::LIFETAP)],
+    ),
+    // P6-11en: "#% increased Area Damage while wielding a Two Handed Melee
+    // Weapon" (`Damage` INC with `ModFlag.Area`, `UsingTwoHandedWeapon` and
+    // `UsingMeleeWeapon`).
+    (
+        "two_handed_melee_area_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::AREA,
+            states::USING_TWO_HANDED_MELEE_WEAPON,
+        )],
     ),
     // P6-10b part 5: "#% additional Physical Damage Reduction while
     // stationary" (`PhysicalDamageReduction` BASE, `Stationary`).
@@ -9890,6 +9926,8 @@ mod tests {
                         states::USING_WAND,
                         states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                         states::DUAL_WIELDING,
+                        // P6-11en: the hands' weapon types.
+                        states::USING_TWO_HANDED_MELEE_WEAPON,
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
@@ -10636,6 +10674,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11en: area damage with a two-handed melee weapon.
+            (
+                "two_handed_melee_area_damage_+%",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::AREA,
+                    states::USING_TWO_HANDED_MELEE_WEAPON,
                 )],
             ),
             // P6-11em: spell block after casting a spell.

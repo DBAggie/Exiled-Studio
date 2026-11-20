@@ -16,9 +16,12 @@
 //! base is not known leaves its condition unsettled, so an effect that
 //! needs it is `unmodelled-condition` (a reason), never a guess. Any other
 //! condition stays unsettled, as before P3-8f: `OffHandIsEmpty`,
-//! `Unarmed`, `UsingMeleeWeapon`, `UsingOneHandedWeapon`,
-//! `UsingTwoHandedWeapon`, the other weapon types, and Necromantic
-//! Aegis's shield; an effect that needs one is a reason.
+//! `Unarmed`, the other weapon types, and Necromantic Aegis's shield; an
+//! effect that needs one is a reason. Since P6-11en the engine also
+//! settles [`USING_MELEE_WEAPON`], [`USING_ONE_HANDED_WEAPON`], and
+//! [`USING_TWO_HANDED_WEAPON`] from both hands, as PoB's
+//! `data.weaponTypeInfo` types them (an empty main hand is PoB's unarmed
+//! `None`: melee, one-handed).
 //!
 //! Differences on purpose: PoB also sets `Using<flag>` from the off hand's
 //! weapon type (`CalcPerform.lua` 187 to 190), but a staff cannot be held
@@ -34,6 +37,20 @@ use loom_domain::{LineKind, LineResolution, Resolved};
 use super::collect::{self, Held};
 use crate::condition::ConditionKey;
 use crate::input::CalcInput;
+
+/// A hand holds a melee weapon, an empty main hand counting as unarmed
+/// (PoB's `UsingMeleeWeapon`; P6-11en).
+pub const USING_MELEE_WEAPON: &str = "UsingMeleeWeapon";
+/// A hand holds a one-handed weapon, an empty main hand counting as
+/// unarmed (PoB's `UsingOneHandedWeapon`; P6-11en).
+pub const USING_ONE_HANDED_WEAPON: &str = "UsingOneHandedWeapon";
+/// A hand holds a two-handed weapon (PoB's `UsingTwoHandedWeapon`;
+/// P6-11en).
+pub const USING_TWO_HANDED_WEAPON: &str = "UsingTwoHandedWeapon";
+/// Both [`USING_TWO_HANDED_WEAPON`] and [`USING_MELEE_WEAPON`] (P6-11en):
+/// the engine's key for PoB's two conditions on one modifier ("while
+/// wielding a Two Handed Melee Weapon"), as a state row reads one.
+pub const USING_TWO_HANDED_MELEE_WEAPON: &str = "UsingTwoHandedWeapon+UsingMeleeWeapon";
 
 /// The main hand holds a staff or a warstaff (PoB's `UsingStaff`).
 pub const USING_STAFF: &str = "UsingStaff";
@@ -95,11 +112,26 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     };
     let dual = hands.dual_wielding();
     let wand = using_wand(&hands);
+    let kinds = hand_kinds(&hands);
+    let any = |f: fn(WeaponKind) -> bool| -> Option<bool> {
+        kinds.map(|k| k.iter().flatten().any(|w| f(*w)))
+    };
+    let melee = any(|w| w.melee);
+    let one_hand = any(|w| w.one_hand);
+    let two_hand = any(|w| !w.one_hand);
+    let two_hand_melee = match (two_hand, melee) {
+        (Some(a), Some(b)) => Some(a && b),
+        _ => None,
+    };
     for (key, value) in [
         (USING_STAFF, staff),
         (USING_SHIELD, shield),
         (DUAL_WIELDING, dual),
         (USING_WAND, wand),
+        (USING_MELEE_WEAPON, melee),
+        (USING_ONE_HANDED_WEAPON, one_hand),
+        (USING_TWO_HANDED_WEAPON, two_hand),
+        (USING_TWO_HANDED_MELEE_WEAPON, two_hand_melee),
     ] {
         if let Some(v) = value {
             out.insert(ConditionKey::new(key), v);
@@ -120,6 +152,48 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         out.insert(ConditionKey::new(NO_LIFE_MODIFIERS_ON_BODY_ARMOUR), v);
     }
     out
+}
+
+/// A hand's weapon as PoB's `data.weaponTypeInfo` (`Modules/Data.lua`
+/// 550 to 566) types it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WeaponKind {
+    melee: bool,
+    one_hand: bool,
+}
+
+/// Each hand's [`WeaponKind`] (`CalcPerform.lua` 150 to 214): the main
+/// hand's weapon, or PoB's unarmed `None` type when it is empty (a melee,
+/// one-handed type); the off hand's weapon, or nothing for an empty hand,
+/// a shield, or a quiver. `None` when a hand's item is not known, or a
+/// weapon class PoB does not type.
+fn hand_kinds(hands: &collect::Hands) -> Option<[Option<WeaponKind>; 2]> {
+    let kind = |class: &str| -> Option<WeaponKind> {
+        let (melee, one_hand) = match super::skill::pob_weapon_type(class)? {
+            "Bow" => (false, false),
+            "Wand" => (false, true),
+            "Staff" | "Fishing Rod" | "Two Handed Axe" | "Two Handed Mace" | "Two Handed Sword" => {
+                (true, false)
+            }
+            _ => (true, true),
+        };
+        Some(WeaponKind { melee, one_hand })
+    };
+    let main = match &hands.main_hand {
+        Held::Weapon(class) => Some(kind(class)?),
+        Held::Empty => Some(WeaponKind {
+            melee: true,
+            one_hand: true,
+        }),
+        Held::Shield | Held::Other => None,
+        Held::Unknown => return None,
+    };
+    let off = match &hands.off_hand {
+        Held::Weapon(class) => Some(kind(class)?),
+        Held::Empty | Held::Shield | Held::Other => None,
+        Held::Unknown => return None,
+    };
+    Some([main, off])
 }
 
 /// [`SIX_LIFE_MASTERIES`]: 6 or more allocated Life Masteries settle it
@@ -372,6 +446,41 @@ mod tests {
         assert_eq!(dual(weapon(), Held::Unknown), None);
         assert_eq!(dual(Held::Unknown, Held::Shield), None);
         assert_eq!(dual(Held::Empty, weapon()), None);
+    }
+
+    /// The hands' weapon types (P6-11en), as PoB's `weaponTypeInfo`: an
+    /// empty main hand is unarmed (melee, one-handed); a shield or an
+    /// empty off hand adds nothing; an unknown hand settles nothing.
+    #[test]
+    fn hand_kinds_should_follow_pobs_weapon_types() {
+        let w = |c: &str| Held::Weapon(c.to_owned());
+        let kinds = |main_hand, off_hand| {
+            hand_kinds(&collect::Hands {
+                main_hand,
+                off_hand,
+                ..collect::Hands::default()
+            })
+        };
+        let k = |melee, one_hand| Some(WeaponKind { melee, one_hand });
+        assert_eq!(
+            kinds(w("Two Hand Axe"), Held::Empty),
+            Some([k(true, false), None])
+        );
+        assert_eq!(kinds(w("Bow"), Held::Other), Some([k(false, false), None]));
+        assert_eq!(
+            kinds(w("Warstaff"), Held::Empty),
+            Some([k(true, false), None])
+        );
+        assert_eq!(
+            kinds(w("Wand"), w("Claw")),
+            Some([k(false, true), k(true, true)])
+        );
+        assert_eq!(
+            kinds(Held::Empty, Held::Shield),
+            Some([k(true, true), None])
+        );
+        assert_eq!(kinds(w("Sceptre"), Held::Unknown), None);
+        assert_eq!(kinds(w("Something New"), Held::Empty), None);
     }
 
     /// `UsingWand` (P6-11b): a wand in either hand settles it; otherwise

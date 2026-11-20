@@ -4828,6 +4828,8 @@ mod tests {
         let checked = [
             "curse_effect_on_self_+%",
             "impale_debuff_effect_+%",
+            // P6-11en: the two-handed weapons' impale effect, the same.
+            "impale_inflicted_by_two_handed_weapons_debuff_effect_+%",
             "supported_active_skill_gem_level_+",
             // P6-11ck: Enhance's supported quality, the same way.
             "supported_active_skill_gem_quality_%",
