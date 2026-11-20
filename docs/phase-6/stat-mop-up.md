@@ -1989,6 +1989,7 @@ Every other computed field equals PoB's.
 - **Public:** 0 unexpected; 3 values toward PoB (a build's ignite and combined DPS, another's full DPS), none away.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
+- **data-parity** (`gem_effects`, run at P6-11dl): the new row first showed one uncategorized difference, `<poe1.enemy-buff-expire-faster>` against PoB's `BuffExpireFaster`: the table's naming did not know the quantity. It now names it (`tools/parity-cli/src/data_parity/gem_effects.rs`), and `uncategorized` is 0.
 
 ## P6-11cw: attack damage per 450 armour
 
