@@ -1619,6 +1619,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cast_on_ward_break_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11cx: "#% increased Cast Speed with Brand Skills" (`Speed` INC,
+    // `ModFlag.Cast`, `SkillType.Brand`).
+    (
+        "cast_speed_for_brand_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::CAST.union(Flags::SKILL_BRAND),
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
     // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
     // skills"; `ModParser.lua` 754, 1052); likewise below.
@@ -2074,6 +2086,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             100.0,
             Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // P6-11cx: "Mark Skills have #% increased Cast Speed" (`Speed` INC,
+    // `ModFlag.Cast`, `SkillType.Mark`).
+    (
+        "mark_skill_cast_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::CAST.union(Flags::SKILL_MARK),
             NONE,
         )],
     ),

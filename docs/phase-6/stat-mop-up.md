@@ -2006,3 +2006,19 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 17 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cx: brand and mark skills' cast speed
+
+**PoB** reads "#% increased Cast Speed with Brand Skills" and "Mark Skills have #% increased Cast Speed" as `Speed` INC with `ModFlag.Cast` and a `SkillType` tag (`Brand`, `Mark`).
+
+**The engine:**
+- `skill::SKILL_TYPE_FLAGS` names the skill types whose tag a row reads, each with its flag: P6-11co's `RangedAttack`, and now `Brand` (`Flags::SKILL_BRAND`, bit 51) and `Mark` (`Flags::SKILL_MARK`, bit 52). `skill::keyword_flags` sets them from the skill's types, and the ailments keep them.
+- The two stats are `HIT_ROWS` rows. A brand or a mark is not a main skill whose hit the engine computes (`hit::NOT_SELF_CAST`), so today the rows only keep these lines from being reasons on other skills, as in PoB.
+- **Tests:** `keyword_flags` of a brand and a mark. The maintainer-run test checks the type names against the real bundle; it passes on `b-ct`.
+
+**Fixture** `ice-nova-brand-mark-cast-speed-witch.xml`: Ice Nova with both lines at 30%. Its cast rate equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cw's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

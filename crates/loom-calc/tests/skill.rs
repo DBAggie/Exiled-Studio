@@ -127,6 +127,12 @@ fn keyword_flags_should_follow_the_skills_types() {
         keyword_flags(&types(&["Attack", RANGED_ATTACK_TYPE])),
         Flags::SKILL_RANGED_ATTACK
     );
+    // "with Brand Skills", "Mark Skills" (P6-11cx).
+    assert_eq!(
+        keyword_flags(&types(&["Spell", "Brand"])),
+        Flags::SKILL_BRAND
+    );
+    assert_eq!(keyword_flags(&types(&["Spell", "Mark"])), Flags::SKILL_MARK);
     assert_eq!(
         keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),
         Flags::NONE
@@ -569,6 +575,12 @@ fn real_skill_types_should_name_the_keyword_types() {
         .iter()
         .map(|(name, _)| *name)
         .chain([TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])
+        // P6-11co, P6-11cx: the skill types the mapping reads.
+        .chain(
+            loom_calc::poe1::skill::SKILL_TYPE_FLAGS
+                .iter()
+                .map(|(name, _)| *name),
+        )
         // P6-11cl: the typed supported levels' types.
         .chain(
             loom_calc::poe1::skill::SUPPORTED_TYPED_LEVEL_STATS

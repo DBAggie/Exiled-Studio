@@ -304,12 +304,11 @@ pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
     // PoB's skill flags from the granted effect's base flags and its
     // supports' added flags, here the skill types with the supports' added
     // types.
-    // "Projectile Attack Skills" (P6-11co): PoB's `SkillType.RangedAttack`.
-    let flags = if types.contains(RANGED_ATTACK_TYPE) {
-        flags | Flags::SKILL_RANGED_ATTACK
-    } else {
-        flags
-    };
+    // PoB's `SkillType` tags the mapping reads (P6-11co, P6-11cx).
+    let flags = SKILL_TYPE_FLAGS
+        .iter()
+        .filter(|(name, _)| types.contains(*name))
+        .fold(flags, |flags, (_, f)| flags | *f);
     if types.contains(TOTEM_TYPE) {
         flags | Flags::KEYWORD_TOTEM
     } else if types.contains(TRAP_TYPE) {
@@ -323,6 +322,16 @@ pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
 
 /// The skill type of a projectile attack skill (P6-11co).
 pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
+
+/// The skill types whose PoB `SkillType` tag a mapped row reads, each with
+/// its flag (P6-11co: "Projectile Attack Skills"; P6-11cx: "with Brand
+/// Skills", "Mark Skills"). A test checks the names against the real
+/// bundle.
+pub const SKILL_TYPE_FLAGS: [(&str, Flags); 3] = [
+    (RANGED_ATTACK_TYPE, Flags::SKILL_RANGED_ATTACK),
+    ("Brand", Flags::SKILL_BRAND),
+    ("Mark", Flags::SKILL_MARK),
+];
 /// The skill type of a totem skill (the game's `ActiveSkillType`).
 pub const TOTEM_TYPE: &str = "SummonsTotem";
 /// The skill type of a trap skill.

@@ -133,6 +133,8 @@ const KEYWORDS: Flags = Flags::SKILL_PHYSICAL
     .union(Flags::KEYWORD_MINE)
     // The skill's types (P6-11co; PoB's ailment config keeps `skillTypes`).
     .union(Flags::SKILL_RANGED_ATTACK)
+    .union(Flags::SKILL_BRAND)
+    .union(Flags::SKILL_MARK)
     // `band(cfg.flags, ModFlag.WeaponMask)` (P6-11b).
     .union(Flags::AILMENT_WEAPON_MASK)
     .union(Flags::KEYWORD_SPELL)
