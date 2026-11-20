@@ -3775,6 +3775,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ENEMY_FULL_LIFE,
         )],
     ),
+    // P6-11dp: "+#% to Critical Strike Multiplier against Bleeding Enemies"
+    // (`CritMultiplier` BASE, enemy `Bleeding`).
+    (
+        "critical_strike_multiplier_+_vs_bleeding_enemies",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::ENEMY_BLEEDING,
+        )],
+    ),
     // P3-8n: "against Unique Enemies" (enemy `RareOrUnique`, 1943).
     (
         "critical_strike_multiplier_+_vs_unique_enemies",
@@ -4193,6 +4204,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::MOVING,
+        )],
+    ),
+    // P6-11dp: "#% chance to Impale Enemies on Hit with Attacks while using
+    // Pride" (`ImpaleChance` BASE with `KeywordFlag.Attack`,
+    // `AffectedByPride`).
+    (
+        "pride_chance_to_impale_with_attacks_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            Flags::KEYWORD_ATTACK,
+            "AffectedByPride",
         )],
     ),
     // P6-11o: "#% increased Physical Damage while affected by Pride".
@@ -5713,6 +5736,17 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::IgnoreMovementPenalties),
             Op::Flag,
+            1.0,
+        )],
+    ),
+    // P6-11dp: "#% chance on Hitting an Enemy for all Impales on that Enemy
+    // to last for an additional Hit" (`ImpaleAdditionalDurationChance`
+    // BASE), read by the impale's stacks.
+    (
+        "impales_do_not_consume_hit_on_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleAdditionalDurationChance),
+            Op::Base,
             1.0,
         )],
     ),
@@ -9799,6 +9833,26 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11dp: crit multiplier against bleeding enemies, Pride's
+            // impale chance.
+            (
+                "critical_strike_multiplier_+_vs_bleeding_enemies",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_BLEEDING,
+                )],
+            ),
+            (
+                "pride_chance_to_impale_with_attacks_%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::ImpaleChance),
+                    Op::Base,
+                    Flags::KEYWORD_ATTACK,
+                    "AffectedByPride",
                 )],
             ),
             // P6-11dl: Pride's impale stacks.

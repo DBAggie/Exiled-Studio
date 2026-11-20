@@ -2321,3 +2321,30 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0414 to DIV-0424).
 - **Corpus:** 0 unexpected; 5 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dp: impales, endurance charges on stun, crits against bleeding enemies
+
+**PoB:**
+- "#% chance to Impale Enemies on Hit with Attacks while using Pride": `ImpaleChance` BASE with `KeywordFlag.Attack`, `AffectedByPride`.
+- "#% chance on Hitting an Enemy for all Impales on that Enemy to last for an additional Hit": `ImpaleAdditionalDurationChance` BASE. The impale's stacks are `ImpaleStacksMax x (1 + chance / 100)` (`CalcOffence.lua` 5477).
+- Endurance Charge on Melee Stun's `endurance_charge_on_melee_stun_damage_+%_final_per_endurance_charge`: `Damage` MORE per `Multiplier:EnduranceCharge` (`sup_str.lua` 2005).
+- "+#% to Critical Strike Multiplier against Bleeding Enemies": `CritMultiplier` BASE with the enemy's `Bleeding`, which only its config check `conditionEnemyBleeding` sets.
+- A flask's "#% increased Area of Effect during Effect": `AreaOfEffect` INC, which no slice field reads.
+
+**The engine:**
+- **Two `STATE_ROWS` rows:** Pride's impale chance, and the crit multiplier with `conditions::ENEMY_BLEEDING` (the check through `CHECKS`; it left `config::NAMED_ONLY`).
+- **Impale stacks:** `Poe1Quantity::ImpaleAdditionalDurationChance` (a `ROWS` row) scales the impale's stacks when present.
+- **The support:** a `charges::MODIFIERS` row with P6-11do's `PerCharge::MoreDamage` for the endurance charges.
+- **The flask line:** `flasks::NO_EFFECT_LOCAL`.
+
+**Fixtures:**
+- `smite-pride-impale-chance-templar.xml`: Pride's impale chance and the additional duration chance.
+- `smite-endurance-charge-on-stun-templar.xml`: the support with three endurance charges.
+- `smite-crit-multiplier-bleeding-enemy-templar.xml`: the crit multiplier, with the enemy checked as bleeding.
+
+Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
+
+**Evidence** (`b-ct`, against P6-11do's run):
+- **Public:** 0 unexpected; 13 values toward PoB (a Juggernaut's, a Slayer's, and a Deadeye's damage), none away.
+- **Corpus:** 0 unexpected; 6 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

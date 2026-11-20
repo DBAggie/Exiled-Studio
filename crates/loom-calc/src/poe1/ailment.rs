@@ -832,7 +832,8 @@ pub(super) fn impale(
         Term::Step("impale-chance-per-hit"),
     )?;
     // The stacks: the maximum (`ImpaleStacksMax` BASE x (1 + additional
-    // duration chance / 100), the latter unmapped).
+    // duration chance / 100); the chance since P6-11dp, `CalcOffence.lua`
+    // 5477).
     let base_stacks = match data.character_constant(IMPALE_STACKS_STAT) {
         Some(v) => {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -863,6 +864,21 @@ pub(super) fn impale(
         &[base_stacks, more_stacks],
         Term::Step("impale-stacks"),
     )?;
+    let chance_q = Quantity::Poe1(Poe1Quantity::ImpaleAdditionalDurationChance);
+    let stacks = if phases::has(calc, chance_q) {
+        let chance = hit::sum_of(
+            calc,
+            chance_q,
+            Op::Base,
+            &hit_cx,
+            Term::Step("impale-additional-duration-chance"),
+            &mut reasons,
+        )?;
+        let factor = phases::factor(calc, chance, Term::Step("impale-additional-duration"))?;
+        phases::product(calc, &[stacks, factor], Term::Step("impale-stacks-lasting"))?
+    } else {
+        stacks
+    };
     // The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
     // (PoB adds the crit pass first, 3415 to 3420).
     let from_crit_pass = phases::product(

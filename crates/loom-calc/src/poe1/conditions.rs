@@ -83,6 +83,10 @@ pub const ENEMY_MARKED: &str = "Enemy:Marked";
 /// the ignited check (an ignited enemy burns).
 pub const ENEMY_BURNING: &str = "Enemy:Burning";
 
+/// The enemy is bleeding (PoB's enemy `Bleeding`, set only by its config
+/// check `conditionEnemyBleeding`, `ConfigOptions.lua`; P6-11dp).
+pub const ENEMY_BLEEDING: &str = "Enemy:Bleeding";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -193,6 +197,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionBlockedSpellRecently", BLOCKED_RECENTLY),
     ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
     ("conditionCritRecently", CRIT_RECENTLY),
+    ("conditionEnemyBleeding", ENEMY_BLEEDING),
     ("conditionEnemyBurning", ENEMY_BURNING),
     ("conditionEnemyCursed", ENEMY_CURSED),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),

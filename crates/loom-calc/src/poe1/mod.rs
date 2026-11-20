@@ -774,6 +774,10 @@ pub enum Poe1Quantity {
     /// Impales on the enemy at most, added to the character template's
     /// (PoB's `ImpaleStacksMax` BASE; Phase 6).
     ImpaleStacksMax,
+    /// The chance for every impale on the enemy to last an additional hit,
+    /// percent (PoB's `ImpaleAdditionalDurationChance` BASE; P6-11dp):
+    /// the stacks are `ImpaleStacksMax x (1 + chance / 100)`.
+    ImpaleAdditionalDurationChance,
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
@@ -1319,6 +1323,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
+            Self::ImpaleAdditionalDurationChance => {
+                f.write_str("impale-additional-duration-chance")
+            }
         }
     }
 }

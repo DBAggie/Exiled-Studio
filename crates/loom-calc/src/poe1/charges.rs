@@ -341,6 +341,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeKind::Endurance,
         ChargeValue::Per(PerCharge::ElementalDamageReduction),
     ),
+    // P6-11dp: Endurance Charge on Melee Stun's more damage per endurance
+    // charge (`sup_str.lua` 2005: `Damage` MORE per
+    // `Multiplier:EnduranceCharge`).
+    (
+        "endurance_charge_on_melee_stun_damage_+%_final_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::MoreDamage),
+    ),
     (
         "evasion_rating_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
