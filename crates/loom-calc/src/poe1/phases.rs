@@ -1181,6 +1181,13 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         "fifth",
         "evasion-from-dexterity",
     )?;
+    // Life gained as energy shield (P6-11dd): one more row of energy
+    // shield, which reads life's base and so strength.
+    let mut life_reasons = Reasons::new();
+    let life_row = life_as_energy_shield(calc, int_bonus, &mut life_reasons)?;
+    if life_row.is_some() {
+        es_deps.push(Field::Strength);
+    }
     for (defence, field, quantity, extra, dep) in [
         (
             Defence::EnergyShield,
@@ -1198,7 +1205,15 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             &[Field::Dexterity],
         ),
     ] {
-        let (value, reasons) = primary_defence(calc, defence, quantity, extra)?;
+        let row = if matches!(defence, Defence::EnergyShield) {
+            life_row
+        } else {
+            None
+        };
+        let (value, mut reasons) = primary_defence(calc, defence, quantity, extra, row)?;
+        if row.is_some() {
+            reasons.extend(&life_reasons);
+        }
         if dep.is_empty() {
             calc.set(field, query(value, reasons));
         } else {
@@ -1208,14 +1223,114 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     Ok(())
 }
 
+/// Life gained as extra energy shield (P6-11dd; `CalcDefence.lua` 1023
+/// to 1036): `Life BASE x percent / 100`, times `calcLib.mod(modDB, nil,
+/// "Life", "EnergyShield", "Defences")`: the increases of life and energy
+/// shield summed (`es_inc`: energy shield's extra increases, the
+/// intelligence bonus among them, as in PoB's store), times life's and
+/// energy shield's rounded more multipliers (PoB rounds per mod name).
+/// Life's base is its BASE effects and the strength bonus, as
+/// `life_mana`'s. `None` without the stat. Chaos Inoculation's `total =
+/// 1` is not read: its keystone is a reason of the life field.
+fn life_as_energy_shield(
+    calc: &mut Calc<'_>,
+    es_inc: Option<Valued>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::LifeAsEnergyShield);
+    if !has(calc, q) {
+        return Ok(None);
+    }
+    let percent = sum(
+        calc,
+        q,
+        Op::Base,
+        Term::Step("life-as-energy-shield-percent"),
+        reasons,
+    )?;
+    if percent.value <= 0.0 {
+        return Ok(None);
+    }
+    let str_bonus = bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")?;
+    let life_effects = sum(
+        calc,
+        Quantity::Life,
+        Op::Base,
+        Term::Step("life-base-effects"),
+        reasons,
+    )?;
+    let mut base_terms = vec![life_effects];
+    base_terms.extend(str_bonus);
+    let life_base = total(calc, &base_terms, Term::Step("life-base"))?;
+    let scaled = product(
+        calc,
+        &[life_base, percent],
+        Term::Step("life-as-energy-shield-scaled"),
+    )?;
+    let hundred = constant(calc, "hundred", 100.0)?;
+    let base = binary(
+        calc,
+        Binary::Quotient,
+        scaled,
+        hundred,
+        "life-as-energy-shield-base",
+    )?;
+    let base = total(calc, &[base], Term::Base)?;
+    let mut incs = vec![
+        sum(
+            calc,
+            Quantity::Life,
+            Op::Increased,
+            Term::Step("life-increased-effects"),
+            reasons,
+        )?,
+        sum(
+            calc,
+            Quantity::EnergyShield,
+            Op::Increased,
+            Term::Step("increased-effects"),
+            reasons,
+        )?,
+    ];
+    incs.extend(es_inc);
+    let inc = total(calc, &incs, Term::Step("increased-sum"))?;
+    let inc = factor(calc, inc, Term::Increased)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let life_more = store.more_rounded(graph, Quantity::Life, &cx)?;
+    let es_more = store.more_rounded(graph, Quantity::EnergyShield, &cx)?;
+    reasons.extend(&life_more.reasons);
+    reasons.extend(&es_more.reasons);
+    let row = product(
+        calc,
+        &[
+            base,
+            inc,
+            Valued {
+                node: life_more.node,
+                value: life_more.value,
+            },
+            Valued {
+                node: es_more.node,
+                value: es_more.value,
+            },
+        ],
+        Term::Step("slot.conversion.life-to-energy-shield"),
+    )?;
+    Ok(Some(row))
+}
+
 /// One primary defence of the current actor ([`primary_defences`];
 /// P6-7b3a: the minion's too, whose store has no armour piece): each
-/// piece's row and the global row, times the modifier, rounded.
+/// piece's row and the global row, times the modifier, rounded. `life_row`
+/// is energy shield's row from life ([`life_as_energy_shield`]), last as in
+/// PoB.
 pub(super) fn primary_defence(
     calc: &mut Calc<'_>,
     defence: Defence,
     quantity: Quantity,
     extra: Option<Valued>,
+    life_row: Option<Valued>,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
@@ -1285,6 +1400,7 @@ pub(super) fn primary_defence(
     if base.value > 0.0 {
         rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
     }
+    rows.extend(life_row);
     let sum = total(calc, &rows, Term::Step("slots"))?;
     let rounded = round(calc, sum, Term::Step("rounded"))?;
     let value = at_least(calc, rounded, "minimum", 0.0)?;

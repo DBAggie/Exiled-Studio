@@ -1661,7 +1661,7 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (Defence::Armour, MinionField::Armour, Quantity::Armour),
         (Defence::Evasion, MinionField::Evasion, Quantity::Evasion),
     ] {
-        let (value, reasons) = phases::primary_defence(calc, defence, quantity, None)?;
+        let (value, reasons) = phases::primary_defence(calc, defence, quantity, None, None)?;
         set(calc, field, value, reasons);
     }
     let block = phases::attack_block(calc, None, Reasons::new())?;

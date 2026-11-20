@@ -560,6 +560,31 @@ fn passive_stats_should_reach_life_through_base_and_increased() {
 }
 
 #[test]
+fn life_gained_as_energy_shield_should_be_a_row_of_energy_shield() {
+    // P6-11dd: life's base 1125 + 75 = 1200 (life 1200 x 1.2 = 1440); 50%
+    // of it, 600, times life's and energy shield's increases summed with
+    // intelligence's (Int 32: 3%), 1 + (20 + 30 + 3) / 100: a row of 918,
+    // the only one.
+    let r = witch_with(&[
+        ("base_maximum_life", 75),
+        ("maximum_life_+%", 20),
+        ("maximum_energy_shield_+%", 30),
+        ("maximum_life_%_to_add_as_maximum_energy_shield", 50),
+    ]);
+    assert_eq!(value(&r, Field::Life), 1440.0);
+    assert_eq!(
+        step(
+            &r,
+            Field::EnergyShield,
+            "slot.conversion.life-to-energy-shield"
+        ),
+        Some(918.0)
+    );
+    assert_eq!(value(&r, Field::EnergyShield), 918.0);
+    assert_eq!(state(&r, Field::EnergyShield), StateKind::Complete);
+}
+
+#[test]
 fn an_attribute_from_a_passive_should_reach_mana_and_energy_shield() {
     // Int 42: mana 34 + 540 + 21 = 595.
     let r = run(&with_spec(witch(90), spec(&[2])));

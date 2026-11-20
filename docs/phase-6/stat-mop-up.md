@@ -2089,3 +2089,25 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 3 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dd: maximum life gained as extra maximum energy shield
+
+**PoB** (`CalcDefence.lua` 1023 to 1036): "Gain #% of Maximum Life as Extra Maximum Energy Shield" is `LifeGainAsEnergyShield` BASE. Energy shield gains one more row, after the pieces' and the global row: `Life BASE x percent / 100`, times `calcLib.mod(modDB, nil, "Life", "EnergyShield", "Defences")`. The breakdown names it "Conversion", "Life to Energy Shield". Under Chaos Inoculation the row's total is 1.
+
+**The engine:**
+- `Poe1Quantity::LifeAsEnergyShield` and a `ROWS` row.
+- `phases::life_as_energy_shield` builds the row (`step.slot.conversion.life-to-energy-shield`):
+  - life's base is its BASE effects and the strength bonus, as the life field's;
+  - the increases of life and energy shield are summed with energy shield's extra increases (the intelligence bonus among them, an `EnergyShield` INC in PoB's store);
+  - the more multipliers are life's and energy shield's, each rounded, as PoB rounds per mod name.
+- `primary_defence` adds the row last, before the rounding. The energy shield field now also depends on strength.
+- Chaos Inoculation's 1 is not read: its keystone is a reason of the life field.
+
+**Tests:** `life_gained_as_energy_shield_should_be_a_row_of_energy_shield` (a row of 918 from life's base 1200, 50%, and 53% increased).
+
+**Fixture** `ice-nova-life-as-energy-shield-witch.xml`: Ice Nova with 20% of maximum life as energy shield, flat and increased life, strength, and increased and flat energy shield. Every computed field and the energy shield breakdown equal PoB's.
+
+**Evidence** (`b-ct`, against P6-11dc's run):
+- **Public:** 0 unexpected; 12 values toward PoB (a build's energy shield 1,236 to 1,468 against PoB's 1,611, its recharge, leech, maximum hits, and EHP), none away.
+- **Corpus:** 0 unexpected; 17 values toward PoB, none away. One build's energy shield went from 457 to 677 against PoB's 680.
+- **Tests:** the workspace tests and clippy pass.
+

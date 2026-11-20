@@ -6023,6 +6023,16 @@ pub const ROWS: &[Row] = &[
             ),
         ],
     ),
+    // P6-11dd: "Gain #% of Maximum Life as Extra Maximum Energy Shield"
+    // (`LifeGainAsEnergyShield` BASE), a row of energy shield.
+    (
+        "maximum_life_%_to_add_as_maximum_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LifeAsEnergyShield),
+            Op::Base,
+            1.0,
+        )],
+    ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
     // P6-10b part 7: "#% increased Maximum Recovery per Life Leech"
     // (`MaxLifeLeechInstance` INC; PoB's skill map reads the life and
