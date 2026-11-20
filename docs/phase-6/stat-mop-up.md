@@ -2812,3 +2812,18 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 **Evidence** (`b-ct`, against P6-11en's run):
 - **Public and corpus:** 0 unexpected; no value moved. No build's main skill is a curse, so the line only stops being a reason.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ep: totems summoned
+
+**PoB:** when any active skill is a totem, `TotemsSummoned` is the config's count, else the main skill's `ActiveTotemLimit` and `ActiveBallistaLimit` summed (`CalcPerform.lua` 1334 to 1338). The limit is the character's `base_number_of_totems_allowed` (1, `CalcSetup.lua` 60), plus "+# to maximum number of Summoned Totems", plus the ballista limit with `SkillType.TotemsAreBallistae` and the attack keyword. Modifiers per summoned totem read it as a `PerStat`; without a totem skill it is unset, so 0.
+
+**The engine:**
+- **Stacks:** a new kind, `StackKind::Totems`, counted by `stacks::totems` after the aura and herald count and before the buffs. The count is the config's `TotemsSummoned`, else, with a totem skill (`gems::any_totem_skill`: the main group and the enabled groups, supports' types included), the limit above. The ballista limit counts only for a main skill of both types.
+- **Per totem:** "#% more Damage per Summoned Totem" (Hierophant), mana and life regeneration per totem (life: the character's share), and Arcane Surge's effect per totem.
+- **Limits:** "+# to maximum number of Summoned Totems" and "Attack Skills have +# to maximum number of Summoned Ballista Totems".
+- The totem's own hit keeps its `totem-data` reason (P6-6d), so its DPS stays `Partial`.
+
+**Evidence** (`b-ct`, against P6-11eo's run):
+- **Public:** 0 unexpected. 13 values moved, all toward PoB. A ballista Hierophant's life regeneration went from 43.1 to 239.2 (PoB 315.6) and its mana regeneration from 42.5 to 103.2 (PoB 115.4); its damage and a Holy Flame Totem Hierophant's moved too.
+- **Corpus:** 0 unexpected. 5 values moved, 2 toward PoB: one build's life and mana regeneration. **Three moved away:** that build's DPS, where PoB has 0: PoB computes no damage for its main skill, a gap from before this step.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

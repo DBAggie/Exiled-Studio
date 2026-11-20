@@ -3148,6 +3148,34 @@ pub fn herald_and_aura_counts(input: &CalcInput<'_>) -> (usize, usize) {
     (heralds.len(), auras.len())
 }
 
+/// Whether any active skill is a totem (P6-11ep; PoB's `skillFlags.totem`
+/// over `activeSkillList`, `CalcPerform.lua` 1334): over the skills of the
+/// main group and the enabled groups in an enabled slot (as
+/// [`herald_and_aura_counts`]), one whose types (the supports' added ones
+/// included) hold `SummonsTotem`.
+#[must_use]
+pub fn any_totem_skill(input: &CalcInput<'_>) -> bool {
+    let build = input.build;
+    let levels = GemLevels::none();
+    let Ok(groups) = skill::active_groups(build) else {
+        return false;
+    };
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    groups.iter().enumerate().any(|(g, group)| {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            return false;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        skill::group_skills(group, group_matches, input.data, &levels)
+            .iter()
+            .any(|s| s.types.contains(skill::TOTEM_TYPE))
+    })
+}
+
 /// What the table says about an active skill.
 #[must_use]
 pub fn kind(id: &str) -> Option<Kind> {

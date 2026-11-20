@@ -97,6 +97,8 @@ pub enum StackKind {
     /// Hits taken recently (P6-11cg; PoB's `Multiplier:BeenHitRecently`,
     /// the config's `multiplierBeenHitRecently`).
     HitsTakenRecently,
+    /// Totems summoned (P6-11ep; PoB's `TotemsSummoned`, [`totems`]).
+    Totems,
 }
 
 impl StackKind {
@@ -113,6 +115,7 @@ impl StackKind {
             Self::Herald => "herald",
             Self::NearbyEnemies => "nearby-enemies",
             Self::HitsTakenRecently => "hits-taken-recently",
+            Self::Totems => "totems",
         }
     }
 }
@@ -131,6 +134,10 @@ pub enum StackValue {
     /// Increased rage effect (PoB's `RageEffect` INC; P6-11dt): `Base`
     /// (a line) or `Increased` (Berserk's buff), the percent summed.
     Effect,
+    /// The ballista totem limit (PoB's `ActiveBallistaLimit` BASE with
+    /// `SkillType.TotemsAreBallistae`; P6-11ep): `Base`, counted only for a
+    /// ballista main skill.
+    BallistaMaximum,
     /// An effect per stack.
     Per(PerStack),
 }
@@ -145,6 +152,7 @@ impl StackValue {
             Self::CanGain => "can-gain",
             Self::Intimidate => "intimidate",
             Self::Effect => "effect",
+            Self::BallistaMaximum => "ballista-maximum",
             Self::Per(p) => p.name(),
         }
     }
@@ -177,6 +185,17 @@ pub enum PerStack {
     /// Physical damage reduction (`PhysicalDamageReduction` BASE), its
     /// total at most 5 (P6-11cg).
     PhysicalReductionUpTo5,
+    /// More damage (`Damage` MORE; P6-11ep).
+    DamageMore,
+    /// Mana regeneration, percent per minute (`ManaRegenPercent` BASE per
+    /// second, the stat per minute; P6-11ep).
+    ManaRegenPercentPerMinute,
+    /// Life regeneration, percent per minute (`LifeRegenPercent` BASE per
+    /// second, the stat per minute; P6-11ep).
+    LifeRegenPercentPerMinute,
+    /// Increased effect of Arcane Surge on you (`ArcaneSurgeEffect` INC;
+    /// P6-11ep).
+    ArcaneSurgeEffect,
 }
 
 impl PerStack {
@@ -194,6 +213,10 @@ impl PerStack {
             Self::MovementSpeedUpTo8 => "per.movement-speed-up-to-8",
             Self::PhysicalReductionIfOnlyOne => "per.physical-reduction-if-only-one",
             Self::PhysicalReductionUpTo5 => "per.physical-reduction-up-to-5",
+            Self::DamageMore => "per.damage-more",
+            Self::ManaRegenPercentPerMinute => "per.mana-regen-percent-per-minute",
+            Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
+            Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
         }
     }
 
@@ -231,6 +254,25 @@ impl PerStack {
                 Flags::NONE,
                 Flags::NONE,
             ),
+            Self::DamageMore => (Quantity::Damage, Op::More, Flags::NONE, Flags::NONE),
+            Self::ManaRegenPercentPerMinute => (
+                Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(super::Pool::Mana)),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::LifeRegenPercentPerMinute => (
+                Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(super::Pool::Life)),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::ArcaneSurgeEffect => (
+                Quantity::Poe1(Poe1Quantity::ArcaneSurgeEffect),
+                Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
         }
     }
 }
@@ -238,6 +280,20 @@ impl PerStack {
 /// The stack modifiers the engine models (module docs), sorted by stat
 /// ID, each as PoB v2.67.2 reads its text or skill stat.
 pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
+    // P6-11ep: "#% increased effect of Arcane Surge on you per Summoned Totem"
+    // (`ArcaneSurgeEffect` INC per `TotemsSummoned`).
+    (
+        "arcane_surge_effect_+%_per_active_totem",
+        StackKind::Totems,
+        StackValue::Per(PerStack::ArcaneSurgeEffect),
+    ),
+    // P6-11ep: "Attack Skills have +# to maximum number of Summoned Ballista
+    // Totems" (`ActiveBallistaLimit` BASE, `SkillType.TotemsAreBallistae`).
+    (
+        "attack_skills_additional_ballista_totems_allowed",
+        StackKind::Totems,
+        StackValue::BallistaMaximum,
+    ),
     // P6-11dt: "Every Rage also grants #% increased Attack Speed" (`Speed`
     // INC with `ModFlag.Attack` per `Multiplier:RageEffect`).
     (
@@ -318,6 +374,20 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Rage,
         StackValue::CanGain,
     ),
+    // P6-11ep: "#% more Damage per Summoned Totem" (`Damage` MORE per
+    // `TotemsSummoned`).
+    (
+        "hierophant_passive_damage_+%_final_per_totem",
+        StackKind::Totems,
+        StackValue::Per(PerStack::DamageMore),
+    ),
+    // P6-11ep: "Regenerate #% of Mana per second for each Summoned Totem"
+    // (`ManaRegenPercent` BASE per `TotemsSummoned`).
+    (
+        "mana_regeneration_rate_per_minute_%_per_active_totem",
+        StackKind::Totems,
+        StackValue::Per(PerStack::ManaRegenPercentPerMinute),
+    ),
     (
         "maximum_intensify_stacks",
         StackKind::Intensity,
@@ -333,6 +403,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "nearby_enemies_are_intimidated_while_you_have_rage",
         StackKind::Rage,
         StackValue::Intimidate,
+    ),
+    // P6-11ep: "+# to maximum number of Summoned Totems" (`ActiveTotemLimit`
+    // BASE).
+    (
+        "number_of_additional_totems_allowed",
+        StackKind::Totems,
+        StackValue::Maximum,
     ),
     (
         "physical_damage_reduction_%_if_only_one_enemy_nearby",
@@ -369,6 +446,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Intensity,
         StackValue::Per(PerStack::AreaDamageMore),
     ),
+    // P6-11ep: "You and your Totems Regenerate #% of Life per second for each
+    // Summoned Totem" (`LifeRegenPercent` BASE per `TotemsSummoned`; the
+    // totems' share is theirs).
+    (
+        "you_and_totem_life_regeneration_rate_per_minute_%_per_active_totem",
+        StackKind::Totems,
+        StackValue::Per(PerStack::LifeRegenPercentPerMinute),
+    ),
 ];
 
 /// The stack modifier `stat` is, if any ([`MODIFIERS`]).
@@ -401,14 +486,19 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 6] = [
+pub const INPUTS: [&str; 7] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
     INTENSITY_INPUT,
     SPELLS_INPUT,
     NEARBY_INPUT,
+    TOTEMS_INPUT,
 ];
+
+/// The config's count of summoned totems, when not the maximum
+/// (`ConfigOptions.lua` 1112: `TotemsSummoned` OVERRIDE in combat).
+pub const TOTEMS_INPUT: &str = "TotemsSummoned";
 
 /// Whether `input` is one this module reads.
 #[must_use]
@@ -727,6 +817,72 @@ pub fn aura_or_herald(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'
     let (heralds, auras) = (heralds as f64, auras as f64);
     apply(ingest, &both, multiplier(heralds + auras), None);
     apply(ingest, &heralds_only, multiplier(heralds), None);
+}
+
+/// Adds the effects per summoned totem (P6-11ep; PoB's `TotemsSummoned`,
+/// `CalcPerform.lua` 1334 to 1338, read by `PerStat` tags): the config's
+/// count, else, when any active skill is a totem
+/// ([`super::gems::any_totem_skill`]), the main skill's limit: the
+/// character's `base_number_of_totems_allowed`, "+# to maximum number of
+/// Summoned Totems", and, for a main skill of `TotemsAreBallistae` and
+/// `Attack`, the ballista limit (`ActiveTotemLimit` and
+/// `ActiveBallistaLimit` summed). 0 otherwise, as PoB's unset output.
+pub fn totems(
+    input: &crate::input::CalcInput<'_>,
+    set: Option<&ConfigSet>,
+    ingest: &mut Ingest<'_>,
+) {
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(StackKind::Totems, StackValue::Per(_)))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let configured = match count(set, TOTEMS_INPUT, false) {
+        Ok(c) => c,
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: TOTEMS_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    let n = match configured {
+        Some(c) => c,
+        None if super::gems::any_totem_skill(input) => {
+            let Some(base) = input
+                .data
+                .character_constant("base_number_of_totems_allowed")
+            else {
+                ingest.indeterminate(IndeterminateReason::MissingData {
+                    table: "character_constants",
+                    key: "base_number_of_totems_allowed".to_owned(),
+                });
+                return;
+            };
+            #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+            let mut limit = base as f64 + sum(ingest, StackKind::Totems, StackValue::Maximum).0;
+            let levels = super::gem_levels::GemLevels::none();
+            if let Ok(main) = super::skill::main_skill(input.build, input.data, &levels)
+                && main.types.contains("TotemsAreBallistae")
+                && main.types.contains("Attack")
+            {
+                limit += sum(ingest, StackKind::Totems, StackValue::BallistaMaximum).0;
+            }
+            limit
+        }
+        None => 0.0,
+    };
+    apply(ingest, &effects, multiplier(n), None);
 }
 
 /// Each effect per stack as its target times `count`, with its source (or

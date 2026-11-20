@@ -110,6 +110,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::devotion::devotion(ingest);
     super::stacks::stacks(active_config(build), input.data, ingest);
     super::stacks::aura_or_herald(input, ingest);
+    // Totems summoned (P6-11ep): before the buffs (Arcane Surge's effect).
+    super::stacks::totems(input, active_config(build), ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
