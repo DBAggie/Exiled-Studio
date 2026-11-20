@@ -768,6 +768,12 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for `RemoteMined`
     /// skills.
     MineManaReservationEfficiency,
+    /// Mines thrown at once (PoB's `MineThrowCount` BASE, its base 1 in
+    /// [`hit`]; P6-11fa).
+    MineThrowCount,
+    /// Traps thrown at once (PoB's `TrapThrowCount` BASE, its base 1 in
+    /// [`hit`]; P6-11fa).
+    TrapThrowCount,
     /// The effect of herald skills' buffs (PoB's `BuffEffect` INC tagged
     /// `SkillType.Herald`; P6-11at), read by [`skill_modifiers`].
     HeraldBuffEffect,
@@ -1360,6 +1366,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
+            Self::MineThrowCount => f.write_str("mine-throw-count"),
+            Self::TrapThrowCount => f.write_str("trap-throw-count"),
             Self::MineManaReservationEfficiency => f.write_str("mine-mana-reservation-efficiency"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),

@@ -2446,6 +2446,30 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::WEAPON_MELEE.union(Flags::UNARMED),
         )],
     ),
+    // P6-11fa: "+# Mines thrown" (`SkillStatMap.lua` 1848: `MineThrowCount`
+    // BASE).
+    (
+        "number_of_additional_mines_to_place",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MineThrowCount),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // P6-11fa: "+# Traps thrown" (`SkillStatMap.lua` 1810: `TrapThrowCount`
+    // BASE).
+    (
+        "number_of_additional_traps_to_throw",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11n: the Occultist's "#% more Chaos Damage" (`ChaosDamage` MORE).
     (
         "occultist_chaos_damage_+%_final",
@@ -2896,6 +2920,66 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::STAFF,
             Flags::HIT.union(Flags::AILMENT),
         )],
+    ),
+    // P6-11fa: Swift Assembly's chances for 1, 2, or 3 additional traps or
+    // mines (`SkillStatMap.lua` 1852 to 1866: both counts BASE, `div` 100,
+    // 100 / 2, 100 / 3: the expected extra count).
+    (
+        "support_additional_trap_mine_%_chance_for_1_additional_trap_mine",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::MineThrowCount),
+                Op::Base,
+                0.01,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+                Op::Base,
+                0.01,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
+    (
+        "support_additional_trap_mine_%_chance_for_2_additional_trap_mine",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::MineThrowCount),
+                Op::Base,
+                0.02,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+                Op::Base,
+                0.02,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
+    (
+        "support_additional_trap_mine_%_chance_for_3_additional_trap_mine",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::MineThrowCount),
+                Op::Base,
+                0.03,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+                Op::Base,
+                0.03,
+                NONE,
+                NONE,
+            ),
+        ],
     ),
     (
         "support_attack_skills_elemental_damage_+%_final",
@@ -5003,6 +5087,17 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "support_lifetap_damage_+%_final_while_buffed",
         &[(Quantity::Damage, Op::More, NONE, conditions::LIFETAP)],
+    ),
+    // P6-11fa: "Throw # additional Traps while Dual Wielding"
+    // (`TrapThrowCount` BASE, `DualWielding`).
+    (
+        "throw_X_additional_traps_if_dual_wielding",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+            Op::Base,
+            NONE,
+            states::DUAL_WIELDING,
+        )],
     ),
     // P6-11en: "#% increased Area Damage while wielding a Two Handed Melee
     // Weapon" (`Damage` INC with `ModFlag.Area`, `UsingTwoHandedWeapon` and
@@ -10775,6 +10870,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11fa: more traps thrown while dual wielding.
+            (
+                "throw_X_additional_traps_if_dual_wielding",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+                    Op::Base,
+                    NONE,
+                    states::DUAL_WIELDING,
                 )],
             ),
             // P6-11ev: Onslaught for you and allies on a warcry.

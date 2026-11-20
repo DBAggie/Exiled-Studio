@@ -1924,6 +1924,9 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::gems::is_input(&input.name)
         || input.name == super::hit::PDR_MODE_INPUT
         || input.name == super::hit::RUTHLESS_MODE_INPUT
+        // The throw counts (P6-11fa).
+        || input.name == super::hit::MINES_PER_THROW_INPUT
+        || input.name == super::hit::TRAPS_PER_THROW_INPUT
         // The Stone Golem's life override (P6-11ar).
         || (input.name == super::enemy_hit::STONE_GOLEM_LIFE_INPUT
             && matches!(input.value, ConfigValue::Number(_)))

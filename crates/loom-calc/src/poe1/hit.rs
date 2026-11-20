@@ -180,10 +180,19 @@ pub struct SkillPart {
 /// every vetted totem skill `Partial` through it.
 pub const TOTEM_REASON: &str = "totem-data";
 
-/// The reason a trap's or a mine's spell keeps (P6-6e): PoB reads its throw
-/// count, trap and mine speed, cooldown, and keyword mods, which the engine
-/// does not.
+/// The reason a trap's or a mine's spell kept (P6-6e) while the engine did
+/// not read its throw count, its throwing speed, or its keyword mods.
+/// Since P6-11fa none is left: the speed (P6-11cy), the keywords
+/// (`Flags::KEYWORD_TRAP` and `KEYWORD_MINE`), and the counts are read, and
+/// a trap or mine with a cooldown is not computed (no skill of PoB's data
+/// has a `trapCooldown`). Kept as the name of that former reason.
 pub const TRAP_MINE_REASON: &str = "trap-mine-data";
+
+/// The config's mines per throw (`ConfigOptions.lua` 1575:
+/// `MineThrowCount` OVERRIDE in combat; P6-11fa).
+pub const MINES_PER_THROW_INPUT: &str = "minesPerThrow";
+/// The config's traps per throw (1587: `TrapThrowCount` OVERRIDE).
+pub const TRAPS_PER_THROW_INPUT: &str = "trapsPerThrow";
 
 /// PoB's base trap throwing time and mine laying time, seconds
 /// (`CalcSetup.lua` 55, 56).
@@ -1060,12 +1069,6 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
             what: TOTEM_REASON,
-        });
-    }
-    if spell.skill.types.contains("Trapped") || spell.skill.types.contains("RemoteMined") {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: spell.source(),
-            what: TRAP_MINE_REASON,
         });
     }
 
@@ -2170,8 +2173,40 @@ fn cast_rate(
             speed
         };
         let speed = action_speed(calc, speed, &mut reasons)?;
+        // The throw counts (P6-11fa; `CalcOffence.lua` 1230 to 1237, 1319 to
+        // 1336): the trap count for a trap, the mine count for a mine (and
+        // both for a trap thrown by a mine). A mine's speed is divided by `1
+        // + (count - 1) x 0.1` before the tick cap; the time is then divided
+        // by each count, so the rate is the capped speed times them.
+        let trap = spell.skill.types.contains("Trapped");
+        let mut counts = Vec::new();
+        if mine {
+            counts.push(throw_count(calc, true, cx, &mut reasons)?);
+        }
+        if trap {
+            counts.push(throw_count(calc, false, cx, &mut reasons)?);
+        }
+        let speed = if mine {
+            let count = counts[0];
+            if count.value >= 1.0 {
+                let one = phases::constant(calc, "one", 1.0)?;
+                let extra = minus(calc, count, one, Term::Step("additional-mines"))?;
+                let tenth = phases::constant(calc, "additional-mine-time", 0.1)?;
+                let extra =
+                    phases::product(calc, &[extra, tenth], Term::Step("additional-mine-penalty"))?;
+                let penalty = phases::total(calc, &[one, extra], Term::Step("mine-throw-penalty"))?;
+                quotient(calc, speed, penalty, Term::Step("mine-laying-speed"))?
+            } else {
+                speed
+            }
+        } else {
+            speed
+        };
         let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
-        let value = phases::pair(calc, speed, cap, Term::Result, true)?;
+        let capped = phases::pair(calc, speed, cap, Term::Step("throwing-speed-capped"), true)?;
+        let mut terms = vec![capped];
+        terms.extend(counts);
+        let value = phases::product(calc, &terms, Term::Result)?;
         return Ok((value, reasons));
     }
     let cast_time = leaf(
@@ -2192,6 +2227,54 @@ fn cast_rate(
     )?;
     reasons.extend(&cooldown_reasons);
     Ok((value, reasons))
+}
+
+/// A throw count (P6-11fa): the config's `minesPerThrow` or `trapsPerThrow`
+/// when set (an `OVERRIDE`), else `calcLib.val`: the base 1 plus the
+/// counts' BASE sum (no INC or MORE is mapped). A value of another type is
+/// the input's reason.
+fn throw_count(
+    calc: &mut Calc<'_>,
+    mine: bool,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let input = if mine {
+        MINES_PER_THROW_INPUT
+    } else {
+        TRAPS_PER_THROW_INPUT
+    };
+    let set = super::collect::active_config(calc.input().build);
+    match set.and_then(|s| super::config::last_input(s, input, loom_domain::ConfigInputKind::Input))
+    {
+        Some(loom_domain::ConfigValue::Number(n)) => {
+            return phases::constant(calc, "throw-count-configured", n.value().0);
+        }
+        None => {}
+        Some(_) => {
+            reasons.partial.insert(UnsupportedReason::UnmodelledConfig {
+                input: input.to_owned(),
+            });
+        }
+    }
+    let q = Quantity::Poe1(if mine {
+        Poe1Quantity::MineThrowCount
+    } else {
+        Poe1Quantity::TrapThrowCount
+    });
+    let base = phases::constant(calc, "throw-count-base", 1.0)?;
+    if !phases::has(calc, q) {
+        return Ok(base);
+    }
+    let added = sum_in(
+        calc,
+        q,
+        Op::Base,
+        cx,
+        Term::Step("throw-count-added"),
+        reasons,
+    )?;
+    phases::total(calc, &[base, added], Term::Step("throw-count"))
 }
 
 /// The rate a cooldown allows (P6-7c3b): PoB's `calcSkillCooldown`

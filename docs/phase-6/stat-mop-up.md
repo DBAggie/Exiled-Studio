@@ -3001,3 +3001,21 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 **Evidence** (`b-ct`, against P6-11ey's run):
 - **Public and corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fa: trap and mine throw counts; the trap and mine reason retired
+
+**PoB** (`CalcOffence.lua` 1230 to 1237, 1319 to 1336):
+- A trap's count is `calcLib.val(TrapThrowCount)`, the base 1 (`CalcSetup.lua` 528) plus "+# Traps thrown" and Swift Assembly's expected extra. The config's `trapsPerThrow` overrides it. The time is the throwing time divided by the count.
+- A mine's count works the same way (`minesPerThrow`). The laying speed is first divided by `1 + (count - 1) x 0.1`, then capped at the tick rate; a trap thrown by a mine divides by both counts.
+- A skill with a cooldown throws one, but none of the engine's computed traps or mines has one (P6-6e), and no skill of PoB's data has a `trapCooldown`.
+
+**The engine:**
+- **Counts:** `Poe1Quantity::MineThrowCount` and `TrapThrowCount` (BASE). Rows: "+# Mines thrown", "+# Traps thrown", Swift Assembly's three chances (scaled 1/100, 2/100, 3/100, PoB's `div`), and "Throw # additional Traps while Dual Wielding" (a state row). The config's two inputs are read by `hit::throw_count` and classed as applied.
+- **The rate** (`hit::cast_rate`): the capped throwing speed times the counts, a mine's speed divided by the extra-mine penalty first.
+- **The reason retired:** `trap-mine-data` (P6-6e) stood for the throw count, the throwing speed, the cooldown, and the keyword mods. The speed (P6-11cy) and the keywords were read since, and the cooldown cannot occur. With the counts read, no trap's or mine's hit carries the reason.
+
+**Evidence** (`b-ct`, against P6-11ez's run):
+- **Public:** 0 unexpected. **7 fields went from partial to complete, each equal to PoB:** the Ice Nova trap fixture's average damage, speed (2.16), crit chance and multiplier, and DPS (2,200.10).
+- A mine Assassin's speed went from 5.9 to 21.07 (PoB 18.61) with its five mines per throw, and its DPS moved toward PoB. The speed's remaining difference is its other mine laying speed lines, still reasons.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
