@@ -757,9 +757,10 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         inc,
         more,
         modifier_reasons,
+        over_cap,
     } = attack_block(calc, shield, reasons)?;
     calc.set(Field::BlockChance, query(value, reasons));
-    spell_block(calc, value, inc, more, &modifier_reasons)
+    spell_block(calc, value, over_cap, inc, more, &modifier_reasons)
 }
 
 /// PoB's `PerStat` tag with `div = 5` (P6-11f): `floor(stat / 5 +
@@ -814,6 +815,9 @@ pub(super) struct AttackBlock {
     more: Valued,
     /// The modifier's reasons.
     modifier_reasons: Reasons,
+    /// PoB's `BlockChanceOverCap`, `max(0, total - maximum)` (P6-11dq),
+    /// built only when a spell block line reads it.
+    over_cap: Option<Valued>,
 }
 
 /// The current actor's chance to block attack damage ([`block`]; P6-7b3a:
@@ -868,12 +872,26 @@ pub(super) fn attack_block(
     let cap = constant(calc, "block-chance-cap", BLOCK_CHANCE_CAP)?;
     let max = pair(calc, max_base, cap, Term::Step("max"), true)?;
     let value = pair(calc, rounded, max, Term::Result, true)?;
+    // PoB's `BlockChanceOverCap` (`CalcDefence.lua` 694), for "+#% Chance to
+    // Block Spell Damage for each 1% Overcapped Chance to Block Attack
+    // Damage" (P6-11dq).
+    let over_cap = if has(
+        calc,
+        Quantity::Poe1(Poe1Quantity::SpellBlockPerOvercappedBlock),
+    ) {
+        let over = binary(calc, Binary::Difference, rounded, max, "over-cap-raw")?;
+        let zero = constant(calc, "no-over-cap", 0.0)?;
+        Some(pair(calc, over, zero, Term::Step("over-cap"), false)?)
+    } else {
+        None
+    };
     Ok(AttackBlock {
         value,
         reasons,
         inc,
         more,
         modifier_reasons,
+        over_cap,
     })
 }
 
@@ -882,6 +900,7 @@ pub(super) fn attack_block(
 fn spell_block(
     calc: &mut Calc<'_>,
     attack_block: Valued,
+    over_cap: Option<Valued>,
     inc: Valued,
     more: Valued,
     modifier_reasons: &Reasons,
@@ -897,6 +916,20 @@ fn spell_block(
     // "per 5% Chance to Block Attack Damage" (P6-11f): PoB's `PerStat` of
     // the final attack block.
     if let Some(term) = per_5(calc, attack_block, true, &mut reasons)? {
+        base = total(calc, &[base, term], Term::Base)?;
+    }
+    // Versatile Combatant (P6-11dq): `SpellBlockChance` BASE per 1% of
+    // attack block over its maximum (`PerStat`, `div = 1`; the block
+    // chances are whole numbers, so PoB's floor changes nothing).
+    if let Some(over_cap) = over_cap {
+        let per = sum(
+            calc,
+            Quantity::Poe1(Poe1Quantity::SpellBlockPerOvercappedBlock),
+            Op::Base,
+            Term::Step("per-overcapped-effects"),
+            &mut reasons,
+        )?;
+        let term = product(calc, &[over_cap, per], Term::Step("per-overcapped"))?;
         base = total(calc, &[base, term], Term::Base)?;
     }
     reasons.extend(modifier_reasons);

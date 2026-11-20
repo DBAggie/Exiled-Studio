@@ -2348,3 +2348,20 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 - **Corpus:** 0 unexpected; 6 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dq: Versatile Combatant
+
+**PoB** reads the keystone's lines (`ModCache.lua` 675):
+- -10% to maximum chance to block attack damage and -10% to maximum chance to block spell damage (`BlockChanceMax`, `SpellBlockChanceMax` BASE);
+- "+2% Chance to Block Spell Damage for each 1% Overcapped Chance to Block Attack Damage": `SpellBlockChance` BASE per `PerStat` `BlockChanceOverCap`, which is `max(0, total - maximum)` of attack block (`CalcDefence.lua` 694).
+
+**The engine:**
+- `keystone_versatile_combatant` is a `ROWS` row with the three effects; the third is the new `Poe1Quantity::SpellBlockPerOvercappedBlock`.
+- `phases::attack_block` builds the overcap only when that quantity is present, so other graphs are unchanged; `spell_block` adds it times the rate to its base.
+
+**Fixture** `ice-nova-versatile-combatant-witch.xml`: Ice Nova with the keystone (as a custom line), +80% attack block, and +5% spell block. Block is 65 and spell block 5 + 2 x 15 = 35, as in PoB.
+
+**Evidence** (`b-ct`, against P6-11dp's run):
+- **Public:** 0 unexpected; 6 values toward PoB, 1 now equal. A Slayer's attack block went from 69 to 65, equal to PoB's, and its spell block from 17 to 25 against PoB's 64; its EHP followed.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

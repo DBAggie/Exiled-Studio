@@ -778,6 +778,10 @@ pub enum Poe1Quantity {
     /// percent (PoB's `ImpaleAdditionalDurationChance` BASE; P6-11dp):
     /// the stacks are `ImpaleStacksMax x (1 + chance / 100)`.
     ImpaleAdditionalDurationChance,
+    /// Spell block per 1% of attack block over its maximum (PoB's
+    /// `SpellBlockChance` BASE per `PerStat` `BlockChanceOverCap`;
+    /// Versatile Combatant; P6-11dq): `Base`, read by the block phase.
+    SpellBlockPerOvercappedBlock,
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
@@ -1323,6 +1327,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
+            Self::SpellBlockPerOvercappedBlock => {
+                f.write_str("spell-block-per-overcapped-block")
+            }
             Self::ImpaleAdditionalDurationChance => {
                 f.write_str("impale-additional-duration-chance")
             }

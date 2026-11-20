@@ -5757,6 +5757,26 @@ pub const ROWS: &[Row] = &[
         "keystone_unwavering_stance",
         &[(Quantity::Poe1(Poe1Quantity::CannotEvade), Op::Flag, 1.0)],
     ),
+    // P6-11dq: Versatile Combatant, as PoB reads the keystone's lines: -10%
+    // to maximum attack and spell block (`BlockChanceMax`,
+    // `SpellBlockChanceMax` BASE), and "+2% Chance to Block Spell Damage
+    // for each 1% Overcapped Chance to Block Attack Damage".
+    (
+        "keystone_versatile_combatant",
+        &[
+            (Quantity::MaximumBlockChance, Op::Base, -10.0),
+            (
+                Quantity::Poe1(Poe1Quantity::MaximumSpellBlockChance),
+                Op::Base,
+                -10.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SpellBlockPerOvercappedBlock),
+                Op::Base,
+                2.0,
+            ),
+        ],
+    ),
     // P6-12: Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua`
     // 5066): `CullMultiplier`, which scales `CombinedDPS`
     // (`CalcOffence.lua` 3221, 6138), not the hit or `TotalDPS`.
