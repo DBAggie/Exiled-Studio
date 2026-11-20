@@ -1439,16 +1439,11 @@ fn calc_run_run(
         .as_ref()
         .map(|t| loom_pipeline::pack_trees(&bundle, t))
         .unwrap_or_default();
-    // The Timeless jewels' results (P6-10a): the six non-Abyss types,
-    // read once for every build (the app reads one type when a build
-    // needs it).
+    // The Timeless jewels' results (P6-10a): every type, read once for
+    // every build (the app reads one type when a build needs it).
     let mut timeless_results = std::collections::BTreeMap::new();
     if let Some(luts) = bundle.poe1.as_ref().and_then(|p| p.timeless_luts.as_ref()) {
-        for j in luts
-            .jewels
-            .iter()
-            .filter(|j| j.jewel < loom_data::bundle::timeless::FIRST_ABYSS)
-        {
+        for j in &luts.jewels {
             let path = bundle_dir.join(&j.file);
             let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
             timeless_results.insert(j.jewel, bytes);

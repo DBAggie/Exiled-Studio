@@ -33,11 +33,26 @@
 //!   or the devotion node, the blank node, 2% or 1% increased Ward), read
 //!   from the game's rows.
 //!
+//! **The Abyss jewels** (types 7 to 11, [`abyss`]) have no radius: their
+//! results list the nodes they change.
+//! - Tecrod, Ulaman, Kurgal, and Amanamu: by socket and seed
+//!   ([`loom_data::bundle::timeless::abyss::read_socket`]).
+//! - Zorath: by node and seed, for the nodes of the allocated shortest path
+//!   from its socket to the class start, and the node each ascendancy's
+//!   section picks for the seed
+//!   ([`loom_data::bundle::timeless::abyss::read_path`]).
+//! - Each change's parts apply in order: a replacement takes its row's
+//!   stats with the part's rolls (signed, the stats' values), and an
+//!   addition adds its row's. Sockets are never changed.
+//! - A node a radius jewel conquers is that jewel's, as in PoB, where the
+//!   Abyss jewels are read first.
+//!
 //! The results files are large, so the host reads only the types a build
 //! needs ([`needed`]) and hands their bytes over ([`TimelessData`]). A node
 //! whose result is not known is a reason, never its old stats: no data
-//! (`timeless-results`), a jewel whose lines do not read (`timeless-jewel`),
-//! an Abyss jewel (`abyss-jewel`, not ported yet).
+//! (`timeless-results`), a jewel whose lines do not read (`timeless-jewel`).
+//! An Abyss jewel without its data is the reason on its socket, since the
+//! nodes it changes are not known without it.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -48,6 +63,7 @@ use loom_domain::ItemId;
 /// `CalcOptions::item_lines`).
 pub type Rolls = BTreeMap<ItemId, BTreeMap<usize, LineValues>>;
 use loom_data::bundle::passives::StatAmount;
+use loom_data::bundle::timeless::abyss::{ADDS, AbyssPart, REPLACES};
 use loom_data::bundle::timeless::{
     FIRST_ABYSS, GLORIOUS_VANITY, LutResult, Timeless, TimelessLuts, read,
 };
@@ -80,13 +96,15 @@ const SMALL_NORMAL: u32 = 2;
 const KEYSTONE_TYPE: u32 = 4;
 /// The names of attribute passives (PoB's `attributes`).
 const ATTRIBUTES: [&str; 3] = ["Dexterity", "Intelligence", "Strength"];
+/// Zorath, the Abyss jewel read along a path.
+const ZORATH: u32 = 11;
 
 /// A socketed Timeless jewel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Socketed {
     /// Its socket.
     pub socket: u32,
-    /// The nodes in its radius.
+    /// The nodes in its radius (none for an Abyss jewel).
     pub ring: BTreeSet<u32>,
     /// `(type, raw seed, conqueror, version)`; `None` when its lines do not
     /// read.
@@ -176,10 +194,16 @@ pub fn socketed(build: &Build, spec: &PassiveSpec, tree: &Tree, rolls: &Rolls) -
         if !timeless {
             continue;
         }
-        let Some(ring) = label.and_then(|l| tree.radius_named(l)) else {
-            continue;
-        };
         let get = |s: &str| stats.get(s).and_then(|v| u32::try_from(*v).ok());
+        let abyss = get(VERSION).is_some_and(|t| t >= FIRST_ABYSS);
+        let ring = if abyss {
+            BTreeSet::new()
+        } else {
+            let Some(ring) = label.and_then(|l| tree.radius_named(l)) else {
+                continue;
+            };
+            loom_tree::poe1::radius::in_ring(tree, socket.node.0, ring, false)
+        };
         let jewel = match (get(VERSION), get(SEED), get(KEYSTONE)) {
             (Some(t), Some(seed), Some(c)) => Some((t, seed, c, get(REVISION).unwrap_or(0))),
             _ => None,
@@ -187,7 +211,7 @@ pub fn socketed(build: &Build, spec: &PassiveSpec, tree: &Tree, rolls: &Rolls) -
         out.push(Socketed {
             jewel_type: get(VERSION),
             socket: socket.node.0,
-            ring: loom_tree::poe1::radius::in_ring(tree, socket.node.0, ring, false),
+            ring,
             jewel,
         });
     }
@@ -204,17 +228,16 @@ pub fn needed(build: &Build, tree: &Tree) -> BTreeSet<u32> {
     socketed(build, spec, tree, &Rolls::new())
         .into_iter()
         .filter_map(|s| s.jewel_type)
-        .filter(|t| *t < FIRST_ABYSS)
         .collect()
 }
 
-fn amounts(stats: &[loom_data::bundle::timeless::AltStat], rolls: &[u32]) -> Vec<StatAmount> {
+fn amounts(stats: &[loom_data::bundle::timeless::AltStat], rolls: &[i64]) -> Vec<StatAmount> {
     stats
         .iter()
         .enumerate()
         .map(|(i, s)| StatAmount {
             stat: s.stat.clone(),
-            value: rolls.get(i).map_or(s.min, |r| i64::from(*r)),
+            value: rolls.get(i).copied().unwrap_or(s.min),
         })
         .collect()
 }
@@ -240,7 +263,10 @@ fn from_results(data: &TimelessData<'_>, jewel: u32, seed: u32, node: u32) -> Co
             match data.timeless.passive(global, additions) {
                 Some(p) => Conquest {
                     replaced: true,
-                    stats: amounts(&p.stats, &rolls),
+                    stats: amounts(
+                        &p.stats,
+                        &rolls.iter().map(|r| i64::from(*r)).collect::<Vec<_>>(),
+                    ),
                     reason: None,
                 },
                 None => reason("timeless-results"),
@@ -263,7 +289,7 @@ fn from_results(data: &TimelessData<'_>, jewel: u32, seed: u32, node: u32) -> Co
                 };
                 stats.extend(amounts(
                     &a.stats,
-                    &roll.map(|r| vec![r]).unwrap_or_default(),
+                    &roll.map(|r| vec![i64::from(r)]).unwrap_or_default(),
                 ));
             }
             // Glorious Vanity's additions come on Might or Legacy of the Vaal,
@@ -309,8 +335,11 @@ pub fn conquests(
     data: Option<&TimelessData<'_>>,
     rolls: &Rolls,
 ) -> BTreeMap<u32, Conquest> {
-    let mut out = BTreeMap::new();
-    for s in socketed(build, spec, tree, rolls) {
+    let jewels = socketed(build, spec, tree, rolls);
+    // The Abyss jewels first; a radius jewel's conquest replaces theirs.
+    let mut out = abyss(spec, tree, data, &jewels);
+    let mut by_radius = BTreeSet::new();
+    for s in &jewels {
         for &node in &s.ring {
             let Some(n) = tree.node(node) else {
                 continue;
@@ -325,7 +354,6 @@ pub fn conquests(
             }
             let conquest = match (s.jewel, data) {
                 (None, _) => reason("timeless-jewel"),
-                (Some((t, ..)), _) if t >= FIRST_ABYSS => reason("abyss-jewel"),
                 (Some(_), None) => reason("timeless-results"),
                 (Some((t, seed, conqueror, version)), Some(d)) => match n.kind {
                     Kind::Keystone => d
@@ -353,10 +381,130 @@ pub fn conquests(
             };
             // Two jewels reaching one node: PoB keeps the last socket's; the
             // engine keeps the first and the order is the spec's.
-            out.entry(node).or_insert(conquest);
+            if by_radius.insert(node) {
+                out.insert(node, conquest);
+            }
         }
     }
     out
+}
+
+/// The nodes the Abyss jewels change (module docs); an Abyss jewel whose
+/// lines or data are missing is a reason on its socket.
+fn abyss(
+    spec: &PassiveSpec,
+    tree: &Tree,
+    data: Option<&TimelessData<'_>>,
+    jewels: &[Socketed],
+) -> BTreeMap<u32, Conquest> {
+    let allocated: BTreeSet<u32> = spec.nodes.value().iter().map(|n| n.0).collect();
+    let mut out = BTreeMap::new();
+    for s in jewels.iter().filter(|s| s.ring.is_empty()) {
+        let Some((t, seed, ..)) = s.jewel else {
+            out.insert(s.socket, reason("timeless-jewel"));
+            continue;
+        };
+        let (Some(d), Some(lut)) = (data, data.and_then(|d| d.luts.jewel(t))) else {
+            out.insert(s.socket, reason("timeless-results"));
+            continue;
+        };
+        let Some(&bytes) = d.results.get(&t) else {
+            out.insert(s.socket, reason("timeless-results"));
+            continue;
+        };
+        let changes = if t == ZORATH {
+            match shortest_path(tree, &allocated, s.socket) {
+                Some(path) => {
+                    loom_data::bundle::timeless::abyss::read_path(d.luts, lut, bytes, seed, &path)
+                }
+                None => BTreeMap::new(),
+            }
+        } else {
+            loom_data::bundle::timeless::abyss::read_socket(d.luts, lut, bytes, seed, s.socket)
+        };
+        for (node, parts) in changes {
+            if tree
+                .node(node)
+                .is_some_and(|n| matches!(n.kind, Kind::JewelSocket | Kind::ClusterSocket))
+            {
+                continue;
+            }
+            out.insert(node, apply(d, &parts));
+        }
+    }
+    out
+}
+
+/// An Abyss change's parts, in order (module docs).
+fn apply(data: &TimelessData<'_>, parts: &[AbyssPart]) -> Conquest {
+    let mut conquest = Conquest {
+        replaced: false,
+        stats: Vec::new(),
+        reason: None,
+    };
+    for part in parts {
+        match part.kind {
+            REPLACES => {
+                let Some(row) = data.timeless.passive(part.global, data.luts.additions) else {
+                    return reason("timeless-results");
+                };
+                conquest.replaced = true;
+                conquest.stats = amounts(&row.stats, &part.rolls);
+            }
+            ADDS => {
+                let Some(row) = data.timeless.addition(part.global) else {
+                    return reason("timeless-results");
+                };
+                conquest.stats.extend(amounts(&row.stats, &part.rolls));
+            }
+            _ => return reason("timeless-results"),
+        }
+    }
+    conquest
+}
+
+/// The allocated shortest path from `socket` to the class start, both
+/// included (PoB's `GetShortestPathToClassStart`): a breadth-first search
+/// through allocated nodes, not through a mastery, a class start (but the
+/// target), or an ascendancy start. `None` when the socket is not
+/// allocated or nothing joins it to the start. Between paths of the same
+/// length, PoB's pick follows its tree's link order and the search here
+/// takes neighbours in ascending order, so the two can differ.
+fn shortest_path(tree: &Tree, allocated: &BTreeSet<u32>, socket: u32) -> Option<BTreeSet<u32>> {
+    if !allocated.contains(&socket) {
+        return None;
+    }
+    let start = allocated
+        .iter()
+        .copied()
+        .find(|n| tree.node(*n).is_some_and(|x| x.kind == Kind::ClassStart))?;
+    let mut parent: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut queue = std::collections::VecDeque::from([socket]);
+    while let Some(at) = queue.pop_front() {
+        let node = tree.node(at)?;
+        for &other in &node.neighbours {
+            if other == start {
+                let mut path = BTreeSet::from([socket, start]);
+                let mut cur = Some(at);
+                while let Some(c) = cur {
+                    path.insert(c);
+                    cur = parent.get(&c).copied();
+                }
+                return Some(path);
+            }
+            let Some(o) = tree.node(other) else { continue };
+            if allocated.contains(&other)
+                && node.kind != Kind::Mastery
+                && !matches!(o.kind, Kind::ClassStart | Kind::AscendancyStart)
+                && other != socket
+                && !parent.contains_key(&other)
+            {
+                parent.insert(other, at);
+                queue.push_back(other);
+            }
+        }
+    }
+    None
 }
 
 /// A small passive of a type other than Glorious Vanity (module docs).
@@ -531,5 +679,72 @@ mod tests {
         assert!(c.replaced);
         let values: Vec<(&str, i64)> = c.stats.iter().map(|s| (s.stat.as_str(), s.value)).collect();
         assert_eq!(values, [("fire_damage_+%", 15), ("cold_damage_+%", 19)]);
+    }
+
+    /// An Abyss change: its parts in order, a replacement's stats taking the
+    /// part's rolls as the stats' raw values (a per-minute regeneration
+    /// roll stays per minute; PoB rounds it to the second's tenth, DIV-0294
+    /// and DIV-0295), an addition added, a replacement wiping what came
+    /// before it.
+    #[test]
+    fn abyss_parts_should_apply_in_order_with_their_raw_rolls() {
+        let mut t = tables();
+        t.passives.push(AltPassive {
+            row: 500,
+            id: String::new(),
+            name: String::new(),
+            tree_version: 8,
+            passive_types: vec![2],
+            stats: vec![AltStat {
+                stat: "base_mana_regeneration_rate_per_minute".to_owned(),
+                min: 30,
+                max: 60,
+            }],
+            conqueror_index: 0,
+            conqueror_version: 0,
+        });
+        let luts = TimelessLuts {
+            source: LutSource {
+                pob_version: String::new(),
+                licence: String::new(),
+            },
+            additions: 337,
+            node_count: 0,
+            notable_count: 0,
+            nodes: Vec::new(),
+            local_to_global: Vec::new(),
+            jewels: Vec::new(),
+        };
+        let data = TimelessData {
+            timeless: &t,
+            luts: &luts,
+            results: BTreeMap::new(),
+        };
+        let part = |kind, global, rolls: &[i64]| AbyssPart {
+            kind,
+            global,
+            rolls: rolls.to_vec(),
+        };
+        let c = apply(
+            &data,
+            &[
+                part(ADDS, 5, &[-3]),
+                part(REPLACES, 837, &[51]),
+                part(ADDS, 30, &[]),
+            ],
+        );
+        assert!(c.replaced);
+        let values: Vec<(&str, i64)> = c.stats.iter().map(|s| (s.stat.as_str(), s.value)).collect();
+        assert_eq!(
+            values,
+            [
+                ("base_mana_regeneration_rate_per_minute", 51),
+                ("cold_damage_+%", 7)
+            ]
+        );
+        let added = apply(&data, &[part(ADDS, 5, &[-15])]);
+        assert!(!added.replaced);
+        assert_eq!(added.stats[0].value, -15);
+        assert!(apply(&data, &[part(3, 5, &[])]).reason.is_some());
     }
 }

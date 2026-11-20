@@ -5876,6 +5876,48 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-19",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0294",
+      "mechanic": "An Abyss timeless jewel's per-minute regeneration roll (base_mana_regeneration_rate_per_minute on a replacement row): the results hold the stat's raw value per minute and the engine applies it so; PoB writes it into the replacement's text as round(value / 60, 1) per second and parses that text, so each roll moves to the nearest tenth per second.",
+      "fixture": "timeless-abyss-amanamu-ice-nova-witch.xml",
+      "field": "/main_output/ManaRegen",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 12.6,
+      "successor_value": 12.5,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Classes/PassiveSpec.lua 1202 to 1218 (replaceHelperFunc): a stat whose key has per_minute becomes round(value / 60, 1) before the text is parsed; the Abyss parts' rolls go through it (1221 to 1236)",
+        "PoB v2.67.2 Data/TimelessJewelData/AbyssAmanamu.zip, seed 7805 results, socket 41263: the replacement rows' rolls are whole per-minute values (51 on node 61320); the game's stat base_mana_regeneration_rate_per_minute is per minute (AlternatePassiveSkills, build 26530219), so 0.85 per second",
+        "docs/phase-6/recovery.md, \"A display limit\": the engine reads per-minute stats at their value; PoB reads the printed number",
+        "docs/phase-6/timeless.md, \"Part 4\": the Abyss jewels"
+      ],
+      "test": "crates/loom-pipeline/src/timeless.rs::tests::abyss_parts_should_apply_in_order_with_their_raw_rolls",
+      "added": "2026-11-19",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0295",
+      "mechanic": "An Abyss timeless jewel's per-minute regeneration roll (base_mana_regeneration_rate_per_minute on a replacement row): the results hold the stat's raw value per minute and the engine applies it so; PoB writes it into the replacement's text as round(value / 60, 1) per second and parses that text, so each roll moves to the nearest tenth per second.",
+      "fixture": "timeless-abyss-ulaman-ice-nova-witch.xml",
+      "field": "/main_output/ManaRegen",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 13.1,
+      "successor_value": 13.0,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Classes/PassiveSpec.lua 1202 to 1218 (replaceHelperFunc): a stat whose key has per_minute becomes round(value / 60, 1) before the text is parsed; the Abyss parts' rolls go through it (1221 to 1236)",
+        "PoB v2.67.2 Data/TimelessJewelData/AbyssUlaman.zip, seed 3860 results, socket 41263: the replacement rows' rolls are whole per-minute values (46 on node 48778, 33 on node 61320); the game's stat base_mana_regeneration_rate_per_minute is per minute (AlternatePassiveSkills, build 26530219), so 0.767 and 0.55 per second",
+        "docs/phase-6/recovery.md, \"A display limit\": the engine reads per-minute stats at their value; PoB reads the printed number",
+        "docs/phase-6/timeless.md, \"Part 4\": the Abyss jewels"
+      ],
+      "test": "crates/loom-pipeline/src/timeless.rs::tests::abyss_parts_should_apply_in_order_with_their_raw_rolls",
+      "added": "2026-11-19",
+      "status": "accepted"
     }
   ]
 }

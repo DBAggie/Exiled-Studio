@@ -31,10 +31,13 @@
 //! A local ID becomes a global one through the jewel's local-to-global
 //! table. A global ID below `additions` is an addition's row; at or above,
 //! a replacement's row is the ID minus `additions`. The Abyss jewels have
-//! their own reader in PoB (`DataAbyssJewelLookUpTableHelper.lua`), not
-//! ported yet: their files ship, and [`read`] returns `None` for them.
+//! their own layout and reader ([`abyss`], PoB's
+//! `DataAbyssJewelLookUpTableHelper.lua`); [`read`] returns `None` for
+//! them.
 
 use serde::{Deserialize, Serialize};
+
+pub mod abyss;
 
 /// The extracted tables.
 pub const TIMELESS: &str = "poe1/timeless.json";

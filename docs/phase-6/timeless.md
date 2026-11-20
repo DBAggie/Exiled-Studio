@@ -195,6 +195,58 @@ Plan steps 2 and 3 (`dev/active/phase-6-mechanics/p6-10a-timeless-plan.md`), for
 - **Found: tattoos.** Kinetic Fusillade and Cyclone are farther from PoB in Strength because their tattoos are not modelled. A tattoo (PoB's `<Override>`) replaces a node's lines: Cyclone has 15, several on +10 Strength nodes. That gap was hidden while their Lethal Pride went unread. Tattoos are a task of their own (tasks file, P6-11).
 
 **Left:**
-- the Abyss jewels (PoB's `DataAbyssJewelLookUpTableHelper.lua`);
+- the Abyss jewels (PoB's `DataAbyssJewelLookUpTableHelper.lua`; done in "Part 4");
 - the conquests' unmapped stats (devotion, ward);
+- tattoos.
+
+## Part 4: the Abyss jewels (2026-11-19)
+
+The five Abyss jewels (types 7 to 11: Tecrod, Ulaman, Kurgal, Amanamu, Zorath) change the nodes their results list.
+
+**The reader:** `loom_data::bundle::timeless::abyss` ports PoB's `Modules/DataAbyssJewelLookUpTableHelper.lua`.
+- **The header:** four format letters, version 1, the jewel type, then the first seed, last seed, and step as `u16`s.
+- **`ABYS` (`read_socket`):** Tecrod, Ulaman, Kurgal, and Amanamu. Each of 21 sockets has one record per seed: the nodes changed from that socket.
+- **`ABYN` (`read_path`):** Zorath. Each of 2,143 nodes has one change per seed. Then the `ASCS` section: for each of 21 ascendancies, the nodes each seed picks.
+- **A change:** its parts, each a kind (1 replaces, 2 adds), a local ID made global through the mapping, and signed rolls.
+- The records vary in length, so a block is found by skipping the records before it, as PoB does.
+- **Tests:**
+  - Unit tests on PoB's own examples (`spec/System/TestAbyssTimelessJewel_spec.lua`).
+  - A maintainer-run test on the shipped files (`crates/loom-data/tests/timeless_abyss_files.rs`): PoB's Kurgal example (seed 533, socket 61419) is the real file's record, part for part. Zorath's read of a path and every ascendancy takes 31 ms in a release build.
+
+**The engine** (`loom_pipeline::timeless`):
+- **Which jewels:** an Abyss jewel has no radius. Its type, seed, and conqueror come from the same `local_unique_jewel_alternate_tree_*` stats ("Subjugating # souls in the thrall of Kurgal", "Binding # souls to phylacteries to sustain Zorath").
+- **Tecrod, Ulaman, Kurgal, Amanamu:** the nodes their socket's record lists for the seed.
+- **Zorath:**
+  - the nodes of the allocated shortest path from its socket to the class start (PoB's `GetShortestPathToClassStart`, breadth-first, not through a mastery or another start);
+  - and in every ascendancy, the node the seed picks.
+  - Between paths of the same length, PoB follows its tree's link order and the engine takes neighbours in ascending order. The two can differ in that case.
+- **Applying a change:** each part in order.
+  - A replacement takes its row's stats with the part's rolls as the stats' raw values, and wipes what came before.
+  - An addition adds its row's stats.
+  - Another kind is a reason. Sockets are never changed.
+- **Precedence:** a node a radius jewel conquers is that jewel's, as in PoB, which reads the Abyss jewels first.
+- **Reasons:** an Abyss jewel whose lines do not read, or whose results are missing, is the reason on its socket, since the nodes it changes are not known without them.
+- **Loading:** `needed` now names the Abyss types too, so the app reads their files on demand. `calc-run` preloads all 11.
+
+**Fixtures:** five mechanic fixtures on the Timeless fixtures' tree (socket 41263, its Large radius allocated), each checked against PoB's own conquered nodes (the local PoB script):
+- `timeless-abyss-tecrod-ice-nova-witch.xml`: seed 597, 8 allocated nodes changed;
+- `timeless-abyss-ulaman-ice-nova-witch.xml`: seed 3860, 19;
+- `timeless-abyss-kurgal-ice-nova-witch.xml`: seed 521, 16;
+- `timeless-abyss-amanamu-ice-nova-witch.xml`: seed 7805, 15;
+- `timeless-abyss-zorath-ice-nova-witch.xml`: seed 7300, the 7 path nodes it changes.
+
+The seeds were picked so their changes carry no unmapped stat. Many Abyss additions are still unmapped: added damage with a weapon type, minion chances, avoid shock.
+
+**Results:** 383 fields match PoB, and two differ, both registered.
+- **DIV-0294 and DIV-0295** (`pob-bug`), Amanamu's and Ulaman's mana regeneration, 12.5 against PoB's 12.6 and 13.0 against 13.1.
+- The results hold `base_mana_regeneration_rate_per_minute` rolls as whole per-minute values (51; 46 and 33). PoB writes each into the node's text as `round(value / 60, 1)` per second (`PassiveSpec.lua` 1206) and parses that text, so 0.85 becomes 0.9.
+- The engine applies the per-minute value, as it does every per-minute stat (`docs/phase-6/recovery.md`, "A display limit").
+- **Test:** `loom_pipeline::timeless::tests::abyss_parts_should_apply_in_order_with_their_raw_rolls`.
+
+**Evidence** (b-tl, against part 3's run):
+- **Public:** 0 unexpected, 2 more expected (the entries above). No value moved: no public or corpus build has an Abyss jewel.
+- **Corpus:** no value moved.
+
+**Left:**
+- the conquests' unmapped stats (devotion, ward, the Abyss additions);
 - tattoos.
