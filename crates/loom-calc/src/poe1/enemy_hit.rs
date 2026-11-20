@@ -790,8 +790,17 @@ fn maximum_hit(
     } else {
         (0.0, 0.0)
     };
-    let half = life * 0.5;
-    let life_pool = (recoverable - half).max(0.0) + recoverable.min(half);
+    // Life loss prevented (P6-11ce): PoB's `LifeHitPool` with
+    // `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 2233 to 2245).
+    let prevented = sum(
+        calc,
+        Poe1Quantity::LifeLossPrevented,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )?
+    .min(100.0);
+    let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented);
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
@@ -1067,6 +1076,7 @@ fn maximum_hit(
             eb,
             golem_rate,
             golem,
+            prevented,
         };
         super::ehp::estimate(
             calc,

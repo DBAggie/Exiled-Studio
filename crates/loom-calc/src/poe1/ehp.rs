@@ -107,6 +107,10 @@ pub(super) struct Character {
     /// its life (PoB's `alliesTakenBeforeYou.stoneGolem`; P6-11ar).
     pub(super) golem_rate: f64,
     pub(super) golem: f64,
+    /// The share of life lost to hits that is lost over time instead,
+    /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce). The share
+    /// below half life (Petrified Blood's) is 0: no modelled source gives it.
+    pub(super) prevented: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -133,10 +137,13 @@ struct Run {
     iterations: u32,
 }
 
-/// PoB's `calcLifeHitPoolWithLossPrevention` with no loss prevented.
-fn life_hit_pool(life: f64, max_life: f64) -> f64 {
+/// PoB's `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to
+/// 181) with no loss prevented below half life: `aboveLow / (1 - p / 100) +
+/// min(life, half) / (1 - p / 100)`.
+pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64) -> f64 {
     let half = max_life * 0.5;
-    (life - half).max(0.0) + life.min(half)
+    let kept = 1.0 - prevented / 100.0;
+    (life - half).max(0.0) / kept + life.min(half) / 1.0 / kept
 }
 
 /// `calcs.reducePoolsByDamage` for life and energy shield alone: the pools
@@ -148,7 +155,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut life = pools.life.max(0.0);
     let mut guard = pools.guard;
     let mut golem = pools.golem;
-    let life_pool = life_hit_pool(life, ch.max_life);
+    let life_pool = life_hit_pool(life, ch.max_life, ch.prevented);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
     // es)` is 0).
@@ -233,6 +240,21 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             }
             mana -= taken;
             remainder -= taken;
+        }
+        // Life loss prevented (P6-11ce; `CalcDefence.lua` 348 to 384, with
+        // nothing prevented below half): the damage life can still take
+        // caps the hit, and the prevented share is lost over time instead.
+        if ch.prevented > 0.0 {
+            let half = ch.max_life * 0.5;
+            let share = ch.prevented / 100.0;
+            let above_low = (life - half).max(0.0) / (1.0 - share);
+            let can_take = above_low + life.min(half).max(0.0) / (1.0 - 0.0) / (1.0 - share);
+            if can_take < remainder {
+                overkill += remainder - can_take;
+                remainder = can_take;
+            }
+            let over_time = remainder * ch.prevented / 100.0;
+            remainder -= over_time;
         }
         if life > 0.0 {
             let taken = remainder.min(life);
@@ -394,7 +416,20 @@ pub(super) fn estimate(
     reasons: &Reasons,
 ) -> Result<(), CalcError> {
     let mut run = Run { iterations: 0 };
-    let damaging = hits_to_die(taken_hit, 1.0, &mut run, ch, Gains::default(), false);
+    // Life loss prevented limits the speed-up (P6-11ce; `CalcDefence.lua`
+    // 2742: `LimitEHPSpeedup` when `preventedLifeLossTotal` is above 0).
+    let tracks_loss = ch.prevented > 0.0;
+    let damaging = hits_to_die(
+        taken_hit,
+        1.0,
+        &mut run,
+        ch,
+        Gains {
+            limit: tracks_loss,
+            ..Gains::default()
+        },
+        false,
+    );
     // Block, suppression, avoidance (`Average`).
     let block_chance = (m.block + m.block + m.spell_block + m.spell_block) / 4.0 / 100.0;
     let block_effect = 1.0 - block_chance * m.block_effect / 100.0;
@@ -426,7 +461,8 @@ pub(super) fn estimate(
     };
     // Tracked recoup (P6-11am; `CalcDefence.lua` 2828 to 2840): the run is
     // made, its speed-up limited.
-    gains.limit = ch.recoup;
+    // Tracked life loss over time too (P6-11ce; 2832 to 2837).
+    gains.limit = ch.recoup || tracks_loss;
     let mitigated = if damage_chance == 100.0 && !gains.any() && !gains.limit {
         damaging
     } else {
@@ -508,6 +544,7 @@ mod tests {
             eb: false,
             golem_rate: 0.0,
             golem: 0.0,
+            prevented: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -538,6 +575,7 @@ mod tests {
             eb: false,
             golem_rate: 0.0,
             golem: 0.0,
+            prevented: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -571,6 +609,7 @@ mod tests {
             eb: false,
             golem_rate: 3.75,
             golem: 100.0,
+            prevented: 0.0,
         };
         let pools = Pools {
             life: ch.life,

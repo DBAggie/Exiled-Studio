@@ -5562,7 +5562,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
-    // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
+    // P6-11ce: a flask's "When Hit during effect, #% of Life loss from Damage
+    // taken occurs over 4 seconds instead" (`LifeLossPrevented` BASE,
+    // `UsingFlask`; `poe1::flasks::FLASK_ROWS`).
+    (
+        "local_life_loss_%_to_prevent_during_flask_effect_to_lose_over_time",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LifeLossPrevented),
+            Op::Base,
+            1.0,
+        )],
+    ), // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
     // from reservation (`CalcPerform.lua` 546), which no modelled
     // modifier reads; [`super::enemy_hit`] reads it for `LifeRecoverable`.
     (

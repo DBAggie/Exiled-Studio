@@ -147,6 +147,8 @@ pub const FLASK_ROWS: &[&str] = &[
     "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect",
     "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
     "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
+    // P6-11ce.
+    "local_life_loss_%_to_prevent_during_flask_effect_to_lose_over_time",
 ];
 
 /// The mapping of a flask's own lines (module docs). Not modelled: a

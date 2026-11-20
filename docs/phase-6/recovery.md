@@ -581,3 +581,27 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **Data parity:** `uncategorized` 353.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,766 tests and clippy pass. The maintainer-run tests on the evidence bundle pass too: the pantheon's soul stats list those parts 5 and 10 to 15 read, the keystone texts list Mind over Matter's, and Enemy Explode left P6-9f's inert skills (PoB's id is not one of the game's granted effects).
+
+## P6-11ce: life loss prevented
+
+A flask's "When Hit during effect, #% of Life loss from Damage taken occurs over 4 seconds instead" is PoB's `LifeLossPrevented` BASE with `UsingFlask` (`ModParser.lua` 5082). PoB parses no other source of it. Petrified Blood's below-half share comes from a skill the engine does not model.
+
+What PoB does with `preventedLifeLoss` (at most 100) and nothing prevented below half:
+- **The hit pool** (`calcLifeHitPoolWithLossPrevention`, `CalcDefence.lua` 177 to 181): `aboveLow / (1 - p / 100) + min(life, half) / (1 - p / 100)`. Maximum hit taken and mind over matter read it (2245, 2326).
+- **Each hit** (`reducePoolsByDamage`, 348 to 384):
+  - the damage life can still take caps the hit, the rest overkill;
+  - the prevented share of what is left is lost over time instead (`LifeLossLostOverTime`, which only the breakdown shows);
+  - life takes the rest.
+- **The speed-up:** both hits-to-die runs limit it to 4 (`LimitEHPSpeedup`, 2742, 2837), and the mitigated run is always made (2840).
+
+What the engine does:
+- `Poe1Quantity::LifeLossPrevented` is a `ROWS` row, in `flasks::FLASK_ROWS`.
+- `enemy_hit` sums it, at most 100, into the maximum hit's life pool (`ehp::life_hit_pool`) and the defence estimate's `Character::prevented`.
+- `ehp::reduce` applies the cap and the prevented share before life takes damage.
+- `ehp::estimate` limits the speed-up of both runs, and makes the mitigated one.
+
+**Fixture** `ehp-life-loss-prevented-flask-ice-nova-witch.xml`: an active Basalt Flask preventing 25%. Every computed field equals PoB's, the hits to die and `TotalEHP` among them.
+
+**Evidence** (`b-ct`, against P6-11cd's run):
+- **Public:** 0 unexpected; 28 values toward PoB (three builds' maximum hits and defence estimate), none away.
+- **Corpus:** unchanged.

@@ -178,6 +178,12 @@ pub enum Poe1Quantity {
     /// PoB's `EnergyShieldIncreasedByChaosResistance`, 819 to 824: by the
     /// chaos resistance): `Flag`, read by the primary defences.
     EnergyShieldFromChaosResistance,
+    /// The share of life lost to hits that is lost over 4 seconds instead
+    /// (P6-11ce; PoB's `LifeLossPrevented` BASE, at most 100; a flask's
+    /// "When Hit during effect, #% of Life loss from Damage taken occurs
+    /// over 4 seconds instead"): `Base`, read by the enemy's hit and the
+    /// defence estimate's pools.
+    LifeLossPrevented,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1065,6 +1071,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
             Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
+            Self::LifeLossPrevented => f.write_str("life-loss-prevented"),
             Self::EnergyShieldFromChaosResistance => {
                 f.write_str("energy-shield-from-chaos-resistance")
             }
