@@ -334,7 +334,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ew: brands attached to the enemy (`StackKind::BrandsAttached`, `gems::brand_attach_limit`): the enemy's damage taken per brand (`docs/phase-6/stat-mop-up.md`, "P6-11ew")
 - [x] P6-11ex: cooldown recovery divides the main skill's cooldown (a fix to P6-7c3b's cap after P6-11bs), travel skills' cooldown recovery (`Flags::SKILL_TRAVEL`, `TypedCooldownRecovery`) (`docs/phase-6/stat-mop-up.md`, "P6-11ex")
 - [x] P6-11ey: mines' mana reservation efficiency (`MineManaReservationEfficiency`), High-Impact Mine's more damage, the mine supports' own stats as `NoEffect` (`docs/phase-6/stat-mop-up.md`, "P6-11ey")
-- [ ] High-Impact Mine's double damage near mines (an `AuraDebuff` on the enemy per active mine, `ActiveMineCount`), the bulk of a mine Assassin's gap to PoB
+- [x] P6-11ez: High-Impact Mine's double damage near mines: no effect without a gem's `skillMineCount` (PoB's stack count), a count a reason (`docs/phase-6/stat-mop-up.md`, "P6-11ez")
+- [ ] A mine Assassin's damage gap to PoB (`ethereal-knives-mines-assassin.xml`: 108,224 average against PoB's 3,074,566; not the double damage near mines, P6-11ez): find the cause
 ## P6-12: combined and full DPS; report
 - [x] P6-12 part 1: `combined-dps` (`poe1::combined`, slice revision 10; Culling Strike's multiplier); a flag stat at 0 sets no flag (`smite-bleed-templar.xml`'s bleeding computed again); Q11 DIV-0133 to DIV-0173; `docs/phase-6/combined-dps.md`
 - [x] P6-12: a skill without a hit adds PoB's 0 (`combined::has_hit`); a skill PoB disables for the hands has no mana cost (`MainSkill::disabled_by_hands`), weapon types compared as PoB's (`skill::pob_weapon_type`); `docs/phase-6/recovery.md`, "A disabled skill's cost"

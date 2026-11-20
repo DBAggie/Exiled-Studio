@@ -8189,6 +8189,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "no-slice",
     ),
     ("support_remote_mine_2_base_mine_duration", "no-slice"),
+    // P6-11ez: High-Impact Mine's double damage near mines: PoB stacks its
+    // enemy debuff per active mine, a gem's `skillMineCount`; without one it
+    // has none (`gems` gives a count a reason).
+    (
+        "support_remote_mine_2_chance_to_deal_double_damage_%_against_enemies_near_mines",
+        "no-slice",
+    ),
     (
         "support_remote_mine_2_mine_override_pvp_scaling_time_ms",
         "no-slice",

@@ -2984,7 +2984,20 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 
 **Evidence** (`b-ct`, against P6-11ex's run):
 - **Public:** 0 unexpected. **5 values moved away,** all in a mine Assassin.
-  - Its damage (240,503 to 108,224 average, PoB 3,074,566) now carries High-Impact Mine's 55% less damage, which PoB applies too. The engine was already far below PoB; the double damage near mines and the mine count, not modelled, are the bulk of the gap.
+  - Its damage (240,503 to 108,224 average, PoB 3,074,566) now carries High-Impact Mine's 55% less damage, which PoB applies too. The engine was already far below PoB; the cause of the gap is elsewhere: the double damage near mines adds nothing in PoB for this build (P6-11ez).
   - Its unreserved mana (552 to 560, PoB 174) now has the mine efficiency, which PoB applies too. The gap is its other reservations.
 - **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ez: High-Impact Mine's double damage near mines
+
+**PoB:** the double damage near mines is an `AuraDebuff` on the enemy whose value is multiplied by the active mine count (`effectStackVar` `ActiveMineCount`, `CalcPerform.lua` 3800 to 3830). That count is the gem's own `skillMineCount`, set in PoB's skill tab (`CalcActiveSkill.lua` 612 to 617). Without it the stack count is 0 and PoB removes the debuff, so the line gives nothing.
+
+**The engine:**
+- **`NoEffect` (`no-slice`):** `support_remote_mine_2_chance_to_deal_double_damage_%_against_enemies_near_mines`.
+- **Reason:** in `gems`, a main skill supported by High-Impact Mine whose active gem or a support carries a `skillMineCount` above 0 is an `active-mine-count` reason. The count is kept with the gem's other attributes on import.
+- **A correction to P6-11ey:** its evidence said the double damage and mine count were the bulk of the mine Assassin's gap to PoB. That build has no `skillMineCount`, so PoB adds nothing from them; the gap's cause is elsewhere (tasks file).
+
+**Evidence** (`b-ct`, against P6-11ey's run):
+- **Public and corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

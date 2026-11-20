@@ -3582,6 +3582,27 @@ pub fn gems(
                 // Its reservation as any skill's (P6-11et; PoB's loop over
                 // `activeSkillList`, the main skill included).
                 reservation(s, &source, totals, ingest);
+                // High-Impact Mine's double damage near mines (P6-11ez):
+                // PoB stacks its debuff per active mine, the gem's
+                // `skillMineCount` (`CalcActiveSkill.lua` 612 to 617); without
+                // a count it has none, so only a count is a reason.
+                if s.supports
+                    .iter()
+                    .any(|sup| sup.effect.id == "SupportHighImpactMine")
+                    && std::iter::once(&s.active_gem)
+                        .chain(&s.supports)
+                        .filter_map(|r| group.gems.typed().nth(r.gem))
+                        .any(|gem| {
+                            skill::attribute(&gem.attributes, "skillMineCount")
+                                .and_then(|v| v.parse::<f64>().ok())
+                                .is_some_and(|n| n > 0.0)
+                        })
+                {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what: "active-mine-count",
+                    });
+                }
                 // PoB's skill list holds the main skill too.
                 guaranteed_chill(&s.types, source, ingest);
                 socket_reasons(g, s, ingest);
