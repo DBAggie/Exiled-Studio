@@ -197,12 +197,16 @@ jobs:
           done
       # Phase 3 step 5: the synthetic builds through calc-run (import,
       # resolution, the engine, the calc result document v1); dto-compare
-      # compares the documents' SHA-256, Windows with Linux.
+      # compares the documents' SHA-256, Windows with Linux. The PoE1
+      # build's field counts follow the slice: each revision that adds
+      # fields (docs/phase-3/slice-fields.json) updates them (10 and 41 at
+      # slice revision 22, Phase 6; the synthetic bundle has no data for
+      # the new fields, so they are reasons).
       - name: Calc result documents of the synthetic builds (calc-run)
         run: |
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/calc-poe1
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/calc-poe2
-          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 7 and .field_states.indeterminate == 17' out/round-trip/calc-poe1/summary.json
+          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 10 and .field_states.indeterminate == 41' out/round-trip/calc-poe1/summary.json
           jq -e '.builds == 1 and .ok == 1 and .build_states.unsupported == 1' out/round-trip/calc-poe2/summary.json
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'
@@ -233,7 +237,9 @@ jobs:
     name: oracle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # A cache miss fetches PoB and builds LuaJIT; a hang must not run for hours.
-    timeout-minutes: 45
+    # 90 since Phase 6 (PR #167): over 250 fixtures, 3 runs each, took 44 to
+    # 46 minutes on the runners, past the former 45.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

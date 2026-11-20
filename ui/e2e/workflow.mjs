@@ -156,12 +156,18 @@ try {
   step('socket a cluster jewel and allocate a node it adds (T5b)')
   // The large socket 5000 takes the build's large cluster jewel (item 5,
   // added by run.sh and run.ps1); its notables then allocate.
-  const searchFor = async (what) => {
-    await wd('POST', `/session/${session}/element/${search}/clear`, {})
-    await wd('POST', `/session/${session}/element/${search}/value`, {
-      text: what,
+  // The list re-renders after an allocation, so the box is found again
+  // and cleared and typed into until the driver can (CI saw "element not
+  // interactable" on the first clear).
+  const searchFor = (what) =>
+    until('the node search', async () => {
+      const box = await find(`//input[@type='search']`)
+      await wd('POST', `/session/${session}/element/${box}/clear`, {})
+      await wd('POST', `/session/${session}/element/${box}/value`, {
+        text: what,
+      })
+      return true
     })
-  }
   await searchFor('Test Large Jewel Socket')
   await click(button('Allocate Test Large Jewel Socket'), 'the large socket')
   await click(
