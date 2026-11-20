@@ -2057,3 +2057,16 @@ Every other computed field equals PoB's.
 
 **Evidence** (`b-ct`, against P6-11cz's run): public and corpus 0 unexpected; no value moved. The workspace tests pass.
 
+## P6-11db: attack speed per frenzy charge
+
+**PoB** reads "#% increased Attack Speed per Frenzy Charge" as `Speed` INC with `ModFlag.Attack` per `Multiplier:FrenzyCharge`. Two stats print that text: `base_attack_speed_+%_per_frenzy_charge` (a passive, `frenzy_charges2420`) and `attack_speed_+%_per_frenzy_charge`. No item mod carries either, so an item line with the text stays ambiguous; the fixture takes the passive.
+
+**The engine:** `charges::PerCharge::AttackSpeed` (`Speed` INC with `Flags::ATTACK`) and a `MODIFIERS` row for the base stat.
+
+**Fixture** `smite-attack-speed-per-frenzy-duelist.xml`: Smite as a Duelist with three frenzy charges and the passive's path. Every computed field equals PoB's but Q11's attack rate (DIV-0378 to DIV-0383).
+
+**Evidence** (`b-ct`, against P6-11da's run):
+- **Public:** 0 unexpected; no value moved (the builds with the passive have other reasons).
+- **Corpus:** 0 unexpected; 8 values moved, 6 toward PoB. Two moved away, both in one Shield Crush build: its attack rate and mana cost per second. That build's rate was already above PoB's (2.536 against 2.387) from stats still unmapped (off-hand added damage, attack speed per 200 accuracy rating); the frenzy charges' speed applies there in PoB too.
+- **Tests:** the workspace tests and clippy pass.
+
