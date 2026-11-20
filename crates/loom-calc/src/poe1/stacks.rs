@@ -254,6 +254,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Inspiration,
         StackValue::Per(PerStack::ElementalDamageMore),
     ),
+    // P6-11bc: "Gain # Rage on Attack Hit": PoB's `Condition:CanGainRage`,
+    // as on melee hit.
+    (
+        "gain_x_rage_on_attack_hit",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
     (
         "gain_x_rage_on_melee_hit",
         StackKind::Rage,

@@ -1371,3 +1371,17 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence** (`b-ct`, against P6-9g's run):
 - **Public:** 0 unexpected; 80 values toward PoB, none away, 41 now equal.
 - **Corpus:** unchanged.
+
+## P6-11bc: rage on attack hit, minion area, avoid shock for all ailments
+
+- **"Gain # Rage on Attack Hit":** PoB's `Condition:CanGainRage`, as on melee hit (`stacks::MODIFIERS`). It leaves `config::DEPENDS_ON`, whose other rage stats PoB reads otherwise.
+- **"Minions have #% increased Area of Effect":** `NoEffect` (`area`). The minion's `AreaOfEffect` feeds only radius outputs, as the character's does.
+- **"Modifiers to Chance to Avoid being Shocked apply to all Elemental Ailments":** `NoEffect` (`ailment-on-self`). It is listed with the shock rows `damage_taken` and the `exposure_shock` test check (shock on you).
+
+**Evidence** (`b-ct`, against P6-11bb's run):
+- **Public:** 0 unexpected; 11 values toward PoB, none away (Elemental Hit's and Kinetic Blast's damage).
+- **Corpus:** unchanged.
+
+**Recorded, not done:**
+- "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (PoB's `ExtraSkillMod` `SupportManaMultiplier` for the item's gems);
+- "#% increased Damage while Leeching" (four config checks, three implying `Leeching`, and PoB's automatic case: leech not removed at full life).

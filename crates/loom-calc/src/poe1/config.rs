@@ -154,7 +154,8 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// (or another config input, itself a reason) set:
 ///
 /// - `multiplierRage` was here until P3-8n, which gives rage its effect
-///   with "Gain # Rage on Melee Hit" ([`super::stacks`]). The other stats
+///   with "Gain # Rage on Melee Hit" ([`super::stacks`]), and "Gain # Rage
+///   on Attack Hit" since P6-11bc (PoB reads both as `CanGainRage`). The other stats
 ///   that gain or regenerate rage stay in [`DEPENDS_ON`]: with one of
 ///   them, PoB's rage would differ from the engine's, so they must stay
 ///   reasons (`ModParser.lua` 2201 to 2585 and 5517 to 5539; the skill
@@ -591,7 +592,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_rage_on_kill",
     "gain_rage_when_you_use_a_warcry",
     "gain_x_rage_on_attack_crit",
-    "gain_x_rage_on_attack_hit",
     "gain_x_rage_on_bow_hit",
     "gain_x_rage_on_hit_with_axes",
     "gain_x_rage_on_hit_with_axes_swords",

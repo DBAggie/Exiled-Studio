@@ -89,6 +89,7 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "always_shock",
     // P6-11ay: shock on you, not the enemy's.
     "base_avoid_shock_%",
+    "has_avoid_shock_as_avoid_all_elemental_ailments",
     "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",

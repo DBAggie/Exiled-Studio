@@ -6005,6 +6005,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // not read the line (no mod), so it reaches none of PoB's outputs; no
     // minion field reads damage taken.
     ("golem_immunity_to_elemental_damage", "minion-defence"),
+    // P6-11bc: "Modifiers to Chance to Avoid being Shocked apply to all
+    // Elemental Ailments" (PoB's `ShockAvoidAppliesToElementalAilments`
+    // flag): ailments on you, no slice field.
+    (
+        "has_avoid_shock_as_avoid_all_elemental_ailments",
+        "ailment-on-self",
+    ),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
     // P3-8n: the stats that add damage from a mana cost stay unmapped
@@ -6069,6 +6076,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("mine_duration_+%", "skill-duration"),
     ("minion_attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("minion_attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
+    // P6-11bc: "Minions have #% increased Area of Effect" (the minion's
+    // `AreaOfEffect` INC): area, as `base_skill_area_of_effect_+%` (the
+    // minion's radius outputs are no slice field either).
+    ("minion_skill_area_of_effect_+%", "area"),
     ("minion_spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
     // P6-7c3: a monster skill's penalty against the player's minions (the
     // Flame Golem's Immolate): PoB's stat map has no row for it.
