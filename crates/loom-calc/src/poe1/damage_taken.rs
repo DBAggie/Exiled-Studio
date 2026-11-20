@@ -727,6 +727,27 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             }
         }
     }
+    // P6-11ca: a flask's crit chance against an enemy on consecrated ground.
+    let crit: Vec<Effect> = unconditional(ingest, Poe1Quantity::ConsecratedCritChance, Op::Base)
+        .cloned()
+        .collect();
+    if !crit.is_empty() {
+        match set.map_or(Ok(false), |s| check(s, CONSECRATED_INPUT)) {
+            Err(()) => ingest.reason(reason(CONSECRATED_INPUT)),
+            Ok(false) => {}
+            Ok(true) => {
+                for e in &crit {
+                    ingest.effect(Effect {
+                        quantity: Quantity::CritChance,
+                        op: Op::Base,
+                        value: e.value,
+                        conditions: Conditions::none(),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+        }
+    }
     // P6-11bf: damage with hits against a chilled enemy ([`chilled`]).
     let vs_chilled: Vec<Effect> =
         unconditional(ingest, Poe1Quantity::DamageVsChilled, Op::Increased)

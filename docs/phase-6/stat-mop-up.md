@@ -1689,3 +1689,22 @@ What the engine does:
 - **Public:** 0 unexpected; 12 values toward PoB, none away.
 - **Unsettled rolls:** two builds carry the consecrated ground line on a flask whose roll the item does not settle. Their 141 fields went from partial (the stat unmapped) to indeterminate (its unsettled value), as P6-11bq's.
 - **Corpus:** unchanged.
+
+## P6-11ca: Pulverise, attacks' additional crit chance, a flask's crit on consecrated ground
+
+- **Pulverise** (`Data/Skills/sup_str.lua` 4289 to 4294): `Damage` MORE with `ModFlag.Melee` and `ModFlag.Area`, and `Speed` MORE with `ModFlag.Attack` (its constant -15). Both are `HIT_ROWS` rows.
+- **"Attacks have +#% to Critical Strike Chance":** PoB's parser gives `CritChance` BASE with `ModFlag.Attack`. The stat is in hundredths (`divide_by_one_hundred`), so the row's divisor is 100.
+- **A flask's "+#% to Critical Strike Chance against Enemies on Consecrated Ground during Effect":** `CritChance` BASE with the enemy's `OnConsecratedGround`, also in hundredths.
+  - `Poe1Quantity::ConsecratedCritChance` (scale 0.01) is in `flasks::FLASK_ROWS`.
+  - `damage_taken::enemy_states` adds it to the crit chance under the config's consecrated ground check.
+
+**Fixtures:**
+- `smite-pulverise-attack-crit-templar.xml`: the damage and crit equal PoB's. The differences are Q11's floored attack rate (`DIV-0327` to `DIV-0332`).
+- `ice-nova-flask-consecrated-crit-witch.xml`: every computed field equals PoB's.
+
+**data-parity:** `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11bz's run):
+- **Public:** 0 unexpected; 16 values toward PoB.
+- **Away:** 4 values, two builds' speed (and a cost and leech rate that follow it), now with Pulverise's 15% less. A check with PoB itself confirms PoB applies it: the Cyclone build at 12.59 without Pulverise, 10.81 with, a factor of 0.858; the engine's is 0.858 too. The engine's speed before was near PoB's by chance: it lacked Pulverise, and the field misses other sources (a partial field).
+- **Corpus:** 0 unexpected; 14 toward PoB, none away.

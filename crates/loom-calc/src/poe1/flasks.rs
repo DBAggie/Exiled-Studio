@@ -143,6 +143,8 @@ pub const ALIASES: &[(&str, &str)] = &[
 /// Flask lines with a row of their own in the character's mapping
 /// (P6-11bz), sorted.
 pub const FLASK_ROWS: &[&str] = &[
+    // P6-11ca.
+    "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect",
     "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
     "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
 ];
@@ -509,7 +511,7 @@ mod tests {
         assert_eq!(
             map(
                 &life,
-                "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect"
+                "local_flask_number_of_additional_projectiles_during_flask_effect"
             ),
             StatMap::Unmapped
         );

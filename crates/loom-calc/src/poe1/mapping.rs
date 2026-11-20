@@ -275,6 +275,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "assassin_ascendancy_spell_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11ca: "Attacks have +#% to Critical Strike Chance" (`CritChance`
+    // BASE, `ModFlag.Attack`; the stat in hundredths, `divide_by_one_hundred`).
+    (
+        "attack_additional_critical_strike_chance_permyriad",
+        &[(Quantity::CritChance, Op::Base, 100.0, Flags::ATTACK, NONE)],
+    ),
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
@@ -2676,7 +2682,23 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::WEAPON_MELEE.union(Flags::UNARMED),
         )],
     ),
-    // P6-11ab: Rapid Decay's "#% more Damage over Time" (`Damage` MORE,
+    // P6-11ca: Pulverise (`Data/Skills/sup_str.lua` 4289 to 4294): `Damage`
+    // MORE with `ModFlag.Melee` and `ModFlag.Area`, `Speed` MORE with
+    // `ModFlag.Attack`.
+    (
+        "support_pulverise_attack_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "support_pulverise_melee_area_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE.union(Flags::AREA),
+            NONE,
+        )],
+    ), // P6-11ab: Rapid Decay's "#% more Damage over Time" (`Damage` MORE,
     // `ModFlag.Dot`, `sup_dex.lua` 3854).
     (
         "support_rapid_decay_damage_over_time_+%_final",
@@ -5496,7 +5518,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-11ad: "You count as on Low Life while at #% of maximum Life or
-    // P6-11bz: a flask's "Consecrated Ground created during Effect applies #%
+    // P6-11ca: a flask's crit chance against an enemy on consecrated ground
+    // (`poe1::flasks::FLASK_ROWS`; the stat in hundredths,
+    // `divide_by_one_hundred`).
+    (
+        "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ConsecratedCritChance),
+            Op::Base,
+            0.01,
+        )],
+    ), // P6-11bz: a flask's "Consecrated Ground created during Effect applies #%
     // increased Damage taken to Enemies" and "Enemies Ignited by you during
     // Effect take #% increased Damage" (`poe1::flasks::FLASK_ROWS`).
     (

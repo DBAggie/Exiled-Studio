@@ -163,6 +163,12 @@ pub enum Poe1Quantity {
     /// `EnemyModifier` `DamageTaken` INC with `OnConsecratedGround`):
     /// `Increased`, read by [`damage_taken`] under the config's check.
     ConsecratedEnemyDamageTaken,
+    /// Critical strike chance against an enemy on consecrated ground
+    /// (P6-11ca; a flask's "+#% to Critical Strike Chance against Enemies on
+    /// Consecrated Ground during Effect", PoB's `CritChance` BASE with the
+    /// enemy's `OnConsecratedGround`): `Base`, read by [`damage_taken`]
+    /// under the config's check.
+    ConsecratedCritChance,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1048,6 +1054,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
+            Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",
