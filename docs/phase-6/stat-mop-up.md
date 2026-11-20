@@ -1901,3 +1901,15 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; 2 values toward PoB and 1 now equal, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cr: Cyclone's movement speed as the main skill
+
+**PoB** gives Cyclone's `cyclone_movement_speed_+%_final` as `MovementSpeed` MORE with `Condition:ChannellingCyclone`, a `GlobalEffect` buff of any active Cyclone (`act_dex.lua` 4719), the main skill included. `poe1::gems` applied it for a Cyclone that is not the main skill (P6-8a). As the main skill, the stat went through `SkillMapping`, which keeps only what the hit reads, so it was an unmapped stat.
+
+**The engine:** `SkillMapping` maps the stat (`mapping::CYCLONE_MOVEMENT_STAT`) to that MORE with the `ChannellingCyclone` state, which the config's check settles.
+
+**Evidence** (`b-ct`, against P6-11cq's run):
+- **Public:** 0 unexpected. The two Cast while Channelling fixtures are unchanged (already complete and equal to PoB, through `poe1::gems`), so nothing is counted twice.
+- **The one move away:** the community Cyclone build's two movement speed fields (partial) moved away from PoB's value, 2.11 to 1.688 against PoB's 2.008. PoB gives the same 20% less: with the check turned off, PoB's value is 2.51 (2.008 = 2.51 × 0.8; local run `local/p6/cr-xo`). The gap is the 40% increased movement speed that the build's unmapped stats give in PoB; those stats are the fields' reasons.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

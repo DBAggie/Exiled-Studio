@@ -3216,6 +3216,9 @@ pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
 /// on an item or a passive the stat stays unmapped (a reason).
 pub const ALWAYS_HIT_STAT: &str = "global_always_hit";
 
+/// Cyclone's movement speed stat (P6-11cr; [`SkillMapping`]).
+pub const CYCLONE_MOVEMENT_STAT: &str = "cyclone_movement_speed_+%_final";
+
 /// The mapping of a gem's stats: the game's ([`Poe1Mapping`]), where every
 /// effect must be one only the skill's hit reads ([`is_hit_quantity`]);
 /// a stat with another effect is `Unmapped` (PoB applies a gem's stats to
@@ -3234,6 +3237,20 @@ impl StatMapping for SkillMapping {
             || super::gems::is_support_global_stat(stat.as_str())
         {
             return StatMap::NoEffect;
+        }
+        // P6-11cr: Cyclone's movement speed as the main skill (PoB's
+        // `MovementSpeed` MORE with `Condition:ChannellingCyclone`, a
+        // `GlobalEffect` buff of any active Cyclone, `act_dex.lua` 4719;
+        // another group's Cyclone is `poe1::gems`').
+        if stat.as_str() == CYCLONE_MOVEMENT_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                op: Op::More,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none()
+                    .with_state(ConditionKey::new(conditions::CHANNELLING_CYCLONE), true),
+            }]);
         }
         if stat.as_str() == ALWAYS_HIT_STAT {
             return StatMap::Effects(vec![EffectTemplate {
