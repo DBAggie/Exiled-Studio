@@ -1532,3 +1532,20 @@ They join `stacks::MODIFIERS` (`StackValue::CanGain`) and leave `config::DEPENDS
 **Evidence** (`b-ct`, against P6-11bm's run):
 - **Public:** 0 unexpected; 6 values toward PoB (a build's chaos damage over time and DPS), none away.
 - **Corpus:** unchanged.
+
+## P6-11bo: the ends of the damage range (Volatility, Ryslatha's Clutches)
+
+PoB's `calcDamage` (`CalcOffence.lua` 113 to 138) rolls each end of a type's range as `round(((base x inc x more) x genericMore + converted) x more<Type> x inc<Type>)`:
+- `genericMore` is `MinDamage` or `MaxDamage` MORE.
+- `more<Type>` and `inc<Type>` are `Min<Type>Damage` or `Max<Type>Damage`.
+
+The engine adds `Poe1Quantity::BoundDamage(type, bound)`, with no type for the generic one. `hit::calc_damage` reads it in that order. It scans for the quantity only for a type with base damage, and reads it only when the store has one, so other hits keep their graphs.
+- Volatility's two stats (`MinDamage` and `MaxDamage` MORE, `SkillType` Attack) are `HIT_ROWS` rows with no type.
+- "#% more Maximum Physical Attack Damage" and Ryslatha's Clutches' maximum and minimum lines have the physical type.
+- The skill mapping reads the quantity as a hit quantity (`is_hit_quantity`), so a support's stats apply.
+
+**Fixture** `smite-volatility-min-max-physical-templar.xml`: Smite with Volatility, a Siege Axe, and both physical lines. The damage equals PoB's. The differences are the weapon's attack rate floored to whole milliseconds, Q11's game truth (`DIV-0308` to `DIV-0313`).
+
+**Evidence** (`b-ct`, against P6-11bn's run):
+- **Public:** 0 unexpected; 12 values toward PoB in three attack builds, none away.
+- **Corpus:** 0 unexpected; 2 values toward PoB in one build, none away.

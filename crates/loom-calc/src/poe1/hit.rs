@@ -3431,11 +3431,42 @@ pub(super) fn calc_damage(
             (inc, more)
         }
     };
+    // The modifiers of one end of the range (P6-11bo), read only when the
+    // store has any, so a hit without them keeps its graph.
+    let bounded = calc.store().effects().iter().any(|e| {
+        matches!(
+            e.quantity,
+            Quantity::Poe1(Poe1Quantity::BoundDamage(None, _))
+        ) || e.quantity == Quantity::Poe1(Poe1Quantity::BoundDamage(Some(ty), Bound::Min))
+            || e.quantity == Quantity::Poe1(Poe1Quantity::BoundDamage(Some(ty), Bound::Max))
+    });
     let mut rolled = Vec::with_capacity(2);
     for (bound, b) in base.into_iter().enumerate() {
         let mut raw = phases::product(calc, &[b, inc, more], Term::Step("unrounded"))?;
+        let end = Bound::ALL[bound];
+        // `(base x inc x more) x genericMore<Bound>Damage + converted`,
+        // then `x more<Bound><Type>Damage x inc<Bound><Type>Damage`
+        // (`CalcOffence.lua` 136 to 137).
+        if bounded {
+            let generic = self::more(
+                calc,
+                Quantity::Poe1(Poe1Quantity::BoundDamage(None, end)),
+                &typed,
+                reasons,
+            )?;
+            raw = phases::product(calc, &[raw, generic], Term::Step("bound-more"))?;
+        }
         if let Some(c) = converted {
             raw = phases::total(calc, &[raw, c[bound]], Term::Step("with-converted"))?;
+        }
+        if bounded {
+            let (own_inc, own_more) = modifiers(
+                calc,
+                Quantity::Poe1(Poe1Quantity::BoundDamage(Some(ty), end)),
+                &typed,
+                reasons,
+            )?;
+            raw = phases::product(calc, &[raw, own_more, own_inc], Term::Step("bound-type"))?;
         }
         rolled.push(phases::round(calc, raw, Term::Step("damage"))?);
     }

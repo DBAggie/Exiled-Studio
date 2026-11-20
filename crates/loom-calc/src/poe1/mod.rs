@@ -126,6 +126,12 @@ pub enum Poe1Quantity {
     /// [`exposure`] adds them; a hit adds their sum to the enemy's base
     /// resistance before its maximum ([`hit`]).
     EnemyResistance(DamageType),
+    /// A modifier of one end of a hit's damage range (P6-11bo; PoB's
+    /// `calcDamage`, `CalcOffence.lua` 113 to 138): with no type, PoB's
+    /// `MinDamage` and `MaxDamage` MORE, on the type's damage before what
+    /// other types convert to it; with a type, `Min<Type>Damage` and
+    /// `Max<Type>Damage` MORE and INC, on the sum after it.
+    BoundDamage(Option<DamageType>, Bound),
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -972,6 +978,12 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
+            Self::BoundDamage(t, b) => write!(
+                f,
+                "bound-damage.{}.{}",
+                t.map_or("any", DamageType::name),
+                b.name()
+            ),
             Self::ExposureChance(t) => write!(f, "exposure-chance.{}", t.name()),
             Self::ExtraExposure(None) => f.write_str("extra-exposure"),
             Self::ExtraExposure(Some(t)) => write!(f, "extra-exposure.{}", t.name()),

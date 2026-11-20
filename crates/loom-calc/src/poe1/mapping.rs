@@ -2062,7 +2062,34 @@ pub const HIT_ROWS: &[HitRow] = &[
         "maximum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
     ),
-    // P6-11n: "#% increased Melee Attack Speed" (`Speed` INC, `ModFlag.Attack`
+    // P6-11bo: Volatility's "#% more Maximum Attack Damage" and "#% less
+    // Minimum Attack Damage" (`MaxDamage` and `MinDamage` MORE, `SkillType`
+    // Attack).
+    (
+        "maximum_attack_damage_+%_final_from_volatility_support",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BoundDamage(None, Bound::Max)),
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ), // P6-11bo: "#% more Maximum Physical Attack Damage" and Ryslatha's
+    // Clutches' maximum and minimum (`MaxPhysicalDamage` and
+    // `MinPhysicalDamage` MORE, `SkillType` Attack).
+    (
+        "maximum_physical_attack_damage_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BoundDamage(
+                Some(DamageType::Physical),
+                Bound::Max,
+            )),
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ), // P6-11n: "#% increased Melee Attack Speed" (`Speed` INC, `ModFlag.Attack`
     // and `ModFlag.Melee`).
     (
         "melee_attack_speed_+%",
@@ -2125,7 +2152,16 @@ pub const HIT_ROWS: &[HitRow] = &[
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
-    // P6-11aj: Multistrike's damage of each repeat (`RepeatOneDamage` to
+    (
+        "minimum_attack_damage_+%_final_from_volatility_support",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BoundDamage(None, Bound::Min)),
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ), // P6-11aj: Multistrike's damage of each repeat (`RepeatOneDamage` to
     // `RepeatThreeDamage` MORE with a melee weapon or unarmed).
     (
         "multistrike_damage_+%_final_on_first_repeat",
@@ -2833,7 +2869,32 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
-    // P6-11b: "#% increased Accuracy Rating with Wands": `Accuracy` INC, `ModFlag.Wand` and `Hit`.
+    (
+        "unique_ryuslathas_clutches_maximum_physical_attack_damage_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BoundDamage(
+                Some(DamageType::Physical),
+                Bound::Max,
+            )),
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    (
+        "unique_ryuslathas_clutches_minimum_physical_attack_damage_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BoundDamage(
+                Some(DamageType::Physical),
+                Bound::Min,
+            )),
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ), // P6-11b: "#% increased Accuracy Rating with Wands": `Accuracy` INC, `ModFlag.Wand` and `Hit`.
     (
         "wand_accuracy_rating_+%",
         &[(
@@ -2942,6 +3003,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             )
             | Quantity::Poe1(
                 Poe1Quantity::SkillBaseDamage(..)
+                    // An end of the damage range (P6-11bo: Volatility's).
+                    | Poe1Quantity::BoundDamage(..)
                     | Poe1Quantity::SkillConversion(..)
                     | Poe1Quantity::Conversion(..)
                     | Poe1Quantity::DoubleDamageChance
