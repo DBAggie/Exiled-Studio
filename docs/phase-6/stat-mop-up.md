@@ -2273,3 +2273,24 @@ PoB's `LoadSkill` misses them by `skillId`, and `ProcessSocketGroup` then finds 
   - **One build's hit damage** (57 to 46 against PoB's 5,443, with its leech) is open. Its life reserved changed too (901 to 630 unreserved). No single newly found support explains the hit's drop: without Vicious Projectiles it is 43.9, and 45.9 without each other one. Vicious Projectiles' own stats are unmapped (next step). Tasks file.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dn: Vicious Projectiles
+
+**PoB** (`sup_dex.lua` 4360 to 4372) maps four stats:
+- more projectile attack physical damage: `PhysicalDamage` MORE with `ModFlag.Attack` and `Projectile`;
+- less projectile attack speed: `Speed` MORE with the same flags;
+- more physical damage over time: `PhysicalDamage` MORE with `KeywordFlag.PhysicalDot`;
+- more chaos damage over time: `ChaosDamage` MORE with `KeywordFlag.ChaosDot`.
+
+The support was in `gems::SUPPORTS` with no global effect, but its stats were reasons; P6-11dm made the builds' old-ID copies known.
+
+**The engine:** four `HIT_ROWS` rows.
+
+**Fixture** `burning-arrow-vicious-projectiles-templar.xml`: Burning Arrow with Vicious Projectiles. Every computed field equals PoB's but Q11's attack rate (DIV-0408 to DIV-0413).
+
+**Evidence** (`b-ct`, against P6-11dm's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; 17 values moved, 15 toward PoB.
+  - P6-11dm's open build gains the support's damage: its hit's average damage goes from 46 to 68, above the 57 it had before P6-11dm.
+  - Two of its values moved away: the attack rate (2.15 to 1.93 against PoB's 2.18) and the life cost per second that follows it. They carry the support's less attack speed, which PoB applies too; the rate is partial on other modifiers.
+- **Tests:** the workspace tests and clippy pass.
+

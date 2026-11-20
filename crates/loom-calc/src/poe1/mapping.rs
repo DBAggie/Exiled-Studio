@@ -2806,6 +2806,54 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::WEAPON_MELEE.union(Flags::UNARMED),
         )],
     ),
+    // P6-11dn: Vicious Projectiles (PoB `sup_dex.lua` 4360 to 4372): chaos
+    // damage over time MORE (`ChaosDamage` with `KeywordFlag.ChaosDot`).
+    (
+        "support_phys_chaos_projectile_chaos_damage_over_time_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::CHAOS.union(Flags::CHAOS_DOT),
+            NONE,
+        )],
+    ),
+    // P6-11dn: Vicious Projectiles' physical damage over time MORE
+    // (`PhysicalDamage` with `KeywordFlag.PhysicalDot`).
+    (
+        "support_phys_chaos_projectile_physical_damage_over_time_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::PHYSICAL.union(Flags::PHYSICAL_DOT),
+            NONE,
+        )],
+    ),
+    // P6-11dn: Vicious Projectiles' projectile attack physical damage MORE
+    // (`PhysicalDamage` with `ModFlag.Attack` and `Projectile`).
+    (
+        "support_projectile_attack_physical_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::ATTACK.union(Flags::PROJECTILE).union(Flags::PHYSICAL),
+            NONE,
+        )],
+    ),
+    // P6-11dn: Vicious Projectiles' projectile attack speed MORE (`Speed`
+    // with `ModFlag.Attack` and `Projectile`).
+    (
+        "support_projectile_attack_speed_+%_final",
+        &[(
+            Quantity::Speed,
+            Op::More,
+            1.0,
+            Flags::ATTACK.union(Flags::PROJECTILE),
+            NONE,
+        )],
+    ),
     // P6-11ca: Pulverise (`Data/Skills/sup_str.lua` 4289 to 4294): `Damage`
     // MORE with `ModFlag.Melee` and `ModFlag.Area`, `Speed` MORE with
     // `ModFlag.Attack`.
