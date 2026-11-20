@@ -138,6 +138,14 @@ pub enum PerCharge {
     LifeRegenPerMinute,
     /// Increased mana regeneration rate (`ManaRegen` INC; P6-11t).
     ManaRegen,
+    /// Increased armour (`Armour` INC; P6-11cn).
+    Armour,
+    /// Additional physical damage reduction (`PhysicalDamageReduction`
+    /// BASE; P6-11cn).
+    PhysicalDamageReduction,
+    /// Additional elemental damage reduction (`ElementalDamageReduction`
+    /// BASE; P6-11cn).
+    ElementalDamageReduction,
 }
 
 impl PerCharge {
@@ -154,6 +162,9 @@ impl PerCharge {
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
             Self::LifeRegenPerMinute => "per.life-regen-per-minute",
             Self::ManaRegen => "per.mana-regen",
+            Self::Armour => "per.armour",
+            Self::PhysicalDamageReduction => "per.physical-damage-reduction",
+            Self::ElementalDamageReduction => "per.elemental-damage-reduction",
         }
     }
 
@@ -187,6 +198,19 @@ impl PerCharge {
             Self::ManaRegen => (
                 Quantity::Poe1(super::Poe1Quantity::Regen(super::Pool::Mana)),
                 Op::Increased,
+                Flags::NONE,
+            ),
+            Self::Armour => (Quantity::Armour, Op::Increased, Flags::NONE),
+            Self::PhysicalDamageReduction => (
+                Quantity::Poe1(super::Poe1Quantity::DamageReduction(
+                    crate::quantity::DamageType::Physical,
+                )),
+                Op::Base,
+                Flags::NONE,
+            ),
+            Self::ElementalDamageReduction => (
+                Quantity::Poe1(super::Poe1Quantity::ElementalDamageReduction),
+                Op::Base,
                 Flags::NONE,
             ),
         }
@@ -292,6 +316,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::Damage),
     ),
+    // P6-11cn: "#% additional Elemental Damage Reduction per Endurance
+    // Charge" (`ElementalDamageReduction` BASE per
+    // `Multiplier:EnduranceCharge`).
+    (
+        "elemental_damage_reduction_%_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::ElementalDamageReduction),
+    ),
     (
         "evasion_rating_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
@@ -334,6 +366,20 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "movement_velocity_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::MovementSpeed),
+    ),
+    // P6-11cn: "#% additional Physical Damage Reduction per Endurance
+    // Charge" (`PhysicalDamageReduction` BASE) and "#% increased Armour per
+    // Endurance Charge" (`Armour` INC), each per
+    // `Multiplier:EnduranceCharge`.
+    (
+        "physical_damage_reduction_%_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::PhysicalDamageReduction),
+    ),
+    (
+        "physical_damage_reduction_rating_+%_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::Armour),
     ),
     (
         "spell_damage_+%_per_power_charge",

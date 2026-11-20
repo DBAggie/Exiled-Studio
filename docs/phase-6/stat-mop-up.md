@@ -1822,3 +1822,19 @@ Every computed field of the three equals PoB's.
 - **Corpus:** 0 unexpected; 1 value toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass. The app's config test used this check as an input with no effect; it now uses `conditionCastSpellRecently`.
 
+## P6-11cn: armour and damage reduction per endurance charge
+
+**PoB** reads each line with the tag `{ type = "Multiplier", var = "EnduranceCharge" }`:
+- "#% increased Armour per Endurance Charge": `Armour` INC.
+- "#% additional Physical Damage Reduction per Endurance Charge": `PhysicalDamageReduction` BASE.
+- "#% additional Elemental Damage Reduction per Endurance Charge": `ElementalDamageReduction` BASE.
+
+**The engine:** `charges::PerCharge` gains `Armour`, `PhysicalDamageReduction`, and `ElementalDamageReduction`, each a `charges::MODIFIERS` row on endurance charges. `charges` applies each times the settled count, as the other per-charge values.
+
+**Fixture** `ice-nova-endurance-reduction-lines-witch.xml`: endurance charges in use, +500 armour, and the three lines. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cm's run):
+- **Public:** 0 unexpected; 22 values toward PoB (a Juggernaut's EHP, hits taken, and damage taken multipliers among them), none away.
+- **Corpus:** 0 unexpected; 48 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass. `loom-persistence`'s `an_empty_build_should_round_trip_through_a_file` failed once in the workspace run and passed on its own; it is recorded for review.
+
