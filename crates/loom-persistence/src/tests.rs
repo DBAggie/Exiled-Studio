@@ -183,6 +183,76 @@ fn an_empty_build_should_round_trip_through_a_file() {
     }
 }
 
+/// Another process holding the target open for a moment without delete
+/// sharing (a virus scanner, the search indexer) makes Windows refuse the
+/// rename over it with a sharing violation; the save waits for it
+/// ([`rename_retrying`]).
+#[cfg(windows)]
+#[test]
+fn a_save_should_wait_for_a_target_held_open_for_a_moment() {
+    use std::os::windows::fs::OpenOptionsExt;
+    const FILE_SHARE_READ: u32 = 1;
+
+    let dir = ScratchDir::new("held");
+    let target = dir.path("build.json");
+    std::fs::write(&target, POE1).unwrap();
+    let held = std::fs::OpenOptions::new()
+        .read(true)
+        .share_mode(FILE_SHARE_READ)
+        .open(&target)
+        .unwrap();
+    assert_eq!(
+        std::fs::rename(&target, dir.path("probe.json"))
+            .unwrap_err()
+            .raw_os_error(),
+        Some(ERROR_SHARING_VIOLATION),
+        "the held file should refuse a rename"
+    );
+    let release = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        drop(held);
+    });
+    let empty = Build::new(Game::Poe1);
+    Store::new().save(&empty, &target, &REPLACE).unwrap();
+    release.join().unwrap();
+    assert_eq!(Store::new().load(&target).unwrap().build, empty);
+}
+
+/// A target Windows refuses with "Access is denied" for a moment (here
+/// read-only until another thread clears it) is replaced once it allows
+/// it ([`rename_retrying`]).
+#[cfg(windows)]
+#[test]
+fn a_save_should_wait_for_a_target_denied_for_a_moment() {
+    let dir = ScratchDir::new("denied");
+    let target = dir.path("build.json");
+    std::fs::write(&target, POE1).unwrap();
+    let set_read_only = |path: &Path, read_only: bool| {
+        let mut permissions = std::fs::metadata(path).unwrap().permissions();
+        permissions.set_readonly(read_only);
+        std::fs::set_permissions(path, permissions).unwrap();
+    };
+    set_read_only(&target, true);
+    let probe = dir.path("probe.json");
+    std::fs::write(&probe, POE1).unwrap();
+    assert_eq!(
+        std::fs::rename(&probe, &target).unwrap_err().kind(),
+        io::ErrorKind::PermissionDenied,
+        "a read-only target should refuse a rename over it"
+    );
+    let release = {
+        let target = target.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            set_read_only(&target, false);
+        })
+    };
+    let empty = Build::new(Game::Poe1);
+    Store::new().save(&empty, &target, &REPLACE).unwrap();
+    release.join().unwrap();
+    assert_eq!(Store::new().load(&target).unwrap().build, empty);
+}
+
 #[test]
 fn an_existing_target_should_be_kept_unless_replacing_is_asked() {
     let dir = ScratchDir::new("exists");
