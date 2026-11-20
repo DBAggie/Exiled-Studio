@@ -488,6 +488,29 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // (`SupportAutomation`); nothing of its own reaches the character
     // (`Data/Skills/act_int.lua` 417).
     ("Automation", Kind::Inert),
+    // P6-11dt: Berserk's buff (`act_str.lua` 934): `RageEffect` INC, a
+    // `GlobalEffect` buff marked unscalable, read by the rage
+    // (`poe1::stacks`). Its minimum rage and rage loss PoB does not map.
+    (
+        "Berserk",
+        Kind::Buff {
+            name: "Berserk",
+            effect: EffectType::Buff,
+            stats: &[(
+                "berserk_rage_effect_+%",
+                BuffStat::Unscalable(&[(
+                    Quantity::Poe1(Poe1Quantity::Stack(
+                        super::stacks::StackKind::Rage,
+                        super::stacks::StackValue::Effect,
+                    )),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     ("BlastRain", Kind::Inert),
     (
         "BloodRage",

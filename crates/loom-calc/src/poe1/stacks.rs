@@ -128,6 +128,9 @@ pub enum StackValue {
     CanGain,
     /// The enemy is Intimidated while you have rage: a `Flag`.
     Intimidate,
+    /// Increased rage effect (PoB's `RageEffect` INC; P6-11dt): `Base`
+    /// (a line) or `Increased` (Berserk's buff), the percent summed.
+    Effect,
     /// An effect per stack.
     Per(PerStack),
 }
@@ -141,6 +144,7 @@ impl StackValue {
             Self::Extra => "extra",
             Self::CanGain => "can-gain",
             Self::Intimidate => "intimidate",
+            Self::Effect => "effect",
             Self::Per(p) => p.name(),
         }
     }
@@ -234,6 +238,13 @@ impl PerStack {
 /// The stack modifiers the engine models (module docs), sorted by stat
 /// ID, each as PoB v2.67.2 reads its text or skill stat.
 pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
+    // P6-11dt: "Every Rage also grants #% increased Attack Speed" (`Speed`
+    // INC with `ModFlag.Attack` per `Multiplier:RageEffect`).
+    (
+        "attack_speed_+%_per_rage",
+        StackKind::Rage,
+        StackValue::Per(PerStack::AttackSpeed),
+    ),
     (
         "cast_speed_+%_per_num_unique_spells_cast_recently",
         StackKind::NonInstantSpells,
@@ -341,6 +352,8 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::NearbyEnemies,
         StackValue::Per(PerStack::PhysicalReductionUpTo8),
     ),
+    // P6-11dt: "#% increased Rage Effect" (`RageEffect` INC).
+    ("rage_effect_+%", StackKind::Rage, StackValue::Effect),
     (
         "support_momentum_attack_speed_+%_per_stack",
         StackKind::Momentum,
@@ -433,7 +446,9 @@ fn sum(ingest: &Ingest<'_>, kind: StackKind, value: StackValue) -> (f64, Option<
     let mut first = None;
     for e in ingest.effects() {
         if e.quantity == Quantity::Poe1(Poe1Quantity::Stack(kind, value))
-            && matches!(e.op, Op::Base | Op::Flag)
+            // The rage effect's increases (P6-11dt) are `Increased` from a
+            // buff, `Base` from a line: both are the percent summed.
+            && matches!(e.op, Op::Base | Op::Flag | Op::Increased)
             && e.conditions == Conditions::none()
         {
             total += e.value;
@@ -515,7 +530,16 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
                 if let Some(base) = constant(ingest, "maximum_rage") {
                     let max = (base + sum(ingest, StackKind::Rage, StackValue::Maximum).0).floor();
                     let stacks = stack.min(max).max(0.0);
-                    let effect = stacks.floor();
+                    // `floor(stacks x calcLib.mod(RageEffect))` (P6-11dt: the
+                    // increases; no `RageEffect` MORE is mapped).
+                    let inc = sum(ingest, StackKind::Rage, StackValue::Effect).0;
+                    let effect = (stacks * (1.0 + inc / 100.0)).floor();
+                    // "Every Rage also grants ..." (P6-11dt): PoB's
+                    // `Multiplier:RageEffect`, the effect.
+                    let effects = per(ingest, StackKind::Rage);
+                    if !effects.is_empty() {
+                        apply(ingest, &effects, multiplier(effect), None);
+                    }
                     if effect != 0.0 {
                         ingest.effect(Effect {
                             quantity: Quantity::Damage,

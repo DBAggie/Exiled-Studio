@@ -2396,3 +2396,19 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 - **Corpus:** 0 unexpected; 6 values toward PoB. The open build's hit damage is now 81, against 57 before P6-11dm.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dt: the rage effect and Berserk
+
+**PoB** (`CalcPerform.lua` 881 to 897):
+- **The rage effect:** `floor(stacks x calcLib.mod(RageEffect))`, attack `Damage` MORE by that amount.
+- **"Every Rage also grants #% increased Attack Speed":** `Speed` INC with `ModFlag.Attack` per `Multiplier:RageEffect`, the effect.
+- **Berserk** (`act_str.lua` 934): its buff is `RageEffect` INC, a `GlobalEffect` marked unscalable. PoB does not map its minimum rage or rage loss.
+
+**The engine** (`poe1::stacks`):
+- `StackValue::Effect` sums the rage effect's increases: "#% increased Rage Effect" (a `MODIFIERS` row) and Berserk's buff (`Increased`).
+- The rage's damage is now `floor(stacks x (1 + inc / 100))`, and per-rage effects apply times that effect. "Every Rage also grants #% increased Attack Speed" is a `MODIFIERS` row; no per-rage row existed before, so none changed.
+- **Berserk** joins `gems::SKILLS` as a buff with a `BuffStat::Unscalable` row. The data-parity `gem_effects` table names the quantity `RageEffect`; `uncategorized` 0.
+
+**Fixture** `smite-berserk-rage-effect-templar.xml`: Smite with rage on melee hit, 20 rage, Berserk in its own group, 25% increased rage effect, and 1% attack speed per rage. PoB's rage effect is 36 (20 x 1.80). Every computed field equals PoB's but Q11's attack rate (DIV-0451 to DIV-0456).
+
+**Evidence** (`b-ct`, against P6-11ds's run): public and corpus 0 unexpected; no value moved (the Berserker builds have other reasons). The workspace tests and clippy pass.
+

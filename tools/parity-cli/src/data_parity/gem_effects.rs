@@ -702,6 +702,11 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),
         // P6-11cv: Temporal Chains' on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster) => "BuffExpireFaster".into(),
+        // P6-11dt: Berserk's rage effect.
+        Quantity::Poe1(Poe1Quantity::Stack(
+            loom_calc::poe1::stacks::StackKind::Rage,
+            loom_calc::poe1::stacks::StackValue::Effect,
+        )) => "RageEffect".into(),
         // P6-10b part 9: leech.
         Quantity::Poe1(Poe1Quantity::DamageLeech(p, source)) => {
             let pool = match p {
