@@ -107,6 +107,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
     // after every source of their modifiers, before the enemy's damage
     // taken (rage's Intimidate).
+    super::devotion::devotion(ingest);
     super::stacks::stacks(active_config(build), input.data, ingest);
     super::stacks::aura_or_herald(input, ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);

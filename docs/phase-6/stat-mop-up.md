@@ -1227,6 +1227,7 @@ The stats Militant Faith's and Heroic Tragedy's conquests give (`docs/phase-6/ti
 - `base_devotion` ("+# to Devotion", PoB's `Devotion` BASE) is `NoEffect`. Devotion reaches a slice field only through the 30 stats that read it: per 10 Devotion (`..._per_10_devotion`) or at a threshold (`..._at_devotion_threshold`).
 - Each of the 30 is a guard of the row in `NO_EFFECT_DEPENDS_ON`. They stay `unmapped-stat`, so a build with one is partial, and mapping one (even as `NoEffect`) fails the guard test until the row is revisited.
 - Militant Faith's own threshold notables (exposure on hit, mana as energy shield at 150 Devotion) remain reasons.
+- *Superseded by P6-11az:* `base_devotion` is a row, and its readers are modelled where the stat they mean is mapped.
 
 **Ward** (`EHP_REASONS`, `Poe1Quantity::EhpReason`, the effective health pool fields' reason alone):
 - `ward_+%` and `ward_from_armour_item_+%`: PoB's `Ward` INC, which its effective health pool reads through `output.Ward` (`CalcDefence.lua` 223). The engine has no ward pool.
@@ -1289,3 +1290,46 @@ The Abyss jewels' additions (`docs/phase-6/timeless.md`, "Part 4") and quivers' 
 - Six differ as every bow fixture does: the attack rate floored to whole milliseconds (Q11), registered as DIV-0296 to DIV-0301 (`game-truth`).
 
 **Evidence** (`b-ct`, against P6-11ax's run): public and corpus 0 unexpected, no value moved; no build has these stats outside the fixture.
+
+## P6-11az: devotion and the lines that read it
+
+`loom_calc::poe1::devotion`.
+
+**How PoB reads devotion** (`CalcPerform.lua` 490 to 491, `ModParser.lua`):
+- `base_devotion` ("+# to Devotion") sums as `Poe1Quantity::Devotion`.
+- A reader per 10 Devotion counts `floor(Devotion / 10 + 0.0001)` (PoB's `PerStat`, `div = 10`).
+- A reader at 150 Devotion counts 1 when the total is at least 150 (PoB's `StatThreshold`).
+
+**How the engine reads it:** each modelled reader (`devotion::READERS`) means one of the game's other stats.
+- The reader maps to `Poe1Quantity::DevotionReader`.
+- After every other source, `devotion::devotion` ingests the stat it means, with the reader's value times the count (and a factor), from the reader's source. The existing rows apply.
+
+**Modelled readers:**
+- **Per 10 Devotion:**
+  - area damage (`area_damage_+%`);
+  - elemental damage (`elemental_damage_+%`);
+  - all elemental resistances (`base_resist_all_elements_%`);
+  - mana cost efficiency;
+  - reduced mana cost (`base_mana_cost_-%`, factor -1).
+- **At 150 Devotion:**
+  - all maximum resistances (`additional_maximum_all_resistances_%`, PoB's elemental and chaos maximums);
+  - additional physical damage reduction;
+  - physical converted to fire or lightning.
+
+**Still reasons:**
+- **The other readers:** totem, brand, and channelled damage, minion speed and accuracy, non-curse aura effect, non-damaging ailment effect, durations on you, shield defences, cold conversion, the threshold exposures, mana as energy shield, minimum charges, Arcane Surge on hit, and ailment immunity on consecrated ground. The stats they would mean are not mapped.
+- **"Regenerate # Mana per Second per 10 Devotion":** the game prints its per-minute value to one decimal, so the text does not settle it. Mapped, it would make Essence Drain's fields indeterminate rather than partial.
+- **The guards gone:** `base_devotion` is no longer `NoEffect`, so its 30 guards in `NO_EFFECT_DEPENDS_ON` are gone.
+
+**Fixtures** on the Militant Faith fixture's tree (seed 3191, 205 Devotion in PoB):
+- `militant-faith-elemental-damage-per-devotion-witch.xml`;
+- `militant-faith-mana-per-devotion-witch.xml`: resistances, mana cost, mana cost efficiency;
+- `militant-faith-devotion-threshold-witch.xml`: maximum resistances, physical damage reduction.
+
+Every computed field equals PoB's.
+
+**Also fixed:** the `exposure_shock` maintainer-run test lists `base_avoid_shock_%` (P6-11ay's row; shock on you).
+
+**Evidence** (`b-ct`, against P6-11ay's run):
+- **Public and corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, every maintainer-run test but the extractor's (which needs a game install and its decoder), and clippy pass.

@@ -22,6 +22,7 @@ pub mod conditions;
 pub mod config;
 pub mod costs;
 pub mod damage_taken;
+pub mod devotion;
 pub mod dot;
 pub mod ehp;
 pub mod enemy;
@@ -329,6 +330,13 @@ pub enum Poe1Quantity {
     /// a Glorious Vanity conquest): `Base`, read by [`enemy_hit`] for
     /// `anyRecoup` as [`Self::ManaRecoup`].
     LifeRecoup,
+    /// Devotion (PoB's `Devotion`; P6-11az): `Base`, summed by
+    /// [`devotion`].
+    Devotion,
+    /// A line that reads devotion ([`devotion::READERS`], by index): `Base`,
+    /// its value, which [`devotion`] scales and ingests as the stat it
+    /// means.
+    DevotionReader(u8),
     /// Skills reserve life instead of mana (PoB's `BloodMagicReserved`;
     /// P6-11an, Blood Magic): a `Flag`, read by
     /// [`skill_modifiers::Totals`] for the other gems' reservation.
@@ -1053,6 +1061,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ManaRecoup => f.write_str("mana-recoup"),
             Self::LifeRecoup => f.write_str("life-recoup"),
+            Self::Devotion => f.write_str("devotion"),
+            Self::DevotionReader(i) => write!(f, "devotion-reader.{i}"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),

@@ -87,6 +87,8 @@ const TEXTS: [(&str, &str); 16] = [
 const NO_EFFECT_NAMING: &[&str] = &[
     "all_damage_can_shock",
     "always_shock",
+    // P6-11ay: shock on you, not the enemy's.
+    "base_avoid_shock_%",
     "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
