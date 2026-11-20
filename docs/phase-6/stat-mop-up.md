@@ -2744,3 +2744,21 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
+## P6-11el: Acrobatics
+
+**PoB:**
+- The current tree's "Modifiers to Chance to Suppress Spell Damage instead apply to Chance to Dodge Spell Hits at 50% of their value" is `ConvertSpellSuppressionToSpellDodge` FLAG and `SpellSuppressionChance` OVERRIDE 0. "Maximum Chance to Dodge Spell Hits is 75%" is `SpellDodgeChanceMax` OVERRIDE 75 (`ModCache.lua` 9946).
+- With the flag, spell dodge is half the suppression chance's `BASE` sum (`CalcDefence.lua` 1124). The effective spell dodge is that, less the enemy's `reduceEnemyDodge`, between 0 and the maximum, and 0 against `CannotBeDodged` (1164 to 1172). The chance not to be hit by a spell reads it (1650).
+
+**The engine:**
+- **Keystone:** `keystone_acrobatics` in `poe1::keystones`, the flag `Poe1Quantity::SuppressionToSpellDodge`.
+- **Spell suppression** (`phases`): 0 with the flag.
+- **Spell dodge** (`enemy_hit::spell_dodge`): half the suppression `BASE` sum, between 0 and 75, passed to `ehp::Mitigation`'s `spell_dodge`, which was 0 until now. The estimate already ported PoB's chance not to be hit with it. PoB's `CannotBeDodged` comes from a boss skill preset, already a reason of the estimate (`UNMODELLED`). Nothing the engine maps sets `reduceEnemyDodge`.
+- The keystone's text is checked against the real bundle (`tests/keystones_chill.rs`).
+
+**Evidence** (`b-ct`, against P6-11ek's run): a Mirage Archer Toxic Rain build (PoB's 3.13 test build) with the keystone.
+- **Public:** 0 unexpected. 6 values moved, 3 toward PoB: the chance not to be hit (33.5 to 37, PoB 50.45), the effective hit pool, and the number of hits.
+- **Three moved away:** spell suppression (14 to 0, PoB 14), the configured damage chance, and the mitigated hits. **A tree version difference:** the build's spec is on tree 3_13, before the keystone's 3.16 rework. PoB reads that tree's node: "30% Chance to Dodge Attack Hits. 50% less Armour, 30% less Energy Shield, 30% less Chance to Block Spell and Attack Damage" (`TreeData/3_13`). The engine calculates a spec with no tree pack on the data's tree (`docs/tree/tree-packs.md`), whose keystone is today's. Each is a partial field.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+

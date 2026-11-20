@@ -102,6 +102,16 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     // -100), "10% more maximum Life" (`Life` MORE 10), "Skills Cost Life
     // instead of Mana" (`CostLifeInsteadOfMana` FLAG), and "Skills Reserve
     // Life instead of Mana" (`BloodMagicReserved` FLAG).
+    // Acrobatics (P6-11el): the tree's "Modifiers to Chance to Suppress
+    // Spell Damage instead apply to Chance to Dodge Spell Hits at 50% of
+    // their value" (`ConvertSpellSuppressionToSpellDodge` FLAG,
+    // `SpellSuppressionChance` OVERRIDE 0) and "Maximum Chance to Dodge
+    // Spell Hits is 75%" (`SpellDodgeChanceMax` OVERRIDE 75): the flag, read
+    // by `phases` and `enemy_hit`.
+    (
+        "keystone_acrobatics",
+        &[flag(Poe1Quantity::SuppressionToSpellDodge)],
+    ),
     (
         "keystone_blood_magic",
         &[

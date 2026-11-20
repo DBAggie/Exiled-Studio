@@ -215,7 +215,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ei: Lightning Purist and Pain Attunement, `conditions::LOW_LIFE` and `IGNITED` from their checks, movement speed on low life and while ignited; field markers no longer shadow a row (P6-11eg's flask movement row), with a test (`docs/phase-6/stat-mop-up.md`, "P6-11ei")
 - [x] P6-11ej: Chaos Inoculation: life 1, chaos damage taken 100% less, life gained as energy shield 1, `FullLife` from the allocated keystone (`docs/phase-6/stat-mop-up.md`, "P6-11ej")
 - [x] P6-11ek: Iron Reflexes: evasion to armour with each shared increase counted once (`ArmourAndEvasionShared`, with a guard test), no evasion from Dexterity (`docs/phase-6/stat-mop-up.md`, "P6-11ek")
-- [ ] Keystones left as reasons (one build each): Acrobatics
+- [x] P6-11el: Acrobatics: suppression 0, half of it as spell dodge up to 75%, read by the estimate's chance not to be hit (`docs/phase-6/stat-mop-up.md`, "P6-11el"). The keystones the public and corpus builds left are all mapped.
 - [ ] Two conditions on one state row: "#% increased Area Damage while wielding a Two Handed Melee Weapon" (`UsingTwoHandedWeapon` and `UsingMeleeWeapon`)
 - [ ] Curse and travel skill flags: "Curse Skills have #% increased Cast Speed" (`KeywordFlag.Curse`), "#% increased Cooldown Recovery Rate of Travel Skills" (`SkillType.Travel`)
 - [ ] Autoexertion's reservation in a community Slayer: PoB reserves 118 for its General's Cry (20% of 714 at 21% efficiency), the engine 126 (the build's 11%, as its other skills). Find PoB's extra 10% efficiency for that warcry

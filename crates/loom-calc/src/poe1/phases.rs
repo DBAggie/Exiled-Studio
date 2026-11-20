@@ -999,6 +999,15 @@ fn spell_block(
     )?;
     let cap = constant(calc, "suppression-chance-cap", SUPPRESSION_CHANCE_CAP)?;
     let value = pair(calc, base, cap, Term::Result, true)?;
+    // Acrobatics (P6-11el): the chance is overridden to 0 (PoB's
+    // `SpellSuppressionChance` OVERRIDE 0 from the keystone).
+    let value = match flag_of(calc, Poe1Quantity::SuppressionToSpellDodge, &mut reasons)? {
+        Some(flag) => {
+            let zero = constant(calc, "acrobatics-suppression", 0.0)?;
+            product(calc, &[flag, zero, value], Term::Result)?
+        }
+        None => value,
+    };
     calc.set(
         Field::Poe1(Poe1Field::SpellSuppressionChance),
         query(value, reasons),

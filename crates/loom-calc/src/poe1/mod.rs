@@ -405,6 +405,10 @@ pub enum Poe1Quantity {
     /// [`phases`]: every evasion row goes to armour (`CalcDefence.lua` 919,
     /// 980).
     IronReflexes,
+    /// Acrobatics (PoB's `ConvertSpellSuppressionToSpellDodge`; P6-11el): a
+    /// `Flag`. Spell suppression is 0 ([`phases`]), and half of its chance is
+    /// the chance to dodge spell hits, at most 75% ([`enemy_hit`]).
+    SuppressionToSpellDodge,
     /// Dexterity grants no evasion (PoB's `NoDexBonusToEvasion`; P6-11ek):
     /// a `Flag`, read by [`phases`] (`CalcPerform.lua` 509).
     NoDexBonusToEvasion,
@@ -1252,6 +1256,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),
             Self::IronReflexes => f.write_str("iron-reflexes"),
+            Self::SuppressionToSpellDodge => f.write_str("suppression-to-spell-dodge"),
             Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
             Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),
             Self::CanWither => f.write_str("can-wither"),

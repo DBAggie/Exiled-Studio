@@ -1045,6 +1045,7 @@ fn maximum_hit(
                     energy_shield,
                     &mut reasons,
                 );
+        let spell_dodge = spell_dodge(calc, &cx, &mut reasons)?;
         let mitigation = super::ehp::Mitigation {
             life_on_block,
             energy_shield_on_block,
@@ -1061,7 +1062,7 @@ fn maximum_hit(
             projectile_evade: field(calc, Field::Poe1(Poe1Field::ProjectileEvadeChance)),
             avoid_projectiles,
             attack_dodge: 0.0,
-            spell_dodge: 0.0,
+            spell_dodge,
             avoid_all: 0.0,
         };
         let character = super::ehp::Character {
@@ -1211,6 +1212,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::SuppressionLucky
                 | Poe1Quantity::ArmourEsRecoveryCap
                 | Poe1Quantity::EsProtectsMana
+                | Poe1Quantity::SuppressionToSpellDodge
                 | Poe1Quantity::TakenFromStoneGolem
                 | Poe1Quantity::PseudoRecoup
                 | Poe1Quantity::ManaRecoup
@@ -1242,6 +1244,43 @@ fn sum(
 /// PoB's `EffectiveSpellSuppressionChance` (`CalcDefence.lua` 1131 to
 /// 1157; P6-11al): lucky, `(1 - (1 - chance)^2) x 100`. Unlucky, extreme
 /// luck, and Unexciting are unmapped stats, so reasons.
+/// Acrobatics' maximum chance to dodge spell hits (PoB's
+/// `SpellDodgeChanceMax` OVERRIDE 75 from the keystone, `ModCache.lua`
+/// 9946).
+const ACROBATICS_SPELL_DODGE_MAX: f64 = 75.0;
+
+/// PoB's `EffectiveSpellDodgeChance` (P6-11el; `CalcDefence.lua` 1124,
+/// 1164 to 1172): with Acrobatics, half the spell suppression chance's
+/// `BASE` sum (before the keystone's override), at most 75%; 0 without
+/// it. The only other source of spell dodge in the game is gone, and
+/// PoB's enemy `CannotBeDodged` comes from a boss skill preset, already a
+/// reason of the estimate ([`UNMODELLED`]).
+fn spell_dodge(
+    calc: &mut Calc<'_>,
+    cx: &crate::condition::QueryContext,
+    reasons: &mut Reasons,
+) -> Result<f64, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::SuppressionToSpellDodge);
+    if !phases::has(calc, q) {
+        return Ok(0.0);
+    }
+    let (store, graph) = calc.parts();
+    let flag = store.flag(graph, q, cx)?;
+    reasons.extend(&flag.reasons);
+    if flag.value == 0.0 {
+        return Ok(0.0);
+    }
+    let suppression = store.sum(
+        graph,
+        Quantity::Poe1(Poe1Quantity::SpellSuppressionChance),
+        Op::Base,
+        cx,
+        Term::Step("suppression-base"),
+    )?;
+    reasons.extend(&suppression.reasons);
+    Ok((suppression.value / 2.0).clamp(0.0, ACROBATICS_SPELL_DODGE_MAX))
+}
+
 fn effective_suppression(
     calc: &mut Calc<'_>,
     chance: f64,
