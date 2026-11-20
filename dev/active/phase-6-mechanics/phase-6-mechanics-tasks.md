@@ -217,7 +217,6 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ek: Iron Reflexes: evasion to armour with each shared increase counted once (`ArmourAndEvasionShared`, with a guard test), no evasion from Dexterity (`docs/phase-6/stat-mop-up.md`, "P6-11ek")
 - [x] P6-11el: Acrobatics: suppression 0, half of it as spell dodge up to 75%, read by the estimate's chance not to be hit (`docs/phase-6/stat-mop-up.md`, "P6-11el"). The keystones the public and corpus builds left are all mapped.
 - [x] P6-11em: attacked and cast a spell recently from their checks or the main skill (`conditions::main_skill_recently`), spell block after casting a spell, five `NoEffect` lines (`docs/phase-6/stat-mop-up.md`, "P6-11em")
-- [ ] PoB's `ExtraAura` lines ("you and nearby Allies ..."), scaled by the aura effect on you (`CalcPerform.lua` 3352 to 3362)
 - [ ] Autoexertion's reservation in a community Slayer: PoB reserves 118 for its General's Cry (20% of 714 at 21% efficiency), the engine 126 (the build's 11%, as its other skills). Find PoB's extra 10% efficiency for that warcry
 - [ ] PoB's full DPS pass with Blood and Sand present gives the main skill another value than its main calculation (Smite's Area Hit: 128.11 against 128.02 in Blood Stance, 95.85 against 96.27 in Sand Stance; equal without Blood and Sand). Find the cause in `Modules/Calcs.lua`'s full DPS environment before a build with both is compared on `FullDPS`
 - [ ] Auras that also affect enemies (`AurasAffectEnemies`, 3 builds): each aura's modifiers on the enemy as a debuff (`CalcPerform.lua` 2451 to 2464); needs each aura row's enemy counterpart
@@ -330,6 +329,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11en: the hands' weapon types (`UsingMeleeWeapon`, `UsingOneHandedWeapon`, `UsingTwoHandedWeapon`), area damage with a two-handed melee weapon, two-handed impales (`docs/phase-6/stat-mop-up.md`, "P6-11en")
 - [x] P6-11eo: the curse keyword (`Flags::KEYWORD_CURSE` from `AppliesCurse`), curse skills' cast speed (`docs/phase-6/stat-mop-up.md`, "P6-11eo")
 - [x] P6-11ep: totems summoned (`StackKind::Totems`, `stacks::totems`, `gems::any_totem_skill`): Hierophant's more damage, mana and life regeneration, and Arcane Surge's effect per totem; the totem and ballista limits (`docs/phase-6/stat-mop-up.md`, "P6-11ep")
+- [x] P6-11eq: PoB's `ExtraAura` lines on you: damage, elemental resistances, block after an attack or a spell (`docs/phase-6/stat-mop-up.md`, "P6-11eq")
+- [ ] The Necromancer's lines with a nearby corpse (`NearbyCorpse`) and Onslaught on warcry (`UsedWarcryRecently`): the conditions to settle
 - [ ] Brands attached to the enemy (`CalcPerform.lua` 1320 to 1332: `BrandsAttachedToEnemy`, `ActiveBrand`) and the lines that read them
 - [ ] Travel skills: a cooldown recovery quantity for the character's skills ("#% increased Cooldown Recovery Rate of Travel Skills", `SkillType.Travel`)
 ## P6-12: combined and full DPS; report

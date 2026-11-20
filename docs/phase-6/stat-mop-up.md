@@ -2827,3 +2827,23 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public:** 0 unexpected. 13 values moved, all toward PoB. A ballista Hierophant's life regeneration went from 43.1 to 239.2 (PoB 315.6) and its mana regeneration from 42.5 to 103.2 (PoB 115.4); its damage and a Holy Flame Totem Hierophant's moved too.
 - **Corpus:** 0 unexpected. 5 values moved, 2 toward PoB: one build's life and mana regeneration. **Three moved away:** that build's DPS, where PoB has 0: PoB computes no damage for its main skill, a gap from before this step.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11eq: "you and nearby allies" lines (PoB's `ExtraAura`)
+
+**PoB:** a line "you and nearby Allies ..." is an `ExtraAura` list mod (`CalcPerform.lua` 3352 to 3362). Unless it is for allies only, its mod applies to you, scaled by `(1 + (BuffEffectOnSelf + AuraEffectOnSelf) INC / 100) x MORE`. A condition on the line is evaluated on you.
+
+**The engine:**
+- **Rows:** the mod on you at scale 1:
+  - "You and nearby Allies deal #% increased Damage" (`Damage` INC), a `HIT_ROWS` row;
+  - "You and nearby Allies have +#% to Elemental Resistances" (each elemental resistance BASE), a `ROWS` row;
+  - "If you've Attacked Recently, you and nearby Allies have +#% Chance to Block Attack Damage" and "If you've Cast a Spell Recently, ... Spell Damage" (`BlockChance`, `SpellBlockChance` BASE under P6-11em's conditions), two `STATE_ROWS` rows.
+- **The scale:** no stat the engine maps is `BuffEffectOnSelf` or `AuraEffectOnSelf`. "#% increased Effect of Buffs on you" stays a reason (`gems::DEPENDS_ON`, P6-11k), as does any other such stat. So the scale is 1 wherever the fields are complete, as for the gems' auras.
+- **Left as reasons:** the Necromancer's lines with a nearby corpse (PoB's `NearbyCorpse` multiplier, unsettled) and Onslaught on warcry (`UsedWarcryRecently`, unsettled).
+
+**Evidence** (`b-ct`, against P6-11ep's run):
+- **Public:** 0 unexpected. 23 values moved, all toward PoB, 13 now equal:
+  - an Animate Guardian Guardian's attack block (46 to 71) and spell block (51 to 78), its configured damage chance, and its mana regeneration;
+  - a Forged Frostbearer Necromancer's fire, cold, and lightning resistances (59 or 60 to 80) and their hit and over-time damage taken;
+  - both builds' defence estimates moved toward PoB.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -1885,6 +1885,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // P6-11eq: "You and nearby Allies deal #% increased Damage" (PoB's
+    // `ExtraAura` of `Damage` INC: on you, scaled by the buff and aura
+    // effect on you, both unmapped, so reasons when present).
+    (
+        "damage_+%_for_you_and_allies_affected_by_your_auras",
+        &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
+    ),
     // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
     (
         "damage_+%_with_bow_skills",
@@ -5001,6 +5008,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::STATIONARY,
         )],
     ),
+    // P6-11eq: "If you've Attacked Recently, you and nearby Allies have +#% Chance to
+    // Block Attack Damage" (PoB's `ExtraAura` of `BlockChance` BASE under
+    // `AttackedRecently`).
+    (
+        "you_and_allies_additional_block_%_if_have_attacked_recently",
+        &[(BLOCK, Op::Base, NONE, conditions::ATTACKED_RECENTLY)],
+    ),
+    // P6-11eq: "If you've Cast a Spell Recently, you and nearby Allies have +#%
+    // Chance to Block Spell Damage" (PoB's `ExtraAura` of `SpellBlockChance`
+    // BASE under `CastSpellRecently`).
+    (
+        "you_and_allies_additional_spell_block_%_if_cast_spell_recently",
+        &[(SPELL_BLOCK, Op::Base, NONE, conditions::CAST_SPELL_RECENTLY)],
+    ),
 ];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
@@ -5895,6 +5916,16 @@ pub const ROWS: &[Row] = &[
             Op::Base,
             1.0,
         )],
+    ),
+    // P6-11eq: "You and nearby Allies have +#% to Elemental Resistances"
+    // (PoB's `ExtraAura` of `ElementalResist` BASE, as the damage one).
+    (
+        "elemental_resistances_+%_for_you_and_allies_affected_by_your_auras",
+        &[
+            (FIRE, Op::Base, 1.0),
+            (COLD, Op::Base, 1.0),
+            (LIGHTNING, Op::Base, 1.0),
+        ],
     ),
     // P6-11dh: "Elemental Resistances are capped by your highest Maximum
     // Elemental Resistance instead" (`ElementalResistMaxIsHighestResistMax`
@@ -10686,6 +10717,20 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11eq: block for you and allies after an attack or a spell.
+            (
+                "you_and_allies_additional_block_%_if_have_attacked_recently",
+                vec![config(BLOCK, Op::Base, NONE, conditions::ATTACKED_RECENTLY)],
+            ),
+            (
+                "you_and_allies_additional_spell_block_%_if_cast_spell_recently",
+                vec![config(
+                    SPELL_BLOCK,
+                    Op::Base,
+                    NONE,
+                    conditions::CAST_SPELL_RECENTLY,
                 )],
             ),
             // P6-11en: area damage with a two-handed melee weapon.
