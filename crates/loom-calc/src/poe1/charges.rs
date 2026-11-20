@@ -130,6 +130,9 @@ pub enum PerCharge {
     MoreDamage,
     /// Increased spell damage (`Damage` INC with `ModFlag.Spell`).
     SpellDamage,
+    /// Increased wand damage (`Damage` INC with `ModFlag.Wand` and `Hit`;
+    /// P6-11ef).
+    WandDamage,
     /// Increased critical strike chance (`CritChance` INC).
     CritChance,
     /// Critical strike multiplier (`CritMultiplier` BASE).
@@ -166,6 +169,7 @@ impl PerCharge {
             Self::Damage => "per.damage",
             Self::MoreDamage => "per.more-damage",
             Self::SpellDamage => "per.spell-damage",
+            Self::WandDamage => "per.wand-damage",
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
             Self::Evasion => "per.evasion",
@@ -189,6 +193,11 @@ impl PerCharge {
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE),
             Self::MoreDamage => (Quantity::Damage, Op::More, Flags::NONE),
             Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL),
+            Self::WandDamage => (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::WAND.union(Flags::HIT),
+            ),
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
             Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
@@ -428,6 +437,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "support_power_charge_on_crit_damage_+%_final_per_power_charge",
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::MoreDamage),
+    ),
+    // P6-11ef: "#% increased Wand Damage per Power Charge" (`Damage` INC
+    // with `ModFlag.Wand` and `Hit` per `Multiplier:PowerCharge`).
+    (
+        "wand_damage_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::WandDamage),
     ),
 ];
 
@@ -744,6 +760,8 @@ mod tests {
         // field).
         "area_of_effect_+%_per_endurance_charge",
         "stun_duration_+%_per_endurance_charge",
+        // P6-11ef: area per power charge (no slice field).
+        "skill_area_of_effect_+%_per_power_charge",
         "add_power_charge_on_kill_%_chance",
         // P6-11do: Power Charge On Critical's chance (the count is the
         // config's).

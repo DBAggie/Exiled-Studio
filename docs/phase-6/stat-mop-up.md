@@ -2610,3 +2610,29 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11ef: cold conversion, penetration, added fire and cold to spells and attacks, throwing and totem cast speed, wand damage per power charge
+
+**PoB:**
+- "#% of Physical Damage Converted to Cold Damage" is `PhysicalDamageConvertToCold` BASE, as the fire and lightning ones.
+- **Penetration:** "Attack Damage Penetrates #% of Enemy Elemental Resistances" and "Damage Penetrates #% of Enemy Elemental Resistances" are `ElementalPenetration` BASE, the first with `ModFlag.Attack`.
+- **Added damage:** "Adds # to # Fire Damage to Spells and Attacks" and its cold twin are `FireMin`/`FireMax` (`ColdMin`/`ColdMax`) BASE with `KeywordFlag.Attack` or `Spell`. The engine gives each line an attack row and a spell row; no skill is both, so no skill gets it twice.
+- **Speeds:** "#% increased Trap and Mine Throwing Speed" is `TrapThrowingSpeed` and `MineLayingSpeed` INC. "Spells Cast by Totems have #% increased Cast Speed" is `Speed` INC with `ModFlag.Spell`, `Cast`, and `KeywordFlag.Totem`.
+- "#% increased Wand Damage per Power Charge" is `Damage` INC with `ModFlag.Wand` and `Hit` per `Multiplier:PowerCharge`.
+
+**The engine:**
+- **Rows:** nine `HIT_ROWS` rows; `poe1::charges` gains `PerCharge::WandDamage` and its modifier row.
+- **`NoEffect`:**
+  - `area`: area of effect for melee skills, warcries, while wielding a two handed melee weapon, and per power charge. The per-charge line is listed in `charges`' checked `NoEffect` rows.
+  - `no-slice`: the trap and mine limits (`ActiveTrapLimit`, `ActiveMineLimit`). PoB shows them, and only its "for each trap" and "for each mine" lines read them; no slice field does.
+- **Left as reasons:**
+  - Flask duration, local and global. A recovery flask's recovery reads it (`poe1::flasks`, `DURATION_STATS`).
+  - "#% increased Area Damage while wielding a Two Handed Melee Weapon". It needs two conditions at once (`UsingTwoHandedWeapon` and `UsingMeleeWeapon`), which a state row does not hold yet.
+  - Curse cast speed and travel skills' cooldown. The engine has no curse or travel skill flag yet.
+  - "#% increased Damage per Summoned Golem". Found on the way: PoB's `PerStat` reads `output.ActiveGolemLimit` (`ModStore.lua` 316), and no PoB module sets that output, so the line adds nothing in PoB. It stays guarded by `NO_EFFECT_DEPENDS_ON` (P3-8n).
+
+**Evidence** (`b-ct`, against P6-11ee's run):
+- **Public:** 0 unexpected. 26 values moved, all toward PoB: the speed and damage of a mine Assassin and a Holy Flame Totem Hierophant, and the damage of a ballista Hierophant, a Shock Nova Hierophant, a Kinetic Blast Necromancer, and a cast-on-crit build.
+- **Corpus:** 0 unexpected. 13 values moved, 12 toward PoB.
+- **One moved away:** a corpus build's poison DPS (179 to 143, against PoB's 548). Its physical damage is now partly converted to cold, which leaves less physical damage to poison; PoB converts it the same way. PoB's higher poison was a gap before this step, from another cause.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+

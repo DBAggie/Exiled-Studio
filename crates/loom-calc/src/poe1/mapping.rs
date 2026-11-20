@@ -1273,6 +1273,34 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11ef: "Attack Damage Penetrates #% of Enemy Elemental Resistances"
+    // (`ElementalPenetration` BASE with `ModFlag.Attack`).
+    (
+        "base_attack_damage_penetrates_elemental_resist_%",
+        &[
+            (
+                Quantity::Penetration(FIRE_T),
+                Op::Base,
+                1.0,
+                Flags::ATTACK,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(COLD_T),
+                Op::Base,
+                1.0,
+                Flags::ATTACK,
+                NONE,
+            ),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                Flags::ATTACK,
+                NONE,
+            ),
+        ],
+    ),
     // P6-10b part 8: "Attack Skills Cost Life instead of #% of Mana
     // Cost" (`HybridManaAndLifeCost_Life` BASE with attacks).
     (
@@ -1421,12 +1449,40 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::WEAPON_MELEE.union(Flags::UNARMED),
         )],
     ),
+    // P6-11ef: "Damage Penetrates #% of Enemy Elemental Resistances"
+    // (`ElementalPenetration` BASE).
+    (
+        "base_penetrate_elemental_resistances_%",
+        &[
+            (Quantity::Penetration(FIRE_T), Op::Base, 1.0, NONE, NONE),
+            (Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
     // P6-11n: "#% of Physical Damage Converted to Chaos Damage"
     // (`PhysicalDamageConvertToChaos` BASE).
     (
         "base_physical_damage_%_to_convert_to_chaos",
         &[(
             Quantity::Poe1(Poe1Quantity::Conversion(PHYS, CHAOS_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // P6-11ef: "#% of Physical Damage Converted to Cold Damage"
+    // (`PhysicalDamageConvertToCold` BASE), as the fire one.
+    (
+        "base_physical_damage_%_to_convert_to_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Conversion(PHYS, COLD_T)),
             Op::Base,
             1.0,
             NONE,
@@ -2598,6 +2654,40 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    (
+        "spell_and_attack_maximum_added_cold_damage",
+        &[
+            (added(COLD_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE),
+            (added(COLD_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE),
+        ],
+    ),
+    (
+        "spell_and_attack_maximum_added_fire_damage",
+        &[
+            (added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE),
+            (added(FIRE_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE),
+        ],
+    ),
+    // P6-11ef: "Adds # to # Cold Damage to Spells and Attacks" (`ColdMin`
+    // and `ColdMax` BASE with `KeywordFlag.Attack` or `Spell`): a
+    // row each, as no skill is both.
+    (
+        "spell_and_attack_minimum_added_cold_damage",
+        &[
+            (added(COLD_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE),
+            (added(COLD_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE),
+        ],
+    ),
+    // P6-11ef: "Adds # to # Fire Damage to Spells and Attacks" (`FireMin`
+    // and `FireMax` BASE with `KeywordFlag.Attack` or `Spell`): a
+    // row each, as no skill is both.
+    (
+        "spell_and_attack_minimum_added_fire_damage",
+        &[
+            (added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE),
+            (added(FIRE_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE),
+        ],
+    ),
     // P3-8n: "Spells have a #% chance to deal Double Damage" (the same, with
     // `ModFlag.Spell`).
     (
@@ -3174,6 +3264,39 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ATTACK.union(Flags::KEYWORD_TOTEM),
             NONE,
         )],
+    ),
+    // P6-11ef: "Spells Cast by Totems have #% increased Cast Speed" (`Speed`
+    // INC with `ModFlag.Spell`, `Cast`, and `KeywordFlag.Totem`).
+    (
+        "totem_skill_cast_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::SPELL.union(Flags::CAST).union(Flags::KEYWORD_TOTEM),
+            NONE,
+        )],
+    ),
+    // P6-11ef: "#% increased Trap and Mine Throwing Speed"
+    // (`TrapThrowingSpeed` and `MineLayingSpeed` INC).
+    (
+        "trap_and_mine_throwing_speed_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::TrapThrowingSpeed),
+                Op::Increased,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::MineLayingSpeed),
+                Op::Increased,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
     ),
     (
         "trap_damage_+%",
@@ -7535,6 +7658,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("melee_attack_number_of_spirit_strikes", "targeting"),
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
+    // P6-11ef: area of effect for melee skills, warcries, while wielding a two
+    // handed melee weapon, and per power charge (`AreaOfEffect` INC): no slice
+    // field reads area.
+    ("melee_skills_area_of_effect_+%", "area"),
     ("mercenary_can_use_unique_amulet", "no-slice"),
     ("mercenary_can_use_unique_belt", "no-slice"),
     ("mercenary_can_use_unique_gloves", "no-slice"),
@@ -7590,6 +7717,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // only with `SequentialProjectiles` (`CalcOffence.lua` 769 to 772), a
     // skill base mod (unvetted) or Barrage's `projectiles_barrage`, a guard.
     ("number_of_additional_projectiles", "projectile-count"),
+    // P6-11ef: the trap and mine limits (`ActiveTrapLimit`, `ActiveMineLimit`
+    // BASE): PoB shows them and its "for each trap" and "for each mine" lines
+    // read them; no slice field does.
+    ("number_of_additional_remote_mines_allowed", "no-slice"),
+    ("number_of_additional_traps_allowed", "no-slice"),
     // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
     // lines, each a guard.
     ("number_of_chains", "chain-count"),
@@ -7640,6 +7772,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("show_number_of_projectiles", "display"),
     // P6-11u: brands are not computed (`hit`).
     ("sigil_duration_+%", "skill-duration"),
+    ("skill_area_of_effect_+%_per_power_charge", "area"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -7746,6 +7879,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
         "pvp",
     ),
+    ("two_handed_melee_area_of_effect_+%", "area"),
     ("two_handed_melee_stun_duration_+%", "stun"),
     ("unaffected_by_burning_ground", "ground-on-self"),
     // P6-11n: "Unaffected by Ignite" (`SelfIgniteEffect` MORE -100): ignite on
@@ -7756,6 +7890,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "wand_attacks_fire_an_additional_projectile",
         "projectile-count",
     ),
+    ("warcry_skill_area_of_effect_+%", "area"),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
