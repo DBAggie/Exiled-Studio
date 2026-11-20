@@ -6869,6 +6869,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_active_skill_gem_level_+", "gem-level"),
     // P6-11ck: Enhance's "Supported Skills have +#% to Quality": the active\ngem's quality, read by `skill::supported_level`.
     ("supported_active_skill_gem_quality_%", "gem-level"),
+    // P6-11cl: the awakened supports' "Supported <type> Skills have +# to Level":\nthe active gem's level for a skill of that type, read by\n`skill::supported_level` (`SUPPORTED_TYPED_LEVEL_STATS`).
+    ("supported_aura_skill_gem_level_+", "gem-level"),
+    ("supported_chaos_skill_gem_level_+", "gem-level"),
+    ("supported_cold_skill_gem_level_+", "gem-level"),
+    ("supported_curse_skill_gem_level_+", "gem-level"),
+    ("supported_elemental_skill_gem_level_+", "gem-level"),
+    ("supported_fire_skill_gem_level_+", "gem-level"),
+    ("supported_lightning_skill_gem_level_+", "gem-level"),
+    ("supported_minion_skill_gem_level_+", "gem-level"),
+    ("supported_physical_skill_gem_level_+", "gem-level"),
+    ("supported_strike_skill_gem_level_+", "gem-level"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is

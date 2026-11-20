@@ -4515,8 +4515,12 @@ mod tests {
         ];
         for id in ids {
             for word in GUARDED_WORDS {
+                // P6-11cl: the typed supported levels, read the same way.
+                let typed = super::super::skill::SUPPORTED_TYPED_LEVEL_STATS
+                    .iter()
+                    .any(|(stat, _)| *stat == id);
                 assert!(
-                    !id.contains(word) || checked.contains(&id),
+                    !id.contains(word) || checked.contains(&id) || typed,
                     "{id}: revisit poe1::gems"
                 );
             }

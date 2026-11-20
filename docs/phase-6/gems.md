@@ -375,3 +375,17 @@ Enhance's "Supported Skills have +#% to Quality" (`supported_active_skill_gem_qu
 **Evidence** (`b-ct`, against P6-11cj's run):
 - **Public:** 0 unexpected; no value moved (the build with Enhance has other reasons).
 - **Corpus:** 0 unexpected; 7 values toward PoB, none away.
+
+## P6-11cl: the typed supported levels
+
+The awakened supports' "+# to Level of Supported <Type> Skill Gems" are PoB's `SupportedGemProperty` `level`, each with a `SkillType` tag (`SkillStatMap.lua` 2284 to 2330).
+- **The types:** aura, chaos, cold, fire, lightning, minion, physical, strike (`MeleeSingleTarget`).
+- **Two keyword variants:** curse is `KeywordFlag.Curse`, the `AppliesCurse` type. Elemental is the fire, cold, or lightning keyword.
+- **The engine:** `skill::SUPPORTED_TYPED_LEVEL_STATS` names each stat and the types of which the skill needs one. `supported_level` reads them against the skill's types after its supports added theirs, as PoB's `activeSkill.skillTypes`. Each is a `NoEffect` row (`gem-level`).
+- **Tests:** a real-bundle test checks the type names, and the gems guard accepts the table.
+
+**Fixture** `ice-nova-awakened-added-cold-witch.xml`: Ice Nova with Awakened Added Cold Damage at level 5 (+1 cold skill level). Every computed field equals PoB's.
+
+**data-parity:** `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ck's run): public and corpus 0 unexpected; no value moved (no other build has a typed level).

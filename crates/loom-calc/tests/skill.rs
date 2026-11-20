@@ -563,6 +563,12 @@ fn real_skill_types_should_name_the_keyword_types() {
         .iter()
         .map(|(name, _)| *name)
         .chain([TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])
+        // P6-11cl: the typed supported levels' types.
+        .chain(
+            loom_calc::poe1::skill::SUPPORTED_TYPED_LEVEL_STATS
+                .iter()
+                .flat_map(|(_, types)| types.iter().copied()),
+        )
     {
         assert!(
             skills.skill_types.iter().any(|t| t.id == name),

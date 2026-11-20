@@ -706,6 +706,28 @@ pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
 /// Skills have +# to Level", Empower's; P6-11cj).
 pub const SUPPORTED_LEVEL_STAT: &str = "supported_active_skill_gem_level_+";
 
+/// The support stats that raise the supported skill's level only for some
+/// skill types (P6-11cl; PoB's `SupportedGemProperty` `level` with a
+/// `SkillType` tag, `SkillStatMap.lua` 2284 to 2330): the stat and the
+/// types of which the skill needs one. Curse is PoB's `KeywordFlag.Curse`
+/// (the `AppliesCurse` type), elemental its fire, cold, or lightning
+/// keyword.
+pub const SUPPORTED_TYPED_LEVEL_STATS: &[(&str, &[&str])] = &[
+    ("supported_aura_skill_gem_level_+", &["Aura"]),
+    ("supported_chaos_skill_gem_level_+", &["Chaos"]),
+    ("supported_cold_skill_gem_level_+", &["Cold"]),
+    ("supported_curse_skill_gem_level_+", &["AppliesCurse"]),
+    (
+        "supported_elemental_skill_gem_level_+",
+        &["Cold", "Fire", "Lightning"],
+    ),
+    ("supported_fire_skill_gem_level_+", &["Fire"]),
+    ("supported_lightning_skill_gem_level_+", &["Lightning"]),
+    ("supported_minion_skill_gem_level_+", &["Minion"]),
+    ("supported_physical_skill_gem_level_+", &["Physical"]),
+    ("supported_strike_skill_gem_level_+", &["MeleeSingleTarget"]),
+];
+
 /// The support stat that raises the supported skill's quality ("Supported
 /// Skills have +#% to Quality", Enhance's; P6-11ck).
 pub const SUPPORTED_QUALITY_STAT: &str = "supported_active_skill_gem_quality_%";
@@ -718,6 +740,7 @@ fn supported_level<'d>(
     active: GemEffectRef<'d>,
     supports: &[GemEffectRef<'_>],
     from_gem: bool,
+    types: &BTreeSet<String>,
     data: &dyn CalcData,
 ) -> GemEffectRef<'d> {
     if !from_gem || active.effect.support {
@@ -733,6 +756,12 @@ fn supported_level<'d>(
             level += v;
         } else if stat == SUPPORTED_QUALITY_STAT {
             quality += v;
+        } else if let Some((_, needs)) = SUPPORTED_TYPED_LEVEL_STATS
+            .iter()
+            .find(|(id, _)| *id == stat)
+            && needs.iter().any(|t| types.contains(*t))
+        {
+            level += v;
         }
     }
     GemEffectRef {
@@ -798,7 +827,7 @@ pub fn main_skill<'d>(
         .slot
         .as_ref()
         .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
-    let active_gem = supported_level(active_gem, &applied, from_gem, data);
+    let active_gem = supported_level(active_gem, &applied, from_gem, &types, data);
     Ok(MainSkill {
         group: index,
         active_gem,
@@ -922,7 +951,7 @@ pub fn group_skills<'d>(
             }
         }
         out.push(GroupSkill {
-            active_gem: supported_level(*active_gem, &applied, from_gem, data),
+            active_gem: supported_level(*active_gem, &applied, from_gem, &types, data),
             active,
             global_off: *global_off,
             supports: applied,
