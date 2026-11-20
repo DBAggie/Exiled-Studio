@@ -183,6 +183,13 @@ pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
 /// The count of enemies killed recently, which sets [`KILLED_RECENTLY`]
 /// above 0 (`ConfigOptions.lua`).
 pub const KILLED_RECENTLY_COUNT_INPUT: &str = "multiplierKilledRecently";
+/// "if you've used a Warcry Recently" (PoB's `UsedWarcryRecently`, from
+/// `conditionUsedWarcryRecently` or a `multiplierWarcryUsedRecently` above
+/// 0, `ConfigOptions.lua` 1558, 1612; P6-11ev).
+pub const USED_WARCRY_RECENTLY: &str = "UsedWarcryRecently";
+/// The count of warcries used recently, which sets
+/// [`USED_WARCRY_RECENTLY`] above 0.
+pub const WARCRY_RECENTLY_COUNT_INPUT: &str = "multiplierWarcryUsedRecently";
 
 /// The auras whose `AffectedBy<Name>` condition a row reads (P6-11o),
 /// each with its condition: PoB sets it while the aura affects the
@@ -260,6 +267,8 @@ pub const CHECKS: &[(&str, &str)] = &[
         STOPPED_TAKING_DOT_RECENTLY,
     ),
     (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
+    // P6-11ev: used a warcry recently; a warcry count too (`settle`).
+    ("conditionUsedWarcryRecently", USED_WARCRY_RECENTLY),
     ("conditionUsingFlask", USING_FLASK),
 ];
 
@@ -464,6 +473,23 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     // `multiplierKilledRecently`, `ConfigOptions.lua`; P6-11p).
     let key = ConditionKey::new(KILLED_RECENTLY);
     let count = match set.and_then(|s| last(s, KILLED_RECENTLY_COUNT_INPUT, ConfigInputKind::Input))
+    {
+        None => Some(false),
+        Some(ConfigValue::Number(n)) => Some(n.value().0 > 0.0),
+        Some(_) => None,
+    };
+    match (out.get(&key).copied(), count) {
+        (Some(true), _) | (_, Some(true)) => {
+            out.insert(key, true);
+        }
+        (Some(false), Some(false)) => {}
+        _ => {
+            out.remove(&key);
+        }
+    }
+    // Used a warcry recently (P6-11ev): a warcry count above 0 sets it too.
+    let key = ConditionKey::new(USED_WARCRY_RECENTLY);
+    let count = match set.and_then(|s| last(s, WARCRY_RECENTLY_COUNT_INPUT, ConfigInputKind::Input))
     {
         None => Some(false),
         Some(ConfigValue::Number(n)) => Some(n.value().0 > 0.0),

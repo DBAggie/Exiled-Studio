@@ -99,6 +99,9 @@ pub enum StackKind {
     HitsTakenRecently,
     /// Totems summoned (P6-11ep; PoB's `TotemsSummoned`, [`totems`]).
     Totems,
+    /// Nearby corpses (P6-11ev; PoB's `Multiplier:NearbyCorpse`, the
+    /// config's `multiplierNearbyCorpse`).
+    NearbyCorpses,
 }
 
 impl StackKind {
@@ -116,6 +119,7 @@ impl StackKind {
             Self::NearbyEnemies => "nearby-enemies",
             Self::HitsTakenRecently => "hits-taken-recently",
             Self::Totems => "totems",
+            Self::NearbyCorpses => "nearby-corpses",
         }
     }
 }
@@ -196,6 +200,16 @@ pub enum PerStack {
     /// Increased effect of Arcane Surge on you (`ArcaneSurgeEffect` INC;
     /// P6-11ep).
     ArcaneSurgeEffect,
+    /// More damage with at least one stack (`Damage` MORE with a
+    /// `MultiplierThreshold` of 1; P6-11ev).
+    DamageMoreWithAny,
+    /// The enemy's increased damage with at least one stack (the enemy's
+    /// `Damage` INC with a `MultiplierThreshold` of 1; P6-11ev).
+    EnemyDamageWithAny,
+    /// Energy shield regeneration, percent per minute (`EnergyShieldRegenPercent`
+    /// BASE per second, the stat per minute), its total at most 2% per
+    /// second (`limit` 2, `limitTotal`; P6-11ev).
+    EnergyShieldRegenPercentPerMinuteUpTo2,
 }
 
 impl PerStack {
@@ -217,6 +231,11 @@ impl PerStack {
             Self::ManaRegenPercentPerMinute => "per.mana-regen-percent-per-minute",
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
             Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
+            Self::DamageMoreWithAny => "per.damage-more-with-any",
+            Self::EnemyDamageWithAny => "per.enemy-damage-with-any",
+            Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
+                "per.energy-shield-regen-percent-per-minute-up-to-2"
+            }
         }
     }
 
@@ -270,6 +289,21 @@ impl PerStack {
             Self::ArcaneSurgeEffect => (
                 Quantity::Poe1(Poe1Quantity::ArcaneSurgeEffect),
                 Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::DamageMoreWithAny => (Quantity::Damage, Op::More, Flags::NONE, Flags::NONE),
+            Self::EnemyDamageWithAny => (
+                Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::EnergyShieldRegenPercentPerMinuteUpTo2 => (
+                Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(
+                    super::Pool::EnergyShield,
+                )),
+                Op::Base,
                 Flags::NONE,
                 Flags::NONE,
             ),
@@ -404,6 +438,31 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Rage,
         StackValue::Intimidate,
     ),
+    // P6-11ev: "With at least one nearby corpse, you and nearby Allies deal #% more
+    // Damage" (PoB's `ExtraAura` of `Damage` MORE, `MultiplierThreshold`
+    // `NearbyCorpse` 1).
+    (
+        "necromancer_damage_+%_final_for_you_and_allies_with_nearby_corpse",
+        StackKind::NearbyCorpses,
+        StackValue::Per(PerStack::DamageMoreWithAny),
+    ),
+    // P6-11ev: "With at least one nearby corpse, nearby Enemies deal #% reduced
+    // Damage" (the enemy's `Damage` INC, `MultiplierThreshold` `NearbyCorpse`
+    // 1).
+    (
+        "necromancer_damage_+%_for_nearby_enemies_with_nearby_corpse",
+        StackKind::NearbyCorpses,
+        StackValue::Per(PerStack::EnemyDamageWithAny),
+    ),
+    // P6-11ev: "For each nearby corpse, you and nearby Allies Regenerate #% of
+    // Energy Shield per second, up to 2.0% per second" (PoB's `ExtraAura` of
+    // `EnergyShieldRegenPercent` BASE per `NearbyCorpse`, `limit` 2,
+    // `limitTotal`).
+    (
+        "necromancer_energy_shield_regeneration_rate_per_minute_%_for_you_and_allies_per_nearby_corpse",
+        StackKind::NearbyCorpses,
+        StackValue::Per(PerStack::EnergyShieldRegenPercentPerMinuteUpTo2),
+    ),
     // P6-11ep: "+# to maximum number of Summoned Totems" (`ActiveTotemLimit`
     // BASE).
     (
@@ -486,7 +545,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 7] = [
+pub const INPUTS: [&str; 8] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -494,7 +553,16 @@ pub const INPUTS: [&str; 7] = [
     SPELLS_INPUT,
     NEARBY_INPUT,
     TOTEMS_INPUT,
+    CORPSES_INPUT,
 ];
+
+/// The config's count of nearby corpses (`ConfigOptions.lua` 1125:
+/// `Multiplier:NearbyCorpse` BASE in combat).
+pub const CORPSES_INPUT: &str = "multiplierNearbyCorpse";
+
+/// The most energy shield regenerated per second from nearby corpses, in
+/// percent per minute (2% per second; P6-11ev).
+const CORPSE_ES_REGEN_LIMIT: f64 = 120.0;
 
 /// The config's count of summoned totems, when not the maximum
 /// (`ConfigOptions.lua` 1112: `TotemsSummoned` OVERRIDE in combat).
@@ -883,6 +951,63 @@ pub fn totems(
         None => 0.0,
     };
     apply(ingest, &effects, multiplier(n), None);
+}
+
+/// Adds the effects per nearby corpse (P6-11ev; module docs): the config's
+/// `multiplierNearbyCorpse`. "With at least one nearby corpse" lines
+/// (`MultiplierThreshold` 1) apply once from 1; the energy shield
+/// regeneration per corpse totals at most 2% per second.
+pub fn nearby_corpses(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::NearbyCorpses,
+                    StackValue::Per(_)
+                ))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let n = match count(set, CORPSES_INPUT, false) {
+        Ok(c) => multiplier(c.unwrap_or(0.0)),
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: CORPSES_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    if n == 0.0 {
+        return;
+    }
+    for e in effects {
+        let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity else {
+            continue;
+        };
+        let value = match p {
+            PerStack::DamageMoreWithAny | PerStack::EnemyDamageWithAny => e.value,
+            PerStack::EnergyShieldRegenPercentPerMinuteUpTo2 => {
+                (e.value * n).min(CORPSE_ES_REGEN_LIMIT)
+            }
+            _ => e.value * n,
+        };
+        let (quantity, op, all, any) = p.target();
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions: Conditions::none().with_all(all).with_any(any),
+            source: e.source.clone(),
+        });
+    }
 }
 
 /// Each effect per stack as its target times `count`, with its source (or

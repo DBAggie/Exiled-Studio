@@ -337,14 +337,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionUsedWarcryInPast8Seconds",
         &["Condition:UsedWarcryInPast8Seconds"],
     ),
-    (
-        "conditionUsedWarcryRecently",
-        &[
-            "Condition:UsedWarcryRecently",
-            "Condition:UsedWarcryInPast8Seconds",
-            "Condition:UsedSkillRecently",
-        ],
-    ),
     ("configResonanceCount", &["Multiplier:ResonanceCount"]),
     (
         "configSpectralTigerCount",
@@ -406,7 +398,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierMineDetonatedRecently",
         &["Multiplier:MineDetonatedRecently"],
     ),
-    ("multiplierNearbyCorpse", &["Multiplier:NearbyCorpse"]),
     (
         "multiplierNearbyRareOrUniqueEnemies",
         // Its share of `Multiplier:NearbyEnemies` is `poe1::stacks`'s
@@ -421,9 +412,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("multiplierSummonedMinion", &["Multiplier:SummonedMinion"]),
     (
         "multiplierWarcryUsedRecently",
+        // Its `UsedWarcryRecently` is settled with the check's (P6-11ev,
+        // `poe1::conditions`); the others are no row's.
         &[
             "Multiplier:WarcryUsedRecently",
-            "Condition:UsedWarcryRecently",
             "Condition:UsedWarcryInPast8Seconds",
             "Condition:UsedSkillRecently",
         ],

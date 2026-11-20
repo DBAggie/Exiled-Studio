@@ -115,6 +115,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::stacks::aura_or_herald(input, ingest);
     // Totems summoned (P6-11ep): before the buffs (Arcane Surge's effect).
     super::stacks::totems(input, active_config(build), ingest);
+    // Nearby corpses (P6-11ev).
+    super::stacks::nearby_corpses(active_config(build), ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);

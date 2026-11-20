@@ -330,8 +330,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11es: Forbidden Flame and Forbidden Flesh (`ForbiddenNode`, `collect::forbidden_pairs`): the shared ascendancy notable when both jewels require the character's class (`docs/phase-6/stat-mop-up.md`, "P6-11es")
 - [x] P6-11et: mine supports' cost as reservation (`COST_AS_RESERVATION_SUPPORTS`), the main skill's reservation (`docs/phase-6/stat-mop-up.md`, "P6-11et")
 - [x] P6-11eu: PoB-only skills (`gems::POB_ONLY_INERT`, `EnemyExplode`) are no reason outside the main skill and full DPS; Autoexertion's difference explained (a `{custom}` line); the Blood and Sand full DPS drift traced to PoB's shared environment (`docs/phase-6/stat-mop-up.md`, "P6-11eu")
+- [x] P6-11ev: nearby corpses (`StackKind::NearbyCorpses`): the Necromancer's damage, the enemy's damage, energy shield regeneration; `UsedWarcryRecently` from its check or count, Onslaught on warcry (`docs/phase-6/stat-mop-up.md`, "P6-11ev")
 - [ ] Mines' other parts: Blastchain Mine's more mine damage and the detonation rate (`SkillStatMap.lua` mine rows; the main skill's speed for mines, P6-6e)
-- [ ] The Necromancer's lines with a nearby corpse (`NearbyCorpse`) and Onslaught on warcry (`UsedWarcryRecently`): the conditions to settle
 - [ ] Brands attached to the enemy (`CalcPerform.lua` 1320 to 1332: `BrandsAttachedToEnemy`, `ActiveBrand`) and the lines that read them
 - [ ] Travel skills: a cooldown recovery quantity for the character's skills ("#% increased Cooldown Recovery Rate of Travel Skills", `SkillType.Travel`)
 ## P6-12: combined and full DPS; report

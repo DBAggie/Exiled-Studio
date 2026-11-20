@@ -2915,3 +2915,23 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - It stays open: no compared build has both.
 
 **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ev: nearby corpses; used a warcry recently
+
+**PoB:**
+- `Multiplier:NearbyCorpse` is the config's `multiplierNearbyCorpse` (`ConfigOptions.lua` 1125). The Necromancer's lines read it:
+  - "With at least one nearby corpse, you and nearby Allies deal #% more Damage": `ExtraAura` `Damage` MORE, `MultiplierThreshold` 1;
+  - "... nearby Enemies deal #% reduced Damage": the enemy's `Damage` INC, threshold 1;
+  - "For each nearby corpse, you and nearby Allies Regenerate #% of Energy Shield per second, up to 2.0% per second": `ExtraAura` `EnergyShieldRegenPercent` BASE per corpse, `limit` 2, `limitTotal`.
+- `UsedWarcryRecently` comes from `conditionUsedWarcryRecently`, or from a `multiplierWarcryUsedRecently` above 0 (1558, 1612). "When you Warcry, you and nearby Allies gain Onslaught for 4 seconds" is `ExtraAura` `Onslaught` FLAG under it.
+
+**The engine:**
+- **Corpses:** `StackKind::NearbyCorpses`, counted by `stacks::nearby_corpses` from the config's count. The threshold lines apply once from 1 corpse; the regeneration totals at most 120% per minute. Its config input leaves `config::NAMED_ONLY` for `stacks::INPUTS`. The regeneration line leaves `mapping::REGEN_REASONS`.
+- **Warcry:** `conditions::USED_WARCRY_RECENTLY`, from its check or the warcry count, as "killed recently" (P6-11p). The check leaves `NAMED_ONLY`. The count input keeps only the names no row reads.
+- **Row:** Onslaught under it, a `STATE_ROWS` row that `poe1::buffs` applies.
+- **Left as a reason:** "For each nearby corpse, you and nearby Allies Regenerate # Mana" (PoB does not parse it).
+
+**Evidence** (`b-ct`, against P6-11eu's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected. 12 values moved, all toward PoB, 2 now equal. One build's physical damage reduction went from 78 to 80 (equal to PoB), and its maximum hits taken and hit counts moved toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

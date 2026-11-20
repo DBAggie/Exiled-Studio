@@ -5022,6 +5022,18 @@ pub const STATE_ROWS: &[StateRow] = &[
         "you_and_allies_additional_spell_block_%_if_cast_spell_recently",
         &[(SPELL_BLOCK, Op::Base, NONE, conditions::CAST_SPELL_RECENTLY)],
     ),
+    // P6-11ev: "When you Warcry, you and nearby Allies gain Onslaught for 4
+    // seconds" (PoB's `ExtraAura` of `Onslaught` FLAG under
+    // `UsedWarcryRecently`; `poe1::buffs` applies it).
+    (
+        "you_and_nearby_allys_gain_onslaught_for_4_seconds_on_warcry",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Onslaught),
+            Op::Flag,
+            NONE,
+            conditions::USED_WARCRY_RECENTLY,
+        )],
+    ),
 ];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
@@ -8424,21 +8436,15 @@ pub const MOVEMENT_REASONS: &[&str] = &[
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
 /// regeneration field's reason alone. PoB's text for each
-/// (`ModParser.lua`): life per level; energy shield per nearby corpse.
+/// (`ModParser.lua`): life per level. (Energy shield per nearby corpse is
+/// [`super::stacks`]' since P6-11ev.)
 /// (Life per fortification stack is a row since P6-11bu, read by
 /// [`super::regen`] with the stacks.) (Mana with exposure inflicted recently is
 /// `poe1::exposure`'s since P6-11au.) Per
 /// endurance and power charge are [`super::charges`]'s, per uncapped fire
 /// resistance and per spell block chance [`super::regen`]'s (P6-11t).
-pub const REGEN_REASONS: &[(&str, Pool)] = &[
-    ("life_regeneration_rate_per_minute_per_level", Pool::Life),
-    // "For each nearby corpse, you and nearby Allies Regenerate #% of Energy
-    // Shield per second" (PoB's `ExtraAura` per `NearbyCorpse`).
-    (
-        "necromancer_energy_shield_regeneration_rate_per_minute_%_for_you_and_allies_per_nearby_corpse",
-        Pool::EnergyShield,
-    ),
-];
+pub const REGEN_REASONS: &[(&str, Pool)] =
+    &[("life_regeneration_rate_per_minute_per_level", Pool::Life)];
 
 /// Stats that change the base damage reduction in a way the engine does not
 /// model, sorted (P6-10b part 5). Empty since P6-11cg: per hit taken
@@ -10727,6 +10733,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11ev: Onslaught for you and allies on a warcry.
+            (
+                "you_and_nearby_allys_gain_onslaught_for_4_seconds_on_warcry",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Onslaught),
+                    Op::Flag,
+                    NONE,
+                    conditions::USED_WARCRY_RECENTLY,
                 )],
             ),
             // P6-11eq: block for you and allies after an attack or a spell.
