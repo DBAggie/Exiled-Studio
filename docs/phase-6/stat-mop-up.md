@@ -2799,3 +2799,16 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public:** 0 unexpected. 3 values moved, all toward PoB: a Cyclone Slayer's impale DPS and the DPS totals on it.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** a unit test of the hand kinds; the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11eo: the curse keyword; curse skills' cast speed
+
+**PoB:** a skill of `SkillType.AppliesCurse` gets `KeywordFlag.Curse` (`CalcActiveSkill.lua` 379). "Curse Skills have #% increased Cast Speed" is `Speed` INC with `ModFlag.Cast` and `KeywordFlag.Curse`.
+
+**The engine:**
+- **Flag:** `Flags::KEYWORD_CURSE`, set from the main skill's `AppliesCurse` type (`skill::SKILL_TYPE_FLAGS`; the real-bundle test checks the type name).
+- **Row:** one `HIT_ROWS` row.
+- **Left as a reason:** "#% increased Cooldown Recovery Rate of Travel Skills". The engine has no cooldown recovery quantity for the character's skills yet.
+
+**Evidence** (`b-ct`, against P6-11en's run):
+- **Public and corpus:** 0 unexpected; no value moved. No build's main skill is a curse, so the line only stops being a reason.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

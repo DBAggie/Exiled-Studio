@@ -1869,6 +1869,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // P6-11eo: "Curse Skills have #% increased Cast Speed" (`Speed` INC with
+    // `ModFlag.Cast` and `KeywordFlag.Curse`).
+    (
+        "curse_cast_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::CAST.union(Flags::KEYWORD_CURSE),
+            NONE,
+        )],
+    ),
     (
         "damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],

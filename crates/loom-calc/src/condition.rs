@@ -151,6 +151,9 @@ impl Flags {
     pub const SKILL_MARK: Self = Self(1 << 52);
     /// A skill of the `Melee` type (PoB's `SkillType.Melee` tag; P6-11dw).
     pub const SKILL_MELEE: Self = Self(1 << 53);
+    /// A skill that applies a curse (PoB's `KeywordFlag.Curse`, set from
+    /// `SkillType.AppliesCurse`, `CalcActiveSkill.lua` 379; P6-11eo).
+    pub const KEYWORD_CURSE: Self = Self(1 << 54);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not
