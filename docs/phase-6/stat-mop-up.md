@@ -1576,3 +1576,15 @@ While writing this step, a fault showed: without the `reads` entry, the unsettle
 **Evidence** (`b-ct`, against P6-11bp's run):
 - **Public:** 0 unexpected; no value moved. Two builds' life regeneration went from partial (the stat unmapped) to indeterminate: their item's line is text, so its value is unsettled.
 - **Corpus:** unchanged.
+
+## P6-11br: five NoEffect rows
+
+Five stats that change no slice field are `NoEffect` rows. PoB parses none of them:
+- stun immunity while using a chaos skill (`stun`);
+- gem experience (`gem-experience`);
+- projectiles fired in random directions (`targeting`);
+- magic utility flask effects that cannot be removed, and a flask that gains no charges during its effect (`flask`). The effects apply while the flask is on, as the config sets. The charge row is listed in the charges guard (`NO_EFFECT_CHARGE_ROWS`).
+
+"Magic Utility Flasks cannot be Used" stays a reason. PoB ignores it, but the game does not, and the engine applies a magic utility flask's effects.
+
+**Evidence** (`b-ct`, against P6-11bq's run): public and corpus 0 unexpected; no value or state moved (those builds' fields have other reasons).

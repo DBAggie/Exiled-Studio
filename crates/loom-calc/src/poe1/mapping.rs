@@ -6182,6 +6182,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "cannot_be_stunned_if_have_been_stunned_or_blocked_stunning_hit_in_past_2_seconds",
         "stun",
     ),
+    // P6-11br: stun immunity while using a chaos skill (PoB does not parse it).
+    ("cannot_be_stunned_while_using_chaos_skill", "stun"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -6361,6 +6363,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
+    // P6-11br: whether magic utility flask effects can be removed, and\nflask charges during the effect (PoB does not parse them; the effects\napply while the flask is on, as the config sets).
+    (
+        "local_flask_cannot_gain_charges_during_flask_effect",
+        "flask",
+    ),
     // P6-11m: flask charges on consuming a corpse (unparsed).
     (
         "local_flask_gain_X_charges_on_consuming_ignited_corpse",
@@ -6376,6 +6383,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_flask_recovery_speed_+%", "flask"),
     // P6-11m: a flask's taunt on use (unparsed).
     ("local_flask_taunt_enemies_on_use_radius", "flask"),
+    // P6-11br: gem experience (PoB does not parse it).
+    ("local_gem_experience_gain_+%", "gem-experience"),
     // Its effect on the sockets' order is `poe1::sockets`' (a reason).
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
@@ -6391,6 +6400,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
     ),
+    ("magic_utility_flasks_cannot_be_removed", "flask"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks" (`ManaOnHit` BASE).
     ("mana_gain_per_target", "recovery"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks if you've used a Mana Flask in the past 10 seconds" (`ManaOnHit` BASE).
@@ -6475,6 +6485,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("rage_loss_delay_ms", "rage-duration"),
+    // P6-11br: projectile directions (PoB does not parse it).
+    ("random_projectile_direction", "targeting"),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),

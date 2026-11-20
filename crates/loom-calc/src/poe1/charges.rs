@@ -677,6 +677,8 @@ mod tests {
         // P6-11m: a flask charge (`recharge` is not a charge word; this
         // names flask "charges").
         "local_flask_gain_X_charges_on_consuming_ignited_corpse",
+        // P6-11br: flask charges during the flask's effect.
+        "local_flask_cannot_gain_charges_during_flask_effect",
         "gain_power_charge_for_each_second_channeling_spell",
         // A skill's constant stat no stat map reads (P6-6a): not a charge
         // count.
