@@ -197,6 +197,42 @@ fn an_unknown_gem_should_be_skipped_and_a_renamed_one_found_by_name() {
     assert_eq!(unknown_gems(&group(vec![renamed]), &data), [0]);
 }
 
+/// P6-11dm: a support under an old `skillId` is found by its name, which
+/// is its base item's without " Support" (a support has no active skill and
+/// the game's gem effect no name): Enlighten as PoB names it. "Increased
+/// Duration", the game's More Duration now, stays unknown, as PoB's
+/// `FindSkillGem` does not find it either.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_supports_under_old_skill_ids_should_be_found_by_name() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let mut enlighten = gem(
+        Some("Metadata/Items/Gems/SupportGemAdditionalXP"),
+        "SupportAdditionalXP",
+        3,
+        0,
+    );
+    enlighten.name = Some("Enlighten".to_owned());
+    let nova = gem(Some("Metadata/Items/Gems/SkillGemIceNova"), "IceNova", 20, 0);
+    let b = build(vec![group(vec![enlighten, nova])], 1);
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
+    let supports: Vec<_> = m.supports.iter().map(|s| s.effect.id.as_str()).collect();
+    assert_eq!(supports, ["SupportEnlighten"]);
+    let mut duration = gem(
+        Some("Metadata/Items/Gems/SupportGemIncreasedDuration"),
+        "SupportIncreasedDuration",
+        20,
+        0,
+    );
+    duration.name = Some("Increased Duration".to_owned());
+    assert_eq!(unknown_gems(&group(vec![duration]), &data), [0]);
+}
+
 #[test]
 fn the_main_group_should_be_clamped_and_a_missing_gem_named() {
     let data = bundle();

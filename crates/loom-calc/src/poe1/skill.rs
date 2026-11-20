@@ -419,17 +419,22 @@ pub fn gem_variant<'d>(
         .or_else(|| {
             let name = gem.name.as_deref()?.trim();
             // A variant's name; the default variant has none in the game
-            // data, and its name is its active skill's (the gem's base).
+            // data, and its name is its active skill's (the gem's base). A
+            // support has no active skill: its name is its base item's
+            // without " Support", as PoB names its gems (P6-11dm: Enlighten,
+            // Second Wind, Faster Attacks under old `skillId`s).
             let shown = |e: &GemEffect| -> Option<String> {
                 if !e.name.is_empty() {
                     return Some(e.name.clone());
                 }
                 let granted = data.granted_effect(e.granted_effect.as_deref()?)?;
-                Some(
-                    data.active_skill(granted.active_skill.as_deref()?)?
-                        .name
-                        .clone(),
-                )
+                match granted.active_skill.as_deref() {
+                    Some(active) => Some(data.active_skill(active)?.name.clone()),
+                    None => {
+                        let base = data.item_base_name(gem_id.as_str())?;
+                        Some(base.strip_suffix(" Support").unwrap_or(base).to_owned())
+                    }
+                }
             };
             effects().find(|e| {
                 !name.is_empty() && shown(e).is_some_and(|n| n.eq_ignore_ascii_case(name))

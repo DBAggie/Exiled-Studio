@@ -2244,3 +2244,32 @@ All stay reasons.
 - **Corpus:** 0 unexpected; 2 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dm: supports under old skill IDs, found by name
+
+**Found:** builds made before a support's granted effect was renamed carry the old `skillId` with the game's `gemId` and no `variantId`:
+- Enlighten as `SupportAdditionalXP`;
+- Second Wind as `SupportAdditionalCooldown`;
+- Faster Attacks as `SupportFasterAttack`;
+- Void Manipulation, Vicious Projectiles, and the Awakened supports, among others.
+
+PoB's `LoadSkill` misses them by `skillId`, and `ProcessSocketGroup` then finds the gem by its name (`FindSkillGem`, `SkillsTab.lua` 1076). The engine's fallback by name (Phase 6) took a default variant's name from its active skill. A support has none, so these gems were `unmodelled-gem`: the public builds now have 34 fewer such reasons (129 to 95), among them Enlighten (3 builds), Second Wind (4), and Faster Attacks (2), already in `gems::SUPPORTS`.
+
+**The engine:**
+- `CalcData::item_base_name` (defaulted, `None`): the bundle gives a base item's name by its ID, and `OverlayData` (`calc-run --data-overlay`) forwards it.
+- `skill::resolve`'s fallback: a gem effect without a name of its own and without an active skill takes the gem's base item name without " Support", as PoB names its gems.
+- "Increased Duration" (the game's More Duration now) stays unknown, as PoB's `FindSkillGem` does not find it either.
+
+**Tests:** `real_supports_under_old_skill_ids_should_be_found_by_name` (maintainer-run, passes on `b-ct`): Enlighten found, Increased Duration unknown. The synthetic bundle's support has a name of its own, so it cannot show the case.
+
+**Evidence** (`b-ct`, against P6-11dl's run):
+- **Public:** 0 unexpected; 36 values moved, 30 toward PoB, 5 now equal (mana costs 25 to 53 and 49 to 90, equal to PoB's). 6 moved away, each checked:
+  - **A Berserker's attack rate** (1.81 to 1.64 against PoB's 2.20): its main group's Awakened Melee Physical Damage now applies, with a less attack speed multiplier PoB applies too; the rate stays partial on other modifiers.
+  - **Its unreserved mana** (141 to 205 against PoB's 138): Enlighten now applies to its auras. PoB reserves 599 without the gem and 534 with it, a drop of 65; the engine reserves 531 and 467, a drop of 64. The engine was already about 67 short before this step.
+  - **A Cast On Critical Strike build's rate and DPS:** its triggered skill's supports now apply, and the trigger rate stays partial.
+  - **A build's life regeneration** (462 to 455.8 against PoB's 724.5): Second Wind now supports Enduring Cry and lowers the warcry's uptime. PoB goes from 732 without the gem to 724.5 with it.
+- **Corpus:** 0 unexpected; 64 values moved, 58 toward PoB, 7 now equal, 5 away. The away moves were checked on local copies of the builds:
+  - **An unreserved mana** (-118 to 209 against PoB's 18): Divine Blessing now applies to an aura. PoB's reservation drops by 376 with it, the engine's by 393. Without it the engine reserves 121% of mana against PoB's 141%, so other reservations are short.
+  - **A mana cost** (10 to 20 against PoB's 15): each newly found support moves both the same way (Vicious Projectiles: PoB 11 to 15, engine 15 to 20). The engine's base cost is about a third higher.
+  - **One build's hit damage** (57 to 46 against PoB's 5,443, with its leech) is open. Its life reserved changed too (901 to 630 unreserved). No single newly found support explains the hit's drop: without Vicious Projectiles it is 43.9, and 45.9 without each other one. Vicious Projectiles' own stats are unmapped (next step). Tasks file.
+- **Tests:** the workspace tests and clippy pass.
+

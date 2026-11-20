@@ -67,6 +67,14 @@ pub trait CalcData {
     /// base has the name.
     fn item_base(&self, name: &str) -> Option<ItemBase>;
 
+    /// The name of the item base with this ID (P6-11dm: a gem's base item
+    /// names a support, "<name> Support", where its gem effect has no name
+    /// of its own); `None` (the default) when the data has no such base.
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        let _ = id;
+        None
+    }
+
     /// A skill gem by its base item ID. Data without skill tables gives
     /// `None` for every skill read: a calculation then reports the gem as
     /// unknown, never a value.
@@ -396,6 +404,13 @@ impl CalcData for Bundle {
         } else {
             ItemBase::Ambiguous
         })
+    }
+
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        self.base_items
+            .iter()
+            .find(|b| b.id == id)
+            .map(|b| b.name.as_str())
     }
 
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {

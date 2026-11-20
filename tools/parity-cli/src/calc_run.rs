@@ -428,6 +428,10 @@ impl CalcData for OverlayData<'_> {
         self.bundle.mastery_effect_stats(effect)
     }
 
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        self.bundle.item_base_name(id)
+    }
+
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
         self.bundle.skill_gem(base_item)
     }
