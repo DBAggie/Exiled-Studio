@@ -194,7 +194,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-10b part 13: maximum hit taken (`enemy_hit::maximum_hit`, slice revision 21; the three marker kinds; hit recently and moving settled); equal to PoB in 168 builds; `docs/phase-6/recovery.md`, "Part 13"
 - [x] P6-10b part 14: the effective health pool (`poe1::ehp`, slice revision 22; hits to die, block, suppression, not hit; `BlockEffect`, `AvoidProjectiles`, `EhpReason`); equal to PoB in 168 builds; `docs/phase-6/recovery.md`, "Part 14"
 - [x] P6-10b part 15: mind over matter in maximum hit and the hits to die (`ManaBeforeLife`; the keystone row; `enemy_hit::mom_hit_pool`); fixtures `mom-ice-nova-witch.xml`, `mom-physical-ice-nova-witch.xml`; `docs/phase-6/recovery.md`, "Part 15"
-- [ ] P6-10b further parts: EHP's other pools (guard, ward, life loss prevention, recoup, Eldritch Battery), damage over time EHP, a dual wielder's leech, soul costs (bundle needs `VaalSouls`), degeneration (D7), the reduction against a hit, maximum hit and EHP
+- [ ] P6-10b further parts: EHP's other pools (ward; life loss prevention done in P6-11ce, without Petrified Blood's below-half share; guard, recoup, Eldritch Battery done in P6-11ae, P6-11am, P6-11ap), damage over time EHP, a dual wielder's leech, soul costs (bundle needs `VaalSouls`), degeneration (D7), the reduction against a hit, maximum hit and EHP
 ## P6-11: stat mop-up (batches)
 - [x] P6-11a: shields and dual wielding (`DualWielding` state, six rows; fixture `smite-shield-templar.xml`, Q11 DIV-0100, DIV-0101); `docs/phase-6/stat-mop-up.md`
 - [x] P6-11a PR #158 (base `feat/p6-7b2b-actor-review`)
