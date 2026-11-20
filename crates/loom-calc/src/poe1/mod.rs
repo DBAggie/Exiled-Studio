@@ -169,6 +169,15 @@ pub enum Poe1Quantity {
     /// enemy's `OnConsecratedGround`): `Base`, read by [`damage_taken`]
     /// under the config's check.
     ConsecratedCritChance,
+    /// "Maximum Energy Shield is increased by Chance to Block Spell Damage"
+    /// (P6-11cb; PoB's `EnergyShieldIncreasedByChanceToBlockSpellDamage`
+    /// flag, `CalcDefence.lua` 812 to 817: `EnergyShield` INC by the spell
+    /// block chance): `Flag`, read by the primary defences.
+    EnergyShieldFromSpellBlock,
+    /// "Maximum Energy Shield is increased by Chaos Resistance" (P6-11cb;
+    /// PoB's `EnergyShieldIncreasedByChaosResistance`, 819 to 824: by the
+    /// chaos resistance): `Flag`, read by the primary defences.
+    EnergyShieldFromChaosResistance,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1055,6 +1064,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
+            Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
+            Self::EnergyShieldFromChaosResistance => {
+                f.write_str("energy-shield-from-chaos-resistance")
+            }
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

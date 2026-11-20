@@ -1708,3 +1708,20 @@ What the engine does:
 - **Public:** 0 unexpected; 16 values toward PoB.
 - **Away:** 4 values, two builds' speed (and a cost and leech rate that follow it), now with Pulverise's 15% less. A check with PoB itself confirms PoB applies it: the Cyclone build at 12.59 without Pulverise, 10.81 with, a factor of 0.858; the engine's is 0.858 too. The engine's speed before was near PoB's by chance: it lacked Pulverise, and the field misses other sources (a partial field).
 - **Corpus:** 0 unexpected; 14 toward PoB, none away.
+
+## P6-11cb: energy shield increased by spell block chance or chaos resistance
+
+"Maximum Energy Shield is increased by Chance to Block Spell Damage" and "... by Chaos Resistance":
+- **PoB's reading:** flags (`ModParser.lua` 4805, 4806). PoB's defence code adds an `EnergyShield` INC of the final spell block chance or chaos resistance (`CalcDefence.lua` 812 to 824), after computing both.
+- **The engine:** `Poe1Quantity::EnergyShieldFromSpellBlock` and `EnergyShieldFromChaosResistance` (`Flag` rows). `phases::primary_defences` adds the field's value as one more term of energy shield's increase, beside the intelligence bonus. The block and resistance phases run first, and energy shield depends on the field.
+- **Negative resistance:** a negative chaos resistance lowers energy shield, as in PoB.
+
+**Fixtures:**
+- `ice-nova-energy-shield-from-spell-block-witch.xml`: 1,000 energy shield, 30% spell block, 1,330.
+- `ice-nova-energy-shield-from-chaos-resistance-witch.xml`: chaos resistance -20, 830.
+
+Every computed field of both equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11ca's run):
+- **Public:** 0 unexpected; 25 values toward PoB (two Occultists' energy shield and the values that follow it), none away.
+- **Corpus:** unchanged.

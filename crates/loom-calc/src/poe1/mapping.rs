@@ -4965,6 +4965,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-10b part 9: "#% of Damage Leeched as Energy Shield" (`DamageEnergyShieldLeech` BASE).
+    // P6-11cb: "Maximum Energy Shield is increased by Chaos Resistance" and
+    // "... by Chance to Block Spell Damage" (PoB's flags, `phases`).
+    (
+        "energy_shield_increased_by_chaos_resistance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldFromChaosResistance),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     (
         "energy_shield_leech_from_any_damage_permyriad",
         &[(
@@ -5645,7 +5655,14 @@ pub const ROWS: &[Row] = &[
         "maximum_energy_shield_+%",
         &[(Quantity::EnergyShield, Op::Increased, 1.0)],
     ),
-    // P6-10b part 7: "#% increased Maximum Recovery per Energy Shield Leech"
+    (
+        "maximum_energy_shield_increased_by_spell_block_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldFromSpellBlock),
+            Op::Flag,
+            1.0,
+        )],
+    ), // P6-10b part 7: "#% increased Maximum Recovery per Energy Shield Leech"
     // (`MaxEnergyShieldLeechInstance` INC; PoB's skill map reads the life and
     // energy shield stats as the rate, items' lines as the instance).
     (

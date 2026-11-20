@@ -1137,6 +1137,43 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         "tenth",
         "energy-shield-from-intelligence",
     )?;
+    // Energy shield increased by the spell block chance or the chaos
+    // resistance (P6-11cb; `CalcDefence.lua` 812 to 824), each when its flag
+    // is present: one more term of energy shield's increase.
+    let mut es_terms: Vec<Valued> = int_bonus.into_iter().collect();
+    let mut es_deps = vec![Field::Intelligence];
+    for (flag, from) in [
+        (
+            Poe1Quantity::EnergyShieldFromSpellBlock,
+            Field::Poe1(Poe1Field::SpellBlockChance),
+        ),
+        (
+            Poe1Quantity::EnergyShieldFromChaosResistance,
+            Field::Resistance(crate::quantity::DamageType::Chaos),
+        ),
+    ] {
+        if !has(calc, Quantity::Poe1(flag)) {
+            continue;
+        }
+        if let Some(v) = calc.field(from).and_then(|f| {
+            Some(Valued {
+                node: f.node?,
+                value: f.value?,
+            })
+        }) {
+            es_terms.push(v);
+            es_deps.push(from);
+        }
+    }
+    let int_bonus = match es_terms.len() {
+        0 => None,
+        1 => Some(es_terms[0]),
+        _ => Some(total(
+            calc,
+            &es_terms,
+            Term::Step("energy-shield-increases"),
+        )?),
+    };
     let dex_bonus = bonus(
         calc,
         Field::Dexterity,
@@ -1150,21 +1187,22 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             Field::EnergyShield,
             Quantity::EnergyShield,
             int_bonus,
-            Some(Field::Intelligence),
+            es_deps.as_slice(),
         ),
-        (Defence::Armour, Field::Armour, Quantity::Armour, None, None),
+        (Defence::Armour, Field::Armour, Quantity::Armour, None, &[]),
         (
             Defence::Evasion,
             Field::Evasion,
             Quantity::Evasion,
             dex_bonus,
-            Some(Field::Dexterity),
+            &[Field::Dexterity],
         ),
     ] {
         let (value, reasons) = primary_defence(calc, defence, quantity, extra)?;
-        match dep {
-            Some(dep) => calc.set_derived(field, query(value, reasons), &[dep]),
-            None => calc.set(field, query(value, reasons)),
+        if dep.is_empty() {
+            calc.set(field, query(value, reasons));
+        } else {
+            calc.set_derived(field, query(value, reasons), dep);
         }
     }
     Ok(())
