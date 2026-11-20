@@ -745,6 +745,11 @@ pub enum Poe1Quantity {
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
+    /// "Allocates <notable> if you have the matching modifier on Forbidden
+    /// Flesh" (`true`, the line on Forbidden Flame) or "... on Forbidden
+    /// Flame" (`false`): PoB's `GrantedAscendancyNode` with its side
+    /// (P6-11es). `Base`, a candidate node hash; `collect` pairs the sides.
+    ForbiddenNode(bool),
     /// "#% increased Effect of Buffs granted by your Golems" (PoB's
     /// `BuffEffect` INC tagged with the `Golem` skill type; P3-close):
     /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
@@ -1336,6 +1341,13 @@ impl core::fmt::Display for Poe1Quantity {
                 write!(f, "regen-if-exposure-applied.{}", p.name())
             }
             Self::GrantedPassive => f.write_str("granted-passive"),
+            Self::ForbiddenNode(flesh) => {
+                write!(
+                    f,
+                    "forbidden-node.{}",
+                    if *flesh { "flesh" } else { "flame" }
+                )
+            }
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),

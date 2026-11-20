@@ -2865,3 +2865,21 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
   - A Facebreaker Luminary has no active ally aura: its Precision's group is not active in its item set.
   - The flag stat is no longer a reason in any of the three, a corpus build among them.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11es: Forbidden Flame and Forbidden Flesh
+
+**PoB:** "Allocates <notable> if you have the matching modifier on Forbidden Flesh" (on Forbidden Flame) and "... on Forbidden Flame" (on Forbidden Flesh) are `GrantedAscendancyNode` with their side (`ModParser.lua` 5484). Two lines of opposite sides naming the same ascendancy notable allocate it when both `ForbiddenFlesh` and `ForbiddenFlame` equal the character's class (`CalcSetup.lua` 1299 to 1315). Each is the class restriction ("Requires Class") of the item of that title (1170).
+
+**The engine:**
+- **Lines:** `unique_jewel_grants_notable_hash_part_1` (naming Forbidden Flesh) and `_part_2`, read by their `passive_hash` handler's lookup, as "Allocates <notable>" is (`collect::hashes_of`). Each candidate hash is a `Poe1Quantity::ForbiddenNode(side)` effect.
+- **`collect::forbidden_pairs`,** after the granted passives:
+  - each line pairs with the first unpaired line of the other side whose candidates meet its own;
+  - when both lines' items carry a selected "Requires Class <the character's class>" line, the one ascendancy notable among the shared candidates is allocated, its stats with the node as their source;
+  - a node already allocated or granted counts once; an ambiguous name is indeterminate.
+
+**Evidence** (`b-ct`, against P6-11er's run):
+- **Public:** 0 unexpected. 11 values moved, 9 toward PoB, 5 now equal. A Poisonous Concoction Pathfinder's evasion went from 25,181 to 25,807, equal to PoB, and so did its evade chances (79 to 80) and its configured chance not to be hit. Its movement speed moved toward PoB.
+- **Two moved away,** by about 1e-6: that build's number of damaging hits, an estimate already far below PoB's.
+- The hash lines are no longer reasons in any of the five builds with the jewels.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

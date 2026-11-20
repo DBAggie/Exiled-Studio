@@ -97,6 +97,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     dual_wielding(input, ingest);
     // After the items: "Allocates <notable>" (P3-8n).
     granted_passives(input, spec, ingest);
+    // Forbidden Flame and Forbidden Flesh (P6-11es): after the granted
+    // passives, as PoB's `CalcSetup.lua` 1299.
+    forbidden_pairs(input, spec, ingest);
     config(build, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
@@ -581,6 +584,26 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
 /// the hashes the description's lookup gives the name (several nodes can
 /// share a name). `None` for any other line, which the mapping reads.
 fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Vec<i64>> {
+    hashes_of(resolution, GRANTED_PASSIVE_STAT)
+}
+
+/// The Forbidden jewels' stats (P6-11es): part 1 names Forbidden Flesh (it
+/// is on Forbidden Flame), part 2 Forbidden Flame.
+const FORBIDDEN_STATS: [(&str, bool); 2] = [
+    ("unique_jewel_grants_notable_hash_part_1", true),
+    ("unique_jewel_grants_notable_hash_part_2", false),
+];
+
+/// A Forbidden jewel line's side and its node hashes (P6-11es).
+fn forbidden_hashes(resolution: &loom_domain::LineResolution) -> Option<(bool, Vec<i64>)> {
+    FORBIDDEN_STATS
+        .iter()
+        .find_map(|&(stat, flesh)| hashes_of(resolution, stat).map(|h| (flesh, h)))
+}
+
+/// The node hashes of a line that is `stat` alone (a `passive_hash`
+/// handler's lookup, or one value).
+fn hashes_of(resolution: &loom_domain::LineResolution, stat: &str) -> Option<Vec<i64>> {
     let loom_domain::LineResolution::Resolved {
         result: loom_domain::Resolved::Stats(lines),
         ..
@@ -591,7 +614,7 @@ fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Ve
     let [line] = lines.as_slice() else {
         return None;
     };
-    if line.stat.as_str() != GRANTED_PASSIVE_STAT {
+    if line.stat.as_str() != stat {
         return None;
     }
     match &line.value {
@@ -667,6 +690,101 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
             ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "passives",
                 key: format!("granted-passive:{source:?}"),
+            });
+            continue;
+        };
+        let node = *node;
+        if allocated.contains(&node) || !granted.insert(node) {
+            continue;
+        }
+        if let Some(stats) = node_stats(input, node) {
+            ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats));
+        }
+    }
+}
+
+/// Forbidden Flame and Forbidden Flesh (P6-11es; PoB's
+/// `GrantedAscendancyNode`, `CalcSetup.lua` 1299 to 1315): a line of each
+/// side naming the same ascendancy notable allocates it, when both
+/// jewels' "Requires Class" is the character's class (PoB's
+/// `ForbiddenFlesh` and `ForbiddenFlame` conditions, the class restriction
+/// of the item of each title, 1170). Lines pair in order, a line once.
+/// The node counts once, as [`granted_passives`]' do; an ambiguous name is
+/// indeterminate.
+fn forbidden_pairs(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+    let mut sides: [Vec<(Source, BTreeSet<u32>)>; 2] = [Vec::new(), Vec::new()];
+    for e in ingest.effects() {
+        let Quantity::Poe1(Poe1Quantity::ForbiddenNode(flesh)) = e.quantity else {
+            continue;
+        };
+        if e.op != Op::Base || e.conditions != Conditions::none() {
+            continue;
+        }
+        #[expect(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "a node hash below 2^16, checked"
+        )]
+        let Some(node) =
+            (e.value.fract() == 0.0 && (0.0..65536.0).contains(&e.value)).then_some(e.value as u32)
+        else {
+            continue;
+        };
+        let list = &mut sides[usize::from(flesh)];
+        match list.iter_mut().find(|(s, _)| *s == e.source) {
+            Some((_, nodes)) => {
+                nodes.insert(node);
+            }
+            None => list.push((e.source.clone(), BTreeSet::from([node]))),
+        }
+    }
+    let [flame_side, mut flesh_side] = sides;
+    if flame_side.is_empty() || flesh_side.is_empty() {
+        return;
+    }
+    let build = input.build;
+    let class = build.character.class.as_ref().map_or("", |c| c.as_str());
+    let restricted_to_class = |source: &Source| -> bool {
+        let Source::Item { item, .. } = source else {
+            return false;
+        };
+        build.items.item(*item).is_some_and(|item| {
+            item.body.modifiers().any(|(_, m)| {
+                m.selected
+                    && m.section == loom_domain::ModSection::Other("class-requirement".to_owned())
+                    && m.text.strip_prefix("Requires Class ") == Some(class)
+            })
+        })
+    };
+    let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
+        spec.nodes
+            .value()
+            .iter()
+            .filter(|n| input.options.passives.connected(**n))
+            .map(|n| n.0)
+            .collect()
+    });
+    let mut granted = BTreeSet::new();
+    for (flame_source, flame_nodes) in flame_side {
+        let Some(i) = flesh_side
+            .iter()
+            .position(|(_, nodes)| !nodes.is_disjoint(&flame_nodes))
+        else {
+            continue;
+        };
+        let (flesh_source, flesh_nodes) = flesh_side.remove(i);
+        if !(restricted_to_class(&flame_source) && restricted_to_class(&flesh_source)) {
+            continue;
+        }
+        let ascendancy: Vec<u32> = flame_nodes
+            .intersection(&flesh_nodes)
+            .copied()
+            .filter(|&n| node_kind(input, n).is_some_and(|k| k.notable && k.ascendancy))
+            .collect();
+        let [node] = ascendancy.as_slice() else {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "passives",
+                key: format!("forbidden-node:{flame_source:?}"),
             });
             continue;
         };
@@ -1512,6 +1630,26 @@ fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'
     for (index, line) in item.body.lines.iter().enumerate() {
         match &line.kind {
             LineKind::Modifier(m) => {
+                // A Forbidden jewel's line (P6-11es): its side and hashes;
+                // [`forbidden_pairs`] pairs the two jewels.
+                if let Some((flesh, hashes)) = forbidden_hashes(&m.resolution) {
+                    let source = Source::Item {
+                        item: item.id,
+                        line: index,
+                        adapted: None,
+                    };
+                    for hash in hashes {
+                        #[expect(clippy::cast_precision_loss, reason = "a node hash, below 2^53")]
+                        ingest.effect(Effect {
+                            quantity: Quantity::Poe1(Poe1Quantity::ForbiddenNode(flesh)),
+                            op: Op::Base,
+                            value: hash as f64,
+                            conditions: Conditions::none(),
+                            source: source.clone(),
+                        });
+                    }
+                    continue;
+                }
                 // "Allocates <notable>" (P3-8n): its value is the name's
                 // node hashes; [`granted_passives`] picks the node.
                 if let Some(hashes) = granted_passive_hashes(&m.resolution) {
