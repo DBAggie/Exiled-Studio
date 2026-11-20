@@ -91,6 +91,11 @@ pub enum ChargeValue {
     /// that overrides `FrenzyChargesMax` with the power charges' maximum,
     /// `CalcPerform.lua` 955 to 960): `Base`, any value above 0 on.
     MaximumFromPower,
+    /// "Count as having maximum number of <Kind> Charges" (P6-11bl; PoB's
+    /// `HaveMaximum<Kind>Charges` flag, `CalcPerform.lua` 1072 to 1080: the
+    /// count is the maximum, whatever the config set): `Base`, any value
+    /// above 0 on.
+    CountAsMaximum,
     /// An effect per charge (a mod with PoB's `Multiplier:<Kind>Charge`
     /// tag).
     Per(PerCharge),
@@ -104,6 +109,7 @@ impl ChargeValue {
             Self::Maximum => "maximum",
             Self::Minimum => "minimum",
             Self::MaximumFromPower => "maximum-from-power",
+            Self::CountAsMaximum => "count-as-maximum",
             Self::Per(p) => p.name(),
         }
     }
@@ -226,6 +232,21 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "base_minimum_power_charges",
         ChargeKind::Power,
         ChargeValue::Minimum,
+    ),
+    (
+        "count_as_having_max_endurance_charges",
+        ChargeKind::Endurance,
+        ChargeValue::CountAsMaximum,
+    ),
+    (
+        "count_as_having_max_frenzy_charges",
+        ChargeKind::Frenzy,
+        ChargeValue::CountAsMaximum,
+    ),
+    (
+        "count_as_having_max_power_charges",
+        ChargeKind::Power,
+        ChargeValue::CountAsMaximum,
     ),
     (
         "critical_strike_chance_+%_per_power_charge",
@@ -465,7 +486,9 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
         }
         let (min, min_source) = modifiers(ingest, charge.kind, ChargeValue::Minimum);
         let min = min.max(0.0);
-        if !use_on && min == 0.0 {
+        let (at_max, at_max_source) = modifiers(ingest, charge.kind, ChargeValue::CountAsMaximum);
+        let at_max = at_max > 0.0;
+        if !use_on && min == 0.0 && !at_max {
             continue;
         }
         // The frenzy charges' maximum is the power charges' with the flag
@@ -516,11 +539,16 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
         } else {
             0.0
         };
-        let count = used.max(min.min(max));
+        let count = if at_max { max } else { used.max(min.min(max)) };
         if count == 0.0 {
             continue;
         }
-        let source = if use_on {
+        let source = if at_max {
+            match at_max_source {
+                Some(s) => s,
+                None => continue,
+            }
+        } else if use_on {
             Source::Config {
                 input: charge.use_input.to_owned(),
             }

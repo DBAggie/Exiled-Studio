@@ -4690,7 +4690,19 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
-    // P6-10b part 9: "#% of Damage Leeched as Energy Shield" (`DamageEnergyShieldLeech` BASE).
+    // P6-11bl: "#% increased Energy Shield from Equipped Helmet"
+    // (`EnergyShield` INC, `SlotName` Helmet), as the shield's (P6-11k).
+    (
+        "energy_shield_from_helmet_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                ArmourSlot::Helmet,
+                Defence::EnergyShield,
+            )),
+            Op::Increased,
+            1.0,
+        )],
+    ), // P6-10b part 9: "#% of Damage Leeched as Energy Shield" (`DamageEnergyShieldLeech` BASE).
     (
         "energy_shield_leech_from_any_damage_permyriad",
         &[(

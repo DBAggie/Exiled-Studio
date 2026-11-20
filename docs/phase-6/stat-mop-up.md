@@ -1484,3 +1484,19 @@ PoB gives a skill `KeywordFlag.Totem` when it is a totem, else `KeywordFlag.Trap
 **Evidence** (`b-ct`, against P6-11bj's run):
 - **Public:** 0 unexpected; 15 values toward PoB, none away: the two totem builds' hits (Holy Flame Totem's and Kinetic Fusillade's through a ballista), their ailments and DPS. Their totem skills are still partial for other reasons.
 - **Corpus:** unchanged.
+
+## P6-11bl: energy shield from the equipped helmet; counting as having maximum charges
+
+- "#% increased Energy Shield from Equipped Helmet" is PoB's `EnergyShield` INC with `SlotName` Helmet: a `ROWS` row on `SlotIncreased(Helmet, EnergyShield)`, as P6-11k's shield lines.
+- "Count as having maximum number of <Kind> Charges" (power, frenzy, endurance) is PoB's `HaveMaximum<Kind>Charges` flag (`CalcPerform.lua` 1072 to 1080). The count is the maximum whatever the config set says. In `charges`, a new `ChargeValue::CountAsMaximum` sets the count to the maximum, the line as the source, with or without the `use` input.
+
+**Fixtures:**
+- `ice-nova-count-as-max-charges-witch.xml`: no charges in use, both lines, one more maximum power charge.
+- `ice-nova-helmet-energy-shield-witch.xml`: a Hubris Circlet and a Vaal Regalia, the helmet's line.
+
+Every computed field of both equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11bk's run):
+- **Public:** 0 unexpected; 25 values toward PoB (a build's helmet line: its energy shield, recharge, regeneration, and hits to die).
+- **Away:** one value, a trap build's energy shield leech rate. It was already 549.7 against PoB's 0, a partial field, and rises with the energy shield the line now adds.
+- **Corpus:** unchanged.
