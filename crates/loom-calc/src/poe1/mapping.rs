@@ -1820,6 +1820,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11dz: "+#% to Damage Over Time Multiplier with Spell Skills"
+    // (`DotMultiplier` BASE with `KeywordFlag.Spell`).
+    (
+        "damage_over_time_multiplier_+_with_spells",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_SPELL,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1187: `BleedFaster`, `PoisonFaster`, and
     // `IgniteBurnFaster` INC (P6-2b).
     (
@@ -3761,6 +3773,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_RECENTLY,
         )],
     ),
+    // P6-11dz: "#% increased Critical Strike Chance against Bleeding Enemies"
+    // (`CritChance` INC, enemy `Bleeding`).
+    (
+        "critical_strike_chance_+%_vs_bleeding_enemies",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_BLEEDING,
+        )],
+    ),
     // P6-11o: "#% increased Critical Strike Chance while affected by Wrath".
     (
         "critical_strike_chance_+%_while_affected_by_wrath",
@@ -3908,6 +3931,32 @@ pub const STATE_ROWS: &[StateRow] = &[
         &[
             (BLOCK, Op::Base, NONE, states::DUAL_WIELDING),
             (BLOCK, Op::Base, NONE, states::USING_SHIELD),
+        ],
+    ),
+    // P6-11dz: "#% increased Elemental Damage during any Flask Effect"
+    // (`ElementalDamage` INC, `UsingFlask`). A query carries one damage
+    // type, so one row each reads as PoB's elemental match.
+    (
+        "elemental_damage_+%_during_flask_effect",
+        &[
+            (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::FIRE,
+                conditions::USING_FLASK,
+            ),
+            (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::COLD,
+                conditions::USING_FLASK,
+            ),
+            (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::LIGHTNING,
+                conditions::USING_FLASK,
+            ),
         ],
     ),
     // P6-10b part 13: "#% increased Elemental Damage taken if you've been
@@ -6870,6 +6919,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
+    // P6-11dz: "#% increased Duration of Ailments on You": ailments on you, no slice
+    // field.
+    ("base_all_ailment_duration_on_self_+%", "ailment-on-self"),
     ("base_aura_area_of_effect_+%", "area"),
     // P6-10a: "#% chance to Avoid Bleeding" (`AvoidBleed` BASE) and
     // "#% chance to Avoid being Poisoned" (`AvoidPoison` BASE), Glorious
@@ -9176,6 +9228,8 @@ mod tests {
                         conditions::AFFECTED_BY_HERALD,
                         // P6-11de: from the marks among the curses.
                         conditions::ENEMY_MARKED,
+                        // P6-11dz: from the active flasks.
+                        conditions::USING_FLASK,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -9874,6 +9928,40 @@ mod tests {
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
                 )],
+            ),
+            // P6-11dz: crit chance against bleeding enemies, elemental
+            // damage during any flask effect.
+            (
+                "critical_strike_chance_+%_vs_bleeding_enemies",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_BLEEDING,
+                )],
+            ),
+            (
+                "elemental_damage_+%_during_flask_effect",
+                vec![
+                    config(
+                        Quantity::Damage,
+                        Op::Increased,
+                        Flags::FIRE,
+                        conditions::USING_FLASK,
+                    ),
+                    config(
+                        Quantity::Damage,
+                        Op::Increased,
+                        Flags::COLD,
+                        conditions::USING_FLASK,
+                    ),
+                    config(
+                        Quantity::Damage,
+                        Op::Increased,
+                        Flags::LIGHTNING,
+                        conditions::USING_FLASK,
+                    ),
+                ],
             ),
             // P6-11dp: crit multiplier against bleeding enemies, Pride's
             // impale chance.

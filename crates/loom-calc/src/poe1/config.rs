@@ -356,7 +356,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "Condition:UsedSkillRecently",
         ],
     ),
-    ("conditionUsingFlask", &["Condition:UsingFlask"]),
     ("configResonanceCount", &["Multiplier:ResonanceCount"]),
     (
         "configSpectralTigerCount",

@@ -65,6 +65,11 @@ pub const USED_MINION_SKILL_RECENTLY: &str = "UsedMinionSkillRecently";
 /// flasks ([`super::flasks::using_life_flask`]).
 pub const USING_LIFE_FLASK: &str = "UsingLifeFlask";
 
+/// "during any Flask Effect" (PoB's `UsingFlask`; P6-11dz): its check
+/// `conditionUsingFlask`, or an active flask
+/// ([`super::flasks::using_flask`]).
+pub const USING_FLASK: &str = "UsingFlask";
+
 /// "while you are affected by a Herald" (PoB's `AffectedByHerald`;
 /// P6-11ct): a herald among the skills (`CalcPerform.lua` 2117 to 2120,
 /// [`super::gems::herald_and_aura_counts`]).
@@ -224,6 +229,7 @@ pub const CHECKS: &[(&str, &str)] = &[
         STOPPED_TAKING_DOT_RECENTLY,
     ),
     (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
+    ("conditionUsingFlask", USING_FLASK),
 ];
 
 /// Whether the main skill makes the character have used a minion skill
@@ -356,6 +362,11 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     // sets it.
     if let Some(v) = super::flasks::using_life_flask(input) {
         out.insert(ConditionKey::new(USING_LIFE_FLASK), v);
+    }
+    // Using any flask (P6-11dz): its check, or an active flask.
+    let key = ConditionKey::new(USING_FLASK);
+    if out.get(&key).copied() == Some(false) && super::flasks::using_flask(input) {
+        out.insert(key, true);
     }
     // A rare or unique enemy nearby (P6-10b): either condition; a count of
     // another type leaves it unsettled unless the enemy is rare or unique.

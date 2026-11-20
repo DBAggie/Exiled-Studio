@@ -90,7 +90,10 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 7] = [
+pub const NO_EFFECT_LOCAL: [&str; 9] = [
+    // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
+    // `UsingFlask`): no slice field.
+    "local_avoid_shock_%_during_flask_effect",
     "local_consecrate_ground_on_flask_use_radius",
     // P6-11dp: area of effect during the effect (`AreaOfEffect` INC,
     // `UsingFlask`): area, no slice field.
@@ -100,6 +103,8 @@ pub const NO_EFFECT_LOCAL: [&str; 7] = [
     // P6-11dr: energy shield recovered on kill during the effect
     // (`EnergyShieldOnKill` BASE, `UsingFlask`): no slice field.
     "local_flask_recover_%_maximum_energy_shield_on_kill_during_flask_effect",
+    // P6-11dz: "Removes Curses on use": no slice field.
+    "local_flask_remove_curses_on_use",
     "local_flask_use_on_full_charges",
     "local_self_curse_effect_+%_during_flask_effect",
 ];
@@ -362,6 +367,15 @@ fn base_of<'d>(
         Some(b) => named(&b.name).or_else(|| b.fallback.as_deref().and_then(named)),
         None => written.and_then(named),
     }
+}
+
+/// Whether the character is using a flask (PoB's `UsingFlask`; P6-11dz,
+/// `CalcPerform.lua` 1735): an active flask whose recovery is not all
+/// instant. The lines that make recovery instant are unmapped stats, a
+/// reason wherever they appear, so an active flask counts.
+#[must_use]
+pub fn using_flask(input: &CalcInput<'_>) -> bool {
+    !active_slots(input).is_empty()
 }
 
 /// Whether the character is using a life flask (PoB's `UsingLifeFlask`;

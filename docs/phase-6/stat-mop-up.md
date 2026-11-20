@@ -2506,3 +2506,26 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dz: during any flask effect; small lines
+
+**PoB:**
+- `UsingFlask` is set by an active flask whose recovery is not all instant (`CalcPerform.lua` 1735), or by the config check `conditionUsingFlask`.
+- "#% increased Elemental Damage during any Flask Effect" is `ElementalDamage` INC under it.
+- "#% increased Critical Strike Chance against Bleeding Enemies" is `CritChance` INC with the enemy's `Bleeding` (P6-11dp's condition).
+- "+#% to Damage Over Time Multiplier with Spell Skills" is `DotMultiplier` BASE with `KeywordFlag.Spell`.
+
+**The engine:**
+- `conditions::USING_FLASK`, from the check through `CHECKS` (it left `config::NAMED_ONLY`) or `flasks::using_flask`: any active flask. The lines that make recovery instant are reasons wherever they appear.
+- **The elemental damage line:** one `STATE_ROWS` row per element. A query carries one damage type, so this reads as PoB's elemental match.
+- **The other two:** a `STATE_ROWS` row for the crit chance, a `HIT_ROWS` row for the multiplier.
+- **`NoEffect`:**
+  - "#% increased Duration of Ailments on You" (`ailment-on-self`);
+  - two flask lines (`flasks::NO_EFFECT_LOCAL`): avoid shock during the effect, and "Removes Curses on use".
+
+**Fixture** `ice-nova-elemental-damage-during-flask-witch.xml`: Ice Nova with an active Quicksilver Flask and the elemental damage line. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11dy's run):
+- **Public:** 0 unexpected; 8 values toward PoB, none away.
+- **Corpus:** 0 unexpected; 7 values moved, 6 toward PoB. One build's ignite DPS moved away (1,571 to 1,656, against PoB's 1,482): it was already above PoB's, and the line's fire increase applies there in PoB too.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+
