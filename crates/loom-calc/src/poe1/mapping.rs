@@ -4548,6 +4548,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11bf: "#% increased Damage with Hits against Chilled Enemies"
+    // (`Damage` INC, `KeywordFlag.Hit`, the enemy's `Chilled`):
+    // `poe1::damage_taken` applies it while the enemy is chilled.
+    (
+        "damage_+%_vs_chilled_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageVsChilled),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P6-10a: "#% of Damage taken Recouped as Life" (`LifeRecoup` BASE), a
     // Glorious Vanity conquest: as mana recoup below.
     (

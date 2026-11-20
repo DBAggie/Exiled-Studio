@@ -702,6 +702,28 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             (Ok(_), Ok(_)) => {}
         }
     }
+    // P6-11bf: damage with hits against a chilled enemy ([`chilled`]).
+    let vs_chilled: Vec<Effect> =
+        unconditional(ingest, Poe1Quantity::DamageVsChilled, Op::Increased)
+            .cloned()
+            .collect();
+    if !vs_chilled.is_empty() {
+        match chilled(set, ingest) {
+            Err(input) => ingest.reason(reason(input)),
+            Ok(true) => {
+                for e in &vs_chilled {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Damage,
+                        op: Op::Increased,
+                        value: e.value,
+                        conditions: Conditions::none().with_all(Flags::HIT),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+            Ok(false) => {}
+        }
+    }
     let per: Vec<Effect> = unconditional(ingest, Poe1Quantity::ChillSecondsDamageTaken, Op::Base)
         .cloned()
         .collect();

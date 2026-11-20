@@ -1410,3 +1410,15 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Left as reasons:** Crush on full-life enemies and aggravated bleeding. PoB parses neither, but in the game they act on the enemy's physical damage reduction and the bleed.
 
 **Evidence:** public and corpus 0 unexpected, no value moved (those builds have other reasons).
+
+## P6-11bf: damage with hits against chilled enemies
+
+"#% increased Damage with Hits against Chilled Enemies" is PoB's `Damage` INC with `KeywordFlag.Hit` and the enemy's `Chilled` condition. It maps to `Poe1Quantity::DamageVsChilled`.
+- `damage_taken::enemy_states` turns it into hit `Damage` INC when the enemy is chilled (`damage_taken::chilled`: the config's check, or a skill's guaranteed chill, `CalcPerform.lua` 1396).
+- This is how it already applies "Enemies Ignited or Chilled by you have #% to Elemental Resistances".
+
+**Fixture** `ice-nova-damage-vs-chilled-witch.xml`: every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11be's run):
+- **Public:** 0 unexpected; 7 values toward PoB, none away.
+- **Corpus:** unchanged.

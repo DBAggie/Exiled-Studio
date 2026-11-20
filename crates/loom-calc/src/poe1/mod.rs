@@ -604,6 +604,11 @@ pub enum Poe1Quantity {
     /// "Enemies Ignited or Chilled by you have #% to Elemental
     /// Resistances" (P3-8n): `Base`, read by [`damage_taken`].
     AilmentElementalResistance,
+    /// "#% increased Damage with Hits against Chilled Enemies" (P6-11bf):
+    /// `Increased`, which [`damage_taken`] turns into hit `Damage` INC
+    /// while the enemy is chilled (PoB's `ActorCondition` `Chilled` on the
+    /// enemy).
+    DamageVsChilled,
     /// "Enemies permanently take #% increased Damage for each second
     /// they've ever been Chilled by you" (P3-8n): `Base`, read by
     /// [`damage_taken`].
@@ -1120,6 +1125,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedGroundEffect => f.write_str("consecrated-ground-effect"),
             Self::ConsecratedGroundDamageTaken => f.write_str("consecrated-ground-damage-taken"),
             Self::AilmentElementalResistance => f.write_str("ailment-elemental-resistance"),
+            Self::DamageVsChilled => f.write_str("damage-vs-chilled"),
             Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
             Self::RegenIfExposureApplied(p) => {
