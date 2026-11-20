@@ -3766,6 +3766,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             "AffectedByHatred",
         )],
     ),
+    // P6-11cm: "Minions deal #% increased Damage if you've used a Minion
+    // Skill Recently" (PoB's `MinionModifier` LIST of `Damage` INC with the
+    // outer condition `UsedMinionSkillRecently`, `ModParser.lua` 4381):
+    // the minion modifier with the character's condition
+    // (`minion_actor::minion_modifiers`, `minions::minions`).
+    (
+        "minion_damage_+%_if_have_used_a_minion_skill_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Minion(super::minions::MinionValue::Damage)),
+            Op::Increased,
+            NONE,
+            conditions::USED_MINION_SKILL_RECENTLY,
+        )],
+    ),
     // P6-11w: "#% increased Movement Speed while on Burning Ground"
     // (`MovementSpeed` INC, `OnBurningGround`, the config's check).
     (
@@ -9290,6 +9304,18 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::MOVING,
+                )],
+            ),
+            // P6-11cm: the minion modifier with the character's condition.
+            (
+                "minion_damage_+%_if_have_used_a_minion_skill_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Minion(
+                        crate::poe1::minions::MinionValue::Damage,
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::USED_MINION_SKILL_RECENTLY,
                 )],
             ),
         ]);

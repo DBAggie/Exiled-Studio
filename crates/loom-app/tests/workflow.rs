@@ -1326,7 +1326,7 @@ fn config_inputs_and_custom_blocks_should_be_edited() {
         .unwrap();
     session
         .set_config_input(
-            "conditionUsedMinionSkillRecently",
+            "conditionCastSpellRecently",
             &ConfigValueView::Boolean(true),
         )
         .unwrap();
@@ -1343,7 +1343,7 @@ fn config_inputs_and_custom_blocks_should_be_edited() {
     };
     assert_eq!(effect("resistancePenalty"), Some(InputEffect::Applied));
     assert_eq!(
-        effect("conditionUsedMinionSkillRecently"),
+        effect("conditionCastSpellRecently"),
         Some(InputEffect::NoEffect)
     );
     assert_eq!(effect("somethingNew"), Some(InputEffect::Unmodelled));
@@ -1351,7 +1351,7 @@ fn config_inputs_and_custom_blocks_should_be_edited() {
     assert_eq!(
         session
             .set_config_input(
-                "conditionUsedMinionSkillRecently",
+                "conditionCastSpellRecently",
                 &ConfigValueView::Boolean(true)
             )
             .unwrap(),

@@ -1795,3 +1795,30 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11cg's run):
 - **Public:** 0 unexpected; 9 values toward PoB (a Hierophant's Shock Nova), none away.
 - **Corpus:** unchanged.
+
+## P6-11cm: minion damage if you've used a minion skill recently
+
+**PoB** reads "Minions deal #% increased Damage if you've used a Minion Skill Recently" as a `MinionModifier` LIST of `Damage` INC, with the condition `UsedMinionSkillRecently` on the outer mod (`ModParser.lua` 4381). Two things set the condition:
+- **The config's check** `conditionUsedMinionSkillRecently` (`ConfigOptions.lua` 1526). Its implied `UsedSkillRecently` matters only to the UI (`implyCond`, `ConfigTab.lua` 193).
+- **The main skill** (`doActorMisc`, `CalcPerform.lua` 240 to 251): a skill with PoB's `minion` flag and not `permanentMinion`, not triggered, not a trap, mine, or totem.
+
+PoB's minion gets the line in both cases. Summon Raging Spirit without the check gets it (fixture below), although `addMinionModifiers` (1918) runs before `doActorMisc` (3425) in the source.
+
+**The engine:**
+- `poe1::conditions` settles `UsedMinionSkillRecently` from the check, or from the main skill (`conditions::used_minion_skill`: PoB's flags from `pob_skills`, the trigger from `triggers::kind`, and the `Trapped`, `RemoteMined`, `SummonsTotem` types). The check leaves `config::NAMED_ONLY`.
+- The stat is a state row on the minion's damage (`mapping::STATE_ROWS`).
+- `minion_actor::minion_modifiers` now evaluates a minion modifier whose only conditions are the character's states against those settled states: it applies, does not, or (unsettled) stays a reason as before. A modifier with flag conditions is a reason as before.
+- Spiritual Aid's redirect (`minions::minions`) keeps the condition, which the character's store evaluates.
+
+**Fixtures:**
+- `minion-raise-zombie-used-minion-skill-witch.xml`: Raise Zombie, the line at 40%, and the check on.
+- `minion-raise-zombie-used-minion-skill-off-witch.xml`: the same with the check off; Raise Zombie is a permanent minion, so nothing.
+- `minion-summon-raging-spirit-used-minion-skill-witch.xml`: Summon Raging Spirit with the check off; the main skill sets the condition.
+
+Every computed field of the three equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cl's run):
+- **Public:** 0 unexpected. Match went from 19,673 to 19,932, the three fixtures' fields; 2 values moved toward PoB (two community builds' full DPS), none away.
+- **Corpus:** 0 unexpected; 1 value toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass. The app's config test used this check as an input with no effect; it now uses `conditionCastSpellRecently`.
+

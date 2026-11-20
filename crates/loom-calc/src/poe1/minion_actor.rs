@@ -321,7 +321,7 @@ fn collect(
 
     let mapping = MinionMapping;
     let mut ingest = Ingest::new(&mapping);
-    minion_modifiers(player, skill, &mut ingest);
+    minion_modifiers(input, player, skill, &mut ingest);
     let totals = super::skill_modifiers::Totals::from_effects(player.effects());
     // A buff or aura effect modifier the totals do not read scales the
     // minion's buffs as the character's (P6-7b3b review).
@@ -1455,8 +1455,19 @@ pub const FIELDS: [MinionField; 9] = [
 /// unconditional effect of a kind a minion field reads is added; a
 /// conditional one is a `minion-modifier` reason (its condition would be
 /// the character's, or the minion's, as PoB's tags say: not modelled).
-fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mut Ingest<'_>) {
+fn minion_modifiers(
+    input: &CalcInput<'_>,
+    player: &ModStore,
+    skill: &skill::MainSkill<'_>,
+    ingest: &mut Ingest<'_>,
+) {
     let golem = skill.types.contains("Golem");
+    // The character's settled conditions a minion modifier's own condition
+    // reads (P6-11cm). PoB's minion modifiers see the main skill's
+    // conditions too: Summon Raging Spirit without the check gets "if
+    // you've used a Minion Skill Recently" (fixture
+    // `minion-summon-raging-spirit-used-minion-skill-witch.xml`).
+    let settled = states::states(input);
     // An unsettled minion modifier of the character is the minion's reason
     // when the minion reads it.
     // Every one reaches the minion's reasons, those of kinds no minion field
@@ -1476,12 +1487,28 @@ fn minion_modifiers(player: &ModStore, skill: &skill::MainSkill<'_>, ingest: &mu
         let Some((quantity, flags)) = on_minion(golem, e.quantity) else {
             continue;
         };
-        if e.conditions != Conditions::none() {
-            ingest.reason(UnsupportedReason::UnmodelledSkill {
-                source: e.source.clone(),
-                what: "minion-modifier",
-            });
-            continue;
+        // A condition of the character only (P6-11cm): settled, it applies
+        // or not; any other condition, or an unsettled one, is a reason.
+        let own_only = e.conditions.all.is_empty() && e.conditions.any.is_empty();
+        let applies = if own_only {
+            e.conditions
+                .states
+                .iter()
+                .map(|(key, want)| settled.get(key).map(|v| v == want))
+                .try_fold(true, |all, v| v.map(|v| all && v))
+        } else {
+            None
+        };
+        match applies {
+            Some(true) => {}
+            Some(false) => continue,
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledSkill {
+                    source: e.source.clone(),
+                    what: "minion-modifier",
+                });
+                continue;
+            }
         }
         ingest.effect(Effect {
             quantity,

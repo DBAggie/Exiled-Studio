@@ -29,7 +29,10 @@
 //!   `Pinnacle` too);
 //! - `buffArcaneSurge`: `Condition:ArcaneSurge` (1002), which
 //!   `CalcPerform.lua` (686) turns into `AffectedByArcaneSurge` (the buff's
-//!   own effect is [`super::buffs`]').
+//!   own effect is [`super::buffs`]');
+//! - `conditionUsedMinionSkillRecently`: `UsedMinionSkillRecently` (1526;
+//!   P6-11cm), which `CalcPerform.lua` (249) also sets from the main skill
+//!   ([`used_minion_skill`]). Its implied `UsedSkillRecently` is the UI's.
 //!
 //! A value of another type (PoB would read it otherwise) leaves the
 //! condition unsettled, so an effect that needs it is a reason, and
@@ -49,6 +52,13 @@ use super::config::last_input as last;
 use super::enemy::{self, BossKind};
 use crate::condition::ConditionKey;
 use crate::input::CalcInput;
+
+/// "if you've used a Minion Skill Recently" (PoB's `UsedMinionSkillRecently`;
+/// P6-11cm): its check, or the main skill (module docs).
+pub const USED_MINION_SKILL_RECENTLY: &str = "UsedMinionSkillRecently";
+
+/// The check of [`USED_MINION_SKILL_RECENTLY`].
+pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
 /// "if you have Shocked an Enemy Recently".
 pub const SHOCKED_ENEMY_RECENTLY: &str = "ShockedEnemyRecently";
@@ -178,7 +188,36 @@ pub const CHECKS: &[(&str, &str)] = &[
         "conditionStoppedTakingDamageOverTimeRecently",
         STOPPED_TAKING_DOT_RECENTLY,
     ),
+    (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
 ];
+
+/// Whether the main skill makes the character have used a minion skill
+/// recently (P6-11cm; PoB's `doActorMisc`, `CalcPerform.lua` 240 to 251):
+/// a skill with PoB's `minion` flag and not `permanentMinion`, not
+/// triggered, not a trap, mine, or totem. `None` when the main skill is not
+/// certain; `Some(false)` without one (PoB's empty main skill).
+#[must_use]
+pub fn used_minion_skill(input: &CalcInput<'_>) -> Option<bool> {
+    use super::skill::{self, SkillProblem};
+    // Gem levels do not decide the skill's types or supports.
+    let levels = super::gem_levels::GemLevels::none();
+    let skill = match skill::main_skill(input.build, input.data, &levels) {
+        Ok(s) => s,
+        Err(SkillProblem::NoActiveSkill) => return Some(false),
+        Err(_) => return None,
+    };
+    let Some(pob) = super::pob_skill::skill(&skill.active_gem.effect.id) else {
+        return Some(false);
+    };
+    let placed = ["Trapped", "RemoteMined", "SummonsTotem"]
+        .iter()
+        .any(|t| skill.types.contains(*t));
+    let triggered = !matches!(
+        super::triggers::kind(&skill),
+        super::triggers::Kind::NotTriggered
+    );
+    Some(pob.flag("minion") && !pob.flag("permanentMinion") && !placed && !triggered)
+}
 
 /// A check's value: `Some(false)` when unset or off, `None` for a value
 /// that is not a boolean.
@@ -249,6 +288,19 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 out.remove(&key);
             }
             None => {}
+        }
+    }
+    // A minion skill used recently (P6-11cm): the check or the main skill.
+    let key = ConditionKey::new(USED_MINION_SKILL_RECENTLY);
+    if out.get(&key).copied() == Some(false) {
+        match used_minion_skill(input) {
+            Some(false) => {}
+            Some(true) => {
+                out.insert(key, true);
+            }
+            None => {
+                out.remove(&key);
+            }
         }
     }
     // A rare or unique enemy nearby (P6-10b): either condition; a count of
