@@ -132,6 +132,15 @@ impl Flags {
     /// `skill_can_fire_arrows`, `SkillStatMap.lua` 1341 and
     /// `CalcActiveSkill.lua` 412; P6-11c; its ailments and DoT keep it).
     pub const KEYWORD_ARROW: Self = Self(1 << 46);
+    /// A totem skill (PoB's `KeywordFlag.Totem`, `CalcActiveSkill.lua` 415:
+    /// the skill's `totem` flag; P6-11bk: the skill type `SummonsTotem`).
+    pub const KEYWORD_TOTEM: Self = Self(1 << 47);
+    /// A trap skill (PoB's `KeywordFlag.Trap`, 417: `trap`, not a totem;
+    /// the skill type `Trapped`).
+    pub const KEYWORD_TRAP: Self = Self(1 << 48);
+    /// A mine skill (PoB's `KeywordFlag.Mine`, 419: `mine`, neither a totem
+    /// nor a trap; the skill type `RemoteMined`).
+    pub const KEYWORD_MINE: Self = Self(1 << 49);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

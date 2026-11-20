@@ -1470,3 +1470,17 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence** (`b-ct`, against P6-11bi's run):
 - **Public:** 0 unexpected; 6 values toward PoB (two staff builds' effective health pool and hits to die), none away.
 - **Corpus:** unchanged.
+
+## P6-11bk: totem, trap, and mine skills; totem and mine damage
+
+PoB gives a skill `KeywordFlag.Totem` when it is a totem, else `KeywordFlag.Trap` when it is a trap, else `KeywordFlag.Mine` when it is a mine (`CalcActiveSkill.lua` 415 to 420). Its skill flags come from the granted effect's base flags and the supports' added flags.
+- The engine reads them from the skill's types, the supports' added types included: `SummonsTotem`, `Trapped`, `RemoteMined` (`skill::keyword_flags`, `Flags::KEYWORD_TOTEM`, `KEYWORD_TRAP`, `KEYWORD_MINE`). A test checks the three names against the real bundle's skill types.
+- An ailment keeps them, as PoB's ailment config keeps every keyword but `Hit`.
+- "#% increased Totem Damage" and "#% increased Mine Damage" are `HIT_ROWS` rows: `Damage` INC with the keyword.
+- Totem, trap, and mine skills themselves are not modelled yet (their supports and their own data are reasons). The rows matter now for every other skill, which they do not reach, as in PoB.
+
+**Fixture** `ice-nova-totem-mine-damage-lines-witch.xml`: Ice Nova with both lines and a spell damage line. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11bj's run):
+- **Public:** 0 unexpected; 15 values toward PoB, none away: the two totem builds' hits (Holy Flame Totem's and Kinetic Fusillade's through a ballista), their ailments and DPS. Their totem skills are still partial for other reasons.
+- **Corpus:** unchanged.

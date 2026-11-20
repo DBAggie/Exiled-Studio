@@ -126,6 +126,11 @@ const KEYWORDS: Flags = Flags::SKILL_PHYSICAL
     .union(Flags::KEYWORD_ATTACK)
     .union(Flags::KEYWORD_BOW)
     .union(Flags::KEYWORD_ARROW)
+    // Totem, trap, and mine (P6-11bk; PoB's ailment config keeps every
+    // keyword but `Hit`).
+    .union(Flags::KEYWORD_TOTEM)
+    .union(Flags::KEYWORD_TRAP)
+    .union(Flags::KEYWORD_MINE)
     // `band(cfg.flags, ModFlag.WeaponMask)` (P6-11b).
     .union(Flags::AILMENT_WEAPON_MASK)
     .union(Flags::KEYWORD_SPELL)

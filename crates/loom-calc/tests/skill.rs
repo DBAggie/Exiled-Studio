@@ -11,8 +11,8 @@ use std::collections::BTreeSet;
 use loom_calc::poe1::Poe1Mapping;
 use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS, SOCKETED_STATS};
 use loom_calc::poe1::skill::{
-    InstanceProblem, KEYWORD_TYPES, SkillProblem, group_skills, instance, instances, keyword_flags,
-    main_skill, type_expression, unknown_gems,
+    InstanceProblem, KEYWORD_TYPES, MINE_TYPE, SkillProblem, TOTEM_TYPE, TRAP_TYPE, group_skills,
+    instance, instances, keyword_flags, main_skill, type_expression, unknown_gems,
 };
 use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
@@ -107,6 +107,19 @@ fn keyword_flags_should_follow_the_skills_types() {
     assert_eq!(
         keyword_flags(&types(&["Attack", "Fire", "Lightning"])),
         Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING
+    );
+    // Totem, else trap, else mine (P6-11bk; `CalcActiveSkill.lua` 415).
+    assert_eq!(
+        keyword_flags(&types(&["Spell", TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])),
+        Flags::KEYWORD_TOTEM
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", TRAP_TYPE, MINE_TYPE])),
+        Flags::KEYWORD_TRAP
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", MINE_TYPE])),
+        Flags::KEYWORD_MINE
     );
     assert_eq!(
         keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),
@@ -546,7 +559,11 @@ fn real_skill_types_should_name_the_keyword_types() {
     let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
     let data = common::bundle_at(std::path::Path::new(&dir));
     let skills = data.skills.as_ref().unwrap();
-    for (name, _) in KEYWORD_TYPES {
+    for name in KEYWORD_TYPES
+        .iter()
+        .map(|(name, _)| *name)
+        .chain([TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])
+    {
         assert!(
             skills.skill_types.iter().any(|t| t.id == name),
             "{name} is no skill type"

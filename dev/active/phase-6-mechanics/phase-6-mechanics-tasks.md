@@ -137,6 +137,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11bh: the minion's added damage of every type (`docs/phase-6/stat-mop-up.md`, "P6-11bh")
 - [x] P6-11bi: the socketed skills' cost and reservation multiplier (`SocketedCostMultiplier`, `cost_mores`); fixture `ice-nova-socketed-cost-multiplier-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bi")
 - [x] P6-11bj: life and energy shield recovered on block while wielding a staff (`BlockGain::EnergyShieldSpellPercent`); fixture `ehp-staff-recover-on-block-ice-nova-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bj")
+- [x] P6-11bk: totem, trap, and mine keywords from the skill types; totem and mine damage (`Flags::KEYWORD_TOTEM`, `KEYWORD_TRAP`, `KEYWORD_MINE`); fixture `ice-nova-totem-mine-damage-lines-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bk")
 - [ ] Damage while leeching (the `Leeching` condition from four checks and PoB's automatic case)
 - [ ] Stats read per a computed value ("#% increased Spell Damage per 100 Maximum Mana, up to 60%", 4 public builds): PoB's `PerStat` on a pool; the engine has no mid-calculation effect with the pool's node as its provenance (design needed: a phase term in the hit as `phases::per_5` does for block)
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it
@@ -242,4 +243,5 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] oracle: over 250 fixtures took 44 to 46 minutes, past the job's 45-minute limit since before P6-10a; the limit is 90 now (maintainer to review).
 - [x] e2e (Linux): the node search box is found again before it is cleared ("element not interactable" after the list re-rendered, intermittent).
 - [ ] e2e (Windows): "session not created: DevToolsActivePort file doesn't exist" in every run since the Phase 6 cascade's merge into dev (`1097108`), on the same runner image as the last pass; the e2e app starts and stays up on this workstation (no driver here). Maintainer to look on a machine with tauri-driver and msedgedriver.
-- [ ] bench: `calculate` is about +119% over `tools/bench/baseline.json` (Phase 6's calculation); re-baseline from a CI `bench` log (`docs/phase-5/performance.md`, "The baseline") and record it in the PR.
+- [x] bench: `calculate` +119.6% over the baseline; re-baselined from CI run 44683273308. No single cause: the bench build's calculation grows with each mechanic, 1.4 ms at `dev` to 2.8 ms (`docs/phase-5/performance.md`, "Re-baselined 2026-11-20"). Maintainer: a profile before Phase 7.
+- [x] Linux e2e passes since the fix (CI run 44683273308); dev's `1097108` run failed e2e on both platforms too.

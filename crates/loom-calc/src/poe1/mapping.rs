@@ -2110,6 +2110,17 @@ pub const HIT_ROWS: &[HitRow] = &[
         "melee_weapon_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::MELEE, NONE)],
     ),
+    // P6-11bk: "#% increased Mine Damage" (`Damage` INC, `KeywordFlag.Mine`).
+    (
+        "mine_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_MINE,
+            NONE,
+        )],
+    ),
     (
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
@@ -2721,7 +2732,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
-    // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    // P6-11bk: "#% increased Totem Damage" (`Damage` INC, `KeywordFlag.Totem`).
+    (
+        "totem_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_TOTEM,
+            NONE,
+        )],
+    ), // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
     (
         "two_handed_melee_accuracy_rating_+%",
         &[(

@@ -294,13 +294,33 @@ impl<'d> MainSkill<'d> {
 /// The skill keywords of a skill with `types` ([`MainSkill::keyword_flags`]).
 #[must_use]
 pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
-    KEYWORD_TYPES
+    let flags = KEYWORD_TYPES
         .iter()
         .filter(|(name, _)| types.contains(*name))
         .fold(Flags::NONE, |flags, (_, t)| {
             flags | Flags::skill_keyword(*t)
-        })
+        });
+    // Totem, else trap, else mine (`CalcActiveSkill.lua` 415 to 420; P6-11bk):
+    // PoB's skill flags from the granted effect's base flags and its
+    // supports' added flags, here the skill types with the supports' added
+    // types.
+    if types.contains(TOTEM_TYPE) {
+        flags | Flags::KEYWORD_TOTEM
+    } else if types.contains(TRAP_TYPE) {
+        flags | Flags::KEYWORD_TRAP
+    } else if types.contains(MINE_TYPE) {
+        flags | Flags::KEYWORD_MINE
+    } else {
+        flags
+    }
 }
+
+/// The skill type of a totem skill (the game's `ActiveSkillType`).
+pub const TOTEM_TYPE: &str = "SummonsTotem";
+/// The skill type of a trap skill.
+pub const TRAP_TYPE: &str = "Trapped";
+/// The skill type of a mine skill.
+pub const MINE_TYPE: &str = "RemoteMined";
 
 /// The game's skill type names that give a skill keyword (the game's
 /// `ActiveSkillType` IDs, which PoB's `SkillType` names match; a test
