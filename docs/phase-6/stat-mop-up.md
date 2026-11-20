@@ -1385,3 +1385,16 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Recorded, not done:**
 - "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (PoB's `ExtraSkillMod` `SupportManaMultiplier` for the item's gems);
 - "#% increased Damage while Leeching" (four config checks, three implying `Leeching`, and PoB's automatic case: leech not removed at full life).
+
+## P6-11bd: bleeding's DoT multiplier, stun, minion aggression
+
+- **"+#% to Damage over Time Multiplier for Bleeding":** `DotMultiplier` BASE with `KeywordFlag.Bleed` (`HIT_ROWS`, as poison's).
+- **`NoEffect`:**
+  - stun duration with two-handed melee weapons, and Occultist's "Cannot Be Stunned while you have Energy Shield" (`stun`);
+  - "Minions are Aggressive" (`minion-behaviour`: PoB parses none of it).
+
+**Evidence** (`b-ct`, against P6-11bc's run):
+- **Public:** 0 unexpected; 4 values toward PoB (Boneshatter's and Lacerate's bleed), none away.
+- **Corpus:** unchanged.
+
+**Recorded, not done:** damage with hits against chilled enemies (the enemy's `Chilled` condition is no engine state).

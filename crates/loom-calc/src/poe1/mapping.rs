@@ -1504,6 +1504,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "bleeding_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::BLEED, NONE)],
     ),
+    // P6-11bd: "+#% to Damage over Time Multiplier for Bleeding":
+    // `DotMultiplier` BASE with `KeywordFlag.Bleed`, as poison's.
+    (
+        "bleeding_dot_multiplier_+",
+        &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::BLEED, NONE)],
+    ),
     // P6-11b: "#% increased Accuracy Rating with Bows": `Accuracy` INC, `ModFlag.Bow` and `Hit`.
     (
         "bow_accuracy_rating_+%",
@@ -6076,6 +6082,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("mine_duration_+%", "skill-duration"),
     ("minion_attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("minion_attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
+    // P6-11bd: "Minions are Aggressive": PoB parses none of it, and no
+    // slice field reads a minion's aggression.
+    ("minion_larger_aggro_radius", "minion-behaviour"),
     // P6-11bc: "Minions have #% increased Area of Effect" (the minion's
     // `AreaOfEffect` INC): area, as `base_skill_area_of_effect_+%` (the
     // minion's radius outputs are no slice field either).
@@ -6097,6 +6106,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
     // lines, each a guard.
     ("number_of_chains", "chain-count"),
+    // P6-11bd: stun on enemies with two handed melee weapons, and Occultist's
+    // "Cannot Be Stunned while you have Energy Shield": no slice field.
+    ("occultist_immune_to_stun_while_has_energy_shield", "stun"),
     (
         "pantheon_abberath_ignite_duration_on_self_+%_final",
         "ailment-on-self",
@@ -6217,6 +6229,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
         "pvp",
     ),
+    ("two_handed_melee_stun_duration_+%", "stun"),
     ("unaffected_by_burning_ground", "ground-on-self"),
     // P6-11n: "Unaffected by Ignite" (`SelfIgniteEffect` MORE -100): ignite on
     // you, no field.
