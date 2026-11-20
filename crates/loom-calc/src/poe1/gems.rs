@@ -4510,6 +4510,8 @@ mod tests {
             "curse_effect_on_self_+%",
             "impale_debuff_effect_+%",
             "supported_active_skill_gem_level_+",
+            // P6-11ck: Enhance's supported quality, the same way.
+            "supported_active_skill_gem_quality_%",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

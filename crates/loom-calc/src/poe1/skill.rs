@@ -706,8 +706,13 @@ pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
 /// Skills have +# to Level", Empower's; P6-11cj).
 pub const SUPPORTED_LEVEL_STAT: &str = "supported_active_skill_gem_level_+";
 
+/// The support stat that raises the supported skill's quality ("Supported
+/// Skills have +#% to Quality", Enhance's; P6-11ck).
+pub const SUPPORTED_QUALITY_STAT: &str = "supported_active_skill_gem_quality_%";
+
 /// `active` with its applied supports' [`SUPPORTED_LEVEL_STAT`] added to its
-/// level (P6-11cj; PoB's `SupportedGemProperty` `level`,
+/// level and [`SUPPORTED_QUALITY_STAT`] to its quality (P6-11cj, P6-11ck;
+/// PoB's `SupportedGemProperty` `level` and `quality`,
 /// `CalcActiveSkill.lua` 549 to 557: a skill from a gem, not a support).
 fn supported_level<'d>(
     active: GemEffectRef<'d>,
@@ -718,14 +723,21 @@ fn supported_level<'d>(
     if !from_gem || active.effect.support {
         return active;
     }
-    let extra: i64 = supports
+    let mut level = 0;
+    let mut quality = 0;
+    for (stat, v) in supports
         .iter()
         .flat_map(|s| instance(s.effect, s.level, s.quality, data).stats)
-        .filter(|(stat, _)| stat == SUPPORTED_LEVEL_STAT)
-        .map(|(_, v)| v)
-        .sum();
+    {
+        if stat == SUPPORTED_LEVEL_STAT {
+            level += v;
+        } else if stat == SUPPORTED_QUALITY_STAT {
+            quality += v;
+        }
+    }
     GemEffectRef {
-        level: active.level + extra,
+        level: active.level + level,
+        quality: active.quality + quality,
         ..active
     }
 }

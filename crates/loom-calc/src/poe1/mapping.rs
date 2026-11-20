@@ -6867,6 +6867,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11cj: Empower's "Supported Skills have +# to Level": the active gem's\nlevel, read by `skill::supported_level`, not a modifier.
     ("supported_active_skill_gem_level_+", "gem-level"),
+    // P6-11ck: Enhance's "Supported Skills have +#% to Quality": the active\ngem's quality, read by `skill::supported_level`.
+    ("supported_active_skill_gem_quality_%", "gem-level"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is

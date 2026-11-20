@@ -365,3 +365,13 @@ Empower's "Supported Skills have +# to Level" (`supported_active_skill_gem_level
 **Evidence** (`b-ct`, against P6-11ci's run):
 - **Public:** 0 unexpected; 12 values toward PoB, 3 now equal, none away.
 - **Corpus:** 0 unexpected; 7 toward PoB, none away.
+
+## P6-11ck: Enhance's supported quality
+
+Enhance's "Supported Skills have +#% to Quality" (`supported_active_skill_gem_quality_%`) is PoB's `SupportedGemProperty` `quality`, added to the active effect's quality the same way as P6-11cj's level. `skill::supported_level` adds both, and the quality stat is a `NoEffect` row too.
+
+**Fixture** `smite-enhance-quality-templar.xml`: Smite's area part with Enhance at level 4 (+24% quality). Smite's quality stat is more area damage, and the area hit is 1.15 times the same build without Enhance, as in PoB. The differences are Q11's floored attack rate (`DIV-0354` to `DIV-0359`).
+
+**Evidence** (`b-ct`, against P6-11cj's run):
+- **Public:** 0 unexpected; no value moved (the build with Enhance has other reasons).
+- **Corpus:** 0 unexpected; 7 values toward PoB, none away.
