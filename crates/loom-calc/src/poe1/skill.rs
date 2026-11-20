@@ -328,8 +328,10 @@ pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
 /// Skills", "Mark Skills"; P6-11dw: Blood and Sand's melee skills; P6-11eo:
 /// "Curse Skills", PoB's curse keyword). A test checks the names against
 /// the real bundle.
-pub const SKILL_TYPE_FLAGS: [(&str, Flags); 5] = [
+pub const SKILL_TYPE_FLAGS: [(&str, Flags); 6] = [
     ("AppliesCurse", Flags::KEYWORD_CURSE),
+    // P6-11ex: "Travel Skills".
+    ("Travel", Flags::SKILL_TRAVEL),
     (RANGED_ATTACK_TYPE, Flags::SKILL_RANGED_ATTACK),
     ("Brand", Flags::SKILL_BRAND),
     ("Mark", Flags::SKILL_MARK),

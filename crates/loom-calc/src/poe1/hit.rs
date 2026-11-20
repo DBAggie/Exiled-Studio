@@ -2180,27 +2180,36 @@ fn cast_rate(
         Quantity::Poe1(Poe1Quantity::CastTime),
         seconds,
     )?;
-    let limit = cooldown_limit(calc, spell)?;
-    rate(
+    let mut cooldown_reasons = Reasons::new();
+    let limit = cooldown_limit(calc, spell, cx, &mut cooldown_reasons)?;
+    let (value, mut reasons) = rate(
         calc,
         cast_time,
         cx,
         !spell.skill.types.contains("Channel"),
         !spell.skill.types.contains("SummonsTotem"),
         limit,
-    )
+    )?;
+    reasons.extend(&cooldown_reasons);
+    Ok((value, reasons))
 }
 
 /// The rate a cooldown allows (P6-7c3b): PoB's `calcSkillCooldown`
 /// (`CalcOffence.lua` 274 to 288), the level's cooldown, rounded up to a
 /// server tick (`ceil(cooldown x tick rate) / tick rate`) unless the skill
 /// stores more than one use; then `Speed = min(Speed, 1 / Cooldown x
-/// Repeats)` (2357 to 2360; the repeats in [`rate`]). No cooldown
-/// recovery, added cooldown, or additional use stat is mapped (each is
-/// unmapped, a reason). `None` without a cooldown.
+/// Repeats)` (2357 to 2360; the repeats in [`rate`]). The cooldown is
+/// divided by `calcLib.mod(CooldownRecovery)` first (P6-11ex: "#% increased
+/// Cooldown Recovery Rate", P6-11bs's `SkillTiming::CooldownRecovery`, and
+/// the typed ones, [`Poe1Quantity::TypedCooldownRecovery`]; no MORE is
+/// mapped); a recovery of -100% or less is a `cooldown-recovery` reason. No
+/// added cooldown or additional use stat is mapped (each is unmapped, a
+/// reason). `None` without a cooldown.
 fn cooldown_limit(
     calc: &mut Calc<'_>,
     spell: &SpellSkill<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     if spell.cooldown == 0 {
         return Ok(None);
@@ -2210,7 +2219,41 @@ fn cooldown_limit(
         reason = "a cooldown in milliseconds, exact as f64"
     )]
     let seconds = spell.cooldown as f64 / 1000.0;
-    let cooldown = phases::constant(calc, "skill-cooldown", seconds)?;
+    let base = phases::constant(calc, "skill-cooldown", seconds)?;
+    let global = Quantity::Poe1(Poe1Quantity::SkillTiming(
+        super::skill_modifiers::SkillTiming::CooldownRecovery,
+    ));
+    let typed = Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery);
+    let cooldown = if phases::has(calc, global) || phases::has(calc, typed) {
+        let a = sum_in(
+            calc,
+            global,
+            Op::Increased,
+            cx,
+            Term::Step("cooldown-recovery"),
+            reasons,
+        )?;
+        let b = sum_in(
+            calc,
+            typed,
+            Op::Increased,
+            cx,
+            Term::Step("cooldown-recovery-typed"),
+            reasons,
+        )?;
+        let inc = phases::total(calc, &[a, b], Term::Step("cooldown-recovery-sum"))?;
+        if inc.value <= -100.0 {
+            reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                source: spell.source(),
+                what: "cooldown-recovery",
+            });
+            return Ok(None);
+        }
+        let factor = phases::factor(calc, inc, Term::Step("cooldown-recovery-factor"))?;
+        quotient(calc, base, factor, Term::Step("cooldown-recovered"))?
+    } else {
+        base
+    };
     let cooldown = if spell.stored_uses > 1 {
         cooldown
     } else {

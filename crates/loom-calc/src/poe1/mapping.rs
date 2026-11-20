@@ -3398,6 +3398,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11ex: "#% increased Cooldown Recovery Rate of Travel Skills"
+    // (`CooldownRecovery` INC, `SkillType.Travel`): the main skill's
+    // cooldown reads it.
+    (
+        "travel_skill_cooldown_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery),
+            Op::Increased,
+            1.0,
+            Flags::SKILL_TRAVEL,
+            NONE,
+        )],
+    ),
     // as inverted" (`HitsInvertEleResChance` CHANCE, `div = 100`,
     // `SkillStatMap.lua` 821).
     (

@@ -2018,6 +2018,58 @@ fn a_main_skill_that_reserves_should_reserve() {
     assert_eq!(value(&r, Field::ManaUnreserved), mana(&r) - 5.0);
 }
 
+/// A cooldown divides by the cooldown recovery before it caps the rate
+/// (P6-11ex; PoB's `calcSkillCooldown`): Ice Nova casts twice a second; a
+/// 2 s cooldown caps it near 0.5, and 100% increased Cooldown Recovery
+/// Rate halves the cooldown, so the cap is near 1.
+#[test]
+fn cooldown_recovery_should_shorten_the_cooldown_cap() {
+    let mut data = Data::new();
+    for e in &mut data.effects {
+        if e.id == "IceNova" {
+            e.levels[0].cooldown = 2000;
+        }
+    }
+    let speed = |b: &Build| {
+        let options = CalcOptions::default();
+        let input = CalcInput {
+            build: b,
+            data: &data,
+            options: &options,
+        };
+        let r = calculate(&input).unwrap_or_else(|e| panic!("{e}"));
+        value(&r, Field::Speed)
+    };
+    let plain = build(vec![group(&["IceNova"])]);
+    // The cooldown rounds up to server ticks (`ceil(cooldown x tick rate) /
+    // tick rate`, the tick 0.033 s).
+    let capped = |cooldown: f64| {
+        let tick = 1.0 / 0.033;
+        tick / (cooldown * tick).ceil()
+    };
+    assert!(
+        (speed(&plain) - capped(2.0)).abs() < 1e-9,
+        "{}",
+        speed(&plain)
+    );
+    let mut line = stat_line("base_cooldown_speed_+%");
+    if let LineKind::Modifier(m) = &mut line.kind {
+        m.resolution = LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_cooldown_speed_+%"),
+                value: StatValue::Exact { min: 100, max: 100 },
+            }]),
+            adapted: None,
+        };
+    }
+    let recovered = with_item(build(vec![group(&["IceNova"])]), "Helmet", vec![line]);
+    assert!(
+        (speed(&recovered) - capped(1.0)).abs() < 1e-9,
+        "{}",
+        speed(&recovered)
+    );
+}
+
 // ------------------------------------------------- socket colour (P3-12i)
 
 fn spec(key: &str, value: &str) -> ItemLine {

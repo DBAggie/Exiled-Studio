@@ -2950,3 +2950,16 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public and corpus:** 0 unexpected; no value moved.
 - A Penance Brand Elementalist's line is no longer a reason. Its count, checked with a debug run, is 1: the config's 2, at most Penance Brand's attach limit of 1. The build's own damage fields are not computed (`unsupported`), so nothing moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ex: cooldown recovery on the main skill's cooldown; travel skills
+
+**PoB:** `calcSkillCooldown` (`CalcOffence.lua` 274 to 288) divides a skill's cooldown by `calcLib.mod(skillModList, skillCfg, "CooldownRecovery")` before it rounds it up to a server tick. The rate is then at most `1 / cooldown`. "#% increased Cooldown Recovery Rate of Travel Skills" is `CooldownRecovery` INC with `SkillType.Travel`.
+
+**The engine:**
+- **A fix:** the main spell's cooldown cap (`hit::cooldown_limit`, P6-7c3b) read the level's cooldown alone. Its docs said no cooldown recovery stat was mapped, which stopped being true in P6-11bs, when "#% increased Cooldown Recovery Rate" became `SkillTiming::CooldownRecovery` for the warcries. A cooldown spell with that line was capped at the unrecovered cooldown, with no reason. The cap now divides by `1 + inc / 100`: the global recovery plus the typed one. A recovery of -100% or less is a `cooldown-recovery` reason.
+- **Travel skills:** `Flags::SKILL_TRAVEL` from the main skill's `Travel` type (`skill::SKILL_TYPE_FLAGS`). The travel line is `Poe1Quantity::TypedCooldownRecovery` with that flag. It is a quantity of its own because `skill_modifiers::Totals` counts any conditional `SkillTiming` effect as unread.
+- **Test:** `cooldown_recovery_should_shorten_the_cooldown_cap`. Ice Nova at a 0.5 s cast with a 2 s cooldown is capped at the tick-rounded 1/2.013 per second; with 100% increased cooldown recovery, at 1/1.023 per second.
+
+**Evidence** (`b-ct`, against P6-11ew's run):
+- **Public and corpus:** 0 unexpected; no value moved. No build's computed main skill is a cooldown spell with a recovery line.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
