@@ -82,6 +82,34 @@ pub const READERS: &[(&str, &str, f64, Reading)] = &[
         -1.0,
         Reading::Per10,
     ),
+    // P6-11fb.
+    (
+        "minimum_endurance_charges_at_devotion_threshold",
+        "base_minimum_endurance_charges",
+        1.0,
+        Reading::AtLeast150,
+    ),
+    // P6-11fb.
+    (
+        "minimum_frenzy_charges_at_devotion_threshold",
+        "base_minimum_frenzy_charges",
+        1.0,
+        Reading::AtLeast150,
+    ),
+    // P6-11fb.
+    (
+        "minimum_power_charges_at_devotion_threshold",
+        "base_minimum_power_charges",
+        1.0,
+        Reading::AtLeast150,
+    ),
+    // P6-11fb.
+    (
+        "physical_damage_%_to_convert_to_cold_at_devotion_threshold",
+        "base_physical_damage_%_to_convert_to_cold",
+        1.0,
+        Reading::AtLeast150,
+    ),
     (
         "physical_damage_%_to_convert_to_fire_at_devotion_threshold",
         "base_physical_damage_%_to_convert_to_fire",

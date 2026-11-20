@@ -122,6 +122,12 @@ pub const BLOCKED_RECENTLY: &str = "BlockedRecently";
 /// "if you haven't Blocked Recently": [`BLOCKED_RECENTLY`] negated,
 /// unsettled when it is (P6-11eg).
 pub const NOT_BLOCKED_RECENTLY: &str = "NotBlockedRecently";
+/// "if you haven't dealt a Critical Strike Recently": [`CRIT_RECENTLY`]
+/// negated, unsettled when it is (P6-11fb).
+pub const NOT_CRIT_RECENTLY: &str = "NotCritRecently";
+/// "if you haven't Killed Recently": [`KILLED_RECENTLY`] negated,
+/// unsettled when it is (P6-11fb).
+pub const NOT_KILLED_RECENTLY: &str = "NotKilledRecently";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
@@ -530,6 +536,15 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     // checks, settled when they are.
     if let Some(v) = out.get(&ConditionKey::new(BLOCKED_RECENTLY)).copied() {
         out.insert(ConditionKey::new(NOT_BLOCKED_RECENTLY), !v);
+    }
+    // Not crit and not killed recently (P6-11fb): the same.
+    for (key, not) in [
+        (CRIT_RECENTLY, NOT_CRIT_RECENTLY),
+        (KILLED_RECENTLY, NOT_KILLED_RECENTLY),
+    ] {
+        if let Some(v) = out.get(&ConditionKey::new(key)).copied() {
+            out.insert(ConditionKey::new(not), !v);
+        }
     }
 }
 

@@ -3019,3 +3019,35 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - A mine Assassin's speed went from 5.9 to 21.07 (PoB 18.61) with its five mines per throw, and its DPS moved toward PoB. The speed's remaining difference is its other mine laying speed lines, still reasons.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fb: the timeless additions' remaining lines
+
+Every stat of the timeless data (`poe1/timeless.json`: 395 stats, the conquests' and the Abyss additions') was run through the mapping. Each unmapped one was rendered and parsed by PoB's own `ModParser` (`local/p6/parse2`), as P6-11ba did.
+
+**Mapped:**
+- **Spell added damage while holding a Shield or wielding a Two Handed Weapon**, each type's minimum and maximum (20 `STATE_ROWS` rows): `<Type>Min`/`Max` BASE with `KeywordFlag.Spell`, under `UsingShield` (PoB's "while holding a (%w+)", a `varList`) or `UsingTwoHandedWeapon` (settled since P6-11en). "Adds # to # Physical Damage to Spells", unconditional (two `HIT_ROWS` rows).
+- **Conditional lines** (`STATE_ROWS`):
+  - damage over time with a two-handed weapon;
+  - crit chance if you haven't crit recently, under the new `conditions::NOT_CRIT_RECENTLY`;
+  - crit multiplier and damage if you've killed recently;
+  - elemental penetration if you haven't killed recently, under the new `NOT_KILLED_RECENTLY` (each the negation of its check, settled when it is, as `NOT_BLOCKED_RECENTLY`);
+  - life regeneration and mana regeneration rate while moving;
+  - movement speed if you haven't taken damage recently (PoB's `BeenHitRecently` negated);
+  - Onslaught on kill (`KilledRecently`, as P6-11p's chance).
+- **Others:** "#% increased Projectile Attack Damage" (`ModFlag.Attack` and `Projectile`); "#% increased Energy Shield per Power Charge" (`PerCharge::EnergyShield`).
+- **Devotion readers at 150:** the three minimum charges and physical damage converted to cold (`poe1::devotion::READERS`).
+- **`NoEffect`:** curse skills' duration, Phasing on kill (no row reads `Phasing`), elemental ailment immunity on consecrated ground.
+
+**Left as reasons**, each for its own cause:
+- the ward lines (no ward pool);
+- the minions' ailment chances, life regeneration, and speed (next);
+- the enemy-side lines (blinded, hindered, intimidated, maimed, withered);
+- "additional Physical Damage Reduction if you weren't Damaged by a Hit Recently" (PoB leaves "if you weren't Damaged by a Hit Recently" unparsed and skips the line);
+- the plain exposure chances and mana as energy shield at 150 Devotion (no target stat yet);
+- the per-10-Devotion aura effect and mana (P6-11az's reasons);
+- flask duration (P6-11ef);
+- the Abyss and other keystones.
+
+**Evidence** (`b-ct`, against P6-11fa's run):
+- **Public and corpus:** 0 unexpected; no value moved. No build has an Abyss jewel, and the conquests' lines are not on any build's nodes. The state rows test checks every new row and its condition.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

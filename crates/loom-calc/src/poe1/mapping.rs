@@ -2571,6 +2571,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "poison_dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::POISON, NONE)],
     ),
+    // P6-11fb: "#% increased Projectile Attack Damage" (`Damage` INC with
+    // `ModFlag.Attack` and `Projectile`).
+    (
+        "projectile_attack_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK.union(Flags::PROJECTILE),
+            NONE,
+        )],
+    ),
     // P6-11co: "Projectile Attack Skills have #% increased Critical Strike
     // Chance" (`CritChance` INC) and "+#% to Critical Strike Multiplier"
     // (`CritMultiplier` BASE), each with the `SkillType.RangedAttack` tag.
@@ -2817,6 +2829,12 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11fb: "Adds # to # Physical Damage to Spells" (`PhysicalMin`/`Max`
+    // BASE with `KeywordFlag.Spell`).
+    (
+        "spell_maximum_added_physical_damage",
+        &[(added(PHYS, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
     (
         "spell_maximum_base_chaos_damage",
         &[(skill_base(CHAOS_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -2852,6 +2870,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "spell_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_minimum_added_physical_damage",
+        &[(added(PHYS, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
     (
         "spell_minimum_base_chaos_damage",
@@ -4210,6 +4232,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_RECENTLY,
         )],
     ),
+    // P6-11fb: "#% increased Critical Strike Chance if you haven't dealt a Critical
+    // Strike Recently" (`CritChance` INC, `CritRecently` negated).
+    (
+        "critical_strike_chance_+%_if_have_not_crit_recently",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::NOT_CRIT_RECENTLY,
+        )],
+    ),
     // P6-11eg: "#% increased Critical Strike Chance if you haven't Blocked
     // Recently" (`CritChance` INC, `BlockedRecently` negated).
     (
@@ -4246,6 +4279,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::ENEMY_FULL_LIFE,
+        )],
+    ),
+    // P6-11fb: "+#% to Critical Strike Multiplier if you've Killed Recently"
+    // (`CritMultiplier` BASE, `KilledRecently`).
+    (
+        "critical_strike_multiplier_+_if_enemy_killed_recently",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::KILLED_RECENTLY,
         )],
     ),
     // P6-11ed: "+#% Critical Strike Multiplier while a Rare or Unique Enemy
@@ -4329,6 +4373,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
         ],
     ),
+    // P6-11fb: "#% increased Damage if you've Killed Recently" (`Damage` INC,
+    // `KilledRecently`).
+    (
+        "damage_+%_if_enemy_killed_recently",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
     // P3-8n: "if you've Shattered an Enemy Recently" (1935).
     (
         "damage_+%_if_enemy_shattered_recently",
@@ -4380,6 +4435,42 @@ pub const STATE_ROWS: &[StateRow] = &[
             Flags::DOT,
             states::USING_SHIELD,
         )],
+    ),
+    // P6-11fb: "#% increased Damage over Time while wielding a Two Handed Weapon"
+    // (`Damage` INC with `ModFlag.Dot`, `UsingTwoHandedWeapon`).
+    (
+        "damage_over_time_+%_while_wielding_two_handed_weapon",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::DOT,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
+    // P6-11fb: "Damage Penetrates #% Elemental Resistances if you haven't
+    // Killed Recently" (`ElementalPenetration` BASE, `KilledRecently` negated).
+    (
+        "damage_penetrates_%_elemental_resistance_if_enemy_not_killed_recently",
+        &[
+            (
+                Quantity::Penetration(FIRE_T),
+                Op::Base,
+                NONE,
+                conditions::NOT_KILLED_RECENTLY,
+            ),
+            (
+                Quantity::Penetration(COLD_T),
+                Op::Base,
+                NONE,
+                conditions::NOT_KILLED_RECENTLY,
+            ),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                NONE,
+                conditions::NOT_KILLED_RECENTLY,
+            ),
+        ],
     ),
     (
         "defences_+%_while_wielding_staff",
@@ -4568,6 +4659,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::USING_LIFE_FLASK,
         )],
     ),
+    // P6-11fb: "Regenerate #% of Life per second while moving" (`LifeRegenPercent`
+    // BASE, the stat per minute, `Moving`).
+    (
+        "life_regeneration_rate_per_minute_%_while_moving",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+            Op::Base,
+            NONE,
+            conditions::MOVING,
+        )],
+    ),
     (
         "life_regeneration_rate_per_minute_%_while_stationary",
         &[(
@@ -4575,6 +4677,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::STATIONARY,
+        )],
+    ),
+    // P6-11fb: "#% increased Mana Regeneration Rate while moving" (`ManaRegen` INC,
+    // `Moving`).
+    (
+        "mana_regeneration_rate_+%_while_moving",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+            Op::Increased,
+            NONE,
+            conditions::MOVING,
         )],
     ),
     // P6-11de: "Marked Enemy has #% increased Accuracy Rating" (an
@@ -4708,6 +4821,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::CRIT_RECENTLY,
         )],
     ),
+    // P6-11fb: "#% increased Movement Speed if you haven't taken Damage Recently"
+    // (`MovementSpeed` INC, PoB's `BeenHitRecently` negated).
+    (
+        "movement_speed_+%_if_have_not_taken_damage_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::NOT_HIT_RECENTLY,
+        )],
+    ),
     // P6-11ee: "#% increased Movement Speed while holding a Shield"
     // (`MovementSpeed` INC, `UsingShield`).
     (
@@ -4750,6 +4874,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::IGNITED,
+        )],
+    ),
+    // P6-11fb: "You gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
+    // FLAG, `KilledRecently`; `poe1::buffs`).
+    (
+        "onslaught_buff_duration_on_kill_ms",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Onslaught),
+            Op::Flag,
+            NONE,
+            conditions::KILLED_RECENTLY,
         )],
     ),
     // P6-11p: "Gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
@@ -4934,6 +5069,30 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    // P6-11fb: "# to # Added Spell <Type> Damage while holding a Shield" (an Abyss
+    // jewel's addition; `<Type>Min`/`Max` BASE with `KeywordFlag.Spell`,
+    // under USING_SHIELD).
+    (
+        "spell_maximum_added_chaos_damage_while_holding_a_shield",
+        &[(
+            added(CHAOS_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    // P6-11fb: "# to # Added Spell <Type> Damage while wielding a Two Handed Weapon" (an Abyss
+    // jewel's addition; `<Type>Min`/`Max` BASE with `KeywordFlag.Spell`,
+    // under USING_TWO_HANDED_WEAPON).
+    (
+        "spell_maximum_added_chaos_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(CHAOS_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
     // `KeywordFlag.Spell`, `DualWielding`.
     (
@@ -4943,6 +5102,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             Flags::SPELL,
             states::DUAL_WIELDING,
+        )],
+    ),
+    (
+        "spell_maximum_added_cold_damage_while_holding_a_shield",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_maximum_added_cold_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(COLD_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
         )],
     ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
@@ -4956,6 +5133,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    (
+        "spell_maximum_added_fire_damage_while_holding_a_shield",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_maximum_added_fire_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
     // `KeywordFlag.Spell`, `DualWielding`.
     (
@@ -4965,6 +5160,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             Flags::SPELL,
             states::DUAL_WIELDING,
+        )],
+    ),
+    (
+        "spell_maximum_added_lightning_damage_while_holding_a_shield",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_maximum_added_lightning_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(LIGHTNING_T, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
         )],
     ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
@@ -4978,6 +5191,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    (
+        "spell_maximum_added_physical_damage_while_holding_a_shield",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_maximum_added_physical_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(PHYS, MAX),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
     // `KeywordFlag.Spell`, `DualWielding`.
     (
@@ -4987,6 +5218,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             Flags::SPELL,
             states::DUAL_WIELDING,
+        )],
+    ),
+    (
+        "spell_minimum_added_chaos_damage_while_holding_a_shield",
+        &[(
+            added(CHAOS_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_minimum_added_chaos_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(CHAOS_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
         )],
     ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
@@ -5000,6 +5249,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    (
+        "spell_minimum_added_cold_damage_while_holding_a_shield",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_minimum_added_cold_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(COLD_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
     // `KeywordFlag.Spell`, `DualWielding`.
     (
@@ -5009,6 +5276,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             Flags::SPELL,
             states::DUAL_WIELDING,
+        )],
+    ),
+    (
+        "spell_minimum_added_fire_damage_while_holding_a_shield",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_minimum_added_fire_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
         )],
     ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
@@ -5022,6 +5307,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    (
+        "spell_minimum_added_lightning_damage_while_holding_a_shield",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_minimum_added_lightning_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(LIGHTNING_T, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
     // P6-11ba: "# to # Added Spell ... Damage while Dual Wielding": BASE,
     // `KeywordFlag.Spell`, `DualWielding`.
     (
@@ -5031,6 +5334,24 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             Flags::SPELL,
             states::DUAL_WIELDING,
+        )],
+    ),
+    (
+        "spell_minimum_added_physical_damage_while_holding_a_shield",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_minimum_added_physical_damage_while_wielding_two_handed_weapon",
+        &[(
+            added(PHYS, MIN),
+            Op::Base,
+            Flags::SPELL,
+            states::USING_TWO_HANDED_WEAPON,
         )],
     ),
     (
@@ -7773,6 +8094,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
+    // P6-11fb: the timeless additions' lines no slice field reads: curse
+    // skills' duration, Phasing on kill (`Condition:Phasing`, which no row
+    // reads), elemental ailment immunity on consecrated ground at 150 Devotion
+    // (the ailments on you).
+    ("curse_skill_effect_duration_+%", "no-slice"),
     // P6-11dl: Cyclone's area per additional melee range (`AreaOfEffect` INC per
     // `AdditionalMeleeRange`): area, no slice field.
     (
@@ -7944,6 +8270,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
     // hexproof, so curses already apply.
     ("ignore_hexproof", "curse"),
+    (
+        "immune_to_elemental_ailments_while_on_consecrated_ground_at_devotion_threshold",
+        "no-slice",
+    ),
     ("is_remote_mine", "no-slice"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
@@ -8167,6 +8497,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
     // not modelled, a reason of their own) (P6-4b).
     ("phase_through_objects", "condition"),
+    ("phasing_for_4_seconds_on_kill_%", "no-slice"),
     // P6-11m: reflected physical damage (unparsed).
     ("physical_damage_to_return_to_melee_attacker", "reflect"),
     // P6-11n: "#% increased Power Charge Duration"
@@ -10124,6 +10455,9 @@ mod tests {
                         states::DUAL_WIELDING,
                         // P6-11en: the hands' weapon types.
                         states::USING_TWO_HANDED_MELEE_WEAPON,
+                        states::USING_TWO_HANDED_WEAPON,
+                        states::USING_ONE_HANDED_WEAPON,
+                        states::USING_MELEE_WEAPON,
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
@@ -10134,6 +10468,9 @@ mod tests {
                         conditions::NOT_HIT_RECENTLY,
                         // P6-11eg: the negation of the blocked checks.
                         conditions::NOT_BLOCKED_RECENTLY,
+                        // P6-11fb: the negations of the crit and kill checks.
+                        conditions::NOT_CRIT_RECENTLY,
+                        conditions::NOT_KILLED_RECENTLY,
                         // P6-11cq: from the active flasks.
                         conditions::USING_LIFE_FLASK,
                         // P6-11ct: from the heralds among the skills.
@@ -10871,6 +11208,273 @@ mod tests {
                     NONE,
                     states::USING_SHIELD,
                 )],
+            ),
+            // P6-11fb: the timeless additions' conditional lines.
+            (
+                "spell_minimum_added_chaos_damage_while_holding_a_shield",
+                vec![config(
+                    added(CHAOS_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_maximum_added_chaos_damage_while_holding_a_shield",
+                vec![config(
+                    added(CHAOS_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_minimum_added_cold_damage_while_holding_a_shield",
+                vec![config(
+                    added(COLD_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_maximum_added_cold_damage_while_holding_a_shield",
+                vec![config(
+                    added(COLD_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_minimum_added_fire_damage_while_holding_a_shield",
+                vec![config(
+                    added(FIRE_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_maximum_added_fire_damage_while_holding_a_shield",
+                vec![config(
+                    added(FIRE_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_minimum_added_lightning_damage_while_holding_a_shield",
+                vec![config(
+                    added(LIGHTNING_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_maximum_added_lightning_damage_while_holding_a_shield",
+                vec![config(
+                    added(LIGHTNING_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_minimum_added_physical_damage_while_holding_a_shield",
+                vec![config(
+                    added(PHYS, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_maximum_added_physical_damage_while_holding_a_shield",
+                vec![config(
+                    added(PHYS, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_SHIELD,
+                )],
+            ),
+            (
+                "spell_minimum_added_chaos_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(CHAOS_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_maximum_added_chaos_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(CHAOS_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_minimum_added_cold_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(COLD_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_maximum_added_cold_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(COLD_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_minimum_added_fire_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(FIRE_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_maximum_added_fire_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(FIRE_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_minimum_added_lightning_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(LIGHTNING_T, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_maximum_added_lightning_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(LIGHTNING_T, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_minimum_added_physical_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(PHYS, MIN),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "spell_maximum_added_physical_damage_while_wielding_two_handed_weapon",
+                vec![config(
+                    added(PHYS, MAX),
+                    Op::Base,
+                    Flags::SPELL,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "damage_over_time_+%_while_wielding_two_handed_weapon",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::DOT,
+                    states::USING_TWO_HANDED_WEAPON,
+                )],
+            ),
+            (
+                "critical_strike_chance_+%_if_have_not_crit_recently",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    conditions::NOT_CRIT_RECENTLY,
+                )],
+            ),
+            (
+                "critical_strike_multiplier_+_if_enemy_killed_recently",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
+            ),
+            (
+                "damage_+%_if_enemy_killed_recently",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
+            ),
+            (
+                "life_regeneration_rate_per_minute_%_while_moving",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+                    Op::Base,
+                    NONE,
+                    conditions::MOVING,
+                )],
+            ),
+            (
+                "mana_regeneration_rate_+%_while_moving",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Regen(Pool::Mana)),
+                    Op::Increased,
+                    NONE,
+                    conditions::MOVING,
+                )],
+            ),
+            (
+                "movement_speed_+%_if_have_not_taken_damage_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::NOT_HIT_RECENTLY,
+                )],
+            ),
+            (
+                "onslaught_buff_duration_on_kill_ms",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Onslaught),
+                    Op::Flag,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
+            ),
+            (
+                "damage_penetrates_%_elemental_resistance_if_enemy_not_killed_recently",
+                [FIRE_T, COLD_T, LIGHTNING_T]
+                    .iter()
+                    .map(|t| {
+                        config(
+                            Quantity::Penetration(*t),
+                            Op::Base,
+                            NONE,
+                            conditions::NOT_KILLED_RECENTLY,
+                        )
+                    })
+                    .collect(),
             ),
             // P6-11fa: more traps thrown while dual wielding.
             (

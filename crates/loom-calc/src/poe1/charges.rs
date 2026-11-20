@@ -149,6 +149,8 @@ pub enum PerCharge {
     CritMultiplier,
     /// Increased evasion rating (`Evasion` INC; P6-11f).
     Evasion,
+    /// Increased energy shield (`EnergyShield` INC; P6-11fb).
+    EnergyShield,
     /// Increased movement speed (`MovementSpeed` INC; P6-10b).
     MovementSpeed,
     /// Life regeneration, percent of life per minute (`LifeRegenPercent`
@@ -187,6 +189,7 @@ impl PerCharge {
             Self::CritChance => "per.crit-chance",
             Self::CritMultiplier => "per.crit-multiplier",
             Self::Evasion => "per.evasion",
+            Self::EnergyShield => "per.energy-shield",
             Self::MovementSpeed => "per.movement-speed",
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
             Self::LifeRegenPerMinute => "per.life-regen-per-minute",
@@ -227,6 +230,7 @@ impl PerCharge {
             Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
             Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
             Self::Evasion => (Quantity::Evasion, Op::Increased, Flags::NONE),
+            Self::EnergyShield => (Quantity::EnergyShield, Op::Increased, Flags::NONE),
             Self::MovementSpeed => (
                 Quantity::Poe1(super::Poe1Quantity::MovementSpeed),
                 Op::Increased,
@@ -394,6 +398,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "endurance_charge_on_melee_stun_damage_+%_final_per_endurance_charge",
         ChargeKind::Endurance,
         ChargeValue::Per(PerCharge::MoreDamage),
+    ),
+    // P6-11fb: "#% increased Energy Shield per Power Charge" (`EnergyShield`
+    // INC per `Multiplier:PowerCharge`).
+    (
+        "energy_shield_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::EnergyShield),
     ),
     (
         "evasion_rating_+%_per_frenzy_charge",
