@@ -1735,7 +1735,7 @@ mod tests {
             GemMinionStat::Applied
         );
         assert_eq!(
-            gem_minion_stat("minions_penetrate_elemental_resistances_%_vs_cursed_enemies"),
+            gem_minion_stat("minion_grant_puppet_master_buff_to_parent_on_hit_%"),
             GemMinionStat::Unmapped
         );
         assert_eq!(

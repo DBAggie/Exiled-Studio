@@ -1946,3 +1946,27 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cu: minion penetration against cursed enemies
+
+**PoB** reads "Minions Penetrate #% of Cursed Enemies' Elemental Resistances" as a `MinionModifier` LIST of `ElementalPenetration` BASE. The inner mod carries `ActorCondition` `enemy` `Cursed`. Two things make the enemy `Cursed`:
+- **A filled curse slot** (`CalcPerform.lua` 3301 to 3303).
+- **The config check** `conditionEnemyCursed` (`ConfigOptions.lua` 1780).
+
+**The engine:**
+- `gems::curses_enemy` is whether the gem table applies a curse or mark (a `Kind::Curse` skill in the groups `affected_by` reads). PoB's curse limit starts at 1, so such a skill fills a slot. A curse is never a main skill whose hit the engine computes.
+- `poe1::conditions` settles `Enemy:Cursed` from the check or `curses_enemy`; the check leaves `config::NAMED_ONLY`.
+- `minions::MinionValue::Penetration(type)` reaches the minion's `Penetration`. The stat is a state row of fire, cold, and lightning penetration on `Enemy:Cursed`, which `minion_actor::minion_modifiers` evaluates against the character's settled states.
+
+**Fixtures** (Summon Flame Golem, a fire spell, with the line at 15%):
+- `minion-summon-flame-golem-cursed-penetration-witch.xml`: with Punishment in a second group, 483.3 average damage.
+- `minion-summon-flame-golem-uncursed-penetration-witch.xml`: no curse, 371.7.
+
+Every computed field of both equals PoB's.
+
+**Found on the way** (recorded for review): with Temporal Chains instead of Punishment, PoB's minion ignite lasts 5.33 s instead of 4 and its `IgniteDPS` rises from 37.7 to 50.3. The engine reads Temporal Chains' `buff_time_passed_+%_other_than_temporal_chains` as `NoSlice` (`gems::SKILLS`). It is not a reason, so the minion's ignite is wrong, unflagged, for a build with Temporal Chains. No public or corpus build has both.
+
+**Evidence** (`b-ct`, against P6-11ct's run):
+- **Public:** 0 unexpected; 2 values toward PoB (two community builds' full DPS), none away.
+- **Corpus:** 0 unexpected; 1 value toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

@@ -3335,6 +3335,17 @@ const SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::SpellBlockChance);
 const MAX_SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::MaximumSpellBlockChance);
 const SUPPRESSION: Quantity = Quantity::Poe1(Poe1Quantity::SpellSuppressionChance);
 
+/// The minion's penetration of each element (P6-11cu).
+const MINION_FIRE_PEN: Quantity = Quantity::Poe1(Poe1Quantity::Minion(
+    super::minions::MinionValue::Penetration(DamageType::Fire),
+));
+const MINION_COLD_PEN: Quantity = Quantity::Poe1(Poe1Quantity::Minion(
+    super::minions::MinionValue::Penetration(DamageType::Cold),
+));
+const MINION_LIGHTNING_PEN: Quantity = Quantity::Poe1(Poe1Quantity::Minion(
+    super::minions::MinionValue::Penetration(DamageType::Lightning),
+));
+
 /// A stat that applies under a named condition the build settles
 /// ([`super::states`], P3-8f): `(stat, [(quantity, op, flags, condition)])`.
 type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
@@ -3844,6 +3855,22 @@ pub const STATE_ROWS: &[StateRow] = &[
             NONE,
             conditions::AFFECTED_BY_HERALD,
         )],
+    ),
+    // P6-11cu: "Minions Penetrate #% of Cursed Enemies' Elemental
+    // Resistances" (PoB's `MinionModifier` LIST of `ElementalPenetration`
+    // BASE with the inner `ActorCondition` `enemy` `Cursed`).
+    (
+        "minions_penetrate_elemental_resistances_%_vs_cursed_enemies",
+        &[
+            (MINION_FIRE_PEN, Op::Base, NONE, conditions::ENEMY_CURSED),
+            (MINION_COLD_PEN, Op::Base, NONE, conditions::ENEMY_CURSED),
+            (
+                MINION_LIGHTNING_PEN,
+                Op::Base,
+                NONE,
+                conditions::ENEMY_CURSED,
+            ),
+        ],
     ),
     // P6-11w: "#% increased Movement Speed while on Burning Ground"
     // (`MovementSpeed` INC, `OnBurningGround`, the config's check).
@@ -9393,6 +9420,20 @@ mod tests {
                     NONE,
                     conditions::USING_LIFE_FLASK,
                 )],
+            ),
+            // P6-11cu: minion penetration against cursed enemies.
+            (
+                "minions_penetrate_elemental_resistances_%_vs_cursed_enemies",
+                vec![
+                    config(MINION_FIRE_PEN, Op::Base, NONE, conditions::ENEMY_CURSED),
+                    config(MINION_COLD_PEN, Op::Base, NONE, conditions::ENEMY_CURSED),
+                    config(
+                        MINION_LIGHTNING_PEN,
+                        Op::Base,
+                        NONE,
+                        conditions::ENEMY_CURSED,
+                    ),
+                ],
             ),
             // P6-11ct: minion damage while affected by a herald.
             (

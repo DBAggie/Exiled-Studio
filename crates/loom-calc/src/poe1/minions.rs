@@ -111,6 +111,10 @@ pub enum MinionValue {
     /// The minion's critical strike multiplier (PoB's `CritMultiplier`
     /// BASE; P6-11cs).
     CritMultiplier,
+    /// The minion's penetration of a resistance (PoB's
+    /// `<Type>Penetration` BASE, `ElementalPenetration` each element's;
+    /// P6-11cu).
+    Penetration(DamageType),
 }
 
 impl MinionValue {
@@ -161,6 +165,13 @@ impl MinionValue {
             },
             Self::DoubleDamageChance => "double-damage-chance",
             Self::CritMultiplier => "crit-multiplier",
+            Self::Penetration(t) => match t {
+                DamageType::Physical => "physical-penetration",
+                DamageType::Fire => "fire-penetration",
+                DamageType::Cold => "cold-penetration",
+                DamageType::Lightning => "lightning-penetration",
+                DamageType::Chaos => "chaos-penetration",
+            },
         }
     }
 
@@ -194,6 +205,7 @@ impl MinionValue {
             Self::AddedDamage(t, b) => Quantity::AddedDamage(t, b),
             Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
             Self::CritMultiplier => Quantity::CritMultiplier,
+            Self::Penetration(t) => Quantity::Penetration(t),
             Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
             Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
         };

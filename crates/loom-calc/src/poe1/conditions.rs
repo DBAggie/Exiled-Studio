@@ -67,6 +67,10 @@ pub const USING_LIFE_FLASK: &str = "UsingLifeFlask";
 /// [`super::gems::herald_and_aura_counts`]).
 pub const AFFECTED_BY_HERALD: &str = "AffectedByHerald";
 
+/// The enemy is cursed (PoB's enemy `Cursed`; P6-11cu): its check, or a
+/// curse the gem table applies ([`super::gems::curses_enemy`]).
+pub const ENEMY_CURSED: &str = "Enemy:Cursed";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -177,6 +181,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionBlockedSpellRecently", BLOCKED_RECENTLY),
     ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
     ("conditionCritRecently", CRIT_RECENTLY),
+    ("conditionEnemyCursed", ENEMY_CURSED),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
@@ -312,6 +317,13 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 out.remove(&key);
             }
         }
+    }
+    // The enemy cursed (P6-11cu): the check, or a curse applied.
+    let key = ConditionKey::new(ENEMY_CURSED);
+    if out.get(&key).copied() == Some(false)
+        && super::gems::curses_enemy(input, &super::gem_levels::GemLevels::none())
+    {
+        out.insert(key, true);
     }
     // Affected by a herald (P6-11ct): PoB's herald count above 0.
     let (heralds, _) = super::gems::herald_and_aura_counts(input);

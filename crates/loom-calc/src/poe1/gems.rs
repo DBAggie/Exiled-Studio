@@ -2775,6 +2775,36 @@ pub fn arcane_surge_support(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
     })
 }
 
+/// Whether the gem table applies a curse to the enemy (P6-11cu): a skill of
+/// [`Kind::Curse`] (curses and marks) in [`affected_by`]'s groups. PoB's
+/// curse limit starts at 1 (`EnemyCurseLimit`), so such a skill fills a
+/// slot and the enemy is `Cursed` (`CalcPerform.lua` 3301 to 3303). A
+/// curse is never a main skill whose hit the engine computes, so
+/// [`gems`] applies each.
+#[must_use]
+pub fn curses_enemy(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
+    let build = input.build;
+    let Ok(groups) = skill::active_groups(build) else {
+        return false;
+    };
+    let main_group = skill::main_skill(build, input.data, levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    groups.iter().enumerate().any(|(g, group)| {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if (main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)))
+            || skill::attribute(&group.attributes, "source").is_some()
+        {
+            return false;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        skill::group_skills(group, group_matches, input.data, levels)
+            .iter()
+            .any(|s| matches!(kind(&s.active_gem.effect.id), Some(Kind::Curse { .. })))
+    })
+}
+
 /// The auras the gem table applies to the character, by PoB's buff name
 /// (a Vaal aura's without "Vaal "; P6-11o): what PoB's `AffectedBy<Name>`
 /// conditions read (`CalcPerform.lua` 2417 to 2419). The groups are

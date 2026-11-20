@@ -300,7 +300,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
     ("conditionEnemyBurning", &["enemy Condition:Burning"]),
-    ("conditionEnemyCursed", &["enemy Condition:Cursed"]),
     (
         "conditionEnemyDebilitated",
         &["enemy Condition:Debilitated"],
