@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 13] = [
+const TEXTS: [(&str, &str); 15] = [
     // P6-11ap: Eldritch Battery.
     (
         "keystone_eldritch_battery",
@@ -61,6 +61,15 @@ const TEXTS: [(&str, &str); 13] = [
         "keystone_elemental_overload",
         "Skills that have dealt a Critical Strike in the past 8 seconds deal 40% more Elemental Damage with Hits and Ailments\\nYour Critical Strikes do not deal extra Damage\\nAilments never count as being from Critical Strikes",
     ),
+    // P6-11ei: Lightning Purist and Pain Attunement.
+    (
+        "keystone_lightning_purist",
+        "25% more Maximum Lightning Damage\\n50% less Minimum Lightning Damage\\nCannot deal non-Lightning Damage",
+    ),
+    (
+        "keystone_pain_attunement",
+        "30% more Spell Damage when on Low Life",
+    ),
     // P6-10b part 15: Mind over Matter.
     (
         "keystone_mana_shield",
@@ -86,6 +95,10 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "active_skill_secondary_area_of_effect_description_mode",
     // P6-11as: avoiding chill on you.
     "base_avoid_chill_%",
+    // P6-11eb (listed in P6-11ei): chill immunity on you (`ChillImmune`),
+    // and the chill's duration, which leaves its effect as it is.
+    "base_cannot_be_chilled",
+    "chill_duration_+%",
     "chill_effectiveness_on_self_+%",
     "cold_ailment_duration_+%",
 ];

@@ -2644,7 +2644,7 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 
 **The engine:**
 - **Condition:** `conditions::NOT_BLOCKED_RECENTLY`, the negation of `BLOCKED_RECENTLY` (the config's three blocked checks), settled only when that is. It is built as `NOT_HIT_RECENTLY` is (P6-10b part 13).
-- **Rows:** three `STATE_ROWS` rows.
+- **Rows:** three `STATE_ROWS` rows. The movement speed row took effect only in P6-11ei: the stat was also in `MOVEMENT_REASONS`, a field marker the mapping reads first ("P6-11ei").
 - **`NoEffect`:**
   - `charge-gain-chance`: chances to gain an endurance or power charge on block, and a power charge on a non-critical strike. PoB does not parse them; the counts are the config's.
   - `flask`: flask charges gained, used, and generated every 3 seconds. No slice field reads a flask's charges.
@@ -2680,4 +2680,27 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public:** 0 unexpected. 26 values moved, all toward PoB, and one is now equal: a Lightning Trap Elementalist's crit multiplier (3.53 to 4.79, equal to PoB). The others are that build's, a mine Assassin's, a Holy Flame Totem Hierophant's, and a ballista Hierophant's crit chance, speed, and damage.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
+
+## P6-11ei: Lightning Purist and Pain Attunement; low life and ignited; field markers checked first
+
+**PoB:**
+- **Lightning Purist** (the game's stat name for Roiling Tempest): "25% more Maximum Lightning Damage" (`MaxLightningDamage` MORE 25), "50% less Minimum Lightning Damage" (`MinLightningDamage` MORE -50), and "Cannot deal non-Lightning Damage" (`DealNoPhysical`, `DealNoCold`, `DealNoFire`, `DealNoChaos`; `ModCache.lua` 5945, 8049).
+- **Pain Attunement:** "30% more Spell Damage when on Low Life" is `Damage` MORE 30 with `ModFlag.Spell` under `Condition:LowLife`.
+- **Conditions:** PoB sets `LowLife` only from the `conditionLowLife` check (`ConfigOptions.lua` 177), and `Ignited` only from `conditionIgnited` (1181). Life reserved past the threshold (`CalcPerform.lua` 546) reads `LowLifePercentage` for display only.
+- "#% increased Movement Speed when on Low Life" and "... while Ignited" are `MovementSpeed` INC under those conditions.
+
+**The engine:**
+- **Conditions:** `conditions::LOW_LIFE` and `conditions::IGNITED` are settled from their checks (`CHECKS`). The two inputs leave `config::NAMED_ONLY`, as `conditionEnemyMaimed` did in P6-11ec.
+- **Keystones:** `keystone_lightning_purist` (`BoundDamage` of lightning, max and min, and the four `DealNo` flags) and `keystone_pain_attunement` (spell `Damage` MORE under `LOW_LIFE`) in `poe1::keystones`. Their texts are in `tests/keystones_chill.rs`, checked against the real bundle.
+- **Rows:** two `STATE_ROWS` rows, movement speed on low life and while ignited.
+- **A fix to P6-11eg:** its row for "#% increased Movement Speed during any Flask Effect" never applied. The stat was also in `MOVEMENT_REASONS`, and the mapping reads field markers before any table. The three movement stats now leave `MOVEMENT_REASONS`. A test now checks that no `STATE_ROWS`, `HIT_ROWS`, or `ROWS` stat is a field marker.
+- **A test fixed:** the real-bundle test `real_keystone_and_chill_stats_should_be_covered` failed since P6-11eb on two `NoEffect` lines whose text names chill: chill immunity on you and the chill's duration. Neither changes the chill's effect; both are now listed in its checked `NoEffect` list.
+- **Left as reasons:** Iron Reflexes, Chaos Inoculation, and Acrobatics, which change defences.
+
+**Evidence** (`b-ct`, against P6-11eh's run):
+- **Public:** 0 unexpected. 6 values moved, 5 toward PoB: a Lightning Trap Elementalist's damage (Lightning Purist) and a mine Assassin's effective movement speed.
+- **One moved away:** that Assassin's `MovementSpeedMod` (2.93 to 3.01, against PoB's 2.79). It now carries The Arkhon's Tools' "8% increased Movement Speed during any Flask Effect": the build's flasks are active, and PoB applies the line too (`UsingFlask`). The engine was 0.14 above PoB before this step, for another reason.
+- **Not exercised:** no build sets `conditionLowLife` or `conditionIgnited`, so Pain Attunement and the two movement rows moved no value. The keystone and state rows tests check them.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 

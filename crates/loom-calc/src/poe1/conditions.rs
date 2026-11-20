@@ -162,6 +162,14 @@ pub const ON_BURNING_GROUND: &str = "OnBurningGround";
 /// Inoculation (`CalcPerform.lua` 79 to 83), whose keystone stat is
 /// unmapped, a reason on every field.
 pub const FULL_LIFE: &str = "FullLife";
+/// "when on Low Life" (PoB's `LowLife`, from `conditionLowLife`,
+/// `ConfigOptions.lua` 177; P6-11ei). PoB sets it from no other source in
+/// its calc modules: life reserved past the threshold (`CalcPerform.lua`
+/// 546) reads `LowLifePercentage` for display only.
+pub const LOW_LIFE: &str = "LowLife";
+/// "while Ignited" (PoB's `Ignited`, from `conditionIgnited`,
+/// `ConfigOptions.lua` 1181; P6-11ei). Its implied `Burning` is the UI's.
+pub const IGNITED: &str = "Ignited";
 /// The count of hits taken recently, which sets [`BEEN_HIT_RECENTLY`]
 /// above 0 (`ConfigOptions.lua`).
 pub const HIT_RECENTLY_COUNT_INPUT: &str = "multiplierBeenHitRecently";
@@ -219,6 +227,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyMaimed", ENEMY_MAIMED),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionFullLife", FULL_LIFE),
+    // P6-11ei: being ignited.
+    ("conditionIgnited", IGNITED),
     ("conditionKilledRecently", KILLED_RECENTLY),
     // P6-11bv: each leeching check sets `Leeching` (PoB's `implyCond`).
     ("conditionLeeching", LEECHING),
@@ -228,6 +238,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionLeechingLife", "LeechingLife"),
     ("conditionLeechingMana", LEECHING),
     ("conditionLeechingMana", "LeechingMana"),
+    // P6-11ei: low life (Pain Attunement, movement speed).
+    ("conditionLowLife", LOW_LIFE),
     ("conditionMoving", MOVING),
     ("conditionOnBurningGround", ON_BURNING_GROUND),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),

@@ -4566,6 +4566,28 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ON_BURNING_GROUND,
         )],
     ),
+    // P6-11ei: "#% increased Movement Speed when on Low Life"
+    // (`MovementSpeed` INC, `LowLife`).
+    (
+        "movement_velocity_+%_when_on_low_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::LOW_LIFE,
+        )],
+    ),
+    // P6-11ei: "#% increased Movement Speed while Ignited"
+    // (`MovementSpeed` INC, `Ignited`).
+    (
+        "movement_velocity_+%_while_ignited",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::IGNITED,
+        )],
+    ),
     // P6-11p: "Gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
     // FLAG, `Condition` `KilledRecently`): Onslaught while the config says
     // you have killed recently (`poe1::buffs`).
@@ -8247,19 +8269,17 @@ pub const COST_REASONS: &[&str] = &[
 /// Stats that change movement speed in a way the engine does not model
 /// (P6-10b), sorted: each maps to [`Poe1Quantity::MovementReason`], the
 /// movement fields' reason alone. PoB's text for each (`ModParser.lua`):
-/// on kill (`KilledRecently`), during a flask's effect (`UsingFlask`), on
-/// low life, while ignited, and with no gems in the
-/// boots, each a config condition the engine does not settle; per
+/// on kill (`KilledRecently`) and with no gems in the boots, each a
+/// config condition the engine does not settle; per
 /// summoned phantasm (`PerStat`); movement speed that cannot go below its
-/// base. (The armour movement penalties ignored are a row since P6-11cp.) Momentum's Swiftness is
+/// base. (The armour movement penalties ignored are a row since P6-11cp;
+/// during a flask's effect, on low life, and while ignited are
+/// [`STATE_ROWS`] since P6-11ei.) Momentum's Swiftness is
 /// `poe1::gems`'s (P6-11y).
 pub const MOVEMENT_REASONS: &[&str] = &[
     "gain_movement_speed_+%_for_20_seconds_on_kill",
-    "movement_speed_+%_during_flask_effect",
     "movement_speed_+%_per_summoned_phantasm",
     "movement_speed_cannot_be_reduced_below_base",
-    "movement_velocity_+%_when_on_low_life",
-    "movement_velocity_+%_while_ignited",
     "movement_velocity_+%_while_no_gems_in_boots",
 ];
 
@@ -8915,6 +8935,17 @@ mod tests {
                 !COST_REASONS.contains(stat) && !MOVEMENT_REASONS.contains(stat),
                 "{stat}"
             );
+        }
+        // A field marker is read before every table (P6-11ei: a state row
+        // under a marker would never apply).
+        for (stat, _) in STATE_ROWS {
+            assert_eq!(field_marker(stat), None, "{stat}");
+        }
+        for (stat, _) in HIT_ROWS {
+            assert_eq!(field_marker(stat), None, "{stat}");
+        }
+        for (stat, _) in ROWS {
+            assert_eq!(field_marker(stat), None, "{stat}");
         }
         for (stat, _) in HIT_ROWS {
             assert!(
@@ -10506,6 +10537,25 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11ei: movement speed on low life and while ignited.
+            (
+                "movement_velocity_+%_when_on_low_life",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::LOW_LIFE,
+                )],
+            ),
+            (
+                "movement_velocity_+%_while_ignited",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::IGNITED,
                 )],
             ),
             // P6-11eg: crits by whether you have blocked recently; movement

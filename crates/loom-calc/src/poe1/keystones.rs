@@ -55,7 +55,7 @@
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 use super::{Poe1Quantity, Pool, TakenOf};
 
@@ -253,6 +253,43 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             ),
         ],
     ),
+    // Lightning Purist (P6-11ei; the game's name for Roiling Tempest's
+    // stat): the tree's "25% more Maximum Lightning Damage"
+    // (`MaxLightningDamage` MORE 25), "50% less Minimum Lightning Damage"
+    // (`MinLightningDamage` MORE -50), and "Cannot deal non-Lightning
+    // Damage" (`DealNoPhysical`, `DealNoCold`, `DealNoFire`, `DealNoChaos`;
+    // `ModCache.lua` 5945, 8049).
+    (
+        "keystone_lightning_purist",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::BoundDamage(
+                    Some(DamageType::Lightning),
+                    Bound::Max,
+                )),
+                Op::More,
+                25.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::BoundDamage(
+                    Some(DamageType::Lightning),
+                    Bound::Min,
+                )),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::DealNo(DamageType::Physical)),
+            flag(Poe1Quantity::DealNo(DamageType::Cold)),
+            flag(Poe1Quantity::DealNo(DamageType::Fire)),
+            flag(Poe1Quantity::DealNo(DamageType::Chaos)),
+        ],
+    ),
     // Mind over Matter (P6-10b part 15): the tree's text "40% of Damage is
     // taken from Mana before Life" (`DamageTakenFromManaBeforeLife` BASE).
     (
@@ -264,6 +301,20 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             Flags::NONE,
             Flags::NONE,
             None,
+        )],
+    ),
+    // Pain Attunement (P6-11ei): the tree's "30% more Spell Damage when on
+    // Low Life" (`Damage` MORE 30 with `ModFlag.Spell`, `Condition`
+    // `LowLife`, the config's check, `conditions::LOW_LIFE`).
+    (
+        "keystone_pain_attunement",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            30.0,
+            Flags::SPELL,
+            Flags::NONE,
+            Some(super::conditions::LOW_LIFE),
         )],
     ),
     (
