@@ -2365,3 +2365,13 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dr: two lines with no slice field
+
+`NoEffect` lines:
+- "Minions Leech #% of Damage as Life" (`minion-leech`): a `MinionModifier` of `DamageLifeLeech`; no slice field reads a minion's leech.
+- A flask's "Recover #% of Energy Shield when you Kill an Enemy during Effect" (`flasks::NO_EFFECT_LOCAL`): `EnergyShieldOnKill`, which no slice field reads.
+
+**Not done:** "Auras from your Skills which affect Allies also affect Enemies" (`AurasAffectEnemies`, 3 builds). PoB copies each aura's modifiers onto the enemy as a debuff (`CalcPerform.lua` 2451 to 2464): Determination's armour and Grace's evasion, for example. The engine would need each aura row's enemy counterpart. It stays a reason (tasks file).
+
+**Evidence** (`b-ct`, against P6-11dq's run): public and corpus 0 unexpected; no value moved. The workspace tests and clippy pass.
+

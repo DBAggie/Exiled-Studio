@@ -7224,6 +7224,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11bd: "Minions are Aggressive": PoB parses none of it, and no
     // slice field reads a minion's aggression.
     ("minion_larger_aggro_radius", "minion-behaviour"),
+    // P6-11dr: "Minions Leech #% of Damage as Life" (a `MinionModifier` of
+    // `DamageLifeLeech`): no slice field reads a minion's leech.
+    ("minion_life_leech_from_any_damage_permyriad", "minion-leech"),
     // P6-11be: "Minions Recover #% of Life on Minion Death" (PoB parses
     // none of it): a recovery on an event, no slice field.
     (

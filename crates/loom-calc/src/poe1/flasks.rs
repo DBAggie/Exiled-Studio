@@ -90,13 +90,16 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 6] = [
+pub const NO_EFFECT_LOCAL: [&str; 7] = [
     "local_consecrate_ground_on_flask_use_radius",
     // P6-11dp: area of effect during the effect (`AreaOfEffect` INC,
     // `UsingFlask`): area, no slice field.
     "local_flask_area_of_effect_+%_during_flask_effect",
     "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
     "local_flask_gain_X_charges_when_hit",
+    // P6-11dr: energy shield recovered on kill during the effect
+    // (`EnergyShieldOnKill` BASE, `UsingFlask`): no slice field.
+    "local_flask_recover_%_maximum_energy_shield_on_kill_during_flask_effect",
     "local_flask_use_on_full_charges",
     "local_self_curse_effect_+%_during_flask_effect",
 ];
