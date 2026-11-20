@@ -3832,6 +3832,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::USED_MINION_SKILL_RECENTLY,
         )],
     ),
+    // P6-11ct: "Minions deal #% increased Damage while you are affected by
+    // a Herald" (PoB's `MinionModifier` LIST of `Damage` INC with the
+    // inner `ActorCondition` `parent` `AffectedByHerald`): the character's
+    // condition.
+    (
+        "minion_damage_+%_while_affected_by_a_herald",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Minion(super::minions::MinionValue::Damage)),
+            Op::Increased,
+            NONE,
+            conditions::AFFECTED_BY_HERALD,
+        )],
+    ),
     // P6-11w: "#% increased Movement Speed while on Burning Ground"
     // (`MovementSpeed` INC, `OnBurningGround`, the config's check).
     (
@@ -8706,6 +8719,8 @@ mod tests {
                         conditions::NOT_HIT_RECENTLY,
                         // P6-11cq: from the active flasks.
                         conditions::USING_LIFE_FLASK,
+                        // P6-11ct: from the heralds among the skills.
+                        conditions::AFFECTED_BY_HERALD,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -9377,6 +9392,18 @@ mod tests {
                     Op::Base,
                     NONE,
                     conditions::USING_LIFE_FLASK,
+                )],
+            ),
+            // P6-11ct: minion damage while affected by a herald.
+            (
+                "minion_damage_+%_while_affected_by_a_herald",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Minion(
+                        crate::poe1::minions::MinionValue::Damage,
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::AFFECTED_BY_HERALD,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.

@@ -1931,3 +1931,18 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; 1 value toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11ct: minion damage while you are affected by a herald
+
+**PoB** reads "Minions deal #% increased Damage while you are affected by a Herald" as a `MinionModifier` LIST of `Damage` INC. The inner mod carries `ActorCondition` `parent` `AffectedByHerald`. PoB sets that condition for each herald among the active skills (`CalcPerform.lua` 2117 to 2120), the same pass that counts `Multiplier:Herald`.
+
+**The engine:**
+- `poe1::conditions` settles `AffectedByHerald` as `gems::herald_and_aura_counts`' herald count above 0 (P6-11af's count).
+- The stat is a state row on the minion's damage, which `minion_actor::minion_modifiers` evaluates against the character's settled states (P6-11cm).
+
+**Fixture** `minion-raise-zombie-herald-damage-witch.xml`: Raise Zombie with Herald of Ash in a second group and the line at 30%. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cs's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

@@ -62,6 +62,11 @@ pub const USED_MINION_SKILL_RECENTLY: &str = "UsedMinionSkillRecently";
 /// flasks ([`super::flasks::using_life_flask`]).
 pub const USING_LIFE_FLASK: &str = "UsingLifeFlask";
 
+/// "while you are affected by a Herald" (PoB's `AffectedByHerald`;
+/// P6-11ct): a herald among the skills (`CalcPerform.lua` 2117 to 2120,
+/// [`super::gems::herald_and_aura_counts`]).
+pub const AFFECTED_BY_HERALD: &str = "AffectedByHerald";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -308,6 +313,9 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             }
         }
     }
+    // Affected by a herald (P6-11ct): PoB's herald count above 0.
+    let (heralds, _) = super::gems::herald_and_aura_counts(input);
+    out.insert(ConditionKey::new(AFFECTED_BY_HERALD), heralds > 0);
     // Using a life flask (P6-11cq): the active flasks; no config check
     // sets it.
     if let Some(v) = super::flasks::using_life_flask(input) {
