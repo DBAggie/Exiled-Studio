@@ -787,7 +787,7 @@
       {
         "field": "poe1.movement-speed",
         "value": 1.0,
-        "node": 578,
+        "node": 579,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -819,7 +819,7 @@
       {
         "field": "poe1.effective-movement-speed",
         "value": 1.0,
-        "node": 583,
+        "node": 584,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -5939,6 +5939,11 @@
         "value": 0.0
       },
       {
+        "kind": "any",
+        "term": "step.flag",
+        "value": 0.0
+      },
+      {
         "kind": "sum",
         "term": "step.increased-sum",
         "value": 0.0
@@ -5947,7 +5952,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          575
+          576
         ],
         "value": 1.0
       },
@@ -5960,8 +5965,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          576,
-          577
+          577,
+          578
         ],
         "value": 1.0
       },
@@ -5974,7 +5979,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          579
+          580
         ],
         "value": 1.0
       },
@@ -5990,8 +5995,8 @@
         "kind": "max",
         "term": "step.action-speed",
         "children": [
-          580,
-          581
+          581,
+          582
         ],
         "value": 1.0
       },
@@ -5999,8 +6004,8 @@
         "kind": "product",
         "term": "result",
         "children": [
-          578,
-          582
+          579,
+          583
         ],
         "value": 1.0
       }

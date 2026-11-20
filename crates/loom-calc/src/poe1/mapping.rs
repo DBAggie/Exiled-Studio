@@ -5340,6 +5340,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11cp: "Ignore all Movement Penalties from Armour"
+    // (`Condition:IgnoreMovementPenalties` FLAG; `poe1::movement`).
+    (
+        "ignore_armour_movement_penalties",
+        &[(
+            Quantity::Poe1(Poe1Quantity::IgnoreMovementPenalties),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
     // P6-10b part 11: Unwavering Stance (the keystone: "Cannot Evade enemy
     // Attacks", `CannotEvade`; its "Cannot be Stunned" reaches no field).
@@ -7136,12 +7146,11 @@ pub const COST_REASONS: &[&str] = &[
 /// on kill (`KilledRecently`), during a flask's effect (`UsingFlask`), on
 /// low life, while ignited, and with no gems in the
 /// boots, each a config condition the engine does not settle; per
-/// summoned phantasm (`PerStat`); the armour movement penalties ignored;
-/// movement speed that cannot go below its base. Momentum's Swiftness is
+/// summoned phantasm (`PerStat`); movement speed that cannot go below its
+/// base. (The armour movement penalties ignored are a row since P6-11cp.) Momentum's Swiftness is
 /// `poe1::gems`'s (P6-11y).
 pub const MOVEMENT_REASONS: &[&str] = &[
     "gain_movement_speed_+%_for_20_seconds_on_kill",
-    "ignore_armour_movement_penalties",
     "movement_speed_+%_during_flask_effect",
     "movement_speed_+%_per_summoned_phantasm",
     "movement_speed_cannot_be_reduced_below_base",

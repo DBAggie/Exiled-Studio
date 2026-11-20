@@ -488,6 +488,10 @@ pub enum Poe1Quantity {
     /// Movement speed (PoB's `MovementSpeed`; P6-10b): `Increased` and
     /// `More`, read by [`movement`].
     MovementSpeed,
+    /// "Ignore all Movement Penalties from Armour" (PoB's
+    /// `Condition:IgnoreMovementPenalties` FLAG; P6-11cp): a `Flag`
+    /// [`movement`] reads, which drops the armour bases' movement penalty.
+    IgnoreMovementPenalties,
     /// A stat that changes movement speed in a way the engine does not model
     /// (P6-10b; [`mapping::MOVEMENT_REASONS`]): a `Flag` only [`movement`]
     /// reads, as those fields' `unmapped-stat` reason.
@@ -1223,6 +1227,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SkillChill => f.write_str("skill-chill"),
             Self::ActionSpeed => f.write_str("action-speed"),
             Self::MovementSpeed => f.write_str("movement-speed"),
+            Self::IgnoreMovementPenalties => f.write_str("ignore-movement-penalties"),
             Self::MovementReason(stat) => write!(f, "movement-reason.{stat}"),
             Self::ManaCost => f.write_str("mana-cost"),
             Self::Cost => f.write_str("cost"),

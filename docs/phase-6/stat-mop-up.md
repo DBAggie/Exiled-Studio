@@ -1854,3 +1854,26 @@ Every computed field of the three equals PoB's.
 - **Corpus:** 0 unexpected; 18 values toward PoB and 1 now equal, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cp: ignoring the armour movement penalties
+
+**PoB** gives an armour base with a `MovementPenalty` (body armours, shields) `MovementSpeed` INC of minus the penalty. The mod carries the negated condition `IgnoreMovementPenalties` (`Item.lua` 2362). "Ignore all Movement Penalties from Armour" is the flag `Condition:IgnoreMovementPenalties` (`ModParser.lua` 4814).
+
+**The engine:**
+- The stat is a `ROWS` flag on the new `Poe1Quantity::IgnoreMovementPenalties`, and leaves `MOVEMENT_REASONS`.
+- `collect` gives the base's penalty the state `IgnoreMovementPenalties` = false.
+- `poe1::movement` queries the flag, then queries movement speed with the state settled from it. Only the movement phase reads `MovementSpeed`.
+- **Tests:** the field-marker test now uses another movement reason stat (per summoned phantasm).
+
+**Goldens:** `synthetic-poe1.calc.json` and `poe1-empty.json` regenerated. The only change in each is the new flag query's node and the node numbers after it.
+
+**Fixtures:**
+- `ice-nova-plate-vest-movement-penalty-witch.xml`: a Plate Vest (3% penalty) and 20% increased movement speed, 1.17.
+- `ice-nova-ignore-movement-penalties-witch.xml`: the Plate Vest and the line, 1.0.
+
+Every computed field of both equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11co's run):
+- **Public:** 0 unexpected; 2 values toward PoB (one build's two movement speed fields), none away.
+- **Corpus:** 0 unexpected; 4 values toward PoB and 2 now equal, none away.
+- **Tests:** the workspace tests and clippy pass.
+

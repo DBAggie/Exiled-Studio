@@ -2633,7 +2633,7 @@ fn life_regeneration_per_fortification_should_follow_the_stacks() {
 /// A field's reason marker reaches that field alone (P6-10b review).
 #[test]
 fn a_field_marker_should_be_that_fields_reason_only() {
-    let r = witch_with(&[("ignore_armour_movement_penalties", 1)]);
+    let r = witch_with(&[("movement_speed_+%_per_summoned_phantasm", 5)]);
     for field in [
         Poe1Field::MovementSpeedMod,
         Poe1Field::EffectiveMovementSpeedMod,

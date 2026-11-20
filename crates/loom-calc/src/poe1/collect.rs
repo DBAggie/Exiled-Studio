@@ -1419,19 +1419,26 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
         ));
     }
     // The base's movement penalty (P6-10b; `Item.lua` 2361: `MovementSpeed`
-    // INC, unless `IgnoreMovementPenalties`, a movement reason).
+    // INC, unless `IgnoreMovementPenalties`, which `poe1::movement` settles
+    // from its flag; P6-11cp).
     if base.movement_speed != 0 {
         #[expect(
             clippy::cast_precision_loss,
             reason = "movement penalties are small integers"
         )]
         let value = base.movement_speed as f64;
-        ingest.effect(effect(
-            Quantity::Poe1(Poe1Quantity::MovementSpeed),
-            Op::Increased,
-            value,
-            &from_base,
-        ));
+        ingest.effect(Effect {
+            conditions: Conditions::none().with_state(
+                crate::condition::ConditionKey::new(super::movement::IGNORE_MOVEMENT_PENALTIES),
+                false,
+            ),
+            ..effect(
+                Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                value,
+                &from_base,
+            )
+        });
     }
     let mut percentiles = Vec::new();
     // The last line of each key counts, as PoB's `self.quality` and
