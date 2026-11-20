@@ -1325,7 +1325,10 @@ fn config_inputs_and_custom_blocks_should_be_edited() {
         .unwrap()
         .unwrap();
     session
-        .set_config_input("conditionLeeching", &ConfigValueView::Boolean(true))
+        .set_config_input(
+            "conditionUsedMinionSkillRecently",
+            &ConfigValueView::Boolean(true),
+        )
         .unwrap();
     session
         .set_config_input("somethingNew", &ConfigValueView::Text("x".to_owned()))
@@ -1339,12 +1342,18 @@ fn config_inputs_and_custom_blocks_should_be_edited() {
             .map(|i| i.effect.clone())
     };
     assert_eq!(effect("resistancePenalty"), Some(InputEffect::Applied));
-    assert_eq!(effect("conditionLeeching"), Some(InputEffect::NoEffect));
+    assert_eq!(
+        effect("conditionUsedMinionSkillRecently"),
+        Some(InputEffect::NoEffect)
+    );
     assert_eq!(effect("somethingNew"), Some(InputEffect::Unmodelled));
     // The same value again changes nothing; the legacy input is refused.
     assert_eq!(
         session
-            .set_config_input("conditionLeeching", &ConfigValueView::Boolean(true))
+            .set_config_input(
+                "conditionUsedMinionSkillRecently",
+                &ConfigValueView::Boolean(true)
+            )
             .unwrap(),
         None
     );
