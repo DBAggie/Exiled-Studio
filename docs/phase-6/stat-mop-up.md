@@ -1444,3 +1444,17 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence:**
 - **Public:** 0 unexpected; 1 value toward PoB (Animate Guardian's full DPS), none away.
 - **Corpus:** unchanged.
+
+## P6-11bi: the socketed skills' cost and reservation multiplier
+
+"Socketed Skill Gems get a #% Cost & Reservation Multiplier" is PoB's `ExtraSkillMod` `SupportManaMultiplier` MORE of the value less 100 for the skills socketed in the item.
+- It maps, on an item in a gem slot, to `Poe1Quantity::SocketedCostMultiplier(slot)` (`gem_levels::InSlot`, as P6-11q's socketed gem levels).
+- `GemLevels` collects it, and each `MainSkill` and `GroupSkill` carries the multipliers of its group's slot (`cost_mores`).
+- `gems::support_multiplier` multiplies them in with the supports' before PoB's two floors, for the cost (`costs`) and the reservation (`gems`).
+
+**Fixture** `ice-nova-socketed-cost-multiplier-witch.xml`: Ice Nova and Precision in the armour. Every computed field equals PoB's, the mana cost and unreserved mana included.
+
+**Evidence** (`b-ct`, against P6-11bh's run):
+- **Public:** 0 unexpected; Flicker Strike's unreserved mana toward PoB.
+- **Away:** two values (Elemental Hit's and Ethereal Knives' unreserved mana). Their unreserved mana was already far above PoB's, with many reasons on the field.
+- **Corpus:** unchanged.

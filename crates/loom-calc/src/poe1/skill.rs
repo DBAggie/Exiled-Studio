@@ -137,6 +137,10 @@ pub struct MainSkill<'d> {
     pub unapplied: Vec<GemEffectRef<'d>>,
     /// The skill's types after the supports added theirs.
     pub types: BTreeSet<String>,
+    /// The cost and reservation multipliers, in percent, the item in the
+    /// group's slot gives its socketed skills (P6-11bi, PoB's
+    /// `ExtraSkillMod` `SupportManaMultiplier`).
+    pub cost_mores: Vec<f64>,
 }
 
 /// PoB's weapon type for a game item class: its exporter's
@@ -730,6 +734,10 @@ pub fn main_skill<'d>(
             unapplied.push(s);
         }
     }
+    let slot = group
+        .slot
+        .as_ref()
+        .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
     Ok(MainSkill {
         group: index,
         active_gem,
@@ -738,6 +746,7 @@ pub fn main_skill<'d>(
         supports: applied,
         unapplied,
         types,
+        cost_mores: levels.cost_multipliers(slot),
     })
 }
 
@@ -809,6 +818,10 @@ pub struct GroupSkill<'d> {
     pub supports: Vec<GemEffectRef<'d>>,
     /// The skill's types after the supports added theirs.
     pub types: BTreeSet<String>,
+    /// The cost and reservation multipliers, in percent, the item in the
+    /// group's slot gives its socketed skills (P6-11bi, PoB's
+    /// `ExtraSkillMod` `SupportManaMultiplier`).
+    pub cost_mores: Vec<f64>,
 }
 
 /// The active effects of a group's enabled gems, each with the group's
@@ -853,6 +866,12 @@ pub fn group_skills<'d>(
             global_off: *global_off,
             supports: applied,
             types,
+            cost_mores: levels.cost_multipliers(
+                group
+                    .slot
+                    .as_ref()
+                    .and_then(|s| super::gem_levels::GemSlot::of(s.as_str())),
+            ),
         });
     }
     out

@@ -2743,8 +2743,13 @@ pub fn support(id: &str) -> Option<&'static [(&'static str, BuffStat)]> {
 /// `SupportManaMultiplier` (`data.highPrecisionMods` precision 4,
 /// `ModList.lua` 139 to 141; `Common.lua` `floor` 659 to 666).
 #[must_use]
-pub fn support_multiplier(supports: &[GemEffectRef<'_>]) -> f64 {
+pub fn support_multiplier(supports: &[GemEffectRef<'_>], cost_mores: &[f64]) -> f64 {
     let mut product = 1.0;
+    // An item's multiplier for its socketed skills (P6-11bi): a MORE of the
+    // value less 100, as a support's.
+    for m in cost_mores {
+        product *= 1.0 + (m - 100.0) / 100.0;
+    }
     for s in supports {
         let Some(level) = skill::effect_level(s.effect, s.level) else {
             continue;
@@ -4077,7 +4082,7 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
         });
         return;
     };
-    let mult = support_multiplier(&s.supports);
+    let mult = support_multiplier(&s.supports, &s.cost_mores);
     let life_instead = totals.reserve_life
         || s.supports
             .iter()
@@ -4352,7 +4357,8 @@ mod tests {
         assert_eq!(floor4(1.15), 1.15);
         assert_eq!(floor4(1.123_456_7), 1.1234);
         assert_eq!(floor4(1.2 * 1.1), 1.32);
-        assert_eq!(support_multiplier(&[]), 1.0);
+        assert_eq!(support_multiplier(&[], &[]), 1.0);
+        assert_eq!(support_multiplier(&[], &[80.0]), 0.8);
     }
 
     #[test]

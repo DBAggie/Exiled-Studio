@@ -160,11 +160,18 @@ impl GemSlot {
 /// stat is one of [`SOCKETED_STATS`].
 #[must_use]
 pub fn socketed_quantity(stat: &str, slot: GemSlot) -> Option<Quantity> {
+    if stat == SOCKETED_COST_STAT {
+        return Some(Quantity::Poe1(Poe1Quantity::SocketedCostMultiplier(slot)));
+    }
     SOCKETED_STATS
         .binary_search_by(|(id, _)| (*id).cmp(stat))
         .ok()
         .map(|i| Quantity::Poe1(Poe1Quantity::SocketedGemLevel(SOCKETED_STATS[i].0, slot)))
 }
+
+/// "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (P6-11bi;
+/// the game's stat ID keeps its misspelling).
+pub const SOCKETED_COST_STAT: &str = "local_display_socketed_gems_get_mana_multplier_%";
 
 /// The mapping of the lines of an item in an equipment slot: its socketed
 /// gem level stats act on the groups in `slot` (module docs); every other
@@ -279,6 +286,9 @@ pub struct GemLevels {
     /// The supports items grant (P6-11r): slot, row stat, level, in the
     /// order the effects were added.
     supports: Vec<(GemSlot, &'static str, i64)>,
+    /// The cost and reservation multipliers items give the skills in a
+    /// slot (P6-11bi), in percent.
+    cost: Vec<(GemSlot, f64)>,
 }
 
 impl GemLevels {
@@ -302,6 +312,7 @@ impl GemLevels {
         let mut totals = BTreeMap::new();
         let mut socketed = BTreeMap::new();
         let mut supports = Vec::new();
+        let mut cost = Vec::new();
         for e in effects {
             if matches!(e.source, Source::Gem { .. }) || e.op != Op::Base {
                 continue;
@@ -312,6 +323,9 @@ impl GemLevels {
                 }
                 Quantity::Poe1(Poe1Quantity::SocketedGemLevel(stat, slot)) => {
                     *socketed.entry((slot, stat)).or_insert(0.0) += e.value;
+                }
+                Quantity::Poe1(Poe1Quantity::SocketedCostMultiplier(slot)) => {
+                    cost.push((slot, e.value));
                 }
                 Quantity::Poe1(Poe1Quantity::ItemSupport(stat, slot)) => {
                     let fixed = super::item_supports::row(stat).map_or(0, |(_, l, _)| l);
@@ -333,7 +347,19 @@ impl GemLevels {
             totals,
             socketed,
             supports,
+            cost,
         }
+    }
+
+    /// The cost and reservation multipliers, in percent, the item in
+    /// `slot` gives its socketed skills (P6-11bi); none without a slot.
+    #[must_use]
+    pub fn cost_multipliers(&self, slot: Option<GemSlot>) -> Vec<f64> {
+        self.cost
+            .iter()
+            .filter(|(s, _)| Some(*s) == slot)
+            .map(|(_, v)| *v)
+            .collect()
     }
 
     /// The supports items grant the groups in `slot` (P6-11r): each

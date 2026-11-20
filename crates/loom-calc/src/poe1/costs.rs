@@ -187,7 +187,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         flags = flags | Flags::SPELL;
     }
     let channelling = skill.types.contains("Channel");
-    let mult = super::gems::support_multiplier(&skill.supports);
+    let mult = super::gems::support_multiplier(&skill.supports, &skill.cost_mores);
     let mult = phases::constant(calc, "support-cost-multiplier", mult)?;
     // The first pass: each resource's final base cost.
     let mut finals = Vec::with_capacity(3);

@@ -287,6 +287,7 @@ fn minion_skill<'d>(
         supports: Vec::new(),
         unapplied: Vec::new(),
         types,
+        cost_mores: Vec::new(),
     };
     let arrow = skill::instance(effect, 1, 0, data)
         .stats
@@ -353,6 +354,7 @@ fn spell<'d>(
             supports: Vec::new(),
             unapplied: Vec::new(),
             types,
+            cost_mores: Vec::new(),
         },
         group: summon.group.saturating_sub(1),
         level,
