@@ -6864,6 +6864,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
         "flask",
     ),
+    // P6-11cz: life flask charges on suppressing a spell (PoB leaves the text unparsed; flask charges reach no slice field).
+    ("life_flasks_gain_X_charges_on_suppressing_spell", "flask"),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),

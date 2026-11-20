@@ -2043,3 +2043,11 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 10 values toward PoB and 2 now equal, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cz: life flask charges on suppressing a spell
+
+**PoB** leaves "Life Flasks gain # Charges when you Suppress Spell Damage" unparsed, so it applies nothing. Flask charges reach no slice field.
+
+**The engine:** a `NoEffect` row (`flask`). The charges guard (`charges::tests`) lists it among the `NoEffect` rows that name a charge: these are flask charges, not power, frenzy, or endurance charges.
+
+**Evidence** (`b-ct`, against P6-11cy's run): public and corpus 0 unexpected; no value moved (the builds with the line have other reasons). The workspace tests and clippy pass.
+

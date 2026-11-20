@@ -704,6 +704,8 @@ mod tests {
         "add_power_charge_on_kill_%_chance",
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",
+        // P6-11cz: flask charges, not power, frenzy, or endurance charges.
+        "life_flasks_gain_X_charges_on_suppressing_spell",
         "chance_to_gain_power_charge_when_block_%",
         // A charge's duration (P6-11f, P6-11n, P6-11u): the count comes
         // from the config.
