@@ -102,6 +102,9 @@ pub enum StackKind {
     /// Nearby corpses (P6-11ev; PoB's `Multiplier:NearbyCorpse`, the
     /// config's `multiplierNearbyCorpse`).
     NearbyCorpses,
+    /// Your brands attached to the enemy (P6-11ew; PoB's enemy
+    /// `Multiplier:BrandsAttached`, [`brands`]).
+    BrandsAttached,
 }
 
 impl StackKind {
@@ -120,6 +123,7 @@ impl StackKind {
             Self::HitsTakenRecently => "hits-taken-recently",
             Self::Totems => "totems",
             Self::NearbyCorpses => "nearby-corpses",
+            Self::BrandsAttached => "brands-attached",
         }
     }
 }
@@ -210,6 +214,9 @@ pub enum PerStack {
     /// BASE per second, the stat per minute), its total at most 2% per
     /// second (`limit` 2, `limitTotal`; P6-11ev).
     EnergyShieldRegenPercentPerMinuteUpTo2,
+    /// The enemy's increased damage taken (`DamageTaken` INC on the enemy;
+    /// P6-11ew).
+    EnemyDamageTaken,
 }
 
 impl PerStack {
@@ -232,6 +239,7 @@ impl PerStack {
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
             Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
+            Self::EnemyDamageTaken => "per.enemy-damage-taken",
             Self::EnemyDamageWithAny => "per.enemy-damage-with-any",
             Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
                 "per.energy-shield-regen-percent-per-minute-up-to-2"
@@ -293,6 +301,12 @@ impl PerStack {
                 Flags::NONE,
             ),
             Self::DamageMoreWithAny => (Quantity::Damage, Op::More, Flags::NONE, Flags::NONE),
+            Self::EnemyDamageTaken => (
+                Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+                Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
             Self::EnemyDamageWithAny => (
                 Quantity::Poe1(Poe1Quantity::EnemyDamage),
                 Op::Increased,
@@ -334,6 +348,12 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "attack_speed_+%_per_rage",
         StackKind::Rage,
         StackValue::Per(PerStack::AttackSpeed),
+    ),
+    // P6-11ew: "You can Cast an additional Brand" (`ActiveBrandLimit` BASE).
+    (
+        "base_total_number_of_sigils_allowed",
+        StackKind::BrandsAttached,
+        StackValue::Maximum,
     ),
     (
         "cast_speed_+%_per_num_unique_spells_cast_recently",
@@ -490,6 +510,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
     ),
     // P6-11dt: "#% increased Rage Effect" (`RageEffect` INC).
     ("rage_effect_+%", StackKind::Rage, StackValue::Effect),
+    // P6-11ew: "Enemies take #% increased Damage for each of your Brands Attached to
+    // them" (the enemy's `DamageTaken` INC per `Multiplier:BrandsAttached`).
+    (
+        "sigil_attached_target_damage_taken_+%",
+        StackKind::BrandsAttached,
+        StackValue::Per(PerStack::EnemyDamageTaken),
+    ),
     (
         "support_momentum_attack_speed_+%_per_stack",
         StackKind::Momentum,
@@ -545,7 +572,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 8] = [
+pub const INPUTS: [&str; 9] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -554,7 +581,15 @@ pub const INPUTS: [&str; 8] = [
     NEARBY_INPUT,
     TOTEMS_INPUT,
     CORPSES_INPUT,
+    BRANDS_INPUT,
 ];
+
+/// The config's count of brands attached to the enemy, when not the
+/// maximum (`ConfigOptions.lua` 323: `Multiplier:ConfigBrandsAttachedToEnemy`).
+pub const BRANDS_INPUT: &str = "BrandsAttachedToEnemy";
+
+/// The active brand limit's base (`CalcSetup.lua` 529).
+const ACTIVE_BRAND_LIMIT: f64 = 3.0;
 
 /// The config's count of nearby corpses (`ConfigOptions.lua` 1125:
 /// `Multiplier:NearbyCorpse` BASE in combat).
@@ -1008,6 +1043,56 @@ pub fn nearby_corpses(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             source: e.source.clone(),
         });
     }
+}
+
+/// Adds the effects per brand attached to the enemy (P6-11ew; PoB's
+/// `CalcPerform.lua` 1320 to 1332): for each brand skill, its attach limit
+/// ([`super::gems::brand_attach_limit`]: its gems' `BrandsAttachedLimit`)
+/// at most the active brand limit (3 plus "You can Cast an additional
+/// Brand"), or the config's count at most that; the largest over the brand
+/// skills. 0 without one, as PoB's unset multiplier.
+pub fn brands(
+    input: &crate::input::CalcInput<'_>,
+    set: Option<&ConfigSet>,
+    ingest: &mut Ingest<'_>,
+) {
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::BrandsAttached,
+                    StackValue::Per(_)
+                ))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let configured = match count(set, BRANDS_INPUT, false) {
+        Ok(c) => c,
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: BRANDS_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    let Some(attach) = super::gems::brand_attach_limit(input) else {
+        return;
+    };
+    let active = ACTIVE_BRAND_LIMIT + sum(ingest, StackKind::BrandsAttached, StackValue::Maximum).0;
+    let limit = attach.min(active);
+    let n = match configured {
+        Some(c) => c.min(limit),
+        None => limit,
+    };
+    apply(ingest, &effects, multiplier(n), None);
 }
 
 /// Each effect per stack as its target times `count`, with its source (or

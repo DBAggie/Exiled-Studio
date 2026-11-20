@@ -3195,6 +3195,47 @@ pub fn any_totem_skill(input: &CalcInput<'_>) -> bool {
     })
 }
 
+/// The largest attach limit of the active brand skills (P6-11ew; PoB's
+/// `BrandsAttachedLimit` on each skill's list, `CalcPerform.lua` 1322):
+/// over the skills of the main group and the enabled groups in an enabled
+/// slot, those of the `Brand` type, each the sum of its gems'
+/// `base_number_of_sigils_allowed_per_target` (`SkillStatMap.lua` 2155).
+/// `None` without a brand skill.
+#[must_use]
+pub fn brand_attach_limit(input: &CalcInput<'_>) -> Option<f64> {
+    const STAT: &str = "base_number_of_sigils_allowed_per_target";
+    let build = input.build;
+    let levels = GemLevels::none();
+    let groups = skill::active_groups(build).ok()?;
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let mut best: Option<f64> = None;
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, &levels) {
+            if !s.types.contains("Brand") {
+                continue;
+            }
+            let mut limit = 0.0;
+            for gem in std::iter::once(&s.active_gem).chain(&s.supports) {
+                let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
+                #[expect(clippy::cast_precision_loss, reason = "a small count, exact as f64")]
+                if let Some((_, v)) = instance.stats.iter().find(|(id, _)| id == STAT) {
+                    limit += *v as f64;
+                }
+            }
+            best = Some(best.map_or(limit, |b: f64| b.max(limit)));
+        }
+    }
+    best
+}
+
 /// What the table says about an active skill.
 #[must_use]
 pub fn kind(id: &str) -> Option<Kind> {

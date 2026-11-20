@@ -331,8 +331,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11et: mine supports' cost as reservation (`COST_AS_RESERVATION_SUPPORTS`), the main skill's reservation (`docs/phase-6/stat-mop-up.md`, "P6-11et")
 - [x] P6-11eu: PoB-only skills (`gems::POB_ONLY_INERT`, `EnemyExplode`) are no reason outside the main skill and full DPS; Autoexertion's difference explained (a `{custom}` line); the Blood and Sand full DPS drift traced to PoB's shared environment (`docs/phase-6/stat-mop-up.md`, "P6-11eu")
 - [x] P6-11ev: nearby corpses (`StackKind::NearbyCorpses`): the Necromancer's damage, the enemy's damage, energy shield regeneration; `UsedWarcryRecently` from its check or count, Onslaught on warcry (`docs/phase-6/stat-mop-up.md`, "P6-11ev")
+- [x] P6-11ew: brands attached to the enemy (`StackKind::BrandsAttached`, `gems::brand_attach_limit`): the enemy's damage taken per brand (`docs/phase-6/stat-mop-up.md`, "P6-11ew")
 - [ ] Mines' other parts: Blastchain Mine's more mine damage and the detonation rate (`SkillStatMap.lua` mine rows; the main skill's speed for mines, P6-6e)
-- [ ] Brands attached to the enemy (`CalcPerform.lua` 1320 to 1332: `BrandsAttachedToEnemy`, `ActiveBrand`) and the lines that read them
 - [ ] Travel skills: a cooldown recovery quantity for the character's skills ("#% increased Cooldown Recovery Rate of Travel Skills", `SkillType.Travel`)
 ## P6-12: combined and full DPS; report
 - [x] P6-12 part 1: `combined-dps` (`poe1::combined`, slice revision 10; Culling Strike's multiplier); a flag stat at 0 sets no flag (`smite-bleed-templar.xml`'s bleeding computed again); Q11 DIV-0133 to DIV-0173; `docs/phase-6/combined-dps.md`

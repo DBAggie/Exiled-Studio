@@ -2935,3 +2935,18 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public:** 0 unexpected; no value moved.
 - **Corpus:** 0 unexpected. 12 values moved, all toward PoB, 2 now equal. One build's physical damage reduction went from 78 to 80 (equal to PoB), and its maximum hits taken and hit counts moved toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ew: brands attached to the enemy
+
+**PoB:** for each brand skill, the brands attached are its attach limit (`BrandsAttachedLimit`, from its gems' `base_number_of_sigils_allowed_per_target`) at most its active brand limit (`ActiveBrandLimit`: 3, `CalcSetup.lua` 529, plus "You can Cast an additional Brand"). The config's `BrandsAttachedToEnemy`, when set, replaces it, at most that limit. The enemy's `Multiplier:BrandsAttached` is the largest over the brand skills (`CalcPerform.lua` 1320 to 1332). "Enemies take #% increased Damage for each of your Brands Attached to them" reads it as the enemy's `DamageTaken` INC.
+
+**The engine:**
+- **Stacks:** `StackKind::BrandsAttached`, counted by `stacks::brands`, with the attach limit from `gems::brand_attach_limit` (the main group and the enabled groups' `Brand` skills). The active brand limit's extra is "You can Cast an additional Brand". A skill's own `ActiveBrandLimit` modifiers (a support's) are not read.
+- **Per brand:** the enemy's damage taken (`EnemyDamageTaken` INC).
+- **Config:** `BrandsAttachedToEnemy` joins `stacks::INPUTS`.
+- **Left as a reason:** the config's `ActiveBrands` (PoB's `Multiplier:ConfigActiveBrands`), which no mapped line reads yet.
+
+**Evidence** (`b-ct`, against P6-11ev's run):
+- **Public and corpus:** 0 unexpected; no value moved.
+- A Penance Brand Elementalist's line is no longer a reason. Its count, checked with a debug run, is 1: the config's 2, at most Penance Brand's attach limit of 1. The build's own damage fields are not computed (`unsupported`), so nothing moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

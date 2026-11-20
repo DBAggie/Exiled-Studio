@@ -117,6 +117,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::stacks::totems(input, active_config(build), ingest);
     // Nearby corpses (P6-11ev).
     super::stacks::nearby_corpses(active_config(build), ingest);
+    // Brands attached to the enemy (P6-11ew).
+    super::stacks::brands(input, active_config(build), ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
