@@ -2897,3 +2897,21 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Public:** 0 unexpected. A mine Assassin's unreserved mana moved toward PoB (578 to 552, PoB 174), and its `reservation` reason, on 77 fields, is gone. The rest of the gap is the build's other reservation lines.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11eu: PoB-only skills; two investigations
+
+**PoB-only skills.** PoB adds "On Kill Monster Explosion" (`EnemyExplode`, `other.lua` 6063: types `Damage` and `Area` only) as a granted group (`source="Explode"`) from the explode-on-kill modifiers. No game granted effect has the ID. It has no buff, reservation, or cost, so it reaches a field only as the main skill or in full DPS.
+- **The engine:** `gems::POB_ONLY_INERT`. A granted group whose enabled gems are all such skills, not the main group and not in full DPS, is no `unmodelled-gem` reason; otherwise it stays one.
+- **Evidence:** 0 unexpected, no value moved. In the six public builds with the group, the `unmodelled-gem` reasons on their fields fell (for example 316 to 237 in a Raise Spider Occultist).
+
+**Autoexertion's reservation** (the community Slayer, PoB 118, the engine 126):
+- The build's helmet (item 43) has a `{custom}` line, "(9-10)% increased Mana Reservation Efficiency of Skills", beside its 11% implicit.
+- PoB applies `{custom}` item lines; the engine excludes them (`Exclusion::Custom`). So PoB's 21% efficiency follows, and the reservation code is right.
+- It waits on the maintainer's decision on `{custom}` item lines (tasks file).
+
+**PoB's full DPS with Blood and Sand** (Smite's area hit differs slightly between PoB's main calculation and its full DPS pass):
+- `calcs.calcFullDPS` makes one environment and calls `calcs.perform` for each included skill without resetting `env.modDB`, so a later pass sees mods an earlier one added with `NewMod`.
+- Blood and Sand's stance buffs (`effectCond` `BloodStance`) are the likely carriers. Naming the mod needs an instrumented PoB run.
+- It stays open: no compared build has both.
+
+**Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

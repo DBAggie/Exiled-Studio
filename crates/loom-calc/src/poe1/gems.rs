@@ -2577,6 +2577,14 @@ pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[
 /// then each pool takes its own terms; P6-9f): Arrogance.
 pub const LIFE_RESERVATION_SUPPORTS: &[&str] = &["SupportArrogance"];
 
+/// Skills only PoB has (P6-11eu): no game granted effect has the ID, so
+/// a gem of one is `unmodelled-gem` before any table is read. PoB adds
+/// "On Kill Monster Explosion" (`EnemyExplode`, `act_*.lua`) as a granted
+/// group from the explode-on-kill modifiers; it has no buff, reservation,
+/// or cost, so it reaches a field only as the main skill or in full DPS. A
+/// granted group of these alone is no reason otherwise.
+pub const POB_ONLY_INERT: [&str; 1] = ["EnemyExplode"];
+
 /// The supports whose `remote_mined_by_support` stat flags
 /// `ManaCostGainAsReservation` and `LifeCostGainAsReservation` (P6-11et;
 /// `SkillStatMap.lua` 1838; PoB's skill data: `sup_dex.lua` 2672,
@@ -3485,6 +3493,20 @@ pub fn gems(
         // supports or the slot's: `CalcSetup.lua` 1340 to 1402): not
         // modelled.
         if skill::attribute(&group.attributes, "source").is_some() {
+            // A group of PoB's own skills alone (P6-11eu): nothing unless
+            // it is the main skill or in full DPS (module docs,
+            // [`POB_ONLY_INERT`]).
+            let pob_only = group.gems.typed().all(|gem| {
+                !gem.enabled
+                    || gem
+                        .skill
+                        .as_ref()
+                        .is_some_and(|id| POB_ONLY_INERT.contains(&id.as_str()))
+            });
+            let full_dps = skill::attribute(&group.attributes, "includeInFullDPS") == Some("true");
+            if pob_only && main_group != Some(g) && !full_dps {
+                continue;
+            }
             for (i, gem) in group.gems.typed().enumerate() {
                 if gem.enabled {
                     ingest.reason(UnsupportedReason::UnmodelledGem {
