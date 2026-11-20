@@ -3051,3 +3051,16 @@ Every stat of the timeless data (`poe1/timeless.json`: 395 stats, the conquests'
 **Evidence** (`b-ct`, against P6-11fa's run):
 - **Public and corpus:** 0 unexpected; no value moved. No build has an Abyss jewel, and the conquests' lines are not on any build's nodes. The state rows test checks every new row and its condition.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fc: minions' ailment chances
+
+**PoB:** "Minions have #% chance to Ignite", "... to cause Bleeding with Attacks", and "... to Poison Enemies on Hit" are `MinionModifier` lists of `EnemyIgniteChance`, `BleedChance` (with `KeywordFlag.Attack`), and `PoisonChance` BASE: the minion's own chances. "Minions Regenerate # Life per second" is a `MinionModifier` of `LifeRegen` BASE.
+
+**The engine:**
+- **`MinionValue::AilmentChance(ailment)`:** on the minion, its `AilmentChance` (bleed with the attack keyword), which the minion's ailments read since P6-7c3d. Three rows in `minions::STATS`, each text checked by `tests/minions.rs` against the game's.
+- **`NoEffect` (`minion-regen`):** the minions' flat life regeneration. No minion field reads regeneration, as for the percent form.
+- **Left as a reason:** "Minions have #% increased Attack and Cast Speed if you or your Minions have Killed Recently" (a condition on the minion).
+
+**Evidence** (`b-ct`, against P6-11fb's run):
+- **Public and corpus:** 0 unexpected; no value moved. No build's minions carry these lines.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

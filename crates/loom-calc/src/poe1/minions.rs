@@ -115,6 +115,10 @@ pub enum MinionValue {
     /// `<Type>Penetration` BASE, `ElementalPenetration` each element's;
     /// P6-11cu).
     Penetration(DamageType),
+    /// The minion's chance to inflict an ailment (PoB's `EnemyIgniteChance`,
+    /// `BleedChance` with `KeywordFlag.Attack`, `PoisonChance` BASE;
+    /// P6-11fc).
+    AilmentChance(super::ailment::Ailment),
 }
 
 impl MinionValue {
@@ -172,6 +176,11 @@ impl MinionValue {
                 DamageType::Lightning => "lightning-penetration",
                 DamageType::Chaos => "chaos-penetration",
             },
+            Self::AilmentChance(a) => match a {
+                super::ailment::Ailment::Ignite => "ignite-chance",
+                super::ailment::Ailment::Bleed => "bleed-chance",
+                super::ailment::Ailment::Poison => "poison-chance",
+            },
         }
     }
 
@@ -206,6 +215,15 @@ impl MinionValue {
             Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
             Self::CritMultiplier => Quantity::CritMultiplier,
             Self::Penetration(t) => Quantity::Penetration(t),
+            // The bleed chance with attacks (`KeywordFlag.Attack`).
+            Self::AilmentChance(a) => {
+                let flags = if matches!(a, super::ailment::Ailment::Bleed) {
+                    Flags::KEYWORD_ATTACK
+                } else {
+                    Flags::NONE
+                };
+                return Some((Quantity::Poe1(Poe1Quantity::AilmentChance(a)), flags));
+            }
             Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
             Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
         };
@@ -252,7 +270,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 45] = [
+pub const STATS: [MinionRow; 48] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -304,6 +322,15 @@ pub const STATS: [MinionRow; 45] = [
         "minion_attack_speed_+%",
         &[(minion(MinionValue::AttackSpeed), INC, 1.0)],
     ),
+    // P6-11fc: "Minions have #% chance to cause Bleeding with Attacks" (PoB's `MinionModifier`).
+    (
+        "minion_bleed_on_hit_with_attacks_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Bleed)),
+            BASE,
+            1.0,
+        )],
+    ),
     (
         "minion_block_%",
         &[(minion(MinionValue::BlockChance), BASE, 1.0)],
@@ -317,6 +344,15 @@ pub const STATS: [MinionRow; 45] = [
     (
         "minion_chance_to_deal_double_damage_%",
         &[(minion(MinionValue::DoubleDamageChance), BASE, 1.0)],
+    ),
+    // P6-11fc: "Minions have #% chance to Ignite" (PoB's `MinionModifier`).
+    (
+        "minion_chance_to_ignite_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Ignite)),
+            BASE,
+            1.0,
+        )],
     ),
     (
         "minion_chaos_resistance_%",
@@ -469,6 +505,15 @@ pub const STATS: [MinionRow; 45] = [
     (
         "minion_physical_damage_reduction_rating",
         &[(minion(MinionValue::Armour), BASE, 1.0)],
+    ),
+    // P6-11fc: "Minions have #% chance to Poison Enemies on Hit" (PoB's `MinionModifier`).
+    (
+        "minions_chance_to_poison_on_hit_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Poison)),
+            BASE,
+            1.0,
+        )],
     ),
     (
         "necromancer_defensive_notable_minion_maximum_life_+%_final",

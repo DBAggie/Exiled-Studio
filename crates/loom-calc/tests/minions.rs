@@ -5,13 +5,14 @@
 mod common;
 
 use loom_calc::poe1::Poe1Quantity;
+use loom_calc::poe1::ailment::Ailment;
 use loom_calc::poe1::minions::{DEPENDS_ON, MinionValue, STATS};
 use loom_calc::quantity::{Bound, DamageType, Op};
 
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 45] = [
+const TEXTS: [(&str, &str); 48] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -61,6 +62,10 @@ const TEXTS: [(&str, &str); 45] = [
         "Minions have {0}% increased Attack Speed",
     ),
     (
+        "minion_bleed_on_hit_with_attacks_%",
+        "Minions have {0}% chance to cause Bleeding with Attacks",
+    ),
+    (
         "minion_block_%",
         "Minions have {0:+d}% Chance to Block Attack Damage",
     ),
@@ -71,6 +76,10 @@ const TEXTS: [(&str, &str); 45] = [
     (
         "minion_chance_to_deal_double_damage_%",
         "Minions have {0}% chance to deal Double Damage",
+    ),
+    (
+        "minion_chance_to_ignite_%",
+        "Minions have {0}% chance to Ignite",
     ),
     (
         "minion_chaos_resistance_%",
@@ -170,6 +179,10 @@ const TEXTS: [(&str, &str); 45] = [
         "Minions have {0:+d} to Armour",
     ),
     (
+        "minions_chance_to_poison_on_hit_%",
+        "Minions have {0}% chance to Poison Enemies on Hit",
+    ),
+    (
         "necromancer_defensive_notable_minion_maximum_life_+%_final",
         "Minions have {0}% more Maximum Life",
     ),
@@ -225,6 +238,12 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
             Bound::Max
         };
         vec![(MinionValue::AddedDamage(t, bound), op)]
+    } else if text.contains("chance to cause Bleeding") {
+        vec![(MinionValue::AilmentChance(Ailment::Bleed), op)]
+    } else if text.contains("chance to Ignite") {
+        vec![(MinionValue::AilmentChance(Ailment::Ignite), op)]
+    } else if text.contains("chance to Poison") {
+        vec![(MinionValue::AilmentChance(Ailment::Poison), op)]
     } else if text.contains("Double Damage") {
         vec![(MinionValue::DoubleDamageChance, op)]
     } else if text.contains("Critical Strike Multiplier") {

@@ -336,7 +336,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ez: High-Impact Mine's double damage near mines: no effect without a gem's `skillMineCount` (PoB's stack count), a count a reason (`docs/phase-6/stat-mop-up.md`, "P6-11ez")
 - [x] P6-11fa: trap and mine throw counts (`MineThrowCount`, `TrapThrowCount`, `minesPerThrow`, `trapsPerThrow`); the `trap-mine-data` reason retired; the Ice Nova trap fixture complete and equal to PoB (`docs/phase-6/stat-mop-up.md`, "P6-11fa")
 - [x] P6-11fb: the timeless additions' remaining lines: 22 spell added damage rows (shield, two-handed, plain), conditional crit, damage, penetration, regeneration, movement, Onslaught rows (`NOT_CRIT_RECENTLY`, `NOT_KILLED_RECENTLY`), projectile attack damage, energy shield per power charge, four devotion readers (`docs/phase-6/stat-mop-up.md`, "P6-11fb")
-- [ ] The minions' lines from the timeless additions: ignite, bleed, and poison chances (`MinionModifier` `EnemyIgniteChance`, `BleedChance`, `PoisonChance`), life regeneration, attack and cast speed if killed recently
+- [x] P6-11fc: minions' ignite, bleed, and poison chances (`MinionValue::AilmentChance`); their flat life regeneration `NoEffect` (`docs/phase-6/stat-mop-up.md`, "P6-11fc")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

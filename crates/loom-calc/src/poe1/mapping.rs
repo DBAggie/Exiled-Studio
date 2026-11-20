@@ -8441,6 +8441,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "minion_life_leech_from_any_damage_permyriad",
         "minion-leech",
     ),
+    // P6-11fc: "Minions Regenerate # Life per second" (PoB's `MinionModifier`
+    // `LifeRegen` BASE): no minion field reads regeneration (as the percent
+    // form, `MinionValue::LifeRegen`).
+    ("minion_life_regeneration_rate_per_second", "minion-regen"),
     // P6-11be: "Minions Recover #% of Life on Minion Death" (PoB parses
     // none of it): a recovery on an event, no slice field.
     (
