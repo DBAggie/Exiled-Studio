@@ -34,9 +34,18 @@
 //! scale, [`LOCAL_EFFECT_STAT`]), its charges and a utility flask's
 //! duration (read into the item's flask data alone, which no calc output
 //! reads: `NoEffect`), and every other local stat unmapped, so a reason,
-//! until a row maps it. Not modelled: the `UsingFlask` conditions (left
-//! unsettled, so a modifier that reads them is a reason), recovery (P6-10b),
-//! flasks applied to minions.
+//! until a row maps it. Not modelled: the `UsingFlask` conditions but
+//! `UsingLifeFlask` (left unsettled, so a modifier that reads them is a
+//! reason), recovery (P6-10b), flasks applied to minions.
+//!
+//! **Using a life flask** (P6-11cq; `CalcPerform.lua` 1729 to 1748, 1783):
+//! PoB's `UsingLifeFlask` holds when an active flask's base recovers life,
+//! its recovery is not all instant, and the character can recover life
+//! outside leech. [`using_life_flask`] settles it from the bases alone: the
+//! lines that make recovery instant (the flask's own, and PoB's
+//! `LifeFlaskInstantRecovery`), Vaal Pact's `CannotRecoverLifeOutsideLeech`,
+//! and "Flasks do not apply to you" are unmapped stats, each a reason on
+//! every field wherever it appears.
 
 use loom_data::bundle::poe1::Flask;
 use loom_domain::{ItemId, LineResolution, Rarity, Resolved, StatId, StatLine, StatValue};
@@ -305,12 +314,10 @@ struct Active<'d> {
     scale: f64,
 }
 
-/// Adds the active flasks' buffs and lines (module docs). Runs after every
-/// source of flask effect is in (passives, items, config).
-pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
-    let build = input.build;
-    let Some(set) = collect::active_item_set(build) else {
-        return;
+/// The active flasks' items and slots (module docs, "Which flasks").
+fn active_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
+    let Some(set) = collect::active_item_set(input.build) else {
+        return Vec::new();
     };
     let second = set
         .attributes
@@ -332,6 +339,50 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         }
         slots.push((id, slot.to_owned()));
     }
+    slots
+}
+
+/// The flask base of item `id`: the base name the import adapter found
+/// (`CalcOptions::item_bases`, as an armour piece's), else the one the item
+/// writes.
+fn base_of<'d>(
+    input: &CalcInput<'_>,
+    bases: &'d [Flask],
+    id: ItemId,
+    written: Option<&str>,
+) -> Option<&'d Flask> {
+    let named = |name: &str| bases.iter().find(|f| f.name == name);
+    match input.options.item_bases.get(&id) {
+        Some(b) => named(&b.name).or_else(|| b.fallback.as_deref().and_then(named)),
+        None => written.and_then(named),
+    }
+}
+
+/// Whether the character is using a life flask (PoB's `UsingLifeFlask`;
+/// P6-11cq, module docs): `Some(false)` with no active flask, `Some(true)`
+/// when an active flask's base recovers life, `None` when a flask's base
+/// is not known.
+#[must_use]
+pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
+    let slots = active_slots(input);
+    if slots.is_empty() {
+        return Some(false);
+    }
+    let bases = input.data.poe1().and_then(super::Poe1Data::flasks)?;
+    let mut life = false;
+    for (id, _) in slots {
+        let item = input.build.items.item(id)?;
+        let base = base_of(input, bases, id, item.body.base.as_deref())?;
+        life |= base.life > 0;
+    }
+    Some(life)
+}
+
+/// Adds the active flasks' buffs and lines (module docs). Runs after every
+/// source of flask effect is in (passives, items, config).
+pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let build = input.build;
+    let slots = active_slots(input);
     if slots.is_empty() {
         return;
     }
@@ -365,14 +416,7 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let Some(item) = build.items.item(id) else {
             continue;
         };
-        // The base name the import adapter found (`CalcOptions::item_bases`,
-        // as an armour piece's), else the one the item writes.
-        let named = |name: &str| bases.iter().find(|f| f.name == name);
-        let found = match input.options.item_bases.get(&id) {
-            Some(b) => named(&b.name).or_else(|| b.fallback.as_deref().and_then(named)),
-            None => item.body.base.as_deref().and_then(named),
-        };
-        let Some(base) = found else {
+        let Some(base) = base_of(input, bases, id, item.body.base.as_deref()) else {
             ingest.reason(unmodelled("flask-base"));
             continue;
         };

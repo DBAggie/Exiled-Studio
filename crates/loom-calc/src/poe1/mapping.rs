@@ -3736,6 +3736,18 @@ pub const STATE_ROWS: &[StateRow] = &[
     ),
     // P6-10b: "Regenerate #% of Life per second while stationary" (the
     // Soul of Shakari's; `LifeRegenPercent` BASE, `Stationary`), per minute.
+    // P6-11cq: "Regenerate #% of Life per Second if you've used a Life
+    // Flask in the past 10 seconds" (`LifeRegenPercent` BASE,
+    // `UsingLifeFlask`; the active flasks).
+    (
+        "life_regeneration_rate_per_minute_%_if_used_life_flask_in_past_10_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+            Op::Base,
+            NONE,
+            conditions::USING_LIFE_FLASK,
+        )],
+    ),
     (
         "life_regeneration_rate_per_minute_%_while_stationary",
         &[(
@@ -8675,6 +8687,8 @@ mod tests {
                         super::super::triggers::TRIGGERED_DAMAGE,
                         // P6-10b part 13: the negation of a check's.
                         conditions::NOT_HIT_RECENTLY,
+                        // P6-11cq: from the active flasks.
+                        conditions::USING_LIFE_FLASK,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -9336,6 +9350,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::MOVING,
+                )],
+            ),
+            // P6-11cq: life regeneration while using a life flask.
+            (
+                "life_regeneration_rate_per_minute_%_if_used_life_flask_in_past_10_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+                    Op::Base,
+                    NONE,
+                    conditions::USING_LIFE_FLASK,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.

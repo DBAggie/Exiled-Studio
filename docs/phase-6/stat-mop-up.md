@@ -1877,3 +1877,27 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; 4 values toward PoB and 2 now equal, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cq: life regeneration while using a life flask
+
+**PoB** reads "Regenerate #% of Life per Second if you've used a Life Flask in the past 10 seconds" (Heart of Oak) as `LifeRegenPercent` BASE with the condition `UsingLifeFlask` (`ModParser.lua` 1744). No config check sets the condition. `CalcPerform.lua` sets it when all of these hold (1729 to 1748, 1783):
+- an active flask's base recovers life;
+- its recovery is not all instant;
+- the character can recover life outside leech (not Vaal Pact);
+- flasks apply to the character.
+
+**The engine:**
+- `flasks::using_life_flask` settles the condition from the active flasks' bases, sharing the active-slot and base lookups with `flasks::flasks`.
+- The other inputs are unmapped stats, each already a reason on every field wherever it appears: the flask's own instant recovery, `LifeFlaskInstantRecovery`, Vaal Pact's `CannotRecoverLifeOutsideLeech`, and "Flasks do not apply to you".
+- `poe1::conditions` inserts it, and the stat is a state row on life's percent regeneration per minute.
+
+**Fixtures:** each is a Ranger with the path to Heart of Oak. A custom line with the game's per-second text leaves the per-minute value unsettled (as in P6-11bq); the notable's stat is typed.
+- `ice-nova-life-flask-regen-ranger.xml`: an active Divine Life Flask, 92.4 life per second.
+- `ice-nova-utility-flask-no-life-regen-ranger.xml`: an active Basalt Flask only, 0.
+
+Every computed field of both equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cp's run):
+- **Public:** 0 unexpected; no value moved (the builds with the notable have other reasons on the field).
+- **Corpus:** 0 unexpected; 2 values toward PoB and 1 now equal, none away.
+- **Tests:** the workspace tests and clippy pass.
+

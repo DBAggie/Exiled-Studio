@@ -57,6 +57,11 @@ use crate::input::CalcInput;
 /// P6-11cm): its check, or the main skill (module docs).
 pub const USED_MINION_SKILL_RECENTLY: &str = "UsedMinionSkillRecently";
 
+/// "if you've used a Life Flask in the past 10 seconds", "during effect of
+/// any Life Flask" (PoB's `UsingLifeFlask`; P6-11cq): from the active
+/// flasks ([`super::flasks::using_life_flask`]).
+pub const USING_LIFE_FLASK: &str = "UsingLifeFlask";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -302,6 +307,11 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 out.remove(&key);
             }
         }
+    }
+    // Using a life flask (P6-11cq): the active flasks; no config check
+    // sets it.
+    if let Some(v) = super::flasks::using_life_flask(input) {
+        out.insert(ConditionKey::new(USING_LIFE_FLASK), v);
     }
     // A rare or unique enemy nearby (P6-10b): either condition; a count of
     // another type leaves it unsettled unless the enemy is rare or unique.
