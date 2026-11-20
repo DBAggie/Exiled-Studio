@@ -92,6 +92,10 @@ pub const ENEMY_BURNING: &str = "Enemy:Burning";
 /// check `conditionEnemyBleeding`, `ConfigOptions.lua`; P6-11dp).
 pub const ENEMY_BLEEDING: &str = "Enemy:Bleeding";
 
+/// The enemy is maimed (PoB's enemy `Maimed`, set only by its config check
+/// `conditionEnemyMaimed`, `ConfigOptions.lua` 1825; P6-11ec).
+pub const ENEMY_MAIMED: &str = "Enemy:Maimed";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -209,6 +213,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     // P6-11dk: an ignited enemy is burning (`implyCond`).
     ("conditionEnemyIgnited", ENEMY_BURNING),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
+    ("conditionEnemyMaimed", ENEMY_MAIMED),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionFullLife", FULL_LIFE),
     ("conditionKilledRecently", KILLED_RECENTLY),

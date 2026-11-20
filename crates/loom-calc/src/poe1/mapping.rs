@@ -1744,6 +1744,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "chaos_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::CHAOS, NONE)],
     ),
+    // P6-11ec: "#% increased Chaos Damage over Time" (`ChaosDamage` INC with
+    // `KeywordFlag.ChaosDot`), as the burning damage row.
+    (
+        "chaos_damage_over_time_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::CHAOS.union(Flags::CHAOS_DOT),
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Chaos Damage with Attack Skills": `ChaosDamage`
     // INC with `KeywordFlag.Attack` (701, 978); "with Spell Skills" with
     // `KeywordFlag.Spell` (971); the other damage types likewise.
@@ -3595,6 +3607,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::BLOCKED_RECENTLY,
         )],
     ),
+    // P6-11ec: "+#% Chance to Block Attack Damage if you've dealt a Critical
+    // Strike Recently" (`BlockChance` BASE, `CritRecently`).
+    (
+        "additional_block_%_if_you_have_crit_recently",
+        &[(
+            Quantity::BlockChance,
+            Op::Base,
+            NONE,
+            conditions::CRIT_RECENTLY,
+        )],
+    ),
     // P6-11b: "+#% Chance to Block Attack Damage while wielding a Staff":
     // `BlockChance` BASE, `UsingStaff` (as `staff_block_%`).
     (
@@ -3643,6 +3666,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::LEECHING_ENERGY_SHIELD,
         )],
     ),
+    // P6-11ec: "#% increased Attack Damage against Maimed Enemies" (`Damage`
+    // INC with `ModFlag.Attack`, enemy `Maimed`).
+    (
+        "attack_damage_+%_vs_maimed_enemies",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::ENEMY_MAIMED,
+        )],
+    ),
     // P6-11o: "#% increased Attack Damage while affected by Precision".
     (
         "attack_damage_+%_while_affected_by_precision",
@@ -3673,6 +3707,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::LEECHING,
         )],
     ),
+    // P6-11ec: "#% increased Attack Damage against Bleeding Enemies"
+    // (`Damage` INC with `ModFlag.Attack`, enemy `Bleeding`).
+    (
+        "attack_damage_vs_bleeding_enemies_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::ENEMY_BLEEDING,
+        )],
+    ),
     // P6-11a review: "Attack Skills deal #% increased Damage while holding a
     // Shield": `Damage` INC with `KeywordFlag.Attack` (an attack's ailments
     // too), `UsingShield`.
@@ -3683,6 +3728,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::KEYWORD_ATTACK,
             states::USING_SHIELD,
+        )],
+    ),
+    // P6-11ec: "#% increased Attack Speed if you've dealt a Critical Strike
+    // Recently" (`Speed` INC with `ModFlag.Attack`, `CritRecently`).
+    (
+        "attack_speed_+%_if_have_crit_recently",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::CRIT_RECENTLY,
         )],
     ),
     // P6-11ai: "+#% chance to Suppress Spell Damage while on Full Life"
@@ -10002,6 +10058,44 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11ec: block and attack speed after a crit, attack damage
+            // against bleeding and maimed enemies.
+            (
+                "additional_block_%_if_you_have_crit_recently",
+                vec![config(
+                    Quantity::BlockChance,
+                    Op::Base,
+                    NONE,
+                    conditions::CRIT_RECENTLY,
+                )],
+            ),
+            (
+                "attack_damage_+%_vs_maimed_enemies",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::ENEMY_MAIMED,
+                )],
+            ),
+            (
+                "attack_damage_vs_bleeding_enemies_+%",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::ENEMY_BLEEDING,
+                )],
+            ),
+            (
+                "attack_speed_+%_if_have_crit_recently",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::CRIT_RECENTLY,
                 )],
             ),
             // P6-11dz: crit chance against bleeding enemies, elemental

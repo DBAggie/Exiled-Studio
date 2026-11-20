@@ -2554,3 +2554,23 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 
 **Evidence** (`b-ct`, against P6-11ea's run): public and corpus 0 unexpected; no value moved. The workspace tests, clippy, and rustfmt pass.
 
+## P6-11ec: after a crit; against bleeding and maimed enemies
+
+**PoB:**
+- "#% increased Attack Speed if you've dealt a Critical Strike Recently" (`Speed` INC with `ModFlag.Attack`) and "+#% Chance to Block Attack Damage if you've dealt a Critical Strike Recently" (`BlockChance` BASE), under `CritRecently`.
+- "#% increased Attack Damage against Bleeding Enemies" and "... against Maimed Enemies": `Damage` INC with `ModFlag.Attack` and the enemy's `Bleeding` or `Maimed`. Only the config checks set them (`conditionEnemyMaimed`, `ConfigOptions.lua` 1825).
+- "#% increased Accuracy Rating per Frenzy Charge": `Accuracy` INC per `Multiplier:FrenzyCharge`.
+- "#% increased Chaos Damage over Time": `ChaosDamage` INC with `KeywordFlag.ChaosDot`.
+
+**The engine:**
+- **The enemy's `Maimed`:** `conditions::ENEMY_MAIMED` from its check through `CHECKS`; it left `config::NAMED_ONLY`.
+- **Rows:** four `STATE_ROWS` rows, `charges::PerCharge::Accuracy` with its `MODIFIERS` row, and a `HIT_ROWS` row for the chaos damage over time, as the burning damage row.
+
+**Fixture** `smite-crit-recently-bleeding-maimed-templar.xml`: Smite with two frenzy charges, the three checks on, and the five lines. Every computed field equals PoB's but Q11's attack rate (DIV-0472 to DIV-0477).
+
+**Evidence** (`b-ct`, against P6-11eb's run):
+- **Public:** 0 unexpected. 17 values moved, 16 toward PoB: a Berserker's and a Slayer's damage, and the Slayer's spell block (25 to 35, against PoB's 64), attack rate, and EHP.
+- **One moved away:** the Slayer's mana cost per second follows its attack rate, which moved toward PoB. PoB's cost there is 0, which the engine does not model yet.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+
