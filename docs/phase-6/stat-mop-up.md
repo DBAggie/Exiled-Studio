@@ -2636,3 +2636,27 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **One moved away:** a corpus build's poison DPS (179 to 143, against PoB's 548). Its physical damage is now partly converted to cold, which leaves less physical damage to poison; PoB converts it the same way. PoB's higher poison was a gap before this step, from another cause.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11eg: crits by whether you have blocked recently; movement speed during a flask effect; nineteen `NoEffect` lines
+
+**PoB:**
+- "#% increased Critical Strike Chance if you haven't Blocked Recently" is `CritChance` INC under `BlockedRecently` negated. "+#% to Critical Strike Multiplier if you have Blocked Recently" is `CritMultiplier` BASE under `BlockedRecently`.
+- "#% increased Movement Speed during any Flask Effect" is `MovementSpeed` INC under `UsingFlask`.
+
+**The engine:**
+- **Condition:** `conditions::NOT_BLOCKED_RECENTLY`, the negation of `BLOCKED_RECENTLY` (the config's three blocked checks), settled only when that is. It is built as `NOT_HIT_RECENTLY` is (P6-10b part 13).
+- **Rows:** three `STATE_ROWS` rows.
+- **`NoEffect`:**
+  - `charge-gain-chance`: chances to gain an endurance or power charge on block, and a power charge on a non-critical strike. PoB does not parse them; the counts are the config's.
+  - `flask`: flask charges gained, used, and generated every 3 seconds. No slice field reads a flask's charges.
+  - `recovery`: mana and energy shield recovered on kill.
+  - `no-slice`: taunt duration, Desecrate's and Unearth's corpse limit, totems' life and elemental resistances, attribute requirements (global, and a local Intelligence requirement), reflected damage taken.
+  - `display`: the sell price, modification while corrupted, the implicit limit, and a wand base's crafting rule.
+- The six lines that name a charge are listed in `charges`' checked `NoEffect` rows.
+- **Left as reasons:** PoB does not parse "#% increased Spell Damage during any Flask Effect" or "+# to Accuracy Rating per Frenzy Charge". Each needs a game check before a row. "#% increased Movement Speed while Ignited" needs the character's own `Ignited` condition, which no settled condition gives yet.
+
+**Evidence** (`b-ct`, against P6-11ef's run):
+- **Public:** 0 unexpected. 5 values moved, all toward PoB: a General's Cry Perforate Berserker's crit multiplier (5.44 to 5.74, PoB 6.25) and the damage that follows.
+- **Corpus:** 0 unexpected. 7 values moved, all toward PoB: another Berserker's crit multiplier, damage, and leech.
+- **Not exercised:** no build has the crit chance line with its blocked check settled false, so `NOT_BLOCKED_RECENTLY` moved no value. The state rows test checks the row and its condition.
+- **Tests:** the workspace tests, clippy, and rustfmt pass.
+

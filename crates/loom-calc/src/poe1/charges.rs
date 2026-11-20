@@ -762,6 +762,14 @@ mod tests {
         "stun_duration_+%_per_endurance_charge",
         // P6-11ef: area per power charge (no slice field).
         "skill_area_of_effect_+%_per_power_charge",
+        // P6-11eg: chances to gain a charge on block and on a non-critical
+        // strike (the counts are the config's), and flask charges.
+        "chance_to_gain_endurance_charge_on_block_%",
+        "power_charge_on_block_%_chance",
+        "gain_power_charge_on_non_critical_strike_%",
+        "charges_gained_+%",
+        "flask_charges_used_+%",
+        "flask_charges_recovered_per_3_seconds",
         "add_power_charge_on_kill_%_chance",
         // P6-11do: Power Charge On Critical's chance (the count is the
         // config's).

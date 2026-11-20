@@ -112,6 +112,9 @@ pub const STATIONARY: &str = "Stationary";
 pub const STOPPED_TAKING_DOT_RECENTLY: &str = "StoppedTakingDamageOverTimeRecently";
 /// "if you've Blocked Recently" (P6-11g).
 pub const BLOCKED_RECENTLY: &str = "BlockedRecently";
+/// "if you haven't Blocked Recently": [`BLOCKED_RECENTLY`] negated,
+/// unsettled when it is (P6-11eg).
+pub const NOT_BLOCKED_RECENTLY: &str = "NotBlockedRecently";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
@@ -435,6 +438,11 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         None => {
             out.remove(&key);
         }
+    }
+    // Not blocked recently (P6-11eg): the negation of the three blocked
+    // checks, settled when they are.
+    if let Some(v) = out.get(&ConditionKey::new(BLOCKED_RECENTLY)).copied() {
+        out.insert(ConditionKey::new(NOT_BLOCKED_RECENTLY), !v);
     }
 }
 

@@ -4016,6 +4016,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_RECENTLY,
         )],
     ),
+    // P6-11eg: "#% increased Critical Strike Chance if you haven't Blocked
+    // Recently" (`CritChance` INC, `BlockedRecently` negated).
+    (
+        "critical_strike_chance_+%_if_havent_blocked_recently",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::NOT_BLOCKED_RECENTLY,
+        )],
+    ),
     // P6-11dz: "#% increased Critical Strike Chance against Bleeding Enemies"
     // (`CritChance` INC, enemy `Bleeding`).
     (
@@ -4053,6 +4064,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
+        )],
+    ),
+    // P6-11eg: "+#% to Critical Strike Multiplier if you have Blocked
+    // Recently" (`CritMultiplier` BASE, `BlockedRecently`).
+    (
+        "critical_strike_multiplier_+_if_you_have_blocked_recently",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::BLOCKED_RECENTLY,
         )],
     ),
     // P6-11dp: "+#% to Critical Strike Multiplier against Bleeding Enemies"
@@ -4463,6 +4485,17 @@ pub const STATE_ROWS: &[StateRow] = &[
                 conditions::ENEMY_CURSED,
             ),
         ],
+    ),
+    // P6-11eg: "#% increased Movement Speed during any Flask Effect"
+    // (`MovementSpeed` INC, `UsingFlask`).
+    (
+        "movement_speed_+%_during_flask_effect",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::USING_FLASK,
+        )],
     ),
     // P6-11ee: "#% increased Movement Speed if you've dealt a Critical Strike
     // Recently" (`MovementSpeed` INC, `CritRecently`).
@@ -7340,6 +7373,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("cannot_have_life_leeched_from", "leech"),
     ("cannot_pierce", "no-slice"),
+    // P6-11eg: lines no slice field reads: taunt duration, Desecrate's and
+    // Unearth's corpses, totems' life and resistances, attribute requirements,
+    // reflected damage taken.
+    ("cannot_take_reflected_elemental_damage", "no-slice"),
+    ("cannot_take_reflected_physical_damage", "no-slice"),
     // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
     ("cast_linked_spells_on_attack_crit_%", "trigger"),
     // P6-8a part 2: PoB's `chanceToTriggerOnMeleeKill`, which no module
@@ -7377,6 +7415,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // only with `SequentialProjectiles` (Barrage's, a guard).
     ("chance_to_fork_extra_projectile_%", "projectile-count"),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    // P6-11eg: chances to gain a charge on block and on a non-critical strike
+    // (PoB does not parse them; the counts are the config's).
+    (
+        "chance_to_gain_endurance_charge_on_block_%",
+        "charge-gain-chance",
+    ),
     (
         "chance_to_gain_endurance_charge_on_melee_crit_%",
         "charge-gain-chance",
@@ -7397,6 +7441,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("chance_to_unnerve_on_hit_%", "ailment-chance"),
     // P6-11u: the charges' count is the config's (`poe1::charges`).
     ("charge_duration_+%", "charge-duration"),
+    // P6-11eg: flask charges gained, used, and generated (`FlaskChargesGained`,
+    // `FlaskChargesUsed` INC, `FlaskChargesGenerated` BASE): no slice field
+    // reads a flask's charges.
+    ("charges_gained_+%", "flask"),
     ("chill_duration_+%", "no-slice"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
@@ -7423,6 +7471,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("debuff_time_passed_+%", "ailment-on-self"),
+    ("desecrate_maximum_number_of_corpses", "no-slice"),
     // P6-11cy: a support that cannot support melee attacks (which supports apply is the skill's types').
     ("disable_skill_if_melee_attack", "skill type marker"),
     // P3-8n: Intensify's text; PoB maps no modifier.
@@ -7487,6 +7536,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11dj: reflected fire damage to melee attackers (unparsed in PoB; damage
     // to attackers, no slice field), as the physical one.
     ("fire_damage_to_return_to_melee_attacker", "reflect"),
+    ("flask_charges_recovered_per_3_seconds", "flask"),
+    ("flask_charges_used_+%", "flask"),
     // P6-11n: "#% increased Life Recovered" by flasks (`FlaskLifeRecovery`
     // INC): no field.
     ("flask_life_to_recover_+%", "flask"),
@@ -7517,11 +7568,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_power_charge_for_each_second_channeling_spell",
         "charge-gain-chance",
     ),
+    (
+        "gain_power_charge_on_non_critical_strike_%",
+        "charge-gain-chance",
+    ),
     // P3-8n: Inspiration's charge gain; PoB maps no modifier (its charges are
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
     ("gem_experience_gain_+%", "display"),
     ("global_chance_to_blind_on_hit_%", "on-hit-debuff"),
+    ("global_item_attribute_requirements_+%", "no-slice"),
     ("gloves_freeze_proliferation_radius", "freeze"),
     // P6-11g: "Ignites you inflict spread to other Enemies within # metre": PoB does not parse it.
     ("gloves_ignite_proliferation_radius", "area"),
@@ -7547,6 +7603,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
     ("kinetic_fusillade_subsequent_targeting_radius", "area"),
+    // P6-11eg: item properties: the sell price, modification while corrupted,
+    // the implicit limit, and a wand base's crafting rule.
+    (
+        "kinetic_wand_implicit_cannot_roll_caster_modifiers",
+        "display",
+    ),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
     (
@@ -7609,6 +7671,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
     ("local_has_X_sockets", "sockets"),
+    ("local_intelligence_requirement_+", "no-slice"),
+    ("local_item_allow_modification_while_corrupted", "display"),
+    ("local_item_implicit_modifier_limit", "display"),
+    ("local_item_sell_price_doubled", "display"),
     // P6-11ea: radius jewels' allocation stats (Intuitive Leap, Thread of Hope's
     // ring, Impossible Escape): the pipeline reads them when it resolves the
     // passives (`loom_pipeline`, `RING_STAT`, `LEAP_STAT`, `ESCAPE_STAT`); they
@@ -7746,6 +7812,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11n: "#% increased Power Charge Duration"
     // (`PowerChargesDuration` INC): the charges come from the config.
     ("power_charge_duration_+%", "charge-duration"),
+    ("power_charge_on_block_%_chance", "charge-gain-chance"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
@@ -7758,6 +7825,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("random_projectile_direction", "targeting"),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
+    // P6-11eg: "Recover #% of Mana on Kill" and "... of Energy Shield on Kill"
+    // (`ManaOnKill`, `EnergyShieldOnKill` BASE): no recovery field reads a kill.
+    ("recover_%_maximum_mana_on_kill", "recovery"),
+    ("recover_energy_shield_%_on_kill", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
     // P6-11aj: Multistrike's repeats choose nearby targets.
     (
@@ -7866,8 +7937,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_minion_skill_gem_level_+", "gem-level"),
     ("supported_physical_skill_gem_level_+", "gem-level"),
     ("supported_strike_skill_gem_level_+", "gem-level"),
+    ("taunt_duration_+%", "no-slice"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
+    ("totem_elemental_resistance_%", "no-slice"),
+    ("totem_life_+%", "no-slice"),
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
@@ -9622,6 +9696,8 @@ mod tests {
                         super::super::triggers::TRIGGERED_DAMAGE,
                         // P6-10b part 13: the negation of a check's.
                         conditions::NOT_HIT_RECENTLY,
+                        // P6-11eg: the negation of the blocked checks.
+                        conditions::NOT_BLOCKED_RECENTLY,
                         // P6-11cq: from the active flasks.
                         conditions::USING_LIFE_FLASK,
                         // P6-11ct: from the heralds among the skills.
@@ -10347,6 +10423,35 @@ mod tests {
                     Op::Increased,
                     NONE,
                     states::USING_SHIELD,
+                )],
+            ),
+            // P6-11eg: crits by whether you have blocked recently; movement
+            // speed during a flask effect.
+            (
+                "critical_strike_chance_+%_if_havent_blocked_recently",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    conditions::NOT_BLOCKED_RECENTLY,
+                )],
+            ),
+            (
+                "critical_strike_multiplier_+_if_you_have_blocked_recently",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::BLOCKED_RECENTLY,
+                )],
+            ),
+            (
+                "movement_speed_+%_during_flask_effect",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::USING_FLASK,
                 )],
             ),
             // P6-11ed: crit multiplier with a rare or unique enemy nearby.
