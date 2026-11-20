@@ -2469,3 +2469,15 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; 8 values toward PoB, 1 now equal.
 - **Tests:** the workspace tests, clippy, and the maintainer-run type test pass.
 
+## P6-11dx: Battlemage's Cry
+
+**PoB** (`act_int.lua`): Battlemage's Cry's buff is base critical strike chance per 5 warcry power, up to 25 (`CritChance` BASE, a `Warcry` effect with `div = 5`, `limit = 25`, the stat over 100). Its exerted attacks trigger the spells it supports; the stat is the skill's own, not global, and no slice field reads it.
+
+**The engine:**
+- Battlemage's Cry joins `gems::SKILLS` as a warcry with a `PerPower` row, scaled by power and uptime as P6-11bs's warcries.
+- **data-parity `gem_effects`:** PoB's "Buff" and "Warcry" entries of the skill are `EXTRA_BUFFS`, as for Intimidating Cry. `uncategorized` 0.
+
+**Fixture** `smite-battlemages-cry-templar.xml`: Smite with Battlemage's Cry in its own group. Every computed field equals PoB's (crit chance included) but Q11's attack rate (DIV-0461 to DIV-0465).
+
+**Evidence** (`b-ct`, against P6-11dw's run): public and corpus 0 unexpected; no value moved (the builds with it have other reasons). The workspace tests and clippy pass.
+

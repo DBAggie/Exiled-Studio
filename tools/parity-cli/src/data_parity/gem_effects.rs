@@ -303,6 +303,8 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
     // A warcry's `UsesWarcryPower` flag is a `Buff` of its name; General's
     // Cry has no other global mod (P6-9e).
     ("GeneralsCry", "Buff General's Cry"),
+    ("BattlemagesCry", "Buff Battlemage's Cry"),
+    ("BattlemagesCry", "Warcry Battlemage's Cry"),
     ("EnduringCry", "Buff Enduring Cry"),
     ("EnduringCry", "Warcry Enduring Cry"),
     ("IntimidatingCry", "Buff Intimidating Cry"),

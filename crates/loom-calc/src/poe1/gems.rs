@@ -498,6 +498,30 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // (`SupportAutomation`); nothing of its own reaches the character
     // (`Data/Skills/act_int.lua` 417).
     ("Automation", Kind::Inert),
+    // P6-11dx: Battlemage's Cry (`act_int.lua`): base critical strike chance
+    // per 5 warcry power up to 25 (`CritChance` BASE, `div = 100`, a
+    // `Warcry` effect). Its exerted attacks (the skill's own stat, not
+    // global) trigger the spells it supports, which no slice field reads.
+    (
+        "BattlemagesCry",
+        Kind::Warcry {
+            name: "Battlemage's Cry",
+            stats: &[
+                (
+                    "divine_cry_additional_base_critical_strike_chance_per_5_power_up_to_cap",
+                    BuffStat::PerPower {
+                        div: 5.0,
+                        limit: 25.0,
+                        rows: &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+                    },
+                ),
+                (
+                    "warcry_count_power_from_enemies",
+                    BuffStat::NoSlice("warcry-power"),
+                ),
+            ],
+        },
+    ),
     // P6-11dt: Berserk's buff (`act_str.lua` 934): `RageEffect` INC, a
     // `GlobalEffect` buff marked unscalable, read by the rage
     // (`poe1::stacks`). Its minimum rage and rage loss PoB does not map.
