@@ -110,6 +110,10 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     if let Some(v) = six_life_masteries(input) {
         out.insert(ConditionKey::new(SIX_LIFE_MASTERIES), v);
     }
+    // Chaos Inoculation sets full life (`CalcPerform.lua` 82; P6-11ej).
+    if chaos_inoculation_allocated(input) {
+        out.insert(ConditionKey::new(super::conditions::FULL_LIFE), true);
+    }
     if reads_life_modifiers(input)
         && let Some(v) = no_life_modifiers_on_body_armour(input)
     {
@@ -142,6 +146,23 @@ fn six_life_masteries(input: &CalcInput<'_>) -> Option<bool> {
         Some(false)
     }
 }
+
+/// Whether an allocated, connected node carries Chaos Inoculation's
+/// keystone stat (P6-11ej): PoB then sets `FullLife` (`CalcPerform.lua`
+/// 82). The game grants the keystone from the tree alone; from another
+/// source `FullLife` stays the config's.
+fn chaos_inoculation_allocated(input: &CalcInput<'_>) -> bool {
+    collect::active_spec(input.build).is_some_and(|spec| {
+        spec.nodes.value().iter().any(|n| {
+            input.options.passives.connected(*n)
+                && collect::node_stats(input, n.0)
+                    .is_some_and(|stats| stats.iter().any(|s| s.stat == CHAOS_INOCULATION_STAT))
+        })
+    })
+}
+
+/// Chaos Inoculation's keystone stat.
+pub const CHAOS_INOCULATION_STAT: &str = "keystone_chaos_inoculation";
 
 /// PoB's `UsingWand` (`CalcPerform.lua` 187 to 190, either hand's weapon
 /// type): a wand in a hand settles it true; else an unknown hand leaves it

@@ -397,6 +397,10 @@ pub enum Poe1Quantity {
     /// read by [`enemy_hit`] and [`ehp`] for the pools and by [`costs`] for
     /// the mana cost per second, paid with energy shield.
     EsProtectsMana,
+    /// Chaos Inoculation (PoB's `ChaosInoculation`; P6-11ej): a `Flag`,
+    /// read by [`phases`]: life is 1 (`CalcPerform.lua` 81), and life
+    /// gained as energy shield adds 1 (`CalcDefence.lua` 1027).
+    ChaosInoculation,
     /// A skill can wither (PoB's `Condition:CanWither`; P6-11aq): a `Flag`
     /// from the character's stats, which every active skill then has;
     /// read by [`damage_taken`] for the enemy's withered stacks.
@@ -1234,6 +1238,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
+            Self::ChaosInoculation => f.write_str("chaos-inoculation"),
             Self::CanWither => f.write_str("can-wither"),
             Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
             Self::WitherEffect => f.write_str("wither-effect"),

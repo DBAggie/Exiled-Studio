@@ -346,8 +346,10 @@ fn attributes(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// * more)` with `floor(Int / 2)` added (`Mana` BASE from
 /// "Intelligence"; `output.Mana = round(calcLib.val(modDB, "Mana"))`).
 ///
-/// Chaos Inoculation, life and mana conversion, and overrides come from
-/// stats the mapping does not know yet, which make the fields `Partial`.
+/// Chaos Inoculation (P6-11ej, `CalcPerform.lua` 81 to 83): life is 1,
+/// its flag's node times 1. Life and mana conversion and overrides come
+/// from stats the mapping does not know yet, which make the fields
+/// `Partial`.
 fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let str_bonus = bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")?;
     let parts = chain(
@@ -360,7 +362,15 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     )?;
     let rounded = round(calc, parts.product, Term::Step("rounded"))?;
     let life = at_least(calc, rounded, "minimum", 1.0)?;
-    calc.set_derived(Field::Life, query(life, parts.reasons), &[Field::Strength]);
+    let mut reasons = parts.reasons;
+    let life = match chaos_inoculation(calc, &mut reasons)? {
+        Some(flag) => {
+            let one = constant(calc, "chaos-inoculation-life", 1.0)?;
+            product(calc, &[flag, one], Term::Result)?
+        }
+        None => life,
+    };
+    calc.set_derived(Field::Life, query(life, reasons), &[Field::Strength]);
 
     let int_bonus = bonus(
         calc,
@@ -384,6 +394,26 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &[Field::Intelligence],
     );
     Ok(())
+}
+
+/// Chaos Inoculation's flag when it is on (P6-11ej; PoB's
+/// `modDB:Flag(nil, "ChaosInoculation")`): its node, value 1.
+fn chaos_inoculation(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::ChaosInoculation);
+    if !has(calc, q) {
+        return Ok(None);
+    }
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let f = store.flag(graph, q, &cx)?;
+    reasons.extend(&f.reasons);
+    Ok((f.value != 0.0).then_some(Valued {
+        node: f.node,
+        value: f.value,
+    }))
 }
 
 /// A minion's life (P6-7b3a, `doActorLifeMana` for `env.minion`):
@@ -1303,8 +1333,8 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// intelligence bonus among them, as in PoB's store), times life's and
 /// energy shield's rounded more multipliers (PoB rounds per mod name).
 /// Life's base is its BASE effects and the strength bonus, as
-/// `life_mana`'s. `None` without the stat. Chaos Inoculation's `total =
-/// 1` is not read: its keystone is a reason of the life field.
+/// `life_mana`'s. `None` without the stat. With Chaos Inoculation the row
+/// is 1 (`CalcDefence.lua` 1027; P6-11ej).
 fn life_as_energy_shield(
     calc: &mut Calc<'_>,
     es_inc: Option<Valued>,
@@ -1323,6 +1353,15 @@ fn life_as_energy_shield(
     )?;
     if percent.value <= 0.0 {
         return Ok(None);
+    }
+    if let Some(flag) = chaos_inoculation(calc, reasons)? {
+        let one = constant(calc, "chaos-inoculation-life-as-energy-shield", 1.0)?;
+        let row = product(
+            calc,
+            &[flag, one],
+            Term::Step("slot.conversion.life-to-energy-shield"),
+        )?;
+        return Ok(Some(row));
     }
     let str_bonus = bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")?;
     let life_effects = sum(

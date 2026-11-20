@@ -19,7 +19,7 @@
 //! - `conditionOnBurningGround`: `OnBurningGround` (1163; P6-11w; its
 //!   implied `Burning` is the UI's alone);
 //! - `conditionFullLife`: `FullLife` (174; P6-11ai; Chaos Inoculation's
-//!   too, whose keystone is unmapped);
+//!   too, `states`' since P6-11ej);
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
 //! - `conditionEnemyBurning`, `conditionEnemyIgnited`: the enemy's `Burning`
 //!   (1849, 1852; P6-11dk): an ignited enemy is burning (`implyCond`, and
@@ -159,8 +159,8 @@ pub const MOVING: &str = "Moving";
 pub const ON_BURNING_GROUND: &str = "OnBurningGround";
 /// "while on Full Life" (PoB's `FullLife`, from `conditionFullLife`,
 /// `ConfigOptions.lua` 174; P6-11ai). PoB sets it otherwise only for Chaos
-/// Inoculation (`CalcPerform.lua` 79 to 83), whose keystone stat is
-/// unmapped, a reason on every field.
+/// Inoculation (`CalcPerform.lua` 79 to 83), which `states` reads from the
+/// allocated keystone (P6-11ej).
 pub const FULL_LIFE: &str = "FullLife";
 /// "when on Low Life" (PoB's `LowLife`, from `conditionLowLife`,
 /// `ConfigOptions.lua` 177; P6-11ei). PoB sets it from no other source in

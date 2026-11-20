@@ -57,7 +57,7 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
-use super::{Poe1Quantity, Pool, TakenOf};
+use super::{Poe1Quantity, Pool, TakenOf, TakenWhen};
 
 /// The skill condition Elemental Overload's more damage needs (PoB's
 /// `CritInPast8Sec`): settled by the hit, true when its crit chance is not
@@ -123,6 +123,26 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             ),
             flag(Poe1Quantity::CostLifeInsteadOfMana),
             flag(Poe1Quantity::ReserveLifeInsteadOfMana),
+        ],
+    ),
+    // Chaos Inoculation (P6-11ej): the tree's "Maximum Life becomes 1, Immune
+    // to Chaos Damage" (`ChaosInoculation` FLAG, `ChaosDamageTaken` MORE
+    // -100; `ModParser.lua` 2242). Its `FullLife` is `states`'.
+    (
+        "keystone_chaos_inoculation",
+        &[
+            flag(Poe1Quantity::ChaosInoculation),
+            (
+                Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                    TakenWhen::Always,
+                    TakenOf::Type(DamageType::Chaos),
+                )),
+                Op::More,
+                -100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
         ],
     ),
     (

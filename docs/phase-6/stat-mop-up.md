@@ -2704,3 +2704,23 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
+## P6-11ej: Chaos Inoculation
+
+**PoB:**
+- The tree's "Maximum Life becomes 1, Immune to Chaos Damage" is `ChaosInoculation` FLAG and `ChaosDamageTaken` MORE -100 (`ModParser.lua` 2242).
+- With the flag, `output.Life = 1` and `condList["FullLife"] = true` (`CalcPerform.lua` 79 to 83).
+- Life gained as energy shield or armour adds 1 (`CalcDefence.lua` 1013, 1027).
+- The stun threshold reads life before the keystone (2121), which is no slice field.
+
+**The engine:**
+- **Keystone:** `keystone_chaos_inoculation` in `poe1::keystones`: the new flag `Poe1Quantity::ChaosInoculation` and `SelfDamageTaken(Always, Chaos)` MORE -100, which damage taken over time and the incoming hit already read.
+- **Life:** with the flag on, life is the flag's node times 1. The row of life gained as energy shield is 1 too (`phases::life_as_energy_shield`). The engine does not model life gained as armour.
+- **Full life:** `states` sets `FullLife` when an allocated, connected node carries the keystone's stat. The game grants the keystone from the tree alone, so from another source `FullLife` stays the config's.
+- The keystone's text is checked against the real bundle (`tests/keystones_chill.rs`).
+
+**Evidence** (`b-ct`, against P6-11ei's run): an Essence Drain Occultist with the keystone.
+- **Public:** 0 unexpected. 14 values moved, 6 toward PoB and now equal: life 1, unreserved life 1, the life leech instance and rate (0.1, 0.2), and chaos damage taken from hits and over time (0).
+- **Eight moved away:** the build's defence estimates (maximum hits taken, effective hit pool, number of hits). They were already far below PoB's before this step: its energy shield is 3,915 against PoB's 10,165, from its other unresolved lines (Quiet Might's keystone among them). Losing the 1,509 life the keystone removes lowers them further. Every one of them is a partial field.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
