@@ -21,6 +21,9 @@
 //! - `conditionFullLife`: `FullLife` (174; P6-11ai; Chaos Inoculation's
 //!   too, whose keystone is unmapped);
 //! - `conditionEnemyFullLife`: the enemy's `FullLife` (1774);
+//! - `conditionEnemyBurning`, `conditionEnemyIgnited`: the enemy's `Burning`
+//!   (1849, 1852; P6-11dk): an ignited enemy is burning (`implyCond`, and
+//!   `CalcSetup.lua` 72's `Burning` flag from `Ignited`);
 //! - `conditionEnemyLowLife`: the enemy's `LowLife` (1777; P6-9e, read by
 //!   Punishment's hex, `gems::SKILLS`);
 //! - `conditionEnemyRareOrUnique`: the enemy's `RareOrUnique` (2057), which
@@ -75,6 +78,10 @@ pub const ENEMY_CURSED: &str = "Enemy:Cursed";
 /// curse slot; P6-11de): [`super::gems::marks_enemy`], unsettled when the
 /// slots' priorities decide. No config check sets it.
 pub const ENEMY_MARKED: &str = "Enemy:Marked";
+
+/// The enemy is burning (PoB's enemy `Burning`; P6-11dk): its check, or
+/// the ignited check (an ignited enemy burns).
+pub const ENEMY_BURNING: &str = "Enemy:Burning";
 
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
@@ -186,8 +193,11 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionBlockedSpellRecently", BLOCKED_RECENTLY),
     ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
     ("conditionCritRecently", CRIT_RECENTLY),
+    ("conditionEnemyBurning", ENEMY_BURNING),
     ("conditionEnemyCursed", ENEMY_CURSED),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
+    // P6-11dk: an ignited enemy is burning (`implyCond`).
+    ("conditionEnemyIgnited", ENEMY_BURNING),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionFullLife", FULL_LIFE),

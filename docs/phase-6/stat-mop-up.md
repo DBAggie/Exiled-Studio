@@ -2211,3 +2211,20 @@ All stay reasons.
 
 **Evidence** (`b-ct`, against P6-11di's run): public and corpus 0 unexpected; no value moved. The workspace tests and clippy pass.
 
+## P6-11dk: added fire damage against burning enemies
+
+**PoB:**
+- Immolate Support's "# to # added Fire Damage against Burning Enemies" is `FireMin` and `FireMax` BASE with the enemy's `Burning` (`SkillStatMap.lua` 831 to 836).
+- The enemy burns when the config checks it as burning (`conditionEnemyBurning`, `ConfigOptions.lua` 1849) or as ignited. `conditionEnemyIgnited` implies `Burning` (1852), and `CalcSetup.lua` 72 gives `Burning` from `Ignited`.
+
+**The engine:**
+- `conditions::ENEMY_BURNING` ("Enemy:Burning"), set by either check through `CHECKS`. `conditionEnemyBurning` left `config::NAMED_ONLY`.
+- Two `STATE_ROWS` rows for the added damage.
+
+**Fixture** `ice-nova-immolate-ignited-enemy-witch.xml`: Ice Nova with Immolate Support against an enemy checked as ignited. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11dj's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; 5 values toward PoB, none away. One build's average damage went from 29,141 to 52,813 against PoB's 84,459.
+- **Tests:** the workspace tests and clippy pass.
+

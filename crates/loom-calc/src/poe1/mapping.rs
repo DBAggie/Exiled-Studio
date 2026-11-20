@@ -3898,6 +3898,27 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_STAFF,
         )],
     ),
+    // P6-11dk: "# to # added Fire Damage against Burning Enemies" (PoB's
+    // `SkillStatMap.lua` 831 to 836: `FireMin` and `FireMax` BASE, enemy
+    // `Burning`; Immolate Support's).
+    (
+        "global_maximum_added_fire_damage_vs_burning_enemies",
+        &[(
+            added(FIRE_T, MAX),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_BURNING,
+        )],
+    ),
+    (
+        "global_minimum_added_fire_damage_vs_burning_enemies",
+        &[(
+            added(FIRE_T, MIN),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_BURNING,
+        )],
+    ),
     // P6-10b: "#% increased Recovery rate of Life and Energy Shield if
     // you've stopped taking Damage Over Time Recently" (`LifeRecoveryRate`
     // and `EnergyShieldRecoveryRate` INC).
@@ -9689,6 +9710,25 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11dk: added fire damage against burning enemies.
+            (
+                "global_maximum_added_fire_damage_vs_burning_enemies",
+                vec![config(
+                    added(FIRE_T, MAX),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_BURNING,
+                )],
+            ),
+            (
+                "global_minimum_added_fire_damage_vs_burning_enemies",
+                vec![config(
+                    added(FIRE_T, MIN),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_BURNING,
                 )],
             ),
             // P6-11de: against the marked enemy, and the marked enemy's
