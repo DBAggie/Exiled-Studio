@@ -2070,3 +2070,22 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 8 values moved, 6 toward PoB. Two moved away, both in one Shield Crush build: its attack rate and mana cost per second. That build's rate was already above PoB's (2.536 against 2.387) from stats still unmapped (off-hand added damage, attack speed per 200 accuracy rating); the frenzy charges' speed applies there in PoB too.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dc: ailment damage from attack skills; Burning Damage Support
+
+**PoB:**
+- "#% increased Damage with Ailments from Attack Skills" (`attack_ailment_damage_+%`) is `Damage` INC with `ModFlag.Ailment` and `KeywordFlag.Attack`. An attack's ailments keep the attack keyword (P6-2b), so the row reaches its bleeding, ignite, and poison.
+- Burning Damage Support's `support_burning_damage_+%_final` is `FireDamage` MORE with `KeywordFlag.FireDot` (`sup_str.lua` 915), as the burning damage row (`burn_damage_+%`) but more.
+
+**The engine:** two `HIT_ROWS` rows. The support was already in `gems::SUPPORTS` with no global effect; its stat was the reason.
+
+**Fixtures:**
+- `smite-attack-ailment-damage-templar.xml`: Smite with a chance to bleed and 25% increased damage with ailments from attack skills. Every computed field equals PoB's but Q11's attack rate (DIV-0384 to DIV-0389).
+- `ice-nova-burning-damage-support-witch.xml`: Ice Nova with a chance to ignite and Burning Damage Support. Every computed field equals PoB's.
+
+**Not done:** "#% increased Damage per Summoned Golem" (`damage_+%_per_active_golem`, 5 public builds). PoB reads it per `PerStat` `ActiveGolemLimit`, which `GetStat` takes from `output.ActiveGolemLimit` (never set) or the skill's stats, so it applies 0. The game applies it per golem. It stays a reason until an in-game check (tasks file).
+
+**Evidence** (`b-ct`, against P6-11db's run):
+- **Public:** 0 unexpected; 8 values toward PoB (a ballista build's bleeding, ignite, and poison, and a burning build's damage over time), none away.
+- **Corpus:** 0 unexpected; 3 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

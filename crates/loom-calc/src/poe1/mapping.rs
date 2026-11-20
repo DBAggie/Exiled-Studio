@@ -281,6 +281,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_additional_critical_strike_chance_permyriad",
         &[(Quantity::CritChance, Op::Base, 100.0, Flags::ATTACK, NONE)],
     ),
+    // P6-11dc: "#% increased Damage with Ailments from Attack Skills"
+    // (`Damage` INC with `ModFlag.Ailment` and `KeywordFlag.Attack`).
+    (
+        "attack_ailment_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
+            NONE,
+        )],
+    ),
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
@@ -2664,6 +2676,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_brutality_physical_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::PHYSICAL, NONE)],
+    ),
+    // P6-11dc: Burning Damage Support's more burning damage (`sup_str.lua`
+    // 915: `FireDamage` MORE with `KeywordFlag.FireDot`).
+    (
+        "support_burning_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::FIRE.union(Flags::FIRE_DOT),
+            NONE,
+        )],
     ),
     // PoB `Data/Skills/sup_dex.lua` 597 (Cast On Critical Strike's
     // triggered part): `Damage` MORE with `ModFlag.Spell` (P6-8a).
