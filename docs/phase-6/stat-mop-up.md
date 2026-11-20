@@ -1519,3 +1519,16 @@ They join `stacks::MODIFIERS` (`StackValue::CanGain`) and leave `config::DEPENDS
 **Evidence** (`b-ct`, against P6-11bl's run):
 - **Public:** 0 unexpected; 4 values toward PoB (a Gladiator's bleed with rage), none away.
 - **Corpus:** unchanged.
+
+## P6-11bn: nearby enemies' resistances
+
+"Nearby Enemies have #% to <Type> Resistance" (fire, cold, lightning, chaos) and "Nearby Enemies have #% to all Resistances" are PoB's `EnemyModifier` `<Type>Resist` BASE; all resistances are `ElementalResist` and `ChaosResist`.
+- They are `ROWS` rows on `Poe1Quantity::EnemyResistance`, the quantity curses and exposure use.
+- The hit and damage over time add it to the enemy's base resistance before its maximum.
+- Exposure picks its strongest from its own candidates, so these lines add beside it, as a curse's do.
+
+**Fixture** `ice-nova-nearby-enemy-resistances-witch.xml`: the cold and the all-resistances lines. Every computed field equals PoB's; the hit's enemy resistance sums both.
+
+**Evidence** (`b-ct`, against P6-11bm's run):
+- **Public:** 0 unexpected; 6 values toward PoB (a build's chaos damage over time and DPS), none away.
+- **Corpus:** unchanged.

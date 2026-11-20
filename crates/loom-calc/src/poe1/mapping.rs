@@ -5148,7 +5148,66 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
-    // P6-11ad: "You count as on Low Life while at #% of maximum Life or
+    // P6-11bn: "Nearby Enemies have #% to <Type> Resistance" and "to all
+    // Resistances" (`EnemyModifier` `<Type>Resist` BASE; all: `ElementalResist`
+    // and `ChaosResist`): the enemy's resistance, as a curse's.
+    (
+        "local_display_nearby_enemies_all_resistances_%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Fire)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Cold)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Lightning)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Chaos)),
+                Op::Base,
+                1.0,
+            ),
+        ],
+    ),
+    (
+        "local_display_nearby_enemy_chaos_damage_resistance_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Chaos)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "local_display_nearby_enemy_cold_damage_resistance_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Cold)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "local_display_nearby_enemy_fire_damage_resistance_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Fire)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "local_display_nearby_enemy_lightning_damage_resistance_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Lightning)),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-11ad: "You count as on Low Life while at #% of maximum Life or
     // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
     // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
     // from reservation (`CalcPerform.lua` 546), which no modelled
