@@ -276,4 +276,10 @@ The support is in `gems::SUPPORTS` with no global stat.
   - **Public:** 16 values toward PoB, none away (Lacerate's damage, RF Chieftain's combined DPS).
   - **Corpus:** unchanged.
 
+**data-parity** (`gem_effects`, run late, 2026-11-20): the two supports first showed 4 differences, each a path the engine reads on purpose. Each is now an allowance in `tools/parity-cli/src/data_parity/gem_effects.rs` with its reason:
+- Eternal Blessing's four reservation keys, as Guardian's Blessing's;
+- Mark On Hit's `triggerMarkOnRareOrUnique` and its `Triggered` type, as Automation's.
+
+After that: 1,645 values compared, 0 differences, uncategorized 0.
+
 **Not modelled: PoB-only skills.** `EnemyExplode` ("On Kill Monster Explosion", in 6 public builds) has no game granted effect of that ID, so its gem is `unmodelled-gem` before any table is read (tasks file).

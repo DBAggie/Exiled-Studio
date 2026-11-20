@@ -321,6 +321,16 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("SupportGuardiansBlessing", "lifeReservationPercent"),
     ("SupportGuardiansBlessing", "manaReservationFlat"),
     ("SupportGuardiansBlessing", "manaReservationPercent"),
+    // P6-9g: Eternal Blessing's aura reserves nothing, as Guardian's
+    // Blessing's (`gems::NO_RESERVATION_SUPPORTS`).
+    ("SupportEternalBlessing", "lifeReservationFlat"),
+    ("SupportEternalBlessing", "lifeReservationPercent"),
+    ("SupportEternalBlessing", "manaReservationFlat"),
+    ("SupportEternalBlessing", "manaReservationPercent"),
+    // P6-9g: Mark On Hit triggers the mark it supports on hitting a rare or
+    // unique enemy; the mark's curse applies as PoB applies it, in a curse
+    // slot, whatever triggers it.
+    ("SupportMarkOnHit", "triggerMarkOnRareOrUnique"),
     // Righteous Fire's own burn (P6-2b): its `SkillData` multipliers make
     // its damage over time when it is the main skill (`poe1::dot`); as
     // another skill only its buff acts.
@@ -506,6 +516,8 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportCastOnWardBreak", "Triggered"),
     ("SupportCastWhileChannellingTriggered", "Triggered"),
     ("SupportCastWhileChannellingTriggeredPlus", "Triggered"),
+    // P6-9g: Mark On Hit triggers its mark (see `ALLOWED_BLOCKED`).
+    ("SupportMarkOnHit", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
