@@ -410,10 +410,13 @@ fn reads(quantity: Quantity, pool: Pool) -> bool {
             | Poe1Quantity::RecoveryRate(p)
             | Poe1Quantity::RegenReason(p, _),
         ) => p == pool,
-        // Regeneration per charge (P6-11t, [`super::charges`]).
+        // Regeneration per charge (P6-11t and P6-11bq, [`super::charges`]).
         Quantity::Poe1(Poe1Quantity::Charge(_, ChargeValue::Per(per))) => matches!(
             (per, pool),
-            (PerCharge::LifeRegenPercentPerMinute, Pool::Life) | (PerCharge::ManaRegen, Pool::Mana)
+            (
+                PerCharge::LifeRegenPercentPerMinute | PerCharge::LifeRegenPerMinute,
+                Pool::Life
+            ) | (PerCharge::ManaRegen, Pool::Mana)
         ),
         _ => false,
     }

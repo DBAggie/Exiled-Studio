@@ -133,6 +133,9 @@ pub enum PerCharge {
     /// Life regeneration, percent of life per minute (`LifeRegenPercent`
     /// BASE per second, read divided by 60; P6-11t).
     LifeRegenPercentPerMinute,
+    /// Life regeneration per second, the stat per minute (`LifeRegen`
+    /// BASE, the stat's value over 60, [`PerCharge::scale`]; P6-11bq).
+    LifeRegenPerMinute,
     /// Increased mana regeneration rate (`ManaRegen` INC; P6-11t).
     ManaRegen,
 }
@@ -149,6 +152,7 @@ impl PerCharge {
             Self::Evasion => "per.evasion",
             Self::MovementSpeed => "per.movement-speed",
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
+            Self::LifeRegenPerMinute => "per.life-regen-per-minute",
             Self::ManaRegen => "per.mana-regen",
         }
     }
@@ -175,11 +179,26 @@ impl PerCharge {
                 Op::Base,
                 Flags::NONE,
             ),
+            Self::LifeRegenPerMinute => (
+                Quantity::Poe1(super::Poe1Quantity::Regen(super::Pool::Life)),
+                Op::Base,
+                Flags::NONE,
+            ),
             Self::ManaRegen => (
                 Quantity::Poe1(super::Poe1Quantity::Regen(super::Pool::Mana)),
                 Op::Increased,
                 Flags::NONE,
             ),
+        }
+    }
+
+    /// The factor from the stat's value to the effect's: 1/60 for a stat
+    /// per minute read per second (P6-11bq), else 1.
+    #[must_use]
+    pub const fn scale(self) -> f64 {
+        match self {
+            Self::LifeRegenPerMinute => 1.0 / 60.0,
+            _ => 1.0,
         }
     }
 }
@@ -277,6 +296,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "evasion_rating_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::Evasion),
+    ),
+    // P6-11bq: "Regenerate # Life per second per Endurance Charge"
+    // (`LifeRegen` BASE per `Multiplier:EnduranceCharge`).
+    (
+        "life_regen_per_minute_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::LifeRegenPerMinute),
     ),
     (
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
@@ -581,7 +607,7 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
             ingest.effect(Effect {
                 quantity,
                 op,
-                value: e.value * count,
+                value: e.value * p.scale() * count,
                 conditions: Conditions::none().with_all(flags),
                 source: e.source,
             });

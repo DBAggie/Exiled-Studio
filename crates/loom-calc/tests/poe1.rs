@@ -173,6 +173,10 @@ impl CalcData for Data {
                 Some(1200)
             }
             "maximum_energy_shield_leech_rate_%_per_minute" => Some(600),
+            // Three endurance charges, 4% damage reductions each (P6-11bq).
+            "max_endurance_charges" => Some(3),
+            "physical_damage_reduction_%_per_endurance_charge"
+            | "elemental_damage_reduction_%_per_endurance_charge" => Some(4),
             "maximum_life_leech_amount_per_leech_%_max_life"
             | "maximum_mana_leech_amount_per_leech_%_max_mana"
             | "maximum_energy_shield_leech_amount_per_leech_%_max_energy_shield" => Some(10),
@@ -2514,12 +2518,27 @@ fn a_granted_passive_should_read_the_tree_packs_stats() {
 /// A level 90 Witch with `stats` as one enabled block of resolved custom
 /// lines (P6-10b review tests).
 fn witch_with(stats: &[(&str, i64)]) -> CalcResult {
+    witch_with_inputs(stats, &[])
+}
+
+/// [`witch_with`] with config inputs of the same set.
+fn witch_with_inputs(stats: &[(&str, i64)], inputs: &[(&str, ConfigValue)]) -> CalcResult {
     use loom_domain::{CustomModifierBlock, CustomModifierLine};
     let mut b = witch(90);
+    let mut set_inputs = Ordered::new();
+    for (name, value) in inputs {
+        set_inputs.push(ConfigInput {
+            name: (*name).to_owned(),
+            value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Vec::new(),
+        });
+    }
     b.config.sets.push(ConfigSet {
         id: ConfigSetId(1),
         title: None,
-        inputs: Ordered::new(),
+        inputs: set_inputs,
         custom_modifiers: vec![CustomModifierBlock {
             title: None,
             enabled: true,
@@ -2572,6 +2591,24 @@ fn zealots_oath_should_move_life_regeneration_and_its_reasons() {
         state(&r, Field::Poe1(Poe1Field::ManaRegen)),
         StateKind::Complete
     );
+}
+
+/// Life regenerated per endurance charge (P6-11bq): the stat per minute,
+/// read per second, times the count; nothing without the charges.
+#[test]
+fn life_regeneration_per_endurance_charge_should_follow_the_count() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    // 6000 per minute: 100 life per second per charge.
+    let line = ("life_regen_per_minute_per_endurance_charge", 6000);
+    let r = witch_with(&[line]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+    let r = witch_with_inputs(
+        &[line],
+        &[("useEnduranceCharges", ConfigValue::Boolean(true))],
+    );
+    assert_eq!(value_of(&r, life_regen), 300.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
 }
 
 /// A field's reason marker reaches that field alone (P6-10b review).

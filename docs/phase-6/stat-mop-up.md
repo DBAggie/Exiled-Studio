@@ -1562,3 +1562,17 @@ The engine adds `Poe1Quantity::BoundDamage(type, bound)`, with no type for the g
 **Evidence** (`b-ct`, against P6-11bo's run):
 - **Public:** 0 unexpected; 14 values toward PoB in three builds, none away.
 - **Corpus:** unchanged.
+
+## P6-11bq: life regeneration per endurance charge
+
+"Regenerate # Life per second per Endurance Charge" is PoB's `LifeRegen` BASE per `Multiplier:EnduranceCharge`, the stat per minute.
+- A new `PerCharge::LifeRegenPerMinute` adds `Regen(Life)` BASE: the stat's value over 60 (`PerCharge::scale`), times the count.
+- The regeneration phase reads it among life's quantities (`regen::reads`), as P6-11t's per-charge regeneration. An unsettled value is therefore life regeneration's reason.
+
+**No fixture:** the game prints `per_minute_to_per_second` stats to one decimal, so a line read from text leaves the value unsettled (`docs/phase-6/recovery.md`, "A display limit"). A typed line and an item's line are both text. A test pins the arithmetic: `life_regeneration_per_endurance_charge_should_follow_the_count` (6000 per minute and three charges: 300 per second; 0 without the charges). The test data gains three endurance charges and their reductions.
+
+While writing this step, a fault showed: without the `reads` entry, the unsettled value's reason reached no field, and life regeneration showed a complete 0. The entry fixes it.
+
+**Evidence** (`b-ct`, against P6-11bp's run):
+- **Public:** 0 unexpected; no value moved. Two builds' life regeneration went from partial (the stat unmapped) to indeterminate: their item's line is text, so its value is unsettled.
+- **Corpus:** unchanged.

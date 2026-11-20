@@ -7056,6 +7056,7 @@ impl StatMapping for Poe1Mapping {
                     _,
                     super::charges::ChargeValue::Per(
                         super::charges::PerCharge::LifeRegenPercentPerMinute
+                            | super::charges::PerCharge::LifeRegenPerMinute
                             | super::charges::PerCharge::ManaRegen,
                     ),
                 )
