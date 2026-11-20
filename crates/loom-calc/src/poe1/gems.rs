@@ -522,6 +522,47 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("BlastRain", Kind::Inert),
+    // P6-11dw: Blood and Sand (`act_str.lua` 1227): melee skills' more area
+    // damage in each stance (`Damage` MORE with `ModFlag.Area` and the
+    // `Melee` skill type, the stance PoB's `effectCond`); their area of
+    // effect reaches no slice field. Its reservation is the skill's.
+    (
+        "BloodAndSand",
+        Kind::Buff {
+            name: "Blood and Sand",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "blood_sand_stance_melee_skills_area_damage_+%_final_in_blood_stance",
+                    BuffStat::BloodStance(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::AREA.union(Flags::SKILL_MELEE),
+                        NONE,
+                    )]),
+                ),
+                (
+                    "blood_sand_stance_melee_skills_area_damage_+%_final_in_sand_stance",
+                    BuffStat::SandStance(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::AREA.union(Flags::SKILL_MELEE),
+                        NONE,
+                    )]),
+                ),
+                (
+                    "blood_sand_stance_melee_skills_area_of_effect_+%_final_in_blood_stance",
+                    BuffStat::NoSlice("area"),
+                ),
+                (
+                    "blood_sand_stance_melee_skills_area_of_effect_+%_final_in_sand_stance",
+                    BuffStat::NoSlice("area"),
+                ),
+            ],
+        },
+    ),
     (
         "BloodRage",
         Kind::Buff {

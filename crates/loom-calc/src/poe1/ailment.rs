@@ -135,6 +135,7 @@ const KEYWORDS: Flags = Flags::SKILL_PHYSICAL
     .union(Flags::SKILL_RANGED_ATTACK)
     .union(Flags::SKILL_BRAND)
     .union(Flags::SKILL_MARK)
+    .union(Flags::SKILL_MELEE)
     // `band(cfg.flags, ModFlag.WeaponMask)` (P6-11b).
     .union(Flags::AILMENT_WEAPON_MASK)
     .union(Flags::KEYWORD_SPELL)

@@ -149,6 +149,8 @@ impl Flags {
     pub const SKILL_BRAND: Self = Self(1 << 51);
     /// A skill of the `Mark` type (PoB's `SkillType.Mark` tag; P6-11cx).
     pub const SKILL_MARK: Self = Self(1 << 52);
+    /// A skill of the `Melee` type (PoB's `SkillType.Melee` tag; P6-11dw).
+    pub const SKILL_MELEE: Self = Self(1 << 53);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

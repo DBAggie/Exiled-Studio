@@ -291,6 +291,10 @@ const ALLOWED_MINIONS: &[&str] = &[
 /// Stance mod a `Buff` on the character (the engine scales the Blood
 /// Stance row as an aura's, which PoB's `AuraDebuff` scale also reads).
 const EXTRA_BUFFS: &[(&str, &str)] = &[
+    // Blood and Sand's two stances are two buffs in PoB (`effectName`
+    // "Blood" and "Sand"; P6-11dw), one skill buff here.
+    ("BloodAndSand", "Buff Blood"),
+    ("BloodAndSand", "Buff Sand"),
     ("FleshAndStone", "AuraDebuff Flesh and Stone"),
     ("FleshAndStone", "Buff Flesh and Stone"),
     // Pride's mods are an `AuraDebuff` on the enemy (P6-9e), scaled as an
@@ -566,6 +570,14 @@ fn is_not_vaal_smite(t: &BTreeMap<String, Value>) -> bool {
         && t.len() == 3
 }
 
+/// PoB's `SkillType.Melee` tag (`SkillType.Melee = 20`, `Data/Global.lua`
+/// 237; P6-11dw).
+fn is_melee_skill_type(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("SkillType")
+        && t.get("skillType").and_then(Value::as_i64) == Some(20)
+        && t.len() == 2
+}
+
 /// PoB's tag for a `notMinionStat` mod: the actor has no parent.
 fn is_not_minion(t: &BTreeMap<String, Value>) -> bool {
     t.get("type").and_then(Value::as_str) == Some("ActorCondition")
@@ -598,7 +610,15 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     if flags & 8 != 0 {
         f.push("dot");
     }
-    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 1024);
+    // `ModFlag.Area` (P6-11dw: Blood and Sand).
+    if flags & 512 != 0 {
+        f.push("area");
+    }
+    // The `Melee` skill type tag (P6-11dw), `Flags::SKILL_MELEE`.
+    if m.tags.iter().any(is_melee_skill_type) {
+        f.push("skill-melee");
+    }
+    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 512 | 1024);
     let rest_kw = kw & !(0x1_0000 | 0x2_0000);
     let mut tags: Vec<String> = m
         .tags
@@ -607,6 +627,7 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         // `notMinionStat`'s tag (`ActorCondition` `parent`, negated): the
         // mod is not a minion's; every row here is the character's.
         .filter(|t| !is_not_minion(t))
+        .filter(|t| !is_melee_skill_type(t))
         // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
         // Vaal Smite has no entry in the engine's tables, so a build with it
         // carries an `unmodelled-gem` reason and the condition is off.
@@ -997,13 +1018,21 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
             if all.contains(Flags::DOT) {
                 f.push("dot");
             }
+            if all.contains(Flags::AREA) {
+                f.push("area");
+            }
+            if all.contains(Flags::SKILL_MELEE) {
+                f.push("skill-melee");
+            }
             let other = !any.is_empty()
                 || !(Flags::ATTACK
                     | Flags::SPELL
                     | Flags::HIT
                     | Flags::CAST
                     | Flags::PROJECTILE
-                    | Flags::DOT)
+                    | Flags::DOT
+                    | Flags::AREA
+                    | Flags::SKILL_MELEE)
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",

@@ -634,7 +634,11 @@ fn real_skill_types_should_name_the_keyword_types() {
         keyword_flags(&active.types.iter().cloned().collect())
     };
     assert_eq!(flags("ice_nova"), Flags::SKILL_COLD);
-    assert_eq!(flags("smite"), Flags::SKILL_LIGHTNING);
+    // P6-11dw: Smite is a melee skill.
+    assert_eq!(
+        flags("smite"),
+        Flags::SKILL_LIGHTNING.union(Flags::SKILL_MELEE)
+    );
 }
 
 /// The real PoE1 bundle's gem colours (P3-12i): every granted effect has

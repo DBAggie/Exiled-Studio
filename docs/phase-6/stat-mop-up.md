@@ -2448,3 +2448,24 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dw: Blood and Sand
+
+**PoB** (`act_str.lua` 1227): Blood and Sand is a reserving buff.
+- **Damage:** in each stance (the `bloodSandStance` config, Blood unless it says Sand), melee skills get more area damage: `Damage` MORE with `ModFlag.Area` and the `SkillType.Melee` tag, under `effectCond` `BloodStance` or `SandStance`.
+- **Area of effect:** its area rows reach no slice field.
+
+**The engine:**
+- **The melee flag:** `Flags::SKILL_MELEE` (bit 53) for the `Melee` skill type, in `skill::SKILL_TYPE_FLAGS` (the real-bundle test checks the name; Smite is now `SKILL_LIGHTNING | SKILL_MELEE`). Ailments keep it, as the other skill-type flags.
+- **The gem:** Blood and Sand joins `gems::SKILLS` with `BloodStance` and `SandStance` rows (as Flesh and Stone's, P6-11x) and `NoSlice` area rows. Its reservation is the skill's own, as for any reserving skill.
+- **data-parity `gem_effects`:**
+  - the two renderers know `ModFlag.Area` and the `Melee` skill type tag (`SkillType.Melee = 20`);
+  - PoB's two buffs, "Blood" and "Sand", are `EXTRA_BUFFS`;
+  - `uncategorized` 0.
+
+**Fixture** `smite-blood-and-sand-templar.xml`: Smite's Area Hit with Blood and Sand in Blood Stance. Every computed field equals PoB's but Q11's attack rate (DIV-0457 to DIV-0460). Smite is left out of full DPS: with Blood and Sand present, PoB's full DPS pass gives Smite another value than its main calculation. Blood Stance gives 128.11 against 128.02; Sand Stance gives 95.85 against 96.27; without Blood and Sand the two agree. The cause is not found yet (tasks file).
+
+**Evidence** (`b-ct`, against P6-11dv's run):
+- **Public:** 0 unexpected; 12 values toward PoB, 2 now equal. P6-11dm's Berserker's unreserved mana is now PoB's 138: Blood and Sand's reservation was the 67 it lacked.
+- **Corpus:** 0 unexpected; 8 values toward PoB, 1 now equal.
+- **Tests:** the workspace tests, clippy, and the maintainer-run type test pass.
+

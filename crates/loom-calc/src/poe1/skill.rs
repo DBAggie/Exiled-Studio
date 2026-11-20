@@ -325,12 +325,13 @@ pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
 
 /// The skill types whose PoB `SkillType` tag a mapped row reads, each with
 /// its flag (P6-11co: "Projectile Attack Skills"; P6-11cx: "with Brand
-/// Skills", "Mark Skills"). A test checks the names against the real
-/// bundle.
-pub const SKILL_TYPE_FLAGS: [(&str, Flags); 3] = [
+/// Skills", "Mark Skills"; P6-11dw: Blood and Sand's melee skills). A test
+/// checks the names against the real bundle.
+pub const SKILL_TYPE_FLAGS: [(&str, Flags); 4] = [
     (RANGED_ATTACK_TYPE, Flags::SKILL_RANGED_ATTACK),
     ("Brand", Flags::SKILL_BRAND),
     ("Mark", Flags::SKILL_MARK),
+    ("Melee", Flags::SKILL_MELEE),
 ];
 /// The skill type of a totem skill (the game's `ActiveSkillType`).
 pub const TOTEM_TYPE: &str = "SummonsTotem";
