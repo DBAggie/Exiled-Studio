@@ -696,6 +696,13 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
             format!("{}DamageTakenWhenHit", title(t.name()))
         }
+        // Immortal Call's (P6-11dv).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Always, TakenOf::Type(t))) => {
+            format!("{}DamageTaken", title(t.name()))
+        }
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Always, TakenOf::Elemental)) => {
+            "ElementalDamageTaken".into()
+        }
         Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
         // P6-10b: regeneration.
         Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
@@ -878,7 +885,11 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             rows,
             format!(" tags global {}", json!({ "modCond": condition })),
         ),
-        BuffStat::NoSlice(_) | BuffStat::Defence(_) | BuffStat::Gated(_) | BuffStat::Reason(_) => {
+        BuffStat::NoSlice(_)
+        | BuffStat::Defence(_)
+        | BuffStat::Gated(_)
+        | BuffStat::Reason(_)
+        | BuffStat::ReasonWhenInput { .. } => {
             return Vec::new();
         }
     };
@@ -1139,6 +1150,7 @@ fn check_one(
                 );
             }
             BuffStat::Reason(_)
+            | BuffStat::ReasonWhenInput { .. }
             | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
             | BuffStat::SandStance(_)

@@ -2426,3 +2426,25 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 
 **Evidence** (`b-ct`, against P6-11dt's run): public and corpus 0 unexpected; no value moved (the builds with them have other reasons). The workspace tests and clippy pass.
 
+## P6-11dv: Immortal Call
+
+**PoB** (`act_str.lua` 6700 to 6716): Immortal Call is a guard with three rows:
+- less elemental damage taken (`ElementalDamageTaken` MORE);
+- less physical damage taken (`PhysicalDamageTaken` MORE);
+- less physical damage taken per removable endurance charge (`Multiplier:RemovableEnduranceCharge`, at most 5, `div = 100`). That is 0 without endurance charges in use.
+
+PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the engine's guards follow (P6-9e).
+
+**The engine:**
+- Immortal Call joins `gems::SKILLS` as a guard. Its first two rows are `SelfDamageTaken(Always, ...)` MORE, so they reach both hits and damage over time, as in PoB.
+- The per-charge row is the new `BuffStat::ReasonWhenInput`. It is a reason only while `useEnduranceCharges` is on: the removable charges are counted after the gem table.
+- **data-parity `gem_effects`** names the character's `<Type>DamageTaken` and `ElementalDamageTaken`. `uncategorized` 0.
+
+**Fixture** `ice-nova-immortal-call-witch.xml`: Ice Nova with Immortal Call in its own group, without endurance charges. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11du's run):
+- **Public:** 0 unexpected. 33 values moved; 31 toward PoB, 2 now equal (a Toxic Rain build's taken multipliers, maximum hits, and EHP).
+- **Two moved away:** a Deadeye's cold and lightning damage-over-time multipliers (cold 0.25 to 0.1875, against PoB's 0.2625). Its physical one is now 0.75, equal to PoB's, so Immortal Call applies as in PoB. PoB's cold value, 0.75 x 0.35, implies 65% cold resistance against the engine's 75%: a resistance gap that was already there.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+

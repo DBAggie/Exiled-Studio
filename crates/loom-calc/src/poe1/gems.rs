@@ -232,6 +232,16 @@ pub enum BuffStat {
     /// `unmodelled-skill` reason with this name when the stat is not 0
     /// (P6-10b: Enduring Cry's regeneration per warcry power).
     Reason(&'static str),
+    /// As [`Self::Reason`], only while the config check `input` is on: a
+    /// value PoB scales by something only that check makes non-zero
+    /// (P6-11dv: Immortal Call's per removable endurance charge, 0 without
+    /// endurance charges in use).
+    ReasonWhenInput {
+        /// The config check.
+        input: &'static str,
+        /// The reason's name.
+        what: &'static str,
+    },
     /// Applies only under a condition only a modifier sets (PoB's
     /// `effectCond`), so it applies nowhere a modifier does not set it,
     /// and that modifier's stat is a reason ([`DEPENDS_ON`]).
@@ -1220,6 +1230,53 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("HolyStrike", Kind::Inert),
     ("IceNova", Kind::Inert),
     ("IceSpear", Kind::Inert),
+    // P6-11dv: Immortal Call (`act_str.lua` 6700 to 6716), a guard: less
+    // elemental and physical damage taken (`ElementalDamageTaken`,
+    // `PhysicalDamageTaken` MORE). Its less physical damage taken per
+    // removable endurance charge (`Multiplier:RemovableEnduranceCharge`, at
+    // most 5, `div = 100`) needs the removable charges: a reason.
+    (
+        "ImmortalCall",
+        Kind::Buff {
+            name: "Immortal Call",
+            effect: EffectType::Guard,
+            stats: &[
+                (
+                    "mortal_call_elemental_damage_taken_+%_final",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                            TakenWhen::Always,
+                            TakenOf::Elemental,
+                        )),
+                        Op::More,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "mortal_call_physical_damage_taken_+%_final",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                            TakenWhen::Always,
+                            TakenOf::Type(DamageType::Physical),
+                        )),
+                        Op::More,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "mortal_call_physical_damage_taken_per_endurance_charge_consumed_final_permyriad",
+                    BuffStat::ReasonWhenInput {
+                        input: "useEnduranceCharges",
+                        what: "removable-endurance-charges",
+                    },
+                ),
+            ],
+        },
+    ),
     (
         "IntimidatingCry",
         Kind::Warcry {
@@ -4112,6 +4169,16 @@ fn add_rows(
                 }
                 continue;
             }
+            BuffStat::ReasonWhenInput { input: check, what } => {
+                let on = config.and_then(|set| last_input(set, check, ConfigInputKind::Input));
+                if *value != 0 && !matches!(on, None | Some(ConfigValue::Boolean(false))) {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what,
+                    });
+                }
+                continue;
+            }
             BuffStat::WhenInput {
                 input: check, rows, ..
             }
@@ -4556,7 +4623,8 @@ mod tests {
                 BuffStat::NoSlice(_)
                 | BuffStat::Defence(_)
                 | BuffStat::Gated(_)
-                | BuffStat::Reason(_) => &[],
+                | BuffStat::Reason(_)
+                | BuffStat::ReasonWhenInput { .. } => &[],
             };
             for e in effects {
                 assert!(!early.contains(&e.0), "{stat}");
@@ -4632,7 +4700,10 @@ mod tests {
             if let Kind::Warcry { stats, .. } = k {
                 assert!(
                     stats.iter().all(|(_, b)| match b {
-                        BuffStat::NoSlice(_) | BuffStat::Defence(_) | BuffStat::Reason(_) => true,
+                        BuffStat::NoSlice(_)
+                        | BuffStat::Defence(_)
+                        | BuffStat::Reason(_)
+                        | BuffStat::ReasonWhenInput { .. } => true,
                         BuffStat::Rows(rows) => marker(rows),
                         // Scaled by power and uptime (P6-11bs).
                         BuffStat::PerPower { .. } => true,
