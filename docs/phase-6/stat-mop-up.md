@@ -2133,3 +2133,21 @@ Every other computed field equals PoB's.
 - **Away:** one `NumberOfMitigatedDamagingHits` in each run, by under 0.02% (2.3633 to 2.3631; 0.68615 to 0.68608). It follows the evade chance, which moved toward PoB (equal to it in the public build); the field was already partial.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11df: the effect of marks
+
+**PoB** reads "#% increased Effect of your Marks" (`mark_skills_curse_effect_+%`, on passives such as Focal Point and Expert Hunter) as `CurseEffect` INC tagged `SkillType.Mark`. It scales a mark's effect on the enemy as the global curse effect does.
+
+**The engine:**
+- `Poe1Quantity::MarkCurseEffect`, a `skill_modifiers::STATS` row, and `Totals::mark_curse_effect`.
+- `gems` adds it to a mark's own increase before the curse's scale (`Totals::curse_scale_with`), as Mark On Hit's increase (P6-9g). Mark On Hit's own stat is still read from the support, not through the mapping.
+- The texts test lists the row's text; the maintainer-run test passes on `b-ct`.
+
+**Fixture** `burning-arrow-mark-effect-templar.xml`: Burning Arrow with Sniper's Mark and 40% increased effect of marks. PoB's total DPS goes from 6.89 (P6-9e's fixture without the line) to 7.48. Every computed field equals PoB's but Q11's attack rate (DIV-0396 to DIV-0401).
+
+**Not done:** the marks' effect per maximum power charge (Deathmarked) and while Elusive (The Vivid Cat) stay reasons.
+
+**Evidence** (`b-ct`, against P6-11de's run):
+- **Public:** 0 unexpected; 4 values toward PoB (a Deadeye build's damage), none away.
+- **Corpus:** 0 unexpected; 10 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

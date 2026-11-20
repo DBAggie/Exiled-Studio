@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 19] = [
+const TEXTS: [(&str, &str); 20] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -85,6 +85,11 @@ const TEXTS: [(&str, &str); 19] = [
     (
         "aura_effect_on_self_from_your_skills_+%",
         "Auras from your Skills have {0}% increased Effect on you",
+    ),
+    // P6-11df: PoB's `CurseEffect` with `SkillType.Mark`.
+    (
+        "mark_skills_curse_effect_+%",
+        "{0}% increased Effect of your Marks",
     ),
 ];
 

@@ -3830,6 +3830,12 @@ fn one_skill(
                 .filter(|(stat, _)| stat == BLASPHEMY_CURSE_EFFECT_STAT)
                 .map(|(_, v)| 1.0 + v as f64 / 100.0)
                 .product();
+            // A mark's own increase (P6-11df: "Effect of your Marks").
+            let own = if s.types.contains("Mark") {
+                own + totals.mark_curse_effect
+            } else {
+                own
+            };
             let scale = totals.curse_scale_with(own) * more;
             if !instance.problems.is_empty() {
                 for p in &instance.problems {

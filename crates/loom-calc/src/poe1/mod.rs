@@ -734,6 +734,10 @@ pub enum Poe1Quantity {
     /// P3-close): `Increased`, read by [`skill_modifiers::Totals`] for
     /// curse gems' effect on the enemy.
     CurseEffect,
+    /// "#% increased Effect of your Marks" (PoB's `CurseEffect` INC tagged
+    /// `SkillType.Mark`; P6-11df): `Increased`, read by
+    /// [`skill_modifiers::Totals`] for marks' effect on the enemy.
+    MarkCurseEffect,
     /// A skill's exposure on the enemy (PoB's enemy `<Type>Exposure` BASE
     /// from a debuff, for example Frost Bomb's; P3-close): `Base`, read by
     /// [`exposure`], which keeps the strongest.
@@ -1294,6 +1298,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
+            Self::MarkCurseEffect => f.write_str("mark-curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
             Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),

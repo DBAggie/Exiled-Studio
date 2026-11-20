@@ -134,7 +134,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 19] = [
+pub const STATS: [ModifierRow; 20] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -181,6 +181,13 @@ pub const STATS: [ModifierRow; 19] = [
         "mana_reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)),
         -2.0,
+    ),
+    // P6-11df: "#% increased Effect of your Marks" (`CurseEffect` INC with
+    // `SkillType.Mark`).
+    (
+        "mark_skills_curse_effect_+%",
+        Poe1Quantity::MarkCurseEffect,
+        1.0,
     ),
     (
         "non_curse_aura_effect_+%",
@@ -260,6 +267,8 @@ pub struct Totals {
     pub herald_buff_effect: f64,
     /// `CurseEffect` INC (P3-close).
     pub curse_effect: f64,
+    /// `CurseEffect` INC of mark skills (P6-11df).
+    pub mark_curse_effect: f64,
     /// `Duration` INC, untagged (P6-11bs).
     pub duration: f64,
     /// `Duration` INC of warcries.
@@ -334,6 +343,7 @@ impl Totals {
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
                 Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
+                Poe1Quantity::MarkCurseEffect => &mut t.mark_curse_effect,
                 Poe1Quantity::SkillTiming(timing) => match timing {
                     SkillTiming::Duration => &mut t.duration,
                     SkillTiming::WarcryDuration => &mut t.warcry_duration,
