@@ -2051,3 +2051,9 @@ Every other computed field equals PoB's.
 
 **Evidence** (`b-ct`, against P6-11cy's run): public and corpus 0 unexpected; no value moved (the builds with the line have other reasons). The workspace tests and clippy pass.
 
+## P6-11da: a trap skill's visual variant
+
+`trap_variation` is a trap skill's own stat (Bear Trap and others, `act_dex.lua` 1656 and on). It picks the trap's look; PoB lists it in the skill's stats with no stat map entry, so it applies nothing. A `NoEffect` row (`display`).
+
+**Evidence** (`b-ct`, against P6-11cz's run): public and corpus 0 unexpected; no value moved. The workspace tests pass.
+

@@ -7109,6 +7109,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_strike_skill_gem_level_+", "gem-level"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
+    // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
+    ("trap_variation", "display"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
