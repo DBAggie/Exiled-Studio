@@ -136,6 +136,11 @@ pub enum Poe1Quantity {
     /// `RuthlessBlowHitMultiplier`, `RuthlessBlowAilmentMultiplier` BASE):
     /// read by the hit ([`hit::ruthless_effect`]) and its bleed and poison.
     Ruthless(RuthlessValue),
+    /// "#% increased Spell Damage per 100 Maximum Mana, up to 40%" (P6-11bw;
+    /// PoB's `Damage` INC with `ModFlag.Spell`, `PerStat` `Mana`, `div`
+    /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
+    /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
+    SpellDamagePer100Mana,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1016,6 +1021,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
+            Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

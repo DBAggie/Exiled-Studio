@@ -2414,7 +2414,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
     ),
-    // P6-11aj: Awakened Spell Echo's final repeat's double damage
+    // P6-11bw: "#% increased Spell Damage per 100 Maximum Mana, up to 40%"
+    // (the game's text; `Damage` INC, `ModFlag.Spell`, `PerStat` `Mana`
+    // `div` 100 `limit` 40 `limitTotal`): the hit's computed term (`hit::spell_damage_per_mana`).
+    (
+        "spell_damage_+%_per_100_maximum_mana_up_to_60%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamagePer100Mana),
+            Op::Base,
+            1.0,
+            Flags::SPELL,
+            NONE,
+        )],
+    ), // P6-11aj: Awakened Spell Echo's final repeat's double damage
     // (`RepeatFinalDoubleDamageChance` BASE, `ModFlag.Spell`).
     (
         "spell_echo_plus_chance_double_damage_%_final",

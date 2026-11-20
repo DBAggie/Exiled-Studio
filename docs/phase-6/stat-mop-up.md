@@ -1620,3 +1620,21 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11bu's run):
 - **Public:** 0 unexpected; 18 values toward PoB in a Deadeye's Elemental Hit, 6 now equal, none away.
 - **Corpus:** unchanged.
+
+## P6-11bw: spell damage per 100 maximum mana
+
+"#% increased Spell Damage per 100 Maximum Mana, up to 40%":
+- **PoB's reading:** `Damage` INC with `ModFlag.Spell` and a `PerStat` tag on `Mana`, `div` 100, `limit` 40, `limitTotal` (`ModParser.lua` 1487). The tag reads `min(floor(mana / 100 + 0.0001) x value, limit)`.
+- **The cap:** the game's text says 40%, though the stat ID keeps an older 60. PoB reads the text, and the engine takes 40.
+- **The design:** this is the tasks file's "stats read per a computed value" item, solved as `phases::per_5` solves block. A computed term in the hit uses the maximum mana field's node, so the graph keeps the provenance.
+- **The engine:** `Poe1Quantity::SpellDamagePer100Mana` holds the value per step (a `HIT_ROWS` row with `Flags::SPELL`). `hit::spell_damage_per_mana` computes the term for a context with the spell flag. `calc_damage` and `damage_modifiers` (damage over time's) add it to the damage increase's one sum, as the melee physical bonus is added. A context without the spell flag, or a store without the stat, keeps its graph.
+
+**Fixtures:**
+- `ice-nova-spell-damage-per-mana-below-witch.xml`: +500 maximum mana, 2% per 100, 20%.
+- `ice-nova-spell-damage-per-mana-capped-witch.xml`: +3000, capped at 40%.
+
+Every computed field of both equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11bv's run):
+- **Public:** 0 unexpected; 9 values toward PoB (two spell builds' damage and DPS), none away.
+- **Corpus:** unchanged.

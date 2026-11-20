@@ -2516,7 +2516,102 @@ pub(super) fn damage_modifiers(
     cx: &QueryContext,
     reasons: &mut Reasons,
 ) -> Result<(Valued, Valued), CalcError> {
-    modifiers(calc, Quantity::Damage, cx, reasons)
+    match spell_damage_per_mana(calc, cx, reasons)? {
+        None => modifiers(calc, Quantity::Damage, cx, reasons),
+        Some(extra) => {
+            let inc = increased_with(calc, Quantity::Damage, cx, &[extra], reasons)?;
+            let more = more(calc, Quantity::Damage, cx, reasons)?;
+            Ok((inc, more))
+        }
+    }
+}
+
+/// The largest spell damage increase per 100 maximum mana: the game's text
+/// says "up to 40%" (the stat ID keeps an older 60), and PoB reads the
+/// text (`ModParser.lua` 1487: `limit = 40`).
+const SPELL_DAMAGE_PER_MANA_LIMIT: f64 = 40.0;
+
+/// The spell damage increase per 100 maximum mana (P6-11bw; PoB's
+/// `PerStat` tag with `limitTotal`, `Modules/ModStore.lua`: `min(floor(Mana
+/// / 100 + 0.0001) x value, 40)`), for a context with the spell flag and a
+/// store with the stat; `None` otherwise, so other hits keep their graph.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn spell_damage_per_mana(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::SpellDamagePer100Mana);
+    if !cx.flags.contains(Flags::SPELL) || !phases::has(calc, q) {
+        return Ok(None);
+    }
+    let Some(mana) = calc.field(Field::Mana).and_then(|f| {
+        Some(Valued {
+            node: f.node?,
+            value: f.value?,
+        })
+    }) else {
+        return Ok(None);
+    };
+    let per = sum_in(
+        calc,
+        q,
+        Op::Base,
+        cx,
+        Term::Step("per-100-mana-effects"),
+        reasons,
+    )?;
+    let hundred = phases::constant(calc, "per-100-mana", 100.0)?;
+    let ratio = quotient(calc, mana, hundred, Term::Step("per-100-mana-ratio"))?;
+    let epsilon = phases::constant(calc, "per-stat-epsilon", 0.0001)?;
+    let ratio = phases::total(calc, &[ratio, epsilon], Term::Step("per-100-mana-nudged"))?;
+    let value = crate::math::floor(ratio.value);
+    let node = calc.graph_mut().push(
+        Node::Floor {
+            term: Term::Step("per-100-mana-count"),
+            of: ratio.node,
+        },
+        value,
+    )?;
+    let count = Valued { node, value };
+    let total = phases::product(calc, &[count, per], Term::Step("per-100-mana"))?;
+    let limit = phases::constant(calc, "per-100-mana-limit", SPELL_DAMAGE_PER_MANA_LIMIT)?;
+    Ok(Some(phases::pair(
+        calc,
+        total,
+        limit,
+        Term::Step("per-100-mana-capped"),
+        true,
+    )?))
+}
+
+/// `1 + (sum + extras) / 100` of `quantity`'s `Increased` effects in `cx`
+/// with computed terms added to the sum (PoB's one `Sum("INC", ...)`).
+fn increased_with(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    extras: &[Valued],
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let (store, graph) = calc.parts();
+    let effects = store.sum(
+        graph,
+        quantity,
+        Op::Increased,
+        cx,
+        Term::Step("increased-effects"),
+    )?;
+    reasons.extend(&effects.reasons);
+    let mut terms = vec![Valued {
+        node: effects.node,
+        value: effects.value,
+    }];
+    terms.extend_from_slice(extras);
+    let sum = phases::total(calc, &terms, Term::Step("increased-sum"))?;
+    phases::factor(calc, sum, Term::Increased)
 }
 
 /// The sum of `op` effects on `quantity` in `cx` (for other phases).
@@ -3477,9 +3572,16 @@ pub(super) fn calc_damage(
         states: cx.states.clone(),
     };
     let bonus = melee_physical.filter(|_| typed.flags.contains(Flags::MELEE | Flags::PHYSICAL));
-    let (inc, more) = match bonus {
-        None => modifiers(calc, Quantity::Damage, &typed, reasons)?,
-        Some(bonus) => {
+    // Spell damage per 100 maximum mana (P6-11bw), a term of the same sum.
+    let per_mana = spell_damage_per_mana(calc, &typed, reasons)?;
+    let (inc, more) = match (bonus, per_mana) {
+        (None, None) => modifiers(calc, Quantity::Damage, &typed, reasons)?,
+        (None, Some(extra)) => {
+            let inc = increased_with(calc, Quantity::Damage, &typed, &[extra], reasons)?;
+            let more = more(calc, Quantity::Damage, &typed, reasons)?;
+            (inc, more)
+        }
+        (Some(bonus), per_mana) => {
             // `1 + (Sum("INC", ...) + strDmgBonus) / 100`: one sum.
             let (store, graph) = calc.parts();
             let effects = store.sum(
@@ -3494,7 +3596,9 @@ pub(super) fn calc_damage(
                 node: effects.node,
                 value: effects.value,
             };
-            let sum = phases::total(calc, &[effects, bonus], Term::Step("increased-sum"))?;
+            let mut terms = vec![effects, bonus];
+            terms.extend(per_mana);
+            let sum = phases::total(calc, &terms, Term::Step("increased-sum"))?;
             let inc = phases::factor(calc, sum, Term::Increased)?;
             let more = more(calc, Quantity::Damage, &typed, reasons)?;
             (inc, more)
