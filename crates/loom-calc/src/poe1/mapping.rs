@@ -6906,6 +6906,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "explode_cursed_enemies_for_25%_life_as_chaos_on_kill_chance_%",
         "explode",
     ),
+    // P6-11dj: on-kill explosions (PoB's `ExplodeMod` LIST and `CanExplode`): read
+    // only by PoB's own "On Kill Monster Explosion" skill (`EnemyExplode`, a
+    // group PoB adds with source "Explode"), which no game gem grants: the
+    // gem table skips a group with a source (`poe1::gems`), and the gem is
+    // `unmodelled-gem` as a main skill or in full DPS.
+    ("explode_enemies_for_500%_life_as_fire_on_kill_%_chance", "explosion"),
+    // P6-11dj: reflected fire damage to melee attackers (unparsed in PoB; damage
+    // to attackers, no slice field), as the physical one.
+    ("fire_damage_to_return_to_melee_attacker", "reflect"),
     // P6-11n: "#% increased Life Recovered" by flasks (`FlaskLifeRecovery`
     // INC): no field.
     ("flask_life_to_recover_+%", "flask"),
@@ -6974,6 +6983,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
+    // P6-11dj: "Can be Anointed": an item property PoB reads only to offer the
+    // anoint; the anoint's passive is the item's own line (P3-8n).
+    ("local_can_be_anointed", "display"),
     // "Gems Socketed always have the Quality bonus from Socket Colour":
     // its effect is the gems' quality, `poe1::sockets` (P3-12i).
     ("local_can_socket_gems_ignoring_colour", "sockets"),

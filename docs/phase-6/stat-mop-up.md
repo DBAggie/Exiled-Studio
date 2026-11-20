@@ -2197,3 +2197,17 @@ All stay reasons.
 
 **Evidence** (`b-ct`, against P6-11dh's run): public and corpus 0 unexpected; no value moved (the brand builds have other reasons). The workspace tests and clippy pass.
 
+## P6-11dj: three lines with no slice field
+
+`NoEffect` rows:
+- **"Reflects # Fire Damage to Melee Attackers"** (`reflect`): unparsed in PoB; damage to attackers, which no slice field reads, as the physical one (P6-11m).
+- **"Can be Anointed"** (`display`): an item property PoB reads only to offer the anoint. The anoint's passive is the item's own line (P3-8n).
+- **The on-kill explosion** (`explosion`): PoB's `ExplodeMod` and `CanExplode` are read only by its own "On Kill Monster Explosion" skill (`EnemyExplode`, in a group PoB adds with source "Explode"). No game gem grants that skill. The gem table skips a group with a source, and the gem is `unmodelled-gem` as a main skill or in full DPS.
+
+**Kept as reasons:**
+- "Magic Utility Flasks cannot be Used": PoB leaves it unparsed, so its flasks stay active there; the game applies it.
+- Phasing on kill: it sets a condition other lines read.
+- "Take no Extra Damage from Critical Strikes if you have taken a Critical Strike Recently": unparsed in PoB; the game applies it to hits taken.
+
+**Evidence** (`b-ct`, against P6-11di's run): public and corpus 0 unexpected; no value moved. The workspace tests and clippy pass.
+
