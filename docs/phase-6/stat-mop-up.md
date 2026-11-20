@@ -1913,3 +1913,21 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cs: minion more damage and minion crit multiplier
+
+**PoB** reads both lines as `MinionModifier` LISTs:
+- The Necromancer's "Minions deal #% more Damage" (`necromancer_minion_damage_+%_final`) holds `Damage` MORE.
+- "Minions have +#% to Critical Strike Multiplier" (`minion_critical_strike_multiplier_+`) holds `CritMultiplier` BASE.
+
+**The engine:**
+- `minions::MinionValue` gains `CritMultiplier`, which reaches the minion's `CritMultiplier`.
+- Both stats are `minions::STATS` rows. The more damage is not redirected: Spiritual Aid's redirect copies increases only, as PoB's.
+- **Tests:** the rows' texts (`tests/minions.rs`). The gem mapping test's unmapped example is now the minions' penetration against cursed enemies.
+
+**Fixture** `minion-raise-zombie-more-damage-crit-multiplier-witch.xml`: Raise Zombie with 10% more minion damage and +30% minion crit multiplier. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cr's run):
+- **Public:** 0 unexpected; 2 values toward PoB (two community builds' full DPS), none away.
+- **Corpus:** 0 unexpected; 1 value toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

@@ -108,6 +108,9 @@ pub enum MinionValue {
     /// The minion's chance to deal double damage (PoB's
     /// `DoubleDamageChance`; P6-11as).
     DoubleDamageChance,
+    /// The minion's critical strike multiplier (PoB's `CritMultiplier`
+    /// BASE; P6-11cs).
+    CritMultiplier,
 }
 
 impl MinionValue {
@@ -157,6 +160,7 @@ impl MinionValue {
                 (DamageType::Chaos, Bound::Max) => "added-chaos-max",
             },
             Self::DoubleDamageChance => "double-damage-chance",
+            Self::CritMultiplier => "crit-multiplier",
         }
     }
 
@@ -189,6 +193,7 @@ impl MinionValue {
             Self::SpellBlockChance => Quantity::Poe1(Poe1Quantity::SpellBlockChance),
             Self::AddedDamage(t, b) => Quantity::AddedDamage(t, b),
             Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
+            Self::CritMultiplier => Quantity::CritMultiplier,
             Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
             Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
         };
@@ -235,7 +240,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 43] = [
+pub const STATS: [MinionRow; 45] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -312,6 +317,12 @@ pub const STATS: [MinionRow; 43] = [
     (
         "minion_cooldown_recovery_+%",
         &[(minion(MinionValue::CooldownRecovery), INC, 1.0)],
+    ),
+    // P6-11cs: "Minions have +#% to Critical Strike Multiplier"
+    // (`MinionModifier` of `CritMultiplier` BASE).
+    (
+        "minion_critical_strike_multiplier_+",
+        &[(minion(MinionValue::CritMultiplier), BASE, 1.0)],
     ),
     (
         "minion_damage_+%",
@@ -450,6 +461,12 @@ pub const STATS: [MinionRow; 43] = [
     (
         "necromancer_defensive_notable_minion_maximum_life_+%_final",
         &[(minion(MinionValue::Life), MORE, 1.0)],
+    ),
+    // P6-11cs: the Necromancer's "Minions deal #% more Damage"
+    // (`MinionModifier` of `Damage` MORE).
+    (
+        "necromancer_minion_damage_+%_final",
+        &[(minion(MinionValue::Damage), MORE, 1.0)],
     ),
     // P6-7c2: Minion Damage's own `statMap` (`Data/Skills/sup_int.lua`
     // 4813): `MinionModifier` holding `Damage` MORE.

@@ -1729,8 +1729,13 @@ mod tests {
             GemMinionStat::Applied
         );
         assert_eq!(gem_minion_stat("minion_damage_+%"), GemMinionStat::Applied);
+        // P6-11cs: a row since.
         assert_eq!(
             gem_minion_stat("minion_critical_strike_multiplier_+"),
+            GemMinionStat::Applied
+        );
+        assert_eq!(
+            gem_minion_stat("minions_penetrate_elemental_resistances_%_vs_cursed_enemies"),
             GemMinionStat::Unmapped
         );
         assert_eq!(
