@@ -585,6 +585,34 @@ fn life_gained_as_energy_shield_should_be_a_row_of_energy_shield() {
 }
 
 #[test]
+fn elemental_resistances_should_be_capped_by_the_highest_maximum() {
+    // P6-11dh: fire's maximum 75 + 4, the highest, caps every elemental
+    // resistance (-60 + 200 = 140 each); chaos keeps its own maximum.
+    let r = witch_with(&[
+        (
+            "elemental_resistances_are_limited_by_highest_maximum_elemental_resistance",
+            1,
+        ),
+        ("base_maximum_fire_damage_resistance_%", 4),
+        ("base_resist_all_elements_%", 200),
+    ]);
+    for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+        let f = Field::Resistance(t);
+        assert_eq!(value(&r, f), 79.0, "{f}");
+        assert_eq!(state(&r, f), StateKind::Complete, "{f}");
+    }
+    let plain = witch_with(&[
+        ("base_maximum_fire_damage_resistance_%", 4),
+        ("base_resist_all_elements_%", 200),
+    ]);
+    assert_eq!(value(&plain, Field::Resistance(DamageType::Cold)), 75.0);
+    assert_eq!(
+        value(&r, Field::Resistance(DamageType::Chaos)),
+        value(&plain, Field::Resistance(DamageType::Chaos))
+    );
+}
+
+#[test]
 fn an_attribute_from_a_passive_should_reach_mana_and_energy_shield() {
     // Int 42: mana 34 + 540 + 21 = 595.
     let r = run(&with_spec(witch(90), spec(&[2])));

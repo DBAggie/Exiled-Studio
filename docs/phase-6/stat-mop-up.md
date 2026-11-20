@@ -2165,3 +2165,20 @@ Every other computed field equals PoB's.
 
 **Not done:** "#% more Damage taken from other Enemies near your Marked Enemy" (Focal Point, 4 builds). PoB leaves it unparsed, so it applies nothing; the game applies it. It stays a reason (tasks file).
 
+## P6-11dh: resistances capped by the highest maximum
+
+**PoB** (`CalcDefence.lua` 561 to 576): with "Elemental Resistances are capped by your highest Maximum Elemental Resistance instead" (`ElementalResistMaxIsHighestResistMax`, Melding of the Flesh), each elemental maximum is `min(cap, sum)`. The highest of them, starting from 0, overrides every elemental maximum. Chaos keeps its own.
+
+**The engine:**
+- `Poe1Quantity::ElementalResistMaxIsHighest`, a `Flag` row.
+- `phases::highest_maximum_resistance` builds that maximum for fire, cold, and lightning when the flag is present. Without it the graph is unchanged: the node order is kept, so the stored calculation results stay equal.
+
+**Tests:** `elemental_resistances_should_be_capped_by_the_highest_maximum` (fire's 79 caps all three; chaos unchanged).
+
+**Fixture** `ice-nova-highest-maximum-resistance-witch.xml`: Ice Nova with the line, +4% maximum fire and +1% maximum cold resistance, and +160% to all elemental resistances. Each elemental resistance is 79, as in PoB.
+
+**Evidence** (`b-ct`, against P6-11dg's run):
+- **Public:** 0 unexpected; 12 values toward PoB, 6 now equal (an Elementalist's fire and lightning resistances 74 to 90, their taken multipliers, maximum hits, and EHP).
+- **Corpus:** 0 unexpected; 12 values toward PoB, 6 now equal.
+- **Tests:** the workspace tests and clippy pass.
+

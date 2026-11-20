@@ -5272,6 +5272,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11dh: "Elemental Resistances are capped by your highest Maximum
+    // Elemental Resistance instead" (`ElementalResistMaxIsHighestResistMax`
+    // FLAG).
+    (
+        "elemental_resistances_are_limited_by_highest_maximum_elemental_resistance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ElementalResistMaxIsHighest),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
     (
         "energy_shield_%_of_armour_rating_gained_on_block",

@@ -668,15 +668,23 @@ pub(super) fn resistance_parts(
     let raw = product(calc, &[base, modifier], Term::Step("unrounded"))?;
     let total = trunc(calc, raw, Term::Step("total"))?;
 
-    let max_base = sum(
-        calc,
-        Quantity::MaximumResistance(t),
-        Op::Base,
-        Term::Step("maximum-sum"),
-        &mut reasons,
-    )?;
-    let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
-    let max = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
+    let max = if is_elemental(t)
+        && has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::ElementalResistMaxIsHighest),
+        ) {
+        highest_maximum_resistance(calc, &mut reasons)?
+    } else {
+        let max_base = sum(
+            calc,
+            Quantity::MaximumResistance(t),
+            Op::Base,
+            Term::Step("maximum-sum"),
+            &mut reasons,
+        )?;
+        let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
+        pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?
+    };
     let max = trunc(calc, max, Term::Step("max"))?;
     let floor = constant(calc, "resistance-floor", RESIST_FLOOR)?;
     let min = trunc(calc, floor, Term::Step("min"))?;
@@ -684,6 +692,38 @@ pub(super) fn resistance_parts(
     let capped = pair(calc, total, max, Term::Step("capped"), true)?;
     let value = pair(calc, capped, min, Term::Result, false)?;
     Ok((value, total, reasons))
+}
+
+/// Whether `t` is an elemental damage type (PoB's `isElemental`).
+const fn is_elemental(t: DamageType) -> bool {
+    matches!(
+        t,
+        DamageType::Fire | DamageType::Cold | DamageType::Lightning
+    )
+}
+
+/// The highest maximum elemental resistance (P6-11dh; `CalcDefence.lua`
+/// 561 to 576, Melding of the Flesh): each elemental maximum's
+/// `min(cap, sum)`, the highest of them and 0 (PoB starts from 0), which
+/// overrides each elemental maximum.
+fn highest_maximum_resistance(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
+    let mut highest = constant(calc, "no-highest-maximum", 0.0)?;
+    for t in RESISTANCES.into_iter().filter(|t| is_elemental(*t)) {
+        let max_base = sum(
+            calc,
+            Quantity::MaximumResistance(t),
+            Op::Base,
+            Term::Step("maximum-sum"),
+            reasons,
+        )?;
+        let capped = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
+        highest = pair(calc, highest, capped, Term::Step("highest-maximum"), false)?;
+    }
+    Ok(highest)
 }
 
 /// PoB's `data.misc.MaxResistCap`: no maximum resistance above 90%.

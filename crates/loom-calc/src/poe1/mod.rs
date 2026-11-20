@@ -148,6 +148,10 @@ pub enum Poe1Quantity {
     /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
     /// phase as one more row.
     LifeAsEnergyShield,
+    /// Elemental resistances are capped by the highest maximum elemental
+    /// resistance (PoB's `ElementalResistMaxIsHighestResistMax`, Melding of
+    /// the Flesh; P6-11dh): a `Flag` the resistance phase reads.
+    ElementalResistMaxIsHighest,
     /// Trap throwing speed (PoB's `TrapThrowingSpeed`; P6-11cy):
     /// `Increased` and `More`, read by [`hit`]'s trap rate.
     TrapThrowingSpeed,
@@ -1098,6 +1102,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
+            Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),
             Self::MineLayingSpeed => f.write_str("mine-laying-speed"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
