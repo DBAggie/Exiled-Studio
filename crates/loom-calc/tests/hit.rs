@@ -1975,15 +1975,36 @@ fn groups_pob_does_not_create_should_change_nothing() {
     }
 }
 
+/// A group an item grants (P6-11fe) is PoB's rebuilt group when no support
+/// in its slot would join it: modelled, no reason. With a support socketed
+/// in its slot, or from another source (the tree, PoB's own), it stays a
+/// reason.
 #[test]
-fn a_group_with_a_source_should_be_a_reason() {
-    let mut granted = group(&["Precision"]);
-    granted.attributes.push(loom_domain::Attribute {
-        name: "source".to_owned(),
-        value: "Item:3".to_owned(),
-    });
-    let r = run(&build(vec![group(&["IceNova"]), granted]));
-    assert_eq!(gem_reasons(&r), ["gem Gem { group: 1, gem: 0 }"]);
+fn a_group_with_a_source_should_be_modelled_or_a_reason() {
+    let granted = |source: &str, slot: Option<&str>| {
+        let mut g = group(&["Precision"]);
+        g.attributes.push(loom_domain::Attribute {
+            name: "source".to_owned(),
+            value: source.to_owned(),
+        });
+        g.slot = slot.map(SlotId::new);
+        g
+    };
+    let alone = run(&build(vec![
+        group(&["IceNova"]),
+        granted("Item:3", Some("Helmet")),
+    ]));
+    assert!(gem_reasons(&alone).is_empty(), "{:?}", gem_reasons(&alone));
+    let mut supports = group(&["SupportTestAdded"]);
+    supports.slot = Some(SlotId::new("Helmet"));
+    let supported = run(&build(vec![
+        group(&["IceNova"]),
+        granted("Item:3", Some("Helmet")),
+        supports,
+    ]));
+    assert_eq!(gem_reasons(&supported), ["gem Gem { group: 1, gem: 0 }"]);
+    let tree = run(&build(vec![group(&["IceNova"]), granted("Tree:5", None)]));
+    assert_eq!(gem_reasons(&tree), ["gem Gem { group: 1, gem: 0 }"]);
 }
 
 #[test]

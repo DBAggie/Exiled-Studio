@@ -107,7 +107,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
+use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue, SocketGroup};
 
 use super::config::last_input;
 use super::gem_levels::GemLevels;
@@ -3684,6 +3684,28 @@ pub fn gems(
             if pob_only && main_group != Some(g) && !full_dps {
                 continue;
             }
+            // An item's skill (P6-11fe) when its slot socket no supports
+            // PoB would add to it: PoB's rebuilt group (module docs,
+            // [`granted_view`]).
+            let from_item = skill::attribute(&group.attributes, "source")
+                .is_some_and(|s| s.starts_with("Item"));
+            if from_item && !slot_supports(&groups, g, input.data) {
+                let view = granted_view(group);
+                let skills = skill::group_skills(&view, &[], input.data, levels);
+                for s in &skills {
+                    let is_main = main.is_some_and(|(mg, m)| {
+                        mg == g
+                            && m.active_gem.gem == s.active_gem.gem
+                            && m.active_gem.effect.id == s.active_gem.effect.id
+                    });
+                    if is_main {
+                        continue;
+                    }
+                    let place = GroupPlace { index: g, slot };
+                    one_skill(input, place, s, totals, config, &mut collected, ingest);
+                }
+                continue;
+            }
             for (i, gem) in group.gems.typed().enumerate() {
                 if gem.enabled {
                     ingest.reason(UnsupportedReason::UnmodelledGem {
@@ -3752,6 +3774,50 @@ pub fn gems(
         }
     }
     apply(input, config, totals, collected, ingest);
+}
+
+/// The group PoB makes of an item's skill (P6-11fe; `CalcSetup.lua` 1384
+/// to 1402): its first gem alone, the active skill, at the granted level
+/// the build stores, quality 0, with its first global effect on
+/// (`enableGlobal1 = true`; PoB writes "nil" in the file).
+fn granted_view(group: &SocketGroup) -> SocketGroup {
+    let mut view = group.clone();
+    let first = view.gems.typed().next().cloned();
+    view.gems = loom_domain::Ordered::default();
+    if let Some(mut gem) = first {
+        gem.quality = loom_domain::Sourced::new(0);
+        gem.attributes.retain(|a| a.name != "enableGlobal1");
+        gem.attributes.push(loom_domain::Attribute {
+            name: "enableGlobal1".to_owned(),
+            value: "true".to_owned(),
+        });
+        gem.enabled = true;
+        view.gems.push(gem);
+    }
+    view
+}
+
+/// Whether another group in group `g`'s slot, not of its source, holds an
+/// enabled support gem (P6-11fe): PoB adds every such support to an item's
+/// skill unless the grant says `noSupports`, which the build file does not
+/// keep (`CalcSetup.lua` 1690 to 1710). Such a group stays a reason.
+fn slot_supports(groups: &[&SocketGroup], g: usize, data: &dyn crate::input::CalcData) -> bool {
+    let group = groups[g];
+    let Some(slot) = group.slot.as_ref() else {
+        return false;
+    };
+    let source = skill::attribute(&group.attributes, "source");
+    groups.iter().enumerate().any(|(o, other)| {
+        o != g
+            && other.slot.as_ref() == Some(slot)
+            && skill::attribute(&other.attributes, "source") != source
+            && other.gems.typed().any(|gem| {
+                gem.enabled
+                    && skill::gem_effects(gem, data)
+                        .and_then(|e| e.first().copied())
+                        .is_some_and(|e| e.support)
+            })
+    })
 }
 
 /// PoB's guard slots (`CalcPerform.lua` 3256 to 3275; module docs): the

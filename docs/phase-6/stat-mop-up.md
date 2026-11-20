@@ -3084,3 +3084,25 @@ Their exerted attacks' mods (`SeismicExertedAttacks`, `AncestralExertedAttacks`,
 - **One moved away:** a Facebreaker Luminary's unreserved mana (14 to -80, PoB 42) carries its warcries' reservation too. Its helmet's `{custom}` lines, a 9-10% mana reservation efficiency and more maximum mana, are applied by PoB and excluded by the engine, as for the Slayer (P6-11eu). The `{custom}` decision settles it.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests (the `data-parity` tool's included), loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fe: skills an item grants
+
+**PoB** (`CalcSetup.lua` 1346 to 1402, 1686 to 1710):
+- A skill an item grants ("Grants Level # <skill>", "Curse Enemies with <curse> on Hit", an enchantment's trigger) gets a socket group rebuilt from its grant. That is one gem, the active skill, at the granted level, with quality 0 and `enableGlobal1` on.
+- Unless the grant says `noSupports`, every support socketed in the item's slot, in any of that slot's other groups, joins it.
+- The build file keeps the group with its `source` (`Item:<id>:<name>`), but not the grant's `noSupports`.
+
+**The engine:**
+- **`gems::granted_view`:** an item's group whose slot has no support gem in another group is now that rebuilt group, processed as any other (`one_skill`): its buffs, curses, and reservation apply. With no support in the slot, PoB's support question cannot arise.
+- **Still reasons (`unmodelled-gem`):** an item's group whose slot holds supports (the build file does not say whether they join it), and every other source (the tree, PoB's own groups, P6-11eu's rule aside).
+- **Test:** `a_group_with_a_source_should_be_modelled_or_a_reason` (was `..._should_be_a_reason`): an item's Precision alone in its slot is modelled with no reason; with a support socketed in the slot, or from the tree, it stays a reason.
+
+**Evidence** (`b-ct`, against P6-11fd's run):
+- **Public:** 0 unexpected. 24 values moved, 21 toward PoB:
+  - an Elemental Hit Deadeye's hit chance (62 to 90, PoB 100), crit chance, damage, and unreserved mana (424 to 252, PoB 152), from its item's Precision;
+  - a Juggernaut's life regeneration;
+  - a Cyclone Slayer's and a Lightning Trap Elementalist's damage.
+- **Three moved away:** a cast-on-crit build's average damage and DPS (its crit chance, multiplier, and speed moved toward PoB). Its ring's Assassin's Mark now applies and takes part in the curse slots by PoB's rule (P6-9e) with the build's Frostbite. PoB's damage is ten times the engine's from other gaps, so this build does not settle that choice.
+- **Reasons:** item-granted Precision and Vulnerability no longer appear among the unmodelled gems.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

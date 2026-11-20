@@ -337,6 +337,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11fb: the timeless additions' remaining lines: 22 spell added damage rows (shield, two-handed, plain), conditional crit, damage, penetration, regeneration, movement, Onslaught rows (`NOT_CRIT_RECENTLY`, `NOT_KILLED_RECENTLY`), projectile attack damage, energy shield per power charge, four devotion readers (`docs/phase-6/stat-mop-up.md`, "P6-11fb")
 - [x] P6-11fc: minions' ignite, bleed, and poison chances (`MinionValue::AilmentChance`); their flat life regeneration `NoEffect` (`docs/phase-6/stat-mop-up.md`, "P6-11fc")
 - [x] P6-11fd: Seismic, Ancestral, and Infernal Cry (`gems::Kind::Warcry`, per warcry power); `data-parity`'s `gem_effects` knows them, and its `collapse` skips P6-11ek's shared marker (`uncategorized` 0) (`docs/phase-6/stat-mop-up.md`, "P6-11fd")
+- [x] P6-11fe: skills an item grants: PoB's rebuilt group (granted level, quality 0, `enableGlobal1`) when no support in the slot would join it (`gems::granted_view`, `slot_supports`) (`docs/phase-6/stat-mop-up.md`, "P6-11fe")
+- [ ] Item-granted skills whose slot holds supports: PoB adds them unless the grant says `noSupports`, which the build file does not keep; read it from the item's granting line (P6-11fe)
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report
