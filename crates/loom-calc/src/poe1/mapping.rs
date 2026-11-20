@@ -3007,6 +3007,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     | Poe1Quantity::SkillConversion(..)
                     | Poe1Quantity::Conversion(..)
+                    // Gain as extra (P6-11bp; PoB's `SkillStatMap.lua` 925
+                    // to 945 for a skill's own stats).
+                    | Poe1Quantity::GainAs(..)
                     | Poe1Quantity::DoubleDamageChance
                     // The repeats (P6-11aj).
                     | Poe1Quantity::RepeatCount
@@ -4549,7 +4552,26 @@ pub const ROWS: &[Row] = &[
         "cold_and_lightning_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
-    // P6-10b part 12: "#% of Cold Damage from Hits taken as Fire Damage" (`ColdDamageFromHitsTakenAsFire` BASE).
+    // P6-11bp: "Gain #% of <Type> Damage as Extra <Type> Damage"
+    // (`<From>DamageGainAs<To>` BASE; elemental: `ElementalDamageGainAs<To>`,
+    // which PoB sums into each elemental type, `CalcOffence.lua` 1893), read
+    // by the hit's conversion table as the heralds' and Hatred's.
+    (
+        "cold_damage_%_to_add_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Cold, DamageType::Chaos)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "cold_damage_%_to_add_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Cold, DamageType::Fire)),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-10b part 12: "#% of Cold Damage from Hits taken as Fire Damage" (`ColdDamageFromHitsTakenAsFire` BASE).
     (
         "cold_damage_taken_%_as_fire",
         &[(
@@ -4694,7 +4716,29 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
-    // P6-10b part 12: "#% of Elemental Damage from Hits taken as Chaos Damage" (`ElementalDamageFromHitsTakenAsChaos` BASE).
+    (
+        "elemental_damage_%_to_add_as_chaos",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Fire, DamageType::Chaos)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Cold, DamageType::Chaos)),
+                Op::Base,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::GainAs(
+                    DamageType::Lightning,
+                    DamageType::Chaos,
+                )),
+                Op::Base,
+                1.0,
+            ),
+        ],
+    ), // P6-10b part 12: "#% of Elemental Damage from Hits taken as Chaos Damage" (`ElementalDamageFromHitsTakenAsChaos` BASE).
     (
         "elemental_damage_taken_%_as_chaos",
         &[(
@@ -4855,7 +4899,14 @@ pub const ROWS: &[Row] = &[
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
-    // P6-10b part 12: "#% of Fire Damage from Hits taken as Cold Damage" (`FireDamageFromHitsTakenAsCold` BASE).
+    (
+        "fire_damage_%_to_add_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Fire, DamageType::Chaos)),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-10b part 12: "#% of Fire Damage from Hits taken as Cold Damage" (`FireDamageFromHitsTakenAsCold` BASE).
     (
         "fire_damage_taken_%_as_cold",
         &[(
@@ -5160,7 +5211,39 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
-    // P6-10b part 12: "#% of Lightning Damage from Hits taken as Cold Damage" (`LightningDamageFromHitsTakenAsCold` BASE).
+    (
+        "lightning_damage_%_to_add_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(
+                DamageType::Lightning,
+                DamageType::Chaos,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "lightning_damage_%_to_add_as_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(
+                DamageType::Lightning,
+                DamageType::Cold,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "lightning_damage_%_to_add_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(
+                DamageType::Lightning,
+                DamageType::Fire,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-10b part 12: "#% of Lightning Damage from Hits taken as Cold Damage" (`LightningDamageFromHitsTakenAsCold` BASE).
     (
         "lightning_damage_taken_%_as_cold",
         &[(
@@ -5553,6 +5636,44 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::Type(
                 DamageType::Physical,
             ))),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "physical_damage_%_to_add_as_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(
+                DamageType::Physical,
+                DamageType::Chaos,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "physical_damage_%_to_add_as_cold",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, DamageType::Cold)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "physical_damage_%_to_add_as_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, DamageType::Fire)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "physical_damage_%_to_add_as_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(
+                DamageType::Physical,
+                DamageType::Lightning,
+            )),
             Op::Base,
             1.0,
         )],

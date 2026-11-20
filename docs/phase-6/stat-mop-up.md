@@ -1549,3 +1549,16 @@ The engine adds `Poe1Quantity::BoundDamage(type, bound)`, with no type for the g
 **Evidence** (`b-ct`, against P6-11bn's run):
 - **Public:** 0 unexpected; 12 values toward PoB in three attack builds, none away.
 - **Corpus:** 0 unexpected; 2 values toward PoB in one build, none away.
+
+## P6-11bp: gain as extra damage
+
+"Gain #% of <Type> Damage as Extra <Type> Damage" is PoB's `<From>DamageGainAs<To>` BASE.
+- "Elemental" is `ElementalDamageGainAs<To>`, which PoB sums into each elemental type's gain (`CalcOffence.lua` 1893).
+- The eleven plain stats are `ROWS` rows on `Poe1Quantity::GainAs`, which the hit's conversion table already read for the heralds and Hatred.
+- PoB's `SkillStatMap.lua` (925 to 945) maps seven of them for a skill's own stats too, so the skill mapping now reads `GainAs` as a hit quantity, as it reads the conversions.
+
+**Fixture** `smite-gain-as-extra-templar.xml`: Smite with a Siege Axe, physical gained as cold, elemental gained as chaos. The damage equals PoB's. The differences are Q11's floored attack rate (`DIV-0314` to `DIV-0319`).
+
+**Evidence** (`b-ct`, against P6-11bo's run):
+- **Public:** 0 unexpected; 14 values toward PoB in three builds, none away.
+- **Corpus:** unchanged.

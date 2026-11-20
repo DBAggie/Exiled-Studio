@@ -142,6 +142,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11bm: seven more rage lines as `CanGain`; fixture `smite-rage-on-hit-with-axes-templar.xml` (Q11 DIV-0302 to DIV-0307) (`docs/phase-6/stat-mop-up.md`, "P6-11bm")
 - [x] P6-11bn: nearby enemies' resistances (`EnemyResistance` rows); fixture `ice-nova-nearby-enemy-resistances-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bn")
 - [x] P6-11bo: the ends of the damage range (`BoundDamage`; Volatility, Ryslatha's Clutches); fixture `smite-volatility-min-max-physical-templar.xml` (Q11 DIV-0308 to DIV-0313) (`docs/phase-6/stat-mop-up.md`, "P6-11bo")
+- [x] P6-11bp: gain as extra damage (eleven `GainAs` rows; `GainAs` a hit quantity); fixture `smite-gain-as-extra-templar.xml` (Q11 DIV-0314 to DIV-0319) (`docs/phase-6/stat-mop-up.md`, "P6-11bp")
 - [ ] Damage while leeching (the `Leeching` condition from four checks and PoB's automatic case)
 - [ ] Stats read per a computed value ("#% increased Spell Damage per 100 Maximum Mana, up to 60%", 4 public builds): PoB's `PerStat` on a pool; the engine has no mid-calculation effect with the pool's node as its provenance (design needed: a phase term in the hit as `phases::per_5` does for block)
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it
