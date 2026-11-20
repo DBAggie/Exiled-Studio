@@ -81,6 +81,13 @@ pub const NEARBY_RARE_OR_UNIQUE_INPUT: &str = "multiplierNearbyRareOrUniqueEnemi
 /// "if you've dealt a Critical Strike Recently" (PoB's `CritRecently`,
 /// from `conditionCritRecently`, `ConfigOptions.lua` 1240; close-out).
 pub const CRIT_RECENTLY: &str = "CritRecently";
+/// "while Leeching" (P6-11bv; PoB's `Leeching`: the config's four
+/// leeching checks, `ConfigOptions.lua` 1068 to 1081; PoB also sets it
+/// for "Life Leech effects are not removed at Full Life", stats that stay
+/// reasons, `config::DEPENDS_ON`).
+pub const LEECHING: &str = "Leeching";
+/// "while Leeching Energy Shield" (P6-11bv).
+pub const LEECHING_ENERGY_SHIELD: &str = "LeechingEnergyShield";
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
@@ -155,6 +162,14 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionFullLife", FULL_LIFE),
     ("conditionKilledRecently", KILLED_RECENTLY),
+    // P6-11bv: each leeching check sets `Leeching` (PoB's `implyCond`).
+    ("conditionLeeching", LEECHING),
+    ("conditionLeechingEnergyShield", LEECHING),
+    ("conditionLeechingEnergyShield", LEECHING_ENERGY_SHIELD),
+    ("conditionLeechingLife", LEECHING),
+    ("conditionLeechingLife", "LeechingLife"),
+    ("conditionLeechingMana", LEECHING),
+    ("conditionLeechingMana", "LeechingMana"),
     ("conditionMoving", MOVING),
     ("conditionOnBurningGround", ON_BURNING_GROUND),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),

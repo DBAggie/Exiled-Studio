@@ -1602,3 +1602,21 @@ Five stats that change no slice field are `NoEffect` rows. PoB parses none of th
 **Evidence** (`b-ct`, against P6-11bt's run):
 - **Public:** 0 unexpected; 3 values toward PoB, none away. The three builds with the passive's life regeneration; one (an Inquisitor) now equals PoB's 553 and is complete.
 - **Corpus:** unchanged.
+
+## P6-11bv: while Leeching
+
+PoB's `Leeching` condition (`ConfigOptions.lua` 1068 to 1081):
+- The config's "Are you Leeching?" sets it. So does each of the life, energy shield, and mana leeching checks, which also set their own condition (`implyCond`).
+- PoB also sets it automatically for "Life Leech effects are not removed at Full Life" (unless Ghost Reaver) and the energy shield equivalent (`CalcPerform.lua` 873 to 880).
+
+What the engine does:
+- `conditions::CHECKS` gains the four checks, each setting `conditions::LEECHING` and its own condition. `conditionLeeching` leaves `NAMED_ONLY`.
+- The four stats that set it automatically join `config::DEPENDS_ON`, which keeps them reasons: the engine settles the condition from the config alone.
+- Seven `STATE_ROWS` read it as PoB reads their text: damage, attack damage and attack speed (`ModFlag.Attack`), attack and cast speed, evasion, and armour and evasion while Leeching, and attack and cast speed while Leeching Energy Shield.
+- Stun and bleeding immunity and damage taken while Leeching stay reasons.
+
+**Fixture** `ice-nova-leeching-lines-witch.xml`: the energy shield check, with damage, armour and evasion, and attack and cast speed lines. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11bu's run):
+- **Public:** 0 unexpected; 18 values toward PoB in a Deadeye's Elemental Hit, 6 now equal, none away.
+- **Corpus:** unchanged.

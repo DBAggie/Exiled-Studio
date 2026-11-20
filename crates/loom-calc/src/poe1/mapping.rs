@@ -3239,6 +3239,17 @@ pub const STATE_ROWS: &[StateRow] = &[
         "armour_+_while_affected_by_determination",
         &[(Quantity::Armour, Op::Base, NONE, "AffectedByDetermination")],
     ),
+    // P6-11bv: "while Leeching" (PoB's `Condition:Leeching`, "while
+    // Leeching Energy Shield" `LeechingEnergyShield`), each as PoB reads it:
+    // attack speed and attack damage with `ModFlag.Attack`, "attack and cast
+    // speed" `Speed`, "armour and evasion rating" both.
+    (
+        "armour_evasion_+%_while_leeching",
+        &[
+            (Quantity::Armour, Op::Increased, NONE, conditions::LEECHING),
+            (Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING),
+        ],
+    ),
     // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
     // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
     // keyword, `UsingShield` (as the staff row).
@@ -3249,6 +3260,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::AILMENT.union(Flags::KEYWORD_ATTACK),
             states::USING_SHIELD,
+        )],
+    ),
+    (
+        "attack_and_cast_speed_+%_while_leeching",
+        &[(Quantity::Speed, Op::Increased, NONE, conditions::LEECHING)],
+    ),
+    (
+        "attack_and_cast_speed_+%_while_leeching_energy_shield",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            NONE,
+            conditions::LEECHING_ENERGY_SHIELD,
         )],
     ),
     // P6-11o: "#% increased Attack Damage while affected by Precision".
@@ -3270,6 +3294,15 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::ATTACK,
             states::USING_SHIELD,
+        )],
+    ),
+    (
+        "attack_damage_+%_while_leeching",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::LEECHING,
         )],
     ),
     // P6-11a review: "Attack Skills deal #% increased Damage while holding a
@@ -3315,6 +3348,15 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::ATTACK,
             states::USING_SHIELD,
+        )],
+    ),
+    (
+        "attack_speed_+%_while_leeching",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::LEECHING,
         )],
     ),
     // P6-11b: "#% increased Attack Speed while Dual Wielding": `Speed` INC,
@@ -3420,6 +3462,10 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::SHOCKED_ENEMY_RECENTLY,
         )],
     ),
+    (
+        "damage_+%_while_leeching",
+        &[(Quantity::Damage, Op::Increased, NONE, conditions::LEECHING)],
+    ),
     // P6-11b: "#% increased Damage while wielding a Wand": `Damage` INC,
     // `UsingWand`.
     (
@@ -3512,6 +3558,10 @@ pub const STATE_ROWS: &[StateRow] = &[
             NONE,
             conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
         )],
+    ),
+    (
+        "evasion_rating_+%_while_leeching",
+        &[(Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING)],
     ),
     // P6-11ba: "#% increased Evasion Rating while moving": `Evasion` INC,
     // `Moving` (the config's).
@@ -8835,6 +8885,53 @@ mod tests {
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
                 )],
+            ),
+            // P6-11bv.
+            (
+                "armour_evasion_+%_while_leeching",
+                vec![
+                    (Quantity::Armour, Op::Increased, NONE, conditions::LEECHING),
+                    (Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING),
+                ],
+            ),
+            (
+                "attack_and_cast_speed_+%_while_leeching",
+                vec![(Quantity::Speed, Op::Increased, NONE, conditions::LEECHING)],
+            ),
+            (
+                "attack_and_cast_speed_+%_while_leeching_energy_shield",
+                vec![(
+                    Quantity::Speed,
+                    Op::Increased,
+                    NONE,
+                    conditions::LEECHING_ENERGY_SHIELD,
+                )],
+            ),
+            (
+                "attack_damage_+%_while_leeching",
+                vec![(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::LEECHING,
+                )],
+            ),
+            (
+                "attack_speed_+%_while_leeching",
+                vec![(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::LEECHING,
+                )],
+            ),
+            (
+                "damage_+%_while_leeching",
+                vec![(Quantity::Damage, Op::Increased, NONE, conditions::LEECHING)],
+            ),
+            (
+                "evasion_rating_+%_while_leeching",
+                vec![(Quantity::Evasion, Op::Increased, NONE, conditions::LEECHING)],
             ),
             // P6-11bj.
             (
