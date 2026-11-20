@@ -1500,3 +1500,22 @@ Every computed field of both equals PoB's.
 - **Public:** 0 unexpected; 25 values toward PoB (a build's helmet line: its energy shield, recharge, regeneration, and hits to die).
 - **Away:** one value, a trap build's energy shield leech rate. It was already 549.7 against PoB's 0, a partial field, and rises with the energy shield the line now adds.
 - **Corpus:** unchanged.
+
+## P6-11bm: the other rage lines PoB reads as "can gain rage"
+
+PoB parses seven more rage lines as `Condition:CanGainRage`, as P6-11bc's "Gain # Rage on Attack Hit":
+- on hit with axes;
+- on hit with axes or swords;
+- on melee weapon hit (the tinctured weapons stat);
+- after spending 200 mana;
+- when hit;
+- on using a life flask;
+- on losing Temporal Chains.
+
+They join `stacks::MODIFIERS` (`StackValue::CanGain`) and leave `config::DEPENDS_ON`. The rest of that list stays: PoB reads those lines as nothing, or not at all.
+
+**Fixture** `smite-rage-on-hit-with-axes-templar.xml`: Smite with a Siege Axe, the axes line, the config's rage at 20. The rage's damage equals PoB's. The differences are the weapon's attack rate floored to whole milliseconds, Q11's game truth (`DIV-0302` to `DIV-0307`).
+
+**Evidence** (`b-ct`, against P6-11bl's run):
+- **Public:** 0 unexpected; 4 values toward PoB (a Gladiator's bleed with rage), none away.
+- **Corpus:** unchanged.

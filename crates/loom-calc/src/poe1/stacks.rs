@@ -254,15 +254,46 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Inspiration,
         StackValue::Per(PerStack::ElementalDamageMore),
     ),
+    (
+        "gain_max_rage_on_losing_temporal_chains_debuff",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
     // P6-11bc: "Gain # Rage on Attack Hit": PoB's `Condition:CanGainRage`,
-    // as on melee hit.
+    // as on melee hit; P6-11bm: the other lines PoB parses as that flag.
     (
         "gain_x_rage_on_attack_hit",
         StackKind::Rage,
         StackValue::CanGain,
     ),
     (
+        "gain_x_rage_on_hit_with_axes",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    (
+        "gain_x_rage_on_hit_with_axes_swords",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    (
+        "gain_x_rage_on_hit_with_tinctured_weapons",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    (
         "gain_x_rage_on_melee_hit",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    (
+        "gain_x_rage_per_200_mana_spent",
+        StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    ("gain_x_rage_when_hit", StackKind::Rage, StackValue::CanGain),
+    (
+        "gain_x_rage_when_you_use_a_life_flask",
         StackKind::Rage,
         StackValue::CanGain,
     ),
