@@ -7041,6 +7041,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-8a part 2: read by `poe1::triggers` (Cast while Channelling's
     // interval, PoB's `triggerTime`).
     ("cast_while_channelling_time_ms", "trigger"),
+    // P6-11ea: skills' radius stats (PoB's `radius` skill data and area of
+    // effect): area, no slice field.
+    (
+        "caustic_arrow_explode_on_hit_base_area_of_effect_radius",
+        "area",
+    ),
     (
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
@@ -7087,6 +7093,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("disable_skill_if_melee_attack", "skill type marker"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
+    ("earthquake_radius_+%", "area"),
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
@@ -7199,6 +7206,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: the stats that add damage from a mana cost stay unmapped
     // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    ("kinetic_fusillade_subsequent_targeting_radius", "area"),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
     (
@@ -7210,6 +7218,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
+    ("lightning_arrow_radius_+%", "area"),
     // P6-11dj: "Can be Anointed": an item property PoB reads only to offer the
     // anoint; the anoint's passive is the item's own line (P3-8n).
     ("local_can_be_anointed", "display"),
@@ -7248,12 +7257,29 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
     ("local_has_X_sockets", "sockets"),
+    // P6-11ea: radius jewels' allocation stats (Intuitive Leap, Thread of Hope's
+    // ring, Impossible Escape): the pipeline reads them when it resolves the
+    // passives (`loom_pipeline`, `RING_STAT`, `LEAP_STAT`, `ESCAPE_STAT`); they
+    // act through the allocated nodes, not as modifiers.
+    ("local_jewel_variable_ring_radius_value", "tree-allocation"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
     // P6-8a: the gems a trigger support supports; PoB has no row.
     (
         "local_support_gem_max_skill_level_requirement_to_support",
         "support-limit",
+    ),
+    (
+        "local_unique_jewel_disconnected_passives_can_be_allocated_around_keystone_hash",
+        "tree-allocation",
+    ),
+    (
+        "local_unique_jewel_nearby_disconnected_keystone_passives_can_be_allocated",
+        "tree-allocation",
+    ),
+    (
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated",
+        "tree-allocation",
     ),
     (
         "lose_all_righteous_charges_on_mana_use_threshold",
@@ -7472,6 +7498,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_strike_skill_gem_level_+", "gem-level"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
+    ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is

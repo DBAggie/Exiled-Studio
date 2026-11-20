@@ -2529,3 +2529,14 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - **Corpus:** 0 unexpected; 7 values moved, 6 toward PoB. One build's ignite DPS moved away (1,571 to 1,656, against PoB's 1,482): it was already above PoB's, and the line's fire increase applies there in PoB too.
 - **Tests:** the workspace tests, clippy, and rustfmt pass.
 
+## P6-11ea: allocation and radius stats
+
+`NoEffect` lines:
+- **Radius jewels' allocation stats** (`tree-allocation`): Intuitive Leap's and its keystone form, Thread of Hope's ring, and Impossible Escape's keystone. The pipeline reads them when it resolves the passives (`loom_pipeline`, `LEAP_STAT`, `RING_STAT`, `ESCAPE_STAT`). They act through the nodes they let you allocate, not as modifiers.
+- **Skills' radius stats** (`area`): Earthquake's and Lightning Arrow's radius, the trap trigger radius, Caustic Arrow's explosion, and Kinetic Fusillade's targeting radius.
+- **A flask's smoke ground on use** (`flasks::NO_EFFECT_LOCAL`).
+
+**Not done:** "Passives in Radius grant ..." lines (the jewels that change the nodes in their radius) stay reasons; they need the radius's nodes in the calculation.
+
+**Evidence** (`b-ct`, against P6-11dz's run): public and corpus 0 unexpected; no value moved. The workspace tests, clippy, and rustfmt pass.
+

@@ -90,7 +90,7 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 9] = [
+pub const NO_EFFECT_LOCAL: [&str; 10] = [
     // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
     // `UsingFlask`): no slice field.
     "local_avoid_shock_%_during_flask_effect",
@@ -107,6 +107,8 @@ pub const NO_EFFECT_LOCAL: [&str; 9] = [
     "local_flask_remove_curses_on_use",
     "local_flask_use_on_full_charges",
     "local_self_curse_effect_+%_during_flask_effect",
+    // P6-11ea: smoke ground on use: no slice field.
+    "local_smoke_ground_on_flask_use_radius",
 ];
 
 /// A flask's own lines PoB reads as the global stat's mod: the line's
