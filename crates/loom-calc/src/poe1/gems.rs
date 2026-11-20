@@ -2212,6 +2212,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportEnduranceChargeOnMeleeStun", &[]),
     ("SupportEnhance", &[]),
     ("SupportEnlighten", &[]),
+    // Eternal Blessing (P6-9g): its aura effect is the supported aura's own
+    // scale term (`OWN_EFFECT_STATS`), and the aura reserves nothing
+    // (`NO_RESERVATION_SUPPORTS`). PoB reads none of its other stats (the
+    // other skills it disables are not disabled there).
+    ("SupportEternalBlessing", &[]),
     ("SupportFasterAttacks", &[]),
     ("SupportFasterCasting", &[]),
     ("SupportFeedingFrenzy", &[]),
@@ -2327,8 +2332,14 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
 
 /// Supports whose base mods set the reservation of a skill of the type to
 /// 0 (PoB's `SkillData` `manaReservationFlat` and kin, 0, tagged with the
-/// type): Guardian's Blessing on an aura (`sup_str.lua` 2807).
-pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[("SupportGuardiansBlessing", "Aura")];
+/// type): Guardian's Blessing on an aura (`sup_str.lua` 2807), Eternal
+/// Blessing (2062).
+pub const NO_RESERVATION_SUPPORTS: &[(&str, &str)] = &[
+    // P6-9g: Eternal Blessing (`sup_str.lua` 2075 to 2080; it supports
+    // auras only).
+    ("SupportEternalBlessing", "Aura"),
+    ("SupportGuardiansBlessing", "Aura"),
+];
 
 /// Supports whose skill reserves life instead of mana (PoB's
 /// `BloodMagicReserved`, `base_skill_reserve_life_instead_of_mana`;

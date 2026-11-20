@@ -267,3 +267,13 @@ The support is in `gems::SUPPORTS` with no global stat.
 **Evidence** (`b-ct`, against P6-11ba's run):
 - **Public:** 0 unexpected; 15 values toward PoB, none away, 2 now equal (Kinetic Blast's crit chance).
 - **Corpus:** 13 toward PoB, none away.
+
+**Eternal Blessing** (P6-9g, `SupportEternalBlessing`, `Data/Skills/sup_str.lua` 2062):
+- **What PoB applies:** its base mods set the supported aura's flat and percent mana and life reservations to 0, and its `aura_effect_+%` (+19 at level 20) scales the aura. The engine lists it in `NO_RESERVATION_SUPPORTS`, and its aura effect is the aura's own scale term (`OWN_EFFECT_STATS`, read from supports too).
+- **What PoB doesn't apply:** "... also disables non-blessing mana reservation skills" is in no calc module, so the other auras still apply there; the engine does the same.
+- **Fixture** `ice-nova-eternal-blessing-hatred-witch.xml`: Hatred blessed, Purity of Ice reserving. Every computed field equals PoB's.
+- **Evidence:**
+  - **Public:** 16 values toward PoB, none away (Lacerate's damage, RF Chieftain's combined DPS).
+  - **Corpus:** unchanged.
+
+**Not modelled: PoB-only skills.** `EnemyExplode` ("On Kill Monster Explosion", in 6 public builds) has no game granted effect of that ID, so its gem is `unmodelled-gem` before any table is read (tasks file).
