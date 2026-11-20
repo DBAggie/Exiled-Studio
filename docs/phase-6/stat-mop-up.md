@@ -3124,3 +3124,17 @@ With supports, every support socketed in the slot's other groups joins the skill
 - **Public:** 0 unexpected. 8 values moved, all toward PoB: a General's Cry Berserker's damage (average 521,698 to 587,458, PoB 604,979) and a mine Assassin's, each from an item's skill now with its slot's supports.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fg: Pyroclast Mine of Sabotage's exposure
+
+**PoB** (`PyroclastMineAltX`): a mine skill with an aura on enemies near its mines, `pyroclast_mine_aura_fire_exposure_%_to_apply`, `FireExposure` BASE -25. The aura is an `AuraDebuff` named "Pyroclast Mine Fire Exposure", scaled by the aura effects that apply to it. The enemy takes the strongest fire exposure (`CalcPerform.lua` 3563 to 3589). The mine reserves mana as every mine does.
+
+**The engine:**
+- **Gems:** a `Kind::Debuff` entry whose row is `SkillExposure(Fire)`. It takes part in `poe1::exposure`'s strongest exposure, as Frost Bomb's does (Phase 3 close-out). Its reservation is the level's, `gems::reservation` running for every kind.
+- **A debuff at scale 1:** PoB scales this one by the non-curse aura effect, which the engine reads (`Totals::aura_effect`). With that effect present the debuff is an `aura-debuff-effect` reason, and its reservation still applies.
+- **`data-parity` (`gem_effects`):** its `Aura` and `HasReservation` types are allowed for this debuff (`ALLOWED_TYPES`, with why); `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ff's run):
+- **Public:** 0 unexpected. A Penance Brand Elementalist's unreserved mana went from 240 to 221 (PoB 78) with the mine's reservation. Its damage fields are not computed, so the exposure moves nothing there.
+- **Corpus:** 0 unexpected. The same move in its corpus build.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

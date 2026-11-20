@@ -223,6 +223,11 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // P6-11fg: Pyroclast Mine of Sabotage's aura is a debuff on the enemy
+    // (`AuraDebuff`), its reservation the mine's (`gems::reservation`, for
+    // every kind); the non-curse aura effect makes it a reason.
+    ("PyroclastMineAltX", "Aura"),
+    ("PyroclastMineAltX", "HasReservation"),
     // The offerings buff minions alone (P6-9e).
     ("BoneOffering", "Minion"),
     ("Convocation", "Minion"),
@@ -312,6 +317,11 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
     ("RallyingCry", "Buff Rallying Cry"),
     ("RallyingCry", "Warcry Rallying Cry"),
     // P6-11fd.
+    // P6-11fg: Pyroclast Mine of Sabotage's exposure, an `AuraDebuff`.
+    (
+        "PyroclastMineAltX",
+        "AuraDebuff Pyroclast Mine Fire Exposure",
+    ),
     ("AncestralCry", "Buff Ancestral Cry"),
     ("AncestralCry", "Warcry Ancestral Cry"),
     ("InfernalCry", "Buff Infernal Cry"),

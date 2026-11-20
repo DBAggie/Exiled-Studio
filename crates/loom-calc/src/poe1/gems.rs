@@ -1808,6 +1808,29 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fg: Pyroclast Mine of Sabotage (`PyroclastMineAltX`): its aura on
+    // enemies near the mines applies fire exposure (PoB's `AuraDebuff`
+    // `FireExposure` BASE, `effectName` "Pyroclast Mine Fire Exposure"),
+    // the strongest exposure winning as every skill's (`poe1::exposure`);
+    // its reservation is the mine's own. A debuff at scale 1: PoB scales an
+    // `AuraDebuff` by the non-curse aura effect, so with one the debuff is
+    // a reason (`one_skill`).
+    (
+        "PyroclastMineAltX",
+        Kind::Debuff {
+            name: "Pyroclast Mine Fire Exposure",
+            stats: &[(
+                "pyroclast_mine_aura_fire_exposure_%_to_apply",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::SkillExposure(DamageType::Fire)),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     // Steelskin (P6-9e): a guard (module docs) that takes the non-Vaal
     // guard slot; its absorption reaches the defence estimate (P6-11ae).
     (
@@ -4434,20 +4457,30 @@ fn one_skill(
             );
         }
         Kind::Debuff { name, stats } => {
-            // `DebuffEffect` is a reason ([`DEPENDS_ON`]): scale 1.
-            add_rows(
-                input,
-                g,
-                &s.active_gem,
-                name,
-                stats,
-                (1.0, 1.0),
-                config,
-                false,
-                None,
-                &mut collected.merged,
-                ingest,
-            );
+            // An aura's debuff (P6-11fg, PoB's `AuraDebuff`) takes the non-curse
+            // aura effect, which the engine reads: with one, a reason (its
+            // reservation below still applies).
+            if s.types.contains("Aura") && totals.aura_effect != 0.0 {
+                ingest.reason(UnsupportedReason::UnmodelledSkill {
+                    source: active_source.clone(),
+                    what: "aura-debuff-effect",
+                });
+            } else {
+                // `DebuffEffect` is a reason ([`DEPENDS_ON`]): scale 1.
+                add_rows(
+                    input,
+                    g,
+                    &s.active_gem,
+                    name,
+                    stats,
+                    (1.0, 1.0),
+                    config,
+                    false,
+                    None,
+                    &mut collected.merged,
+                    ingest,
+                );
+            }
         }
         Kind::Warcry { name, stats } => {
             // Autoexertion's warcries share no buff (P6-11dy; PoB's
