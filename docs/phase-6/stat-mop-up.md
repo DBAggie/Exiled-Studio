@@ -2228,3 +2228,18 @@ All stay reasons.
 - **Corpus:** 0 unexpected; 5 values toward PoB, none away. One build's average damage went from 29,141 to 52,813 against PoB's 84,459.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11dl: Pride's impale stacks; two `NoEffect` rows
+
+**PoB** reads "Impales you inflict last # additional Hits while using Pride" as `ImpaleStacksMax` BASE while `AffectedByPride`. The engine's impale (P6-2d) reads `ImpaleStacksMax`, and `AffectedByPride` is settled from the auras (P6-11o).
+
+**The engine:**
+- a `STATE_ROWS` row for Pride's line;
+- `NoEffect` rows for "Projectile Barrages have no spread" (unparsed in PoB; the projectiles' geometry, `projectile-spread`) and Cyclone's area per additional melee range (`area`).
+
+**Fixture** `smite-pride-impale-stacks-templar.xml`: Smite with a chance to impale, Pride in its own group, and the line at 2. Every computed field equals PoB's but Q11's attack rate (DIV-0402 to DIV-0407).
+
+**Evidence** (`b-ct`, against P6-11dk's run):
+- **Public:** 0 unexpected; 3 values toward PoB (a Slayer's impale DPS), none away.
+- **Corpus:** 0 unexpected; 2 values toward PoB, none away.
+- **Tests:** the workspace tests and clippy pass.
+

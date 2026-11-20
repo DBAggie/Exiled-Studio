@@ -4136,6 +4136,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             "AffectedByPride",
         )],
     ),
+    // P6-11dl: "Impales you inflict last # additional Hits while using Pride"
+    // (`ImpaleStacksMax` BASE while `AffectedByPride`).
+    (
+        "pride_your_impaled_debuff_lasts_+_additional_hits",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleStacksMax),
+            Op::Base,
+            NONE,
+            "AffectedByPride",
+        )],
+    ),
     // P6-11bj: "Recover #% of Energy Shield when you Block Spell Damage while
     // wielding a Staff" (`EnergyShieldOnSpellBlock` BASE, `PercentStat`
     // `EnergyShield`, `UsingStaff`; read by `enemy_hit`).
@@ -6869,6 +6880,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
+    // P6-11dl: Cyclone's area per additional melee range (`AreaOfEffect` INC per
+    // `AdditionalMeleeRange`): area, no slice field.
+    ("cyclone_area_of_effect_+%_per_additional_melee_range", "area"),
     // P6-11cf: "Damage cannot be Reflected" (PoB: reflected damage taken, which no
     // slice field reads).
     ("damage_cannot_be_reflected", "reflect"),
@@ -7101,6 +7115,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "monster_penalty_against_minions_damage_+%_final_vs_player_minions",
         "monster",
     ),
+    // P6-11dl: "Projectile Barrages have no spread" (unparsed in PoB): the
+    // projectiles' geometry, no slice field.
+    ("no_barrage_projectile_spread", "projectile-spread"),
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
@@ -9710,6 +9727,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11dl: Pride's impale stacks.
+            (
+                "pride_your_impaled_debuff_lasts_+_additional_hits",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::ImpaleStacksMax),
+                    Op::Base,
+                    NONE,
+                    "AffectedByPride",
                 )],
             ),
             // P6-11dk: added fire damage against burning enemies.
