@@ -350,3 +350,18 @@ What the engine does:
 **Fixture** `smite-intimidating-cry-warcry-speed-templar.xml`: Smite with Intimidating Cry in another group and 30% increased warcry speed. The differences are Q11's floored attack rate (`DIV-0346` to `DIV-0353`). They include the average damage, through the exerted attacks' uptime, as `DIV-0056` registers.
 
 **Evidence** (`b-ct`, against P6-11ch's run): public and corpus 0 unexpected; no value moved (no build pairs the line with Intimidating Cry).
+
+## P6-11cj: Empower's supported level
+
+Empower's "Supported Skills have +# to Level" (`supported_active_skill_gem_level_+`) is PoB's `SupportedGemProperty` `level` (`SkillStatMap.lua` 2304).
+- **PoB:** for a skill from a gem that is not a support, PoB adds it to the active effect's level before reading the level's data (`CalcActiveSkill.lua` 549 to 557).
+- **The engine:** `skill::supported_level` adds the applied supports' value to the active gem's level, for the main skill and for each group's skills (`GroupSkill`: auras and buffs), when the skill is from a gem.
+- **Mapping:** the stat is a `NoEffect` row (`gem-level`), so the support's own mapping adds no reason. The gems guard names it.
+
+**Fixture** `ice-nova-empower-hatred-witch.xml`: Ice Nova and Hatred, each with Empower at level 3 (+2). Every computed field equals PoB's; the average damage is 907.8 against 727.5 without Empower.
+
+**data-parity:** `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ci's run):
+- **Public:** 0 unexpected; 12 values toward PoB, 3 now equal, none away.
+- **Corpus:** 0 unexpected; 7 toward PoB, none away.

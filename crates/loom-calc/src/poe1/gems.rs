@@ -4504,7 +4504,13 @@ mod tests {
         // Checked rows: curses on you (`curse_effect_on_self_+%`, P3-8n) are
         // not the curses this module casts.
         // P6-2d: impale's effect is the impale's, not a buff's or an aura's.
-        let checked = ["curse_effect_on_self_+%", "impale_debuff_effect_+%"];
+        // P6-11cj: Empower's supported level, which `skill::supported_level`
+        // reads (a `NoEffect` row so the support's own mapping is quiet).
+        let checked = [
+            "curse_effect_on_self_+%",
+            "impale_debuff_effect_+%",
+            "supported_active_skill_gem_level_+",
+        ];
         for id in ids {
             for word in GUARDED_WORDS {
                 assert!(

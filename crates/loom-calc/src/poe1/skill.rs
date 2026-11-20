@@ -702,6 +702,34 @@ pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
         .collect()
 }
 
+/// The support stat that raises the supported skill's level ("Supported
+/// Skills have +# to Level", Empower's; P6-11cj).
+pub const SUPPORTED_LEVEL_STAT: &str = "supported_active_skill_gem_level_+";
+
+/// `active` with its applied supports' [`SUPPORTED_LEVEL_STAT`] added to its
+/// level (P6-11cj; PoB's `SupportedGemProperty` `level`,
+/// `CalcActiveSkill.lua` 549 to 557: a skill from a gem, not a support).
+fn supported_level<'d>(
+    active: GemEffectRef<'d>,
+    supports: &[GemEffectRef<'_>],
+    from_gem: bool,
+    data: &dyn CalcData,
+) -> GemEffectRef<'d> {
+    if !from_gem || active.effect.support {
+        return active;
+    }
+    let extra: i64 = supports
+        .iter()
+        .flat_map(|s| instance(s.effect, s.level, s.quality, data).stats)
+        .filter(|(stat, _)| stat == SUPPORTED_LEVEL_STAT)
+        .map(|(_, v)| v)
+        .sum();
+    GemEffectRef {
+        level: active.level + extra,
+        ..active
+    }
+}
+
 /// The build's main skill (module docs), its gems at the levels `levels`
 /// gives them.
 ///
@@ -758,6 +786,7 @@ pub fn main_skill<'d>(
         .slot
         .as_ref()
         .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
+    let active_gem = supported_level(active_gem, &applied, from_gem, data);
     Ok(MainSkill {
         group: index,
         active_gem,
@@ -881,7 +910,7 @@ pub fn group_skills<'d>(
             }
         }
         out.push(GroupSkill {
-            active_gem: *active_gem,
+            active_gem: supported_level(*active_gem, &applied, from_gem, data),
             active,
             global_off: *global_off,
             supports: applied,
