@@ -1978,7 +1978,50 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // skill is inert when it is not the main skill).
     ("UniqueMirageWarriors", Kind::Inert),
     ("VaalDetonateDead", Kind::Inert),
+    // P6-11du: Vaal Discipline's buff (`act_int.lua`): energy shield
+    // recharge not delayed by damage, a `DUMMY` mod PoB's calculation never
+    // reads.
+    (
+        "VaalDiscipline",
+        Kind::Buff {
+            name: "Vaal Discipline",
+            effect: EffectType::Aura,
+            stats: &[(
+                "energy_shield_recharge_not_delayed_by_damage",
+                BuffStat::NoSlice("recharge-delay"),
+            )],
+        },
+    ),
     ("VaalFlickerStrike", Kind::Inert),
+    // P6-11du: Vaal Haste's aura (`act_dex.lua` 9171), Haste's stats; PoB
+    // merges buffs by name, so it stacks with Haste.
+    (
+        "VaalHaste",
+        Kind::Buff {
+            name: "Vaal Haste",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "attack_speed_+%_granted_from_skill",
+                    BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)]),
+                ),
+                (
+                    "base_movement_velocity_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "cast_speed_+%_granted_from_skill",
+                    BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)]),
+                ),
+            ],
+        },
+    ),
     ("VaalIceNova", Kind::Inert),
     // Vaal Molten Shell (P6-9e): a guard that takes every guard slot.
     (

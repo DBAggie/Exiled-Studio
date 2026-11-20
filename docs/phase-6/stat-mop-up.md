@@ -2412,3 +2412,17 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 
 **Evidence** (`b-ct`, against P6-11ds's run): public and corpus 0 unexpected; no value moved (the Berserker builds have other reasons). The workspace tests and clippy pass.
 
+## P6-11du: Vaal Haste and Vaal Discipline
+
+**PoB:**
+- **Vaal Haste** (`act_dex.lua` 9171): Haste's three aura stats (attack speed, cast speed, movement speed), applied whenever the skill is in an enabled group. PoB merges buffs by name, so it stacks with Haste.
+- **Vaal Discipline's** only global mod, `EnergyShieldRechargeNotDelayedByDamage`, is a `DUMMY` mod PoB's calculation never reads.
+
+**The engine:**
+- Both join `gems::SKILLS`: Vaal Haste as a buff with Haste's rows, Vaal Discipline with a `NoSlice` row.
+- **data-parity `gem_effects`** allowances: the Discipline mod in `NO_SLICE_NAMES`, and both skills' soul gain prevention skill data in `ALLOWED_BLOCKED`. `uncategorized` 0.
+
+**Fixture** `ice-nova-vaal-haste-witch.xml`: Ice Nova with Vaal Haste and Vaal Discipline in their own group. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11dt's run): public and corpus 0 unexpected; no value moved (the builds with them have other reasons). The workspace tests and clippy pass.
+

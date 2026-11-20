@@ -342,6 +342,9 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("RighteousFire", "RFLifeMultiplier"),
     // Molten Shell's reflected fire damage (P6-9e): its own hit's data.
     ("MoltenShell", "moltenShellReflect"),
+    // P6-11du: the Vaal auras' soul gain prevention duration, no slice field.
+    ("VaalDiscipline", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalHaste", "skillEffectAppliesToSoulGainPrevention"),
     ("VaalMoltenShell", "moltenShellReflect"),
     // P6-9f: inert skills' own data, read only when each is the main skill:
     // Forbidden Rite's damage from life and energy shield and its cost to
@@ -435,6 +438,9 @@ const NO_SLICE_NAMES: &[&str] = &[
     "ElusiveEffect",
     "DamageTakenWhenHit",
     "Dummy",
+    // P6-11du: Vaal Discipline's, a `DUMMY` mod PoB's calculation never
+    // reads.
+    "EnergyShieldRechargeNotDelayedByDamage",
     // Smite's aura's shock chance (P6-8a): the engine applies shock only
     // from a guaranteed source, never a chance (`base_chance_to_shock_%`).
     "EnemyShockChance",
