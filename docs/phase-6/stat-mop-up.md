@@ -1746,3 +1746,21 @@ Every computed field of both equals PoB's.
 "+# to maximum number of Spectres" is PoB's `ActiveSpectreLimit`. As the zombie and skeleton limits (P6-11m), it is a count no slice field reads, so it is a `NoEffect` row (`minion-count`).
 
 **Evidence** (`b-ct`, against P6-11cc's run): public and corpus 0 unexpected; no value or state moved (those builds' fields have other reasons).
+
+## P6-11cf: projectile damage against nearby enemies; trap and totem lines
+
+Each as PoB's parser reads the game's text:
+- "Projectiles deal #% increased Damage with Hits against nearby Enemies": `Damage` INC with `ModFlag.Projectile` and `KeywordFlag.Hit`. PoB keeps no condition for "nearby".
+- "#% increased Trap Damage": `Damage` INC, `KeywordFlag.Trap`.
+- "+#% to Critical Strike Multiplier with Totem Skills": `CritMultiplier` BASE, `KeywordFlag.Totem`.
+- "Attacks used by Totems have #% increased Attack Speed": `Speed` INC, `ModFlag.Attack` and `KeywordFlag.Totem`.
+- "Damage cannot be Reflected" is `NoEffect` (`reflect`).
+
+All are `HIT_ROWS` rows on P6-11bk's keywords.
+
+**Fixture** `burning-arrow-projectile-trap-totem-lines-templar.xml`: the projectile line raises the hit; the trap and totem lines do not reach it. The differences are Q11's floored attack rate (`DIV-0340` to `DIV-0345`).
+
+**Evidence** (`b-ct`, against P6-11ce's run):
+- **Public:** 0 unexpected; 17 values toward PoB, 1 now equal.
+- **Away:** 1 value, the Kinetic Fusillade ballista's speed (4.2 to 4.36, PoB 2.7), with the totem attack speed line PoB also applies. The engine does not model totems yet, so that build's totem speed is a partial field far from PoB's either way.
+- **Corpus:** unchanged.

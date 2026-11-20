@@ -2312,7 +2312,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
-    // P6-11b review: "Damage with Weapons Penetrates #% Elemental
+    // P6-11cf: "Projectiles deal #% increased Damage with Hits against nearby
+    // Enemies": PoB's parser keeps no condition for "nearby" (`Damage` INC,
+    // `ModFlag.Projectile`, `KeywordFlag.Hit`).
+    (
+        "projectile_damage_+%_vs_nearby_enemies",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::PROJECTILE.union(Flags::HIT),
+            NONE,
+        )],
+    ), // P6-11b review: "Damage with Weapons Penetrates #% Elemental
     // Resistances": `ElementalPenetration` BASE with `ModFlag.Weapon`
     // (each hand's weapon flag).
     (
@@ -2835,7 +2847,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
-    // P6-11bk: "#% increased Totem Damage" (`Damage` INC, `KeywordFlag.Totem`).
+    // P6-11cf: totem skills' crit multiplier, attack speed, and trap damage
+    // (PoB: `CritMultiplier` BASE, `Speed` INC with `ModFlag.Attack`, `Damage`
+    // INC, each with its `KeywordFlag`; P6-11bk's keywords).
+    (
+        "totem_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_TOTEM,
+            NONE,
+        )],
+    ), // P6-11bk: "#% increased Totem Damage" (`Damage` INC, `KeywordFlag.Totem`).
     (
         "totem_damage_+%",
         &[(
@@ -2846,7 +2870,26 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ), // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
-    // P6-11bx: "#% chance to treat Enemy Monster Elemental Resistance values
+    (
+        "totem_skill_attack_speed_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK.union(Flags::KEYWORD_TOTEM),
+            NONE,
+        )],
+    ),
+    (
+        "trap_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::KEYWORD_TRAP,
+            NONE,
+        )],
+    ), // P6-11bx: "#% chance to treat Enemy Monster Elemental Resistance values
     // as inverted" (`HitsInvertEleResChance` CHANCE, `div = 100`,
     // `SkillStatMap.lua` 821).
     (
@@ -6465,6 +6508,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
+    // P6-11cf: "Damage cannot be Reflected" (PoB: reflected damage taken, which no\nslice field reads).
+    ("damage_cannot_be_reflected", "reflect"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
