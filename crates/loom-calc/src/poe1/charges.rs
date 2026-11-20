@@ -737,6 +737,15 @@ mod tests {
         // P6-11do: Power Charge On Critical's chance (the count is the
         // config's).
         "add_power_charge_on_critical_strike_%",
+        // P6-11eb: chances on a trap or mine, a melee crit, a stun; and the
+        // frenzy charges' duration. The counts are the config's.
+        "%_chance_to_gain_frenzy_charge_on_mine_detonated_targeting_an_enemy",
+        "%_chance_to_gain_frenzy_charge_on_trap_triggered_by_an_enemy",
+        "%_chance_to_gain_power_charge_on_mine_detonated_targeting_an_enemy",
+        "%_chance_to_gain_power_charge_on_trap_triggered_by_an_enemy",
+        "chance_to_gain_endurance_charge_on_melee_crit_%",
+        "chance_to_gain_endurance_charge_when_you_stun_enemy_%",
+        "base_frenzy_charge_duration_+%",
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",
         // P6-11cz: flask charges, not power, frenzy, or endurance charges.

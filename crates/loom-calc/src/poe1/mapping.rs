@@ -6830,6 +6830,24 @@ pub struct Poe1Mapping;
 /// must revisit the rows it reaches; the guarantee holds only while it is
 /// unmapped.
 pub const NO_EFFECT: &[(&str, &str)] = &[
+    // P6-11eb: chances to gain a charge (on a trap or mine, on a melee crit, on
+    // stunning): PoB's calc never reads them; the counts are the config's.
+    (
+        "%_chance_to_gain_frenzy_charge_on_mine_detonated_targeting_an_enemy",
+        "charge-gain-chance",
+    ),
+    (
+        "%_chance_to_gain_frenzy_charge_on_trap_triggered_by_an_enemy",
+        "charge-gain-chance",
+    ),
+    (
+        "%_chance_to_gain_power_charge_on_mine_detonated_targeting_an_enemy",
+        "charge-gain-chance",
+    ),
+    (
+        "%_chance_to_gain_power_charge_on_trap_triggered_by_an_enemy",
+        "charge-gain-chance",
+    ),
     (
         "%_of_your_and_your_minions_damage_cannot_be_reflected",
         "reflect",
@@ -6919,6 +6937,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
+    // P6-11eb: lines no slice field reads: knockback chance, frenzy charge
+    // duration, mana on kill, chill duration on enemies (the chill's effect is
+    // its own), pierce and chaining range (unparsed in PoB), the atlas's and a
+    // mercenary's.
+    ("azmeri_warden_wisps_found_+%", "no-slice"),
     // P6-11dz: "#% increased Duration of Ailments on You": ailments on you, no slice
     // field.
     ("base_all_ailment_duration_on_self_+%", "ailment-on-self"),
@@ -6939,6 +6962,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_avoid_shock_%", "ailment-on-self"),
     // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
     ("base_avoid_stun_%", "stun"),
+    // P6-11eb: immunities on you (`ChillImmune`, `FreezeImmune`, `StunImmune`):
+    // no slice field.
+    ("base_cannot_be_chilled", "ailment-on-self"),
+    ("base_cannot_be_frozen", "ailment-on-self"),
+    ("base_cannot_be_stunned", "ailment-on-self"),
     ("base_chance_to_freeze_%", "freeze"),
     // P3-8n: a passive's "#% chance to Shock" (`EnemyShockChance` BASE): as
     // the skill's chance below, never the enemy's shock in the hit.
@@ -6949,6 +6977,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
     ("base_charge_duration_+%", "charge-duration"),
+    ("base_frenzy_charge_duration_+%", "no-slice"),
+    ("base_global_chance_to_knockback_%", "no-slice"),
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
     // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
     ("base_is_projectile", "skill type marker"),
@@ -6958,6 +6988,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_life_gain_per_target", "recovery"),
     // P6-11g: "Gain # Life per Enemy Killed" (`LifeOnKill` BASE).
     ("base_life_gained_on_enemy_death", "recovery"),
+    ("base_mana_gained_on_enemy_death", "no-slice"),
     // P6-11m: minion duration (`Duration` INC for minion skills): no slice
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
@@ -6997,6 +7028,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_trap_duration", "skill-duration"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
+    ("can_have_active_mercenary_follower", "no-slice"),
     ("cannot_be_blinded", "blind-on-self"),
     // P6-11f: "Corrupted Blood cannot be inflicted on you" (`CorruptedBloodImmune`): no slice field.
     ("cannot_be_inflicted_by_corrupted_blood", "ailment-on-self"),
@@ -7020,6 +7052,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ailment-on-self",
     ),
     ("cannot_have_life_leeched_from", "leech"),
+    ("cannot_pierce", "no-slice"),
     // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
     ("cast_linked_spells_on_attack_crit_%", "trigger"),
     // P6-8a part 2: PoB's `chanceToTriggerOnMeleeKill`, which no module
@@ -7047,13 +7080,26 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "caustic_arrow_explode_on_hit_base_area_of_effect_radius",
         "area",
     ),
+    ("chaining_range_+%", "no-slice"),
     (
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
     ),
+    // P6-11eb: "Projectiles have #% chance for an additional Projectile when
+    // Forking" (PoB: `ProjectileCount` BASE): as the projectile count, read
+    // only with `SequentialProjectiles` (Barrage's, a guard).
+    ("chance_to_fork_extra_projectile_%", "projectile-count"),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    (
+        "chance_to_gain_endurance_charge_on_melee_crit_%",
+        "charge-gain-chance",
+    ),
     // P6-11m: a chance to gain an endurance charge when hit (unparsed).
     ("chance_to_gain_endurance_charge_when_hit_%", "charge-gain"),
+    (
+        "chance_to_gain_endurance_charge_when_you_stun_enemy_%",
+        "charge-gain-chance",
+    ),
     (
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
@@ -7064,6 +7110,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("chance_to_unnerve_on_hit_%", "ailment-chance"),
     // P6-11u: the charges' count is the config's (`poe1::charges`).
     ("charge_duration_+%", "charge-duration"),
+    ("chill_duration_+%", "no-slice"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     (
@@ -7586,6 +7633,7 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "number_of_chains",
     ),
     // P6-11dg: Barrage's, for the bows' additional arrows.
+    ("projectiles_barrage", "chance_to_fork_extra_projectile_%"),
     ("projectiles_barrage", "number_of_additional_arrows"),
     // P6-11u: Barrage's `SequentialProjectiles`.
     ("projectiles_barrage", "number_of_additional_projectiles"),

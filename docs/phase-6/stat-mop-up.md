@@ -2540,3 +2540,17 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 
 **Evidence** (`b-ct`, against P6-11dz's run): public and corpus 0 unexpected; no value moved. The workspace tests, clippy, and rustfmt pass.
 
+## P6-11eb: eighteen lines with no slice field
+
+`NoEffect` lines, each checked against PoB's reading of its text:
+- **Chances to gain a charge** (`charge-gain-chance`): on a trap triggered or a mine detonated (frenzy and power), on a melee crit, and on stunning (endurance). PoB's calculation never reads them; the counts are the config's. The charges test lists them, with the frenzy charges' duration.
+- **Immunities on you** (`ailment-on-self`): to chill, freeze, and stun.
+- **Other lines no slice field reads** (`no-slice`):
+  - knockback chance, frenzy charge duration, mana gained on kill;
+  - chill duration on enemies (the chill's effect is its own);
+  - pierce and chaining range (unparsed in PoB);
+  - the atlas's wisps and a mercenary follower.
+- **"Projectiles have #% chance for an additional Projectile when Forking"** (`projectile-count`): PoB reads it as `ProjectileCount`, which reaches a slice field only with Barrage's `SequentialProjectiles`; that stat guards it, as the other projectile counts.
+
+**Evidence** (`b-ct`, against P6-11ea's run): public and corpus 0 unexpected; no value moved. The workspace tests, clippy, and rustfmt pass.
+
