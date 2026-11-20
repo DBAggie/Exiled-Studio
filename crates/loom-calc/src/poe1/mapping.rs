@@ -3717,6 +3717,27 @@ pub const STATE_ROWS: &[StateRow] = &[
             "AffectedByPrecision",
         )],
     ),
+    // P6-11de: "#% increased Damage with Hits and Ailments against Marked
+    // Enemy" (`Damage` INC with `KeywordFlag.Hit` or `Ailment`, enemy
+    // `Marked`). A hit's query and an ailment's never carry both flags, so
+    // one row each reads as PoB's either-flag match.
+    (
+        "damage_+%_against_enemies_marked_by_you",
+        &[
+            (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::HIT,
+                conditions::ENEMY_MARKED,
+            ),
+            (
+                Quantity::Damage,
+                Op::Increased,
+                Flags::AILMENT,
+                conditions::ENEMY_MARKED,
+            ),
+        ],
+    ),
     // P3-8n: "if you've Shattered an Enemy Recently" (1935).
     (
         "damage_+%_if_enemy_shattered_recently",
@@ -3910,6 +3931,28 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::STATIONARY,
+        )],
+    ),
+    // P6-11de: "Marked Enemy has #% increased Accuracy Rating" (an
+    // `EnemyModifier` of `Accuracy` INC, enemy `Marked`).
+    (
+        "marked_enemy_accuracy_rating_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyAccuracy),
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_MARKED,
+        )],
+    ),
+    // P6-11de: "Marked Enemy takes #% increased Damage" (an `EnemyModifier`
+    // of `DamageTaken` INC, enemy `Marked`).
+    (
+        "marked_enemy_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_MARKED,
         )],
     ),
     // P6-11o: the maximum of "Adds # to # Cold Damage while affected by Hatred".
@@ -8895,6 +8938,8 @@ mod tests {
                         conditions::USING_LIFE_FLASK,
                         // P6-11ct: from the heralds among the skills.
                         conditions::AFFECTED_BY_HERALD,
+                        // P6-11de: from the marks among the curses.
+                        conditions::ENEMY_MARKED,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -9592,6 +9637,43 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::AFFECTED_BY_HERALD,
+                )],
+            ),
+            // P6-11de: against the marked enemy, and the marked enemy's
+            // damage taken and accuracy.
+            (
+                "damage_+%_against_enemies_marked_by_you",
+                vec![
+                    config(
+                        Quantity::Damage,
+                        Op::Increased,
+                        Flags::HIT,
+                        conditions::ENEMY_MARKED,
+                    ),
+                    config(
+                        Quantity::Damage,
+                        Op::Increased,
+                        Flags::AILMENT,
+                        conditions::ENEMY_MARKED,
+                    ),
+                ],
+            ),
+            (
+                "marked_enemy_accuracy_rating_+%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyAccuracy),
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_MARKED,
+                )],
+            ),
+            (
+                "marked_enemy_damage_taken_+%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_MARKED,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.

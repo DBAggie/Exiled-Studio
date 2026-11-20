@@ -71,6 +71,11 @@ pub const AFFECTED_BY_HERALD: &str = "AffectedByHerald";
 /// curse the gem table applies ([`super::gems::curses_enemy`]).
 pub const ENEMY_CURSED: &str = "Enemy:Cursed";
 
+/// The enemy is marked (PoB's enemy `Marked`, set only by a mark in a
+/// curse slot; P6-11de): [`super::gems::marks_enemy`], unsettled when the
+/// slots' priorities decide. No config check sets it.
+pub const ENEMY_MARKED: &str = "Enemy:Marked";
+
 /// The check of [`USED_MINION_SKILL_RECENTLY`].
 pub const USED_MINION_SKILL_INPUT: &str = "conditionUsedMinionSkillRecently";
 
@@ -324,6 +329,12 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         && super::gems::curses_enemy(input, &super::gem_levels::GemLevels::none())
     {
         out.insert(key, true);
+    }
+    // The enemy marked (P6-11de): only where the skill list settles it.
+    if let Some(v) =
+        super::gems::marks_enemy(input, &super::gem_levels::GemLevels::none())
+    {
+        out.insert(ConditionKey::new(ENEMY_MARKED), v);
     }
     // Affected by a herald (P6-11ct): PoB's herald count above 0.
     let (heralds, _) = super::gems::herald_and_aura_counts(input);

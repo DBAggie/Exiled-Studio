@@ -2111,3 +2111,25 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 17 values toward PoB, none away. One build's energy shield went from 457 to 677 against PoB's 680.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11de: lines against the marked enemy
+
+**PoB** sets the enemy's `Marked` only for a mark that holds a curse slot (`CalcPerform.lua` 3304). Three lines read it:
+- "#% increased Damage with Hits and Ailments against Marked Enemy": `Damage` INC with `KeywordFlag.Hit` or `Ailment`;
+- "Marked Enemy takes #% increased Damage": the enemy's `DamageTaken` INC;
+- "Marked Enemy has #% increased Accuracy Rating": the enemy's `Accuracy` INC.
+
+**The engine:**
+- `conditions::ENEMY_MARKED` from `gems::marks_enemy`, which shares `curses_enemy`'s list of applied curse skills:
+  - false with no mark among them;
+  - true when every one is a mark, since the first takes a slot (the limit starts at 1, and a mark never loses its slot to another mark);
+  - unsettled, so a reason, when hexes and a mark compete: the slots' priorities decide, and `gems::curse_slots` runs only while the gems are applied.
+- Three `STATE_ROWS` entries. A hit's query and an ailment's never carry both flags (an ailment keeps every keyword but `Hit`), so the damage line is one row with `HIT` and one with `AILMENT`: PoB's either-flag match.
+
+**Fixture** `burning-arrow-marked-enemy-templar.xml`: Burning Arrow with Sniper's Mark and the three lines. Every computed field equals PoB's but Q11's attack rate (DIV-0390 to DIV-0395).
+
+**Evidence** (`b-ct`, against P6-11dd's run):
+- **Public:** 0 unexpected; 14 values moved, 13 toward PoB, 5 now equal (a mark build's evade chances and hits).
+- **Corpus:** 0 unexpected; 29 values moved, 28 toward PoB.
+- **Away:** one `NumberOfMitigatedDamagingHits` in each run, by under 0.02% (2.3633 to 2.3631; 0.68615 to 0.68608). It follows the evade chance, which moved toward PoB (equal to it in the public build); the field was already partial.
+- **Tests:** the workspace tests and clippy pass.
+

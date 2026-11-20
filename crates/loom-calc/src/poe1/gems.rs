@@ -2792,26 +2792,56 @@ pub fn arcane_surge_support(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
 /// [`gems`] applies each.
 #[must_use]
 pub fn curses_enemy(input: &CalcInput<'_>, levels: &GemLevels) -> bool {
+    !applied_curses(input, levels).is_empty()
+}
+
+/// Whether a mark holds a curse slot on the enemy (PoB's enemy `Marked`,
+/// `CalcPerform.lua` 3304; P6-11de), where the skill list settles it:
+/// `Some(false)` with no mark among [`curses_enemy`]'s curses, `Some(true)`
+/// when every one is a mark (the first takes a slot: PoB's limit starts at
+/// 1, and a mark never loses its slot to another mark). With hexes and a
+/// mark, the slots' priorities decide ([`curse_slots`], read only while
+/// the gems are applied): `None`, a reason.
+#[must_use]
+pub fn marks_enemy(input: &CalcInput<'_>, levels: &GemLevels) -> Option<bool> {
+    let curses = applied_curses(input, levels);
+    if !curses.contains(&true) {
+        Some(false)
+    } else if curses.iter().all(|mark| *mark) {
+        Some(true)
+    } else {
+        None
+    }
+}
+
+/// The curse skills the gem table applies to the enemy ([`curses_enemy`]),
+/// each as whether it is a mark (typed `Mark`, PoB's `isMark`).
+fn applied_curses(input: &CalcInput<'_>, levels: &GemLevels) -> Vec<bool> {
     let build = input.build;
     let Ok(groups) = skill::active_groups(build) else {
-        return false;
+        return Vec::new();
     };
     let main_group = skill::main_skill(build, input.data, levels)
         .ok()
         .map(|m| m.group - 1);
     let matches = sockets::socket_matches(build, &groups, input.data);
-    groups.iter().enumerate().any(|(g, group)| {
+    let mut out = Vec::new();
+    for (g, group) in groups.iter().enumerate() {
         let slot = group.slot.as_ref().map(|s| s.as_str());
         if (main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)))
             || skill::attribute(&group.attributes, "source").is_some()
         {
-            return false;
+            continue;
         }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        skill::group_skills(group, group_matches, input.data, levels)
-            .iter()
-            .any(|s| matches!(kind(&s.active_gem.effect.id), Some(Kind::Curse { .. })))
-    })
+        out.extend(
+            skill::group_skills(group, group_matches, input.data, levels)
+                .iter()
+                .filter(|s| matches!(kind(&s.active_gem.effect.id), Some(Kind::Curse { .. })))
+                .map(|s| s.types.contains("Mark")),
+        );
+    }
+    out
 }
 
 /// The auras the gem table applies to the character, by PoB's buff name
