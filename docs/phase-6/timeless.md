@@ -248,5 +248,5 @@ The seeds were picked so their changes carry no unmapped stat. Many Abyss additi
 - **Corpus:** no value moved.
 
 **Left:**
-- the conquests' unmapped stats (devotion, ward, the Abyss additions);
-- tattoos.
+- the conquests' unmapped stats (devotion and ward done in P6-11aw, `docs/phase-6/stat-mop-up.md`; the Abyss additions' remain);
+- tattoos (done in P6-11av, `docs/phase-6/tattoos.md`).

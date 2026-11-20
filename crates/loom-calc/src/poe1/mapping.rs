@@ -4873,6 +4873,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
     ("base_charge_duration_+%", "charge-duration"),
+    // P6-11aw: "+# to Devotion" (`Devotion` BASE), Militant Faith's
+    // conquests: it reaches a slice field only through the stats that read
+    // it (guards in [`NO_EFFECT_DEPENDS_ON`]).
+    ("base_devotion", "devotion"),
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
     // own type (`Projectile`) says it; PoB maps no row for it (P6-1).
     ("base_is_projectile", "skill type marker"),
@@ -5305,11 +5309,48 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// area of effect, scaling with energy shield, while phased) reach no slice
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
+    // P6-11aw: devotion (`Devotion` BASE) reaches a slice field only
+    // through the stats that read it, per 10 or at a threshold.
+    (
+        "additional_maximum_all_resistances_%_at_devotion_threshold",
+        "base_devotion",
+    ),
+    ("area_damage_+%_per_10_devotion", "base_devotion"),
+    (
+        "base_mana_cost_efficiency_+%_per_10_devotion",
+        "base_devotion",
+    ),
+    (
+        "channelled_skill_damage_+%_per_10_devotion",
+        "base_devotion",
+    ),
     // P3-8n: damage from a mana cost (PoB `PercentStat` of `ManaCost`).
     // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
     (
         "damage_+%_per_active_golem",
         "base_number_of_golems_allowed",
+    ),
+    ("elemental_damage_+%_per_10_devotion", "base_devotion"),
+    ("elemental_resistance_%_per_10_devotion", "base_devotion"),
+    (
+        "gain_arcane_surge_on_hit_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "immune_to_elemental_ailments_while_on_consecrated_ground_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "inflict_cold_exposure_on_hit_%_chance_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "inflict_fire_exposure_on_hit_%_chance_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "inflict_lightning_exposure_on_hit_%_chance_at_devotion_threshold",
+        "base_devotion",
     ),
     (
         "light_radius_additive_modifiers_apply_to_damage",
@@ -5320,6 +5361,15 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "light_radius_+%",
     ),
     (
+        "mana_%_to_add_as_energy_shield_at_devotion_threshold",
+        "base_devotion",
+    ),
+    ("mana_cost_+%_per_10_devotion", "base_devotion"),
+    (
+        "mana_regeneration_rate_per_minute_per_10_devotion",
+        "base_devotion",
+    ),
+    (
         "maximum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
     ),
@@ -5327,10 +5377,48 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
     ),
+    (
+        "minimum_endurance_charges_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "minimum_frenzy_charges_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "minimum_power_charges_at_devotion_threshold",
+        "base_devotion",
+    ),
+    ("minion_accuracy_rating_per_10_devotion", "base_devotion"),
+    (
+        "minion_attack_and_cast_speed_+%_per_10_devotion",
+        "base_devotion",
+    ),
     // P6-11u: projectiles counted as chains.
     (
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "number_of_additional_projectiles",
+    ),
+    ("non_curse_aura_effect_+%_per_10_devotion", "base_devotion"),
+    (
+        "non_damaging_ailment_effect_+%_per_10_devotion",
+        "base_devotion",
+    ),
+    (
+        "physical_damage_%_to_convert_to_cold_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "physical_damage_%_to_convert_to_fire_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "physical_damage_%_to_convert_to_lightning_at_devotion_threshold",
+        "base_devotion",
+    ),
+    (
+        "physical_damage_reduction_%_at_devotion_threshold",
+        "base_devotion",
     ),
     // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
     ("projectile_damage_+%_per_chain", "number_of_chains"),
@@ -5344,6 +5432,14 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     ),
     // P6-11u: Barrage's `SequentialProjectiles`.
     ("projectiles_barrage", "number_of_additional_projectiles"),
+    ("self_curse_duration_+%_per_10_devotion", "base_devotion"),
+    (
+        "self_elemental_status_duration_-%_per_10_devotion",
+        "base_devotion",
+    ),
+    ("shield_defences_+%_per_10_devotion", "base_devotion"),
+    ("sigil_damage_+%_per_10_devotion", "base_devotion"),
+    ("totem_damage_+%_per_10_devotion", "base_devotion"),
 ];
 
 /// Config inputs that would make a [`NO_EFFECT`] row reach a slice field:
@@ -5433,7 +5529,17 @@ pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 /// [`Poe1Quantity::EhpReason`]. PoB's text: P6-11n: damage taken recouped
 /// as mana (`ManaRecoup`). Lucky spell suppression is a row since P6-11al. The gains on
 /// block are [`Poe1Quantity::BlockGain`] rows since P6-11ak.
-pub const EHP_REASONS: &[&str] = &[];
+///
+/// P6-11aw, ward (Heroic Tragedy's conquests): increased ward and ward
+/// from armour items (`Ward` INC), which PoB's effective health pool reads
+/// through `output.Ward` (`CalcDefence.lua` 223); the engine has no ward
+/// pool. "#% chance to Restore Ward when you Block" PoB reads only in part,
+/// so applies none of it.
+pub const EHP_REASONS: &[&str] = &[
+    "restore_ward_on_block_%",
+    "ward_+%",
+    "ward_from_armour_item_+%",
+];
 
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to

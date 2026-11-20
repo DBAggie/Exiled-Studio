@@ -1218,3 +1218,25 @@ Both match PoB on every computed field.
 - **Corpus:** 0 unexpected; 1 value toward PoB, now equal.
 - **Data parity:** `uncategorized` 353.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle, and clippy pass.
+
+## P6-11aw: devotion and ward, the Timeless conquests' stats
+
+The stats Militant Faith's and Heroic Tragedy's conquests give (`docs/phase-6/timeless.md`, "Part 3", left them as reasons).
+
+**Devotion:**
+- `base_devotion` ("+# to Devotion", PoB's `Devotion` BASE) is `NoEffect`. Devotion reaches a slice field only through the 30 stats that read it: per 10 Devotion (`..._per_10_devotion`) or at a threshold (`..._at_devotion_threshold`).
+- Each of the 30 is a guard of the row in `NO_EFFECT_DEPENDS_ON`. They stay `unmapped-stat`, so a build with one is partial, and mapping one (even as `NoEffect`) fails the guard test until the row is revisited.
+- Militant Faith's own threshold notables (exposure on hit, mana as energy shield at 150 Devotion) remain reasons.
+
+**Ward** (`EHP_REASONS`, `Poe1Quantity::EhpReason`, the effective health pool fields' reason alone):
+- `ward_+%` and `ward_from_armour_item_+%`: PoB's `Ward` INC, which its effective health pool reads through `output.Ward` (`CalcDefence.lua` 223). The engine has no ward pool.
+- `restore_ward_on_block_%`: PoB reads "#% chance to Restore Ward when you Block" only in part (`Ward` BASE with text left over), and its tree adds no mod from such a line (`PassiveTree.lua` 816 to 836).
+- The armour pieces' local ward stays as P3-8c left it (`LOCAL_ROWS`, no effect). The ward pool is an open item (tasks file, "ward and aegis").
+
+**Fixtures** (`docs/phase-6/timeless.md`, "Part 3"):
+- `timeless-militant-faith-ice-nova-witch.xml` (seed 3191): its attribute passives become the devotion node and the other small passives gain +5 Devotion. All 77 computed fields equal PoB's. The seed was picked so its notables carry no threshold stat.
+- `timeless-heroic-tragedy-ice-nova-witch.xml` (seed 5000): its small passives gain increased Ward. 71 fields equal PoB's; the 6 effective health pool fields are partial (the ward reason).
+
+**Evidence** (b-tt, against P6-11av's run):
+- **Public and corpus:** 0 unexpected, no value moved; no build has these stats outside the fixtures.
+- **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle (the guards are stats of the real bundle), and clippy pass.
