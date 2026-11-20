@@ -214,10 +214,11 @@ fn unique_ids<'a>(table: &str, ids: impl Iterator<Item = &'a str>) -> Result<(),
 
 fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
     let t = Table::require(read, "Stats")?;
-    let (id, local, weapon) = (
+    let (id, local, weapon, scalable) = (
         t.column("Id")?,
         t.column("IsLocal")?,
         t.column("IsWeaponLocal")?,
+        t.column("IsScalable")?,
     );
     let flag = |r: &[Value], c: usize| r.get(c).and_then(Value::as_bool).unwrap_or(false);
     Ok(t.rows
@@ -227,6 +228,7 @@ fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
                 id: Table::text(r, id)?.to_owned(),
                 local: flag(r, local),
                 weapon_local: flag(r, weapon),
+                scalable: Some(flag(r, scalable)),
             })
         })
         .collect())

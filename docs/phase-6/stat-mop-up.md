@@ -1240,3 +1240,35 @@ The stats Militant Faith's and Heroic Tragedy's conquests give (`docs/phase-6/ti
 **Evidence** (b-tt, against P6-11av's run):
 - **Public and corpus:** 0 unexpected, no value moved; no build has these stats outside the fixtures.
 - **Tests:** the workspace tests, the maintainer-run tests on the evidence bundle (the guards are stats of the real bundle), and clippy pass.
+
+## P6-11ax: catalyst quality
+
+Found while tracing the Strength gaps tattoos made visible (`docs/phase-6/tattoos.md`): Lightning Trap's Mageblood has `+(25-35) to Strength` at range 1 with Intrinsic catalyst quality 20%. PoB counts 42; the engine counted nothing, because the line was a `scaled-line` reason since P3-8b (`docs/phase-3/rolled-values.md`).
+
+**The data:**
+- The bundle's stats carry the game's `IsScalable` (`loom_data::bundle::Stat::scalable`, written by `bundle`). PoB's `data.modScalability` comes from the same column (`Export/statdesc.lua` `describeScalability`).
+- The field is optional: `None` in a bundle written before, whose catalysed lines stay reasons. 16,159 of 23,362 stats are scalable.
+
+**The rule** (`loom_serialization::legacy::pob_item::line_values_with`, PoB's `Item.lua` `getCatalystScalar` and `ItemTools.lua` `formatValue`):
+- **Which lines:** a catalysed one-line reading whose `{tags}`, or `prefix` or `suffix` flag, meets the catalyst's tags, with each stat's scalability known.
+- **The values:** each stat's raw value is the roll of a ranged one (as before), else its exact value. A scalable stat becomes `floorSymmetric(raw x (100 + quality) / 100)` in PoB's order of float operations; an unscalable one keeps its value.
+- **Still reasons** (`scaled-line` `catalyst`):
+  - a stat whose scalability is not known;
+  - a multi-line reading;
+  - an untagged ranged line (the game scales it; PoB does not);
+  - the unnamed `Quality (... Modifiers)` line.
+- **The new `LineValues::Catalysed`** carries the values: unlike `Rolled`, a value may lie outside the line's range (24 becomes 28), and an exact stat's value is replaced too.
+
+**Tests:**
+- `pob_item::values::tests::known_scalability_should_settle_catalysed_lines`;
+- `ingest::tests::the_hosts_catalysed_values_should_replace_the_stats_values`.
+
+**Evidence** (evidence bundle `local/p6/packs/b-ct`, `b-tt` with the new `data/stats.json` from extract `26530219-tt`, identical but the new field; against P6-11aw's run):
+- **Public:** 0 unexpected; 196 values moved, 181 toward PoB, 15 away, 24 now equal; no state changed.
+  - Lightning Trap's Strength gains Mageblood's 42 and now equals PoB's 131 (89 since its tattoos).
+  - Poisonous Concoction's Dexterity now equals PoB's (376).
+  - **The away moves** are in builds with larger gaps. Essence Drain's life is 1 in PoB, under Chaos Inoculation. Mana reserved differs in several builds. Poisonous Concoction's Intelligence now overshoots PoB's by 10 from another source, and its energy shield follows.
+- **Corpus:** 0 unexpected; 31 moved, 30 toward PoB, 1 away, 11 now equal.
+- **Tests:** the workspace tests, the maintainer-run tests on `b-ct`, clippy, and the wasm32 check pass.
+
+**Not compared:** the `scalable` flags against PoB's `modScalability` (a `data-parity` table could; PoB keys its data by description text, not by stat).

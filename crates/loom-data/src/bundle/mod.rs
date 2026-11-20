@@ -198,6 +198,10 @@ pub struct Stat {
     /// Changes the item's weapon properties.
     #[serde(default)]
     pub weapon_local: bool,
+    /// Whether the game scales it (`IsScalable`: catalysts and other
+    /// modifier magnitudes; P6-11ax). `None` in a bundle written before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scalable: Option<bool>,
 }
 
 /// One stat of a mod row and its range.

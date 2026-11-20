@@ -95,7 +95,7 @@ Tests:
 
 ## Follow-ups
 
-- **Catalyst scaling.** Needs the game's `Stats.IsScalable` in the bundle; PoB's `data.modScalability` comes from it. The game then scales the catalysed lines, and `scaled-line` `catalyst` goes away.
+- **Catalyst scaling.** Needs the game's `Stats.IsScalable` in the bundle; PoB's `data.modScalability` comes from it. The game then scales the catalysed lines, and `scaled-line` `catalyst` goes away. *Done in P6-11ax* (`docs/phase-6/stat-mop-up.md`, "P6-11ax"): one-line readings whose stats' scalability the bundle holds; the untagged ranged lines, multi-line readings, and the unnamed catalyst line stay reasons.
 - **Modifier magnitudes and corrupted ranges:** the same, with their own scalars.
 - **PoB's `<ModRange>` list order**, for uniques with variant lines such as the Watcher's Eye above.
 

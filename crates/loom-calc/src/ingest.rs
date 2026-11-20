@@ -148,6 +148,24 @@ fn rolled(stats: &[StatLine], values: &[Option<i64>]) -> Option<Vec<StatLine>> {
         .collect()
 }
 
+/// A line's stats with the adapter's scaled values ([`LineValues::Catalysed`]);
+/// `None` when the counts differ.
+fn catalysed(stats: &[StatLine], values: &[Option<i64>]) -> Option<Vec<StatLine>> {
+    (stats.len() == values.len()).then(|| {
+        stats
+            .iter()
+            .zip(values)
+            .map(|(s, v)| match v {
+                None => s.clone(),
+                Some(v) => StatLine {
+                    stat: s.stat.clone(),
+                    value: StatValue::Exact { min: *v, max: *v },
+                },
+            })
+            .collect()
+    })
+}
+
 /// Builds the modifier store from a build's content.
 pub struct Ingest<'m> {
     mapping: &'m dyn StatMapping,
@@ -359,6 +377,7 @@ impl<'m> Ingest<'m> {
                     Resolved::Stats(stats) => {
                         let rolled = match host {
                             Some(LineValues::Rolled(values)) => rolled(stats, values),
+                            Some(LineValues::Catalysed(values)) => catalysed(stats, values),
                             _ => None,
                         };
                         for s in rolled.as_deref().unwrap_or(stats) {
@@ -696,6 +715,34 @@ mod tests {
             result: Resolved::Stats(stats),
             adapted: None,
         }
+    }
+
+    /// A catalysed line (P6-11ax): the host's values replace the stats'
+    /// own, beyond the range and on an exact stat too; another number of
+    /// stats is ignored.
+    #[test]
+    fn the_hosts_catalysed_values_should_replace_the_stats_values() {
+        let item = ItemId(6);
+        let lines: ItemLines = BTreeMap::from([(
+            item,
+            BTreeMap::from([
+                (0, LineValues::Catalysed(vec![Some(4), Some(28)])),
+                (1, LineValues::Catalysed(vec![Some(28)])),
+            ]),
+        )]);
+        let pair = || {
+            vec![
+                line("life", exact(3)),
+                line("life", StatValue::Ranged { min: 16, max: 24 }),
+            ]
+        };
+        let mut i = Ingest::new(&Map).with_item_lines(&lines);
+        i.item_line(item, 0, &ranged_line(pair()));
+        i.item_line(item, 1, &ranged_line(pair()));
+        let (store, reasons) = i.finish();
+        let values: Vec<f64> = store.effects().iter().map(|e| e.value).collect();
+        assert_eq!(values, [4.0, 28.0, 3.0]);
+        assert_eq!(reasons.indeterminate.len(), 1, "line 1 unsettled");
     }
 
     #[test]

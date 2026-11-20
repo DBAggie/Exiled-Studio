@@ -759,6 +759,13 @@ pub enum LineValues {
     /// order (`None`: the resolution's own value). The engine takes them
     /// only when the line resolved to that many stats.
     Rolled(Vec<Option<i64>>),
+    /// The line's values after a scaling the adapter settled (a catalyst's
+    /// quality, P6-11ax): each stat's raw value, in order (`None`: the
+    /// resolution's own value). Unlike [`Self::Rolled`], a value may lie
+    /// outside the resolution's range, and an exact stat's value is
+    /// replaced too. The engine takes them only when the line resolved to
+    /// that many stats.
+    Catalysed(Vec<Option<i64>>),
     /// The format scales the line's values in a way the engine does not
     /// model: the line gives no effect and the fields are `Partial`
     /// (`scaled-line` with the scaling's name).

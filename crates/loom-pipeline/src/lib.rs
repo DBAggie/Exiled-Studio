@@ -827,7 +827,15 @@ pub fn options_with(
         })
         .collect();
     // PoB's rules for values the text does not settle (rolls, scalings):
-    // the adapter's, from the ranges' exact ends the resolver read.
+    // the adapter's, from the ranges' exact ends the resolver read, and
+    // the stats' scalability for catalysts (P6-11ax).
+    let scalability: BTreeMap<&str, bool> = data
+        .bundle()
+        .stats
+        .iter()
+        .filter_map(|s| Some((s.id.as_str(), s.scalable?)))
+        .collect();
+    let scalable = |stat: &str| scalability.get(stat).copied();
     let item_lines = build
         .items
         .items()
@@ -846,7 +854,7 @@ pub fn options_with(
                         .collect()
                 })
                 .unwrap_or_default();
-            let values = pob_item::line_values(item, &item_ends);
+            let values = pob_item::line_values_with(item, &item_ends, &scalable);
             (!values.is_empty()).then_some((item.id, values))
         })
         .collect();
