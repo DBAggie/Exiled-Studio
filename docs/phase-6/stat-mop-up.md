@@ -1638,3 +1638,20 @@ Every computed field of both equals PoB's.
 **Evidence** (`b-ct`, against P6-11bv's run):
 - **Public:** 0 unexpected; 9 values toward PoB (two spell builds' damage and DPS), none away.
 - **Corpus:** unchanged.
+
+## P6-11bx: elemental resistances treated as inverted
+
+"Hits have #% chance to treat Enemy Monster Elemental Resistance values as inverted" is PoB's `HitsInvertEleResChance` CHANCE, the stat over 100 (`SkillStatMap.lua` 821).
+
+PoB's hit (`CalcOffence.lua` 3478 to 3500), for an elemental type: the chance `c` is clamped to [0, 1], and the effective resistance is `(resist - pen) x (1 - c) + (-resist - pen) x c`.
+
+What the engine does:
+- `Poe1Quantity::InvertElementalResistChance` is a `HIT_ROWS` row (divisor 100), read by the skill mapping as a hit quantity too.
+- `hit::effective_resistance` takes that form when the store has the chance. Other hits keep their graph.
+- Chaos's own chance (`HitsInvertChaosResChance`) and PoB's `CannotElePenIgnore` branch have no source in the engine.
+
+**Fixture** `ice-nova-inverted-resistance-witch.xml`: a 25% chance and 10% cold penetration against the default Pinnacle boss. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11bw's run):
+- **Public:** 0 unexpected; 9 values toward PoB, none away.
+- **Corpus:** 0 unexpected; 11 values toward PoB, none away.

@@ -141,6 +141,10 @@ pub enum Poe1Quantity {
     /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
     /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
     SpellDamagePer100Mana,
+    /// A chance to treat the enemy's elemental resistances as inverted
+    /// (P6-11bx; PoB's `HitsInvertEleResChance` CHANCE, the stat over 100):
+    /// `Base`, a fraction, read by the hit's effective resistance.
+    InvertElementalResistChance,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1022,6 +1026,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
+            Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

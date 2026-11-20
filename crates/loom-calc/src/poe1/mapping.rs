@@ -2824,6 +2824,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ), // P6-11b: "#% increased Accuracy Rating with Two Handed Melee Weapons": `Accuracy` INC, `ModFlag.Weapon2H`, `WeaponMelee`, `Hit`.
+    // P6-11bx: "#% chance to treat Enemy Monster Elemental Resistance values
+    // as inverted" (`HitsInvertEleResChance` CHANCE, `div = 100`,
+    // `SkillStatMap.lua` 821).
+    (
+        "treat_enemy_resistances_as_negated_on_elemental_damage_hit_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::InvertElementalResistChance),
+            Op::Base,
+            100.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "two_handed_melee_accuracy_rating_+%",
         &[(
@@ -3052,6 +3065,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     // Ruthless (P6-11bt).
                     | Poe1Quantity::Ruthless(_)
+                    // P6-11bx.
+                    | Poe1Quantity::InvertElementalResistChance
                     | Poe1Quantity::SkillConversion(..)
                     | Poe1Quantity::Conversion(..)
                     // Gain as extra (P6-11bp; PoB's `SkillStatMap.lua` 925

@@ -2743,6 +2743,38 @@ fn effective_resistance(
         Term::Step("penetration"),
         reasons,
     )?;
+    // A chance to treat elemental resistances as inverted (P6-11bx;
+    // `CalcOffence.lua` 3478 to 3500): `(resist - pen) x (1 - c) + (-resist
+    // - pen) x c`, `c` the chance clamped to [0, 1]; only when the store has
+    // one, so other hits keep their graph.
+    let invert = Quantity::Poe1(Poe1Quantity::InvertElementalResistChance);
+    if t != DamageType::Chaos && phases::has(calc, invert) {
+        let chance = sum_in(
+            calc,
+            invert,
+            Op::Base,
+            cx,
+            Term::Step("invert-chance"),
+            reasons,
+        )?;
+        let one = phases::constant(calc, "one", 1.0)?;
+        let zero = phases::constant(calc, "zero", 0.0)?;
+        let chance = phases::pair(calc, chance, one, Term::Step("invert-capped"), true)?;
+        let chance = phases::pair(calc, chance, zero, Term::Step("invert-floored"), false)?;
+        if chance.value > 0.0 {
+            let kept = difference(calc, resist, pen, Term::Step("resistance-kept"))?;
+            let negated = difference(calc, zero, resist, Term::Step("resistance-inverted"))?;
+            let inverted = difference(calc, negated, pen, Term::Step("inverted-kept"))?;
+            let rest = difference(calc, one, chance, Term::Step("not-inverted-share"))?;
+            let a = phases::product(calc, &[kept, rest], Term::Step("resistance-not-inverted"))?;
+            let b = phases::product(
+                calc,
+                &[inverted, chance],
+                Term::Step("resistance-inverted-share"),
+            )?;
+            return phases::total(calc, &[a, b], Term::Step("effective-resistance"));
+        }
+    }
     difference(calc, resist, pen, Term::Step("effective-resistance"))
 }
 

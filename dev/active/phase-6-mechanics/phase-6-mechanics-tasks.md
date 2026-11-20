@@ -146,6 +146,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11bq: life regeneration per endurance charge (`PerCharge::LifeRegenPerMinute`); a test, no fixture (a per-minute line from text is unsettled) (`docs/phase-6/stat-mop-up.md`, "P6-11bq")
 - [x] P6-11br: five NoEffect rows (stun, gem experience, projectile directions, two flask lines) (`docs/phase-6/stat-mop-up.md`, "P6-11br")
 - [x] P6-11bu: life regeneration per fortification (`RegenPerFortification`, `enemy_hit::fortification_stacks`); a test (`docs/phase-6/stat-mop-up.md`, "P6-11bu")
+- [x] P6-11bx: elemental resistances treated as inverted (`InvertElementalResistChance`); fixture `ice-nova-inverted-resistance-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bx")
 - [x] P6-11bv: while Leeching (the four checks in `conditions::CHECKS`, the automatic case's stats in `config::DEPENDS_ON`, seven state rows); fixture `ice-nova-leeching-lines-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bv")
 - [x] P6-11bw: spell damage per 100 maximum mana (`hit::spell_damage_per_mana`, a computed term in the damage increase, as `phases::per_5`); fixtures `ice-nova-spell-damage-per-mana-below-witch.xml`, `ice-nova-spell-damage-per-mana-capped-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11bw")
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it
