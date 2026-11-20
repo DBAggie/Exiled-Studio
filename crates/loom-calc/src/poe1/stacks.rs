@@ -94,6 +94,9 @@ pub enum StackKind {
     Herald,
     /// Nearby enemies (P6-11v).
     NearbyEnemies,
+    /// Hits taken recently (P6-11cg; PoB's `Multiplier:BeenHitRecently`,
+    /// the config's `multiplierBeenHitRecently`).
+    HitsTakenRecently,
 }
 
 impl StackKind {
@@ -109,6 +112,7 @@ impl StackKind {
             Self::AuraOrHerald => "aura-or-herald",
             Self::Herald => "herald",
             Self::NearbyEnemies => "nearby-enemies",
+            Self::HitsTakenRecently => "hits-taken-recently",
         }
     }
 }
@@ -166,6 +170,9 @@ pub enum PerStack {
     /// Physical damage reduction while only one enemy is nearby
     /// (`PhysicalDamageReduction` BASE, P6-11v).
     PhysicalReductionIfOnlyOne,
+    /// Physical damage reduction (`PhysicalDamageReduction` BASE), its
+    /// total at most 5 (P6-11cg).
+    PhysicalReductionUpTo5,
 }
 
 impl PerStack {
@@ -182,6 +189,7 @@ impl PerStack {
             Self::PhysicalReductionUpTo8 => "per.physical-reduction-up-to-8",
             Self::MovementSpeedUpTo8 => "per.movement-speed-up-to-8",
             Self::PhysicalReductionIfOnlyOne => "per.physical-reduction-if-only-one",
+            Self::PhysicalReductionUpTo5 => "per.physical-reduction-up-to-5",
         }
     }
 
@@ -203,7 +211,9 @@ impl PerStack {
             }
             Self::AreaDamageMore => (Quantity::Damage, Op::More, Flags::AREA, Flags::NONE),
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE, Flags::NONE),
-            Self::PhysicalReductionUpTo8 | Self::PhysicalReductionIfOnlyOne => (
+            Self::PhysicalReductionUpTo8
+            | Self::PhysicalReductionIfOnlyOne
+            | Self::PhysicalReductionUpTo5 => (
                 Quantity::Poe1(Poe1Quantity::DamageReduction(
                     crate::quantity::DamageType::Physical,
                 )),
@@ -318,6 +328,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::NearbyEnemies,
         StackValue::Per(PerStack::PhysicalReductionIfOnlyOne),
     ),
+    // P6-11cg: "#% additional Physical Damage Reduction for each Hit you've
+    // taken Recently up to a maximum of 5%" (`PhysicalDamageReduction` BASE
+    // per `Multiplier:BeenHitRecently`, `limit` 5, `limitTotal`).
+    (
+        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
+        StackKind::HitsTakenRecently,
+        StackValue::Per(PerStack::PhysicalReductionUpTo5),
+    ),
     (
         "physical_damage_reduction_%_per_nearby_enemy",
         StackKind::NearbyEnemies,
@@ -364,6 +382,10 @@ pub const NEARBY_INPUT: &str = "multiplierNearbyEnemies";
 /// The total limit of Lunaris's "for each nearby Enemy, up to 8%" (the
 /// stat descriptions' fixed text; P6-11v).
 pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
+
+/// The total of physical damage reduction per hit taken recently (PoB's
+/// `limit = 5`, `limitTotal`, from the text "up to a maximum of 5%").
+pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
 pub const INPUTS: [&str; 6] = [
@@ -567,6 +589,38 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Err(()) => ingest.reason(reason(SPELLS_INPUT)),
             Ok(None) => {}
             Ok(Some(n)) => apply(ingest, &effects, multiplier(n), None),
+        }
+    }
+
+    // Hits taken recently (P6-11cg): the config's count, each effect's total
+    // at most 5.
+    let effects = per(ingest, StackKind::HitsTakenRecently);
+    if !effects.is_empty() {
+        let input = super::conditions::HIT_RECENTLY_COUNT_INPUT;
+        match count(set, input, false) {
+            Err(()) => ingest.reason(reason(input)),
+            Ok(None) => {}
+            Ok(Some(n)) => {
+                let n = multiplier(n);
+                for e in &effects {
+                    let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity
+                    else {
+                        continue;
+                    };
+                    let value = (e.value * n).min(HITS_TAKEN_LIMIT_TOTAL);
+                    if value == 0.0 {
+                        continue;
+                    }
+                    let (quantity, op, all, any) = p.target();
+                    ingest.effect(Effect {
+                        quantity,
+                        op,
+                        value,
+                        conditions: Conditions::none().with_all(all).with_any(any),
+                        source: e.source.clone(),
+                    });
+                }
+            }
         }
     }
 

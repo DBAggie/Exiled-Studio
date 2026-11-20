@@ -7101,13 +7101,11 @@ pub const REGEN_REASONS: &[(&str, Pool)] = &[
 ];
 
 /// Stats that change the base damage reduction in a way the engine does not
-/// model, sorted (P6-10b part 5): PoB's `PhysicalDamageReduction` BASE per
-/// hit taken recently (`ModParser.lua`; a multiplier the engine does not
-/// settle). Per nearby enemy and with only one enemy nearby are
-/// [`super::stacks`]'s (P6-11v). A field marker ([`field_marker`]) read by
+/// model, sorted (P6-10b part 5). Empty since P6-11cg: per hit taken
+/// recently, per nearby enemy, and with only one enemy nearby are
+/// [`super::stacks`]'s. A field marker ([`field_marker`]) read by
 /// [`super::reduction`] alone.
-pub const REDUCTION_REASONS: &[&str] =
-    &["physical_damage_reduction_%_per_hit_you_have_taken_recently"];
+pub const REDUCTION_REASONS: &[&str] = &[];
 
 /// Stats that change a hit's rate or DPS in a way the engine does not model,
 /// sorted (P6-8a): PoB's `showAverage` (`SkillStatMap.lua` 136), which

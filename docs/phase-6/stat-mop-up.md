@@ -1764,3 +1764,16 @@ All are `HIT_ROWS` rows on P6-11bk's keywords.
 - **Public:** 0 unexpected; 17 values toward PoB, 1 now equal.
 - **Away:** 1 value, the Kinetic Fusillade ballista's speed (4.2 to 4.36, PoB 2.7), with the totem attack speed line PoB also applies. The engine does not model totems yet, so that build's totem speed is a partial field far from PoB's either way.
 - **Corpus:** unchanged.
+
+## P6-11cg: physical damage reduction per hit taken recently
+
+"#% additional Physical Damage Reduction for each Hit you've taken Recently up to a maximum of 5%" is PoB's `PhysicalDamageReduction` BASE per `Multiplier:BeenHitRecently`, `limit` 5, `limitTotal`.
+- **The count** is the config's `multiplierBeenHitRecently`. The "hit recently" check alone sets no count.
+- **The engine:** a new stack kind `stacks::StackKind::HitsTakenRecently` reads that input (with `conditions::HIT_RECENTLY_COUNT_INPUT`, which also settles the condition). `PerStack::PhysicalReductionUpTo5` caps the total at 5.
+- **Reasons:** the stat leaves `mapping::REDUCTION_REASONS`, now empty.
+
+**Fixture** `ehp-reduction-per-hit-taken-ice-nova-witch.xml`: 3 hits and 2% each, 6% capped at 5%. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cf's run):
+- **Public:** 0 unexpected; 8 values toward PoB, none away. 32 fields went from partial (the field's reason) to complete.
+- **Corpus:** unchanged.
