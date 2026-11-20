@@ -2449,6 +2449,21 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11di: "#% increased Brand Damage" (`Damage` INC with
+    // `KeywordFlag.Brand`, which PoB sets from the `Brand` skill type, as
+    // `Flags::SKILL_BRAND`; P6-11cx). A brand is not a main skill whose hit
+    // the engine computes, so the row keeps the line from being a reason on
+    // other skills, as in PoB.
+    (
+        "sigil_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SKILL_BRAND,
+            NONE,
+        )],
+    ),
     // P6-11n: the skill's own physical conversion to chaos
     // (`SkillPhysicalDamageConvertToChaos` BASE), as the cold one.
     (

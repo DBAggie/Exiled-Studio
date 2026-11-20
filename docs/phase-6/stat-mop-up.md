@@ -2182,3 +2182,18 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; 12 values toward PoB, 6 now equal.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11di: brand damage
+
+**PoB** reads "#% increased Brand Damage" (`sigil_damage_+%`) as `Damage` INC with `KeywordFlag.Brand`, which a skill gets from its `Brand` type: P6-11cx's `Flags::SKILL_BRAND`.
+
+**The engine:** a `HIT_ROWS` row. A brand is not a main skill whose hit the engine computes (`hit::NOT_SELF_CAST`), so the row only keeps the line from being a reason on other skills, as in PoB.
+
+**Not done:**
+- "Enemies take #% increased Damage for each of your Brands Attached to them" needs PoB's attached brand count (`CalcPerform.lua` 1320 to 1332).
+- The travel skills' cooldown recovery needs a per-skill-type cooldown.
+- The totem lines (damage per summoned totem, the totem limit) need PoB's `TotemsSummoned`. Totem skills are partial on `totem-data` meanwhile.
+
+All stay reasons.
+
+**Evidence** (`b-ct`, against P6-11dh's run): public and corpus 0 unexpected; no value moved (the brand builds have other reasons). The workspace tests and clippy pass.
+
