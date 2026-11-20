@@ -144,6 +144,12 @@ pub enum Poe1Quantity {
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
+    /// Trap throwing speed (PoB's `TrapThrowingSpeed`; P6-11cy):
+    /// `Increased` and `More`, read by [`hit`]'s trap rate.
+    TrapThrowingSpeed,
+    /// Mine laying speed (PoB's `MineLayingSpeed`; P6-11cy): `Increased`
+    /// and `More`, read by [`hit`]'s mine rate.
+    MineLayingSpeed,
     /// A chance to treat the enemy's elemental resistances as inverted
     /// (P6-11bx; PoB's `HitsInvertEleResChance` CHANCE, the stat over 100):
     /// `Base`, a fraction, read by the hit's effective resistance.
@@ -1083,6 +1089,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
+            Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),
+            Self::MineLayingSpeed => f.write_str("mine-laying-speed"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),

@@ -2022,3 +2022,24 @@ Every other computed field equals PoB's.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cy: trap throwing and mine laying speed; Trap and Mine Damage
+
+**PoB** (`CalcOffence.lua` 1223 to 1337) sets a trap's rate to `1 / TrapThrowingTime × calcLib.mod(TrapThrowingSpeed) × ActionSpeedMod`, at most the server tick rate, and a mine's alike with `MineLayingSpeed`. The engine had the base time and the action speed (P6-6e); the speed modifiers were unmapped stats.
+
+**The engine:**
+- `Poe1Quantity::TrapThrowingSpeed` and `MineLayingSpeed` (hit quantities). The trap or mine rate multiplies by their `Increased` and `More` when the store has any.
+- **Rows** (`HIT_ROWS`):
+  - "#% increased Trap Throwing Speed" and "#% increased Mine Throwing Speed" (INC);
+  - Trap and Mine Damage's less throwing and laying speed (MORE);
+  - its more damage (`Damage` MORE with either `KeywordFlag.Trap` or `Mine`);
+  - Trap Support's more trap damage (`support_trap_damage_+%_final`, `SkillStatMap.lua` 1777).
+- **`NoEffect`:** the supports' player-versus-player scaling (`pvp`), and "cannot support melee attacks" (`skill type marker`).
+- **Not done:** mines. Blastchain Mine's own stats stay reasons: its costs as reservation (`remote_mined_by_support`, PoB's `ManaCostGainAsReservation`), its more mine damage, and its detonation. So a mine skill's fields stay partial (tasks file).
+
+**Fixture** `ice-nova-trap-throwing-speed-witch.xml`: Ice Nova with Trap and Trap and Mine Damage, and 25% increased trap throwing speed. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cx's run):
+- **Public:** 0 unexpected; 9 values toward PoB (a trap build's and a mine build's rate and damage), none away.
+- **Corpus:** 0 unexpected; 10 values toward PoB and 2 now equal, none away.
+- **Tests:** the workspace tests and clippy pass.
+

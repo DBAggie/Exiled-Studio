@@ -2131,8 +2131,10 @@ fn cast_rate(
     // throwing or laying time (`skillData.timeOverride`, `CalcOffence.lua`
     // 1223 to 1337, 2208): `1 / min(1 / base x action speed, tick rate)`,
     // a mine's when it is both (PoB's mine path sets the time), one
-    // thrown (throw counts and trap or mine speed are not read: the
-    // reason). Cast speed does not reach it.
+    // thrown (throw counts are not read: the reason). Cast speed does not
+    // reach it. The throwing or laying speed modifiers (P6-11cy):
+    // `baseSpeed x calcLib.mod(TrapThrowingSpeed)` (or `MineLayingSpeed`)
+    // `x ActionSpeedMod` (1229, 1317).
     let mine = spell.skill.types.contains("RemoteMined");
     if mine || spell.skill.types.contains("Trapped") {
         let base = if mine {
@@ -2152,6 +2154,21 @@ fn cast_rate(
         let one = phases::constant(calc, "one", 1.0)?;
         let speed = quotient(calc, one, base, Term::Step("throwing-speed"))?;
         let mut reasons = Reasons::new();
+        let q = Quantity::Poe1(if mine {
+            Poe1Quantity::MineLayingSpeed
+        } else {
+            Poe1Quantity::TrapThrowingSpeed
+        });
+        let speed = if phases::has(calc, q) {
+            let (inc, more) = modifiers_of(calc, q, cx, &mut reasons)?;
+            phases::product(
+                calc,
+                &[speed, inc, more],
+                Term::Step("throwing-speed-modified"),
+            )?
+        } else {
+            speed
+        };
         let speed = action_speed(calc, speed, &mut reasons)?;
         let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
         let value = phases::pair(calc, speed, cap, Term::Result, true)?;

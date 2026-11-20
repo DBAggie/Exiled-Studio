@@ -2191,6 +2191,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11cy: "#% increased Mine Throwing Speed" (`MineLayingSpeed` INC).
+    (
+        "mine_laying_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MineLayingSpeed),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
@@ -2832,6 +2843,45 @@ pub const HIT_ROWS: &[HitRow] = &[
             DAMAGING_AILMENTS,
         )],
     ),
+    // P6-11cy: Trap and Mine Damage's more damage (`Damage` MORE with `bor(KeywordFlag.Trap, KeywordFlag.Mine)`, either keyword).
+    (
+        "support_trap_and_mine_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            NONE,
+            Flags::KEYWORD_TRAP.union(Flags::KEYWORD_MINE),
+        )],
+    ),
+    // P6-11cy: Trap and Mine Damage's less laying speed (`MineLayingSpeed` MORE).
+    (
+        "support_trap_and_mine_damage_mine_throwing_speed_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MineLayingSpeed),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // P6-11cy: Trap and Mine Damage's less throwing speed (`TrapThrowingSpeed` MORE).
+    (
+        "support_trap_and_mine_damage_trap_throwing_speed_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TrapThrowingSpeed),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // P6-11cy: Trap Support's more trap damage (`Damage` MORE,
+    // `KeywordFlag.Trap`, `SkillStatMap.lua` 1777).
+    (
+        "support_trap_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::KEYWORD_TRAP, NONE)],
+    ),
     // P6-11b: "+# to Accuracy Rating with Swords": `Accuracy` BASE, `ModFlag.Sword` and `Hit`.
     (
         "sword_accuracy_rating",
@@ -2952,6 +3002,17 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ), // P6-11bx: "#% chance to treat Enemy Monster Elemental Resistance values
+    // P6-11cy: "#% increased Trap Throwing Speed" (`TrapThrowingSpeed` INC).
+    (
+        "trap_throwing_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TrapThrowingSpeed),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // as inverted" (`HitsInvertEleResChance` CHANCE, `div = 100`,
     // `SkillStatMap.lua` 821).
     (
@@ -3192,6 +3253,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     // Ruthless (P6-11bt).
                     | Poe1Quantity::Ruthless(_)
+                    // Trap and mine speeds (P6-11cy).
+                    | Poe1Quantity::TrapThrowingSpeed
+                    | Poe1Quantity::MineLayingSpeed
                     // P6-11bx.
                     | Poe1Quantity::InvertElementalResistChance
                     | Poe1Quantity::SkillConversion(..)
@@ -6690,6 +6754,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("debuff_time_passed_+%", "ailment-on-self"),
+    // P6-11cy: a support that cannot support melee attacks (which supports apply is the skill's types').
+    ("disable_skill_if_melee_attack", "skill type marker"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
     (
@@ -6865,6 +6931,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11f: "+# metres to Melee Strike Range" (`MeleeWeaponRangeMetre`, `UnarmedRangeMetre`): no slice field.
     ("melee_range_+", "range"),
     ("mine_duration_+%", "skill-duration"),
+    // P6-11cy: the trap and mine supports' player-versus-player scaling.
+    ("mine_override_pvp_scaling_time_ms", "pvp"),
     (
         "minimum_lightning_damage_to_return_to_melee_attacker",
         "reflect",
@@ -6993,6 +7061,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_greater_spell_echo_area_of_effect_+%_per_repeat",
         "area",
     ),
+    ("support_makes_skill_mine_pvp_damage_+%_final", "pvp"),
+    ("support_makes_skill_trap_pvp_damage_+%_final", "pvp"),
     // P6-8b: the mirage's less attack speed, read by `poe1::combined` for
     // the mirage's copy alone.
     ("support_mirage_archer_attack_speed_+%_final", "mirage"),
