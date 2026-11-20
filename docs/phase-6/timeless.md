@@ -89,7 +89,7 @@ So no implementation of the generator can ship under the project's MIT licence (
 2. **PoB's lookup tables into the bundle:** a compact form of the five original types' results (170 MB of zip parts in PoB, the Abyss types included), read by the engine through the bundle (ADR-016: no file I/O in core crates), with a `data-parity` table against PoB's own.
 3. **The engine:** the replaced and added nodes in a Timeless jewel's radius, and the replacement keystones (P6-11ao's `TimelessKeystone` reason).
 
-Until then, a timeless jewel stays the reason it is today: its stats are unmapped, and the nodes it changes are not modelled.
+Until then, a timeless jewel stays the reason it is today: its stats are unmapped, and the nodes it changes are not modelled. (Done for the six types that are not Abyss jewels: "Part 3".)
 
 ## Part 2: the tables in the bundle (2026-11-19)
 
@@ -137,3 +137,64 @@ The plan is `dev/active/phase-6-mechanics/p6-10a-timeless-plan.md`, decided by t
 - the app reading a type's file on demand;
 - the jewel's type, seed, and conqueror from its lines;
 - the replaced and added nodes in its radius, and the conqueror's keystone.
+
+## Part 3: the engine (2026-11-19)
+
+Plan steps 2 and 3 (`dev/active/phase-6-mechanics/p6-10a-timeless-plan.md`), for the six types that are not Abyss jewels. The nodes a Timeless jewel conquers now carry the conquest's stats, as PoB's `PassiveSpec.lua` 1102 to 1376 gives them.
+
+**Where it is:**
+- `loom_pipeline::timeless` (core, no I/O):
+  - **`socketed`:** each Timeless jewel in an allocated socket, with its type, seed, conqueror, and version from its stats (`local_unique_jewel_alternate_tree_version`, `_seed`, `_keystone`, `_internal_revision`) and its `Radius:` line's ring.
+  - **`conquests`:** every node in the ring that is a keystone, notable, or normal passive of the tree itself. Class starts, sockets, ascendancy nodes, masteries, and cluster jewels' generated nodes are left out; PoB's `nodesInRadius` holds none of them.
+  - **`needed`:** the types a build's jewels need, so the host reads only those results files.
+- **The seed is the rolled value:** read from the line values PoB's ranges settle (`Rolls`, the import's item line values), never a range's minimum.
+  - Elegant Hubris's line shows the seed times 20 (the bundle's `seed_divisor`).
+  - The version is the range's minimum: the description's "1 and above" reads as 1.
+- **The data:** `TimelessData` holds the extracted tables, the mapping, and the results bytes the host read.
+  - `loom_app::GameData::timeless_results` reads a type's file on demand and checks its size and SHA-256 against the manifest (plan decision T2).
+  - `loom-parity-cli calc-run` preloads the six types.
+  - Without the data, each node the jewel conquers is a reason (`timeless-results`).
+- **`loom_calc::input::ResolvedPassives.conquered`:** each conquered node's `Conquest`, whether it replaces the node's own stats, and the stats it gives. `collect` ingests them in place of, or beside, the node's lines.
+  - P6-11ao's `PassiveState::TimelessKeystone` is gone: a keystone in the radius becomes the conqueror's keystone row, its stats applied (or a reason when the stat is unmapped).
+
+**The rules, as PoB's:**
+- **A keystone:** the row of the jewel type with the conqueror's index and version that replaces keystones (passive type 4).
+- **A notable:** the results file (`loom_data::bundle::timeless::read`, PoB's `readLUT`): a replacement takes its row's stats (Glorious Vanity's rolls, else the row's fixed values), and an addition adds its row's.
+- **A Glorious Vanity small passive:** the results file, as a notable.
+- **Another type's small passive:** by the tree version's flags, the one replacement row, or the one addition row, of passive type attribute (1) when the node is named Strength, Dexterity, or Intelligence, else normal (2).
+- **Glorious Vanity's additions:** the node becomes Might of the Vaal (row 76) or Legacy of the Vaal (row 77) by PoB's bias (at least half the IDs at most 21 is Might), each addition's rolls summed.
+
+**Two changes made on the way:**
+- **The parser:** the selected lines and the lines of variants not selected each form their own runs, and each runs on past the other's.
+  - A Timeless jewel with variants (Cyclone's Lethal Pride) has its conqueror line and its "Passives in radius are Conquered by the Karui" line with the other conquerors' lines between them. Before, those lines broke the run, so the two-line description never resolved and the jewel was never read.
+  - `ItemBody::check_links` follows the same rule: a continuation follows its line among the lines of its own selection.
+  - `build-round-trip` on b-tl: the public fixtures' unresolved lines went from 315 to 279 (18 two-line descriptions now resolve); the corpus's went from 372 to 370. Nothing else changed.
+- **The mapping:**
+  - `damage_taken_goes_to_life_over_4_seconds_%` is life recoup (`Poe1Quantity::LifeRecoup`), read by `enemy_hit` for PoB's `anyRecoup` as mana recoup is.
+  - `base_avoid_bleed_%` and `base_avoid_poison_%` are `NoEffect` (`ailment-on-self`).
+  - The jewel's own stats are `NoEffect` prefixes: they act through the conquered nodes.
+
+**Fixtures:** four new mechanic fixtures. Each is a level 90 Witch casting Ice Nova, with the jewel in socket 41263 and the passives of its Large radius that connect to the path allocated.
+- The fixtures:
+  - `timeless-glorious-vanity-ice-nova-witch.xml` (seed 1200);
+  - `timeless-brutal-restraint-ice-nova-witch.xml`;
+  - `timeless-elegant-hubris-ice-nova-witch.xml`;
+  - `timeless-lethal-pride-ice-nova-witch.xml`.
+- Each matches PoB in all 77 computed fields.
+- Militant Faith and Heroic Tragedy fixtures were built the same way, with no value differences from PoB. They are not added, because their conquests give stats still unmapped: devotion (`base_devotion` and the devotion thresholds), and ward (`ward_+%`, `ward_from_armour_item_+%`, `restore_ward_on_block_%`).
+- The Glorious Vanity seed was picked so its conquests carry no unmapped stat (seed 2365 gives one, `curse_skill_effect_duration_+%`).
+
+**Checked against PoB's own conquered nodes:** a local PoB script listing each allocated node's `conqueredBy` and lines.
+- **Kinetic Fusillade:** PoB conquers 18 allocated nodes; the 12 that gain Strength gain it here too, the same +36 in all.
+- **Cyclone:** PoB conquers 23 allocated nodes; the 15 that gain Strength gain it here too, the same +46 in all.
+
+**Evidence** (b-tl, against P6-10a part 2's run):
+- **Public:** 0 unexpected; 231 values moved, 155 toward PoB, 75 away, 4 now equal.
+- **Corpus:** 86 moved, 30 toward, 56 away, 1 now equal.
+- **The away moves** are in builds whose other gaps are larger (Essence Drain, Penance Brand, RF Chieftain, Flicker Strike, Lacerate): their attribute nodes are replaced or added to as PoB's are, and the other gaps keep their totals apart.
+- **Found: tattoos.** Kinetic Fusillade and Cyclone are farther from PoB in Strength because their tattoos are not modelled. A tattoo (PoB's `<Override>`) replaces a node's lines: Cyclone has 15, several on +10 Strength nodes. That gap was hidden while their Lethal Pride went unread. Tattoos are a task of their own (tasks file, P6-11).
+
+**Left:**
+- the Abyss jewels (PoB's `DataAbyssJewelLookUpTableHelper.lua`);
+- the conquests' unmapped stats (devotion, ward);
+- tattoos.

@@ -651,6 +651,26 @@ pub struct ResolvedPassives {
     /// plan, T4): the passives table and mastery effects are then not
     /// read.
     pub pack: Option<PackStats>,
+    /// The nodes a socketed Timeless jewel conquers (P6-10a,
+    /// `loom_pipeline::timeless`), with what they become: a node listed
+    /// here takes its conquest's stats (instead of its own when replaced).
+    pub conquered: BTreeMap<NodeId, Conquest>,
+}
+
+/// What a Timeless jewel makes of a node ([`ResolvedPassives::conquered`];
+/// PoB's `PassiveSpec.lua` 1196 to 1376).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Conquest {
+    /// The node's own stats are replaced (else the stats are added).
+    pub replaced: bool,
+    /// The stats it gains, raw game values (a Glorious Vanity roll, else
+    /// the row's fixed value).
+    pub stats: Vec<StatAmount>,
+    /// Why the conquest is not known (`timeless-results` without the
+    /// jewel type's results, `timeless-jewel` for lines that do not read,
+    /// `abyss-jewel` for the Abyss jewels): the node then counts nothing
+    /// and is this reason.
+    pub reason: Option<&'static str>,
 }
 
 /// The stats of a tree version the host resolved the spec against
@@ -720,11 +740,6 @@ pub enum PassiveState {
     /// A node PoB generates from a socketed cluster jewel
     /// (`cluster-jewel-node`).
     ClusterNode,
-    /// A connected keystone in a socketed Timeless jewel's radius: the
-    /// jewel replaces it with its conqueror's keystone (PoB's timeless
-    /// jewel conversion), which the engine does not model
-    /// (`timeless-keystone`; P6-11ao).
-    TimelessKeystone,
 }
 
 impl PassiveState {

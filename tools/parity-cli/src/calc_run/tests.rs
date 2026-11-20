@@ -61,6 +61,8 @@ fn run_with(
         .as_ref()
         .map(|t| loom_pipeline::pack_trees(&bundle, t))
         .unwrap_or_default();
+    // The synthetic bundles have no timeless jewel results.
+    let timeless_results = std::collections::BTreeMap::new();
     let request = Request {
         bundle: &bundle,
         resolver: &resolver,
@@ -85,6 +87,7 @@ fn run_with(
         scope: None,
         anonymous,
         tool: ToolRecord::default(),
+        timeless_results: &timeless_results,
     };
     run(inputs, &request)
 }

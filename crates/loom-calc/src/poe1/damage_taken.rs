@@ -954,6 +954,8 @@ mod tests {
             "chance_to_freeze_shock_ignite_%",
             // P6-11as: damage you take recouped as mana (`poe1::enemy_hit`).
             "damage_taken_goes_to_mana_%",
+            // P6-10a: and as life, the same way.
+            "damage_taken_goes_to_life_over_4_seconds_%",
             // P6-8a: Cast when Damage Taken's own less damage on the spell it
             // triggers; "damage taken" names the trigger, not the enemy.
             "cast_on_damage_taken_damage_+%_final",

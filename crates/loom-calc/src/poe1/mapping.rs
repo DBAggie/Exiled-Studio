@@ -3619,6 +3619,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-10a: "#% of Damage taken Recouped as Life" (`LifeRecoup` BASE), a
+    // Glorious Vanity conquest: as mana recoup below.
+    (
+        "damage_taken_goes_to_life_over_4_seconds_%",
+        &[(Quantity::Poe1(Poe1Quantity::LifeRecoup), Op::Base, 1.0)],
+    ),
     // P6-11as: "#% of Damage taken Recouped as Mana" (`ManaRecoup` BASE):
     // read by `poe1::enemy_hit` as PoB's `anyRecoup`.
     (
@@ -4847,9 +4853,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
     ("base_aura_area_of_effect_+%", "area"),
+    // P6-10a: "#% chance to Avoid Bleeding" (`AvoidBleed` BASE) and
+    // "#% chance to Avoid being Poisoned" (`AvoidPoison` BASE), Glorious
+    // Vanity conquests: PoB's ailment avoidance, no slice field.
+    ("base_avoid_bleed_%", "ailment-on-self"),
     // P6-11as: "#% chance to Avoid being Chilled": chill on you.
     ("base_avoid_chill_%", "ailment-on-self"),
     ("base_avoid_freeze_%", "ailment-on-self"),
+    ("base_avoid_poison_%", "ailment-on-self"),
     // P6-11g: "#% chance to Avoid being Stunned" (`AvoidStun` BASE).
     ("base_avoid_stun_%", "stun"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -5384,6 +5395,14 @@ pub const NO_EFFECT_PREFIXES: &[(&str, &str)] = &[
         "local_unique_jewel_grants_x_empty_passives",
         "cluster jewel: adds nodes that grant nothing",
     ),
+    // P6-10a: a Timeless jewel's type, seed, and conqueror: read by
+    // `loom_pipeline::timeless`, it acts through the nodes it conquers
+    // (each a reason without the results); "Historic" is its display.
+    (
+        "local_unique_jewel_alternate_tree_",
+        "timeless jewel: acts through its conquered nodes",
+    ),
+    ("local_is_alternate_tree_jewel", "timeless jewel: Historic"),
 ];
 
 /// Whether `stat` has no effect by a rule rather than a [`NO_EFFECT`] row:

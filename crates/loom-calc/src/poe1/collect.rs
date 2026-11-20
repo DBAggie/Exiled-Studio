@@ -518,15 +518,20 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
                 });
                 continue;
             }
-            // A keystone a Timeless jewel replaces (P6-11ao): its own lines
-            // do not apply, and the replacement is not modelled.
-            PassiveState::TimelessKeystone => {
-                ingest.reason(UnsupportedReason::UnmodelledPassive {
-                    source: Source::Passive { node: *node },
-                    what: "timeless-keystone",
-                });
+        }
+        // A node a Timeless jewel conquers (P6-10a): its conquest's stats,
+        // with or instead of its own; a conquest not known is its reason.
+        if let Some(c) = resolved.conquered.get(node) {
+            let source = Source::Passive { node: *node };
+            if let Some(what) = c.reason {
+                ingest.reason(UnsupportedReason::UnmodelledPassive { source, what });
                 continue;
             }
+            if !c.replaced {
+                ingest.stats(&source, &lines(stats));
+            }
+            ingest.stats(&source, &lines(&c.stats));
+            continue;
         }
         ingest.stats(&Source::Passive { node: *node }, &lines(stats));
         unread_lines(

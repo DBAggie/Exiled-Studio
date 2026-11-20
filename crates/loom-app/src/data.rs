@@ -57,6 +57,10 @@ pub struct GameData {
     pub tree_layout: Option<Arc<loom_serialization::dto::app::v1::TreeLayout>>,
     /// The tree's sprites DTO, made on first use ([`GameData::tree_sprites`]).
     sprites: OnceLock<Option<Arc<loom_serialization::dto::app::v1::TreeSprites>>>,
+    /// Each Timeless jewel type's results read so far, by type
+    /// ([`GameData::timeless_results`]; P6-10a): `None` when the file did
+    /// not read or check.
+    timeless: std::sync::Mutex<std::collections::BTreeMap<u32, Option<Arc<Vec<u8>>>>>,
 }
 
 impl std::fmt::Debug for GameData {
@@ -126,7 +130,54 @@ impl GameData {
             trees: Arc::new(trees),
             tree_layout,
             sprites: OnceLock::new(),
+            timeless: std::sync::Mutex::new(std::collections::BTreeMap::new()),
         })
+    }
+
+    /// The Timeless jewels' results of `types` (P6-10a, plan decision T2):
+    /// each type's file is read from the folder on its first use, checked
+    /// against the manifest's SHA-256 and size, then kept. A type whose
+    /// file is missing or does not check is left out, so its nodes stay a
+    /// reason (`timeless-results`).
+    pub fn timeless_results(
+        &self,
+        types: &std::collections::BTreeSet<u32>,
+    ) -> std::collections::BTreeMap<u32, Arc<Vec<u8>>> {
+        use sha2::{Digest, Sha256};
+        let Some(luts) = self
+            .bundle
+            .poe1
+            .as_ref()
+            .and_then(|p| p.timeless_luts.as_ref())
+        else {
+            return std::collections::BTreeMap::new();
+        };
+        let mut cache = self
+            .timeless
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut out = std::collections::BTreeMap::new();
+        for t in types {
+            let entry = cache.entry(*t).or_insert_with(|| {
+                let jewel = luts.jewel(*t)?;
+                let listed = self
+                    .bundle
+                    .manifest
+                    .files
+                    .iter()
+                    .find(|f| f.path == jewel.file)?;
+                let bytes = std::fs::read(self.dir.join(&jewel.file)).ok()?;
+                let sha: String = Sha256::digest(&bytes)
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect();
+                (bytes.len() as u64 == listed.size && sha == listed.sha256).then(|| Arc::new(bytes))
+            });
+            if let Some(bytes) = entry {
+                out.insert(*t, Arc::clone(bytes));
+            }
+        }
+        out
     }
 
     /// The tree's sprites DTO, when the bundle has sprites and the tree is

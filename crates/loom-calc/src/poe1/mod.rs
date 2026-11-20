@@ -325,6 +325,10 @@ pub enum Poe1Quantity {
     /// Damage taken recouped as mana, percent (PoB's `ManaRecoup`;
     /// P6-11as): `Base`, read by [`enemy_hit`] for `anyRecoup`.
     ManaRecoup,
+    /// Damage taken recouped as life, percent (PoB's `LifeRecoup`; P6-10a,
+    /// a Glorious Vanity conquest): `Base`, read by [`enemy_hit`] for
+    /// `anyRecoup` as [`Self::ManaRecoup`].
+    LifeRecoup,
     /// Skills reserve life instead of mana (PoB's `BloodMagicReserved`;
     /// P6-11an, Blood Magic): a `Flag`, read by
     /// [`skill_modifiers::Totals`] for the other gems' reservation.
@@ -1048,6 +1052,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::WitherEffect => f.write_str("wither-effect"),
             Self::PseudoRecoup => f.write_str("pseudo-recoup"),
             Self::ManaRecoup => f.write_str("mana-recoup"),
+            Self::LifeRecoup => f.write_str("life-recoup"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),

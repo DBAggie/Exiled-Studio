@@ -1012,6 +1012,7 @@ Both match PoB on every computed field.
   - A connected keystone there is a new `PassiveState::TimelessKeystone`. `collect` turns it into an `unmodelled-passive` reason (`timeless-keystone`) instead of applying its lines.
   - **Why the base check:** one build's Glorious Vanity resolved to no such stat, so the stat check alone missed it.
   - The replacement keystones wait for the Timeless data run (a maintainer item).
+  - **Superseded by P6-10a part 3** (`docs/phase-6/timeless.md`): `timeless_keystones` and `PassiveState::TimelessKeystone` are gone; the keystone becomes its conqueror's, applied.
 - **Confirmed in PoB's own output:**
   - Eternal Youth dropped in those four builds leaves their leech at PoB's 20%.
   - In penance-brand-ignite-elementalist, the replaced keystone is Mind over Matter. PoB's `sharedMindOverMatter` is 0 there too.
