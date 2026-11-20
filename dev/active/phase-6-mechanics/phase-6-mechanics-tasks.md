@@ -127,6 +127,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] The review of P6-7b3b to P6-9c applied (`ModStore::more_rounded` in every phase, the minion's unread totals, unsettled minion-only values, conditional gem minion modifiers, the export scripts committed); `docs/phase-6/gems.md`, "The review"
 - [x] P6-9e: marks (PoB's mark rule; `EnemyProjectileDamageTaken`, `EnemyPhysicalDamageReduction`), Pride (`BuffStat::ConfigIs`), Punishment (`BuffStat::WhenState`, `conditionEnemyLowLife` settled), guards (`EffectType::Guard`, PoB's guard slots), Tempest Shield (disabled without a shield, still reserves), offerings (`BuffStat::MinionOnly`), Chaos and Carrion golems, General's Cry, 17 plain supports; `gem_effects` 1,476 values, 0 differences; 7 fixtures (Q11 DIV-0114 to DIV-0122); `docs/phase-6/gems.md`, "P6-9e"
 - [x] P6-9f: Arrogance (life reservation, `LIFE_RESERVATION_SUPPORTS`), six inert skills; `docs/phase-6/gems.md`, "P6-9f"
+- [x] P6-9g: Mark On Hit (the mark's curse effect; PoB reads no trigger stat of it); fixture `ice-nova-mark-on-hit-witch.xml` (`docs/phase-6/gems.md`, "P6-9g")
 - [ ] P6-9 remaining: warcry power (Battlemage's, Ancestral, Infernal, Seismic Cry), Eternal Blessing, Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 - [x] P6-10a part 1: extraction roots `TIMELESS_TABLES_POE1` (the three tables read; 718 rows as PoB's export); `docs/phase-6/timeless.md`

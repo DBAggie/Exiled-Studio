@@ -2257,6 +2257,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportIntensify", &[]),
     ("SupportInvertTheRules", &[]),
     ("SupportLifetap", &[]),
+    // Mark On Hit (P6-9g): the mark's curse effect
+    // ([`MARK_CURSE_EFFECT_STAT`]); PoB reads its trigger stat
+    // (`triggerMarkOnRareOrUnique`) nowhere, so the mark applies as cast.
+    ("SupportMarkOnHit", &[]),
     ("SupportMeatShield", &[]),
     ("SupportMeleePhysicalDamage", &[]),
     ("SupportMeleeSplash", &[]),
@@ -2335,6 +2339,10 @@ pub const LIFE_RESERVATION_SUPPORTS: &[&str] = &["SupportArrogance"];
 /// A curse gem's own curse effect stat (Despair's, a hex's quality):
 /// PoB's `CurseEffect` INC on the skill's own list (P6-9b).
 pub const OWN_CURSE_EFFECT_STAT: &str = "curse_effect_+%";
+
+/// Mark On Hit's `CurseEffect` INC on the mark it supports (P6-9g; PoB's
+/// `SkillStatMap.lua` 2107).
+pub const MARK_CURSE_EFFECT_STAT: &str = "mark_skills_curse_effect_+%";
 
 /// Blasphemy's `CurseEffect` MORE on the curse it supports (P6-11r; PoB's
 /// `statMap`, a constant -25).
@@ -3549,7 +3557,18 @@ fn one_skill(
                 .iter()
                 .filter(|(stat, _)| stat == OWN_CURSE_EFFECT_STAT)
                 .map(|(_, v)| *v as f64)
-                .sum();
+                .sum::<f64>()
+                // Mark On Hit's `CurseEffect` INC on the mark it supports
+                // (P6-9g; PoB's `SkillStatMap.lua` 2107, `SkillType.Mark`:
+                // the support needs a mark). PoB reads no other stat of it.
+                + s.supports
+                    .iter()
+                    .flat_map(|sup| {
+                        skill::instance(sup.effect, sup.level, sup.quality, input.data).stats
+                    })
+                    .filter(|(stat, _)| stat == MARK_CURSE_EFFECT_STAT)
+                    .map(|(_, v)| v as f64)
+                    .sum::<f64>();
             // The supports' `CurseEffect` MORE (Blasphemy's, P6-11r): PoB's
             // `calcLib.mod` multiplies the increase by each more.
             #[expect(

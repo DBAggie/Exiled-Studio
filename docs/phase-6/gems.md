@@ -253,3 +253,17 @@ Left, with why:
 - **Data parity:** `uncategorized` 353.
 - **Corpus:** 0 unexpected.
 - **Tests:** the workspace's 1,766 tests and clippy pass.
+
+## P6-9g: Mark On Hit
+
+Mark On Hit (`SupportMarkOnHit`) supports a mark. PoB v2.67.2 reads two stats of it (`Data/SkillStatMap.lua`):
+- `mark_skills_curse_effect_+%` is `CurseEffect` INC on a `SkillType.Mark` skill (2107). The engine adds it to the mark's own curse effect (`gems::MARK_CURSE_EFFECT_STAT`), as the gem's own `curse_effect_+%`.
+- `trigger_on_attack_hit_against_rare_or_unique` sets `triggerMarkOnRareOrUnique` (273), which no calc module reads, so the mark applies as if cast. The engine does the same.
+
+The support is in `gems::SUPPORTS` with no global stat.
+
+**Fixture** `ice-nova-mark-on-hit-witch.xml`: Assassin's Mark with Mark On Hit (level 20, quality 20). Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11ba's run):
+- **Public:** 0 unexpected; 15 values toward PoB, none away, 2 now equal (Kinetic Blast's crit chance).
+- **Corpus:** 13 toward PoB, none away.
