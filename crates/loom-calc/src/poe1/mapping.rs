@@ -3419,7 +3419,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
-    // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
+    // P6-11cc: "+#% Chance to Block Attack Damage if you were Damaged by a
+    // Hit Recently" (`BlockChance` BASE, `BeenHitRecently`).
+    (
+        "block_chance_on_damage_taken_%",
+        &[(BLOCK, Op::Base, NONE, conditions::BEEN_HIT_RECENTLY)],
+    ), // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
     // ModParser.lua 1785), from the config (`poe1::conditions`).
     (
@@ -7541,7 +7546,15 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
             (weapon(WeaponValue::Damage(PHYS, MAX)), Op::Increased),
         ],
     ),
-    // P3-8n: "Quality does not increase Physical Damage"
+    // P6-11cc: a weapon's "#% chance to Poison on Hit": PoB parses it as the
+    // global `PoisonChance` BASE (no hand condition), and so does the engine.
+    (
+        "local_poison_on_hit_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
+            Op::Base,
+        )],
+    ), // P3-8n: "Quality does not increase Physical Damage"
     // (`AlternateQualityWeapon`, 5753; `Classes/Item.lua` 2257).
     (
         "local_quality_does_not_increase_physical_damage",
@@ -8990,6 +9003,11 @@ mod tests {
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
                 )],
+            ),
+            // P6-11cc.
+            (
+                "block_chance_on_damage_taken_%",
+                vec![(BLOCK, Op::Base, NONE, conditions::BEEN_HIT_RECENTLY)],
             ),
             // P6-11bv.
             (

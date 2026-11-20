@@ -1725,3 +1725,18 @@ Every computed field of both equals PoB's.
 **Evidence** (`b-ct`, against P6-11ca's run):
 - **Public:** 0 unexpected; 25 values toward PoB (two Occultists' energy shield and the values that follow it), none away.
 - **Corpus:** unchanged.
+
+## P6-11cc: block if hit recently; a weapon's poison chance
+
+- **"+#% Chance to Block Attack Damage if you were Damaged by a Hit Recently":** PoB's `BlockChance` BASE with `BeenHitRecently` (its parser), a `STATE_ROWS` row on the settled check.
+- **A weapon's "#% chance to Poison on Hit"** (`local_poison_on_hit_%`): PoB parses it as the global `PoisonChance` BASE, with no hand condition. A `WEAPON_ROWS` row reads it the same way.
+  - For one weapon, the game's local chance and PoB's global one agree.
+  - For a dual wielder with one such weapon, PoB gives both hands the chance and the engine does too. The difference from the game there is PoB's, kept as the oracle has it.
+
+**Fixtures:**
+- `ehp-block-if-hit-recently-ice-nova-witch.xml`: every computed field equals PoB's.
+- `smite-weapon-poison-chance-templar.xml`: the poison equals PoB's apart from Q11's floored attack rate (`DIV-0333` to `DIV-0339`).
+
+**Evidence** (`b-ct`, against P6-11cb's run):
+- **Public:** 0 unexpected; 13 values toward PoB, 2 now equal, none away.
+- **Corpus:** 0 unexpected; 2 toward PoB. One build's poison DPS is now computed, indeterminate for the build's older tree version.
