@@ -46,6 +46,7 @@ mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
+mod tattoos;
 mod timeless;
 mod tree_flavour;
 mod tree_layout;

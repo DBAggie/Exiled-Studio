@@ -28,6 +28,7 @@ pub mod flavour;
 pub mod gem_effects;
 pub mod pob;
 pub mod rules;
+pub mod tattoos;
 pub mod timeless;
 
 #[cfg(test)]
@@ -45,7 +46,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 21] = [
+pub const TABLES: [&str; 22] = [
     "skills",
     "gems",
     "bases",
@@ -67,6 +68,7 @@ pub const TABLES: [&str; 21] = [
     "minions",
     "minion_mods",
     "timeless",
+    "tattoos",
 ];
 
 /// Summary and overlay format.

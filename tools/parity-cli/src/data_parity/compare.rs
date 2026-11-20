@@ -413,6 +413,7 @@ pub fn compare(
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
     super::timeless::compare_timeless(&mut out, bundle, export, timeless_adlers);
+    super::tattoos::compare_tattoos(&mut out, bundle, export);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()

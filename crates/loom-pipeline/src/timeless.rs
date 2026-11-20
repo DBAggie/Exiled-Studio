@@ -28,7 +28,8 @@
 //!   (named Strength, Dexterity, or Intelligence) is the small attribute
 //!   type, else the small normal type. When the jewel type's tree version
 //!   replaces that type, the node becomes the type's one replacement row;
-//!   else it gains the type's one addition row. This is PoB's hand-written
+//!   else it gains the type's one addition row (a tattooed node counts as
+//!   an attribute one, as PoB's `node.isTattoo`). This is PoB's hand-written
 //!   rule for each conqueror (+4 or +2 Strength or Dexterity, +5 Devotion
 //!   or the devotion node, the blank node, 2% or 1% increased Ward), read
 //!   from the game's rows.
@@ -334,6 +335,7 @@ pub fn conquests(
     tree: &Tree,
     data: Option<&TimelessData<'_>>,
     rolls: &Rolls,
+    tattooed: &BTreeSet<u32>,
 ) -> BTreeMap<u32, Conquest> {
     let jewels = socketed(build, spec, tree, rolls);
     // The Abyss jewels first; a radius jewel's conquest replaces theirs.
@@ -376,7 +378,13 @@ pub fn conquests(
                         ),
                     Kind::Notable => from_results(d, t, seed, node),
                     _ if t == GLORIOUS_VANITY => from_results(d, t, seed, node),
-                    _ => small(d.timeless, t, ATTRIBUTES.contains(&n.name.as_str())),
+                    // A tattooed small passive counts as an attribute
+                    // one (PoB's `node.isTattoo`, `PassiveSpec.lua` 1355).
+                    _ => small(
+                        d.timeless,
+                        t,
+                        ATTRIBUTES.contains(&n.name.as_str()) || tattooed.contains(&node),
+                    ),
                 },
             };
             // Two jewels reaching one node: PoB keeps the last socket's; the

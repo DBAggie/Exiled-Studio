@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 15
+local FORMAT = 16
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -761,6 +761,23 @@ local timeless = {
 	jewels = timelessJewels,
 }
 
+-- Tattoos and the other passive skill overrides (format 16, P6-11av):
+-- Data/TattooPassives.lua's nodes by name, each with its ID, override type,
+-- keystone flag, and stats' ranges as PoB's exporter wrote them.
+local tattoos = {}
+for name, node in pairs(LoadModule("Data/TattooPassives").nodes) do
+	local stats = {}
+	for stat, range in pairs(node.stats or {}) do
+		stats[stat] = { min = range.min, max = range.max }
+	end
+	tattoos[name] = {
+		id = node.id,
+		override_type = node.overrideType,
+		keystone = node.ks and true or false,
+		stats = stats,
+	}
+end
+
 ---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
@@ -788,6 +805,7 @@ local document = {
 	flavour_text = list(flavourText),
 	cluster_jewels = clusterJewels,
 	timeless = timeless,
+	tattoos = tattoos,
 	tree = { classes = classes, nodes = nodes },
 }
 

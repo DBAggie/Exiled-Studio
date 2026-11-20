@@ -31,7 +31,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 15,
+        "format": 16,
         "flasks": {},
         "minions": {},
         "minion_mods": {},
@@ -232,6 +232,9 @@ fn equal_export_should_have_no_difference() {
             // (P6-10a): the table runs on the real bundle and PoB's export;
             // its reader and checksum have their own tests.
             "timeless",
+            // Nor tattoos (P6-11av): the table runs on the real bundle and
+            // PoB's export.
+            "tattoos",
         ]
         .contains(&table)
         {

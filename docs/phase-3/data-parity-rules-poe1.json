@@ -914,6 +914,33 @@
         "game:AlternatePassiveSkills.Stat1Min",
         "game:AlternatePassiveAdditions.Stat1Min"
       ]
+    },
+    {
+      "id": "tattoo-display-units",
+      "category": "representation",
+      "table": "tattoos",
+      "fields": [
+        "stat.*"
+      ],
+      "keys": [
+        "override|Honoured Tattoo of the Berserker",
+        "override|Runegraft of Quaffing",
+        "override|Runegraft of the Agile",
+        "override|Runegraft of the Bound",
+        "override|Runegraft of the Fortress",
+        "override|Runegraft of the Soulwick",
+        "override|Runegraft of the Warp",
+        "override|Tattoo of the Hinekora Deathwarden",
+        "override|Tattoo of the Kitava Blood Drinker",
+        "override|Tattoo of the Tukohama Shaman",
+        "override|Tattoo of the Valako Scout"
+      ],
+      "count": 22,
+      "evidence": "PoB's tattoo exporter stores each stat in the unit its description shows, as its legion exporter does: milliseconds as seconds (gain_onslaught_on_hit_duration_ms 4000 as 4, elusive_ticks_up_instead_for_x_ms 2000 as 2), per minute as per second (vaal_souls_gained_per_minute 60 as 1, life_regeneration_rate_per_minute_% 18 as 0.3), per-myriad as a percent (base_life_leech_from_attack_damage_permyriad 50 as 0.5), and a negative stat worded \"reduced\" as its positive magnitude (six stats). The bundle keeps the game's raw StatValues; every difference is one of these conversions (checked on the 26530219 extract).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/tattooPassives.lua:76",
+        "game:PassiveSkillOverrides.StatValues"
+      ]
     }
   ]
 }

@@ -895,6 +895,17 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(n),
             );
         }
+        // Tattoos and the other passive skill overrides (P6-11av).
+        if let Some(t) = crate::tattoos::rows(read)? {
+            let n = t.overrides.len();
+            put(
+                &mut files,
+                &mut rows,
+                loom_data::bundle::tattoos::TATTOOS,
+                to_json(&t)?,
+                Some(n),
+            );
+        }
         if let Some(c) = cluster_jewels::rows(read, extract.set.files().map(|(_, f)| f))? {
             let n = c.jewels.len() + c.skills.len() + c.specials.len() + c.slots.len();
             put(

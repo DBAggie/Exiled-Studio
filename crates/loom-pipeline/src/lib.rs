@@ -20,15 +20,17 @@
 //! Core crate (ADR-016): no filesystem, clocks, threads, or environment.
 //! Errors carry the failing layer's stable code (ADR-014) and the step.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub mod timeless;
 
+use loom_calc::input::Conquest;
 use loom_calc::{
     BaseName, CalcData, CalcInput, CalcOptions, CalcResult, ClusterPassive, PackNode, PackStats,
     PassiveState, ResolvedPassives,
 };
 use loom_data::bundle::passives::StatAmount;
+use loom_data::bundle::tattoos::Tattoos;
 use loom_domain::{
     Build, ItemBody, ItemId, LineKind, LineResolution, NodeId, PassiveSpec, Resolved, StatValue,
     TreeVersion,
@@ -472,7 +474,7 @@ fn cluster_jewel(
 /// and `calc-run` pass the bundle's tree whenever it has one).
 #[must_use]
 pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives {
-    resolve_passives_with(build, tree, None, &timeless::Rolls::new())
+    resolve_passives_with(build, tree, None, None, &timeless::Rolls::new())
 }
 
 /// [`resolve_passives`] with the Timeless jewels' data the host read
@@ -484,6 +486,7 @@ pub fn resolve_passives_with(
     build: &Build,
     tree: Option<&Tree>,
     timeless: Option<&timeless::TimelessData<'_>>,
+    tattoos: Option<&Tattoos>,
     rolls: &timeless::Rolls,
 ) -> ResolvedPassives {
     let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {
@@ -519,7 +522,10 @@ pub fn resolve_passives_with(
     let held =
         loom_tree::poe1::radius::held(tree, &leaps(build, spec, tree), &allocated, &connected);
     connected.extend(held);
-    let conquered = timeless::conquests(build, spec, tree, timeless, rolls);
+    // Tattoos and the other overrides (P6-11av), by the spec's numbers.
+    let overrides = overrides(spec);
+    let tattooed: BTreeSet<u32> = overrides.keys().map(|n| now(NodeId(*n))).collect();
+    let conquered = timeless::conquests(build, spec, tree, timeless, rolls, &tattooed);
     let is_cluster = |n: u32| n & loom_tree::poe1::CLUSTER_NODE_BIT != 0;
     ResolvedPassives {
         nodes: nodes
@@ -554,10 +560,101 @@ pub fn resolve_passives_with(
             })
             .collect(),
         pack,
-        conquered: nodes
+        changed: nodes
             .iter()
-            .filter_map(|n| Some((*n, conquered.get(&now(*n))?.clone())))
+            .filter_map(|n| {
+                let tattoo = overrides.get(&n.0).map(|name| tattoo(tattoos, name));
+                let change = match (tattoo, conquered.get(&now(*n)).cloned()) {
+                    (None, None) => return None,
+                    (Some(t), None) => t,
+                    (None, Some(c)) => c,
+                    (Some(t), Some(c)) => over_tattoo(t, c),
+                };
+                Some((*n, change))
+            })
             .collect(),
+    }
+}
+
+/// A spec's tattoos, runegrafts, and other overrides (PoB's `<Overrides>`,
+/// which the XML reader keeps as read): each `<Override>`'s node and name
+/// (`nodeId`, `dn`; PoB's `PassiveSpec.lua` 148 to 175). The text inside an
+/// override is PoB's display, not read.
+fn overrides(spec: &PassiveSpec) -> BTreeMap<u32, String> {
+    use loom_domain::{Entry, OpaqueNode};
+    let mut out = BTreeMap::new();
+    for entry in spec.layout.entries() {
+        let Entry::Opaque(OpaqueNode::Element { name, children, .. }) = entry else {
+            continue;
+        };
+        if name != "Overrides" {
+            continue;
+        }
+        for child in children {
+            let OpaqueNode::Element {
+                name, attributes, ..
+            } = child
+            else {
+                continue;
+            };
+            if name != "Override" {
+                continue;
+            }
+            let get = |k: &str| {
+                attributes
+                    .iter()
+                    .find(|a| a.name == k)
+                    .map(|a| a.value.as_str())
+            };
+            if let (Some(node), Some(dn)) =
+                (get("nodeId").and_then(|v| v.trim().parse().ok()), get("dn"))
+            {
+                out.insert(node, dn.to_owned());
+            }
+        }
+    }
+    out
+}
+
+/// What the override named `name` makes of its node: its stats in place
+/// of the node's, or the reason it is not known (module docs of
+/// [`loom_data::bundle::tattoos`]).
+fn tattoo(tattoos: Option<&Tattoos>, name: &str) -> Conquest {
+    let reason = |what| Conquest {
+        replaced: true,
+        stats: Vec::new(),
+        reason: Some(what),
+    };
+    let Some(t) = tattoos else {
+        return reason("tattoo-data");
+    };
+    match t.named(name) {
+        None => reason("tattoo"),
+        Some(o) if o.grants_skill => reason("tattoo-skill"),
+        Some(o) => Conquest {
+            replaced: true,
+            stats: o.stats.clone(),
+            reason: None,
+        },
+    }
+}
+
+/// A Timeless jewel's conquest of a tattooed node: PoB applies the tattoo
+/// first (`PassiveSpec.lua` 1187), so a replacement takes its place and an
+/// addition adds to it.
+fn over_tattoo(tattoo: Conquest, conquest: Conquest) -> Conquest {
+    if tattoo.reason.is_some() {
+        return tattoo;
+    }
+    if conquest.reason.is_some() || conquest.replaced {
+        return conquest;
+    }
+    let mut stats = tattoo.stats;
+    stats.extend(conquest.stats);
+    Conquest {
+        replaced: true,
+        stats,
+        reason: None,
     }
 }
 
@@ -753,7 +850,8 @@ pub fn options_with(
             (!values.is_empty()).then_some((item.id, values))
         })
         .collect();
-    let passives = resolve_passives_with(build, tree, timeless, &item_lines);
+    let tattoos = data.bundle().poe1.as_ref().and_then(|p| p.tattoos.as_ref());
+    let passives = resolve_passives_with(build, tree, timeless, tattoos, &item_lines);
     CalcOptions {
         tree_version,
         item_bases,
@@ -833,4 +931,86 @@ pub fn base_names(build: &Build, data: &BundleData<'_>) -> BTreeMap<ItemId, Stri
                 .map(|(name, _)| (item.id, name))
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use loom_data::bundle::tattoos::Override;
+    use loom_domain::{Attribute, OpaqueNode, SpecId};
+
+    fn amount(stat: &str, value: i64) -> StatAmount {
+        StatAmount {
+            stat: stat.to_owned(),
+            value,
+        }
+    }
+
+    /// A spec's `<Overrides>`: each `<Override>`'s node and name, the
+    /// display text inside it not read.
+    #[test]
+    fn overrides_should_read_each_node_and_name() {
+        let mut spec = PassiveSpec::new(SpecId(1));
+        let child = |node: &str, dn: &str| OpaqueNode::Element {
+            name: "Override".to_owned(),
+            attributes: vec![Attribute::new("nodeId", node), Attribute::new("dn", dn)],
+            children: vec![OpaqueNode::Text("+6% to Fire Resistance".to_owned())],
+        };
+        spec.layout.push_opaque(OpaqueNode::Element {
+            name: "Overrides".to_owned(),
+            attributes: Vec::new(),
+            children: vec![
+                child("37671", "Tattoo of the Ngamahu Firewalker"),
+                child("x", "bad"),
+            ],
+        });
+        let got = overrides(&spec);
+        assert_eq!(
+            got.into_iter().collect::<Vec<_>>(),
+            [(37671, "Tattoo of the Ngamahu Firewalker".to_owned())]
+        );
+    }
+
+    /// A tattoo's stats replace the node's; a name the data does not hold,
+    /// an override granting a skill, or no data is a reason; a conquest
+    /// that replaces wins over the tattoo, one that adds goes on top.
+    #[test]
+    fn tattoos_should_replace_and_conquests_apply_after_them() {
+        let o = |name: &str, skill| Override {
+            id: name.to_owned(),
+            name: name.to_owned(),
+            kind: String::new(),
+            stats: vec![amount("base_fire_damage_resistance_%", 6)],
+            passive: None,
+            grants_skill: skill,
+        };
+        let t = Tattoos {
+            overrides: vec![o("Fire", false), o("Skill", true)],
+        };
+        let fire = tattoo(Some(&t), "Fire");
+        assert!(fire.replaced && fire.reason.is_none());
+        assert_eq!(tattoo(Some(&t), "Skill").reason, Some("tattoo-skill"));
+        assert_eq!(tattoo(Some(&t), "None").reason, Some("tattoo"));
+        assert_eq!(tattoo(None, "Fire").reason, Some("tattoo-data"));
+        let added = Conquest {
+            replaced: false,
+            stats: vec![amount("base_strength", 2)],
+            reason: None,
+        };
+        let both = over_tattoo(fire.clone(), added);
+        assert!(both.replaced);
+        assert_eq!(
+            both.stats,
+            vec![
+                amount("base_fire_damage_resistance_%", 6),
+                amount("base_strength", 2)
+            ]
+        );
+        let replaced = Conquest {
+            replaced: true,
+            stats: vec![amount("base_devotion", 10)],
+            reason: None,
+        };
+        assert_eq!(over_tattoo(fire, replaced.clone()), replaced);
+    }
 }

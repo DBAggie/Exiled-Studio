@@ -37,6 +37,8 @@
 //! - `poe1/timeless.json`, `poe1/timeless_luts.json`, `poe1/timeless/`:
 //!   timeless jewels (Phase 6 P6-10a, [`super::timeless`]); the results
 //!   files are never loaded here.
+//! - `poe1/tattoos.json`: tattoos, runegrafts, and the other passive skill
+//!   overrides a spec can name (Phase 6 P6-11av, [`super::tattoos`]).
 //! - `poe1/flasks.json`: the flask bases (`Flasks`, Phase 6 P6-4b), each
 //!   with its recovery, duration, and buff's stats ([`Flask`]; the calc
 //!   applies an active flask's buff).
@@ -661,6 +663,9 @@ pub struct Poe1Section {
     /// How to read the timeless jewels' results (`None` when the file is
     /// absent; the results themselves are read on demand, never here).
     pub timeless_luts: Option<super::timeless::TimelessLuts>,
+    /// Tattoos and the other passive skill overrides (`None` when the file
+    /// is absent; P6-11av).
+    pub tattoos: Option<super::tattoos::Tattoos>,
 }
 
 impl Poe1Section {
@@ -1041,6 +1046,11 @@ impl Poe1Section {
             },
             timeless_luts: if listed(super::timeless::TIMELESS_LUTS) {
                 Some(json(source, super::timeless::TIMELESS_LUTS)?)
+            } else {
+                None
+            },
+            tattoos: if listed(super::tattoos::TATTOOS) {
+                Some(json(source, super::tattoos::TATTOOS)?)
             } else {
                 None
             },

@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 15;
+pub const FORMAT: u32 = 16;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -78,6 +78,9 @@ pub struct Export {
     /// Timeless jewels (format 15, P6-10a).
     #[serde(default)]
     pub timeless: Option<PobTimeless>,
+    /// `Data/TattooPassives.lua`'s nodes, by name (format 16, P6-11av).
+    #[serde(default)]
+    pub tattoos: Option<BTreeMap<String, PobTattoo>>,
     /// The tree.
     pub tree: Tree,
 }
@@ -852,6 +855,21 @@ pub struct LegionJewel {
     /// The zlib stream's Adler-32 trailer.
     #[serde(default)]
     pub adler32: Option<u32>,
+}
+
+/// A tattoo or another passive skill override (format 16).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PobTattoo {
+    /// Its ID.
+    pub id: String,
+    /// Its override type.
+    pub override_type: String,
+    /// Whether it is a keystone tattoo.
+    pub keystone: bool,
+    /// Its stats' ranges, by stat (PoB's display units).
+    #[serde(default)]
+    pub stats: BTreeMap<String, LegionRange>,
 }
 
 /// Timeless jewels (format 15).

@@ -202,12 +202,19 @@ pub const TIMELESS_TABLES_POE1: [&str; 3] = [
     "AlternateTreeVersions",
 ];
 
+/// PoE1 tattoo and runegraft tables (Phase 6, P6-11av): the passive skill
+/// overrides a spec's `<Override>` names (PoB v2.67.2 exports
+/// `Data/TattooPassives.lua` from them, `src/Export/Scripts/tattooPassives.lua`)
+/// and the tattoos that place them. Nothing the extract already holds
+/// references them, so they are roots. PoE1 only.
+pub const TATTOO_TABLES_POE1: [&str; 2] = ["PassiveSkillOverrides", "PassiveSkillTattoos"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`],
 /// [`CHOICE_TABLES_POE1`], [`TREE_TABLES_POE1`], [`FLAVOUR_TABLES_POE1`],
-/// [`TIMELESS_TABLES_POE1`],
+/// [`TIMELESS_TABLES_POE1`], [`TATTOO_TABLES_POE1`],
 /// and [`FLASK_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
@@ -226,6 +233,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
         roots.extend(FLAVOUR_TABLES_POE1);
         roots.extend(FLASK_TABLES_POE1);
         roots.extend(TIMELESS_TABLES_POE1);
+        roots.extend(TATTOO_TABLES_POE1);
     }
     roots
 }
@@ -2137,6 +2145,7 @@ mod tests {
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .chain(&TREE_TABLES_POE1)
+                .chain(&TATTOO_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
         assert!(
@@ -2146,6 +2155,7 @@ mod tests {
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .chain(&TREE_TABLES_POE1)
+                .chain(&TATTOO_TABLES_POE1)
                 .all(|t| !poe2.contains(t))
         );
     }

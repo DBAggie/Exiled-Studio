@@ -1116,6 +1116,41 @@ fn domain(b: &Bundle, report: &mut Report) {
             cluster_domain(b, c, report);
         }
         timeless_domain(b, p, report);
+        tattoos_domain(b, p, report);
+    }
+}
+
+/// The passive skill overrides (P6-11av): every stat exists, every
+/// keystone tattoo's passive is one of the bundle's passives
+/// (`BUNDLE_DANGLING_REF`), and each ID is on one row
+/// (`BUNDLE_DUPLICATE_ID`).
+fn tattoos_domain(b: &Bundle, p: &super::poe1::Poe1Section, report: &mut Report) {
+    use super::tattoos::TATTOOS;
+    let Some(t) = &p.tattoos else {
+        return;
+    };
+    let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
+    let passives: BTreeSet<&str> = b
+        .passives
+        .iter()
+        .flat_map(|x| x.passives.iter().map(|p| p.id.as_str()))
+        .collect();
+    duplicates(report, TATTOOS, t.overrides.iter().map(|o| o.id.as_str()));
+    for o in &t.overrides {
+        for s in o.stats.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{TATTOOS}:{}", o.id),
+                format!("stat {} does not exist", s.stat),
+            );
+        }
+        if let Some(passive) = o.passive.as_deref().filter(|x| !passives.contains(x)) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{TATTOOS}:{}", o.id),
+                format!("passive {passive} does not exist"),
+            );
+        }
     }
 }
 

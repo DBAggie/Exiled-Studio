@@ -651,14 +651,16 @@ pub struct ResolvedPassives {
     /// plan, T4): the passives table and mastery effects are then not
     /// read.
     pub pack: Option<PackStats>,
-    /// The nodes a socketed Timeless jewel conquers (P6-10a,
+    /// The nodes a tattoo, a runegraft, or another override replaces
+    /// (P6-11av), or a socketed Timeless jewel conquers (P6-10a,
     /// `loom_pipeline::timeless`), with what they become: a node listed
-    /// here takes its conquest's stats (instead of its own when replaced).
-    pub conquered: BTreeMap<NodeId, Conquest>,
+    /// here takes these stats (instead of its own when replaced), and a
+    /// mastery listed here takes no chosen effect.
+    pub changed: BTreeMap<NodeId, Conquest>,
 }
 
-/// What a Timeless jewel makes of a node ([`ResolvedPassives::conquered`];
-/// PoB's `PassiveSpec.lua` 1196 to 1376).
+/// What a tattoo or a Timeless jewel makes of a node
+/// ([`ResolvedPassives::changed`]; PoB's `PassiveSpec.lua` 1185 to 1376).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Conquest {
     /// The node's own stats are replaced (else the stats are added).
@@ -666,10 +668,11 @@ pub struct Conquest {
     /// The stats it gains, raw game values (a Glorious Vanity roll, else
     /// the row's fixed value).
     pub stats: Vec<StatAmount>,
-    /// Why the conquest is not known (`timeless-results` without the
-    /// jewel type's results, `timeless-jewel` for lines that do not read,
-    /// `abyss-jewel` for the Abyss jewels): the node then counts nothing
-    /// and is this reason.
+    /// Why the change is not known (`timeless-results` without the jewel
+    /// type's results, `timeless-jewel` for lines that do not read,
+    /// `tattoo-data` without the bundle's overrides, `tattoo` for a name
+    /// they do not hold, `tattoo-skill` for an override that grants a
+    /// skill): the node then counts nothing and is this reason.
     pub reason: Option<&'static str>,
 }
 

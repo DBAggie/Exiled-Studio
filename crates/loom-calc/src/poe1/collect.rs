@@ -519,9 +519,10 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
                 continue;
             }
         }
-        // A node a Timeless jewel conquers (P6-10a): its conquest's stats,
-        // with or instead of its own; a conquest not known is its reason.
-        if let Some(c) = resolved.conquered.get(node) {
+        // A node a tattoo replaces (P6-11av) or a Timeless jewel conquers
+        // (P6-10a): those stats, with or instead of its own; a change not
+        // known is its reason.
+        if let Some(c) = resolved.changed.get(node) {
             let source = Source::Passive { node: *node };
             if let Some(what) = c.reason {
                 ingest.reason(UnsupportedReason::UnmodelledPassive { source, what });
@@ -547,6 +548,11 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         // allocated notable of its group (the unconnected node itself is
         // reported above).
         if !nodes.contains(&m.node) || !resolved.connected(m.node) {
+            continue;
+        }
+        // A runegraft on the mastery takes the place of its effect (PoB's
+        // `PassiveSpec.lua` 1393 to 1398).
+        if resolved.changed.contains_key(&m.node) {
             continue;
         }
         unread_lines(
