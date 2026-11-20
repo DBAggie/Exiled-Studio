@@ -20,11 +20,12 @@ The P6-11ac counts are from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.s
 | Public, at P6-11ac | 212 (211 calculate; one is the expected failure) | 13,953 | 1,669 | 816 | 447 | 0 |
 | Public, at P6-11az | 253 (252 calculate; one is the expected failure) | 17,146 | 1,658 | 888 | 460 | 0 |
 | Public, at P6-11cz | 308 (307 calculate; one is the expected failure) | 21,531 | 1,486 | 1,027 | 604 | 0 |
-| Public, now (P6-11dj, 2026-11-20) | 315 (314 calculate; one is the expected failure) | 22,078 | 1,486 | 1,037 | 604 | 0 |
+| Public, at P6-11dj | 315 (314 calculate; one is the expected failure) | 22,078 | 1,486 | 1,037 | 604 | 0 |
+| Public, now (P6-11do, 2026-11-20) | 320 (319 calculate; one is the expected failure) | 22,470 | 1,486 | 1,043 | 603 | 0 |
 | Corpus, start | 21 | 0 | 193 | 141 | 170 | 0 |
 | Corpus, at P6-11ac | 21 | 0 | 791 | 124 | 749 | 0 |
 | Corpus, at P6-11az | 21 | 0 | 804 | 118 | 749 | 0 |
-| Corpus, now (P6-11dj) | 21 | 0 | 804 | 118 | 750 | 0 |
+| Corpus, now (P6-11do) | 21 | 0 | 804 | 118 | 750 | 0 |
 
 - **The Phase 3 set** (the 24 fields every document carries; at P6-11n):
   - Public: 3,090 `Complete` of 4,180, against 2,270 of 3,240 at the start. The new fixtures are mostly complete builds.
@@ -32,11 +33,11 @@ The P6-11ac counts are from `local/p6/p6-11ac/`, made by `sh local/p6/evidence.s
 - **The Phase 6 set** (slice revisions 3 to 22, each field present when it applies; at P6-11n):
   - Public: 10,457 `Complete`.
   - Every computed field that is complete equals PoB's or is registered.
-- **Public calc-parity:** 300 expected differences, 0 unexpected (P6-11az); 376 expected, 0 unexpected (P6-11cz); 400 expected, 0 unexpected (P6-11dj). Fields matching PoB: 13,535 at P6-11w, 13,651 at P6-11ac, 16,822 at P6-11az, 21,109 at P6-11cz, 21,633 at P6-11dj (`local/p6/dj/`, same bundle).
+- **Public calc-parity:** 300 expected differences, 0 unexpected (P6-11az); 376 expected, 0 unexpected (P6-11cz); 400 expected, 0 unexpected (P6-11dj); 423 expected, 0 unexpected (P6-11do). Fields matching PoB: 13,535 at P6-11w, 13,651 at P6-11ac, 16,822 at P6-11az, 21,109 at P6-11cz, 21,633 at P6-11dj, 22,003 at P6-11do (`local/p6/do/`, same bundle).
 
 ## The register
 
-`docs/parity/divergence-register.json` holds 401 entries at P6-11dj (398 `game-truth`; DIV-0302 to DIV-0401 are Q11 entries of the later attack fixtures). At P6-11az it held 301 entries: 298 `game-truth`, 2 `pob-bug` (DIV-0294 and DIV-0295, PoB's per-second rounding of an Abyss jewel's per-minute rolls, `docs/phase-6/timeless.md`, "Part 4"), and 1 retired `pob-bug` (DIV-0282 to DIV-0293, P6-11aj's Multistrike fixtures, and DIV-0296 to DIV-0301, P6-11ay's bow fixture, are Q11 entries too).
+`docs/parity/divergence-register.json` holds 424 entries at P6-11do (421 `game-truth`; DIV-0302 to DIV-0424 are Q11 entries of the later attack fixtures). At P6-11az it held 301 entries: 298 `game-truth`, 2 `pob-bug` (DIV-0294 and DIV-0295, PoB's per-second rounding of an Abyss jewel's per-minute rolls, `docs/phase-6/timeless.md`, "Part 4"), and 1 retired `pob-bug` (DIV-0282 to DIV-0293, P6-11aj's Multistrike fixtures, and DIV-0296 to DIV-0301, P6-11ay's bow fixture, are Q11 entries too).
 - **Q11 entries (Phase 6 adds DIV-0102 to DIV-0293, except DIV-0111 to DIV-0113 and DIV-0174):** the game floors a weapon's attack time to whole milliseconds (Q11, answered in game 2026-11-12). Each attack fixture's `Speed` difference is carried into the fields that read it:
   - the hit's DPS;
   - combined and full DPS;
