@@ -129,7 +129,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-9f: Arrogance (life reservation, `LIFE_RESERVATION_SUPPORTS`), six inert skills; `docs/phase-6/gems.md`, "P6-9f"
 - [x] P6-9g: Mark On Hit (the mark's curse effect; PoB reads no trigger stat of it), Eternal Blessing (no reservation, aura effect); fixtures `ice-nova-mark-on-hit-witch.xml`, `ice-nova-eternal-blessing-hatred-witch.xml` (`docs/phase-6/gems.md`, "P6-9g")
 - [ ] PoB-only skills (`EnemyExplode`, "On Kill Monster Explosion", in 6 public builds): no game granted effect has the ID, so the gem is `unmodelled-gem` before any table is read; it reaches a field only as the main skill or in full DPS, and none of the builds includes it
-- [ ] P6-9 remaining: warcry power (Battlemage's, Ancestral, Infernal, Seismic Cry), Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
+- [ ] Warcry power (PoB `CalcPerform.lua` 2311 to 2360): the config's `multiplierWarcryPower` override, else 20 against a boss (`ConfigOptions.lua` 2097); each per-5-power stat counts `floor(min(power, limit) / div)`, times buff effect and uptime `min(duration / cooldown, 1)` (`calcSkillDuration` with every duration modifier). Then Enduring Cry's regeneration, Intimidating Cry's movement speed (9 public builds), Seismic Cry's armour; then exertion for Seismic, Battlemage's, Ancestral, Infernal Cry
+- [ ] Spellslinger (the supported spell reserves and triggers from wand attacks), Frost Shield (stages, the enemy in its globe), Blood and Sand, Bear Trap, mines
+- [ ] P6-9 remaining: Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 - [x] P6-10a part 1: extraction roots `TIMELESS_TABLES_POE1` (the three tables read; 718 rows as PoB's export); `docs/phase-6/timeless.md`
 - [x] Q-P6-1 decided 2026-11-19: PoB's lookup tables, not a ported generator (the "MIT" ports are GPL-3.0 or unlicensed); plan decision 11 amended; the local consistency check: PoB's tables and Vilsol's agree on all 149,920 sampled lookups (`docs/phase-6/timeless.md`)
@@ -223,3 +225,10 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-12: a skill without a hit adds PoB's 0 (`combined::has_hit`); a skill PoB disables for the hands has no mana cost (`MainSkill::disabled_by_hands`), weapon types compared as PoB's (`skill::pob_weapon_type`); `docs/phase-6/recovery.md`, "A disabled skill's cost"
 - [x] P6-12 part 2: `full-dps` (`poe1::full_dps`, slice revision 14, `CalcOptions::nested`); 97 equal to PoB, 40 Q11 (DIV-0233 to DIV-0272); `docs/phase-6/combined-dps.md`, "Part 2"
 - [x] P6-12: the Phase 6 report `docs/phase-6/phase-6-report.md` (at P6-11n: public 13,547 `Complete`, corpus 0; register 281; the gate not met yet; the bench re-checked, every budget met, `calculate` 6.7 to 64.9 ms from full DPS); updated as later steps land
+
+## For review (CI on PR #167, 2026-11-20)
+- [x] build round-trip: the synthetic build's pinned field counts follow the slice (10 unsupported, 41 indeterminate at revision 22; `.github/workflows/ci.yml`).
+- [x] oracle: over 250 fixtures took 44 to 46 minutes, past the job's 45-minute limit since before P6-10a; the limit is 90 now (maintainer to review).
+- [x] e2e (Linux): the node search box is found again before it is cleared ("element not interactable" after the list re-rendered, intermittent).
+- [ ] e2e (Windows): "session not created: DevToolsActivePort file doesn't exist" in every run since the Phase 6 cascade's merge into dev (`1097108`), on the same runner image as the last pass; the e2e app starts and stays up on this workstation (no driver here). Maintainer to look on a machine with tauri-driver and msedgedriver.
+- [ ] bench: `calculate` is about +119% over `tools/bench/baseline.json` (Phase 6's calculation); re-baseline from a CI `bench` log (`docs/phase-5/performance.md`, "The baseline") and record it in the PR.
