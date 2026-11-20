@@ -1838,3 +1838,19 @@ Every computed field of the three equals PoB's.
 - **Corpus:** 0 unexpected; 48 values toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass. `loom-persistence`'s `an_empty_build_should_round_trip_through_a_file` failed once in the workspace run and passed on its own; it is recorded for review.
 
+## P6-11co: projectile attack skills' critical strikes
+
+**PoB** reads "Projectile Attack Skills have #% increased Critical Strike Chance" as `CritChance` INC and "Projectile Attack Skills have +#% to Critical Strike Multiplier" as `CritMultiplier` BASE. Each has the tag `{ type = "SkillType", skillType = SkillType.RangedAttack }`, which matches the skill's types after its supports added theirs.
+
+**The engine:**
+- `Flags::SKILL_RANGED_ATTACK` (bit 50): `skill::keyword_flags` sets it from the `RangedAttack` type (`skill::RANGED_ATTACK_TYPE`). The ailments keep it, as PoB's ailment config keeps `skillTypes`.
+- The two stats are `HIT_ROWS` rows with that flag.
+- **Test:** `keyword_flags` of an attack with `RangedAttack`.
+
+**Fixture** `burning-arrow-projectile-attack-crit-templar.xml`: Burning Arrow with a Short Bow and both lines (40% and +30%). Crit chance and multiplier equal PoB's. The attack rate's Q11 rounding is registered as DIV-0360 to DIV-0365 (`game-truth`).
+
+**Evidence** (`b-ct`, against P6-11cn's run):
+- **Public:** 0 unexpected; 6 values toward PoB (a Deadeye's Elemental Hit: crit chance, multiplier, damage), none away.
+- **Corpus:** 0 unexpected; 18 values toward PoB and 1 now equal, none away.
+- **Tests:** the workspace tests and clippy pass.
+

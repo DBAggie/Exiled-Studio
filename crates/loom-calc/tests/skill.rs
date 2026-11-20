@@ -11,8 +11,9 @@ use std::collections::BTreeSet;
 use loom_calc::poe1::Poe1Mapping;
 use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS, SOCKETED_STATS};
 use loom_calc::poe1::skill::{
-    InstanceProblem, KEYWORD_TYPES, MINE_TYPE, SkillProblem, TOTEM_TYPE, TRAP_TYPE, group_skills,
-    instance, instances, keyword_flags, main_skill, type_expression, unknown_gems,
+    InstanceProblem, KEYWORD_TYPES, MINE_TYPE, RANGED_ATTACK_TYPE, SkillProblem, TOTEM_TYPE,
+    TRAP_TYPE, group_skills, instance, instances, keyword_flags, main_skill, type_expression,
+    unknown_gems,
 };
 use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
@@ -120,6 +121,11 @@ fn keyword_flags_should_follow_the_skills_types() {
     assert_eq!(
         keyword_flags(&types(&["Spell", MINE_TYPE])),
         Flags::KEYWORD_MINE
+    );
+    // "Projectile Attack Skills" (P6-11co): the `RangedAttack` type.
+    assert_eq!(
+        keyword_flags(&types(&["Attack", RANGED_ATTACK_TYPE])),
+        Flags::SKILL_RANGED_ATTACK
     );
     assert_eq!(
         keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),

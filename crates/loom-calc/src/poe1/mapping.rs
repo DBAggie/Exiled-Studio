@@ -2300,6 +2300,29 @@ pub const HIT_ROWS: &[HitRow] = &[
         "poison_dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::POISON, NONE)],
     ),
+    // P6-11co: "Projectile Attack Skills have #% increased Critical Strike
+    // Chance" (`CritChance` INC) and "+#% to Critical Strike Multiplier"
+    // (`CritMultiplier` BASE), each with the `SkillType.RangedAttack` tag.
+    (
+        "projectile_attack_skill_critical_strike_chance_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            1.0,
+            Flags::SKILL_RANGED_ATTACK,
+            NONE,
+        )],
+    ),
+    (
+        "projectile_attack_skill_critical_strike_multiplier_+",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            1.0,
+            Flags::SKILL_RANGED_ATTACK,
+            NONE,
+        )],
+    ),
     // PoB `ModParser.lua` 719 ("projectile damage"): `Damage` INC with
     // `ModFlag.Projectile` (P6-1).
     (

@@ -141,6 +141,10 @@ impl Flags {
     /// A mine skill (PoB's `KeywordFlag.Mine`, 419: `mine`, neither a totem
     /// nor a trap; the skill type `RemoteMined`).
     pub const KEYWORD_MINE: Self = Self(1 << 49);
+    /// A skill of the `RangedAttack` type (PoB's `SkillType.RangedAttack`
+    /// tag, "Projectile Attack Skills"; P6-11co): the skill's types after
+    /// its supports added theirs.
+    pub const SKILL_RANGED_ATTACK: Self = Self(1 << 50);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

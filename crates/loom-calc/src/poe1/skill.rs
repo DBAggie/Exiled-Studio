@@ -304,6 +304,12 @@ pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
     // PoB's skill flags from the granted effect's base flags and its
     // supports' added flags, here the skill types with the supports' added
     // types.
+    // "Projectile Attack Skills" (P6-11co): PoB's `SkillType.RangedAttack`.
+    let flags = if types.contains(RANGED_ATTACK_TYPE) {
+        flags | Flags::SKILL_RANGED_ATTACK
+    } else {
+        flags
+    };
     if types.contains(TOTEM_TYPE) {
         flags | Flags::KEYWORD_TOTEM
     } else if types.contains(TRAP_TYPE) {
@@ -315,6 +321,8 @@ pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
     }
 }
 
+/// The skill type of a projectile attack skill (P6-11co).
+pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
 /// The skill type of a totem skill (the game's `ActiveSkillType`).
 pub const TOTEM_TYPE: &str = "SummonsTotem";
 /// The skill type of a trap skill.
