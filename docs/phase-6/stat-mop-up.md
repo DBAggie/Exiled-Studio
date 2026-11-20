@@ -1333,3 +1333,29 @@ Every computed field equals PoB's.
 **Evidence** (`b-ct`, against P6-11ay's run):
 - **Public and corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, every maintainer-run test but the extractor's (which needs a game install and its decoder), and clippy pass.
+
+## P6-11ba: the Abyss jewels' other additions
+
+Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.lua`).
+
+**`NoEffect` (`on-hit-debuff`):** chances to blind, taunt, or hinder on hit, yours and your minions' (7 stats).
+- PoB parses none of these lines, and the enemy is Blinded only by the config's condition.
+- The three blind chances are listed in `damage_taken`'s Blind guard test, as P6-11at's unnerve chance is.
+
+**`STATE_ROWS`, each on a condition the build or the config settles:**
+- "# to # Added Spell <Type> Damage while Dual Wielding" (10 stats) and "#% increased Spell Damage while Dual Wielding": `KeywordFlag.Spell` or `ModFlag.Spell`, `DualWielding`.
+- "#% increased Damage over Time while Dual Wielding", and "... while holding a Shield" (PoB's "while holding a (%w+)", `UsingShield`).
+- "+#% Chance to Block Spell Damage if you were Damaged by a Hit Recently" (`BeenHitRecently`).
+- "#% increased Evasion Rating while moving" (`Moving`).
+
+**Still reasons:**
+- **PoB reads only in part** (text left over, so it applies none of it): "... additional Physical Damage Reduction if you weren't Damaged by a Hit Recently", "... Minion Attack and Cast Speed if you or your Minions have Killed Recently". The game applies them, so they are not `NoEffect`.
+- **PoB does not parse:** "Enemies you Wither have #% to all Resistances".
+- **A condition the engine does not settle:** the two-handed variants (`UsingTwoHandedWeapon`), movement speed if you haven't taken damage recently, cast speed if a minion has been killed recently.
+- **Not modelled yet:** the minion chances to ignite and bleed, and the minion's added chaos damage.
+
+**Fixture** `ice-nova-moving-hit-recently-lines-witch.xml`: moving and damaged by a hit recently by the config. Evasion while moving and spell block apply; the shield and dual wielding lines do not. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11az's run):
+- **Public:** 0 unexpected; 6 values toward PoB, none away, 2 now equal (Arakaali's spell block is now PoB's 78).
+- **Corpus:** no value moved.

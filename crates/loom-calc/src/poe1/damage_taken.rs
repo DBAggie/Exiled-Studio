@@ -1049,7 +1049,15 @@ mod tests {
         // Blind on you, not the enemy's (the pantheon's Garukhan).
         // P6-11at: a chance to unnerve on hit, from which PoB reads no
         // modifier (the enemy's Unnerve is the config's).
-        let listed = ["cannot_be_blinded", "chance_to_unnerve_on_hit_%"];
+        // P6-11ba: chances to blind on hit (yours and your minions'), which
+        // PoB does not parse (the enemy's Blind is the config's).
+        let listed = [
+            "attacks_chance_to_blind_on_hit_%",
+            "cannot_be_blinded",
+            "chance_to_unnerve_on_hit_%",
+            "global_chance_to_blind_on_hit_%",
+            "minion_attacks_chance_to_blind_on_hit_%",
+        ];
         let ids = HIT_ROWS
             .iter()
             .map(|r| r.0)
