@@ -145,6 +145,13 @@ pub enum Poe1Quantity {
     /// (P6-11bx; PoB's `HitsInvertEleResChance` CHANCE, the stat over 100):
     /// `Base`, a fraction, read by the hit's effective resistance.
     InvertElementalResistChance,
+    /// "#% increased Armour and Energy Shield from Equipped Body Armour if
+    /// Equipped Helmet, Gloves and Boots all have Armour and Energy Shield"
+    /// (P6-11by; PoB's `Body ArmourESAndArmour` INC with six
+    /// `StatThreshold` tags, `ModParser.lua` 2478): `Increased`, read by the
+    /// body armour's armour and energy shield rows when the three pieces
+    /// each have both.
+    BodyArmourIfHybridPieces,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1027,6 +1034,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
+            Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::BoundDamage(t, b) => write!(
                 f,
                 "bound-damage.{}.{}",

@@ -4153,7 +4153,16 @@ pub const ROWS: &[Row] = &[
             (INT, Op::Increased, 1.0),
         ],
     ),
-    // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // P6-11by: the body armour's armour and energy shield when the helmet,
+    // gloves, and boots all have both (`phases::primary_defence`).
+    (
+        "armour_and_energy_shield_+%_from_body_armour_if_gloves_helmet_boots_have_armour_and_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BodyArmourIfHybridPieces),
+            Op::Increased,
+            1.0,
+        )],
+    ), // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
     // MORE (P6-4b).
     (
         "basalt_flask_armour_+%_final",

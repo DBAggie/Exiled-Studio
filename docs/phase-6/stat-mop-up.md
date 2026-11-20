@@ -1655,3 +1655,16 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11bw's run):
 - **Public:** 0 unexpected; 9 values toward PoB, none away.
 - **Corpus:** 0 unexpected; 11 values toward PoB, none away.
+
+## P6-11by: the body armour's defences with hybrid helmet, gloves, and boots
+
+"#% increased Armour and Energy Shield from Equipped Body Armour if Equipped Helmet, Gloves and Boots all have Armour and Energy Shield":
+- **PoB's reading:** `Body ArmourESAndArmour` INC with six `StatThreshold` tags: `ArmourOn<slot>` and `EnergyShieldOn<slot>` at least 1 for the three pieces (`ModParser.lua` 2478). Its defence code reads the name in the body armour's armour and energy shield rows (`CalcDefence.lua` 900, 908).
+- **The engine:** `Poe1Quantity::BodyArmourIfHybridPieces` (a `ROWS` row) joins the body armour's own increase in `phases::primary_defence` for armour and energy shield. It applies only when `hybrid_pieces` finds the helmet, gloves, and boots equipped, each with armour and energy shield of at least 1 (each piece's own value, as PoB's `<Defence>On<slot>`).
+
+**No fixture:** the game prints the line on two lines, so a typed line does not resolve, and PoB parses only the first line of an item's text. The public builds take it from a passive.
+
+**Evidence** (`b-ct`, against P6-11bx's run):
+- **Public:** 0 unexpected; 40 values toward PoB, 1 now equal (a Penance Brand build's armour, 25,366).
+- **Away:** 4 values, all on fields with other reasons. One build's energy shield recharge rose with its energy shield, which is still below PoB's. Three of another build's defence estimate values moved by under 0.01%.
+- **Corpus:** 0 unexpected; 43 toward PoB, 19 now equal, 3 away (the same estimate, by under 0.01%).

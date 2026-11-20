@@ -1195,14 +1195,36 @@ pub(super) fn primary_defence(
             // piece's modifier adds it to the global increase; other pieces
             // keep the shared modifier.
             let own = Quantity::Poe1(Poe1Quantity::SlotIncreased(slot, defence));
-            let modifier = if has(calc, own) {
-                let slot_inc = sum(
-                    calc,
-                    own,
-                    Op::Increased,
-                    Term::Step("slot-increased"),
-                    &mut reasons,
-                )?;
+            // The body armour's increase when the helmet, gloves, and boots
+            // each have armour and energy shield (P6-11by; PoB's
+            // `StatThreshold` on `ArmourOn<slot>` and `EnergyShieldOn<slot>`,
+            // each piece's own value, at least 1).
+            let hybrid = Quantity::Poe1(Poe1Quantity::BodyArmourIfHybridPieces);
+            let hybrid_applies = slot == ArmourSlot::BodyArmour
+                && matches!(defence, Defence::Armour | Defence::EnergyShield)
+                && has(calc, hybrid)
+                && hybrid_pieces(calc, &mut reasons)?;
+            let modifier = if has(calc, own) || hybrid_applies {
+                let mut incs = Vec::new();
+                if has(calc, own) {
+                    incs.push(sum(
+                        calc,
+                        own,
+                        Op::Increased,
+                        Term::Step("slot-increased"),
+                        &mut reasons,
+                    )?);
+                }
+                if hybrid_applies {
+                    incs.push(sum(
+                        calc,
+                        hybrid,
+                        Op::Increased,
+                        Term::Step("slot-increased-hybrid"),
+                        &mut reasons,
+                    )?);
+                }
+                let slot_inc = total(calc, &incs, Term::Step("slot-increases"))?;
                 let extra_inc = match extra {
                     Some(e) => total(calc, &[e, slot_inc], Term::Step("extra-and-slot"))?,
                     None => slot_inc,
@@ -1229,6 +1251,25 @@ pub(super) fn primary_defence(
     let rounded = round(calc, sum, Term::Step("rounded"))?;
     let value = at_least(calc, rounded, "minimum", 0.0)?;
     Ok((value, reasons))
+}
+
+/// Whether the helmet, gloves, and boots are each equipped with armour and
+/// energy shield above 0 ([`Poe1Quantity::BodyArmourIfHybridPieces`]).
+fn hybrid_pieces(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<bool, CalcError> {
+    for slot in [ArmourSlot::Helmet, ArmourSlot::Gloves, ArmourSlot::Boots] {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) {
+            return Ok(false);
+        }
+        for defence in [Defence::Armour, Defence::EnergyShield] {
+            if piece(calc, slot, defence, reasons)?.value < 1.0 {
+                return Ok(false);
+            }
+        }
+    }
+    Ok(true)
 }
 
 /// Unreserved life and mana: the pool less its reservation
