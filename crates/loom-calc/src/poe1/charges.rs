@@ -86,6 +86,11 @@ pub enum ChargeValue {
     Maximum,
     /// The minimum (PoB's `<Kind>ChargesMin` BASE).
     Minimum,
+    /// "Your Maximum Frenzy Charges is equal to your Maximum Power Charges"
+    /// (P6-11bg; PoB's `MaximumFrenzyChargesIsMaximumPowerCharges`, a flag
+    /// that overrides `FrenzyChargesMax` with the power charges' maximum,
+    /// `CalcPerform.lua` 955 to 960): `Base`, any value above 0 on.
+    MaximumFromPower,
     /// An effect per charge (a mod with PoB's `Multiplier:<Kind>Charge`
     /// tag).
     Per(PerCharge),
@@ -98,6 +103,7 @@ impl ChargeValue {
         match self {
             Self::Maximum => "maximum",
             Self::Minimum => "minimum",
+            Self::MaximumFromPower => "maximum-from-power",
             Self::Per(p) => p.name(),
         }
     }
@@ -272,6 +278,11 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeValue::Maximum,
     ),
     ("max_power_charges", ChargeKind::Power, ChargeValue::Maximum),
+    (
+        "maximum_frenzy_charges_is_equal_to_maximum_power_charges",
+        ChargeKind::Frenzy,
+        ChargeValue::MaximumFromPower,
+    ),
     (
         "movement_velocity_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
@@ -457,7 +468,19 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
         if !use_on && min == 0.0 {
             continue;
         }
-        let (more, _) = modifiers(ingest, charge.kind, ChargeValue::Maximum);
+        // The frenzy charges' maximum is the power charges' with the flag
+        // (`CalcPerform.lua` 955 to 960).
+        let of = if charge.kind == ChargeKind::Frenzy
+            && modifiers(ingest, ChargeKind::Frenzy, ChargeValue::MaximumFromPower).0 > 0.0
+        {
+            CHARGES
+                .iter()
+                .find(|c| c.kind == ChargeKind::Power)
+                .unwrap_or(charge)
+        } else {
+            charge
+        };
+        let (more, _) = modifiers(ingest, of.kind, ChargeValue::Maximum);
         // The input, else its placeholder (PoB's `BuildModList`); read only
         // when the charges are used, as PoB does.
         let overridden = if use_on {
@@ -477,13 +500,13 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
                 continue;
             }
         };
-        let max = match data.character_constant(charge.max_stat) {
+        let max = match data.character_constant(of.max_stat) {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
             Some(max) => (max as f64 + more).max(0.0),
             None => {
                 ingest.indeterminate(IndeterminateReason::MissingData {
                     table: "character_constants",
-                    key: charge.max_stat.to_owned(),
+                    key: of.max_stat.to_owned(),
                 });
                 continue;
             }

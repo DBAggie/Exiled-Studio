@@ -1422,3 +1422,15 @@ Each line was checked with PoB's own parser (`tools/oracle/data/pob_parse_lines.
 **Evidence** (`b-ct`, against P6-11be's run):
 - **Public:** 0 unexpected; 7 values toward PoB, none away.
 - **Corpus:** unchanged.
+
+## P6-11bg: the frenzy charges' maximum from the power charges'
+
+"Your Maximum Frenzy Charges is equal to your Maximum Power Charges" (Badge of the Brotherhood) is `ChargeValue::MaximumFromPower`.
+- With it, `charges::charges` computes the frenzy charges' maximum as the power charges' (the power constant plus the power maximum modifiers), as PoB's `FrenzyChargesMax` override (`CalcPerform.lua` 955 to 960).
+- **Found:** PoB fails the calculation when the line comes from the config's custom modifiers. Its `modDB.mods[...][1].source` has no such entry there (the fixture's first try, `ORACLE_CALCULATION`). The fixture carries it on the amulet.
+
+**Fixture** `ice-nova-frenzy-max-from-power-witch.xml`: every computed field equals PoB's.
+
+**Evidence:**
+- **Public:** 0 unexpected; 8 values toward PoB (a Cospris build's speed and damage), none away.
+- **Corpus:** unchanged.
