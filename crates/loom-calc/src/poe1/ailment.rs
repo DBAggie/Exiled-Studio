@@ -183,6 +183,10 @@ fn modifier(
     phases::product(calc, &[inc, more], Term::Step("modifier"))
 }
 
+/// The slowest the enemy's debuffs can expire (PoB's
+/// `data.misc.BuffExpirationSlowCap`, `Data.lua` 235; P6-11cv).
+const BUFF_EXPIRATION_SLOW_CAP: f64 = 0.25;
+
 /// How an ailment's source damage meets the roll (PoB's three forms).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Roll {
@@ -478,6 +482,24 @@ pub(super) fn damaging(
         Term::Step("ailment-duration-scaled"),
     )?;
     let duration = hit::ratio(calc, scaled, rate_mod, Term::Step("ailment-duration"))?;
+    // The enemy's debuffs expiring slower or faster (P6-11cv; PoB's
+    // `debuffDurationMult = 1 / max(BuffExpirationSlowCap,
+    // mod(enemy, BuffExpireFaster))`, `CalcOffence.lua` 1457 to 1459, on
+    // ignite, bleed, and poison, 4317, 4588, 4904).
+    let expire = Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster);
+    let duration = if phases::has(calc, expire) {
+        let faster = modifier(calc, expire, &cx, &mut reasons)?;
+        let cap = phases::constant(calc, "buff-expiration-slow-cap", BUFF_EXPIRATION_SLOW_CAP)?;
+        let faster = phases::pair(calc, faster, cap, Term::Step("debuff-expiry"), false)?;
+        hit::ratio(
+            calc,
+            duration,
+            faster,
+            Term::Step("ailment-duration-debuff"),
+        )?
+    } else {
+        duration
+    };
 
     // Step 4: the chance per hit, the stacks, and the roll.
     let one = phases::constant(calc, "one", 1.0)?;

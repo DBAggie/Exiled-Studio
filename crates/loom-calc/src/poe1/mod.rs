@@ -761,6 +761,10 @@ pub enum Poe1Quantity {
     /// `SelfElementalAilmentDuration`, by conditions; curses such as
     /// Elemental Weakness; Phase 6): `Increased`, read by [`ailment`].
     EnemyAilmentDuration,
+    /// How fast the enemy's debuffs expire (PoB's enemy `BuffExpireFaster`;
+    /// Temporal Chains' `MORE`; P6-11cv): `Increased` and `More`, read by
+    /// [`ailment`] as PoB's `debuffDurationMult`.
+    EnemyBuffExpireFaster,
     /// "Ailments never count as being from Critical Strikes" (PoB's
     /// `AilmentsAreNeverFromCrit`, Elemental Overload; Phase 6): a `Flag`
     /// read by [`ailment`].
@@ -1283,6 +1287,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AilmentEffect => f.write_str("ailment-effect"),
             Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
+            Self::EnemyBuffExpireFaster => f.write_str("enemy-buff-expire-faster"),
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),

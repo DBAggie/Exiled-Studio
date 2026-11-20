@@ -1924,10 +1924,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
         Kind::Curse {
             name: "Temporal Chains",
             stats: &[
-                // The enemy's buffs and action speed: no slice field.
+                // P6-11cv: the enemy's debuffs expire slower (PoB's
+                // `BuffExpireFaster` MORE, `act_dex.lua` 15947), which
+                // lengthens the ailments (`poe1::ailment`). The action speed:
+                // no slice field.
                 (
                     "buff_time_passed_+%_other_than_temporal_chains",
-                    BuffStat::NoSlice("enemy-speed"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster),
+                        Op::More,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "temporal_chains_action_speed_+%_final",
@@ -4455,6 +4464,8 @@ mod tests {
                         | Poe1Quantity::EnemyTypeDamageTaken(_)
                         | Poe1Quantity::EnemyDamageTaken
                         | Poe1Quantity::EnemyAilmentDuration
+                        // P6-11cv: its debuffs' expiry.
+                        | Poe1Quantity::EnemyBuffExpireFaster
                         | Poe1Quantity::EnemyProjectileDamageTaken
                         | Poe1Quantity::EnemyPhysicalDamageReduction
                         // P6-10b parts 11 and 12: its accuracy and damage.

@@ -1970,3 +1970,23 @@ Every computed field of both equals PoB's.
 - **Corpus:** 0 unexpected; 1 value toward PoB, none away.
 - **Tests:** the workspace tests and clippy pass.
 
+## P6-11cv: Temporal Chains lengthens the ailments
+
+**Found in P6-11cu.** PoB reads Temporal Chains' `buff_time_passed_+%_other_than_temporal_chains` as the enemy's `BuffExpireFaster` MORE (`act_dex.lua` 15947). The ailment durations are multiplied by `debuffDurationMult = 1 / max(BuffExpirationSlowCap, mod(enemy, BuffExpireFaster))` (`CalcOffence.lua` 1457 to 1459; ignite, bleed, and poison at 4904, 4317, 4588), and `BuffExpirationSlowCap` is 0.25 (`Data.lua` 235). The gem table had the stat as `NoSlice`, so the ailments were wrong, unflagged, for a build with Temporal Chains.
+
+**The engine:**
+- `Poe1Quantity::EnemyBuffExpireFaster` is an enemy quantity, so the minion's hits read it too.
+- Temporal Chains' stat is a curse row on it (MORE), scaled by curse effect as the curse's other rows.
+- `poe1::ailment` divides the duration by `max(0.25, mod)` when the quantity has effects (`ailment::BUFF_EXPIRATION_SLOW_CAP`). The stacks follow the duration, as in PoB.
+
+**Fixtures:**
+- `minion-summon-flame-golem-temporal-chains-witch.xml`: the Flame Golem's ignite, 4 s to 5.33 s.
+- `burning-arrow-temporal-chains-templar.xml`: the character's ignite. Its attack rate's Q11 rounding is registered as DIV-0366 to DIV-0371.
+
+Every other computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cu's run):
+- **Public:** 0 unexpected; 3 values toward PoB (a build's ignite and combined DPS, another's full DPS), none away.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests and clippy pass.
+
