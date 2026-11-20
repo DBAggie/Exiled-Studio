@@ -331,6 +331,10 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // unique enemy; the mark's curse applies as PoB applies it, in a curse
     // slot, whatever triggers it.
     ("SupportMarkOnHit", "triggerMarkOnRareOrUnique"),
+    // P6-11ds: Hextouch triggers the hex it supports on hit; the hex's curse
+    // applies as PoB applies it, in a curse slot, whatever triggers it, at
+    // Hextouch's less curse effect (`gems::HEXTOUCH_CURSE_EFFECT_STAT`).
+    ("SupportCurseOnHitCurse", "triggeredByCurseOnHit"),
     // Righteous Fire's own burn (P6-2b): its `SkillData` multipliers make
     // its damage over time when it is the main skill (`poe1::dot`); as
     // another skill only its buff acts.
@@ -516,6 +520,8 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportCastOnWardBreak", "Triggered"),
     ("SupportCastWhileChannellingTriggered", "Triggered"),
     ("SupportCastWhileChannellingTriggeredPlus", "Triggered"),
+    // P6-11ds: Hextouch triggers its hex (see `ALLOWED_BLOCKED`).
+    ("SupportCurseOnHitCurse", "Triggered"),
     // P6-9g: Mark On Hit triggers its mark (see `ALLOWED_BLOCKED`).
     ("SupportMarkOnHit", "Triggered"),
     ("SupportMomentum", "Buff"),

@@ -2225,6 +2225,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCooldownRecovery", &[]),
     ("SupportCruelty", &[]),
     ("SupportCullingStrike", &[]),
+    // Hextouch's part that supports the hex (P6-11ds; `sup_int.lua` 1484):
+    // the hex triggered on hit, no cost, at its `CurseEffect` MORE
+    // ([`HEXTOUCH_CURSE_EFFECT_STAT`]) and a curse duration no slice field
+    // reads; no global stat.
+    ("SupportCurseOnHitCurse", &[]),
     ("SupportDamageOnFullLife", &[]),
     ("SupportDeadlyAilments", &[]),
     ("SupportEfficacy", &[]),
@@ -2382,6 +2387,10 @@ pub const MARK_CURSE_EFFECT_STAT: &str = "mark_skills_curse_effect_+%";
 /// Blasphemy's `CurseEffect` MORE on the curse it supports (P6-11r; PoB's
 /// `statMap`, a constant -25).
 pub const BLASPHEMY_CURSE_EFFECT_STAT: &str = "support_blasphemy_curse_effect_+%_final";
+
+/// Hextouch's less curse effect on the hex it supports (P6-11ds; PoB's
+/// `CurseEffect` MORE of `SupportCurseOnHitCurse`, `sup_int.lua` 1500).
+pub const HEXTOUCH_CURSE_EFFECT_STAT: &str = "support_hextouch_curse_effect_+%_final";
 
 /// A gem's own stats that scale the buff of the skill it is part of
 /// (PoB's `SkillStatMap.lua`: `golem_buff_effect_+%` 2089 is `BuffEffect`
@@ -3827,7 +3836,9 @@ fn one_skill(
                 .flat_map(|sup| {
                     skill::instance(sup.effect, sup.level, sup.quality, input.data).stats
                 })
-                .filter(|(stat, _)| stat == BLASPHEMY_CURSE_EFFECT_STAT)
+                .filter(|(stat, _)| {
+                    stat == BLASPHEMY_CURSE_EFFECT_STAT || stat == HEXTOUCH_CURSE_EFFECT_STAT
+                })
                 .map(|(_, v)| 1.0 + v as f64 / 100.0)
                 .product();
             // A mark's own increase (P6-11df: "Effect of your Marks").

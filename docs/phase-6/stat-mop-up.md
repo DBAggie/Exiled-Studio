@@ -2375,3 +2375,24 @@ Every computed field equals PoB's but Q11's attack rate (DIV-0425 to DIV-0443).
 
 **Evidence** (`b-ct`, against P6-11dq's run): public and corpus 0 unexpected; no value moved. The workspace tests and clippy pass.
 
+## P6-11ds: Hextouch (P6-11dm's open corpus drop)
+
+**The cause of P6-11dm's open item:**
+- A corpus build's Vulnerability is supported by Hextouch, whose old `skillId` (`SupportCurseOnHit`) P6-11dm now finds by name.
+- Hextouch's gem also grants `SupportCurseOnHitCurse`, the part that supports the hex. The gem table did not have it, so the hex had an unmodelled support and was not applied: its physical damage taken and bleed chance went missing.
+- Before P6-11dm, Hextouch was unknown and the hex applied at its full effect, which was wrong too.
+
+**PoB** (`sup_int.lua` 1484): `SupportCurseOnHitCurse` triggers the hex on hit (`triggeredByCurseOnHit`, no cost) at `support_hextouch_curse_effect_+%_final`, `CurseEffect` MORE (-35% at every level). Its curse duration reaches no slice field. Hextouch's own `apply_linked_curses_on_hit_%` is display only.
+
+**The engine:**
+- `SupportCurseOnHitCurse` joins `gems::SUPPORTS`, and its less curse effect joins the curse's more multiplier with Blasphemy's (`gems::HEXTOUCH_CURSE_EFFECT_STAT`).
+- `apply_linked_curses_on_hit_%` is `NoEffect` (`trigger`).
+- **data-parity `gem_effects`:** allowances for the trigger, as Mark On Hit's (P6-9g): `triggeredByCurseOnHit` in `ALLOWED_BLOCKED`, `Triggered` in `ALLOWED_ADD_TYPES`. `uncategorized` 0.
+
+**Fixture** `smite-hextouch-vulnerability-templar.xml`: Smite with Hextouch and Vulnerability in one group. Every computed field equals PoB's but Q11's attack rate (DIV-0444 to DIV-0450).
+
+**Evidence** (`b-ct`, against P6-11dr's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected; 6 values toward PoB. The open build's hit damage is now 81, against 57 before P6-11dm.
+- **Tests:** the workspace tests and clippy pass.
+

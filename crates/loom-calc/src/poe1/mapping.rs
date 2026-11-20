@@ -6828,6 +6828,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `base_projectile_speed_+%`.
     ("always_pierce", "pierce"),
     ("always_shock", "ailment-chance"),
+    // P6-11ds: Hextouch's chance to apply the linked hex on hit (PoB: display only;
+    // the hex's own support, `SupportCurseOnHitCurse`, applies it).
+    ("apply_linked_curses_on_hit_%", "trigger"),
     // P6-11as: "#% increased Area of Effect per Endurance Charge"
     // (`AreaOfEffect` INC per `EnduranceCharge`): area, as
     // `base_skill_area_of_effect_+%`.
