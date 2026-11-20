@@ -60,7 +60,7 @@ use loom_domain::{ConfigInputKind, ConfigValue};
 use super::enemy::{self, BossKind};
 use super::phases::{self, Valued};
 use super::{BlockGain, Poe1Field, Poe1Quantity, TakenOf, TakenWhen};
-use crate::condition::Flags;
+use crate::condition::{Flags, QueryContext};
 use crate::engine::Calc;
 use crate::error::CalcError;
 use crate::graph::Term;
@@ -385,24 +385,9 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         None => 90.0,
     };
     // Fortification's less damage taken from hits.
-    let fortify_more = if super::conditions::check(set, "buffFortification") == Some(true) {
-        #[expect(clippy::cast_precision_loss, reason = "a small integer")]
-        let base = input
-            .data
-            .character_constant("base_max_fortification")
-            .map_or(20.0, |v| v as f64);
-        let max = base
-            + sum(
-                calc,
-                Poe1Quantity::MaximumFortification,
-                Op::Base,
-                &cx,
-                &mut reasons,
-            )?;
-        let stacks = number("overrideFortification").unwrap_or(max).min(max);
-        1.0 - stacks / 100.0
-    } else {
-        1.0
+    let fortify_more = match fortification_stacks(calc, &cx, &mut reasons)? {
+        Some(stacks) => 1.0 - stacks / 100.0,
+        None => 1.0,
     };
     // Spell suppression, its effective chance (P6-11al).
     let suppression =
@@ -1093,6 +1078,47 @@ fn maximum_hit(
         )?;
     }
     Ok(())
+}
+
+/// The fortification stacks (`CalcPerform.lua` 632 to 653), `None` when
+/// not fortified: while the config's `buffFortification` is on, `min(the
+/// config's overrideFortification or the maximum, the maximum)`, the
+/// maximum `base_max_fortification` (20 without it) plus
+/// `MaximumFortification` BASE. Read by the enemy's hit and, per stack,
+/// by regeneration (P6-11bu).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn fortification_stacks(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<f64>, CalcError> {
+    let set = super::collect::active_config(calc.input().build);
+    if super::conditions::check(set, "buffFortification") != Some(true) {
+        return Ok(None);
+    }
+    #[expect(clippy::cast_precision_loss, reason = "a small integer")]
+    let base = calc
+        .input()
+        .data
+        .character_constant("base_max_fortification")
+        .map_or(20.0, |v| v as f64);
+    let max = base
+        + sum(
+            calc,
+            Poe1Quantity::MaximumFortification,
+            Op::Base,
+            cx,
+            reasons,
+        )?;
+    let over = match set
+        .and_then(|s| super::config::last_input(s, "overrideFortification", ConfigInputKind::Input))
+    {
+        Some(ConfigValue::Number(n)) => Some(n.value().0),
+        _ => None,
+    };
+    Ok(Some(over.unwrap_or(max).min(max)))
 }
 
 /// PoB's `calcMoMEBPool` (`CalcDefence.lua` 2309 to 2321): the life pool

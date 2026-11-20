@@ -2611,6 +2611,25 @@ fn life_regeneration_per_endurance_charge_should_follow_the_count() {
     assert_eq!(state(&r, life_regen), StateKind::Complete);
 }
 
+/// Life regenerated per fortification (P6-11bu): 0.1% of life per second
+/// per stack (6 per minute) at the default 20 stacks while fortified, 2% of
+/// life; nothing when not fortified.
+#[test]
+fn life_regeneration_per_fortification_should_follow_the_stacks() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    let line = ("life_regeneration_per_minute_%_per_fortification", 6);
+    let r = witch_with(&[line]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+    let r = witch_with_inputs(
+        &[line],
+        &[("buffFortification", ConfigValue::Boolean(true))],
+    );
+    let want = value_of(&r, Field::Life) * 0.02;
+    assert!((value_of(&r, life_regen) - want).abs() <= 0.05, "{want}");
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+}
+
 /// A field's reason marker reaches that field alone (P6-10b review).
 #[test]
 fn a_field_marker_should_be_that_fields_reason_only() {

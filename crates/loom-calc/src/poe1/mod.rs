@@ -236,6 +236,11 @@ pub enum Poe1Quantity {
     /// `FireResistTotal`, P6-11t): `Base`, read by [`regen`] times the
     /// resistance's total, floored.
     RegenPerFireResist(Pool),
+    /// Regeneration in percent of the pool per minute per fortification
+    /// stack (P6-11bu; PoB's `<Pool>RegenPercent` BASE per `PerStat`
+    /// `FortificationStacks`): `Base`, read by [`regen`] times the stacks
+    /// ([`enemy_hit::fortification_stacks`]).
+    RegenPerFortification(Pool),
     /// A stat that changes a pool's regeneration in a way the engine does
     /// not model (P6-10b; [`mapping::REGEN_REASONS`]): a `Flag` only
     /// [`regen`] reads, as that field's `unmapped-stat` reason, so the
@@ -1087,6 +1092,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
             Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
             Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
+            Self::RegenPerFortification(p) => {
+                write!(f, "regen-per-fortification.{}", p.name())
+            }
             Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
             Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),

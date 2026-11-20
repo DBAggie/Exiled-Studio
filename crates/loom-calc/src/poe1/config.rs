@@ -147,7 +147,8 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   12 the enemy's hit, [`super::enemy_hit`], reads the check and the
 ///   override itself), the `HaveMaximumFortification` flag, and one more
 ///   `BuffOnSelf`; 3889 exports the stacks to a party (not a slice
-///   field). Every other reader is a modifier (per fortification, while
+///   field). Life regeneration per stack reads the same stacks since
+///   P6-11bu ([`super::regen`]). Every other reader is a modifier (while
 ///   fortified, at maximum fortification, per buff on you).
 ///
 /// Added in P3-12f, inputs whose effect needs a condition only modifiers
@@ -794,17 +795,19 @@ mod tests {
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
         // P6-10b part 12: the maximum, which the enemy's hit reads while
-        // Fortified (`poe1::enemy_hit`, reading the check itself).
+        // Fortified (`poe1::enemy_hit`, reading the check itself); P6-11bu:
+        // life regeneration per stack, which `poe1::regen` reads with the
+        // same stacks (`enemy_hit::fortification_stacks`).
         for id in ids {
             assert!(
-                !id.contains("fortif") || id == "base_max_fortification",
+                !id.contains("fortif")
+                    || id == "base_max_fortification"
+                    || id == "life_regeneration_per_minute_%_per_fortification",
                 "{id}: revisit NAMED_ONLY"
             );
         }
         // `NoEffect` rows naming fortification, each checked: a chance to
-        // fortify, its duration; none reaches a slice field. Regeneration
-        // per stack is a `mapping::REGEN_REASONS` entry (P6-10b): the life
-        // regeneration field's reason, never a value.
+        // fortify, its duration; none reaches a slice field.
         let checked = ["chance_to_fortify_on_melee_hit_+%", "fortify_duration_+%"];
         for (id, _) in crate::poe1::mapping::NO_EFFECT {
             assert!(

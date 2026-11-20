@@ -172,6 +172,34 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 Term::Step("percent-per-second"),
             )?);
         }
+        // Per fortification stack (P6-11bu): the stat per minute, read per
+        // second, times the stacks; nothing when not fortified.
+        let per_fortification = Quantity::Poe1(Poe1Quantity::RegenPerFortification(pool));
+        if phases::has(calc, per_fortification) {
+            let cx = calc.context(Flags::NONE);
+            let stacks = super::enemy_hit::fortification_stacks(calc, &cx, &mut reasons)?;
+            if let Some(stacks) = stacks {
+                let sum = phases::sum(
+                    calc,
+                    per_fortification,
+                    Op::Base,
+                    Term::Step("percent-per-minute-per-fortification"),
+                    &mut reasons,
+                )?;
+                let sixtieth = phases::constant(calc, "per-second", 1.0 / 60.0)?;
+                let per_second = phases::product(
+                    calc,
+                    &[sum, sixtieth],
+                    Term::Step("percent-per-second-per-fortification"),
+                )?;
+                let stacks = phases::constant(calc, "fortification-stacks", stacks)?;
+                percent_terms.push(phases::product(
+                    calc,
+                    &[per_second, stacks],
+                    Term::Step("percent-per-fortification"),
+                )?);
+            }
+        }
         if pool == Pool::EnergyShield {
             // Zealot's Oath: life's sums, each when above 0.
             for (flat, percent, life) in moved.drain(..) {
@@ -407,6 +435,7 @@ fn reads(quantity: Quantity, pool: Pool) -> bool {
             | Poe1Quantity::RegenPerMinute(p)
             | Poe1Quantity::RegenIncPerSpellBlock(p)
             | Poe1Quantity::RegenPerFireResist(p)
+            | Poe1Quantity::RegenPerFortification(p)
             | Poe1Quantity::RecoveryRate(p)
             | Poe1Quantity::RegenReason(p, _),
         ) => p == pool,

@@ -5213,7 +5213,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
-    // P6-11t: "Regenerate # Life per second for each 1% Uncapped Fire
+    // P6-11bu: "Regenerate #% of Life per second per Fortification"
+    // (`LifeRegenPercent` BASE per `FortificationStacks`).
+    (
+        "life_regeneration_per_minute_%_per_fortification",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPerFortification(Pool::Life)),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-11t: "Regenerate # Life per second for each 1% Uncapped Fire
     // Resistance" (`LifeRegen` BASE, `PerStat` `FireResistTotal`; the stat
     // per minute); [`super::regen`] reads it.
     (
@@ -6858,18 +6867,13 @@ pub const MOVEMENT_REASONS: &[&str] = &[
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
 /// regeneration field's reason alone. PoB's text for each
-/// (`ModParser.lua`): life per fortification stack, per level; energy
-/// shield per nearby corpse. (Mana with exposure inflicted recently is
+/// (`ModParser.lua`): life per level; energy shield per nearby corpse.
+/// (Life per fortification stack is a row since P6-11bu, read by
+/// [`super::regen`] with the stacks.) (Mana with exposure inflicted recently is
 /// `poe1::exposure`'s since P6-11au.) Per
 /// endurance and power charge are [`super::charges`]'s, per uncapped fire
 /// resistance and per spell block chance [`super::regen`]'s (P6-11t).
 pub const REGEN_REASONS: &[(&str, Pool)] = &[
-    // Per fortification stack: fortification is named only
-    // (`config::NAMED_ONLY`), so this stays a reason, now on the field.
-    (
-        "life_regeneration_per_minute_%_per_fortification",
-        Pool::Life,
-    ),
     ("life_regeneration_rate_per_minute_per_level", Pool::Life),
     // "For each nearby corpse, you and nearby Allies Regenerate #% of Energy
     // Shield per second" (PoB's `ExtraAura` per `NearbyCorpse`).
@@ -7114,6 +7118,7 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::RegenPerMinute(_)
                 | Poe1Quantity::RegenIncPerSpellBlock(_)
                 | Poe1Quantity::RegenPerFireResist(_)
+                | Poe1Quantity::RegenPerFortification(_)
                 // Regeneration per charge (P6-11t).
                 | Poe1Quantity::Charge(
                     _,

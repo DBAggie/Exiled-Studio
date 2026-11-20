@@ -1588,3 +1588,17 @@ Five stats that change no slice field are `NoEffect` rows. PoB parses none of th
 "Magic Utility Flasks cannot be Used" stays a reason. PoB ignores it, but the game does not, and the engine applies a magic utility flask's effects.
 
 **Evidence** (`b-ct`, against P6-11bq's run): public and corpus 0 unexpected; no value or state moved (those builds' fields have other reasons).
+
+## P6-11bu: life regeneration per fortification
+
+"Regenerate #% of Life per second per Fortification" is PoB's `LifeRegenPercent` BASE per `PerStat` `FortificationStacks`.
+- **The stacks** (`CalcPerform.lua` 632 to 653): while the config's `buffFortification` is on, `min(overrideFortification or the maximum, the maximum)`. The maximum is `base_max_fortification` plus `MaximumFortification` BASE.
+- **Shared:** the enemy's hit (P6-10b part 12) already computed them. That code is now `enemy_hit::fortification_stacks`, shared with regeneration.
+- **The new term:** `Poe1Quantity::RegenPerFortification` (a `ROWS` row) is the stat per minute. `regen` reads it per second times the stacks, and nothing when not fortified.
+- **Guards:** the stat leaves `mapping::REGEN_REASONS`. The fortification guard (`config::tests::no_mapped_stat_should_read_fortification`) names it beside the maximum.
+
+**No fixture:** the stat's text handler prints one decimal, so a typed line is unsettled. The public builds take it from a passive (node 13922), whose value is exact. A test pins the term: `life_regeneration_per_fortification_should_follow_the_stacks` (2% of life at 20 stacks, nothing when not fortified).
+
+**Evidence** (`b-ct`, against P6-11bt's run):
+- **Public:** 0 unexpected; 3 values toward PoB, none away. The three builds with the passive's life regeneration; one (an Inquisitor) now equals PoB's 553 and is complete.
+- **Corpus:** unchanged.
