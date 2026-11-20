@@ -1777,3 +1777,21 @@ All are `HIT_ROWS` rows on P6-11bk's keywords.
 **Evidence** (`b-ct`, against P6-11cf's run):
 - **Public:** 0 unexpected; 8 values toward PoB, none away. 32 fields went from partial (the field's reason) to complete.
 - **Corpus:** unchanged.
+
+## P6-11ch: Arcane Surge's effect and its more spell damage
+
+PoB's Arcane Surge (`CalcPerform.lua` 686 to 699):
+- **The effect:** `1 + (ArcaneSurgeEffect + BuffEffectOnSelf) / 100`, plus a flask share.
+- **What it scales:** the mana regeneration (`ArcaneSurgeManaRegen` or 30) and the cast speed (`ArcaneSurgeCastSpeed` or 20).
+- **The more spell damage:** the largest `ArcaneSurgeDamage` (the Hierophant's "Arcane Surge also grants #% more Spell Damage to you") times the effect.
+
+What the engine does:
+- "#% increased Effect of Arcane Surge on you" is `Poe1Quantity::ArcaneSurgeEffect`, and the Hierophant's line is `ArcaneSurgeDamage`, both `ROWS` rows.
+- `buffs::arcane_surge` scales the regeneration and the cast speed by the effect, and adds the more spell damage.
+- The generic buff effect on self and the flask share stay reasons (`ARCANE_SURGE_DEPENDS_ON`, which the effect stat leaves).
+
+**Fixture** `ice-nova-arcane-surge-effect-witch.xml`: 30% effect and 10% more spell damage. Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11cg's run):
+- **Public:** 0 unexpected; 9 values toward PoB (a Hierophant's Shock Nova), none away.
+- **Corpus:** unchanged.

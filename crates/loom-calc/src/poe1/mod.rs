@@ -184,6 +184,12 @@ pub enum Poe1Quantity {
     /// over 4 seconds instead"): `Base`, read by the enemy's hit and the
     /// defence estimate's pools.
     LifeLossPrevented,
+    /// "#% increased Effect of Arcane Surge on you" (P6-11ch; PoB's
+    /// `ArcaneSurgeEffect` INC): `Increased`, read by [`buffs`].
+    ArcaneSurgeEffect,
+    /// "Arcane Surge also grants #% more Spell Damage to you" (P6-11ch;
+    /// PoB's `ArcaneSurgeDamage` MAX): `Base`, the largest read by [`buffs`].
+    ArcaneSurgeDamage,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -1072,6 +1078,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
             Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
             Self::LifeLossPrevented => f.write_str("life-loss-prevented"),
+            Self::ArcaneSurgeEffect => f.write_str("arcane-surge-effect"),
+            Self::ArcaneSurgeDamage => f.write_str("arcane-surge-damage"),
             Self::EnergyShieldFromChaosResistance => {
                 f.write_str("energy-shield-from-chaos-resistance")
             }

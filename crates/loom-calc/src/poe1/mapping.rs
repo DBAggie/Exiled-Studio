@@ -4223,7 +4223,24 @@ pub const ROWS: &[Row] = &[
             (INT, Op::Increased, 1.0),
         ],
     ),
-    // P6-11by: the body armour's armour and energy shield when the helmet,
+    // P6-11ch: Arcane Surge's effect on you and its more spell damage
+    // (`ArcaneSurgeEffect` INC, `ArcaneSurgeDamage` MAX; `poe1::buffs`).
+    (
+        "arcane_surge_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    (
+        "arcane_surge_on_you_spell_damage_+%_final_from_hierophant",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeDamage),
+            Op::Base,
+            1.0,
+        )],
+    ), // P6-11by: the body armour's armour and energy shield when the helmet,
     // gloves, and boots all have both (`phases::primary_defence`).
     (
         "armour_and_energy_shield_+%_from_body_armour_if_gloves_helmet_boots_have_armour_and_energy_shield",

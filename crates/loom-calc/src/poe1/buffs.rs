@@ -100,7 +100,6 @@ pub const ARCANE_SURGE_DEPENDS_ON: &[&str] = &[
     "additive_flask_effect_modifiers_apply_to_arcane_surge",
     "additive_flask_effect_modifiers_apply_to_arcane_surge_at_%_value",
     "arcane_surge_cast_speed_+%",
-    "arcane_surge_effect_+%",
     "buff_effect_on_self_+%",
 ];
 
@@ -308,8 +307,45 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     } else {
         support.unwrap_or(Source::Rule("arcane-surge"))
     };
+    // Its effect (P6-11ch; `CalcPerform.lua` 688): `1 + ArcaneSurgeEffect /
+    // 100` (the buff effect on self and the flask's share stay reasons).
+    let increased: f64 = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeEffect)
+                && e.op == Op::Increased
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .sum();
+    let effect = 1.0 + increased / 100.0;
+    // Its more spell damage (696 to 699): the largest `ArcaneSurgeDamage`
+    // times the effect, when not 0.
+    let damage = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeDamage)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(None, |m: Option<f64>, v| {
+            Some(m.map_or(v, |m| crate::math::max(m, v)))
+        })
+        .unwrap_or(0.0);
+    if damage != 0.0 {
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value: damage * effect,
+            conditions: Conditions::none().with_all(Flags::SPELL),
+            source: source.clone(),
+        });
+    }
     // Its mana regeneration (P6-10b; `CalcPerform.lua` 690): `ManaRegen`
-    // INC, the largest `ArcaneSurgeManaRegen` or 30, times its effect (1).
+    // INC, the largest `ArcaneSurgeManaRegen` or 30, times its effect.
     let regen = ingest
         .effects()
         .iter()
@@ -326,14 +362,14 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     ingest.effect(Effect {
         quantity: Quantity::Poe1(Poe1Quantity::Regen(super::Pool::Mana)),
         op: Op::Increased,
-        value: regen,
+        value: regen * effect,
         conditions: Conditions::none(),
         source: source.clone(),
     });
     ingest.effect(Effect {
         quantity: Quantity::Speed,
         op: Op::Increased,
-        value: speed,
+        value: speed * effect,
         conditions: Conditions::none().with_all(Flags::CAST),
         source,
     });
