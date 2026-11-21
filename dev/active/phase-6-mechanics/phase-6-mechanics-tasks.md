@@ -353,6 +353,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ft: Manaforged Arrows, Mirage Archer beside the main skill, Generosity (its aura not on you; `gems::AURA_NOT_ON_SELF_SUPPORTS`) (`docs/phase-6/stat-mop-up.md`, "P6-11ft")
 - [x] P6-11fu: Maim Support's debuff on a maimed enemy (`gems::DEBUFF_SUPPORTS`) (`docs/phase-6/stat-mop-up.md`, "P6-11fu")
 - [x] P6-11fv: Bonechill, the chill as cold damage taken (`Poe1Quantity::Bonechill`; fixture `ice-nova-bonechill-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11fv")
+- [x] P6-11fw: Defiance Banner and War Banner (nothing unless planted, a `banner-valour` reason when planted) (`docs/phase-6/stat-mop-up.md`, "P6-11fw")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

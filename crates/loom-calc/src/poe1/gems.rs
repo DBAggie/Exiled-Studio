@@ -849,6 +849,42 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("DarkPact", Kind::Inert),
     ("Dash", Kind::Inert),
+    // P6-11fw: the banners (`act_str.lua`): an aura at `AuraEffect` MORE
+    // -100 unless planted (the config's `bannerPlanted`), so nothing
+    // without it; planted, scaled per Valour consumed
+    // (`banner_buff_effect_+%_final_per_resource`, the config's
+    // `bannerValour` up to `MaximumValour`, `CalcPerform.lua` 1299 to 1302),
+    // which the engine does not model: a reason (`""`: its base mods).
+    (
+        "DefianceBanner",
+        Kind::Buff {
+            name: "Defiance Banner",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+                (
+                    "base_movement_velocity_+%",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+                (
+                    "base_spell_suppression_chance_%",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+            ],
+        },
+    ),
     ("Desecrate", Kind::Inert),
     (
         "Despair",
@@ -2639,6 +2675,37 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fw: as Defiance Banner.
+    (
+        "WarBanner",
+        Kind::Buff {
+            name: "War Banner",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+                (
+                    "accuracy_rating_+%",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+                (
+                    "war_banner_physical_damage_+%_final_with_melee_skills",
+                    BuffStat::ReasonWhenInput {
+                        input: BANNER_PLANTED_INPUT,
+                        what: "banner-valour",
+                    },
+                ),
+            ],
+        },
+    ),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("WhirlingBlades", Kind::Inert),
@@ -3429,6 +3496,9 @@ pub const INFUSION_INPUT: &str = "infusedChannellingInfusion";
 /// The config count of Momentum stacks removed (Swiftness,
 /// `ConfigOptions.lua` 543; P6-11y).
 pub const MOMENTUM_REMOVED_INPUT: &str = "MomentumSwiftnessStacks";
+/// The config check of a planted banner (`ConfigOptions.lua` 287;
+/// P6-11fw).
+pub const BANNER_PLANTED_INPUT: &str = "bannerPlanted";
 /// The config list of Pride's effect (`ConfigOptions.lua` 566: `MIN` or
 /// `MAX`; P6-9e).
 pub const PRIDE_INPUT: &str = "prideEffect";
@@ -3447,6 +3517,8 @@ pub fn is_input(name: &str) -> bool {
         // P6-11fk, P6-11fn: Frost Shield's stages, Ensnaring Arrow's stacks.
         "frostShieldStages",
         "multiplierEnsnaredStackCount",
+        // P6-11fw: a planted banner (its Valour count goes with it).
+        BANNER_PLANTED_INPUT,
     ]
     .contains(&name)
 }

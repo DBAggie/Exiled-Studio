@@ -3412,3 +3412,18 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - All 78 compared fields equal PoB's.
 - **Public and corpus:** 0 unexpected; no other value moved. The builds with Bonechill neither configure a chill nor have a chilling area with it.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fw: Defiance Banner and War Banner
+
+**PoB** (`act_str.lua`, `DefianceBanner`, `WarBanner`):
+- **Unplanted:** a banner's base mods give its aura `AuraEffect` MORE -100 unless the config's `bannerPlanted` is on, so it does nothing.
+- **Planted:**
+  - the aura scales per Valour consumed (`banner_buff_effect_+%_final_per_resource` times `Multiplier:BannerValour`, the config's `bannerValour` up to `MaximumValour`, `CalcPerform.lua` 1299 to 1302);
+  - a `Buff` of its name sets `AffectedByPlacedBanner`.
+- **The aura's rows:** Defiance Banner's movement speed and spell suppression; War Banner's accuracy and physical damage MORE with melee skills.
+
+**The engine:** both in `gems::SKILLS` as auras whose stats, the base mods (`""`) included, are `ReasonWhenInput` on `bannerPlanted` (`banner-valour`). Unplanted they do nothing, as in PoB; planted they are reasons, the Valour scale not being modelled. `bannerPlanted` is among the inputs `poe1::gems` reads. `data-parity` (`gem_effects`) lists both buff identities and allows the `AuraEffect` MORE with why; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fv's run):
+- **Public and corpus:** 0 unexpected; no value moved. The banner builds do not plant theirs, so the banner is no longer an unmodelled gem there and still does nothing, as in PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

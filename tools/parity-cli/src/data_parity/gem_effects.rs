@@ -307,6 +307,12 @@ const ALLOWED_MINIONS: &[&str] = &[
 /// Stance mod a `Buff` on the character (the engine scales the Blood
 /// Stance row as an aura's, which PoB's `AuraDebuff` scale also reads).
 const EXTRA_BUFFS: &[(&str, &str)] = &[
+    // P6-11fw: a banner's planted flag (`AffectedByPlacedBanner`) is a
+    // `Buff` of its name beside its aura; both act only when planted.
+    ("DefianceBanner", "Aura Defiance Banner"),
+    ("DefianceBanner", "Buff Defiance Banner"),
+    ("WarBanner", "Aura War Banner"),
+    ("WarBanner", "Buff War Banner"),
     // Blood and Sand's two stances are two buffs in PoB (`effectName`
     // "Blood" and "Sand"; P6-11dw), one skill buff here.
     ("BloodAndSand", "Buff Blood"),
@@ -356,6 +362,11 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fw: a banner's `AuraEffect` MORE, -100 unless planted and per
+    // Valour when planted: its rows are reasons when planted
+    // (`gems::BANNER_PLANTED_INPUT`), nothing otherwise.
+    ("DefianceBanner", "AuraEffect"),
+    ("WarBanner", "AuraEffect"),
     // P6-11fv: Bonechill's flag is `gems::BONECHILL_SUPPORT` (the chill as
     // cold damage taken); its chill effect on a chilling area is a
     // `skill-chill-effect` reason (`gems::guaranteed_chill`).
