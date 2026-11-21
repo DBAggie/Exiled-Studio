@@ -3180,3 +3180,18 @@ With supports, every support socketed in the slot's other groups joins the skill
 **Evidence** (`b-ct`, against P6-11fh's run):
 - **Public and corpus:** 0 unexpected; no value moved. The fixtures' Shockwave builds hold maces or staves, and no restriction stat is unmapped now (5 before).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fj: Bear Trap's debuff
+
+**PoB** (`act_dex.lua`, `BearTrap`): `bear_trap_damage_taken_+%_from_traps_and_mines` maps to `TrapMineDamageTaken` INC on the enemy, a `GlobalEffect` `Debuff`. A trap or mine skill's hit adds it to the enemy's `takenInc`, read with no skill config (`CalcOffence.lua` 3488 to 3490). Damage over time never reads it.
+
+**The engine:**
+- **New `Poe1Quantity::EnemyTrapMineDamageTaken`.**
+- **`hit::projectile_taken` sums what the hit's kind adds:** a projectile hit's `ProjectileDamageTaken` (Sniper's Mark) and now a trap or mine skill's (`KEYWORD_TRAP`, `KEYWORD_MINE`) trap and mine damage taken. It is one term of `takenInc`, as in PoB.
+- **`gems::SKILLS`:** Bear Trap as a `Kind::Debuff` with that row.
+- **`data-parity` (`gem_effects`):** the quantity is PoB's `TrapMineDamageTaken`; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fi's run):
+- **Public:** 0 unexpected. 8 values moved, all toward PoB: a mine Assassin's and a Lightning Trap Elementalist's damage (average, total, combined, and full DPS), each with Bear Trap in the build.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

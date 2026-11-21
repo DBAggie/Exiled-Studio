@@ -282,6 +282,10 @@ pub enum Poe1Quantity {
     /// INC on the enemy; Sniper's Mark, P6-9e): `Increased`, read only by a
     /// projectile hit ([`hit`]).
     EnemyProjectileDamageTaken,
+    /// The enemy's damage taken from trap and mine hits (PoB's
+    /// `TrapMineDamageTaken` INC on the enemy; Bear Trap, P6-11fj):
+    /// `Increased`, read only by a trap or mine skill's hit ([`hit`]).
+    EnemyTrapMineDamageTaken,
     /// A pool's regeneration (P6-10b): `Base` the flat amount per second
     /// (PoB's `<Pool>Regen` BASE), `Increased` and `More` its rate, read by
     /// [`regen`].
@@ -1196,6 +1200,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
+            Self::EnemyTrapMineDamageTaken => f.write_str("enemy-trap-mine-damage-taken"),
             Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
             Self::Regen(p) => write!(f, "regen.{}", p.name()),
             Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),

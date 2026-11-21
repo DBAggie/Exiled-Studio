@@ -598,6 +598,25 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fj: Bear Trap's debuff (`act_dex.lua`, `BearTrap`): the enemy's
+    // `TrapMineDamageTaken` INC (`GlobalEffect`, `Debuff`), which only a
+    // trap or mine skill's hit adds to its `takenInc` ([`super::hit`]).
+    (
+        "BearTrap",
+        Kind::Debuff {
+            name: "Bear Trap",
+            stats: &[(
+                "bear_trap_damage_taken_+%_from_traps_and_mines",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     // P6-11dt: Berserk's buff (`act_str.lua` 934): `RageEffect` INC, a
     // `GlobalEffect` buff marked unscalable, read by the rage
     // (`poe1::stacks`). Its minimum rage and rage loss PoB does not map.
@@ -5374,6 +5393,7 @@ mod tests {
                         // P6-11cv: its debuffs' expiry.
                         | Poe1Quantity::EnemyBuffExpireFaster
                         | Poe1Quantity::EnemyProjectileDamageTaken
+                        | Poe1Quantity::EnemyTrapMineDamageTaken
                         | Poe1Quantity::EnemyPhysicalDamageReduction
                         // P6-10b parts 11 and 12: its accuracy and damage.
                         | Poe1Quantity::EnemyAccuracy

@@ -710,6 +710,7 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::EnemyDamageTaken) => "DamageTaken".into(),
         // The marks' rows on the enemy (P6-9e).
         Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken) => "ProjectileDamageTaken".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken) => "TrapMineDamageTaken".into(),
         Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
             "PhysicalDamageReduction".into()
         }

@@ -3384,29 +3384,52 @@ fn type_damage_taken(
     phases::product(calc, &parts, Term::Step("enemy-damage-taken"))
 }
 
-/// The enemy's projectile damage taken a projectile hit adds to its
-/// `takenInc` (PoB's `ProjectileDamageTaken` INC on the enemy, read with no
-/// skill config when `skillFlags.projectile`, `CalcOffence.lua` 3482 to
-/// 3484; never by damage over time; Sniper's Mark, P6-9e): `None` for a
-/// hit without the projectile flag or when nothing gives it.
+/// What a hit's kind adds to the enemy's `takenInc`, each read with no
+/// skill config and never by damage over time (`CalcOffence.lua` 3482 to
+/// 3490): a projectile hit's `ProjectileDamageTaken` (Sniper's Mark,
+/// P6-9e) and a trap or mine skill's `TrapMineDamageTaken` (Bear Trap,
+/// P6-11fj), summed; `None` when the hit is neither or nothing gives it.
 fn projectile_taken(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
-    let q = Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken);
-    if !cx.flags.contains(Flags::PROJECTILE) || !phases::has(calc, q) {
-        return Ok(None);
-    }
+    let kinds = [
+        (
+            Poe1Quantity::EnemyProjectileDamageTaken,
+            cx.flags.contains(Flags::PROJECTILE),
+            "enemy-projectile-damage-taken",
+        ),
+        (
+            Poe1Quantity::EnemyTrapMineDamageTaken,
+            cx.flags.contains(Flags::KEYWORD_TRAP) || cx.flags.contains(Flags::KEYWORD_MINE),
+            "enemy-trap-mine-damage-taken",
+        ),
+    ];
     let none = calc.context(Flags::NONE);
-    Ok(Some(sum_in(
-        calc,
-        q,
-        Op::Increased,
-        &none,
-        Term::Step("enemy-projectile-damage-taken"),
-        reasons,
-    )?))
+    let mut terms = Vec::new();
+    for (q, applies, step) in kinds {
+        let q = Quantity::Poe1(q);
+        if applies && phases::has(calc, q) {
+            terms.push(sum_in(
+                calc,
+                q,
+                Op::Increased,
+                &none,
+                Term::Step(step),
+                reasons,
+            )?);
+        }
+    }
+    match terms.as_slice() {
+        [] => Ok(None),
+        [one] => Ok(Some(*one)),
+        _ => Ok(Some(phases::total(
+            calc,
+            &terms,
+            Term::Step("enemy-kind-damage-taken"),
+        )?)),
+    }
 }
 
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type
