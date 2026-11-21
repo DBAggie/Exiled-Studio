@@ -322,6 +322,22 @@ pub enum BuffStat {
         /// The rows.
         rows: &'static [HitEffect],
     },
+    /// Applies at the skill's maximum stages (PoB's `effectCond` on a
+    /// condition the skill's own `MultiplierThreshold` on its
+    /// `StageAfterFirst` sets; P6-11gb, Scorching Ray): the gem's part
+    /// `part` or above (PoB's `CalcPerform.lua` 2241 to 2245 set the
+    /// maximum there), or a stage count (`skillStageCount`, PoB's default
+    /// the maximum, `CalcActiveSkill.lua` 638) of at least `stages`.
+    AtMaxStages {
+        /// The part at the maximum stages (1-based).
+        part: usize,
+        /// The maximum stages.
+        stages: u32,
+        /// The skill's condition (PoB's `effectCond`).
+        condition: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies while unreserved life is at least 2 and mana at least 1
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
@@ -2222,6 +2238,33 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("RollingMagma", Kind::Inert),
+    // P6-11gb: Scorching Ray's fire exposure (`act_int.lua` 15732): a
+    // debuff (`effectName` "Fire Exposure") whose `effectCond`
+    // `ScorchingRayMaxStages` the skill sets at 8 stages (its
+    // `MultiplierThreshold` 7 on `StageAfterFirst`), the default stage
+    // count, or in its part 2 ("Maximum Stages"). Its burning is its own
+    // damage over time.
+    (
+        "ScorchingRay",
+        Kind::Debuff {
+            name: "Fire Exposure",
+            stats: &[(
+                "base_fire_damage_resistance_%",
+                BuffStat::AtMaxStages {
+                    part: 2,
+                    stages: 8,
+                    condition: "ScorchingRayMaxStages",
+                    rows: &[(
+                        Quantity::Poe1(Poe1Quantity::SkillExposure(DamageType::Fire)),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )],
+                },
+            )],
+        },
+    ),
     ("SearingBond", Kind::Inert),
     // P6-11fd: Seismic Cry (`act_str.lua` 9667): more armour per 5 warcry
     // power up to 25 (`Armour` MORE, a `Warcry` effect). Its stun threshold
@@ -5421,6 +5464,14 @@ fn add_rows(
                 }
                 (rows, None)
             }
+            BuffStat::AtMaxStages {
+                part, stages, rows, ..
+            } => {
+                if !at_max_stages(input, g, r.gem, part, stages) {
+                    continue;
+                }
+                (rows, None)
+            }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
             BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
@@ -5475,6 +5526,25 @@ fn add_rows(
             }
         }
     }
+}
+
+/// Whether the gem at `gem` of group `g` is at its maximum stages
+/// ([`BuffStat::AtMaxStages`]): its `skillPart` (PoB's `m_min(#parts,
+/// skillPart or 1)`, the parts at most `part`) is `part`, or its
+/// `skillStageCount` (missing: the maximum; PoB's `m_max(count, 1)`) is
+/// at least `stages`.
+fn at_max_stages(input: &CalcInput<'_>, g: usize, gem: usize, part: usize, stages: u32) -> bool {
+    let Ok(groups) = skill::active_groups(input.build) else {
+        return true;
+    };
+    let Some(x) = groups.get(g).and_then(|group| group.gems.typed().nth(gem)) else {
+        return true;
+    };
+    let number = |name| skill::attribute(&x.attributes, name).and_then(|v| v.parse::<f64>().ok());
+    if number("skillPart").is_some_and(|p| p >= part as f64) {
+        return true;
+    }
+    number("skillStageCount").is_none_or(|c| c.max(1.0) >= f64::from(stages))
 }
 
 /// Lightning Golem's Wrath (module docs; `CalcPerform.lua` 2782 to 2812):
@@ -5990,6 +6060,7 @@ mod tests {
                 | BuffStat::Unscalable(e)
                 | BuffStat::PerCount { rows: e, .. }
                 | BuffStat::PerStack { rows: e, .. }
+                | BuffStat::AtMaxStages { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }

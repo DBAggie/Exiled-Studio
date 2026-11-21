@@ -1043,6 +1043,13 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
                 json!({ "effectStackLimit": limit, "effectStackVar": var })
             ),
         ),
+        // The skill's condition at its maximum stages (P6-11gb).
+        BuffStat::AtMaxStages {
+            condition, rows, ..
+        } => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": condition })),
+        ),
         BuffStat::Threshold(rows) => (
             rows,
             format!(
@@ -1409,6 +1416,7 @@ fn check_one(
             | BuffStat::Unscalable(_)
             | BuffStat::PerCount { .. }
             | BuffStat::PerStack { .. }
+            | BuffStat::AtMaxStages { .. }
             | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)

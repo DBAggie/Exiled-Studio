@@ -3502,3 +3502,23 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **New mechanic fixture** `ice-nova-ignite-flame-surge-witch.xml`: the Ice Nova ignite fixture with Flame Surge in a group of its own. All 79 compared fields match, among them `BurningGroundDPS` 41.83, the ignite 139.43, and the combined and full DPS 1699.34.
 - **Public and corpus:** 0 unexpected, and no value moved. The new field is not computed in the 7 builds where PoB has it (1 public, 6 corpus): none of them has a computed ignite.
 - **Tests:** the workspace tests, the UI tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gb: Scorching Ray's fire exposure
+
+**PoB** (`act_int.lua` 15712 to 15770; `CalcActiveSkill.lua` 635 to 643; `CalcPerform.lua` 2241 to 2245, 2260):
+- **The debuff:** Scorching Ray's `base_fire_damage_resistance_%` (-25) is `FireExposure` BASE, a `Debuff` named "Fire Exposure" whose `effectCond` is `ScorchingRayMaxStages`.
+- **The condition:** the skill sets it on its own mods by a `MultiplierThreshold` of 7 on `ScorchingRayStageAfterFirst`, which is `min(7, stage count - 1)`.
+- **The stage count:** the gem's `skillStageCount`, defaulting to the maximum, 8. In part 2 ("Maximum Stages") it is always 7.
+- **So:** the exposure applies by default, and not below 8 stages in part 1.
+
+**The engine:**
+- **`gems::BuffStat::AtMaxStages`:** applies its rows when the gem's `skillPart` is the maximum-stages part, or its `skillStageCount` (missing: the maximum; at least 1, as PoB's `m_max`) reaches the maximum.
+- **`gems::SKILLS`:** Scorching Ray as a debuff with that row, `SkillExposure(Fire)`; the strongest exposure wins as for every skill (`poe1::exposure`).
+- **`data-parity` (`gem_effects`):** the row is printed with PoB's `effectCond`, and it matches; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ga's run):
+- **Two new mechanic fixtures** from the Ice Nova ignite fixture, with Scorching Ray in a group of its own. All 78 compared fields match in each:
+  - `ice-nova-ignite-scorching-ray-witch.xml`, at the default stage count: the exposure applies (average damage 1121.02, ignite 209.14);
+  - `ice-nova-ignite-scorching-ray-stages-witch.xml`, at 4 stages: none (ignite 139.43, the base fixture's).
+- **Public and corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
