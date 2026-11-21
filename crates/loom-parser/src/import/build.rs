@@ -374,6 +374,21 @@ impl<'d, 'b> Resolver<'d, 'b> {
         body: &mut ItemBody,
         base: Result<&ItemBaseName, &str>,
     ) -> LineRangeEnds {
+        // A `{custom}` line is the player's text, applied as PoB applies
+        // it (`Classes/Item.lua`: `BuildModList` takes every mod line,
+        // custom or not; a line its parser does not read whole adds
+        // nothing). So it is read as any line of the item, and stays a
+        // reason only when it does not resolve (maintainer decision
+        // 2026-11-20; `docs/phase-6/stat-mop-up.md`, "P6-11fh"). The
+        // import keeps the exclusion, so a document saved before reads
+        // the same.
+        for line in &mut body.lines {
+            if let LineKind::Modifier(m) = &mut line.kind
+                && m.resolution == LineResolution::Excluded(loom_domain::Exclusion::Custom)
+            {
+                m.resolution = LineResolution::Pending;
+            }
+        }
         let found = match base {
             Err(reason) => Err(NoBase::Unnamed(reason.to_owned())),
             Ok(b) => find_base(

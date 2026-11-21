@@ -3138,3 +3138,23 @@ With supports, every support socketed in the slot's other groups joins the skill
 - **Public:** 0 unexpected. A Penance Brand Elementalist's unreserved mana went from 240 to 221 (PoB 78) with the mine's reservation. Its damage fields are not computed, so the exposure moves nothing there.
 - **Corpus:** 0 unexpected. The same move in its corpus build.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fh: item `{custom}` lines applied as PoB applies them
+
+**Maintainer decision** (2026-11-20): "Yes, follow how PoB handles custom". Spike B's plan kept an item's `{custom}` lines (the player's text, not the game's) out, as `Exclusion::Custom`. ADR-015 Amendment 2 covered config custom lines only, so no amendment is needed: an item line read through the stat descriptions is stat-ID first as ADR-015 asks.
+
+**PoB** (`Classes/Item.lua`): `{custom}` only marks the line (`modLine.custom`). `BuildModList` takes every mod line, custom or not, and a line its `ModParser` does not read whole adds nothing, as for any item line.
+
+**The engine:**
+- **`Resolver::resolve_item_ranged`** turns an `Excluded(Custom)` line into `Pending` before it reads the item, so the line is resolved, ranged, and applied as any line of the item. One that does not resolve stays a reason (`unresolved-line`) instead of `excluded-line`.
+- **The import keeps the exclusion** (`legacy::pob_item::domain`), and the `{custom}` prefix stays on the line for export, so a build document saved before reads the same.
+- **Tests:** the parser's ring fixture (its `{custom}` life line resolves), the synthetic build's outcome counts (`excluded` 0, `resolved` 10), the pipeline's reset test (a line a variant leaves out keeps its exclusion), the synthetic golden regenerated (each `excluded-line` reason of that line became its `unmapped-stat`: the synthetic bundle maps no stat). CI's pinned synthetic field counts are unchanged (10 unsupported, 41 indeterminate).
+
+**Evidence** (`b-ct`, against P6-11fg's run):
+- **Public:** 0 unexpected. 147 values moved, 145 toward PoB, 15 now equal:
+  - a Cyclone Slayer's Strength, Intelligence, mana, and unreserved mana (-85 to -18, PoB -18; the helmet's reservation efficiency line that explained Autoexertion in P6-11eu) and crit chance (100, PoB 100);
+  - a Boneshatter Juggernaut's life (5,579 to 5,890, PoB 5,890) and its leech caps;
+  - an Occultist's armour and block, a Flicker Strike Berserker's and a Deadeye's movement speed, a spectre Necromancer, a ballista Hierophant, a Lightning Trap Elementalist.
+- **Two moved away**, each where the engine was already past PoB for another cause: a Pathfinder's unreserved mana (220 to 269, PoB 91: its two `{custom}` reservation efficiency lines now apply, as in PoB) and a Flicker Strike Berserker's energy shield recharge (106 to 107, PoB 0; it follows the energy shield, 317 to 320, PoB 3,199).
+- **Corpus:** 0 unexpected. 39 moved, 36 toward PoB, 17 now equal; the three away again past PoB already (unreserved mana, attack speed and its ignite).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
