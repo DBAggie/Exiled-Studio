@@ -344,6 +344,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11fk: Frost Shield (its staged values reasons only with `frostShieldStages`, its guaranteed chill, a skill's own chill effect from quality a reason) (`docs/phase-6/stat-mop-up.md`, "P6-11fk")
 - [x] P6-11fl: Hexpass, the enemy's `NeverCrit` through the hex it supports (`gems::CURSE_SUPPORTS`, `Poe1Quantity::EnemyNeverCrit`; fixture `minion-summon-flame-golem-hexpass-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11fl")
 - [x] P6-11fm: Battlemage's Cry's support effect (`BattlemagesCrySupport` in `gems::SUPPORTS`) (`docs/phase-6/stat-mop-up.md`, "P6-11fm")
+- [x] P6-11fn: Ensnaring Arrow's debuff per stack (`BuffStat::PerStack`, `Poe1Quantity::EnemyProjectileAttackDamageTaken`; fixture `burning-arrow-ensnaring-arrow-templar.xml`, DIV-0484 to DIV-0489) (`docs/phase-6/stat-mop-up.md`, "P6-11fn")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

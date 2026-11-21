@@ -345,6 +345,9 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fn: Ensnaring Arrow's quality (`BuffEffect`): PoB scales a
+    // `Debuff` by `DebuffEffect` alone (`CalcPerform.lua` 2589 to 2593).
+    ("EnsnaringArrow", "BuffEffect"),
     // P6-11fm: Battlemage's Cry's support triggers the spell it supports
     // (as Automation's); the spell's own kind says what it does.
     ("BattlemagesCrySupport", "triggeredByBattleMageCry"),
@@ -740,6 +743,10 @@ fn pob_name(q: Quantity) -> String {
         // The marks' rows on the enemy (P6-9e).
         Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken) => "ProjectileDamageTaken".into(),
         Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken) => "TrapMineDamageTaken".into(),
+        // P6-11fn: Ensnaring Arrow's.
+        Quantity::Poe1(Poe1Quantity::EnemyProjectileAttackDamageTaken) => {
+            "ProjectileAttackDamageTaken".into()
+        }
         // P6-11fl: Hexpass's, on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyNeverCrit) => "NeverCrit".into(),
         Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
@@ -923,6 +930,16 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
         BuffStat::PerCount { var, rows, .. } => (
             rows,
             format!(" tags {}", json!({ "type": "Multiplier", "var": var })),
+        ),
+        // PoB's stack variable and limit on the `GlobalEffect` tag (P6-11fn).
+        BuffStat::PerStack {
+            var, limit, rows, ..
+        } => (
+            rows,
+            format!(
+                " tags global {}",
+                json!({ "effectStackLimit": limit, "effectStackVar": var })
+            ),
         ),
         BuffStat::Threshold(rows) => (
             rows,
@@ -1255,6 +1272,7 @@ fn check_one(
             | BuffStat::SandStance(_)
             | BuffStat::Unscalable(_)
             | BuffStat::PerCount { .. }
+            | BuffStat::PerStack { .. }
             | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)

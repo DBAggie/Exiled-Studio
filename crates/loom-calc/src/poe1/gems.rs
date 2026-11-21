@@ -307,6 +307,21 @@ pub enum BuffStat {
         /// The rows.
         rows: &'static [HitEffect],
     },
+    /// Applies per stack, at most `limit` (PoB's `effectStackVar` and
+    /// `effectStackLimit` on the `GlobalEffect` tag, the stack count a
+    /// multiplier only the config count `input` sets; P6-11fn, Ensnaring
+    /// Arrow's `EnsnareStackCount`): the scaled value times `min(count,
+    /// limit)`, nothing without stacks.
+    PerStack {
+        /// The config count.
+        input: &'static str,
+        /// PoB's stack variable.
+        var: &'static str,
+        /// PoB's stack limit.
+        limit: u32,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies while unreserved life is at least 2 and mana at least 1
     /// (PoB's `StatThreshold` tags, Righteous Fire's): the rows carry the
     /// state [`STAT_THRESHOLD`], which the hit sets from those fields.
@@ -994,6 +1009,32 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     BuffStat::Defence("enemy-offence"),
                 ),
             ],
+        },
+    ),
+    // P6-11fn: Ensnaring Arrow's debuff ("Ensnared"): the enemy's
+    // `ProjectileAttackDamageTaken` INC, per ensnare stack at most 1 (PoB's
+    // `effectStackVar = "EnsnareStackCount"`, `effectStackLimit = 1`, the
+    // stacks the config's `multiplierEnsnaredStackCount`), read only by a
+    // projectile attack's hit ([`super::hit`]).
+    (
+        "EnsnaringArrow",
+        Kind::Debuff {
+            name: "Ensnared",
+            stats: &[(
+                "tethered_enemies_take_attack_projectile_damage_taken_+%",
+                BuffStat::PerStack {
+                    input: "multiplierEnsnaredStackCount",
+                    var: "EnsnareStackCount",
+                    limit: 1,
+                    rows: &[(
+                        Quantity::Poe1(Poe1Quantity::EnemyProjectileAttackDamageTaken),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )],
+                },
+            )],
         },
     ),
     ("EssenceDrain", Kind::Inert),
@@ -3239,6 +3280,9 @@ pub fn is_input(name: &str) -> bool {
         MOMENTUM_REMOVED_INPUT,
         INFUSION_INPUT,
         WARCRY_POWER_INPUT,
+        // P6-11fk, P6-11fn: Frost Shield's stages, Ensnaring Arrow's stacks.
+        "frostShieldStages",
+        "multiplierEnsnaredStackCount",
     ]
     .contains(&name)
 }
@@ -4978,6 +5022,29 @@ fn add_rows(
                 }
                 (rows, None)
             }
+            BuffStat::PerStack {
+                input: counted,
+                limit,
+                rows,
+                ..
+            } => {
+                match config.and_then(|set| last_input(set, counted, ConfigInputKind::Input)) {
+                    Some(ConfigValue::Number(n))
+                        if n.value().0.is_finite() && n.value().0 > 0.0 =>
+                    {
+                        count = crate::math::min(n.value().0, f64::from(limit));
+                    }
+                    Some(ConfigValue::Number(n)) if n.value().0 <= 0.0 => continue,
+                    None => continue,
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: counted.to_owned(),
+                        });
+                        continue;
+                    }
+                }
+                (rows, None)
+            }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
             BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
@@ -5503,6 +5570,7 @@ mod tests {
                 | BuffStat::SandStance(e)
                 | BuffStat::Unscalable(e)
                 | BuffStat::PerCount { rows: e, .. }
+                | BuffStat::PerStack { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }
@@ -5538,6 +5606,7 @@ mod tests {
                         | Poe1Quantity::EnemyBuffExpireFaster
                         | Poe1Quantity::EnemyProjectileDamageTaken
                         | Poe1Quantity::EnemyTrapMineDamageTaken
+                        | Poe1Quantity::EnemyProjectileAttackDamageTaken
                         | Poe1Quantity::EnemyNeverCrit
                         | Poe1Quantity::EnemyPhysicalDamageReduction
                         // P6-10b parts 11 and 12: its accuracy and damage.

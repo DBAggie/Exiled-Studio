@@ -959,6 +959,7 @@ const fn is_enemy_quantity(q: Quantity) -> bool {
                 | Poe1Quantity::EnemyPhysicalDamageReduction
                 | Poe1Quantity::EnemyProjectileDamageTaken
                 | Poe1Quantity::EnemyTrapMineDamageTaken
+                | Poe1Quantity::EnemyProjectileAttackDamageTaken
                 | Poe1Quantity::ChillDamageTaken(_)
                 | Poe1Quantity::ConsecratedGroundDamageTaken
                 | Poe1Quantity::ChillSecondsDamageTaken

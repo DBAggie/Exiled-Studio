@@ -3387,8 +3387,9 @@ fn type_damage_taken(
 /// What a hit's kind adds to the enemy's `takenInc`, each read with no
 /// skill config and never by damage over time (`CalcOffence.lua` 3482 to
 /// 3490): a projectile hit's `ProjectileDamageTaken` (Sniper's Mark,
-/// P6-9e) and a trap or mine skill's `TrapMineDamageTaken` (Bear Trap,
-/// P6-11fj), summed; `None` when the hit is neither or nothing gives it.
+/// P6-9e), a projectile attack's `ProjectileAttackDamageTaken` (Ensnaring
+/// Arrow, P6-11fn), and a trap or mine skill's `TrapMineDamageTaken` (Bear
+/// Trap, P6-11fj), summed; `None` when the hit is none or nothing gives it.
 fn projectile_taken(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
@@ -3399,6 +3400,11 @@ fn projectile_taken(
             Poe1Quantity::EnemyProjectileDamageTaken,
             cx.flags.contains(Flags::PROJECTILE),
             "enemy-projectile-damage-taken",
+        ),
+        (
+            Poe1Quantity::EnemyProjectileAttackDamageTaken,
+            cx.flags.contains(Flags::PROJECTILE) && cx.flags.contains(Flags::ATTACK),
+            "enemy-projectile-attack-damage-taken",
         ),
         (
             Poe1Quantity::EnemyTrapMineDamageTaken,

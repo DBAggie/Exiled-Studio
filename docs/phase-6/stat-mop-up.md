@@ -3246,3 +3246,26 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected. 4 values moved, all toward PoB: a Boneshatter Juggernaut's damage (average 88,871 to 115,531, PoB 582,277) with its Vulnerability now applied.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fn: Ensnaring Arrow's debuff
+
+**PoB** (`act_dex.lua`, `EnsnaringArrow`):
+- `tethered_enemies_take_attack_projectile_damage_taken_+%` maps to `ProjectileAttackDamageTaken` INC on the enemy, a `Debuff` named "Ensnared".
+- Its `GlobalEffect` tag carries `effectStackVar = "EnsnareStackCount"` and `effectStackLimit = 1`. The stack count is the config's `multiplierEnsnaredStackCount`, which has no default.
+- PoB scales the debuff by `DebuffEffect` times `min(stacks, limit)`; with no stack it does nothing (`CalcPerform.lua` 2534 to 2600).
+- A projectile attack's hit adds it to the enemy's `takenInc` (`CalcOffence.lua` 3485).
+- The gem's quality (`BuffEffect`) does not reach a `Debuff`.
+
+**The engine:**
+- **New `Poe1Quantity::EnemyProjectileAttackDamageTaken`,** one more term of `hit::projectile_taken`, for a hit with both the projectile and attack flags.
+- **New `BuffStat::PerStack { input, var, limit, rows }`:** PoB's stack variable and limit, with the rows times `min(count, limit)`. Ensnaring Arrow is a `Kind::Debuff` with it.
+- **Config inputs read:** `multiplierEnsnaredStackCount`, and Frost Shield's `frostShieldStages` (P6-11fk), are now among the inputs `poe1::gems` reads, so neither is an `unmodelled-config` reason.
+- **`data-parity` (`gem_effects`):** the stack tag is compared as PoB writes it, and the quality's `BuffEffect` is allowed with why; `uncategorized` 0.
+
+**Evidence** (`b-ct`):
+- **New mechanic fixture** `burning-arrow-ensnaring-arrow-templar.xml`: Burning Arrow with Ensnaring Arrow at one stack.
+  - Average damage is 6.105, equal to PoB's; with 0 stacks the engine gives 5.088.
+  - 73 fields match. The 6 differences are the Q11 attack-time rounding of the base fixture, registered as `game-truth` (DIV-0484 to DIV-0489).
+- **Public:** 0 unexpected; no other value moved. The Deadeye with Ensnaring Arrow attacks with Elemental Hit, which is not a projectile skill.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
