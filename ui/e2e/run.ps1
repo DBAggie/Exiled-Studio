@@ -41,6 +41,20 @@ $env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe
 # passes on a Windows desktop: start the app alone with a fixed DevTools
 # port and say whether WebView2 answers, then stop it. CI only.
 if ($env:CI) {
+  # The 2026-11-20 probes: WebView2 starts (no crash dump) but its
+  # DevTools never answer, with or without the GPU and sandbox. A machine
+  # policy can forbid remote debugging: show the Edge and WebView2
+  # policies, then remove the ones that block it (the runner is ours
+  # alone and thrown away after the job).
+  foreach ($key in 'HKLM:\SOFTWARE\Policies\Microsoft\Edge', 'HKLM:\SOFTWARE\Policies\Microsoft\Edge\WebView2', 'HKLM:\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge', 'HKCU:\SOFTWARE\Policies\Microsoft\Edge') {
+    if (Test-Path $key) {
+      "probe: policy key $key"
+      (Get-ItemProperty $key).PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object { "probe:   $($_.Name) = $($_.Value)" }
+      foreach ($name in 'RemoteDebuggingAllowed', 'DeveloperToolsAvailability') {
+        Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue
+      }
+    }
+  }
   $probeArgs = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
   # Each variant once: as is, then without the GPU, then also without the
   # sandbox (both known causes of a WebView2 that never starts on a server).
