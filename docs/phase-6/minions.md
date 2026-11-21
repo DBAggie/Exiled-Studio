@@ -284,3 +284,321 @@ The code-architecture-reviewer found no blockers in #165. Applied:
 **Evidence:**
 - **The sweep:** only Holy Strike changed, its reason now `minion-items` instead of `minion-level`. There are still 0 unexpected differences.
 - **Public and corpus on `b-ot`:** no value or state changed. There are 0 unexpected differences, and both runs are byte-identical.
+
+## P6-7b3b: the character's minion modifiers on the minion
+
+PoB adds every `MinionModifier` of the main skill's `skillModList` to the minion (`CalcPerform.lua` `addMinionModifiers`, 1213 to 1219, called at 1918), keeping only those whose `type` names the minion. "Golems have ..." lines carry the main skill's `SkillType.Golem` tag (`ModParser.lua` 1137).
+
+### The rows
+
+`poe1::minions::STATS` has 31 rows, sorted. Each carries PoB's mod type as its op. Each was checked against PoB's own reading:
+- **item and passive lines:** PoB's `modLib.parseMod` on the game's text, rendered from the bundle's stat descriptions. The tool is `tools/oracle/data/pob_parse_lines.lua`, with the inner `MinionModifier` mod written out (local copy, `local/p6/parse2`).
+- **gem stats:** PoB's stat map (`Data/SkillStatMap.lua` 1922 to 2061; `Data/Skills/sup_int.lua` 4675 and 4929).
+
+The new kinds of `MinionValue` are the minion's life, energy shield, armour, evasion, each resistance, each maximum resistance, block and spell block, life regeneration, movement speed, and cooldown recovery. `MinionValue::on_minion` names the minion's quantity for each. Regeneration, movement speed, and cooldown recovery reach no minion field, just as the character's movement speed reaches no field. Damage and speeds are P6-7c's.
+
+| Rows | PoB's reading |
+|---|---|
+| `minion_maximum_life_+%`, `minion_maximum_energy_shield_+%`, `minion_evasion_rating_+%` | `Life`, `EnergyShield`, `Evasion` INC |
+| `active_skill_minion_life_+%_final`, `support_minion_maximum_life_+%_final`, `support_minion_damage_minion_life_+%_final`, `necromancer_defensive_notable_minion_maximum_life_+%_final`, `active_skill_minion_energy_shield_+%_final` | `Life` or `EnergyShield` MORE |
+| `minion_physical_damage_reduction_rating` | `Armour` BASE |
+| `minion_elemental_resistance_%`, `minion_fire_damage_resistance_%`, `minion_cold_damage_resistance_%`, `minion_chaos_resistance_%` | `<Type>Resist` BASE (all three for the elemental row) |
+| `minion_maximum_all_elemental_resistances_%` | `ElementalResistMax` BASE |
+| `minion_block_%`, `minion_additional_spell_block_%` | `BlockChance`, `SpellBlockChance` BASE |
+| `minion_life_regeneration_rate_per_minute_%` | `LifeRegenPercent` BASE, per minute over 60 (no field) |
+| `minion_movement_speed_+%`, `active_skill_minion_movement_velocity_+%_final`, `minion_cooldown_recovery_+%` | `MovementSpeed` INC and MORE, `CooldownRecovery` INC (no field) |
+| `golem_maximum_life_+%`, `golem_maximum_energy_shield_+%`, `golem_physical_damage_reduction_rating` | the same, tagged `SkillType.Golem`: `Poe1Quantity::GolemMinion` |
+
+**Moved out of `MinionPending`:**
+- `Poe1Quantity::MinionPending` is gone. Its four stats are rows now, except `golem_immunity_to_elemental_damage`.
+- `golem_immunity_to_elemental_damage` is back in `NO_EFFECT` (`minion-defence`): PoB's parser does not read its line ("Golems are Immune to Elemental Damage"), so it reaches none of PoB's outputs.
+
+### The minion step
+
+`poe1::minion_actor` now adds three things to the minion:
+- **`minion_modifiers`:** the character's effects of those kinds. A golem kind applies only when the main skill has the `Golem` type. A conditional one is a `minion-modifier` reason.
+- **`gem_modifiers`:** the main skill's own gems' stats, read through the gem mapping.
+  - The character's store holds them only when the skill is also a hit or damage over time the engine computes. So they are read here, and their copies in the character's store are skipped.
+  - A stat PoB's stat map sends to the minion (`PobSkill::minion_stats`) that the gem mapping leaves unmapped is an `unmapped-stat` reason on the minion. One it reads as no effect is a `minion-modifier` reason.
+- **Unsettled values:** an unsettled range on a minion-only stat (`StatMapping::elsewhere`) is kept in `ModStore::elsewhere`. It becomes the minion's `unsettled-value` reason, not the character's.
+  - Before this, such a range made every character field indeterminate (Forged Frostbearer's "Minions Regenerate (1-2)% of Life per second").
+  - Minion damage and speeds stay the character's, since a redirect can give them to the character.
+
+**PoB's more multiplier rounding:** `ModDB:MoreInternal` rounds each name's product of `1 + more / 100` to two decimals. The engine's `phases::chain` (life, mana, energy shield, armour, evasion) did not. It now does, adding the nodes only when the rounding changes the value. Raise Zombie with Minion Life shows it: 1.38 x 1.49 = 2.0562, which PoB rounds to 2.06. No character value of the public or corpus builds changed. `hit.rs` already rounded the hit's multipliers so.
+
+**Not modelled, each a reason:** keystones given to the minion, `StrengthAddedToMinions`, and `ResistanceAddedToMinions` come from stats the engine does not map, so each is already the character's `unmapped-stat`. Reaper's "non-Reaper minions" life (a `GlobalEffect` buff) waits for P6-7b4.
+
+### Evidence
+
+- **The sweep (52 builds):**
+  - 0 unexpected differences.
+  - 40 minion fields are `Complete`, all equal to PoB. That is 32 before, minus those now carrying a gem's unmapped minion damage stat, plus Herald of Purity's and Stone Golem of Safeguarding's.
+  - Every `Partial` field equals PoB except Vaal Summon Skeletons' life, armour, and evasion (the level). Its fields stay `Partial` through the gem's `unmodelled-gem`, so its register entry waits (task kept).
+- **Fixtures:**
+  - New: `minion-summon-stone-golem-golem-lines-witch.xml`, with golem life and armour lines and two more-life lines. All 25 fields are `Complete` and equal to PoB, the rounding included.
+  - Stone Golem of Safeguarding's targets gain its minion fields.
+  - A Raise Zombie build with the minion lines and Minion Life equals PoB on every minion field. It stays local (`local/p6/fx16`): the Raise Zombie gem is the character's `unmodelled-gem` until P6-9.
+- **`set_maximum_life_is_one`:** every skill minion with it (skitterbots, Herald of Agony's spider, ancestral totems' minions) takes its level from the gem's level requirement or the character. The bundle carries neither, so those minions are `minion-level`, and the fixture waits on a data run with level requirements.
+- **Public `calc-parity` on `b-ot`:** 162 builds, 109 expected differences, 0 unexpected. `Complete` fields went from 2,822 to 2,857 (2,840 without the new fixture), and the indeterminate count is unchanged.
+- **Corpus:** 0 unexpected, field counts unchanged.
+- Both runs are byte-identical.
+
+## P6-7b4: the character's auras and buffs on the minion
+
+PoB applies two kinds of the character's skills to the main skill's minion, merging them per name into `minionBuffs`:
+- **a buff with `skillData.buffMinions` or `buffAllies`** (`CalcPerform.lua` 2282 to 2290);
+- **every self aura** (2425 to 2438), unless the character's "auras cannot affect allies" flags say otherwise.
+
+The minion's scale is `(1 + inc / 100) x more`, from the skill's `AuraEffect` and `BuffEffect`. It leaves out the "on self" terms the character's scale has, and adds the minion's own `BuffEffectOnSelf` and `AuraEffectOnSelf`.
+
+**The engine:** `poe1::gems::minion_buffs`:
+- It walks the enabled skills as `gems` does, and takes each skill whose buff reaches the minion (`reaches_minion`).
+- For a modelled one (`Kind::Buff`), it adds the rows with `add_rows`. They are scaled by the character's `Totals::buff_scale` (now also built from a finished store, `Totals::from_effects`) and merged per name with each row's largest value, as `mergeBuff`. The "on self" terms PoB leaves out are terms the engine reads nowhere (they are unmapped, reasons), so the two scales are the same.
+- An unmodelled one, or one with an unmodelled support, is a `minion-buffs` reason.
+- Lightning Golem's Wrath, a minion skill's aura that reaches minions too (2775 to 2780), is a reason when the config enables it.
+- The flags that stop auras reaching allies, and the minion's buff effect on itself, come from stats the engine does not map: the character's reasons, which every minion field carries.
+
+`deferred_reasons` is gone: every source it named is now applied or a reason where it is read.
+
+### Evidence
+
+- **Fixture:** `minion-summon-stone-golem-discipline-witch.xml`: Stone Golem with Discipline in another group, and 15% increased effect of non-curse auras. The golem's energy shield is 249, as in PoB, and all 25 fields are `Complete` and equal to PoB.
+- **The sweep:** unchanged (no aura in its builds).
+- **Public `calc-parity` on `b-ot`:** 163 builds, 109 expected differences, 0 unexpected. No document but the new fixture's changed.
+- **Corpus:** unchanged, 0 unexpected.
+- Both runs are byte-identical.
+
+## P6-7c, part 1: the minion's hit
+
+PoB computes the minion's main skill with its own offence code: `calcs.offence(env, env.minion, env.minion.mainSkill)` (`CalcPerform.lua` 3737). The engine does the same. Under the minion actor, `Calc` writes and reads each field as the minion's copy (`Field::for_minion`, `Calc::with_actor`), so the character's attack path (`hit::attack_hit`) computes the minion's hit unchanged (`poe1::minion_hit`).
+
+**What PoB does:**
+- **The minion's skills** (`CalcActiveSkill.lua` 870 to 922): its `skillList` (the variety's skills, then the template's), each PoB's data has, at level 1, with the summoning skill's supports. The main one is the gem's `skillMinionSkill` (1-based, clamped), else the first; PoB's default attack when the list is empty.
+- **Its weapon** (719 to 752):
+  - `damage = monsterAllyDamageTable[level] x damage`, times `attackTime` unless the type's damage ignores attack speed;
+  - `PhysicalMin = round(damage x (1 - damageSpread))` and `PhysicalMax = round(damage x (1 + damageSpread))`;
+  - `AttackRate = 1 / attackTime`, `CritChance = 5`;
+  - its type is the variety's main-hand class through the exporter's class map (`minions.lua` 76 to 93), else `None` (unarmed); the off hand holds nothing.
+- **`damageFixup`** (488 to 490; the exporter, `minions.lua` 185 to 191): `Damage` MORE `-100 x fixup` and `Speed` MORE `100 x fixup` for attacks, from a `MonsterSpeedAndDamageFixup*` mod.
+- **`initMinionModDB`** (`CalcPerform.lua` 1141 to 1146): `CannotBeEvaded`, and `CritMultiplier` BASE of the monster template's `base_critical_strike_multiplier - 100`.
+- **The enemy is shared:** one `enemyDB`, so the character's curses, debuffs, exposure, and the configured enemy conditions reach the minion's hits.
+
+**The engine:**
+- `minion_actor::collect`:
+  - the minion's main skill (`ActorState::skill`) and its weapon class (`ActorState::weapon`);
+  - its monster weapon as the weapon quantities an item gives the character, from the variety, the type, and the new `CalcData::monster_ally_damage`. The table's single-precision number is widened as PoB's table holds it; the multipliers are the exporter's (`lua_number`). The rate is the new `WeaponValue::AttackRate`, PoB's `1 / attackTime` as is: the item path's millisecond rate differs from it by one ulp;
+  - `damageFixup` and `CannotBeEvaded`;
+  - the enemy's effects (every effect on an enemy quantity, and every effect of a curse or debuff skill) and the configured `Enemy:` conditions, copied from the character's.
+- `hit::crit_multiplier` takes the monster template's base for the minion.
+- `MinionValue::on_minion` gives damage and attack and cast speed with their flags, so the character's "Minions deal #% increased Damage" and kin, and the main skill's gems' minion stats, reach the minion's hit.
+- The minion's own monster mods that reach its hit now have PoB's mods (`MINION_STATS`):
+  - `active_skill_attack_speed_+%_final`;
+  - added physical damage to attacks, and to the main hand's weapon;
+  - the three physical conversions;
+  - `dual_wield_inherent_attack_speed_+%_final` (the minion never dual wields).
+
+  Until this step they had no effect, which was right while the minion had only defence fields.
+- The minion's strength, dexterity, and intelligence are computed from its own store (none but the character's minion modifiers give it any), as its hit reads them.
+
+**Computed:** a minion skill of `minion_hit::VETTED` (PoB's default attack `Melee`, the Raging Spirit's `SumonRagingSpiritMelee`: plain attacks in PoB's data, a test), when the summoning skill has no support. Otherwise the minion's offence fields are `unmodelled-skill`:
+- `minion-skill`: any other minion skill (the golems' and relics' spells, the Reaper's);
+- `minion-skill-support`: PoB applies the summoning skill's supports to the minion's skills, which the engine does not yet;
+- `minion-weapon`: a weapon class PoB has no flags for.
+
+**Slice revision 5:** `Minion.AverageDamage`, `Minion.Speed`, `Minion.HitChance`, `Minion.CritChance`, `Minion.CritMultiplier`, `Minion.TotalDPS` (PoB's `output.Minion`). The result gains the minion's copies of the offence fields and its attributes (`MinionField`, additive).
+
+### Evidence
+
+- **The sweep (52 builds):** 10 builds' minion hits computed, 58 offence values equal to PoB, 2 registered. Vaal Summon Skeletons' damage follows its minion level, 68 against PoB's 70: DIV-0123 and DIV-0124, `game-truth`, as DIV-0111 to DIV-0113. Minion fields equal to PoB: 175 (109 before). 0 unexpected.
+  - The Raging Spirit first showed `Complete` but differed. Its monster mods (conversion to fire, added physical damage, attack speed MORE 40) had no effect, and nothing marked them a reason. Fixed with their PoB mods above. The other `Later` rows reach no minion field: damage taken, immunities, stun, leech, regeneration, and charges.
+- **Fixture:** `minion-raise-zombie-damage-speed-lines-witch.xml`: the character's minion damage and speed lines, with all 14 minion fields equal to PoB. Nine minion fixtures are retargeted to their hit fields.
+- **Public `calc-parity` on `b-ot`:** 183 builds, 123 expected differences, 0 unexpected. `Complete` fields: 3,447. No value of another build moved.
+- **Corpus:** 0 unexpected, no value moved.
+- Both runs are byte-identical.
+
+## P6-7c, part 2: the summoning skill's supports on the minion's skills
+
+PoB creates the minion's skills with the summoning skill's support list (`CalcActiveSkill.lua` 903). For a minion's skill, `canGrantedEffectSupportActiveSkill` checks a support against the summoning skill's types and its minion types (`CalcTools.lua` 104 to 105), the same check the summoning skill's own supports passed. So each of them reaches the minion's skill, except:
+- **triggers:** `isTrigger`, since the minion is not the player (113);
+- **supports that name weapon types:** the minion skills have none (119 to 130).
+
+A support's stats then join the minion skill's list. Two kinds are not read there:
+- **its minion modifiers:** they apply to the minion's own minions, which don't exist;
+- **its `notMinionStat` stats:** `Modules/Data.lua` 81 to 90 tags them so a minion's skill skips them.
+
+**The engine:**
+- `minion_actor::support_modifiers` reads each such support's stats into the minion's store through the gem mapping (`SupportOnMinion`). It drops the minion modifiers, which `gem_modifiers` already gives the minion, and the `notMinionStat` stats.
+- The tables come from `Data/Skills/sup_*.lua`: `NO_MINION_SUPPORTS` (27 triggers and weapon-typed supports) and `NOT_MINION_STATS` (36 supports).
+- An unmapped stat is the minion's `unmapped-stat` reason, as for the character's skill.
+- The `minion-skill-support` gate is gone.
+
+**Rows added on the way** (the character's own skills read them too):
+- Brutality's own `statMap` (`sup_str.lua` 802): `support_brutality_physical_damage_+%_final`, `PhysicalDamage` MORE;
+- `SkillStatMap.lua` 1232 to 1239: `deal_no_elemental_damage` and `base_deal_no_chaos_damage`, PoB's `DealNo<Type>` flags. The gem mapping now takes `DealNo` as a hit quantity;
+- Minion Damage's own `statMap` (`sup_int.lua` 4813): `support_minion_damage_+%_final`, a minion modifier holding `Damage` MORE (the redirect to the character reads only increases).
+
+### Evidence
+
+- **Fixture:** `minion-raise-zombie-supports-witch.xml`, Raise Zombie with Minion Damage, Minion Speed, Melee Physical Damage, and Brutality. All 31 compared fields `Complete` and equal to PoB, the zombie's 468.04 average damage included.
+- **The sweep:** unchanged (no support in its builds), 0 unexpected.
+- **Public `calc-parity` on `b-ot`:** 184 builds, 123 expected differences, 0 unexpected; `Complete` fields 3,491.
+  - 10 values of other builds moved, 8 toward PoB: Brutality's more physical damage in Boneshatter, Cyclone, and Lacerate builds.
+  - 2 moved away: Kinetic Blast of Clustering's main group has Void Manipulation, whose "deal no elemental damage" now applies, as in PoB. The build's fields stay `Partial` with other reasons, and PoB's value is far above ours for them.
+- **Corpus:** 0 unexpected, no value moved.
+- Both runs are byte-identical.
+
+**Next (P6-7c, part 3):** more minion skills (spells, slams: each PoB skill's data, as the character's), the minion's ailments and damage over time (the copies exist: `MinionField::IgniteDps` and kin), spectres.
+
+## P6-7c, part 3a: the minion's spells
+
+A minion's spell runs through the character's spell path (`hit::spell_hit`) under the minion actor, as its attack runs through the attack path.
+
+**What PoB does** (`CalcActiveSkill.lua` 868 to 922):
+- **The level:** each minion skill is created at level 1, or at the highest level the minion's level reaches. Its actor is the minion, so `actorLevel` is the minion's level (567).
+- **Its own stats** (`calcLib.buildSkillInstanceStats`, `CalcTools.lua` 183 to 240):
+  - A stat with effectiveness interpolation (code 3) is `round(effectiveness x value)`.
+  - `effectiveness = (3.885209 + 0.360246 x (level - 1)) x baseEffectiveness x (1 + incrementalEffectiveness) ^ (level - 1)` at the actor's level (`Data/Misc.lua` 29 and 30).
+  - The game's resolved value is the value at the level requirement, so it does not fit a minion.
+- **Its damage effectiveness:** `1 + minionDamageEffectiveness / 100` of the summoning skill (910). No skill in PoB's data sets that, so it is 1.
+- **The totem flag** is the skill's `baseFlags.totem` (415 to 444). The Flame Golem's Immolate has the `SummonsTotem` type but no such flag, so PoB casts it as the golem's spell.
+
+**The engine:**
+- **`skill::instance_for_actor`:** an effectiveness-scaled stat at the actor's level, by `skill::effectiveness`. The stat set's single-precision values are widened as PoB's exporter reads them, and `math::pow` is the deterministic power.
+- **`minion_actor::own_skill_stats`:** reads the spell's own stats into the minion's store. They go through the mapping a support's stats take on a minion's skill, under the rule source `minion-skill`, which joins the skill's list (its mores are rounded with the supports').
+- **`minion_hit::VETTED_SPELLS`:** the minion spells computed. Each is a plain self-cast spell in PoB's data: the spell flag, no totem flag, `pob_vetted`, one level, no cooldown, and a cast time (a test, and `spell`'s checks). The list holds the Flame Golem's Immolate.
+- **The hit under the minion actor:** damage effectiveness 1, and the totem reason follows PoB's flag.
+
+**Rows added:**
+- `active_skill_cast_speed_+%_final`, PoB's `Speed` MORE with `ModFlag.Cast` (`SkillStatMap.lua` 1729), a hit row;
+- `always_pierce`: PoB reads it only into `PierceCount` (`CalcOffence.lua` 1106), so `NoEffect` (no slice field), as `base_projectile_speed_+%`;
+- `monster_penalty_against_minions_damage_+%_final_vs_player_minions` and `spell_maximum_action_distance_+%`: no row in PoB's stat map, so `NoEffect`.
+
+**Not computed yet** (each still `unmodelled-skill` `minion-skill`):
+- the Lightning Golem's Storm Orb (a cooldown; part 3b below);
+- the Holy Relic's Nova (triggered, PoB's average);
+- the Carrion Golem's combo attack (its own stat map);
+- the Reaper's skills.
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run12`): every Flame Golem minion offence value equals PoB's, the average damage (371.74375), the speed (0.44), and the DPS (163.567) included. The plain build is `Complete`; the two alternate-quality builds are `partial` for their gem only. No other sweep document changed; 0 unexpected.
+- **Fixture:** `minion-summon-flame-golem-witch.xml` is retargeted to its five minion offence fields, all met.
+- **Public `calc-parity` on `b-ot`:** 195 builds, 172 expected, 0 unexpected; `Complete` fields 5,166 (5,158 before).
+  - Two other builds' documents changed: `holy-flame-totem-hierophant.xml` and `lightning-trap-of-sparking-elementalist.xml` lost `always_pierce` from their reasons.
+  - No value or state moved in either.
+- **Corpus:** 0 unexpected. One document lost `always_pierce` from its reasons; no value or state moved.
+- **Tests:**
+  - `effectiveness_should_follow_pobs_formula_at_the_actors_level` (Immolate at levels 1, 68, and 90);
+  - `vetted_minion_spells_should_be_plain_spells`;
+  - the workspace's tests and clippy pass.
+
+## P6-7c, part 3b: a spell's cooldown
+
+**What PoB does** (`CalcOffence.lua`):
+- **The cooldown** (`calcSkillCooldown`, 274 to 288): `(cooldown + added) / CooldownRecovery`, rounded up to a server tick (`ceil(cooldown x tick rate) / tick rate`), unless the skill stores more than one use or has additional uses.
+- **The cap** (2357 to 2360): `Speed = min(Speed, 1 / Cooldown x Repeats)`, after action speed and before the tick cap.
+
+**The engine:**
+- **`hit::cooldown_limit`:** the level's cooldown, rounded as PoB does, caps the spell's rate (`rate`'s new `limit`).
+- **Not mapped:** no cooldown recovery, added cooldown, or additional use stat (each stays unmapped, a reason), and the repeat count is 1 (the hit's module docs).
+- **Which spells:** a self-cast spell with a cooldown is now computed, the character's too (`spell_skill`). A trap's or a mine's cooldown is PoB's trap cooldown, not modelled, so those stay not computed.
+- **Minion spells:** `minion_hit::VETTED_SPELLS` gains the Lightning Golem's Storm Orb (8 s, two stored uses, so not rounded).
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run13`): every Lightning Golem minion offence value equals PoB's, the speed 0.125 and the DPS 9.957 included. The plain build is `Complete`, the alternate-quality one `partial` for its gem. No other sweep document changed; 0 unexpected.
+- **New fixture:** `minion-summon-lightning-golem-witch.xml`, 39 targets.
+- **Skill sweep** (`local/p6/sweep`, 376 builds): no document changed. Its 31 unexpected differences are the same with the binary before this step.
+- **Public `calc-parity` on `b-ot`:** 196 builds, 172 expected, 0 unexpected; `Complete` fields 5,209. No other document changed.
+- **Corpus:** no document changed; 0 unexpected.
+- **Tests:** `a_spells_cooldown_should_cap_its_rate` (3 s rounded to a tick) replaces the test that a cooldown spell is not computed. The workspace's tests and clippy pass.
+
+## P6-7c, part 3c: a minion attack's own stat map
+
+**What PoB does:** the Carrion Golem's combo attack (`Data/Skills/minion.lua` 1465 to 1495) has its own `statMap`, read as untagged mods (each `div = 1.5`):
+- `bone_golem_attack_speed_+%_final_after_third_combo_index` (200): `Speed` MORE with `KeywordFlag.Attack`;
+- `bone_golem_damage_+%_final_after_third_combo_index` (20): `Damage` MORE.
+
+Its level also has `baseMultiplier = 1.6`. Its damage effectiveness of 1.6 is replaced by 1 (part 3a).
+
+**The engine:**
+- **`minion_hit::OWN_STATS`:** PoB's own stat map rows of the minion skills the engine computes. Each row has the skill, the stat, the quantity, how it combines, the divisor (PoB's `div`, `value / 1.5` in one division as PoB's), and the flags.
+- **`minion_actor::OwnSkillMapping`:** reads those rows first, then the mapping a support's stats take on a minion's skill.
+- **A computed minion attack's own stats** are read into the minion's store too, as a spell's are (part 3a).
+- **`VETTED`** gains `BoneGolemMultiAttack`.
+- **Why the generated table missed them:** `pob_skills.rs` keeps only tagged own stat map entries. These are untagged, so `pob_vetted` already accepted the skill, and without these rows its stats were unmapped (a test).
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run14`): every Carrion Golem minion offence value equals PoB's, the speed 2.589 and the DPS 212.846 included. No other sweep document changed; 0 unexpected.
+  - The fields stay `partial`: Summon Carrion Golem's own stats are unmapped reasons (damage per nearby non-golem minion, the golem's added damage to minions; the remaining P6-9 gem work).
+  - So no fixture: none of its hit fields would be a target.
+- **Public and corpus:** no document changed (neither has a Carrion Golem); 0 unexpected.
+- **Tests:** `own_stats_should_be_pobs_stat_map_entries`; the workspace's tests and clippy pass.
+
+## P6-7c, part 3d: the minion's ailments and combined damage per second
+
+**What PoB does:** `calcs.offence` for the minion (`CalcPerform.lua` 3737) writes the minion's ignite, bleeding, poison, impale, and `CombinedDPS` as the character's. From the minion's crits its DoT multiplier gains the monster template's `critical_ailment_dot_multiplier_+` (30; `initMinionModDB`, 1147), not the character's 50 (`CalcSetup.lua` 502). Its other constants come from `initModDB` as the character's (impale's stack count included).
+
+**The engine:**
+- **The ailment fields:** the minion's ignite, bleeding, poison, and impale are no longer set not computed after its hit. Its own damage over time and hit speed still are.
+- **Crits:** `ailment` takes the critical ailment DoT multiplier by actor.
+- **`combined::combine`:** split out of the combined phase. It runs under the minion actor after the minion's hit, with the minion's skill, so it reads the minion's copies.
+- **Slice revision 11:** `Minion.IgniteDPS`, `Minion.BleedDPS`, `Minion.TotalPoisonDPS`, `Minion.ImpaleDPS`, and `Minion.CombinedDPS`, with the new `applies: minion-present` (compared where our field exists or PoB's minion value is not 0). `calc-parity`'s three rules are now one function, `applies`, with a test.
+- **Found on the way:** the minion's ignite used the character's +50; PoB's 37.709 (the Flame Golem) and 56.755 (the Raging Spirit) are now ours.
+
+### Evidence
+
+- **Minion sweep** (`local/p6/mfx-run15`): 0 unexpected.
+  - The Flame Golem's and the Raging Spirit's ignite equal PoB's.
+  - Every `Minion.CombinedDPS` of a computed minion hit equals PoB's, except where its fields are `partial` (an unmodelled skill or gem, an unmapped stat), and Vaal Summon Skeletons'.
+  - Vaal Summon Skeletons' combined DPS carries its registered minion level: **DIV-0174**, `game-truth`, as DIV-0124.
+- **Public `calc-parity` on `b-ot`:** 196 builds, 173 expected, 0 unexpected; `Complete` fields 5,225 (5,209 before).
+  - 15 minion fixtures are retargeted. Each gained its newly complete fields (the minion's combined DPS and ignite, and the character's recovery, movement, cost, and combined fields) and lost none; every target is met.
+  - Vaal Summon Skeletons' registered minion life, armour, and evasion stay targets.
+- **Corpus:** no document changed; 0 unexpected.
+- **Tests:** `applies_should_follow_each_rule`; the slice revision in `calc-parity`'s report test; the workspace's tests (1,761) and clippy pass.
+
+## The review of P6-9e to P6-11h (code-architecture-reviewer, no blockers)
+
+Applied:
+- **Every character field has a minion copy** (`Field::for_minion` is total: `MinionField` gains mana, the unreserved pools, and the game's own fields). Under the minion actor no write is dropped and no dependency falls back to the character's field. Test: `engine::tests::the_minion_actor_should_write_and_read_its_own_fields` (a minion write leaves the character's field alone; a dependency the minion did not compute makes the derived field `DependsOnNotComputed`).
+- **The minion's enemy states** are every `Enemy:` state the rules settle (`states::states`), not only the config's checks.
+- **`SupportOnMinion` drops the enemy's quantities**, which come with the enemy's effects (no double count).
+- **`ExtraMinionSkill`:** the summoning skill's gems' stats that PoB's stat map turns into an extra minion skill (Infernal Legion, the Radiant Sentinel) are appended to the minion's list, as PoB's `CalcActiveSkill.lua` 880 to 884. From the character's lines it comes through unmapped stats, the character's reasons.
+- **The minion skill's own list** is the summoning skill's supports (`set_skill_sources`): PoB rounds their mores apart.
+- **The minion's ailments, damage over time, and hit speed** are `not-computed` until the slice compares them.
+- **`conditions::settle`** removes only an entry it set itself.
+- **The minion's weapon id** is a sentinel no build item has (`ItemId(u32::MAX)`).
+
+Noted: the minion's life and mana thresholds (`STAT_THRESHOLD`, `LIFE_THRESHOLD`) are never settled for it, so a gem row that needs them is the minion's reason.
+
+**Evidence:** public 186 builds and corpus 21, 0 unexpected, no compared value moved. Both runs are byte-identical. The sweep is unchanged, 0 unexpected.
+
+## Data schema 5: the minion's level from the gem's level requirement
+
+**The data:** the bundle's gem levels carry their character level requirement since data schema 5 (`docs/phase-3/data-parity.md`, "Data schema 5"). The evidence bundle is `local/p6/packs/b-gl`: `b-ot` with only `data/granted_effects.json` replaced, from a bundle built from the 26530219 extract. That file equals `b-ot`'s but for the four new fields. `bundle-check` reports no findings; the bundle is local and unsigned.
+
+**PoB's level rule** (`CalcActiveSkill.lua` 707 to 711):
+- the enemy's level with `minionLevelIsEnemyLevel` (`display_skill_minions_level_is_corpse_level`);
+- else the character's level, at most the skill data's value, with `minionLevelIsPlayerLevel` (`minion_actor_level_is_user_level_up_to_maximum`; `mergeLevelMod` puts the stat's value, 85, in place of the map's `true`);
+- else a support minion's level, `minionLevel`, or the gem level's level requirement;
+- clamped to 1 to 100.
+
+**The engine** (`minion_actor::level`) now follows it:
+- **Enemy level:** the enemy model's level, unless the model has a problem.
+- **Character level:** the build's level, at most the stat.
+- **Otherwise:** the game's `base_display_minion_actor_level` first, then the requirement.
+
+Before, the first two were `minion-level` reasons, and a gem without the game's stat had no level.
+
+**Vaal Summon Skeletons:** the game's stat stays first. It differs from PoB's requirement only there (DIV-0111 to DIV-0113, DIV-0174), and the maintainer's in-game check of the skeletons' level is open: it decides which value the engine takes.
+
+**Evidence** (`local/p6/d5/`, on `b-gl`):
+- **Public `calc-parity`:** 237 builds, 292 expected, 0 unexpected; match unchanged at 15,602.
+- **Newly computed minions:** 8 fields went from unsupported to partial: the item-granted Summon Elemental Relic and Summon Sentinel of Radiance, whose minions take the character's level. They stay partial for their builds' other reasons.
+- **Corpus:** 0 unexpected, no value moved.
+- **Data parity:** `uncategorized` 353.
+- **Tests:** the workspace tests, the maintainer-run tests on `b-gl`, and clippy pass.
+
+**Soul costs:** no slice field holds a Vaal skill's soul cost, so the bundle's `vaal_souls` is compared with PoB's but read by no field yet.

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11bj): a level 90 Witch casting Ice Nova (level 20) while wielding a staff, with life, energy shield, armour, and block chance against a non-boss enemy, and life and energy shield recovered on block while wielding a staff (a percent of maximum life on attack block, of maximum energy shield on spell block).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Quarterstaff
+Quality: 0
+Implicits: 1
++18% Chance to Block Attack Damage while wielding a Staff
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyIsBoss" string="None"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+3000 to maximum Life
+				+1000 to maximum Energy Shield
+				+5000 to Armour
+				+20% Chance to Block Attack Damage
+				+40% Chance to Block Spell Damage
+				Recover 2% of Life when you Block Attack Damage while wielding a Staff
+				Recover 2% of Energy Shield when you Block Spell Damage while wielding a Staff
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

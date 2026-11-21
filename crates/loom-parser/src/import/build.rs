@@ -374,6 +374,21 @@ impl<'d, 'b> Resolver<'d, 'b> {
         body: &mut ItemBody,
         base: Result<&ItemBaseName, &str>,
     ) -> LineRangeEnds {
+        // A `{custom}` line is the player's text, applied as PoB applies
+        // it (`Classes/Item.lua`: `BuildModList` takes every mod line,
+        // custom or not; a line its parser does not read whole adds
+        // nothing). So it is read as any line of the item, and stays a
+        // reason only when it does not resolve (maintainer decision
+        // 2026-11-20; `docs/phase-6/stat-mop-up.md`, "P6-11fh"). The
+        // import keeps the exclusion, so a document saved before reads
+        // the same.
+        for line in &mut body.lines {
+            if let LineKind::Modifier(m) = &mut line.kind
+                && m.resolution == LineResolution::Excluded(loom_domain::Exclusion::Custom)
+            {
+                m.resolution = LineResolution::Pending;
+            }
+        }
         let found = match base {
             Err(reason) => Err(NoBase::Unnamed(reason.to_owned())),
             Ok(b) => find_base(
@@ -438,22 +453,50 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 .collect(),
         };
         let mut out = Lines::default();
-        let mut run: Vec<(usize, &ModifierLine)> = Vec::new();
+        // One run of the selected lines and one of the lines of variants
+        // not selected: each runs on past the other's, so the selected
+        // lines around another variant's can be one multi-line description
+        // (a Timeless jewel's conqueror line and its "Passives in radius are
+        // Conquered by" line, with the other conquerors' lines between them;
+        // P6-10a). Both break at any other line and at a section change.
+        let (mut other, mut selected): (Vec<(usize, &ModifierLine)>, Vec<_>) =
+            (Vec::new(), Vec::new());
         for (n, line) in body.lines.iter().enumerate() {
             match &line.kind {
                 LineKind::Modifier(m) if m.resolution == LineResolution::Pending => {
+                    let run = if m.selected {
+                        &mut selected
+                    } else {
+                        &mut other
+                    };
                     if run
                         .last()
                         .is_some_and(|(_, prev)| prev.section != m.section)
                     {
-                        self.resolve_run(&ctx, index, &std::mem::take(&mut run), &mut out);
+                        self.resolve_run(&ctx, index, &std::mem::take(run), &mut out);
                     }
                     run.push((n, m));
                 }
-                _ => self.resolve_run(&ctx, index, &std::mem::take(&mut run), &mut out),
+                // A resolved modifier line (a typed kind) breaks only its
+                // own selection's run, as before for the selected lines.
+                LineKind::Modifier(m) => {
+                    let run = if m.selected {
+                        &mut selected
+                    } else {
+                        &mut other
+                    };
+                    self.resolve_run(&ctx, index, &std::mem::take(run), &mut out);
+                }
+                _ => {
+                    for run in [&mut other, &mut selected] {
+                        self.resolve_run(&ctx, index, &std::mem::take(run), &mut out);
+                    }
+                }
             }
         }
-        self.resolve_run(&ctx, index, &run, &mut out);
+        for run in [&other, &selected] {
+            self.resolve_run(&ctx, index, run, &mut out);
+        }
         out.pair_split_sections(index, body);
         self.typed_kinds(found.name, &mut out);
         out.finish()

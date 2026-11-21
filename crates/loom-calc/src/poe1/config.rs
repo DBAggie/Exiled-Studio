@@ -77,9 +77,11 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   line 514); read by the skill stat map of the gems that grant it.
 /// - `bloodSandStance` moved to [`super::gems`] in the Phase 3 close-out
 ///   (Flesh and Stone's Blood Stance row reads it).
-/// - `conditionBeenHitRecently`, `conditionBlockedRecently`,
-///   `conditionChilledEnemyRecently`, `conditionFullLife`: the condition of
-///   that name (lines 1375, 1421, 1339, 174); the calc modules read them
+/// - `conditionBeenHitRecently`, `conditionChilledEnemyRecently`: the
+///   condition of that name (lines 1375, 1339; `conditionFullLife` moved
+///   to [`super::conditions`] in P6-11ai; the blocked-recently checks moved to [`super::conditions`] in
+///   P6-11g, as "+# Armour if you've Blocked Recently" reads them); the
+///   calc modules read them
 ///   only through modifiers
 ///   or flags a modifier sets (`CalcDefence.lua` 707, 723: maximum block
 ///   if not blocked recently, from a stat); `FullLife` is set by Chaos
@@ -90,12 +92,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
 ///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
 ///   taken when a modifier's flag asks for it.
-/// - `conditionOnConsecratedGround`: `Condition:OnConsecratedGround`, also
-///   for minions (line 1148); `CalcPerform.lua` adds life regeneration
-///   and less curse effect on you (804, 3171; not slice fields) and
-///   accuracy from `ConsecratedGroundAlsoAccuracy` (a modifier).
-/// - `conditionStationary`: `Multiplier:StationarySeconds`, and
-///   `Condition:Stationary` when above 0 (line 158).
+/// - `conditionOnConsecratedGround` and `conditionStationary` moved to
+///   [`super::buffs`] in P6-10b: consecrated ground's life regeneration
+///   is a field now.
 /// - Moved in P3-8n: `conditionShockedEnemyRecently` to
 ///   [`super::conditions`] (its condition settled for the rows that read
 ///   it); `conditionEnemyOnConsecratedGround` and `conditionEnemyIgnited`
@@ -144,17 +143,20 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   and `FortificationStacks` OVERRIDE in combat (lines 1039, 1042).
 ///   `CalcSetup.lua` (94) turns the condition into the `Fortified` flag;
 ///   `CalcPerform.lua` (659 to 680) then sets the stacks (the override or
-///   the maximum), `DamageTakenWhenHit` MORE per stack (damage taken, not a
-///   slice field), the `HaveMaximumFortification` flag, and one more
+///   the maximum), `DamageTakenWhenHit` MORE per stack (since P6-10b part
+///   12 the enemy's hit, [`super::enemy_hit`], reads the check and the
+///   override itself), the `HaveMaximumFortification` flag, and one more
 ///   `BuffOnSelf`; 3889 exports the stacks to a party (not a slice
-///   field). Every other reader is a modifier (per fortification, while
+///   field). Life regeneration per stack reads the same stacks since
+///   P6-11bu ([`super::regen`]). Every other reader is a modifier (while
 ///   fortified, at maximum fortification, per buff on you).
 ///
 /// Added in P3-12f, inputs whose effect needs a condition only modifiers
 /// (or another config input, itself a reason) set:
 ///
 /// - `multiplierRage` was here until P3-8n, which gives rage its effect
-///   with "Gain # Rage on Melee Hit" ([`super::stacks`]). The other stats
+///   with "Gain # Rage on Melee Hit" ([`super::stacks`]), and "Gain # Rage
+///   on Attack Hit" since P6-11bc (PoB reads both as `CanGainRage`). The other stats
 ///   that gain or regenerate rage stay in [`DEPENDS_ON`]: with one of
 ///   them, PoB's rage would differ from the engine's, so they must stay
 ///   reasons (`ModParser.lua` 2201 to 2585 and 5517 to 5539; the skill
@@ -170,21 +172,20 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// `CalcTriggers.lua`, `CalcActiveSkill.lua`, `CalcTools.lua`, `Calcs.lua`,
 /// `CalcMirages.lua`, `CalcBreakdown.lua`):
 ///
-/// - `conditionCastSpellRecently`, `conditionUsedMinionSkillRecently`:
-///   `Condition:CastSpellRecently`, `Condition:UsedMinionSkillRecently`,
-///   each with `Condition:UsedSkillRecently` (lines 1489, 1526); no calc
-///   module reads them.
+/// - `conditionUsedMinionSkillRecently` (1526) left this list in P6-11cm,
+///   `conditionAttackedRecently` and `conditionCastSpellRecently` (1485,
+///   1489) in P6-11em: checks `poe1::conditions` settles, read by
+///   modifiers. Their implied `UsedSkillRecently` is no row's.
 /// - `conditionKilledRecently`: `Condition:KilledRecently` (line 1270);
 ///   only `CalcTriggers.lua` (1136, 1156) reads it, for trigger skills
 ///   (other gems, reasons).
 /// - `conditionLeeching`: `Condition:Leeching` (line 1068); no calc module
 ///   reads it.
-/// - `conditionEnemyBleeding`, `conditionEnemyLowLife`,
-///   `conditionEnemyPoisoned`: the enemy's `Condition:Bleeding`,
-///   `Condition:LowLife`, `Condition:Poisoned` (lines 1786, 1777, 1798); no
+/// - `conditionEnemyBleeding`, `conditionEnemyPoisoned`: the enemy's
+///   `Condition:Bleeding`, `Condition:Poisoned` (lines 1786, 1798); no
 ///   calc module reads them on the enemy (`CalcSetup.lua` 73 sets
-///   `Poisoned` from poison stacks; `CalcPerform.lua` 1605 reads the
-///   player's `LowLife`, for flasks).
+///   `Poisoned` from poison stacks). `conditionEnemyLowLife` left this
+///   list in P6-9e: Punishment's hex reads it (`conditions::CHECKS`).
 /// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
 ///   (not a slice field).
@@ -215,15 +216,14 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   them only through modifiers;
 /// - read only outside the slice: `LowLife` (a flask's instant recovery,
 ///   1605; the input itself in `CalcDefence.lua` 2216 and 2238, the life
-///   pools of the defence estimate), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
+///   pools of the defence estimate, which `poe1::enemy_hit` reads from the
+///   input since P6-11ad), `LowEnergyShield` (the input itself caps the
+///   energy shield pool, `CalcDefence.lua` 1061, read the same way), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
 ///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
-///   with a support that is not modelled), the enemy's `Debilitated` and
-///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
-///   `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), the
-///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72), and the
-///   enemy's `Withered` stacks (`ChaosDamageTaken` only with
-///   `WitherEffectStack`, 812 to 815, which only unmapped stats and gems
-///   that are not modelled give).
+///   with a support that is not modelled), `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), and the
+///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72). The enemy's
+///   `Withered` stacks (`multiplierWitheredStackCount`) are
+///   [`super::damage_taken`]'s since P6-11aq (no longer in this list).
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -259,7 +259,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
-    ("buffLifetap", &["Condition:Lifetap", "FlaskLifeRecovery"]),
     (
         "buffNgamahuFlamesAdvance",
         &["Condition:NgamahuFlamesAdvance"],
@@ -269,31 +268,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Multiplier:NearbyNonGolemMinion"],
     ),
     ("changedStance", &["Condition:ChangedStanceRecently"]),
-    ("channellingCycloneCheck", &["Condition:ChannellingCyclone"]),
-    (
-        "conditionAttackedRecently",
-        &["Condition:AttackedRecently", "Condition:UsedSkillRecently"],
-    ),
-    ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
-    (
-        "conditionBlockedAttackRecently",
-        &[
-            "Condition:BlockedAttackRecently",
-            "Condition:BlockedRecently",
-        ],
-    ),
-    ("conditionBlockedRecently", &["Condition:BlockedRecently"]),
-    (
-        "conditionBlockedSpellRecently",
-        &[
-            "Condition:BlockedSpellRecently",
-            "Condition:BlockedRecently",
-        ],
-    ),
-    (
-        "conditionCastSpellRecently",
-        &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],
-    ),
     (
         "conditionCausedBleedingRecently",
         &["Condition:CausedBleedingRecently"],
@@ -314,44 +288,22 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionConsumedCorpseRecently",
         &["Condition:ConsumedCorpseRecently"],
     ),
-    ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
-    ("conditionEnemyBurning", &["enemy Condition:Burning"]),
-    ("conditionEnemyCursed", &["enemy Condition:Cursed"]),
-    (
-        "conditionEnemyDebilitated",
-        &["enemy Condition:Debilitated"],
-    ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
-    ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
-    ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
-    (
-        "conditionEnemyMalignantMadness",
-        &["enemy Condition:MalignantMadness"],
-    ),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
     ("conditionFocused", &["Condition:Focused"]),
-    ("conditionFullLife", &["Condition:FullLife"]),
     ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
     ("conditionHitRecently", &["Condition:HitRecently"]),
     (
         "conditionHitSpellRecently",
         &["Condition:HitSpellRecently", "Condition:HitRecently"],
     ),
-    ("conditionIgnited", &["Condition:Ignited"]),
     ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),
-    ("conditionKilledRecently", &["Condition:KilledRecently"]),
     (
         "conditionKilledUniqueEnemy",
         &["Condition:KilledUniqueEnemy"],
     ),
-    ("conditionLeeching", &["Condition:Leeching"]),
-    ("conditionLowLife", &["Condition:LowLife"]),
-    ("conditionMoving", &["Condition:Moving"]),
-    (
-        "conditionOnConsecratedGround",
-        &["Condition:OnConsecratedGround"],
-    ),
+    ("conditionLowEnergyShield", &["Condition:LowEnergyShield"]),
     (
         "conditionSacrificeMinion",
         &["Condition:SacrificeMinionOnAttack"],
@@ -359,10 +311,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionSpawnedCorpseRecently",
         &["Condition:SpawnedCorpseRecently"],
-    ),
-    (
-        "conditionStationary",
-        &["Multiplier:StationarySeconds", "Condition:Stationary"],
     ),
     (
         "conditionSummonedTotemRecently",
@@ -376,25 +324,9 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         ],
     ),
     (
-        "conditionUsedMinionSkillRecently",
-        &[
-            "Condition:UsedMinionSkillRecently",
-            "Condition:UsedSkillRecently",
-        ],
-    ),
-    (
         "conditionUsedWarcryInPast8Seconds",
         &["Condition:UsedWarcryInPast8Seconds"],
     ),
-    (
-        "conditionUsedWarcryRecently",
-        &[
-            "Condition:UsedWarcryRecently",
-            "Condition:UsedWarcryInPast8Seconds",
-            "Condition:UsedSkillRecently",
-        ],
-    ),
-    ("conditionUsingFlask", &["Condition:UsingFlask"]),
     ("configResonanceCount", &["Multiplier:ResonanceCount"]),
     (
         "configSpectralTigerCount",
@@ -411,7 +343,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "heraldOfTheHivePressure",
         &["Multiplier:OtherworldlyPressure"],
     ),
-    ("infusedChannellingInfusion", &["Condition:InfusionActive"]),
     (
         "meatShieldEnemyNearYou",
         &["Condition:MeatShieldEnemyNearYou"],
@@ -419,7 +350,9 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("meleeDistance", &["skillDist"]),
     (
         "multiplierBeenHitRecently",
-        &["Multiplier:BeenHitRecently", "Condition:BeenHitRecently"],
+        // Its condition is settled with the check's (P6-10b part 13,
+        // `poe1::conditions`).
+        &["Multiplier:BeenHitRecently"],
     ),
     (
         "multiplierChannelling",
@@ -443,7 +376,9 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     (
         "multiplierKilledRecently",
-        &["Multiplier:EnemyKilledRecently", "Condition:KilledRecently"],
+        // Its condition is settled with the check's (P6-11p,
+        // `poe1::conditions`).
+        &["Multiplier:EnemyKilledRecently"],
     ),
     (
         "multiplierManaSpentRecently",
@@ -453,16 +388,12 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierMineDetonatedRecently",
         &["Multiplier:MineDetonatedRecently"],
     ),
-    ("multiplierNearbyCorpse", &["Multiplier:NearbyCorpse"]),
-    (
-        "multiplierNearbyEnemies",
-        &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
-    ),
     (
         "multiplierNearbyRareOrUniqueEnemies",
+        // Its share of `Multiplier:NearbyEnemies` is `poe1::stacks`'s
+        // (P6-11v).
         &[
             "Multiplier:NearbyRareOrUniqueEnemies",
-            "Multiplier:NearbyEnemies",
             "Condition:AtMostOneNearbyRareOrUniqueEnemy",
             "enemy Condition:NearbyRareOrUniqueEnemy",
         ],
@@ -471,16 +402,13 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("multiplierSummonedMinion", &["Multiplier:SummonedMinion"]),
     (
         "multiplierWarcryUsedRecently",
+        // Its `UsedWarcryRecently` is settled with the check's (P6-11ev,
+        // `poe1::conditions`); the others are no row's.
         &[
             "Multiplier:WarcryUsedRecently",
-            "Condition:UsedWarcryRecently",
             "Condition:UsedWarcryInPast8Seconds",
             "Condition:UsedSkillRecently",
         ],
-    ),
-    (
-        "multiplierWitheredStackCount",
-        &["enemy Multiplier:WitheredStack"],
     ),
     (
         "multiplierWitheredStackCountSelf",
@@ -614,8 +542,9 @@ pub const DEPENDS_ON: &[&str] = &[
     "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
+    "energy_shield_leech_does_not_stop_on_full_energy_shield",
+    "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
     "gain_1_rage_on_use_%_chance",
-    "gain_max_rage_on_losing_temporal_chains_debuff",
     "gain_player_far_shot_while_do_not_have_iron_reflexes",
     "gain_rage_on_hit",
     "gain_rage_on_hit_%_chance",
@@ -624,22 +553,16 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_rage_on_kill",
     "gain_rage_when_you_use_a_warcry",
     "gain_x_rage_on_attack_crit",
-    "gain_x_rage_on_attack_hit",
     "gain_x_rage_on_bow_hit",
-    "gain_x_rage_on_hit_with_axes",
-    "gain_x_rage_on_hit_with_axes_swords",
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
-    "gain_x_rage_on_hit_with_tinctured_weapons",
     "gain_x_rage_on_melee_crit",
-    "gain_x_rage_per_200_mana_spent",
-    "gain_x_rage_when_hit",
-    "gain_x_rage_when_you_use_a_life_flask",
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
     "ignites_apply_fire_resistance_+",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
     "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
+    "life_leech_does_not_stop_at_full_life",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
     "local_display_tattoo_trigger_level_x_akoya",
     "local_gain_X_rage_on_attack_hit_with_melee_abyss_jewel_socketed",
@@ -660,6 +583,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "spell_block_is_maximum_if_not_blocked_recently",
     "support_rage_gain_rage_on_melee_hit_cooldown_ms",
     "support_slashing_damage_+%_final_from_distance",
+    "virtual_life_leech_does_not_stop_at_full_life",
     "warcry_grant_X_rage_per_5_power",
     "you_and_nearby_party_members_gain_x_rage_when_you_warcry",
     "your_consecrated_ground_grants_accuracy_rating_+%",
@@ -833,20 +757,21 @@ mod tests {
             .chain(ROWS.iter().map(|r| r.0))
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        // P6-10b part 12: the maximum, which the enemy's hit reads while
+        // Fortified (`poe1::enemy_hit`, reading the check itself); P6-11bu:
+        // life regeneration per stack, which `poe1::regen` reads with the
+        // same stacks (`enemy_hit::fortification_stacks`).
         for id in ids {
-            assert!(!id.contains("fortif"), "{id}: revisit NAMED_ONLY");
+            assert!(
+                !id.contains("fortif")
+                    || id == "base_max_fortification"
+                    || id == "life_regeneration_per_minute_%_per_fortification",
+                "{id}: revisit NAMED_ONLY"
+            );
         }
         // `NoEffect` rows naming fortification, each checked: a chance to
-        // fortify, its duration, regeneration per stack; none reaches a
-        // slice field.
-        let checked = [
-            // The maximum (P3-8n): its readers per fortification are
-            // `mapping::NO_EFFECT_DEPENDS_ON` guards.
-            "base_max_fortification",
-            "chance_to_fortify_on_melee_hit_+%",
-            "fortify_duration_+%",
-            "life_regeneration_per_minute_%_per_fortification",
-        ];
+        // fortify, its duration; none reaches a slice field.
+        let checked = ["chance_to_fortify_on_melee_hit_+%", "fortify_duration_+%"];
         for (id, _) in crate::poe1::mapping::NO_EFFECT {
             assert!(
                 !id.contains("fortif") || checked.contains(id),
@@ -877,12 +802,8 @@ mod tests {
             assert!(!names(id), "{id}: revisit NAMED_ONLY");
         }
         // Rage's loss delay (PoB `InherentRageLossDelay`): rage's loss,
-        // never its gain or effect. Mana regeneration if you inflicted
-        // exposure recently: regeneration, not a slice field.
-        let checked = [
-            "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
-            "rage_loss_delay_ms",
-        ];
+        // never its gain or effect.
+        let checked = ["rage_loss_delay_ms"];
         for (id, _) in NO_EFFECT {
             assert!(
                 !names(id) || checked.contains(id),

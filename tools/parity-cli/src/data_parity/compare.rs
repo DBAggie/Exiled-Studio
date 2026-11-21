@@ -387,6 +387,7 @@ pub fn compare(
     export: &Export,
     passive_scope: &str,
     bosses: &[Boss],
+    timeless_adlers: &std::collections::BTreeMap<String, u32>,
 ) -> Result<Comparison, String> {
     let (Some(skills), Some(passives), Some(properties)) =
         (&bundle.skills, &bundle.passives, &bundle.properties)
@@ -411,6 +412,8 @@ pub fn compare(
     compare_jewel_radii(&mut out, bundle, export);
     super::flavour::compare_flavour_text(&mut out, bundle, export);
     super::cluster::compare_cluster_jewels(&mut out, bundle, export);
+    super::timeless::compare_timeless(&mut out, bundle, export, timeless_adlers);
+    super::tattoos::compare_tattoos(&mut out, bundle, export);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()
@@ -618,11 +621,15 @@ fn compare_levels(
             out.check(T, id, at(&format!("stat.{name}")), ours(a), num(b));
         }
         // Costs by resource.
-        let costs: BTreeMap<&str, i64> = el
+        // Vaal souls are PoB's `Soul` cost (data schema 5).
+        let mut costs: BTreeMap<&str, i64> = el
             .costs
             .iter()
             .map(|c| (c.resource.as_str(), c.amount))
             .collect();
+        if el.vaal_souls != 0 {
+            costs.insert("Soul", el.vaal_souls);
+        }
         let resources: BTreeSet<&str> = costs
             .keys()
             .copied()
@@ -634,7 +641,25 @@ fn compare_levels(
             out.check(T, id, at(&format!("cost.{resource}")), a, b);
         }
         let per = |x: Option<f64>, divisor: f64, plus: f64| x.map(|v| v / divisor + plus);
-        let fields: [(&str, Option<f64>, Option<f64>); 12] = [
+        let some = |v: Option<f64>| v.filter(|x| *x != 0.0);
+        let fields: [(&str, Option<f64>, Option<f64>); 15] = [
+            // Data schema 5: the level requirement, the stored Vaal uses,
+            // and the soul gain prevention (milliseconds; PoB's seconds).
+            (
+                "level_requirement",
+                nonzero(el.level_requirement),
+                some(level.level_requirement),
+            ),
+            (
+                "vaal_stored_uses",
+                nonzero(el.vaal_stored_uses),
+                some(level.vaal_stored_uses),
+            ),
+            (
+                "soul_prevention_duration",
+                per(nonzero(el.soul_gain_prevention), 1000.0, 0.0),
+                some(level.soul_prevention_duration),
+            ),
             (
                 "damage_effectiveness",
                 per(sl.damage_effectiveness.and_then(nonzero), 10_000.0, 1.0),

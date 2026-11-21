@@ -132,6 +132,34 @@ impl Flags {
     /// `skill_can_fire_arrows`, `SkillStatMap.lua` 1341 and
     /// `CalcActiveSkill.lua` 412; P6-11c; its ailments and DoT keep it).
     pub const KEYWORD_ARROW: Self = Self(1 << 46);
+    /// A totem skill (PoB's `KeywordFlag.Totem`, `CalcActiveSkill.lua` 415:
+    /// the skill's `totem` flag; P6-11bk: the skill type `SummonsTotem`).
+    pub const KEYWORD_TOTEM: Self = Self(1 << 47);
+    /// A trap skill (PoB's `KeywordFlag.Trap`, 417: `trap`, not a totem;
+    /// the skill type `Trapped`).
+    pub const KEYWORD_TRAP: Self = Self(1 << 48);
+    /// A mine skill (PoB's `KeywordFlag.Mine`, 419: `mine`, neither a totem
+    /// nor a trap; the skill type `RemoteMined`).
+    pub const KEYWORD_MINE: Self = Self(1 << 49);
+    /// A skill of the `RangedAttack` type (PoB's `SkillType.RangedAttack`
+    /// tag, "Projectile Attack Skills"; P6-11co): the skill's types after
+    /// its supports added theirs.
+    pub const SKILL_RANGED_ATTACK: Self = Self(1 << 50);
+    /// A skill of the `Brand` type (PoB's `SkillType.Brand` tag; P6-11cx).
+    pub const SKILL_BRAND: Self = Self(1 << 51);
+    /// A skill of the `Mark` type (PoB's `SkillType.Mark` tag; P6-11cx).
+    pub const SKILL_MARK: Self = Self(1 << 52);
+    /// A skill of the `Melee` type (PoB's `SkillType.Melee` tag; P6-11dw).
+    pub const SKILL_MELEE: Self = Self(1 << 53);
+    /// A skill that applies a curse (PoB's `KeywordFlag.Curse`, set from
+    /// `SkillType.AppliesCurse`, `CalcActiveSkill.lua` 379; P6-11eo).
+    pub const KEYWORD_CURSE: Self = Self(1 << 54);
+    /// A skill of the `Travel` type (PoB's `SkillType.Travel` tag; P6-11ex).
+    pub const SKILL_TRAVEL: Self = Self(1 << 55);
+    /// A skill not of the `SummonsTotem` type (PoB's negated
+    /// `SkillType.SummonsTotem` tag; P6-11fo, Phase Run's "not to your
+    /// melee skills used by totems").
+    pub const SKILL_NOT_TOTEM: Self = Self(1 << 56);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

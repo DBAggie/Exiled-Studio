@@ -61,6 +61,8 @@ fn run_with(
         .as_ref()
         .map(|t| loom_pipeline::pack_trees(&bundle, t))
         .unwrap_or_default();
+    // The synthetic bundles have no timeless jewel results.
+    let timeless_results = std::collections::BTreeMap::new();
     let request = Request {
         bundle: &bundle,
         resolver: &resolver,
@@ -85,6 +87,7 @@ fn run_with(
         scope: None,
         anonymous,
         tool: ToolRecord::default(),
+        timeless_results: &timeless_results,
     };
     run(inputs, &request)
 }
@@ -95,14 +98,20 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     let b = &out.report.builds[0];
     assert_eq!(b.id, "synthetic-poe1.xml");
     assert_eq!(b.status, "ok");
-    // P3-6 and P3-7 compute 17 fields; the synthetic bundle has no
-    // Scion, so they are indeterminate (missing-data); 7 not computed.
+    // P3-6 and P3-7 compute 17 fields, P6-10b the five regeneration and
+    // recharge fields; the synthetic bundle has no Scion, so they are
+    // indeterminate (missing-data); 7 not computed. The two movement speed
+    // fields (P6-10b) read no pool but carry the build's reasons too, and so
+    // do the five base damage reductions (P6-10b part 5) and the seven
+    // leech caps (P6-10b part 7).
     assert_eq!(b.state.as_deref(), Some("indeterminate"));
     assert_eq!(
         b.fields,
         Some(StateCounts {
-            unsupported: 7,
-            indeterminate: 17,
+            // The main skill's 7 and the mana, life, and energy shield
+            // costs (P6-10b).
+            unsupported: 10,
+            indeterminate: 41,
             ..StateCounts::default()
         })
     );
@@ -113,9 +122,9 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
         Some(sha256_hex(json.as_bytes()).as_str())
     );
     let doc = calc_dto::from_json(json).unwrap();
-    assert_eq!(doc.result.fields.len(), 24);
-    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&7));
-    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&17));
+    assert_eq!(doc.result.fields.len(), 51);
+    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&10));
+    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&41));
     assert_eq!(out.summary.build_states.get("indeterminate"), Some(&1));
     assert_eq!(out.summary.timing.builds, 1);
 }
@@ -410,7 +419,7 @@ fn write_and_read_should_round_trip_and_check_hashes() {
     let (report, _) = read_report(&dir).unwrap();
     assert_eq!(report, out.report);
     let doc = read_document(&dir, &report.builds[0]).unwrap();
-    assert_eq!(doc.result.fields.len(), 24);
+    assert_eq!(doc.result.fields.len(), 51);
     for name in ["summary.json", "timing.json"] {
         assert!(dir.join(name).is_file(), "{name}");
     }

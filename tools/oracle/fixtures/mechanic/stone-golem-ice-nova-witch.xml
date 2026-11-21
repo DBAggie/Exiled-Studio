@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11ar): a level 90 Witch casting Ice Nova (level 20) with Summon Stone Golem of Safeguarding (level 20) in a second group with less minion life and much more life of your own, so the effective health pool drains the golem: under the Average damage category the golem takes a quarter of its redirect of each hit from its own life before yours, in the maximum hit and the effective health pool.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem skillMinionSkillCalcs="1" enableGlobal1="true" enableGlobal2="true" level="20" variantId="SummonStoneGolemAltY" gemId="Metadata/Items/Gems/SkillGemSummonRockGolem" enabled="true" skillId="SummonStoneGolemAltY" nameSpec="Summon Stone Golem of Safeguarding" quality="0" skillMinion="SummonedStoneGolem" skillMinionSkill="1" count="1" skillMinionCalcs="SummonedStoneGolem"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="customMods" string="Minions have 90% reduced maximum Life
++20000 to maximum Life"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -18,6 +18,8 @@ fn bases_should_join_their_property_tables() {
         Some(ItemBase::Armour(ArmourBase {
             armour: Range { min: 9, max: 12 },
             block: Some(24),
+            // The table's movement penalty (P6-10b).
+            movement_speed: -3,
             ..ArmourBase::default()
         }))
     );

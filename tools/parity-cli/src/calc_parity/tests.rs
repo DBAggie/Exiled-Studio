@@ -875,7 +875,7 @@ fn run_should_write_the_report_and_refuse_an_existing_folder() {
     let written: Value =
         serde_json::from_slice(&std::fs::read(c.request.out.join("report.json")).unwrap()).unwrap();
     assert_eq!(written["status"], "no_difference");
-    assert_eq!(written["slice"]["revision"], 4);
+    assert_eq!(written["slice"]["revision"], 22);
     assert!(report.summary_markdown().starts_with("# calc-parity"));
     assert!(run(&c.request).unwrap_err().contains("already exists"));
 }
@@ -1165,6 +1165,35 @@ fn fixed_decimals_should_round_exact_ties_to_even() {
     assert_eq!(Format::Fixed(2).print(0.125), "0.12");
     assert_eq!(Format::Fixed(0).print(2.5), "2");
     assert_eq!(Format::Fixed(0).print(3.5), "4");
+}
+
+/// When a slice field is compared (`applies`): a minion field whenever
+/// there is a minion; a minion's mechanic (revision 11, P6-7c3d) and a
+/// Phase 6 field only where either side has it.
+#[test]
+fn applies_should_follow_each_rule() {
+    let fields =
+        super::slice::SliceFile::read(include_bytes!("../../../../docs/phase-3/slice-fields.json"))
+            .unwrap()
+            .fields;
+    let get = |id: &str| fields.iter().find(|f| f.id == id).unwrap();
+    let (life, ignite, combined, armour) = (
+        get("Minion.Life"),
+        get("Minion.IgniteDPS"),
+        get("CombinedDPS"),
+        get("Armour"),
+    );
+    let no_minion = json!({"CombinedDPS": 0});
+    let minion = json!({"CombinedDPS": 5, "Minion": {"Life": 0, "IgniteDPS": 0}});
+    let igniting = json!({"Minion": {"IgniteDPS": 3.5}});
+    assert!(!super::applies(life, Some(&no_minion), false));
+    assert!(super::applies(life, Some(&minion), false));
+    assert!(!super::applies(ignite, Some(&minion), false));
+    assert!(super::applies(ignite, Some(&igniting), false));
+    assert!(super::applies(ignite, Some(&no_minion), true));
+    assert!(!super::applies(combined, Some(&no_minion), false));
+    assert!(super::applies(combined, Some(&minion), false));
+    assert!(super::applies(armour, None, false));
 }
 
 /// A minion field (slice revision 4, P6-7b2): its value under PoB's

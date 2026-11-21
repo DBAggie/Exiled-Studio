@@ -46,6 +46,8 @@ mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
+mod tattoos;
+mod timeless;
 mod tree_flavour;
 mod tree_layout;
 mod tree_pack;
@@ -77,6 +79,13 @@ const USAGE: &str = "usage:
       as stat IDs through the bundle's passive descriptions, the ones that
       do not kept as text. Refuses another commit or other orbits. Prints a
       JSON summary.
+  loom-parity-cli timeless-pack <bundle-dir> <pob-src-dir> <pob-version> --out <dir>
+      Copy a bundle into <dir> (which must not exist) with PoB's timeless
+      jewel results added (poe1/timeless_luts.json and poe1/timeless/<Type>.bin;
+      Phase 6 P6-10a): PoB's NodeIndexMapping.lua, its jewel types and seed
+      ranges from Modules/Data.lua, and each Data/TimelessJewelData zip
+      inflated byte for byte. Needs the bundle's poe1/timeless.json (the
+      extract's tables). Prints a JSON summary.
   loom-parity-cli tree-layout <tools/tree/manifest.json> <export-dir> <bundle-dir> --out <dir>
       Copy a bundle into <dir> (which must not exist) with the passive
       tree's layout constants (data/passive_tree_layout.json) and sprites
@@ -911,7 +920,17 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
         let manifest = read(&bundle_dir.join("bundle.json"))?;
         let export = read(Path::new(export))?;
         let rules = read(Path::new(&rules))?;
+        // Each timeless jewel results file's Adler-32 (P6-10a).
+        let mut timeless_adlers = std::collections::BTreeMap::new();
+        for f in bundle.manifest.files.iter().filter(|f| {
+            f.path
+                .starts_with(loom_data::bundle::timeless::TIMELESS_DIR)
+        }) {
+            let bytes = read(&bundle_dir.join(&f.path))?;
+            timeless_adlers.insert(f.path.clone(), data_parity::timeless::adler32(&bytes));
+        }
         data_parity::run(&data_parity::Request {
+            timeless_adlers: &timeless_adlers,
             bundle: &bundle,
             bundle_manifest: &manifest,
             export: &export,
@@ -1421,7 +1440,18 @@ fn calc_run_run(
         .as_ref()
         .map(|t| loom_pipeline::pack_trees(&bundle, t))
         .unwrap_or_default();
+    // The Timeless jewels' results (P6-10a): every type, read once for
+    // every build (the app reads one type when a build needs it).
+    let mut timeless_results = std::collections::BTreeMap::new();
+    if let Some(luts) = bundle.poe1.as_ref().and_then(|p| p.timeless_luts.as_ref()) {
+        for j in &luts.jewels {
+            let path = bundle_dir.join(&j.file);
+            let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+            timeless_results.insert(j.jewel, bytes);
+        }
+    }
     let request = calc_run::Request {
+        timeless_results: &timeless_results,
         scope,
         bundle: &bundle,
         resolver: &resolver,
@@ -1595,6 +1625,15 @@ fn main() -> ExitCode {
                 println!("{json}");
                 Ok(true)
             })
+        }
+        [cmd, bundle, pob, version, flag, out] if cmd == "timeless-pack" && flag == "--out" => {
+            timeless::pack(Path::new(bundle), Path::new(pob), version, Path::new(out)).and_then(
+                |summary| {
+                    let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+                    println!("{json}");
+                    Ok(true)
+                },
+            )
         }
         [cmd, pin, export, bundle, flag, out] if cmd == "tree-layout" && flag == "--out" => {
             tree_layout::run(

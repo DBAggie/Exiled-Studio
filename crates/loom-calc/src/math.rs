@@ -22,6 +22,13 @@ pub fn floor(x: f64) -> f64 {
     x.floor()
 }
 
+/// The square root of `x` (IEEE-754 `squareRoot`, correctly rounded;
+/// PoB's `m_sqrt`, P6-10b part 13).
+#[must_use]
+pub fn sqrt(x: f64) -> f64 {
+    x.sqrt()
+}
+
 /// The least integer not below `x` (IEEE-754 `roundToIntegralTowardPositive`).
 #[must_use]
 pub fn ceil(x: f64) -> f64 {

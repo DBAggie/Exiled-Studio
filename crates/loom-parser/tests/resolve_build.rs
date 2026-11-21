@@ -219,7 +219,8 @@ fn ring_expected(quality: Option<LineResolution>) -> Vec<Option<LineResolution>>
             Some(Adapted::SplitSection),
         ),
         Some(LineResolution::Continues { line: 12 }),
-        Some(LineResolution::Excluded(Exclusion::Custom)),
+        // A `{custom}` line is read as any line, as PoB applies it (P6-11fh).
+        stats(vec![exact("test_maximum_life", 15)], None),
         typed(TypedResolution::ItemProperty {
             property: "DisplayLastsSeconds".to_owned(),
             values: vec![PropertyValue {

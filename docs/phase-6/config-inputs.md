@@ -38,7 +38,7 @@ The recount is from the P6-2d evidence (`local/p6/p6-2d`, public and corpus). 10
 |---|---|
 | Minion inputs (Feeding Frenzy, minion charges, Onslaught, full life), `TotalSpectreLife`, `detonateDeadCorpseLife` | P6-7 |
 | Brands (`ActiveBrands`, `BrandsAttachedToEnemy`), `TotemsSummoned`, `minesPerThrow`, Storm Rain's and Toxic Rain's overlaps | P6-6 |
-| `multiplierWarcryPower`, `waveOfConvictionExposureType`, `buffUnholyMight` | P6-9 |
+| `waveOfConvictionExposureType`, `buffUnholyMight` (`multiplierWarcryPower` read since P6-11bs, `docs/phase-6/gems.md`) | P6-9 |
 | `buffAlchemistsGenius` (flask effect), `conditionUsingFlask`'s flask source | P6-4b |
 | The enemy's brittle, scorch, and sap (and their grounds), crushed, frozen, moving (bleed's more damage, `CalcSetup.lua` 537), Ensnare, covered in ash; Elemental Equilibrium's inputs; mana burn; `presetBossSkills`; `bandit` with a value PoB reads otherwise | P6-11 |
 

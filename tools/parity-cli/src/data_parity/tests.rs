@@ -13,6 +13,9 @@ use super::rules::{Category, Rules, glob};
 use super::{Request, UNCATEGORIZED, pob, run};
 use crate::resolve_corpus::Tool;
 
+/// No timeless jewel results file (the synthetic bundles have none).
+static NO_TIMELESS: std::collections::BTreeMap<String, u32> = std::collections::BTreeMap::new();
+
 /// The synthetic bundle has no passive description file; its main file
 /// stands in (it describes none of the synthetic passive stats, so they
 /// render no line, as a stat without a description shows none in game).
@@ -28,7 +31,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 13,
+        "format": 16,
         "flasks": {},
         "minions": {},
         "minion_mods": {},
@@ -179,9 +182,15 @@ const BOSSES: [loom_calc::poe1::enemy::Boss; 2] = [
 
 fn differences(export: &Value) -> Vec<Difference> {
     let export = pob::parse(&serde_json::to_vec(export).unwrap()).unwrap();
-    compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES)
-        .unwrap()
-        .differences
+    compare::compare(
+        &bundle("bundle-poe1"),
+        &export,
+        SCOPE,
+        &BOSSES,
+        &NO_TIMELESS,
+    )
+    .unwrap()
+    .differences
 }
 
 fn fields(found: &[Difference]) -> Vec<(&str, &str, &str)> {
@@ -194,7 +203,14 @@ fn fields(found: &[Difference]) -> Vec<(&str, &str, &str)> {
 #[test]
 fn equal_export_should_have_no_difference() {
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(
+        &bundle("bundle-poe1"),
+        &export,
+        SCOPE,
+        &BOSSES,
+        &NO_TIMELESS,
+    )
+    .unwrap();
     assert_eq!(comparison.differences, []);
     // Every table compared something; bundle rows PoB lacks are counted.
     for table in super::TABLES {
@@ -212,6 +228,13 @@ fn equal_export_should_have_no_difference() {
             "flasks",
             "minions",
             "minion_mods",
+            // The synthetic export and bundle have no timeless jewels
+            // (P6-10a): the table runs on the real bundle and PoB's export;
+            // its reader and checksum have their own tests.
+            "timeless",
+            // Nor tattoos (P6-11av): the table runs on the real bundle and
+            // PoB's export.
+            "tattoos",
         ]
         .contains(&table)
         {
@@ -388,7 +411,7 @@ fn minion_mods_without_object_stats_should_be_one_difference() {
     if let Some(m) = b.poe1.as_mut().and_then(|p| p.minions.as_mut()) {
         m.object_stats = None;
     }
-    let comparison = compare::compare(&b, &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(&b, &export, SCOPE, &BOSSES, &NO_TIMELESS).unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [("minion_mods", "*", "object_stats")]
@@ -410,7 +433,14 @@ fn rows_on_one_side_should_be_listed() {
         .unwrap()
         .remove("2");
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(
+        &bundle("bundle-poe1"),
+        &export,
+        SCOPE,
+        &BOSSES,
+        &NO_TIMELESS,
+    )
+    .unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [("skills", "PobOnly", "row")]
@@ -444,7 +474,14 @@ fn flavour_text_should_compare_pobs_cleaned_lines_by_name_and_id() {
     rows[1]["text"] = json!(["First variant, as PoB has it."]);
     rows[2] = json!({"id": "TestUnique9", "name": "Test PoB Only", "text": ["Only in PoB."]});
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(
+        &bundle("bundle-poe1"),
+        &export,
+        SCOPE,
+        &BOSSES,
+        &NO_TIMELESS,
+    )
+    .unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [
@@ -501,7 +538,7 @@ fn crit_chance_should_prefer_the_second_column() {
     export["skills"]["TestBolt"]["levels"]["1"]["critChance"] = json!(7.5);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
             .unwrap()
             .differences,
         []
@@ -576,7 +613,7 @@ fn bases_should_match_one_base_by_name() {
     weapon.base_item = twin.id.clone();
     properties.weapon_types.push(weapon.clone());
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let found = compare::compare(&bundle, &export, SCOPE, &BOSSES)
+    let found = compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
         .unwrap()
         .differences;
     // Its requirements agree with the first one's, so they compare as one.
@@ -593,7 +630,7 @@ fn bases_should_match_one_base_by_name() {
         .unwrap()
         .base_item = royale.to_owned();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
             .unwrap()
             .differences,
         []
@@ -636,7 +673,7 @@ fn affixes_and_requirements_should_compare() {
     export["mods"]["TestLife1"]["level"] = json!(10);
     export["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle, &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS).unwrap();
     assert_eq!(comparison.differences, []);
     // A second game base under the ring's name with other requirements:
     // PoB holds one, so the row differs.
@@ -651,7 +688,7 @@ fn affixes_and_requirements_should_compare() {
     bundle.base_items.push(twin);
     assert_eq!(
         fields(
-            &compare::compare(&bundle, &export, SCOPE, &BOSSES)
+            &compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
                 .unwrap()
                 .differences
         ),
@@ -672,7 +709,7 @@ fn affixes_and_requirements_should_compare() {
     let off = pob::parse(&serde_json::to_vec(&off).unwrap()).unwrap();
     assert_eq!(
         fields(
-            &compare::compare(&bundle, &off, SCOPE, &BOSSES)
+            &compare::compare(&bundle, &off, SCOPE, &BOSSES, &NO_TIMELESS)
                 .unwrap()
                 .differences
         ),
@@ -687,7 +724,7 @@ fn affixes_and_requirements_should_compare() {
     // A bundle before data schema 4 carries neither: refused, not compared.
     bundle.manifest.data_schema = 3;
     assert!(
-        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
             .unwrap_err()
             .contains("data schema 3")
     );
@@ -713,7 +750,7 @@ fn passive_text_should_render_as_the_game_shows_it() {
     export["tree"]["nodes"]["101"]["stats"] = json!(["+10 to maximum Life"]);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES, &NO_TIMELESS)
             .unwrap()
             .differences,
         []
@@ -892,6 +929,7 @@ fn run_with(export: &Value, rules: &Value, bundle_name: &str) -> Result<super::O
         rules: &rules,
         passive_scope: SCOPE,
         bosses: &BOSSES,
+        timeless_adlers: &NO_TIMELESS,
         tool: Tool::default(),
     })
 }
@@ -1104,6 +1142,7 @@ fn rules_should_be_for_the_bundles_build() {
         rules: &rules,
         passive_scope: SCOPE,
         bosses: &BOSSES,
+        timeless_adlers: &NO_TIMELESS,
         tool: Tool::default(),
     })
     .unwrap_err();
@@ -1179,7 +1218,14 @@ fn pantheons_should_compare_gods_souls_lines_and_values() {
     let found = differences(&export);
     assert_eq!(fields(&found), [("pantheons", "Extra", "row")], "PoB only");
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    let comparison = compare::compare(
+        &bundle("bundle-poe1"),
+        &export,
+        SCOPE,
+        &BOSSES,
+        &NO_TIMELESS,
+    )
+    .unwrap();
     assert!(
         comparison
             .bundle_only

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-7c2): a level 90 Witch with Raise Zombie (level 20) as the main skill, supported by Minion Damage, Minion Speed, Melee Physical Damage, and Brutality (level 20 each): the summoning skill's supports on the zombie's skill and its minion modifiers.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Raise Zombie" skillId="RaiseZombie" variantId="RaiseZombie" gemId="Metadata/Items/Gems/SkillGemRaiseZombie" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Minion Damage" skillId="SupportMinionDamage" variantId="SupportMinionDamage" gemId="Metadata/Items/Gems/SupportGemMinionDamage" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Minion Speed" skillId="SupportMinionSpeed" variantId="SupportMinionSpeed" gemId="Metadata/Items/Gems/SupportGemMinionSpeed" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Melee Physical Damage" skillId="SupportMeleePhysicalDamage" variantId="SupportMeleePhysicalDamage" gemId="Metadata/Items/Gems/SupportGemMeleePhysicalDamage" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Brutality" skillId="SupportBrutality" variantId="SupportBrutality" gemId="Metadata/Items/Gems/SupportGemBrutality" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config/>
+</PathOfBuilding>

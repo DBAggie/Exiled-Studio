@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11ay): Burning Arrow (level 20) with a
+     Short Bow, and custom lines adding damage with weapon types: those with
+     Bow Attacks apply to the hit; those with Axe, Staff, Mace or Sceptre,
+     Claw, and Dagger Attacks do not.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Burning Arrow" skillId="BurningArrow" variantId="BurningArrow" gemId="Metadata/Items/Gems/SkillGemBurningArrow" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Short Bow
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				4 to 9 Added Physical Damage with Bow Attacks
+6 to 12 Added Fire Damage with Bow Attacks
+5 to 11 Added Cold Damage with Bow Attacks
+2 to 20 Added Lightning Damage with Bow Attacks
+3 to 7 Added Chaos Damage with Bow Attacks
+10 to 20 Added Fire Damage with Axe Attacks
+10 to 20 Added Cold Damage with Staff Attacks
+10 to 20 Added Lightning Damage with Mace or Sceptre Attacks
+10 to 20 Added Physical Damage with Claw Attacks
+10 to 20 Added Chaos Damage with Dagger Attacks
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -26,12 +26,18 @@
 //!   with a `Catalyst` and its quality (`CatalystQuality`, default 20),
 //!   every line whose `{tags}` (or `prefix`/`suffix` flag) meets the
 //!   catalyst's tags is scaled, ranged or not, unless `{unscalable}` or
-//!   ` - Unscalable Value`. The game scales only stats it marks scalable,
-//!   which the bundle does not carry yet: such a line is
-//!   [`LineValues::Scaled`] (`catalyst`). An untagged ranged line on a
-//!   catalysed item is too (the game scales it; PoB does not), and a
-//!   `Quality (... Modifiers)` catalyst line, whose catalyst the adapter
-//!   does not name, scales every tagged or ranged line.
+//!   ` - Unscalable Value`. The game scales only the stats it marks
+//!   scalable (`Stats.IsScalable`, the bundle's `scalable` since P6-11ax;
+//!   PoB's `modScalability`): with each of a one-line reading's stats
+//!   known ([`line_values_with`]), a scalable stat's value is
+//!   `floorSymmetric(raw x (100 + quality) / 100)`, after the roll for a
+//!   ranged line (`formatValue`'s `valueScalar`), and an unscalable one
+//!   keeps its value ([`LineValues::Catalysed`]). Otherwise the line is
+//!   [`LineValues::Scaled`] (`catalyst`): a stat whose scalability is not
+//!   known, a multi-line reading, an untagged ranged line on a catalysed
+//!   item (the game scales it; PoB does not), and a `Quality (...
+//!   Modifiers)` catalyst line, whose catalyst the adapter does not name
+//!   (it scales every tagged or ranged line).
 //! - **Corrupted range** (`{corruptedRange}`, `formatValue`'s
 //!   `baseValueScalar`): the line is scaled (`corrupted-range`).
 //! - **Modifier magnitudes** ("... Modifier magnitudes", "... effect of
@@ -97,8 +103,8 @@ pub type LineEnds = BTreeMap<usize, Vec<Option<(i64, i64)>>>;
 /// The catalyst state of an item.
 enum Catalyst {
     None,
-    /// Named, with its tags.
-    Tags(&'static [&'static str]),
+    /// Named, with its tags and its quality.
+    Tags(&'static [&'static str], f64),
     /// From a `Quality (... Modifiers)` line: tags not known here.
     Unnamed,
 }
@@ -108,6 +114,17 @@ enum Catalyst {
 /// exact ends of its ranges.
 #[must_use]
 pub fn line_values(item: &Item, ends: &LineEnds) -> BTreeMap<usize, LineValues> {
+    line_values_with(item, ends, &|_| None)
+}
+
+/// [`line_values`] with each stat's scalability (`Stats.IsScalable`;
+/// `None` when not known), which settles catalysed lines (module docs).
+#[must_use]
+pub fn line_values_with(
+    item: &Item,
+    ends: &LineEnds,
+    scalable: &dyn Fn(&str) -> Option<bool>,
+) -> BTreeMap<usize, LineValues> {
     let body = &item.body;
     let mut out = BTreeMap::new();
     let modifiers: Vec<(usize, &ModifierLine)> = body.modifiers().collect();
@@ -142,7 +159,11 @@ pub fn line_values(item: &Item, ends: &LineEnds) -> BTreeMap<usize, LineValues> 
             .iter()
             .any(|m| catalysed(&catalyst, m, has_range(&m.text)))
         {
-            out.insert(*n, LineValues::Scaled(Scaling::Catalyst));
+            let values = catalysed_values(&catalyst, lines, ends.get(n), rolls_agree, scalable);
+            out.insert(
+                *n,
+                values.map_or(LineValues::Scaled(Scaling::Catalyst), LineValues::Catalysed),
+            );
             continue;
         }
         let ranged: Vec<&&ModifierLine> = lines.iter().filter(|m| has_range(&m.text)).collect();
@@ -362,10 +383,95 @@ fn catalyst(item: &Item) -> Catalyst {
             _ => {}
         }
     }
+    let quality = quality.unwrap_or(20.0);
     match named {
-        Some(tags) if quality.unwrap_or(20.0) != 0.0 => Catalyst::Tags(tags),
+        Some(tags) if quality != 0.0 => Catalyst::Tags(tags, quality),
         _ => Catalyst::None,
     }
+}
+
+/// A catalysed one-line reading's values (module docs): each stat's raw
+/// value (the roll of a ranged one, else its exact value), scaled when
+/// the stat is scalable. `None` when the line is a reason instead.
+fn catalysed_values(
+    catalyst: &Catalyst,
+    lines: &[&ModifierLine],
+    line_ends: Option<&Vec<Option<(i64, i64)>>>,
+    rolls_agree: bool,
+    scalable: &dyn Fn(&str) -> Option<bool>,
+) -> Option<Vec<Option<i64>>> {
+    let (Catalyst::Tags(tags, quality), [m]) = (catalyst, lines) else {
+        return None;
+    };
+    // An untagged ranged line: the game scales it, PoB does not.
+    if !line_tags(m).iter().any(|t| tags.contains(t)) {
+        return None;
+    }
+    let LineResolution::Resolved {
+        result: Resolved::Stats(stats),
+        ..
+    } = &m.resolution
+    else {
+        return None;
+    };
+    let r = if has_range(&m.text) {
+        if !rolls_agree || has_value_then_range(&m.text) {
+            return None;
+        }
+        Some(roll(m)?)
+    } else {
+        None
+    };
+    let scalar = (100.0 + quality) / 100.0;
+    stats
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            let ranged = r.zip(line_ends.and_then(|e| e.get(i)).copied().flatten());
+            let raw = match (ranged, &s.value) {
+                (Some((r, (from, to))), _) => interpolate(from, to, r),
+                (None, loom_domain::StatValue::Exact { min, max }) if min == max => *min,
+                _ => return None,
+            };
+            Some(Some(if scalable(s.stat.as_str())? {
+                floor_symmetric(raw, scalar)
+            } else {
+                raw
+            }))
+        })
+        .collect()
+}
+
+/// PoB's `floorSymmetric(value * valueScalar)`, in its order of float
+/// operations.
+#[expect(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    reason = "stat values are far below 2^53; the scaled value fits in i64"
+)]
+fn floor_symmetric(raw: i64, scalar: f64) -> i64 {
+    let v = raw as f64 * scalar;
+    (if v >= 0.0 { v.floor() } else { v.ceil() }) as i64
+}
+
+/// A line's `{tags}` and its `prefix` or `suffix` flag (PoB's
+/// `getCatalystScalar`).
+fn line_tags(m: &ModifierLine) -> Vec<&str> {
+    let mut tags: Vec<&str> = m
+        .prefixes
+        .iter()
+        .filter(|p| p.key == "tags")
+        .filter_map(|p| p.value.as_deref())
+        .flat_map(|v| v.split(','))
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .collect();
+    for flag in ["prefix", "suffix"] {
+        if m.has(flag) {
+            tags.push(flag);
+        }
+    }
+    tags
 }
 
 /// Whether the catalyst scales the line.
@@ -394,7 +500,9 @@ fn catalysed(catalyst: &Catalyst, m: &ModifierLine, ranged: bool) -> bool {
     match catalyst {
         Catalyst::None => false,
         Catalyst::Unnamed => !untagged || ranged,
-        Catalyst::Tags(scaled) => (untagged && ranged) || tags.iter().any(|t| scaled.contains(t)),
+        Catalyst::Tags(scaled, _) => {
+            (untagged && ranged) || tags.iter().any(|t| scaled.contains(t))
+        }
     }
 }
 
@@ -451,7 +559,7 @@ fn mod_ranges_agree(item: &Item, modifiers: &[(usize, &ModifierLine)]) -> bool {
     reason = "tests index fixed synthetic data; a bad index should panic"
 )]
 mod tests {
-    use loom_domain::{Attribute, ItemId, ItemPart, Ordered};
+    use loom_domain::{Attribute, ItemId, ItemPart, Ordered, StatValue};
 
     use super::super::{read, to_domain};
     use super::*;
@@ -587,6 +695,79 @@ mod tests {
             .map(|(n, _)| (n, vec![Some((10, 20))]))
             .collect();
         assert!(line_values(&it, &e).is_empty());
+    }
+
+    /// With the stats' scalability known (P6-11ax): a scalable stat's
+    /// value is `floorSymmetric(raw x 1.2)` after the roll (24 becomes 28,
+    /// 20 stays 24), an unscalable one keeps its value, an unknown one
+    /// leaves the line a reason, and an untagged ranged line stays one.
+    #[test]
+    fn known_scalability_should_settle_catalysed_lines() {
+        let text = format!(
+            "Rarity: RARE
+A
+Iron Ring
+Catalyst: Intrinsic
+CatalystQuality: 20
+Implicits: 0
+{}
+{}
+{}
+{}
+{}",
+            "{tags:attribute}{range:1}+(16-24) to Strength",
+            "{tags:attribute}+20 to Dexterity",
+            "{tags:attribute}+20 to Intelligence",
+            "{tags:attribute}+20 to all Attributes",
+            "{range:1}+(10-20) to Intelligence",
+        );
+        let mut it = item(&text, &[]);
+        let stats = [
+            ("base_strength", StatValue::Ranged { min: 16, max: 24 }),
+            ("base_dexterity", StatValue::Exact { min: 20, max: 20 }),
+            ("unscalable_int", StatValue::Exact { min: 20, max: 20 }),
+            ("unknown", StatValue::Exact { min: 20, max: 20 }),
+            ("base_intelligence", StatValue::Ranged { min: 10, max: 20 }),
+        ];
+        let lines: Vec<usize> = it.body.modifiers().map(|(n, _)| n).collect();
+        for (n, (stat, value)) in lines.iter().zip(stats) {
+            if let Some(LineKind::Modifier(m)) = it.body.lines.get_mut(*n).map(|l| &mut l.kind) {
+                m.resolution = LineResolution::Resolved {
+                    result: Resolved::Stats(vec![loom_domain::StatLine {
+                        stat: loom_domain::StatId::new(stat),
+                        value,
+                    }]),
+                    adapted: None,
+                };
+            }
+        }
+        let e = ends(&[(lines[0], 16, 24), (lines[4], 10, 20)]);
+        let scalable = |s: &str| match s {
+            "base_strength" | "base_dexterity" | "base_intelligence" => Some(true),
+            "unscalable_int" => Some(false),
+            _ => None,
+        };
+        let got = line_values_with(&it, &e, &scalable);
+        assert_eq!(
+            got.get(&lines[0]),
+            Some(&LineValues::Catalysed(vec![Some(28)]))
+        );
+        assert_eq!(
+            got.get(&lines[1]),
+            Some(&LineValues::Catalysed(vec![Some(24)]))
+        );
+        assert_eq!(
+            got.get(&lines[2]),
+            Some(&LineValues::Catalysed(vec![Some(20)]))
+        );
+        assert_eq!(
+            got.get(&lines[3]),
+            Some(&LineValues::Scaled(Scaling::Catalyst))
+        );
+        assert_eq!(
+            got.get(&lines[4]),
+            Some(&LineValues::Scaled(Scaling::Catalyst))
+        );
     }
 
     #[test]

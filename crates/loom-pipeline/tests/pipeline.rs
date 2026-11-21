@@ -171,6 +171,27 @@ fn reset_resolutions_should_keep_exclusions() {
     let resolver = Resolver::new(&data).unwrap();
     let mut build = loom_pipeline::read_pob(&synthetic()).unwrap();
     loom_pipeline::resolve(&resolver, &data, &mut build).unwrap();
+    // The synthetic build's one exclusion was its `{custom}` line, which
+    // resolves since P6-11fh; a line a variant leaves out stands in.
+    let first = build
+        .items
+        .entries
+        .typed_mut()
+        .find_map(|e| match e {
+            loom_domain::ItemsEntry::Item(item) => Some(item),
+            _ => None,
+        })
+        .unwrap();
+    let line = first
+        .body
+        .lines
+        .iter_mut()
+        .find_map(|l| match &mut l.kind {
+            loom_domain::LineKind::Modifier(m) => Some(m),
+            _ => None,
+        })
+        .unwrap();
+    line.resolution = loom_domain::LineResolution::Excluded(loom_domain::Exclusion::NotSelected);
     loom_pipeline::reset_resolutions(&mut build);
     let mut excluded = 0;
     for item in build.items.items() {
@@ -182,6 +203,5 @@ fn reset_resolutions_should_keep_exclusions() {
             }
         }
     }
-    // `{custom}+15 to maximum Life`.
-    assert!(excluded >= 1);
+    assert_eq!(excluded, 1);
 }

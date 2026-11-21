@@ -428,6 +428,10 @@ impl CalcData for OverlayData<'_> {
         self.bundle.mastery_effect_stats(effect)
     }
 
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        self.bundle.item_base_name(id)
+    }
+
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
         self.bundle.skill_gem(base_item)
     }
@@ -497,6 +501,7 @@ impl CalcData for OverlayData<'_> {
                     evasion: range("evasion", a.evasion),
                     energy_shield: range("energy_shield", a.energy_shield),
                     block: a.block.map(|b| self.int("bases", name, "block", b)),
+                    movement_speed: a.movement_speed,
                 }))
             }
             other => Some(other),
@@ -527,6 +532,8 @@ pub struct Request<'a> {
     pub anonymous: bool,
     /// The tool.
     pub tool: ToolRecord,
+    /// The Timeless jewels' results files read, by jewel type (P6-10a).
+    pub timeless_results: &'a std::collections::BTreeMap<u32, Vec<u8>>,
 }
 
 /// The outputs of a run, before they are written.
@@ -573,7 +580,25 @@ fn one(
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
         request.trees,
     );
-    let options = loom_pipeline::options(&build, request.data, &ends, version, tree);
+    let timeless = request.bundle.poe1.as_ref().and_then(|p| {
+        Some(loom_pipeline::timeless::TimelessData {
+            timeless: p.timeless.as_ref()?,
+            luts: p.timeless_luts.as_ref()?,
+            results: request
+                .timeless_results
+                .iter()
+                .map(|(t, b)| (*t, b.as_slice()))
+                .collect(),
+        })
+    });
+    let options = loom_pipeline::options_with(
+        &build,
+        request.data,
+        &ends,
+        version,
+        tree,
+        timeless.as_ref(),
+    );
     let data: &dyn CalcData = match &request.overlay {
         Some((overlay, _)) => *overlay,
         None => request.bundle,

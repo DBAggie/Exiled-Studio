@@ -33,7 +33,8 @@
 //! gives cast `Speed` INC `(Max(ArcaneSurgeCastSpeed) or 20) x effect`,
 //! the effect `1 + (ArcaneSurgeEffect + BuffEffectOnSelf) / 100` (and a
 //! flask's share): no effect stat is mapped ([`ARCANE_SURGE_DEPENDS_ON`]),
-//! so 1. Its mana regeneration and `ArcaneSurgeDamage` (unmapped) are not
+//! so 1; and its mana regeneration, `ManaRegen` INC `(Max(ArcaneSurgeManaRegen)
+//! or 30) x effect` (P6-10b). `ArcaneSurgeDamage` (unmapped) is not
 //! here. Its source is the input.
 //!
 //! **Convergence** (P3-8n). `conditionConvergence` (1430) sets
@@ -51,8 +52,8 @@
 //!   (TailwindEffectOnSelf + BuffEffectOnSelf) / 100))`;
 //! - Adrenaline (740 to 746): `Damage` INC `floor(100 x effect)`, `Speed`
 //!   INC `floor(25 x effect)` for attacks and for casts, the effect `1 +
-//!   BuffEffectOnSelf / 100`; its movement speed and physical damage
-//!   reduction are not slice fields.
+//!   BuffEffectOnSelf / 100`; its movement speed (P6-10b) and its
+//!   `PhysicalDamageReduction` BASE `floor(10 x effect)` (P6-10b part 5).
 //!
 //! The effect stats are unmapped ([`TAILWIND_DEPENDS_ON`], [`DEPENDS_ON`]'s
 //! `buff_effect_on_self_+%`), so the constants. Other sources of either
@@ -99,7 +100,6 @@ pub const ARCANE_SURGE_DEPENDS_ON: &[&str] = &[
     "additive_flask_effect_modifiers_apply_to_arcane_surge",
     "additive_flask_effect_modifiers_apply_to_arcane_surge_at_%_value",
     "arcane_surge_cast_speed_+%",
-    "arcane_surge_effect_+%",
     "buff_effect_on_self_+%",
 ];
 
@@ -128,6 +128,9 @@ pub const ADRENALINE_DAMAGE: f64 = 100.0;
 /// Adrenaline's increased attack and cast speed (743, 744).
 pub const ADRENALINE_SPEED: f64 = 25.0;
 
+/// Adrenaline's additional physical damage reduction (746; P6-10b part 5).
+pub const ADRENALINE_REDUCTION: f64 = 10.0;
+
 /// Whether this module handles `input` (Arcane Surge's check is
 /// [`super::conditions`]').
 #[must_use]
@@ -137,8 +140,95 @@ pub fn is_buff_input(input: &str) -> bool {
         CONVERGENCE_INPUT,
         TAILWIND_INPUT,
         ADRENALINE_INPUT,
+        CONSECRATED_INPUT,
+        STATIONARY_INPUT,
     ]
     .contains(&input)
+}
+
+/// The check that puts you on consecrated ground (`ConfigOptions.lua`
+/// 1137).
+pub const CONSECRATED_INPUT: &str = "conditionOnConsecratedGround";
+
+/// The count of seconds you have been stationary (`ConfigOptions.lua`:
+/// `Multiplier:StationarySeconds`, and `Condition:Stationary` above 0).
+pub const STATIONARY_INPUT: &str = "conditionStationary";
+
+/// Consecrated ground's life regeneration, percent of life per second
+/// (`CalcPerform.lua` 772: `5 x effect`).
+pub const CONSECRATED_LIFE_REGEN: f64 = 5.0;
+
+/// Consecrated ground under you (P6-10b; `CalcPerform.lua` 770 to 775):
+/// on with the config's check, or with "Consecrated Ground around you while
+/// stationary" and a stationary count above 0. Its life regeneration,
+/// `LifeRegenPercent` 5 times its effect (`1 + ConsecratedGroundEffect INC /
+/// 100`, the effect you create); its less curse effect on you
+/// reaches no slice field, and its accuracy comes from a stat that stays a
+/// reason.
+fn consecrated_ground(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let line = ingest
+        .effects()
+        .iter()
+        .find(|e| e.quantity == Quantity::Poe1(Poe1Quantity::ConsecratedWhileStationary))
+        .map(|e| e.source.clone());
+    let on = match check(set, CONSECRATED_INPUT) {
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: CONSECRATED_INPUT.to_owned(),
+            });
+            return;
+        }
+        Ok(true) => Some(Source::Config {
+            input: CONSECRATED_INPUT.to_owned(),
+        }),
+        Ok(false) => match line {
+            None => None,
+            Some(source) => {
+                match set.and_then(|s| {
+                    super::config::last_input(s, STATIONARY_INPUT, ConfigInputKind::Input)
+                }) {
+                    None => None,
+                    Some(ConfigValue::Number(n)) => (n.value().0 > 0.0).then_some(source),
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: STATIONARY_INPUT.to_owned(),
+                        });
+                        return;
+                    }
+                }
+            }
+        },
+    };
+    if let Some(source) = on {
+        // Its effect: `1 + ConsecratedGroundEffect INC / 100`, the
+        // unconditional increases; a conditional one is a reason.
+        let mut inc = 0.0;
+        let mut conditional = None;
+        for e in ingest.effects() {
+            if e.quantity == Quantity::Poe1(Poe1Quantity::ConsecratedGroundEffect)
+                && e.op == Op::Increased
+            {
+                if e.conditions == Conditions::none() {
+                    inc += e.value;
+                } else {
+                    conditional = Some(e.source.clone());
+                }
+            }
+        }
+        if let Some(s) = conditional {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: s,
+                what: "consecrated-ground-effect",
+            });
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::RegenPercent(super::Pool::Life)),
+            op: Op::Base,
+            value: CONSECRATED_LIFE_REGEN * (1.0 + inc / 100.0),
+            conditions: Conditions::none(),
+            source,
+        });
+    }
 }
 
 /// A check buff's constant effects (Tailwind, Adrenaline; module docs),
@@ -147,7 +237,7 @@ fn constant_buff(
     set: Option<&ConfigSet>,
     ingest: &mut Ingest<'_>,
     input: &str,
-    effects: &[(Quantity, f64, Flags)],
+    effects: &[(Quantity, Op, f64, Flags)],
 ) {
     match check(set, input) {
         Ok(false) => {}
@@ -155,10 +245,10 @@ fn constant_buff(
             input: input.to_owned(),
         }),
         Ok(true) => {
-            for &(quantity, value, flags) in effects {
+            for &(quantity, op, value, flags) in effects {
                 ingest.effect(Effect {
                     quantity,
-                    op: Op::Increased,
+                    op,
                     value,
                     conditions: Conditions::none().with_all(flags),
                     source: Source::Config {
@@ -210,20 +300,84 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             Some(m.map_or(v, |m| crate::math::max(m, v)))
         })
         .unwrap_or(ARCANE_SURGE_SPEED);
+    let source = if checked {
+        Source::Config {
+            input: ARCANE_SURGE_INPUT.to_owned(),
+        }
+    } else {
+        support.unwrap_or(Source::Rule("arcane-surge"))
+    };
+    // Its effect (P6-11ch; `CalcPerform.lua` 688): `1 + ArcaneSurgeEffect /
+    // 100` (the buff effect on self and the flask's share stay reasons).
+    let increased: f64 = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeEffect)
+                && e.op == Op::Increased
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .sum();
+    let effect = 1.0 + increased / 100.0;
+    // Its more spell damage (696 to 699): the largest `ArcaneSurgeDamage`
+    // times the effect, when not 0.
+    let damage = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeDamage)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(None, |m: Option<f64>, v| {
+            Some(m.map_or(v, |m| crate::math::max(m, v)))
+        })
+        .unwrap_or(0.0);
+    if damage != 0.0 {
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value: damage * effect,
+            conditions: Conditions::none().with_all(Flags::SPELL),
+            source: source.clone(),
+        });
+    }
+    // Its mana regeneration (P6-10b; `CalcPerform.lua` 690): `ManaRegen`
+    // INC, the largest `ArcaneSurgeManaRegen` or 30, times its effect.
+    let regen = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(None, |m: Option<f64>, v| {
+            Some(m.map_or(v, |m| crate::math::max(m, v)))
+        })
+        .unwrap_or(ARCANE_SURGE_MANA_REGEN);
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::Regen(super::Pool::Mana)),
+        op: Op::Increased,
+        value: regen * effect,
+        conditions: Conditions::none(),
+        source: source.clone(),
+    });
     ingest.effect(Effect {
         quantity: Quantity::Speed,
         op: Op::Increased,
-        value: speed,
+        value: speed * effect,
         conditions: Conditions::none().with_all(Flags::CAST),
-        source: if checked {
-            Source::Config {
-                input: ARCANE_SURGE_INPUT.to_owned(),
-            }
-        } else {
-            support.unwrap_or(Source::Rule("arcane-surge"))
-        },
+        source,
     });
 }
+
+/// Arcane Surge's increased mana regeneration without a source of its own
+/// (`CalcPerform.lua` 690).
+const ARCANE_SURGE_MANA_REGEN: f64 = 30.0;
 
 /// Convergence's more elemental damage (module docs).
 fn convergence(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
@@ -262,16 +416,24 @@ pub const ONSLAUGHT_STAT: &str = "base_should_have_onslaught_from_stat";
 /// Adds the buffs the active config set or a modifier turns on (module
 /// docs). A check value that is not a boolean is a reason under its input
 /// (PoB reads any value other than `false` as on). Runs after every other
-/// source has been ingested.
-pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+/// source has been ingested. `settled` holds the calculation's settled
+/// conditions (`super::states::states`), which a conditional Onslaught
+/// flag reads (P6-11p).
+pub fn buffs(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     arcane_surge(set, ingest);
     convergence(set, ingest);
+    consecrated_ground(set, ingest);
     constant_buff(
         set,
         ingest,
         TAILWIND_INPUT,
         &[(
             Quantity::Poe1(Poe1Quantity::ActionSpeed),
+            Op::Increased,
             TAILWIND_ACTION_SPEED,
             Flags::NONE,
         )],
@@ -281,9 +443,40 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         ingest,
         ADRENALINE_INPUT,
         &[
-            (Quantity::Damage, ADRENALINE_DAMAGE, Flags::NONE),
-            (Quantity::Speed, ADRENALINE_SPEED, Flags::ATTACK),
-            (Quantity::Speed, ADRENALINE_SPEED, Flags::CAST),
+            (
+                Quantity::Damage,
+                Op::Increased,
+                ADRENALINE_DAMAGE,
+                Flags::NONE,
+            ),
+            (
+                Quantity::Speed,
+                Op::Increased,
+                ADRENALINE_SPEED,
+                Flags::ATTACK,
+            ),
+            (
+                Quantity::Speed,
+                Op::Increased,
+                ADRENALINE_SPEED,
+                Flags::CAST,
+            ),
+            // Its movement speed (`CalcPerform.lua` 745; P6-10b).
+            (
+                Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                ADRENALINE_SPEED,
+                Flags::NONE,
+            ),
+            // Its physical damage reduction (746; P6-10b part 5).
+            (
+                Quantity::Poe1(Poe1Quantity::DamageReduction(
+                    crate::quantity::DamageType::Physical,
+                )),
+                Op::Base,
+                ADRENALINE_REDUCTION,
+                Flags::NONE,
+            ),
         ],
     );
     // The last input counts; a check's placeholder is not applied.
@@ -301,9 +494,9 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             None
         }
     };
-    // Every Onslaught flag is unconditional: the one mapping row has no
-    // condition (`flag_tests` pins it). A conditional one would be a new
-    // row, which must come with its condition here.
+    // An Onslaught flag that holds: unconditional (the modifier
+    // "Onslaught"), or under settled conditions that all hold (P6-11p: on
+    // kill, with `KilledRecently`).
     if source.is_none() {
         source = ingest
             .effects()
@@ -311,7 +504,13 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             .find(|e| {
                 e.quantity == Quantity::Poe1(Poe1Quantity::Onslaught)
                     && e.op == Op::Flag
-                    && e.conditions == Conditions::none()
+                    && e.value != 0.0
+                    && e.conditions.all == Flags::NONE
+                    && e.conditions.any == Flags::NONE
+                    && e.conditions
+                        .states
+                        .iter()
+                        .all(|(k, want)| settled.get(k) == Some(want))
             })
             .map(|e| e.source.clone());
     }
@@ -325,6 +524,14 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             source: source.clone(),
         });
     }
+    // Its movement speed (`CalcPerform.lua` 684; P6-10b).
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+        op: Op::Increased,
+        value: ONSLAUGHT_SPEED,
+        conditions: Conditions::none(),
+        source,
+    });
 }
 
 #[cfg(test)]
@@ -433,10 +640,14 @@ mod tests {
         let on = set(&[(CONVERGENCE_INPUT, ConfigValue::Boolean(true))]);
         let mut with_line = Ingest::new(&Poe1Mapping);
         with_line.effect(flag);
-        buffs(Some(&on), &mut with_line);
+        buffs(
+            Some(&on),
+            &std::collections::BTreeMap::new(),
+            &mut with_line,
+        );
         assert_eq!(more(&with_line), [CONVERGENCE_MORE]);
         let mut without = Ingest::new(&Poe1Mapping);
-        buffs(Some(&on), &mut without);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut without);
         assert!(more(&without).is_empty());
     }
 
@@ -457,7 +668,7 @@ mod tests {
             (ADRENALINE_INPUT, ConfigValue::Boolean(true)),
         ]);
         let mut ingest = Ingest::new(&Poe1Mapping);
-        buffs(Some(&on), &mut ingest);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut ingest);
         assert_eq!(
             values(&ingest, Quantity::Poe1(Poe1Quantity::ActionSpeed)),
             [TAILWIND_ACTION_SPEED]
@@ -469,7 +680,7 @@ mod tests {
         );
         let off = set(&[(TAILWIND_INPUT, ConfigValue::Boolean(false))]);
         let mut none = Ingest::new(&Poe1Mapping);
-        buffs(Some(&off), &mut none);
+        buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
         assert!(none.effects().is_empty());
         assert!(is_buff_input(TAILWIND_INPUT) && is_buff_input(ADRENALINE_INPUT));
     }

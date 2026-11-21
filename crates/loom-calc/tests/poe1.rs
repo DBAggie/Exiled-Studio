@@ -8,7 +8,7 @@
 //! `loom_calc::poe1::phases`); the mechanic fixtures check the same
 //! against the oracle (`docs/phase-3/character-fields.md`).
 
-use loom_calc::poe1::{Poe1Data, Poe1Field};
+use loom_calc::poe1::{Poe1Data, Poe1Field, Pool};
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
     Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveState, Range,
@@ -162,6 +162,24 @@ impl CalcData for Data {
                 Some(75)
             }
             "base_evasion_rating" => Some(15),
+            // 1.75% of mana per second (P6-10b).
+            "mana_regeneration_rate_per_minute_%" => Some(105),
+            // 33.3% of energy shield per second (P6-10b).
+            "energy_shield_recharge_rate_per_minute_%" => Some(2000),
+            // The largest damage reduction (P6-10b part 5).
+            "maximum_physical_damage_reduction_%" => Some(90),
+            // The leech caps (P6-10b part 7).
+            "maximum_life_leech_rate_%_per_minute" | "maximum_mana_leech_rate_%_per_minute" => {
+                Some(1200)
+            }
+            "maximum_energy_shield_leech_rate_%_per_minute" => Some(600),
+            // Three endurance charges, 4% damage reductions each (P6-11bq).
+            "max_endurance_charges" => Some(3),
+            "physical_damage_reduction_%_per_endurance_charge"
+            | "elemental_damage_reduction_%_per_endurance_charge" => Some(4),
+            "maximum_life_leech_amount_per_leech_%_max_life"
+            | "maximum_mana_leech_amount_per_leech_%_max_mana"
+            | "maximum_energy_shield_leech_amount_per_leech_%_max_energy_shield" => Some(10),
             _ => None,
         }
     }
@@ -445,6 +463,30 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         (Field::EnergyShield, 0.0),
         (Field::LifeUnreserved, 1125.0),
         (Field::ManaUnreserved, 590.0),
+        // P6-10b: no life regeneration; mana 590 x 105 / 60 / 100 = 10.325,
+        // PoB's round to one decimal.
+        (Field::Poe1(Poe1Field::LifeRegen), 0.0),
+        (Field::Poe1(Poe1Field::ManaRegen), 10.3),
+        // P6-10b: no energy shield, so nothing regenerates or recharges; the
+        // recharge delay is the base 2 seconds.
+        (Field::Poe1(Poe1Field::EnergyShieldRegen), 0.0),
+        (Field::Poe1(Poe1Field::EnergyShieldRecharge), 0.0),
+        (Field::Poe1(Poe1Field::EnergyShieldRechargeDelay), 2.0),
+        // P6-10b part 7: life's rate cap 1200 / 60 = 20% of 1125, its
+        // instance cap 10%; mana's the same of 590; energy shield's 0.
+        (Field::Poe1(Poe1Field::MaxLifeLeechRatePercent), 20.0),
+        (Field::Poe1(Poe1Field::MaxLeechRate(Pool::Life)), 225.0),
+        (Field::Poe1(Poe1Field::MaxLeechInstance(Pool::Life)), 112.5),
+        (Field::Poe1(Poe1Field::MaxLeechRate(Pool::Mana)), 118.0),
+        (Field::Poe1(Poe1Field::MaxLeechInstance(Pool::Mana)), 59.0),
+        (
+            Field::Poe1(Poe1Field::MaxLeechRate(Pool::EnergyShield)),
+            0.0,
+        ),
+        (
+            Field::Poe1(Poe1Field::MaxLeechInstance(Pool::EnergyShield)),
+            0.0,
+        ),
     ];
     for (field, v) in expect {
         assert_eq!(value(&r, field), v, "{field}");
@@ -468,13 +510,14 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         assert_eq!(value(&r, field), v, "{field}");
         assert_eq!(state(&r, field), StateKind::Complete, "{field}");
     }
-    // The other 7 slice fields (the main skill's) are not computed yet.
+    // The other 7 slice fields (the main skill's) and the mana, life, and
+    // energy shield costs (P6-10b) are not computed: the build has no skill.
     let not_computed = r
         .fields
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 7);
+    assert_eq!(not_computed, 10);
     assert_eq!(r.state, StateKind::Unsupported);
 }
 
@@ -514,6 +557,59 @@ fn passive_stats_should_reach_life_through_base_and_increased() {
     assert_eq!(value(&r, Field::Life), 1226.0);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     assert_eq!(value(&r, Field::LifeUnreserved), 1226.0);
+}
+
+#[test]
+fn life_gained_as_energy_shield_should_be_a_row_of_energy_shield() {
+    // P6-11dd: life's base 1125 + 75 = 1200 (life 1200 x 1.2 = 1440); 50%
+    // of it, 600, times life's and energy shield's increases summed with
+    // intelligence's (Int 32: 3%), 1 + (20 + 30 + 3) / 100: a row of 918,
+    // the only one.
+    let r = witch_with(&[
+        ("base_maximum_life", 75),
+        ("maximum_life_+%", 20),
+        ("maximum_energy_shield_+%", 30),
+        ("maximum_life_%_to_add_as_maximum_energy_shield", 50),
+    ]);
+    assert_eq!(value(&r, Field::Life), 1440.0);
+    assert_eq!(
+        step(
+            &r,
+            Field::EnergyShield,
+            "slot.conversion.life-to-energy-shield"
+        ),
+        Some(918.0)
+    );
+    assert_eq!(value(&r, Field::EnergyShield), 918.0);
+    assert_eq!(state(&r, Field::EnergyShield), StateKind::Complete);
+}
+
+#[test]
+fn elemental_resistances_should_be_capped_by_the_highest_maximum() {
+    // P6-11dh: fire's maximum 75 + 4, the highest, caps every elemental
+    // resistance (-60 + 200 = 140 each); chaos keeps its own maximum.
+    let r = witch_with(&[
+        (
+            "elemental_resistances_are_limited_by_highest_maximum_elemental_resistance",
+            1,
+        ),
+        ("base_maximum_fire_damage_resistance_%", 4),
+        ("base_resist_all_elements_%", 200),
+    ]);
+    for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+        let f = Field::Resistance(t);
+        assert_eq!(value(&r, f), 79.0, "{f}");
+        assert_eq!(state(&r, f), StateKind::Complete, "{f}");
+    }
+    let plain = witch_with(&[
+        ("base_maximum_fire_damage_resistance_%", 4),
+        ("base_resist_all_elements_%", 200),
+    ]);
+    assert_eq!(value(&plain, Field::Resistance(DamageType::Cold)), 75.0);
+    assert_eq!(
+        value(&r, Field::Resistance(DamageType::Chaos)),
+        value(&plain, Field::Resistance(DamageType::Chaos))
+    );
 }
 
 #[test]
@@ -2456,6 +2552,7 @@ fn a_granted_passive_should_read_the_tree_packs_stats() {
             kind: loom_calc::input::PassiveKind {
                 notable: true,
                 ascendancy: false,
+                life_mastery: false,
             },
             unresolved: Vec::new(),
         },
@@ -2469,4 +2566,162 @@ fn a_granted_passive_should_read_the_tree_packs_stats() {
     options.passives.pack = Some(pack);
     let r = run_with(&b, &options);
     assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
+}
+
+/// A level 90 Witch with `stats` as one enabled block of resolved custom
+/// lines (P6-10b review tests).
+fn witch_with(stats: &[(&str, i64)]) -> CalcResult {
+    witch_with_inputs(stats, &[])
+}
+
+/// [`witch_with`] with config inputs of the same set.
+fn witch_with_inputs(stats: &[(&str, i64)], inputs: &[(&str, ConfigValue)]) -> CalcResult {
+    use loom_domain::{CustomModifierBlock, CustomModifierLine};
+    let mut b = witch(90);
+    let mut set_inputs = Ordered::new();
+    for (name, value) in inputs {
+        set_inputs.push(ConfigInput {
+            name: (*name).to_owned(),
+            value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Vec::new(),
+        });
+    }
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: set_inputs,
+        custom_modifiers: vec![CustomModifierBlock {
+            title: None,
+            enabled: true,
+            text: String::new(),
+            lines: stats
+                .iter()
+                .map(|(id, v)| CustomModifierLine {
+                    text: (*id).to_owned(),
+                    resolution: LineResolution::Resolved {
+                        result: Resolved::Stats(vec![stat(id, *v)]),
+                        adapted: None,
+                    },
+                })
+                .collect(),
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    run(&b)
+}
+
+/// Zealot's Oath (P6-10b): life regenerates nothing and its flat
+/// regeneration is energy shield's; life's reasons go with it (review).
+#[test]
+fn zealots_oath_should_move_life_regeneration_and_its_reasons() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    let es_regen = Field::Poe1(Poe1Field::EnergyShieldRegen);
+    // 600 per minute: 10 life per second.
+    let flat = ("base_life_regeneration_rate_per_minute", 600);
+    let es = ("base_maximum_energy_shield", 100);
+    let r = witch_with(&[flat, es]);
+    assert_eq!(value_of(&r, life_regen), 10.0);
+    assert_eq!(value_of(&r, es_regen), 0.0);
+    assert_eq!(state(&r, es_regen), StateKind::Complete);
+
+    let oath = ("regenerate_energy_shield_instead_of_life", 1);
+    let r = witch_with(&[flat, es, oath]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(value_of(&r, es_regen), 10.0);
+    assert_eq!(state(&r, es_regen), StateKind::Complete);
+
+    // A life regeneration stat the engine does not model: life's reason,
+    // carried to energy shield; no other field's.
+    let per_level = ("life_regeneration_rate_per_minute_per_level", 1);
+    let r = witch_with(&[flat, es, oath, per_level]);
+    assert_eq!(state(&r, life_regen), StateKind::Partial);
+    assert_eq!(state(&r, es_regen), StateKind::Partial);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(
+        state(&r, Field::Poe1(Poe1Field::ManaRegen)),
+        StateKind::Complete
+    );
+}
+
+/// Life regenerated per endurance charge (P6-11bq): the stat per minute,
+/// read per second, times the count; nothing without the charges.
+#[test]
+fn life_regeneration_per_endurance_charge_should_follow_the_count() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    // 6000 per minute: 100 life per second per charge.
+    let line = ("life_regen_per_minute_per_endurance_charge", 6000);
+    let r = witch_with(&[line]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+    let r = witch_with_inputs(
+        &[line],
+        &[("useEnduranceCharges", ConfigValue::Boolean(true))],
+    );
+    assert_eq!(value_of(&r, life_regen), 300.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+}
+
+/// Life regenerated per fortification (P6-11bu): 0.1% of life per second
+/// per stack (6 per minute) at the default 20 stacks while fortified, 2% of
+/// life; nothing when not fortified.
+#[test]
+fn life_regeneration_per_fortification_should_follow_the_stacks() {
+    let life_regen = Field::Poe1(Poe1Field::LifeRegen);
+    let line = ("life_regeneration_per_minute_%_per_fortification", 6);
+    let r = witch_with(&[line]);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+    let r = witch_with_inputs(
+        &[line],
+        &[("buffFortification", ConfigValue::Boolean(true))],
+    );
+    let want = value_of(&r, Field::Life) * 0.02;
+    assert!((value_of(&r, life_regen) - want).abs() <= 0.05, "{want}");
+    assert_eq!(state(&r, life_regen), StateKind::Complete);
+}
+
+/// A field's reason marker reaches that field alone (P6-10b review).
+#[test]
+fn a_field_marker_should_be_that_fields_reason_only() {
+    let r = witch_with(&[("movement_speed_+%_per_summoned_phantasm", 5)]);
+    for field in [
+        Poe1Field::MovementSpeedMod,
+        Poe1Field::EffectiveMovementSpeedMod,
+    ] {
+        assert_eq!(
+            state(&r, Field::Poe1(field)),
+            StateKind::Partial,
+            "{field:?}"
+        );
+    }
+    for field in [
+        Field::Life,
+        Field::Mana,
+        Field::Poe1(Poe1Field::LifeRegen),
+        Field::Poe1(Poe1Field::ManaRegen),
+    ] {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+}
+
+/// Movement speed (P6-10b): `(1 + inc / 100) x more`, and the effective
+/// one times the action speed modifier, never below 0.
+#[test]
+fn movement_speed_should_follow_pob() {
+    let movement = Field::Poe1(Poe1Field::MovementSpeedMod);
+    let effective = Field::Poe1(Poe1Field::EffectiveMovementSpeedMod);
+    let r = witch_with(&[]);
+    assert_eq!(value_of(&r, movement), 1.0);
+    assert_eq!(value_of(&r, effective), 1.0);
+    // 20% increased movement speed, 10% reduced action speed.
+    let r = witch_with(&[("base_movement_velocity_+%", 20), ("action_speed_-%", 10)]);
+    assert_eq!(value_of(&r, movement), 1.2);
+    assert_eq!(value_of(&r, effective), 1.2 * 0.9);
+    assert_eq!(state(&r, effective), StateKind::Complete);
+    // 150% reduced action speed: the modifier stops at 0.
+    let r = witch_with(&[("action_speed_-%", 150)]);
+    assert_eq!(value_of(&r, effective), 0.0);
 }

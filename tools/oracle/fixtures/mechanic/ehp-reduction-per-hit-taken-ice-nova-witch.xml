@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11cg): a level 90 Witch casting Ice Nova (level 20) with life and armour against a non-boss enemy, the config's 3 hits taken recently, and "2% additional Physical Damage Reduction for each Hit you've taken Recently up to a maximum of 5%": 6% capped at 5% (PoB's PerStat Multiplier:BeenHitRecently, limit 5, limitTotal).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyIsBoss" string="None"/>
+			<Input name="multiplierBeenHitRecently" number="3"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+3000 to maximum Life
+				+1000 to maximum Energy Shield
+				+5000 to Armour
+				2% additional Physical Damage Reduction for each Hit you've taken Recently up to a maximum of 5%
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

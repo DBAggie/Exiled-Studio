@@ -47,14 +47,27 @@
 //! INC (minion melee damage, damage on full or low life, ...) are
 //! unmapped: reasons. Every redirect row is unconditional (a test), so
 //! [`minions`] reads no condition on a redirect.
+//!
+//! **The minion's own life and defences** (P6-7b3b): "Minions have #%
+//! increased maximum Life" and kin are `MinionModifier` entries PoB adds
+//! to the minion (`CalcPerform.lua` `addMinionModifiers`, 1213 to 1219,
+//! called at 1918 with the main skill's `skillModList`). Their rows here
+//! carry PoB's mod type as the op, each checked against PoB's parse of the
+//! game's text, or, for a gem's stat, PoB's stat map
+//! (`Data/SkillStatMap.lua` 1922 to 2060, `Data/Skills/sup_int.lua` 4675
+//! and 4929). [`MinionValue::on_minion`] names the minion's quantity, and
+//! the minion step ([`super::minion_actor`]) adds them to the minion's
+//! store. The golems' lines (`ModParser.lua` 1137: `SkillType.Golem` on
+//! the main skill) are [`Poe1Quantity::GolemMinion`].
 
 use super::Poe1Quantity;
 use crate::condition::Flags;
 use crate::ingest::Ingest;
-use crate::quantity::{Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::store::Effect;
 
-/// A kind of minion modifier the character can take on.
+/// A kind of minion modifier: one the character can take on (damage and
+/// speeds, P3-8j), or one of the minion's own life and defences (P6-7b3b).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MinionValue {
     /// Increased damage.
@@ -63,11 +76,54 @@ pub enum MinionValue {
     AttackSpeed,
     /// Increased cast speed.
     CastSpeed,
+    /// The minion's maximum life (PoB's `Life`).
+    Life,
+    /// The minion's maximum energy shield (PoB's `EnergyShield`).
+    EnergyShield,
+    /// The minion's armour (PoB's `Armour`).
+    Armour,
+    /// The minion's evasion rating (PoB's `Evasion`).
+    Evasion,
+    /// The minion's resistance of a type (PoB's `<Type>Resist`).
+    Resistance(DamageType),
+    /// The minion's maximum resistance of a type (PoB's `<Type>ResistMax`).
+    MaximumResistance(DamageType),
+    /// The minion's chance to block attack damage (PoB's `BlockChance`).
+    BlockChance,
+    /// The minion's chance to block spell damage (PoB's
+    /// `SpellBlockChance`).
+    SpellBlockChance,
+    /// The minion's life regeneration, percent of life per second (PoB's
+    /// `LifeRegenPercent`): no minion field reads it.
+    LifeRegen,
+    /// The minion's movement speed (PoB's `MovementSpeed`): no minion field
+    /// reads it, as no character field reads the character's.
+    MovementSpeed,
+    /// The minion's cooldown recovery (PoB's `CooldownRecovery`): no
+    /// minion field reads it.
+    CooldownRecovery,
+    /// The minion's added damage of a type, one bound (PoB's `<Type>Min`
+    /// and `<Type>Max` BASE; P6-11as).
+    AddedDamage(DamageType, Bound),
+    /// The minion's chance to deal double damage (PoB's
+    /// `DoubleDamageChance`; P6-11as).
+    DoubleDamageChance,
+    /// The minion's critical strike multiplier (PoB's `CritMultiplier`
+    /// BASE; P6-11cs).
+    CritMultiplier,
+    /// The minion's penetration of a resistance (PoB's
+    /// `<Type>Penetration` BASE, `ElementalPenetration` each element's;
+    /// P6-11cu).
+    Penetration(DamageType),
+    /// The minion's chance to inflict an ailment (PoB's `EnemyIgniteChance`,
+    /// `BleedChance` with `KeywordFlag.Attack`, `PoisonChance` BASE;
+    /// P6-11fc).
+    AilmentChance(super::ailment::Ailment),
 }
 
 impl MinionValue {
-    /// Every kind.
-    pub const ALL: [Self; 3] = [Self::Damage, Self::AttackSpeed, Self::CastSpeed];
+    /// The kinds a redirect can give the character.
+    pub const REDIRECTED: [Self; 3] = [Self::Damage, Self::AttackSpeed, Self::CastSpeed];
 
     /// The kind's name.
     #[must_use]
@@ -76,16 +132,102 @@ impl MinionValue {
             Self::Damage => "damage",
             Self::AttackSpeed => "attack-speed",
             Self::CastSpeed => "cast-speed",
+            Self::Life => "life",
+            Self::EnergyShield => "energy-shield",
+            Self::Armour => "armour",
+            Self::Evasion => "evasion",
+            Self::Resistance(t) => match t {
+                DamageType::Physical => "physical-resistance",
+                DamageType::Fire => "fire-resistance",
+                DamageType::Cold => "cold-resistance",
+                DamageType::Lightning => "lightning-resistance",
+                DamageType::Chaos => "chaos-resistance",
+            },
+            Self::MaximumResistance(t) => match t {
+                DamageType::Physical => "maximum-physical-resistance",
+                DamageType::Fire => "maximum-fire-resistance",
+                DamageType::Cold => "maximum-cold-resistance",
+                DamageType::Lightning => "maximum-lightning-resistance",
+                DamageType::Chaos => "maximum-chaos-resistance",
+            },
+            Self::BlockChance => "block-chance",
+            Self::SpellBlockChance => "spell-block-chance",
+            Self::LifeRegen => "life-regen",
+            Self::MovementSpeed => "movement-speed",
+            Self::CooldownRecovery => "cooldown-recovery",
+            Self::AddedDamage(t, b) => match (t, b) {
+                (DamageType::Physical, Bound::Min) => "added-physical-min",
+                (DamageType::Physical, Bound::Max) => "added-physical-max",
+                (DamageType::Fire, Bound::Min) => "added-fire-min",
+                (DamageType::Fire, Bound::Max) => "added-fire-max",
+                (DamageType::Cold, Bound::Min) => "added-cold-min",
+                (DamageType::Cold, Bound::Max) => "added-cold-max",
+                (DamageType::Lightning, Bound::Min) => "added-lightning-min",
+                (DamageType::Lightning, Bound::Max) => "added-lightning-max",
+                (DamageType::Chaos, Bound::Min) => "added-chaos-min",
+                (DamageType::Chaos, Bound::Max) => "added-chaos-max",
+            },
+            Self::DoubleDamageChance => "double-damage-chance",
+            Self::CritMultiplier => "crit-multiplier",
+            Self::Penetration(t) => match t {
+                DamageType::Physical => "physical-penetration",
+                DamageType::Fire => "fire-penetration",
+                DamageType::Cold => "cold-penetration",
+                DamageType::Lightning => "lightning-penetration",
+                DamageType::Chaos => "chaos-penetration",
+            },
+            Self::AilmentChance(a) => match a {
+                super::ailment::Ailment::Ignite => "ignite-chance",
+                super::ailment::Ailment::Bleed => "bleed-chance",
+                super::ailment::Ailment::Poison => "poison-chance",
+            },
         }
     }
 
-    /// The character's quantity and the flags the kind's effects take on.
-    const fn target(self) -> (Quantity, Flags) {
+    /// The character's quantity and the flags a redirected kind's effects
+    /// take on; `None` for a kind no redirect gives.
+    const fn target(self) -> Option<(Quantity, Flags)> {
         match self {
-            Self::Damage => (Quantity::Damage, Flags::NONE),
-            Self::AttackSpeed => (Quantity::Speed, Flags::ATTACK),
-            Self::CastSpeed => (Quantity::Speed, Flags::CAST),
+            Self::Damage => Some((Quantity::Damage, Flags::NONE)),
+            Self::AttackSpeed => Some((Quantity::Speed, Flags::ATTACK)),
+            Self::CastSpeed => Some((Quantity::Speed, Flags::CAST)),
+            _ => None,
         }
+    }
+
+    /// The minion's quantity the kind adds to (P6-7b3b), and the flags its
+    /// effects take on (P6-7c: damage, attack and cast speed, PoB's
+    /// `Damage` and `Speed` with `ModFlag.Attack` or `ModFlag.Cast`); `None`
+    /// for a kind no minion field reads (regeneration, movement speed, and
+    /// cooldown recovery).
+    #[must_use]
+    pub const fn on_minion(self) -> Option<(Quantity, Flags)> {
+        let q = match self {
+            Self::Life => Quantity::Life,
+            Self::EnergyShield => Quantity::EnergyShield,
+            Self::Armour => Quantity::Armour,
+            Self::Evasion => Quantity::Evasion,
+            Self::Resistance(t) => Quantity::Resistance(t),
+            Self::MaximumResistance(t) => Quantity::MaximumResistance(t),
+            Self::BlockChance => Quantity::BlockChance,
+            Self::SpellBlockChance => Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+            Self::AddedDamage(t, b) => Quantity::AddedDamage(t, b),
+            Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
+            Self::CritMultiplier => Quantity::CritMultiplier,
+            Self::Penetration(t) => Quantity::Penetration(t),
+            // The bleed chance with attacks (`KeywordFlag.Attack`).
+            Self::AilmentChance(a) => {
+                let flags = if matches!(a, super::ailment::Ailment::Bleed) {
+                    Flags::KEYWORD_ATTACK
+                } else {
+                    Flags::NONE
+                };
+                return Some((Quantity::Poe1(Poe1Quantity::AilmentChance(a)), flags));
+            }
+            Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
+            Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
+        };
+        Some((q, Flags::NONE))
     }
 }
 
@@ -97,8 +239,22 @@ const fn to_you(value: MinionValue, percent: u16) -> Poe1Quantity {
     Poe1Quantity::MinionToYou(value, percent)
 }
 
-/// One stat: its quantities and the scale per unit of its value.
-type MinionRow = (&'static str, &'static [(Poe1Quantity, f64)]);
+const fn golem(value: MinionValue) -> Poe1Quantity {
+    Poe1Quantity::GolemMinion(value)
+}
+
+const INC: Op = Op::Increased;
+const MORE: Op = Op::More;
+const BASE: Op = Op::Base;
+const FLAG: Op = Op::Flag;
+const FIRE: DamageType = DamageType::Fire;
+const COLD: DamageType = DamageType::Cold;
+const LIGHTNING: DamageType = DamageType::Lightning;
+const CHAOS: DamageType = DamageType::Chaos;
+
+/// One stat: its quantities, PoB's mod type, and the scale per unit of
+/// its value.
+type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 
 /// The minion stats and the redirects, sorted by stat ID (module docs).
 /// Each description is the game's (`stat_descriptions.txt`):
@@ -107,39 +263,281 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, f64)]);
 /// - "Increases and Reductions to Minion Damage also affect you" (its
 ///   value 1, so 100%), "... at 150% of their value", "Increases and
 ///   Reductions to Minion Attack Speed also affect you", "... Cast Speed
-///   ...".
-pub const STATS: [MinionRow; 8] = [
+///   ...";
+/// - P6-7b3b: "Minions have #% increased maximum Life", "... more Maximum
+///   Life", "... +#% to all Elemental Resistances", "... +#% Chance to
+///   Block Attack Damage", "Golems have #% increased Maximum Life", and
+///   kin, each PoB's `MinionModifier` with the mod type as the op (module
+///   docs). "Minions Regenerate #% of Life per second" is PoB's
+///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
+pub const STATS: [MinionRow; 48] = [
+    (
+        "active_skill_minion_energy_shield_+%_final",
+        &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
+    ),
+    (
+        "active_skill_minion_life_+%_final",
+        &[(minion(MinionValue::Life), MORE, 1.0)],
+    ),
+    (
+        "active_skill_minion_movement_velocity_+%_final",
+        &[(minion(MinionValue::MovementSpeed), MORE, 1.0)],
+    ),
     (
         "additive_minion_damage_modifiers_apply_to_you_at_150%_value",
-        &[(to_you(MinionValue::Damage, 150), 1.0)],
+        &[(to_you(MinionValue::Damage, 150), FLAG, 1.0)],
     ),
     (
         "additive_modifiers_to_minion_attack_speed_also_affect_you",
-        &[(to_you(MinionValue::AttackSpeed, 100), 1.0)],
+        &[(to_you(MinionValue::AttackSpeed, 100), FLAG, 1.0)],
     ),
     (
         "additive_modifiers_to_minion_cast_speed_also_affect_you",
-        &[(to_you(MinionValue::CastSpeed, 100), 1.0)],
+        &[(to_you(MinionValue::CastSpeed, 100), FLAG, 1.0)],
+    ),
+    (
+        "golem_maximum_energy_shield_+%",
+        &[(golem(MinionValue::EnergyShield), INC, 1.0)],
+    ),
+    (
+        "golem_maximum_life_+%",
+        &[(golem(MinionValue::Life), INC, 1.0)],
+    ),
+    (
+        "golem_physical_damage_reduction_rating",
+        &[(golem(MinionValue::Armour), BASE, 1.0)],
+    ),
+    (
+        "minion_additional_spell_block_%",
+        &[(minion(MinionValue::SpellBlockChance), BASE, 1.0)],
     ),
     (
         "minion_attack_and_cast_speed_+%",
         &[
-            (minion(MinionValue::AttackSpeed), 1.0),
-            (minion(MinionValue::CastSpeed), 1.0),
+            (minion(MinionValue::AttackSpeed), INC, 1.0),
+            (minion(MinionValue::CastSpeed), INC, 1.0),
         ],
     ),
     (
         "minion_attack_speed_+%",
-        &[(minion(MinionValue::AttackSpeed), 1.0)],
+        &[(minion(MinionValue::AttackSpeed), INC, 1.0)],
+    ),
+    // P6-11fc: "Minions have #% chance to cause Bleeding with Attacks" (PoB's `MinionModifier`).
+    (
+        "minion_bleed_on_hit_with_attacks_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Bleed)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_block_%",
+        &[(minion(MinionValue::BlockChance), BASE, 1.0)],
     ),
     (
         "minion_cast_speed_+%",
-        &[(minion(MinionValue::CastSpeed), 1.0)],
+        &[(minion(MinionValue::CastSpeed), INC, 1.0)],
     ),
-    ("minion_damage_+%", &[(minion(MinionValue::Damage), 1.0)]),
+    // P6-11as: "Minions have #% chance to deal Double Damage"
+    // (`MinionModifier` `DoubleDamageChance` BASE).
+    (
+        "minion_chance_to_deal_double_damage_%",
+        &[(minion(MinionValue::DoubleDamageChance), BASE, 1.0)],
+    ),
+    // P6-11fc: "Minions have #% chance to Ignite" (PoB's `MinionModifier`).
+    (
+        "minion_chance_to_ignite_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Ignite)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_chaos_resistance_%",
+        &[(minion(MinionValue::Resistance(CHAOS)), BASE, 1.0)],
+    ),
+    (
+        "minion_cold_damage_resistance_%",
+        &[(minion(MinionValue::Resistance(COLD)), BASE, 1.0)],
+    ),
+    (
+        "minion_cooldown_recovery_+%",
+        &[(minion(MinionValue::CooldownRecovery), INC, 1.0)],
+    ),
+    // P6-11cs: "Minions have +#% to Critical Strike Multiplier"
+    // (`MinionModifier` of `CritMultiplier` BASE).
+    (
+        "minion_critical_strike_multiplier_+",
+        &[(minion(MinionValue::CritMultiplier), BASE, 1.0)],
+    ),
+    (
+        "minion_damage_+%",
+        &[(minion(MinionValue::Damage), INC, 1.0)],
+    ),
     (
         "minion_damage_increases_and_reductions_also_affects_you",
-        &[(to_you(MinionValue::Damage, 100), 1.0)],
+        &[(to_you(MinionValue::Damage, 100), FLAG, 1.0)],
+    ),
+    (
+        "minion_elemental_resistance_%",
+        &[
+            (minion(MinionValue::Resistance(FIRE)), BASE, 1.0),
+            (minion(MinionValue::Resistance(COLD)), BASE, 1.0),
+            (minion(MinionValue::Resistance(LIGHTNING)), BASE, 1.0),
+        ],
+    ),
+    (
+        "minion_evasion_rating_+%",
+        &[(minion(MinionValue::Evasion), INC, 1.0)],
+    ),
+    (
+        "minion_fire_damage_resistance_%",
+        &[(minion(MinionValue::Resistance(FIRE)), BASE, 1.0)],
+    ),
+    (
+        "minion_global_maximum_added_chaos_damage",
+        &[(
+            minion(MinionValue::AddedDamage(CHAOS, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ), // P6-11as (cold) and P6-11bh (the other types): "Minions deal # to #
+    // additional <Type> Damage" (`MinionModifier` `<Type>Min` and
+    // `<Type>Max` BASE, no flags).
+    (
+        "minion_global_maximum_added_cold_damage",
+        &[(
+            minion(MinionValue::AddedDamage(COLD, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_maximum_added_fire_damage",
+        &[(
+            minion(MinionValue::AddedDamage(FIRE, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_maximum_added_lightning_damage",
+        &[(
+            minion(MinionValue::AddedDamage(LIGHTNING, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_maximum_added_physical_damage",
+        &[(
+            minion(MinionValue::AddedDamage(DamageType::Physical, Bound::Max)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_chaos_damage",
+        &[(
+            minion(MinionValue::AddedDamage(CHAOS, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_cold_damage",
+        &[(
+            minion(MinionValue::AddedDamage(COLD, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_fire_damage",
+        &[(
+            minion(MinionValue::AddedDamage(FIRE, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_lightning_damage",
+        &[(
+            minion(MinionValue::AddedDamage(LIGHTNING, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_global_minimum_added_physical_damage",
+        &[(
+            minion(MinionValue::AddedDamage(DamageType::Physical, Bound::Min)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "minion_life_regeneration_rate_per_minute_%",
+        &[(minion(MinionValue::LifeRegen), BASE, 1.0 / 60.0)],
+    ),
+    (
+        "minion_maximum_all_elemental_resistances_%",
+        &[
+            (minion(MinionValue::MaximumResistance(FIRE)), BASE, 1.0),
+            (minion(MinionValue::MaximumResistance(COLD)), BASE, 1.0),
+            (minion(MinionValue::MaximumResistance(LIGHTNING)), BASE, 1.0),
+        ],
+    ),
+    (
+        "minion_maximum_energy_shield_+%",
+        &[(minion(MinionValue::EnergyShield), INC, 1.0)],
+    ),
+    (
+        "minion_maximum_life_+%",
+        &[(minion(MinionValue::Life), INC, 1.0)],
+    ),
+    (
+        "minion_movement_speed_+%",
+        &[(minion(MinionValue::MovementSpeed), INC, 1.0)],
+    ),
+    (
+        "minion_physical_damage_reduction_rating",
+        &[(minion(MinionValue::Armour), BASE, 1.0)],
+    ),
+    // P6-11fc: "Minions have #% chance to Poison Enemies on Hit" (PoB's `MinionModifier`).
+    (
+        "minions_chance_to_poison_on_hit_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Poison)),
+            BASE,
+            1.0,
+        )],
+    ),
+    (
+        "necromancer_defensive_notable_minion_maximum_life_+%_final",
+        &[(minion(MinionValue::Life), MORE, 1.0)],
+    ),
+    // P6-11cs: the Necromancer's "Minions deal #% more Damage"
+    // (`MinionModifier` of `Damage` MORE).
+    (
+        "necromancer_minion_damage_+%_final",
+        &[(minion(MinionValue::Damage), MORE, 1.0)],
+    ),
+    // P6-7c2: Minion Damage's own `statMap` (`Data/Skills/sup_int.lua`
+    // 4813): `MinionModifier` holding `Damage` MORE.
+    (
+        "support_minion_damage_+%_final",
+        &[(minion(MinionValue::Damage), MORE, 1.0)],
+    ),
+    (
+        "support_minion_damage_minion_life_+%_final",
+        &[(minion(MinionValue::Life), MORE, 1.0)],
+    ),
+    (
+        "support_minion_maximum_life_+%_final",
+        &[(minion(MinionValue::Life), MORE, 1.0)],
     ),
 ];
 
@@ -167,13 +565,7 @@ pub fn effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
         STATS[i]
             .1
             .iter()
-            .map(|&(q, scale)| {
-                let op = match q {
-                    Poe1Quantity::MinionToYou(..) => Op::Flag,
-                    _ => Op::Increased,
-                };
-                (Quantity::Poe1(q), op, scale)
-            })
+            .map(|&(q, op, scale)| (Quantity::Poe1(q), op, scale))
             .collect(),
     )
 }
@@ -184,14 +576,16 @@ pub fn effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
 pub const fn is_minion_quantity(quantity: Quantity) -> bool {
     matches!(
         quantity,
-        Quantity::Poe1(Poe1Quantity::Minion(_) | Poe1Quantity::MinionToYou(..))
+        Quantity::Poe1(
+            Poe1Quantity::Minion(_) | Poe1Quantity::GolemMinion(_) | Poe1Quantity::MinionToYou(..)
+        )
     )
 }
 
 /// Adds the minion modifiers that also affect the character (module
 /// docs). Runs after every other source has been ingested.
 pub fn minions(ingest: &mut Ingest<'_>) {
-    for kind in MinionValue::ALL {
+    for kind in MinionValue::REDIRECTED {
         // The largest percent (PoB's flag, with `Improved...` MAX).
         // Every redirect row is unconditional: a conditional one would be
         // a new row, which must come with its condition here.
@@ -205,7 +599,9 @@ pub fn minions(ingest: &mut Ingest<'_>) {
             .max();
         let Some(percent) = percent else { continue };
         let percent = f64::from(percent);
-        let (quantity, flags) = kind.target();
+        let Some((quantity, flags)) = kind.target() else {
+            continue;
+        };
         let added: Vec<Effect> = ingest
             .effects()
             .iter()
@@ -247,8 +643,9 @@ mod tests {
                 panic!("{stat} is not mapped");
             };
             assert_eq!(effects.len(), row.len(), "{stat}");
-            for (t, &(q, scale)) in effects.iter().zip(row) {
+            for (t, &(q, op, scale)) in effects.iter().zip(row) {
                 assert_eq!(t.quantity, Quantity::Poe1(q), "{stat}");
+                assert_eq!(t.op, op, "{stat}");
                 assert!((t.scale - scale).abs() < f64::EPSILON, "{stat}");
                 assert_eq!(t.conditions, Conditions::none(), "{stat}");
             }
@@ -449,6 +846,28 @@ mod tests {
                 .with_state(key, true)
                 .with_all(Flags::ATTACK)
         );
+    }
+
+    /// P6-7b3b: every life and defence kind reaches a minion quantity, and
+    /// the redirected kinds reach none yet (P6-7c).
+    #[test]
+    fn each_kind_should_name_its_minion_quantity() {
+        for (stat, row) in STATS {
+            for &(q, op, _) in row {
+                let (Poe1Quantity::Minion(v) | Poe1Quantity::GolemMinion(v)) = q else {
+                    assert_eq!(op, Op::Flag, "{stat}");
+                    continue;
+                };
+                let no_field = matches!(
+                    v,
+                    MinionValue::LifeRegen
+                        | MinionValue::MovementSpeed
+                        | MinionValue::CooldownRecovery
+                );
+                assert_eq!(v.on_minion().is_none(), no_field, "{stat}");
+                assert!(matches!(op, Op::Increased | Op::More | Op::Base), "{stat}");
+            }
+        }
     }
 
     #[test]

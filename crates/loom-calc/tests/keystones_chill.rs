@@ -10,6 +10,7 @@ mod common;
 use loom_calc::StatMapping;
 use loom_calc::poe1::damage_taken::{CHILL_DEPENDS_ON, CHILL_STATS, SHOCK_STATS};
 use loom_calc::poe1::keystones::KEYSTONES;
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_domain::StatId;
 
@@ -18,8 +19,32 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 7] = [
+const TEXTS: [(&str, &str); 18] = [
+    // P6-11ap: Eldritch Battery.
+    (
+        "keystone_eldritch_battery",
+        "Spend Energy Shield before Mana for Skill Mana Costs\\nEnergy Shield protects Mana instead of Life\\n50% less Energy Shield Recharge Rate",
+    ),
+    (
+        "keystone_glancing_blows",
+        "Chance to Block Attack Damage is doubled\\nChance to Block Spell Damage is doubled\\nYou take 65% of Damage from Blocked Hits",
+    ),
     ("chill_effect_+%", "{0}% increased Effect of Chill"),
+    // P6-11ao: Eternal Youth.
+    (
+        "keystone_eternal_youth",
+        "50% less Life Regeneration Rate\\n50% less maximum Total Life Recovery per Second from Leech\\nEnergy Shield Recharge instead applies to Life",
+    ),
+    // P6-11an: Blood Magic.
+    (
+        "keystone_blood_magic",
+        "Removes all mana\\n10% more maximum Life\\nSkills Cost Life instead of Mana\\nSkills Reserve Life instead of Mana",
+    ),
+    // P6-11am: Divine Shield.
+    (
+        "keystone_divine_shield",
+        "Cannot Recover Energy Shield to above Armour\\n3% of Physical Damage prevented from Hits Recently is Regenerated as Energy Shield per second",
+    ),
     (
         "cold_ailment_effect_+%",
         "{0}% increased Effect of Cold Ailments",
@@ -35,6 +60,35 @@ const TEXTS: [(&str, &str); 7] = [
     (
         "keystone_elemental_overload",
         "Skills that have dealt a Critical Strike in the past 8 seconds deal 40% more Elemental Damage with Hits and Ailments\\nYour Critical Strikes do not deal extra Damage\\nAilments never count as being from Critical Strikes",
+    ),
+    // P6-11el: Acrobatics.
+    (
+        "keystone_acrobatics",
+        "Modifiers to Chance to Suppress Spell Damage instead apply to Chance to Dodge Spell Hits at 50% of their value\\nMaximum Chance to Dodge Spell Hits is 75%",
+    ),
+    // P6-11ek: Iron Reflexes.
+    (
+        "keystone_iron_reflexes",
+        "Converts all Evasion Rating to Armour. Dexterity provides no bonus to Evasion Rating",
+    ),
+    // P6-11ej: Chaos Inoculation.
+    (
+        "keystone_chaos_inoculation",
+        "Maximum Life becomes 1, Immune to Chaos Damage",
+    ),
+    // P6-11ei: Lightning Purist and Pain Attunement.
+    (
+        "keystone_lightning_purist",
+        "25% more Maximum Lightning Damage\\n50% less Minimum Lightning Damage\\nCannot deal non-Lightning Damage",
+    ),
+    (
+        "keystone_pain_attunement",
+        "30% more Spell Damage when on Low Life",
+    ),
+    // P6-10b part 15: Mind over Matter.
+    (
+        "keystone_mana_shield",
+        "40% of Damage is taken from Mana before Life",
     ),
     (
         "non_damaging_ailment_effect_+%",
@@ -54,6 +108,12 @@ const TEXTS: [(&str, &str); 7] = [
 const NO_EFFECT_NAMING: &[&str] = &[
     "active_skill_base_secondary_area_of_effect_radius",
     "active_skill_secondary_area_of_effect_description_mode",
+    // P6-11as: avoiding chill on you.
+    "base_avoid_chill_%",
+    // P6-11eb (listed in P6-11ei): chill immunity on you (`ChillImmune`),
+    // and the chill's duration, which leaves its effect as it is.
+    "base_cannot_be_chilled",
+    "chill_duration_+%",
     "chill_effectiveness_on_self_+%",
     "cold_ailment_duration_+%",
 ];
@@ -62,6 +122,8 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// `poe1::damage_taken`'s `enemy_states`): resistances of an ignited or
 /// chilled enemy, damage taken per second chilled.
 const ENEMY_ROWS: &[&str] = &[
+    // P6-11bf: hit damage while the enemy is chilled (`damage_taken`).
+    "damage_+%_vs_chilled_enemies",
     "ignites_and_chill_apply_elemental_resistance_+",
     "permanent_damage_+%_per_second_of_chill",
 ];
@@ -152,6 +214,9 @@ fn real_keystone_and_chill_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
             loom_calc::StatMap::Effects(_) if ENEMY_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
@@ -190,5 +255,5 @@ fn modelled_chilling_skills_should_be_chilling_areas() {
             chilling.push(*id);
         }
     }
-    assert_eq!(chilling, ["ArcticArmour", "Frostblink"]);
+    assert_eq!(chilling, ["ArcticArmour", "FrostShield", "Frostblink"]);
 }

@@ -1,0 +1,391 @@
+# P6-9: the remaining gems
+
+Plan step P6-9: the gems the engine leaves `unmodelled-gem`, a reason on every field of a build that has one. They are other groups' skills and the supports applied to them (`loom_calc::poe1::gems`, P3-12h), plus marks, curse priority, exerts, banners, and heralds.
+
+## How a gem is added
+
+The method is P3-12h's:
+- A skill or support goes into `gems::SKILLS` or `gems::SUPPORTS` with its kind and its buff rows.
+- Every entry is checked against PoB v2.67.2's skill data by the data-parity table `gem_effects`:
+  - its `GlobalEffect` stats are exactly the table's;
+  - each row has PoB's mod name, type, and flags;
+  - no other mod scales buffs or reservation;
+  - its types fit its kind.
+- Any difference counts as `uncategorized`.
+
+**Finding candidates:** `local/p6/classify_gems.py` reads PoB's export (format 13) for each gem that is `unmodelled-gem` in the public builds or the corpus, ranked by count (`local/p6/gem_names.py`). A gem is an inert candidate when it has no `GlobalEffect` mod, no mod the table blocks, no `SkillData` key outside its display keys, and no type its kind forbids.
+
+## P6-9a: inert skills, plain supports, and nine auras
+
+**Inert active skills (15).** None has a global effect, so as another group's skill it gives the character nothing. Its reservation, if any, is still computed:
+- Autoexertion, Blast Rain, Burning Arrow, Divine Ire, Earthshatter, Frenzy, Detonate Mines, Ice Spear, Poisonous Concoction of Bouncing, Portal, Searing Bond, Spectral Shield Throw, Spellslinger, Sunder, Vaal Flicker Strike.
+
+**Plain supports (43).** No row. A support applied to another group's skill acts only on that skill:
+- Brutality, Controlled Destruction, Greater Multiple Projectiles, Melee Physical Damage, Vicious Projectiles, Void Manipulation, and their Awakened versions;
+- Barrage, Burning Damage, Combustion, Concentrated Effect, Cooldown Recovery, Culling Strike, Damage on Full Life, Efficacy, Elemental Damage with Attacks, Elemental Focus, Empower, Enhance, Enlighten, Faster Casting, Feeding Frenzy, Focused Ballista, Hextouch, Hypothermia, Ice Bite, Immolate, Increased Area of Effect, Lifetap, Multiple Totems, Pierce, Pulverise, Second Wind, Spell Cascade, Spell Echo, Swift Affliction, Swift Assembly, Unleash, Volatility, Withering Touch.
+- A support applied to the main skill acts through its stats on the skill (`SkillMapping`), as before.
+
+**Auras (9), as PoB's `GlobalEffect` mods:**
+
+| Aura | Rows |
+|---|---|
+| Anger | added fire damage to attacks (`ModFlag.Attack` here, as the mapping's attack rows) and to spells |
+| Wrath | added lightning damage to attacks; `LightningDamage` MORE for spells |
+| Determination | `Armour` BASE and MORE |
+| Grace | `Evasion` BASE and MORE |
+| Purity of Elements | `ElementalResist` BASE (all three); its ailment immunity reaches no field |
+| Purity of Fire, Ice, Lightning | the type's resistance and its maximum, BASE |
+| Vitality | its life regeneration reaches no field |
+
+They are scaled, merged, and reserved as the other auras are, and they reach the minion too (P6-7b4).
+
+**The parity tool:** `gem_effects` now:
+- names the character's resistances and maximums in PoB's form;
+- writes a typed more with other flags (`LightningDamage` MORE `[spell]`) without the type's flag;
+- allows `ElementalAilmentImmune` as a mod no field reads.
+
+**Evidence:**
+- **`data-parity`, table `gem_effects`:** 894 values compared, 0 differences.
+- **Fixtures:** three Ice Nova Witch builds, each with two auras in their own groups. All 67 computed fields are `Complete` and equal to PoB, reservation included:
+  - `ice-nova-anger-purity-of-elements-witch.xml`;
+  - `ice-nova-determination-purity-of-fire-witch.xml`;
+  - `ice-nova-grace-purity-of-ice-witch.xml`.
+- **`unmodelled-gem` reasons:** in the public builds, 262 to 248; in the corpus, 306 to 264.
+- **Corpus:** 39 values moved toward PoB, none away, and 11 are now equal to PoB. Those include fire and cold resistances, unreserved mana, and a minion's armour from Determination.
+- **Public `calc-parity`:** 166 builds, 109 expected differences, 0 unexpected.
+- Both runs are byte-identical.
+
+Note for fixtures: PoB writes the game's gem item as `gemId` (Purity of Elements is `SkillGemPurity`, Purity of Fire `SkillGemFireResistAura`). PoB's export key (`SkillGemPurityOfElements`) does not resolve in the bundle.
+
+## P6-9b: hexes and PoB's curse slots
+
+**Curse slots** (`gems::curse_slots`, `curse_priority`; `CalcPerform.lua` 3155 to 3212, `determineCursePriority` 563 to 593):
+- **The limit:** 1, plus `number_of_additional_curses_allowed` (PoB's `EnemyCurseLimit` BASE, `SkillStatMap.lua` 1317). That stat leaves `gems::DEPENDS_ON` and maps to `Poe1Quantity::CurseLimit`; a conditional one is a `curse-limit` reason.
+- **The walk:** the curses, in the skill list's order, take the slots as PoB fills them. Each takes the first free slot, or the slot of a curse of its name when its priority is higher. Otherwise it takes the last slot holding a lower priority.
+- **The priority:** PoB's base table (`Modules/Data.lua` 322 to 335), plus 100 per socket position (at most 8), plus the group's item slot, plus 20,000 for an aura.
+- **Not modelled:** a group granted by an item (PoB's 11,000) is skipped by `gems`. Curses that ignore the limit, and marks, come from stats the engine does not map, so they stay reasons.
+- Before this step, a second hex of another name was a `curse-limit` reason on every field.
+
+**A curse's own effect:** a hex gem's own `curse_effect_+%` (Despair's, a hex's quality) is PoB's `CurseEffect` INC on the skill's own list. The curse scale now adds it to the character's: `Totals::curse_scale_with`.
+
+**Hexes (6):**
+
+| Hex | Rows on the enemy |
+|---|---|
+| Despair | chaos resistance; `SelfChaosMin` and `SelfChaosMax`, added damage of every hit (`CalcOffence.lua` 3263) |
+| Flammability | fire resistance; `SelfIgniteDuration` INC (`mult = -1`); `SelfIgniteChance`, added to every hit's chance to ignite (4108) |
+| Vulnerability | `PhysicalDamageTaken` INC; `SelfBleedChance` (4097); `SelfBleedDuration` INC |
+| Conductivity | lightning resistance; its shock chance and duration reach no field |
+| Enfeeble | none: the enemy's accuracy and damage reach no field |
+| Temporal Chains | none: the enemy's action speed and buff duration reach no field |
+
+Punishment is left `unmodelled-gem`: its damage taken applies only while the enemy is on low life (PoB's enemy `Condition:LowLife`).
+
+**The parity tool:**
+- `gem_effects` names a curse's or debuff's added damage, ailment chances, and ailment durations PoB's way (`Self...`).
+- It allows the enemy-only names in `ENEMY_NO_SLICE_NAMES` for a curse's `NoSlice` stats.
+
+**Evidence:**
+- **`gem_effects`:** 954 values compared, 0 differences.
+- **Fixtures:** all 44 computed fields are `Complete` and equal to PoB:
+  - `ice-nova-curse-priority-witch.xml`: Elemental Weakness and Despair with one slot, so Despair is kept;
+  - `ice-nova-curse-slots-witch.xml`: Elemental Weakness, Frostbite, and Despair with two slots, so Despair replaces Frostbite.
+- **`unmodelled-gem` reasons:** in the public builds, 231 to 218; in the corpus, 246 to 234.
+- **Corpus:** 3 values moved toward PoB, none away.
+- **Public `calc-parity`:** 168 builds, 109 expected differences, 0 unexpected.
+
+## P6-9c: the summoning skills
+
+A summoning skill's minions act through the minion step. For the character, such a skill is inert when neither it nor any of its minions' skills has a `GlobalEffect` mod. A minion's skills come from PoB's minion data and templates, and `local/p6/minion_skill_globals.py` checks them in PoB's export. Of the 87 summoning skills in PoB, only Summon Elemental Relic's minion has auras (Anger, Hatred).
+
+**Inert (20):**
+- Absolution, Animate Guardian, Animate Weapon, Dominating Blow, Raise Zombie, Summon Raging Spirit, and Summon Skeletons, with their PoB variants;
+- Vaal Summon Skeletons, Holy Strike, Summon Holy Relic of Conviction, and Summon Void Spawn.
+
+Each of these is in `gem_effects`' `ALLOWED_MINIONS`, the list of skills whose minions are known. Vaal Summon Skeletons' variants of Mages and of Archers are not in PoB v2.67.2's data, so they cannot be checked and stay `unmodelled-gem`.
+
+**Minion supports with no row (6):**
+- Minion Damage and its Awakened version, Minion Speed, Infernal Legion, Predator, and Minion Pact.
+- Minion Life and Meat Shield were in already.
+- A support's minion stats reach the minion through the minion step (P6-7b3b, `gem_modifiers`) when its skill is the main skill.
+
+**Vaal Summon Skeletons' level:**
+- The game's `base_display_minion_actor_level` at gem level 20 is 68. PoB takes the gem level's requirement, 70.
+- With the gem modelled, the skeleton's fields are `Complete`. Its life, armour, and evasion are registered `game-truth` divergences (DIV-0111 to DIV-0113), with fixture `minion-vaal-summon-skeletons-witch.xml`.
+- Confirmation in game (the skeletons' level) is a maintainer item.
+
+**Evidence:**
+- **`gem_effects`:** 1,110 values compared, 0 differences.
+- **The minion sweep (52 builds):** 109 minion fields `Complete` and equal to PoB, or registered. That is 40 before P6-9c. 13 builds have every minion field `Complete`.
+- **Fixtures (`Complete` and equal to PoB):** the Raise Zombie build with minion lines (P6-7b3b, local until now), and the sweep's Raise Zombie, Summon Skeletons, and Summon Raging Spirit.
+- **Public `calc-parity`:** 173 builds, 112 expected differences (the three new entries), 0 unexpected. `Complete` fields: 3,124.
+
+## P6-9d: skills with their own data, and four buffs
+
+**A skill's own data:** PoB reads these `SkillData` keys only from the skill's own `skillData` (checked in `CalcOffence.lua`), never another skill's. `gem_effects` now counts them as the skill's own keys:
+- base damage and damage over time: `FireMin`, `FireMax`, `LightningMin`, `LightningMax`, `ChaosMin`, `ChaosMax`, `ChaosDot`, `ColdDot`, `PhysicalDot`;
+- timing: `damageInterval`, `hitFrequency`, `fixedCastTime`;
+- corpse explosion data: `explodeCorpse`, `corpseExplosionLifeMultiplier`, `hitChanceIsExplodeChance`;
+- `dpsMultiplier`, `dotIsProjectile`.
+
+16 skills are then inert as another group's skill: Flame Dash, Detonate Dead's corpse explosion (`EnemyExplode`), Desecrate, Dash, Toxic Rain, Shield Crush, Tornado, Volatile Dead, Vaal Detonate Dead, Orb of Storms, Fire Trap, Storm Rain, Double Strike, Essence Drain, Contagion, and Rolling Magma.
+
+**Buffs:**
+
+| Skill | Rows |
+|---|---|
+| Hatred (aura) | `PhysicalDamageGainAsCold` BASE, `Poe1Quantity::GainAs` |
+| Herald of Thunder (buff) | added lightning damage to attacks and spells |
+| Malevolence (aura) | `Damage` MORE with `ModFlag.Dot` (`Flags::DOT`); its skill effect duration reaches no field |
+| Enduring Cry (warcry) | none reaches a slice field (regeneration, warcry power) |
+
+`gem_effects` reads `ModFlag.Dot` as `dot`, and allows `Duration` and `LifeRegenPercent` as names no field reads.
+
+**Not yet, with why:**
+- Tempest Shield: PoB disables it without a shield, which the other-gems table does not check yet.
+- Pride: its effect is PoB's `modCond` from the config.
+- The marks: they need the mark slot rule.
+- General's and Battlemage's Cry: mirage warriors, warcry power.
+- The offerings and Bone and Carrion golems: minion buffs with their own effect stats.
+
+**Evidence:**
+- **`gem_effects`:** 1,237 values compared, 0 differences.
+- **Fixture:** `ice-nova-herald-of-thunder-enlighten-witch.xml` (Herald of Thunder and Purity of Ice with Enlighten 3, and Hatred). All 22 computed fields are `Complete` and equal to PoB, reservation included.
+- **Corpus:** 8 values moved toward PoB and 5 away. Three builds' unreserved mana went further below PoB's: the newly modelled reserving skills add reservation that PoB lowers with modifiers the engine does not read yet (those fields stay `Partial`). The fixture shows the skills' own reservation equal to PoB.
+
+## P6-9e: marks, Pride, Punishment, guards, offerings, two golems, and supports
+
+**Marks** (Assassin's, Sniper's, and Poacher's Mark) are curses typed `Mark`. PoB puts them in the same curse slots as hexes, with one extra rule (`CalcPerform.lua` 3162 to 3212, "Currently assume only 1 mark is possible"):
+- while a mark holds a slot, no other mark takes one, even a free one;
+- a mark replaced by a curse of higher priority frees the rule.
+
+`gems::curse_slots` ports this. Tests: `curse_slots_should_hold_one_mark`, `curse_slots_should_free_the_mark_rule_when_a_mark_is_replaced`.
+
+| Skill | Rows |
+|---|---|
+| Assassin's Mark | the enemy's `SelfCritChance` (stat / 100) and `SelfCritMultiplier` BASE: a hit adds them to its crit chance's base and its extra damage (`CalcOffence.lua` 3015, 3125), so they are the character's `CritChance` and `CritMultiplier` sums, as Despair's added damage is |
+| Sniper's Mark | the enemy's `ProjectileDamageTaken` INC: new `Poe1Quantity::EnemyProjectileDamageTaken`, which only a hit with the projectile flag adds to `takenInc` (3482); damage over time never reads it (a damage-over-time context can carry the projectile flag, so a conditioned `EnemyDamageTaken` row would be wrong) |
+| Poacher's Mark | the enemy's `PhysicalDamageReduction` BASE: new `Poe1Quantity::EnemyPhysicalDamageReduction`, added to the armour reduction of a physical hit before its floor at 0 (3434) and alone for physical damage over time (4457); and added physical damage taken with `ModFlag.Hit` |
+
+**Pride** is an `AuraDebuff` on the enemy. Its two stats are chosen by PoB's `modCond`, which only the config sets: `PrideMaxEffect` from `prideEffect` = `MAX` (`ConfigOptions.lua` 566), else `PrideMinEffect` (`CalcSetup.lua` 539). `CalcActiveSkill.lua` 806 drops a mod whose `modCond` fails. The new `BuffStat::ConfigIs` reads the list input; `prideEffect` is now one of `gems::is_input`'s inputs. Pride is scaled as an aura, as Flesh and Stone is. Its `DebuffEffect` term is a reason (`DEPENDS_ON`).
+
+**Punishment**'s damage taken applies while the enemy is on low life (a `Condition` tag on the mod). The new `BuffStat::WhenState` carries the state into the curse's rows. `conditionEnemyLowLife` moved from `config::NAMED_ONLY` to `conditions::CHECKS` (`Enemy:LowLife`).
+
+**Guards** (`EffectType::Guard`): Molten Shell, Vaal Molten Shell, Steelskin. PoB's guard slots (`CalcPerform.lua` 3256 to 3275):
+- Vaal Molten Shell alone;
+- else every Vaal guard and one other.
+
+With two or more non-Vaal guards, PoB keeps the first in its table's iteration order, which is not defined. So none of them applies and each is an `unmodelled-skill` `guard-slot` reason (`gems::guard_pick`, test `guard_pick_should_follow_pobs_slots`). PoB scales a guard by the character's buff effect alone, with no gem stat.
+
+**Tempest Shield:** spell block and shock immunity. A skill typed `RequiresShield` is disabled without a shield in the off hand (`CalcActiveSkill.lua` 269 to 273): no buff, and its supports' buffs neither. It still reserves, because PoB's reservation loop (1939) does not check `disable`. The fixture without a shield shows the reservation equal to PoB. An unknown off hand is a `requires-shield` reason.
+
+**Offerings** (Bone and Flesh Offering): `buffNotPlayer` with `buffMinions`. The new `BuffStat::MinionOnly` adds rows in `minion_buffs` only. `offering_spells_effect_+%` joins `OWN_EFFECT_STATS` (PoB's `BuffEffect` INC on the skill).
+
+**Golems:** Summon Chaos Golem (chaos resistance, damage over time multiplier) and Summon Carrion Golem. The Carrion Golem's added damage goes to your other minions, which compute no hit yet (P6-7c); its stats are `NoSlice("minion-buff")` until then. Neither golem's minion skills have a `GlobalEffect` mod.
+
+**General's Cry:** a warcry whose only global mod is its warcry power flag. Its mirage warriors act only for a skill it triggers (P6-8b).
+
+**Supports:** 17 plain supports, classified by `classify_gems.py` (no global or blocked mod):
+- Awakened Empower, Cruelty, Deadly Ailments, Endurance Charge on Melee Stun, Fire Penetration, Fist of War;
+- Greater Chain, Greater Multiple Projectiles, Greater Multistrike, Greater Volley, Ignite Proliferation, Impale;
+- Invert the Rules, Melee Splash, Multistrike, Overexertion, Trap and Mine Damage.
+
+**Not yet, with why:**
+- Battlemage's, Ancestral, Infernal, and Seismic Cry: their rows (crit chance, resistances, conversion, armour) scale with warcry power, which is not modelled.
+- Arrogance and Eternal Blessing: reservation as life, and aura effect.
+- Cast when Damage Taken, Mirage Archer, Manaforged Arrows, Mark on Hit: triggers (P6-8a, P6-8b).
+- Summon Skitterbots: its aura chills, and its minions' level is the character's (a data run).
+- Herald of the Hive, Blood and Sand, banners, brands, Phase Run, Berserk, Frost Shield, Vaal auras, Wave of Conviction, Flame Surge, Cyclone, and others: each has its own buff or data.
+
+**Evidence:**
+- **`gem_effects`:** 1,476 values compared, 0 differences.
+- **Fixtures (7), all equal to PoB or registered (Q11, DIV-0114 to DIV-0122):**
+  - `ice-nova-marks-witch.xml`;
+  - `burning-arrow-snipers-mark-templar.xml`;
+  - `smite-poachers-mark-pride-punishment-templar.xml`;
+  - `smite-pride-initial-templar.xml`;
+  - `ice-nova-guard-shield-golem-witch.xml`;
+  - `ice-nova-tempest-shield-no-shield-witch.xml`;
+  - `minion-raise-zombie-offerings-witch.xml`: the minion's block and speed are not slice fields, so this one only shows that the character gets none of the offerings' buffs.
+- **Public:** 182 builds, 121 expected differences, 0 unexpected; `Complete` fields 3,330 (3,168 before, plus the 7 fixtures). 34 values of the other builds moved: 33 toward PoB, 1 away (unreserved mana, below).
+- **Corpus:** 0 unexpected. 32 values moved: 29 toward PoB (7 now equal), 3 away. The three away are unreserved mana, as in P6-9d: the newly modelled reserving skills add reservation that PoB lowers with modifiers the engine does not read yet (those fields stay `Partial`).
+
+## The review of P6-7b3b to P6-9c (code-architecture-reviewer, no blockers)
+
+Applied:
+- **M1, M2: PoB's more rounding everywhere the phases read a more.**
+  - `ModStore::more_rounded` rounds the product to two decimals whenever an effect applies. The nodes are always added, so the graph no longer depends on float noise.
+  - `phases` uses it for every chained quantity, the resistances, block, and the primary defences, the minion's included. Test: `more_rounded_should_round_to_two_decimals`.
+  - PoB rounds per mod name. The store rounds per quantity, which differs only where several names feed one quantity (energy shield's `EnergyShield` and `Defences`); this is noted in the doc.
+- **M3:** the minion step adds the `unread-skill-modifier` reason when the buff totals did not read a modifier.
+- **M4:** an unsettled minion-only value reaches the minion's reasons for every kind (regeneration, movement, cooldown too), except a golem one for a skill that is not a golem. Test: `applies_to_should_keep_every_kind_but_golem_for_others`.
+- **m1:** a conditional minion modifier from the main skill's gems is a `minion-modifier` reason, as from the character.
+- **m8:** the export scripts behind the inert classification are committed: `tools/oracle/data/classify_gems.py`, `minion_skill_globals.py`. `ENEMY_NO_SLICE_NAMES`' `Damage` is noted.
+- **m9:** line ranges made consistent.
+
+Left, with why:
+- **m3:** curses that ignore the limit, and hexproof enemies. Their sources are unmapped stats or PoB config options the engine classifies, so they stay reasons.
+- **m4:** the socket index uses the gem's position among typed gems. It differs from PoB's only with untyped gems or a repeated curse gem in one group.
+- **m7:** the register has only `accepted` and `retired`. DIV-0111 to DIV-0113 note that confirmation in game is a maintainer item.
+
+## P6-9f: Arrogance and five inert skills
+
+**Arrogance** (`SupportArrogance`; PoB's `CalcPerform.lua` 1955 to 1964):
+- **Its reservation:** the supported skill reserves life instead of mana. Life's base reservation gains mana's, and each pool takes its own terms (`gems::LIFE_RESERVATION_SUPPORTS`, read in `reservation`).
+- **Its aura effect** is the supported aura's own scale term (`OWN_EFFECT_STATS`, as before).
+- **Data parity:** `gem_effects` allows its `BloodMagicReserved` mod. Allowances now also match a mod name, not only a skill-data key.
+
+**Five inert skills.** PoB's skill data gives each no global effect and no reservation, so as a skill that is not the main one each changes nothing:
+- **The skills:** Forbidden Rite and its AltX, Summon Sentinel of Radiance, the Mirage Warriors, Whirling Blades.
+- **Data parity:** `gem_effects` allows their own skill data (Forbidden Rite's damage and cost from life and energy shield, the Sentinel's minion level, the Mirage Warriors' trigger, Whirling Blades' double hit), read only when each is the main skill. The Sentinel's minion template has no skill.
+
+**Not yet:** Eternal Blessing, Skitterbots, Raise Spectre, the relics, the warcries' power, and the other skills with their own buffs.
+- Some of those reasons come from gems without a `gemId` (skills an item grants), which the tables cannot reach. Enemy Explode is one: PoB's id is not a granted effect of the game's data (a maintainer-run test checks each table entry against the bundle).
+
+### Evidence
+
+- **Public `calc-parity` on `b-ot`:** 210 builds, 280 expected, 0 unexpected.
+- **Arrogance's builds** (all partial):
+  - `ethereal-knives-mines-assassin.xml`'s unreserved life and mana regeneration now equal PoB's (2,471 and 118.8).
+  - `kinetic-fusillade-ballista-hierophant.xml`'s unreserved life is closer: 3,448 against PoB's 3,548, from 3,821.
+  - Their maximum hit and effective health pool follow that life. Where PoB's pools hold more than the engine models (mind over matter, guard), those values moved away from PoB's.
+- **Values:** 29 moved toward PoB, 18 away (those dependents).
+- **Data parity:** `uncategorized` 353.
+- **Corpus:** 0 unexpected.
+- **Tests:** the workspace's 1,766 tests and clippy pass.
+
+## P6-9g: Mark On Hit
+
+Mark On Hit (`SupportMarkOnHit`) supports a mark. PoB v2.67.2 reads two stats of it (`Data/SkillStatMap.lua`):
+- `mark_skills_curse_effect_+%` is `CurseEffect` INC on a `SkillType.Mark` skill (2107). The engine adds it to the mark's own curse effect (`gems::MARK_CURSE_EFFECT_STAT`), as the gem's own `curse_effect_+%`.
+- `trigger_on_attack_hit_against_rare_or_unique` sets `triggerMarkOnRareOrUnique` (273), which no calc module reads, so the mark applies as if cast. The engine does the same.
+
+The support is in `gems::SUPPORTS` with no global stat.
+
+**Fixture** `ice-nova-mark-on-hit-witch.xml`: Assassin's Mark with Mark On Hit (level 20, quality 20). Every computed field equals PoB's.
+
+**Evidence** (`b-ct`, against P6-11ba's run):
+- **Public:** 0 unexpected; 15 values toward PoB, none away, 2 now equal (Kinetic Blast's crit chance).
+- **Corpus:** 13 toward PoB, none away.
+
+**Eternal Blessing** (P6-9g, `SupportEternalBlessing`, `Data/Skills/sup_str.lua` 2062):
+- **What PoB applies:** its base mods set the supported aura's flat and percent mana and life reservations to 0, and its `aura_effect_+%` (+19 at level 20) scales the aura. The engine lists it in `NO_RESERVATION_SUPPORTS`, and its aura effect is the aura's own scale term (`OWN_EFFECT_STATS`, read from supports too).
+- **What PoB doesn't apply:** "... also disables non-blessing mana reservation skills" is in no calc module, so the other auras still apply there; the engine does the same.
+- **Fixture** `ice-nova-eternal-blessing-hatred-witch.xml`: Hatred blessed, Purity of Ice reserving. Every computed field equals PoB's.
+- **Evidence:**
+  - **Public:** 16 values toward PoB, none away (Lacerate's damage, RF Chieftain's combined DPS).
+  - **Corpus:** unchanged.
+
+**data-parity** (`gem_effects`, run late, 2026-11-20): the two supports first showed 4 differences, each a path the engine reads on purpose. Each is now an allowance in `tools/parity-cli/src/data_parity/gem_effects.rs` with its reason:
+- Eternal Blessing's four reservation keys, as Guardian's Blessing's;
+- Mark On Hit's `triggerMarkOnRareOrUnique` and its `Triggered` type, as Automation's.
+
+After that: 1,645 values compared, 0 differences, uncategorized 0.
+
+**Not modelled: PoB-only skills.** `EnemyExplode` ("On Kill Monster Explosion", in 6 public builds) has no game granted effect of that ID, so its gem is `unmodelled-gem` before any table is read (tasks file).
+
+## P6-11bs: warcry power and uptime
+
+PoB v2.67.2 scales a warcry's buff (`CalcPerform.lua` 2311 to 2350) by `(1 + inc / 100) x more x bonus x uptime`:
+- `inc` is the warcry's `BuffEffect`, `BuffEffectOnSelf`, and `BuffEffectOnPlayer` INC.
+- `bonus` is `floor(min(power, limit) / div)` for a mod whose `GlobalEffect` tag has a `div`, else 1.
+- `uptime` is `min(duration / cooldown, 1)`.
+
+The terms:
+- **Power:** the config's `multiplierWarcryPower` override, applied when not 0, else its placeholder when not 0 (`ConfigTab.lua` 1088 to 1093). Otherwise `max(base x (1 + inc / 100), minimum)`: `base` is 20 against the Boss, Pinnacle, and Uber kinds (`ConfigOptions.lua` 2097, 2132, 2166), `inc` is "increased total Power counted by Warcries".
+- **Duration:** PoB's `calcSkillDuration` (`CalcOffence.lua` 300 to 313): the gem's `base_skill_effect_duration` times `max(calcLib.mod(Duration), 0)`. This version has no server tick rounding.
+- **Cooldown:** the level's over `calcLib.mod(CooldownRecovery)`.
+
+What the engine does:
+- `gems::warcry_terms` computes the three terms from the warcry's gems' stats and the character's.
+- The character's are the new `skill_modifiers::SkillTiming` sums in `Totals`, from six stats PoB reads as INC: "Skill Effect Duration", "Cooldown Recovery Rate", warcry duration, warcry cooldown recovery, warcry buff effect, and total power. The warcry ones carry `KeywordFlag.Warcry`.
+- `skill_effect_duration_+%` leaves `NO_EFFECT`. Through a skill's own gems it stays no effect (the skill mapping's rule); the other five stay reasons there.
+- A new `BuffStat::PerPower { div, limit, rows }` holds a row per power. `add_rows` scales it by the bonus and the uptime, and a warcry's other rows by the uptime.
+- Enduring Cry's life regeneration (`RegenPercent` BASE, the stat over 60, step 5 up to 25) and Intimidating Cry's movement speed (`MovementSpeed` INC, step 5 up to 30) are such rows. Each was a field's reason marker before.
+- A flat cooldown change (`base_cooldown_modifier_ms`), a missing level, or a power that is not a number is an `unmodelled-skill` reason (`warcry-uptime` or `warcry-power`).
+- **Scaling:** PoB scales `<Pool>RegenPercent` BASE at precision 2 and `<Pool>Regen` BASE at precision 1 (`Modules/Data.lua` 437 to 454). `skill_modifiers::scale` now does too. Clarity's, Vitality's, and the golems' regeneration were scaled with the default rule before.
+
+**Fixtures:** every computed field of both equals PoB's.
+- `ice-nova-warcry-power-witch.xml`: both cries at the boss's power 20.
+- `ice-nova-warcry-power-config-witch.xml`: the config's power 12, with lines of warcry duration, skill effect duration, warcry cooldown recovery, and warcry buff effect.
+
+**data-parity** (`gem_effects`): 1,647 values compared, the two new rows with their `div` and `limit` among them, 0 differences.
+
+**Evidence** (`b-ct`, against P6-11br's run):
+- **Public:** 0 unexpected. 11 values moved toward PoB, 6 now equal, none away. 6 fields went from partial to complete: the Inquisitor builds' movement speed and a Chieftain's, plus three builds' life regeneration.
+- **Corpus:** 0 unexpected; 5 values toward PoB, 1 now equal, none away.
+
+## P6-11bt: Ruthless
+
+Ruthless (`SupportRuthless`, `Data/Skills/sup_str.lua` 4685 to 4720) makes every third use of a melee strike or slam a Ruthless blow.
+
+What PoB does (`CalcOffence.lua` 2889 to 2909):
+- It reads `RuthlessBlowMaxCount` BASE (the constant 3), and `RuthlessBlowHitMultiplier` and `RuthlessBlowAilmentMultiplier` BASE with `ModFlag.Melee`.
+- In the average mode (`ruthlessSupportMode`, the default), the chance is `round(100 / count)`. Each effect is `1 - chance / 100 + chance / 100 x (1 + multiplier / 100)`.
+- The hit's effect joins `allMult` after the scaled damage effect (3352). The ailment effect multiplies bleed's and poison's base (4451, 4721), not ignite's.
+
+What the engine does:
+- `Poe1Quantity::Ruthless` carries the three terms as `HIT_ROWS` rows, read by the skill mapping as hit quantities.
+- `hit::ruthless_effect` computes an effect only when a count is present, so a hit without Ruthless keeps its graph.
+- The hit multiplies its scaled damage effect by the hit effect. `ailment` multiplies bleed's and poison's base by the ailment effect, summed with the hit's context as PoB's `cfg`.
+- The `MAX` mode (chance 100, the DPS divided by the count) is an `unmodelled-config` reason.
+- The stun duration override is `NoEffect` (`stun`).
+
+**Fixture** `smite-ruthless-bleed-templar.xml`: Smite with Ruthless, a Siege Axe, and a 25% chance to bleed. The hit and the bleed equal PoB's. The differences are Q11's floored attack rate (`DIV-0320` to `DIV-0326`); the bleed's DPS follows the rate, as `DIV-0137` already registers.
+
+**Register:** the `added` date of the Q11 entries `DIV-0302` to `DIV-0319` is corrected to 2026-11-20. The helper had a fixed date.
+
+**Evidence** (`b-ct`, against P6-11bs's run):
+- **Public:** 0 unexpected; 7 values toward PoB, none away (a Juggernaut's Boneshatter, among others).
+- **Corpus:** 0 unexpected; 1 value toward PoB, none away.
+
+## P6-11ci: the character's warcry speed
+
+PoB's warcry cast time (`calcWarcryCastTime`, `CalcOffence.lua` 289 to 298) reads `calcLib.mod(skillModList, "WarcrySpeed")`, the warcry's gems' and the character's "#% increased Warcry Speed" (`WarcrySpeed` INC, `KeywordFlag.Warcry`). Intimidating Cry's exerted attacks read it through their uptime (P6-9e).
+
+What the engine does:
+- `skill_modifiers::SkillTiming::WarcrySpeed` (a `STATS` row) sums the character's warcry speed into `Totals`.
+- `gems::intimidating_terms` adds it to the gems' warcry speed.
+
+**Fixture** `smite-intimidating-cry-warcry-speed-templar.xml`: Smite with Intimidating Cry in another group and 30% increased warcry speed. The differences are Q11's floored attack rate (`DIV-0346` to `DIV-0353`). They include the average damage, through the exerted attacks' uptime, as `DIV-0056` registers.
+
+**Evidence** (`b-ct`, against P6-11ch's run): public and corpus 0 unexpected; no value moved (no build pairs the line with Intimidating Cry).
+
+## P6-11cj: Empower's supported level
+
+Empower's "Supported Skills have +# to Level" (`supported_active_skill_gem_level_+`) is PoB's `SupportedGemProperty` `level` (`SkillStatMap.lua` 2304).
+- **PoB:** for a skill from a gem that is not a support, PoB adds it to the active effect's level before reading the level's data (`CalcActiveSkill.lua` 549 to 557).
+- **The engine:** `skill::supported_level` adds the applied supports' value to the active gem's level, for the main skill and for each group's skills (`GroupSkill`: auras and buffs), when the skill is from a gem.
+- **Mapping:** the stat is a `NoEffect` row (`gem-level`), so the support's own mapping adds no reason. The gems guard names it.
+
+**Fixture** `ice-nova-empower-hatred-witch.xml`: Ice Nova and Hatred, each with Empower at level 3 (+2). Every computed field equals PoB's; the average damage is 907.8 against 727.5 without Empower.
+
+**data-parity:** `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ci's run):
+- **Public:** 0 unexpected; 12 values toward PoB, 3 now equal, none away.
+- **Corpus:** 0 unexpected; 7 toward PoB, none away.
+
+## P6-11ck: Enhance's supported quality
+
+Enhance's "Supported Skills have +#% to Quality" (`supported_active_skill_gem_quality_%`) is PoB's `SupportedGemProperty` `quality`, added to the active effect's quality the same way as P6-11cj's level. `skill::supported_level` adds both, and the quality stat is a `NoEffect` row too.
+
+**Fixture** `smite-enhance-quality-templar.xml`: Smite's area part with Enhance at level 4 (+24% quality). Smite's quality stat is more area damage, and the area hit is 1.15 times the same build without Enhance, as in PoB. The differences are Q11's floored attack rate (`DIV-0354` to `DIV-0359`).
+
+**Evidence** (`b-ct`, against P6-11cj's run):
+- **Public:** 0 unexpected; no value moved (the build with Enhance has other reasons).
+- **Corpus:** 0 unexpected; 7 values toward PoB, none away.
+
+## P6-11cl: the typed supported levels
+
+The awakened supports' "+# to Level of Supported <Type> Skill Gems" are PoB's `SupportedGemProperty` `level`, each with a `SkillType` tag (`SkillStatMap.lua` 2284 to 2330).
+- **The types:** aura, chaos, cold, fire, lightning, minion, physical, strike (`MeleeSingleTarget`).
+- **Two keyword variants:** curse is `KeywordFlag.Curse`, the `AppliesCurse` type. Elemental is the fire, cold, or lightning keyword.
+- **The engine:** `skill::SUPPORTED_TYPED_LEVEL_STATS` names each stat and the types of which the skill needs one. `supported_level` reads them against the skill's types after its supports added theirs, as PoB's `activeSkill.skillTypes`. Each is a `NoEffect` row (`gem-level`).
+- **Tests:** a real-bundle test checks the type names, and the gems guard accepts the table.
+
+**Fixture** `ice-nova-awakened-added-cold-witch.xml`: Ice Nova with Awakened Added Cold Damage at level 5 (+1 cold skill level). Every computed field equals PoB's.
+
+**data-parity:** `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ck's run): public and corpus 0 unexpected; no value moved (no other build has a typed level).

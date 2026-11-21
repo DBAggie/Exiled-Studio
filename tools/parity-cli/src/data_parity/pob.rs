@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 13;
+pub const FORMAT: u32 = 16;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -75,6 +75,12 @@ pub struct Export {
     pub flavour_text: Vec<FlavourEntry>,
     /// `data.clusterJewels` (format 9, passive tree plan T-i).
     pub cluster_jewels: ClusterJewels,
+    /// Timeless jewels (format 15, P6-10a).
+    #[serde(default)]
+    pub timeless: Option<PobTimeless>,
+    /// `Data/TattooPassives.lua`'s nodes, by name (format 16, P6-11av).
+    #[serde(default)]
+    pub tattoos: Option<BTreeMap<String, PobTattoo>>,
     /// The tree.
     pub tree: Tree,
 }
@@ -444,8 +450,17 @@ pub struct Level {
     /// none).
     #[serde(deserialize_with = "list")]
     pub values: Vec<f64>,
-    /// `cost`, by resource (Vaal souls left out by the script).
+    /// `cost`, by resource (Vaal souls as `Soul` since format 14).
     pub cost: BTreeMap<String, f64>,
+    /// `levelRequirement` (format 14).
+    #[serde(default, rename = "levelRequirement")]
+    pub level_requirement: Option<f64>,
+    /// `vaalStoredUses` (format 14).
+    #[serde(default, rename = "vaalStoredUses")]
+    pub vaal_stored_uses: Option<f64>,
+    /// `soulPreventionDuration`, seconds (format 14).
+    #[serde(default, rename = "soulPreventionDuration")]
+    pub soul_prevention_duration: Option<f64>,
     /// `critChance`, percent.
     #[serde(default, rename = "critChance")]
     pub crit_chance: Option<f64>,
@@ -793,4 +808,91 @@ pub fn parse(bytes: &[u8]) -> Result<Export, String> {
         ));
     }
     Ok(export)
+}
+
+/// A legion table row (`LegionPassives.lua`, format 15).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionRow {
+    /// The ID.
+    pub id: String,
+    /// Each stat's range.
+    #[serde(default)]
+    pub stats: BTreeMap<String, LegionRange>,
+}
+
+/// A stat's range.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionRange {
+    /// The lowest roll (PoB's display unit: per minute stats per second,
+    /// per-myriad ones as a percent).
+    pub min: f64,
+    /// The highest roll, likewise.
+    pub max: f64,
+}
+
+/// A node's index (`nodeIDList`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionIndex {
+    /// Its index.
+    pub index: u32,
+    /// Its bytes in Glorious Vanity's table.
+    pub size: u32,
+}
+
+/// A jewel type.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LegionJewel {
+    /// Its name.
+    pub name: String,
+    /// The lowest seed (Elegant Hubris's divided).
+    pub seed_min: u32,
+    /// The highest seed.
+    pub seed_max: u32,
+    /// The zlib stream's Adler-32 trailer.
+    #[serde(default)]
+    pub adler32: Option<u32>,
+}
+
+/// A tattoo or another passive skill override (format 16).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PobTattoo {
+    /// Its ID.
+    pub id: String,
+    /// Its override type.
+    pub override_type: String,
+    /// Whether it is a keystone tattoo.
+    pub keystone: bool,
+    /// Its stats' ranges, by stat (PoB's display units).
+    #[serde(default)]
+    pub stats: BTreeMap<String, LegionRange>,
+}
+
+/// Timeless jewels (format 15).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PobTimeless {
+    /// `legion.additions`, in order.
+    #[serde(deserialize_with = "list")]
+    pub additions: Vec<LegionRow>,
+    /// `legion.nodes`, in order.
+    #[serde(deserialize_with = "list")]
+    pub nodes: Vec<LegionRow>,
+    /// `timelessJewelAdditions`.
+    pub additions_count: u32,
+    /// `nodeIDList.size`.
+    pub node_count: u32,
+    /// `nodeIDList.sizeNotable`.
+    pub notable_count: u32,
+    /// Each node's index, by node.
+    pub node_index: BTreeMap<String, LegionIndex>,
+    /// Each jewel type's local-to-global IDs.
+    #[serde(default)]
+    pub local_to_global: BTreeMap<String, BTreeMap<String, u32>>,
+    /// The jewel types, by index.
+    pub jewels: BTreeMap<String, LegionJewel>,
 }

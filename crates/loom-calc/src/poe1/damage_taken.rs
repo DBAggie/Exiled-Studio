@@ -110,14 +110,14 @@
 //! Everything else that sets the chill is a stat that stays a reason
 //! ([`CHILL_DEPENDS_ON`]) or a gem the engine does not model.
 
-use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
+use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
 use super::Poe1Quantity;
 use super::config::last_input as last;
 use super::enemy::{self, BossKind};
 use crate::condition::Flags;
 use crate::ingest::Ingest;
-use crate::input::CalcData;
+
 use crate::quantity::{DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::UnsupportedReason;
@@ -129,6 +129,18 @@ pub const SHOCKED_INPUT: &str = "conditionEnemyShocked";
 pub const SHOCK_EFFECT_INPUT: &str = "conditionShockEffect";
 /// The delirium list.
 pub const DELIRIUM_INPUT: &str = "deliriousPercentage";
+/// The config checks that set the enemy's `Debilitated` and
+/// `MalignantMadness` (`ConfigOptions.lua` 528, and Debilitate's), each
+/// giving every actor `Damage` MORE -10 under it (`CalcSetup.lua` 68, 70,
+/// `initModDB`): the enemy deals less damage, which its hit on you reads
+/// (P6-10b part 12; P6-11fp). Their movement and action speed reach no
+/// slice field.
+pub const ENEMY_LESS_DAMAGE_INPUTS: [&str; 2] = [
+    "conditionEnemyDebilitated",
+    "conditionEnemyMalignantMadness",
+];
+/// Their `Damage` MORE.
+const ENEMY_LESS_DAMAGE: f64 = -10.0;
 /// The boss kind list.
 pub const BOSS_INPUT: &str = "enemyIsBoss";
 /// The check that intimidates the enemy.
@@ -137,6 +149,28 @@ pub const INTIMIDATED_INPUT: &str = "conditionEnemyIntimidated";
 pub const UNNERVED_INPUT: &str = "conditionEnemyUnnerved";
 /// The check that blinds the enemy.
 pub const BLINDED_INPUT: &str = "conditionEnemyBlinded";
+/// The count of the enemy's Withered stacks (P6-11aq).
+pub const WITHERED_STACKS_INPUT: &str = "multiplierWitheredStackCount";
+/// Withered's chaos damage taken per stack, before its effect, and the
+/// stacks that count (`CalcPerform.lua` 812 to 815, 2704 to 2707).
+const WITHERED_BASE: f64 = 6.0;
+const WITHERED_STACK_LIMIT: f64 = 15.0;
+/// Stats any skill's stat map reads as `Condition:CanWither`
+/// (`SkillStatMap.lua` 2202 to 2210), sorted.
+pub const CAN_WITHER_STATS: &[&str] = &[
+    "withered_on_hit_chance_%",
+    "withered_on_hit_for_2_seconds_%_chance",
+];
+/// Stats one skill's own stat map reads as `Condition:CanWither`, by its
+/// granted effect, sorted: Summon Void Spawn (`other.lua` 4873), Toxic
+/// Rain of Withering (`act_dex.lua` 15117), Wither (`act_int.lua` 21243),
+/// Withering Step (`act_dex.lua` 17322).
+pub const CAN_WITHER_SKILL_STATS: &[(&str, &str)] = &[
+    ("SummonVoidSpawn", "void_spawn_withered_on_hit_chance_%"),
+    ("ToxicRainAltY", "toxic_rain_spores_apply_withered"),
+    ("Wither", "active_skill_withered_base_duration_ms"),
+    ("WitheringStep", "slither_wither_stacks"),
+];
 /// The check that puts the enemy on consecrated ground (P3-8n).
 pub const CONSECRATED_INPUT: &str = "conditionEnemyOnConsecratedGround";
 /// The check that ignites the enemy (P3-8n).
@@ -358,7 +392,9 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | BLINDED_INPUT
         | CONSECRATED_INPUT
         | IGNITED_INPUT
-        | CHILLED_SECONDS_INPUT => true,
+        | CHILLED_SECONDS_INPUT
+        | WITHERED_STACKS_INPUT => true,
+        i if ENEMY_LESS_DAMAGE_INPUTS.contains(&i) => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -427,15 +463,21 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
             Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.to_owned(),
             }),
-            Ok(true) if input == BLINDED_INPUT => ingest.effect(Effect {
-                quantity: Quantity::Poe1(Poe1Quantity::EnemyEvasion),
-                op: Op::More,
-                value: BLIND_LESS_EVASION,
-                conditions: Conditions::none(),
-                source: Source::Config {
-                    input: input.to_owned(),
-                },
-            }),
+            Ok(true) if input == BLINDED_INPUT => {
+                // Blind's less evasion and, since P6-10b part 11, its less
+                // accuracy (`CalcPerform.lua` 831 and 832): the same value.
+                for quantity in [Poe1Quantity::EnemyEvasion, Poe1Quantity::EnemyAccuracy] {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(quantity),
+                        op: Op::More,
+                        value: BLIND_LESS_EVASION,
+                        conditions: Conditions::none(),
+                        source: Source::Config {
+                            input: input.to_owned(),
+                        },
+                    });
+                }
+            }
             Ok(true) => ingest.effect(Effect {
                 conditions: Conditions::none().with_all(flag),
                 ..taken(Op::Increased, INTIMIDATE_UNNERVE_DAMAGE_TAKEN, input)
@@ -673,6 +715,74 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             (Ok(_), Ok(_)) => {}
         }
     }
+    // P6-11bz: a flask's damage taken while the enemy is ignited or on
+    // consecrated ground, each under the config's check.
+    for (quantity, input) in [
+        (Poe1Quantity::IgnitedEnemyDamageTaken, IGNITED_INPUT),
+        (Poe1Quantity::ConsecratedEnemyDamageTaken, CONSECRATED_INPUT),
+    ] {
+        let lines: Vec<Effect> = unconditional(ingest, quantity, Op::Increased)
+            .cloned()
+            .collect();
+        if lines.is_empty() {
+            continue;
+        }
+        match set.map_or(Ok(false), |s| check(s, input)) {
+            Err(()) => ingest.reason(reason(input)),
+            Ok(false) => {}
+            Ok(true) => {
+                for e in &lines {
+                    ingest.effect(Effect {
+                        source: e.source.clone(),
+                        ..taken_effect(Op::Increased, e.value)
+                    });
+                }
+            }
+        }
+    }
+    // P6-11ca: a flask's crit chance against an enemy on consecrated ground.
+    let crit: Vec<Effect> = unconditional(ingest, Poe1Quantity::ConsecratedCritChance, Op::Base)
+        .cloned()
+        .collect();
+    if !crit.is_empty() {
+        match set.map_or(Ok(false), |s| check(s, CONSECRATED_INPUT)) {
+            Err(()) => ingest.reason(reason(CONSECRATED_INPUT)),
+            Ok(false) => {}
+            Ok(true) => {
+                for e in &crit {
+                    ingest.effect(Effect {
+                        quantity: Quantity::CritChance,
+                        op: Op::Base,
+                        value: e.value,
+                        conditions: Conditions::none(),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+        }
+    }
+    // P6-11bf: damage with hits against a chilled enemy ([`chilled`]).
+    let vs_chilled: Vec<Effect> =
+        unconditional(ingest, Poe1Quantity::DamageVsChilled, Op::Increased)
+            .cloned()
+            .collect();
+    if !vs_chilled.is_empty() {
+        match chilled(set, ingest) {
+            Err(input) => ingest.reason(reason(input)),
+            Ok(true) => {
+                for e in &vs_chilled {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Damage,
+                        op: Op::Increased,
+                        value: e.value,
+                        conditions: Conditions::none().with_all(Flags::HIT),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+            Ok(false) => {}
+        }
+    }
     let per: Vec<Effect> = unconditional(ingest, Poe1Quantity::ChillSecondsDamageTaken, Op::Base)
         .cloned()
         .collect();
@@ -746,15 +856,81 @@ fn chill_damage_taken(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     }
 }
 
+/// The enemy's Withered stacks (P6-11aq; `CalcPerform.lua` 812 to 815,
+/// 2704 to 2707; `ConfigOptions.lua` 1813): when an active skill can
+/// wither, the configured stacks, at most 15, each give the enemy `effect`
+/// increased chaos damage taken, `effect` the largest of the skills':
+/// `floor(6 x (1 + WitherEffect / 100))`, a minion skill's
+/// `floor(6 x (1 + MinionWitherEffect / 100))` (no mapping gives the
+/// latter, so 6). A skill can wither when the character's stats say so
+/// ([`Poe1Quantity::CanWither`]) or its gems' stats at their levels hold
+/// [`CAN_WITHER_STATS`] or its own of [`CAN_WITHER_SKILL_STATS`].
+fn withered(input: &crate::input::CalcInput<'_>, set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let Some(set) = set else { return };
+    let stacks = match count(set, WITHERED_STACKS_INPUT) {
+        Ok(None) => return,
+        other => other,
+    };
+    // The character's own flag; a gem's stat is the skill's own, read by
+    // the scan below.
+    let everyone = unconditional(ingest, Poe1Quantity::CanWither, Op::Flag)
+        .any(|e| !matches!(e.source, Source::Gem { .. }));
+    let Some((player, minion)) = super::gems::can_wither(input, everyone) else {
+        return;
+    };
+    // A value that is not a finite number, read only when a skill can
+    // wither.
+    let Ok(Some(stacks)) = stacks else {
+        ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: WITHERED_STACKS_INPUT.to_owned(),
+        });
+        return;
+    };
+    let stacks = stacks.min(WITHERED_STACK_LIMIT);
+    let q = Quantity::Poe1(Poe1Quantity::WitherEffect);
+    let conditional: Vec<Source> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.conditions != Conditions::none())
+        .map(|e| e.source.clone())
+        .collect();
+    for source in conditional {
+        ingest.reason(UnsupportedReason::UnmodelledCondition {
+            condition: crate::condition::ConditionKey::new("wither-effect"),
+            quantity: q,
+            source,
+        });
+    }
+    let inc: f64 = unconditional(ingest, Poe1Quantity::WitherEffect, Op::Increased)
+        .map(|e| e.value)
+        .sum();
+    let player = player.then(|| crate::math::floor(WITHERED_BASE * (1.0 + inc / 100.0)));
+    let minion = minion.then_some(WITHERED_BASE);
+    let effect = player
+        .into_iter()
+        .chain(minion)
+        .fold(f64::NEG_INFINITY, f64::max);
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(DamageType::Chaos)),
+        op: Op::Increased,
+        value: effect * stacks,
+        conditions: Conditions::none(),
+        source: Source::Config {
+            input: WITHERED_STACKS_INPUT.to_owned(),
+        },
+    });
+}
+
 /// Adds the enemy's damage taken from the active config set and the
 /// skills' guaranteed chills (module docs). A value the engine does not
 /// read as PoB does is a reason under its input.
 pub fn damage_taken(
-    build: &Build,
+    input: &crate::input::CalcInput<'_>,
     set: Option<&ConfigSet>,
-    data: &dyn CalcData,
     ingest: &mut Ingest<'_>,
 ) {
+    let (build, data) = (input.build, input.data);
+    withered(input, set, ingest);
     chill_damage_taken(set, ingest);
     enemy_states(set, ingest);
     let Some(set) = set else { return };
@@ -780,7 +956,22 @@ pub fn damage_taken(
         None => {}
         Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => {}
         Some(ConfigValue::String(s)) => match DELIRIUM.iter().find(|(v, _)| v == s) {
-            Some(&(_, more)) => ingest.effect(taken(Op::More, more, DELIRIUM_INPUT)),
+            Some(&(_, more)) => {
+                ingest.effect(taken(Op::More, more, DELIRIUM_INPUT));
+                // Its increased damage of the enemy (`Damage` INC 6, 12,
+                // 18, 24, 30: 6/16 of the less damage taken,
+                // `ConfigOptions.lua` 2222 to 2243), which only the enemy's
+                // hit reads (P6-10b part 12).
+                ingest.effect(Effect {
+                    quantity: Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                    op: Op::Increased,
+                    value: -more * 6.0 / 16.0,
+                    conditions: Conditions::none(),
+                    source: Source::Config {
+                        input: DELIRIUM_INPUT.to_owned(),
+                    },
+                });
+            }
             None => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: DELIRIUM_INPUT.to_owned(),
             }),
@@ -788,6 +979,23 @@ pub fn damage_taken(
         Some(_) => ingest.reason(UnsupportedReason::UnmodelledConfig {
             input: DELIRIUM_INPUT.to_owned(),
         }),
+    }
+    for input in ENEMY_LESS_DAMAGE_INPUTS {
+        match last(set, input, ConfigInputKind::Input) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                op: Op::More,
+                value: ENEMY_LESS_DAMAGE,
+                conditions: Conditions::none(),
+                source: Source::Config {
+                    input: input.to_owned(),
+                },
+            }),
+            Some(_) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.to_owned(),
+            }),
+        }
     }
 }
 
@@ -810,21 +1018,20 @@ mod tests {
         // "Hits always Shock", P3-8k).
         "all_damage_can_shock",
         "always_shock",
+        // P6-8a: Cast when Damage Taken's chance and threshold (the
+        // trigger's, `poe1::triggers`), not the enemy's damage taken.
+        "cast_on_damage_taken_%",
+        "cast_on_damage_taken_threshold",
         "base_chance_to_shock_%",
         "base_chance_to_shock_%_from_skill",
+        // P6-11em: the chance to be frozen, shocked, and ignited: yours.
+        "chance_to_be_frozen_shocked_ignited_%",
         // Shock on you: not the enemy's.
+        "base_avoid_shock_%",
+        "has_avoid_shock_as_avoid_all_elemental_ailments",
         "cannot_be_shocked_while_at_maximum_power_charges",
-        // Damage taken by you, as another type: not the enemy's.
-        "physical_damage_taken_%_as_fire",
-        "physical_damage_taken_%_as_lightning",
         // The pantheon's souls (P3-12g): damage taken by you, its
         // reduction, and shock on you, not the enemy's.
-        "chaos_damage_taken_+%",
-        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
-        "elemental_damage_taken_+%_if_been_hit_recently",
-        "elemental_damage_taken_+%_if_not_hit_recently",
-        "physical_damage_over_time_taken_+%_while_moving",
-        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
         "shocked_effect_on_self_+%",
     ];
 
@@ -846,7 +1053,62 @@ mod tests {
         // ignite's chance (`poe1::ailment`), never the enemy's shock.
         let read_here = [
             "consecrated_ground_enemy_damage_taken_+%",
+            // P6-11bz: a flask's, read here under the config's checks.
+            "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
+            "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
             "chance_to_freeze_shock_ignite_%",
+            // P6-11as: damage you take recouped as mana (`poe1::enemy_hit`).
+            "damage_taken_goes_to_mana_%",
+            // P6-10a: and as life, the same way.
+            "damage_taken_goes_to_life_over_4_seconds_%",
+            // P6-8a: Cast when Damage Taken's own less damage on the spell it
+            // triggers; "damage taken" names the trigger, not the enemy.
+            "cast_on_damage_taken_damage_+%_final",
+            // P6-10b part 10: damage the character takes (`poe1::taken`),
+            // not the enemy's.
+            "base_damage_taken_+%",
+            "base_physical_damage_over_time_taken_+%",
+            "chaos_damage_taken_+%",
+            "chaos_damage_taken_over_time_+%",
+            "cold_damage_taken_+%",
+            "elemental_damage_taken_+%",
+            "fire_damage_taken_+%",
+            "lightning_damage_taken_+%",
+            "marauder_hidden_ascendancy_damage_taken_+%_final",
+            "passive_mastery_damage_taken_over_time_+%_final",
+            // P6-10b part 15: damage taken from mana before life (the
+            // character's pools, `poe1::enemy_hit`).
+            "lightning_damage_%_taken_from_mana_before_life",
+            "physical_damage_%_taken_from_mana_before_life",
+            "physical_damage_taken_+%",
+            // P6-10b part 12: the character's damage taken as another
+            // type and flat damage taken (`poe1::enemy_hit`).
+            "base_fire_hit_damage_taken_%_as_physical",
+            "chaos_damage_taken_+",
+            "chaos_hit_and_dot_damage_%_taken_as_fire",
+            "chaos_hit_and_dot_damage_%_taken_as_lightning",
+            "cold_damage_taken_%_as_fire",
+            "cold_damage_taken_%_as_lightning",
+            "cold_damage_taken_+",
+            "cold_hit_and_dot_damage_%_taken_as_fire",
+            "cold_hit_and_dot_damage_%_taken_as_lightning",
+            "elemental_damage_taken_%_as_chaos",
+            "elemental_hit_damage_taken_%_as_physical",
+            "fire_damage_taken_%_as_cold",
+            "fire_damage_taken_%_as_lightning",
+            "fire_damage_taken_+",
+            "fire_hit_and_dot_damage_%_taken_as_lightning",
+            "lightning_damage_taken_%_as_cold",
+            "lightning_damage_taken_%_as_fire",
+            "lightning_hit_and_dot_damage_%_taken_as_fire",
+            "physical_attack_damage_taken_+",
+            "physical_damage_taken_%_as_chaos",
+            "physical_damage_taken_%_as_cold",
+            "physical_damage_taken_%_as_fire",
+            "physical_damage_taken_%_as_lightning",
+            "physical_damage_taken_+",
+            "physical_hit_and_dot_damage_%_taken_as_fire",
+            "physical_ranged_attack_damage_taken_+",
         ];
         for id in ids {
             assert!(
@@ -889,7 +1151,17 @@ mod tests {
             "blinds",
         ];
         // Blind on you, not the enemy's (the pantheon's Garukhan).
-        let listed = ["cannot_be_blinded"];
+        // P6-11at: a chance to unnerve on hit, from which PoB reads no
+        // modifier (the enemy's Unnerve is the config's).
+        // P6-11ba: chances to blind on hit (yours and your minions'), which
+        // PoB does not parse (the enemy's Blind is the config's).
+        let listed = [
+            "attacks_chance_to_blind_on_hit_%",
+            "cannot_be_blinded",
+            "chance_to_unnerve_on_hit_%",
+            "global_chance_to_blind_on_hit_%",
+            "minion_attacks_chance_to_blind_on_hit_%",
+        ];
         let ids = HIT_ROWS
             .iter()
             .map(|r| r.0)
@@ -1099,6 +1371,8 @@ mod tests {
             INTIMIDATED_INPUT,
             UNNERVED_INPUT,
             BLINDED_INPUT,
+            ENEMY_LESS_DAMAGE_INPUTS[0],
+            ENEMY_LESS_DAMAGE_INPUTS[1],
         ] {
             assert!(!super::super::config::named_only(input), "{input}");
             assert!(!super::super::config::enemy_damage(input), "{input}");

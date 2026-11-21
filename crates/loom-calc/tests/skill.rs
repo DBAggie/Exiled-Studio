@@ -9,10 +9,11 @@ use loom_calc::CalcData;
 use std::collections::BTreeSet;
 
 use loom_calc::poe1::Poe1Mapping;
-use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS};
+use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS, SOCKETED_STATS};
 use loom_calc::poe1::skill::{
-    InstanceProblem, KEYWORD_TYPES, SkillProblem, group_skills, instance, instances, keyword_flags,
-    main_skill, type_expression, unknown_gems,
+    InstanceProblem, KEYWORD_TYPES, MINE_TYPE, RANGED_ATTACK_TYPE, SkillProblem, TOTEM_TYPE,
+    TRAP_TYPE, group_skills, instance, instances, keyword_flags, main_skill, type_expression,
+    unknown_gems,
 };
 use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
@@ -97,20 +98,49 @@ fn the_main_skill_should_be_the_main_groups_active_gem_with_its_supports() {
 fn keyword_flags_should_follow_the_skills_types() {
     let types =
         |names: &[&str]| -> BTreeSet<String> { names.iter().map(|n| (*n).to_owned()).collect() };
+    // Every skill that is not a totem's has `SKILL_NOT_TOTEM` (P6-11fo).
+    let nt = |f: Flags| f | Flags::SKILL_NOT_TOTEM;
     for (name, t) in KEYWORD_TYPES {
         assert_eq!(
             keyword_flags(&types(&["Spell", name])),
-            Flags::skill_keyword(t),
+            nt(Flags::skill_keyword(t)),
             "{name}"
         );
     }
     assert_eq!(
         keyword_flags(&types(&["Attack", "Fire", "Lightning"])),
-        Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING
+        nt(Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING)
+    );
+    // Totem, else trap, else mine (P6-11bk; `CalcActiveSkill.lua` 415).
+    assert_eq!(
+        keyword_flags(&types(&["Spell", TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])),
+        Flags::KEYWORD_TOTEM
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", TRAP_TYPE, MINE_TYPE])),
+        nt(Flags::KEYWORD_TRAP)
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", MINE_TYPE])),
+        nt(Flags::KEYWORD_MINE)
+    );
+    // "Projectile Attack Skills" (P6-11co): the `RangedAttack` type.
+    assert_eq!(
+        keyword_flags(&types(&["Attack", RANGED_ATTACK_TYPE])),
+        nt(Flags::SKILL_RANGED_ATTACK)
+    );
+    // "with Brand Skills", "Mark Skills" (P6-11cx).
+    assert_eq!(
+        keyword_flags(&types(&["Spell", "Brand"])),
+        nt(Flags::SKILL_BRAND)
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", "Mark"])),
+        nt(Flags::SKILL_MARK)
     );
     assert_eq!(
         keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),
-        Flags::NONE
+        nt(Flags::NONE)
     );
 }
 
@@ -126,7 +156,7 @@ fn a_type_a_support_adds_should_give_its_keyword() {
     )
     .unwrap()
     .keyword_flags();
-    assert_eq!(base, Flags::NONE);
+    assert_eq!(base, Flags::SKILL_NOT_TOTEM);
     let skills = data.skills.as_mut().unwrap();
     for e in &mut skills.granted_effects {
         if e.id == "SupportTestDamage" {
@@ -140,7 +170,10 @@ fn a_type_a_support_adds_should_give_its_keyword() {
     )
     .unwrap();
     assert!(m.types.contains("Cold"));
-    assert_eq!(m.keyword_flags(), Flags::SKILL_COLD);
+    assert_eq!(
+        m.keyword_flags(),
+        Flags::SKILL_COLD | Flags::SKILL_NOT_TOTEM
+    );
 }
 
 /// Phase 6: a gem the data does not have is skipped, as PoB does
@@ -170,6 +203,47 @@ fn an_unknown_gem_should_be_skipped_and_a_renamed_one_found_by_name() {
     // A name the gem's variants do not have: the gem is unknown.
     renamed.name = Some("Something Else".to_owned());
     assert_eq!(unknown_gems(&group(vec![renamed]), &data), [0]);
+}
+
+/// P6-11dm: a support under an old `skillId` is found by its name, which
+/// is its base item's without " Support" (a support has no active skill and
+/// the game's gem effect no name): Enlighten as PoB names it. "Increased
+/// Duration", the game's More Duration now, stays unknown, as PoB's
+/// `FindSkillGem` does not find it either.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_supports_under_old_skill_ids_should_be_found_by_name() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let mut enlighten = gem(
+        Some("Metadata/Items/Gems/SupportGemAdditionalXP"),
+        "SupportAdditionalXP",
+        3,
+        0,
+    );
+    enlighten.name = Some("Enlighten".to_owned());
+    let nova = gem(
+        Some("Metadata/Items/Gems/SkillGemIceNova"),
+        "IceNova",
+        20,
+        0,
+    );
+    let b = build(vec![group(vec![enlighten, nova])], 1);
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
+    let supports: Vec<_> = m.supports.iter().map(|s| s.effect.id.as_str()).collect();
+    assert_eq!(supports, ["SupportEnlighten"]);
+    let mut duration = gem(
+        Some("Metadata/Items/Gems/SupportGemIncreasedDuration"),
+        "SupportIncreasedDuration",
+        20,
+        0,
+    );
+    duration.name = Some("Increased Duration".to_owned());
+    assert_eq!(unknown_gems(&group(vec![duration]), &data), [0]);
 }
 
 #[test]
@@ -546,7 +620,23 @@ fn real_skill_types_should_name_the_keyword_types() {
     let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
     let data = common::bundle_at(std::path::Path::new(&dir));
     let skills = data.skills.as_ref().unwrap();
-    for (name, _) in KEYWORD_TYPES {
+    for name in KEYWORD_TYPES
+        .iter()
+        .map(|(name, _)| *name)
+        .chain([TOTEM_TYPE, TRAP_TYPE, MINE_TYPE])
+        // P6-11co, P6-11cx: the skill types the mapping reads.
+        .chain(
+            loom_calc::poe1::skill::SKILL_TYPE_FLAGS
+                .iter()
+                .map(|(name, _)| *name),
+        )
+        // P6-11cl: the typed supported levels' types.
+        .chain(
+            loom_calc::poe1::skill::SUPPORTED_TYPED_LEVEL_STATS
+                .iter()
+                .flat_map(|(_, types)| types.iter().copied()),
+        )
+    {
         assert!(
             skills.skill_types.iter().any(|t| t.id == name),
             "{name} is no skill type"
@@ -556,8 +646,18 @@ fn real_skill_types_should_name_the_keyword_types() {
         let active = data.active_skill(id).unwrap();
         keyword_flags(&active.types.iter().cloned().collect())
     };
-    assert_eq!(flags("ice_nova"), Flags::SKILL_COLD);
-    assert_eq!(flags("smite"), Flags::SKILL_LIGHTNING);
+    // Neither is a totem's (P6-11fo: `SKILL_NOT_TOTEM`).
+    assert_eq!(
+        flags("ice_nova"),
+        Flags::SKILL_COLD.union(Flags::SKILL_NOT_TOTEM)
+    );
+    // P6-11dw: Smite is a melee skill.
+    assert_eq!(
+        flags("smite"),
+        Flags::SKILL_LIGHTNING
+            .union(Flags::SKILL_MELEE)
+            .union(Flags::SKILL_NOT_TOTEM)
+    );
 }
 
 /// The real PoE1 bundle's gem colours (P3-12i): every granted effect has
@@ -661,5 +761,133 @@ fn real_gem_level_stats_should_have_pobs_keywords() {
                 "{stat}: {w}"
             );
         }
+    }
+    // The socketed rows (P6-11q): the words between "Level of Socketed"
+    // and "Gems", as PoB's `"([%+%-]%d+)%%? to (%a+) of socketed ?([%a%-
+    // ]*) gems"` reads them (none: `all`); each a gem tag or one of
+    // `calcLib.gemIsType`'s words.
+    for (stat, word) in SOCKETED_STATS {
+        assert!(!gem_names.contains(word), "{stat}");
+        let found: BTreeSet<String> = texts
+            .iter()
+            .filter(|(s, _)| *s == stat)
+            .map(|(_, text)| {
+                let rest = text
+                    .split_once(" to Level of Socketed ")
+                    .map(|(_, r)| format!(" {r}"))
+                    .unwrap_or_else(|| panic!("{stat}: {text}"));
+                let phrase = rest
+                    .strip_suffix(" Gems")
+                    .unwrap_or_else(|| panic!("{stat}: {text}"))
+                    .trim()
+                    .to_lowercase();
+                if phrase.is_empty() {
+                    "all".to_owned()
+                } else {
+                    phrase
+                }
+            })
+            .collect();
+        // The hex stat's text says "Curse", as the curse stat's does.
+        assert_eq!(found, BTreeSet::from([word.to_owned()]), "{stat}");
+        assert!(
+            tags.contains(word)
+                || [
+                    "all",
+                    "skill",
+                    "aoe",
+                    "elemental",
+                    "non-vaal",
+                    "trap or mine"
+                ]
+                .contains(&word),
+            "{stat}: {word}"
+        );
+    }
+}
+
+/// Each item support row (P6-11r) names the gem its stat's English line
+/// names: the line is "... Supported by Level <n> <Name>", the bundle has
+/// a gem whose base item is "<Name> Support" (or "<Name>", a support),
+/// and the row's effects are that gem's first effect's support effects,
+/// as PoB's `extraSupport` adds them.
+/// Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_item_support_rows_should_name_their_gems() {
+    use loom_calc::poe1::item_supports::ROWS;
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let skills = data.skills.as_ref().unwrap();
+    let texts: Vec<(&str, &str)> = data
+        .stat_descriptions
+        .files()
+        .flat_map(|(_, f)| &f.descriptions)
+        .filter(|d| d.stats.len() == 1)
+        .flat_map(|d| {
+            d.variants
+                .iter()
+                .map(move |v| (d.stats[0].as_str(), v.text.as_str()))
+        })
+        .collect();
+    for (stat, level, effects) in ROWS {
+        // A stat can have several variants (one per value range): the row
+        // reads one whose level is the stat's value (`level` 0) or the
+        // fixed level.
+        let name = texts
+            .iter()
+            .filter(|(s, _)| *s == stat)
+            .find_map(|(_, text)| {
+                let (lead, rest) = text.split_once(" Supported by Level ")?;
+                let (n, name) = rest.split_once(' ')?;
+                let fits = if level == 0 {
+                    n.contains('{')
+                } else {
+                    n == level.to_string()
+                };
+                (lead.starts_with("Socketed ") && fits).then_some(name)
+            })
+            .unwrap_or_else(|| panic!("{stat}: no fitting text"));
+        // "<Name> Support" first, as PoB's `gemForBaseName` lookup.
+        let named = |wanted: &str| {
+            skills.gems.iter().find(|g| {
+                data.base_items
+                    .iter()
+                    .any(|b| b.id == g.base_item && b.name.eq_ignore_ascii_case(wanted))
+            })
+        };
+        // PoB's one hand entry in `gemIdLookup` (`ModParser.lua` 2033).
+        let name = if name == "Power Charge On Critical Strike" {
+            "Power Charge On Critical"
+        } else {
+            name
+        };
+        let gem = named(&format!("{name} Support"))
+            .or_else(|| named(name))
+            .unwrap_or_else(|| panic!("{stat}: no gem for {name}"));
+        let first = gem
+            .effects
+            .first()
+            .and_then(|id| skills.gem_effects.iter().find(|e| &e.id == id))
+            .unwrap_or_else(|| panic!("{stat}: no gem effect"));
+        // The gem's support effects (the bundle can list an active skill
+        // first, where PoB's gem table puts the support first).
+        let want: Vec<&str> = first
+            .granted_effect
+            .iter()
+            .chain(&first.additional_granted_effects)
+            .map(String::as_str)
+            .filter(|id| {
+                skills
+                    .granted_effects
+                    .iter()
+                    .any(|g| g.id == *id && g.support)
+            })
+            .collect();
+        assert_eq!(effects.to_vec(), want, "{stat}");
     }
 }

@@ -55,6 +55,10 @@ fn effect(id: &str, active: &str) -> GrantedEffect {
             attack_speed_multiplier: -20,
             attack_time: 0,
             reservations: Vec::new(),
+            level_requirement: 0,
+            vaal_souls: 0,
+            vaal_stored_uses: 0,
+            soul_gain_prevention: 0,
         }],
         quality: Vec::new(),
     }
@@ -107,6 +111,10 @@ fn intimidating_cry_effect() -> GrantedEffect {
             attack_speed_multiplier: 0,
             attack_time: 0,
             reservations: Vec::new(),
+            level_requirement: 0,
+            vaal_souls: 0,
+            vaal_stored_uses: 0,
+            soul_gain_prevention: 0,
         }],
         ..effect("IntimidatingCry", "intimidating-cry")
     }

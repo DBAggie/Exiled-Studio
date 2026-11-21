@@ -30,16 +30,184 @@
 //!
 //! Each row's keywords are the words of its English description between
 //! "Level of all" and "Gems", lower-cased, as PoB's pattern reads them (a
-//! real-bundle test checks every row). Gem level stats that depend on the
-//! socket ("+1 to Level of Socketed Gems") or name a gem stay unmapped:
-//! reasons.
+//! real-bundle test checks every row). Gem level stats that name a gem
+//! stay unmapped: reasons.
+//!
+//! **Socketed gems (P6-11q).** PoB reads "+N to Level of Socketed <words>
+//! Gems" as a `GemProperty` LIST modifier `{ keyword = <the words>, key =
+//! "level", value = N }` with the tag `SocketedIn` for the item's slot
+//! (`ModParser.lua` 3178 to 3182; no words: `all`). A group tabulates its
+//! `GemProperty` modifiers with its slot (`CalcSetup.lua` 1631 to 1638:
+//! the group's slot without " Swap"), so the item's levels reach every gem
+//! of a group in the item's slot whose gem matches the keyword (`ModStore`
+//! 719 to 760, `applyGemMods`). The stats of [`SOCKETED_STATS`] on an item
+//! in an equipment slot map to [`Poe1Quantity::SocketedGemLevel`] for that
+//! slot ([`InSlot`]); [`GemLevels::bonus`] adds them to the gems of the
+//! groups in that slot. The socketed stats that scale with a count ("per
+//! Socketed Gem", "per # Player Levels") or hold only with one gem
+//! socketed stay unmapped: reasons.
 
 use std::collections::BTreeMap;
 
+use loom_domain::StatId;
+
 use super::Poe1Quantity;
+use crate::condition::Conditions;
+use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
 use crate::quantity::{Op, Quantity};
 use crate::source::Source;
 use crate::store::Effect;
+use loom_domain::TypedResolution;
+
+/// The socketed gem level stats and their keyword (module docs): the
+/// words of "+# to Level of Socketed <words> Gems", lower-cased (none:
+/// `all`), sorted by stat ID. The hex stat's text says "Curse".
+pub const SOCKETED_STATS: [(&str, &str); 30] = [
+    ("local_socketed_active_skill_gem_level_+", "skill"),
+    ("local_socketed_area_of_effect_gem_level_+", "aoe"),
+    ("local_socketed_aura_gem_level_+", "aura"),
+    ("local_socketed_bow_gem_level_+", "bow"),
+    ("local_socketed_chaos_gem_level_+", "chaos"),
+    ("local_socketed_cold_gem_level_+", "cold"),
+    ("local_socketed_curse_gem_level_+", "curse"),
+    ("local_socketed_dexterity_gem_level_+", "dexterity"),
+    ("local_socketed_duration_gem_level_+", "duration"),
+    ("local_socketed_elemental_gem_level_+", "elemental"),
+    ("local_socketed_fire_gem_level_+", "fire"),
+    ("local_socketed_gem_level_+", "all"),
+    ("local_socketed_golem_gem_level_+", "golem"),
+    ("local_socketed_herald_gem_level_+", "herald"),
+    ("local_socketed_hex_gem_level_+", "curse"),
+    ("local_socketed_intelligence_gem_level_+", "intelligence"),
+    ("local_socketed_lightning_gem_level_+", "lightning"),
+    ("local_socketed_melee_gem_level_+", "melee"),
+    ("local_socketed_minion_gem_level_+", "minion"),
+    ("local_socketed_movement_gem_level_+", "movement"),
+    ("local_socketed_non_vaal_gem_level_+", "non-vaal"),
+    ("local_socketed_physical_gem_level_+", "physical"),
+    ("local_socketed_projectile_gem_level_+", "projectile"),
+    ("local_socketed_spell_gem_level_+", "spell"),
+    ("local_socketed_strength_gem_level_+", "strength"),
+    ("local_socketed_support_gem_level_+", "support"),
+    ("local_socketed_trap_and_mine_gem_level_+", "trap or mine"),
+    ("local_socketed_trap_gem_level_+", "trap"),
+    ("local_socketed_vaal_gem_level_+", "vaal"),
+    ("local_socketed_warcry_gem_level_+", "warcry"),
+];
+
+/// An equipment slot whose item's socketed gem levels reach the groups
+/// socketed in it (P6-11q).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum GemSlot {
+    /// The main hand.
+    Weapon1,
+    /// The off hand.
+    Weapon2,
+    /// The helmet.
+    Helmet,
+    /// The body armour.
+    BodyArmour,
+    /// The gloves.
+    Gloves,
+    /// The boots.
+    Boots,
+}
+
+impl GemSlot {
+    /// The slot of PoB's slot name, " Swap" dropped as PoB drops it for a
+    /// group's slot (`CalcSetup.lua` 1634). `None`: a slot without gem
+    /// sockets (jewellery, flasks, jewels).
+    #[must_use]
+    pub fn of(slot: &str) -> Option<Self> {
+        Some(match slot.strip_suffix(" Swap").unwrap_or(slot) {
+            "Weapon 1" => Self::Weapon1,
+            "Weapon 2" => Self::Weapon2,
+            "Helmet" => Self::Helmet,
+            "Body Armour" => Self::BodyArmour,
+            "Gloves" => Self::Gloves,
+            "Boots" => Self::Boots,
+            _ => return None,
+        })
+    }
+
+    /// The slot of an armour piece's slot.
+    #[must_use]
+    pub const fn of_armour(slot: super::ArmourSlot) -> Self {
+        match slot {
+            super::ArmourSlot::Helmet => Self::Helmet,
+            super::ArmourSlot::Gloves => Self::Gloves,
+            super::ArmourSlot::Boots => Self::Boots,
+            super::ArmourSlot::BodyArmour => Self::BodyArmour,
+            super::ArmourSlot::Weapon2 => Self::Weapon2,
+        }
+    }
+
+    /// Stable name: PoB's slot name lowercased, spaces as `-`.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Weapon1 => "weapon-1",
+            Self::Weapon2 => "weapon-2",
+            Self::Helmet => "helmet",
+            Self::BodyArmour => "body-armour",
+            Self::Gloves => "gloves",
+            Self::Boots => "boots",
+        }
+    }
+}
+
+/// The quantity of a socketed gem level stat on an item in `slot`, if the
+/// stat is one of [`SOCKETED_STATS`].
+#[must_use]
+pub fn socketed_quantity(stat: &str, slot: GemSlot) -> Option<Quantity> {
+    if stat == SOCKETED_COST_STAT {
+        return Some(Quantity::Poe1(Poe1Quantity::SocketedCostMultiplier(slot)));
+    }
+    SOCKETED_STATS
+        .binary_search_by(|(id, _)| (*id).cmp(stat))
+        .ok()
+        .map(|i| Quantity::Poe1(Poe1Quantity::SocketedGemLevel(SOCKETED_STATS[i].0, slot)))
+}
+
+/// "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (P6-11bi;
+/// the game's stat ID keeps its misspelling).
+pub const SOCKETED_COST_STAT: &str = "local_display_socketed_gems_get_mana_multplier_%";
+
+/// The mapping of the lines of an item in an equipment slot: its socketed
+/// gem level stats act on the groups in `slot` (module docs); every other
+/// stat is `inner`'s.
+pub struct InSlot<'a> {
+    /// The item's mapping otherwise.
+    pub inner: &'a dyn StatMapping,
+    /// The item's slot.
+    pub slot: GemSlot,
+}
+
+impl StatMapping for InSlot<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        // A support the item grants its socketed gems (P6-11r).
+        let support = super::item_supports::row(stat.as_str())
+            .map(|(id, _, _)| Quantity::Poe1(Poe1Quantity::ItemSupport(id, self.slot)));
+        match socketed_quantity(stat.as_str(), self.slot).or(support) {
+            Some(quantity) => StatMap::Effects(vec![EffectTemplate {
+                quantity,
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]),
+            None => self.inner.map(stat),
+        }
+    }
+
+    fn typed(&self, resolution: &TypedResolution, source: &Source) -> TypedMap {
+        self.inner.typed(resolution, source)
+    }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        self.inner.elsewhere(quantity)
+    }
+}
 
 /// The global gem level stats and their keywords (module docs), sorted by
 /// stat ID.
@@ -113,6 +281,14 @@ pub fn is_type(tags: &[String], keyword: &str) -> bool {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct GemLevels {
     totals: BTreeMap<&'static str, f64>,
+    /// The socketed totals per slot and stat of [`SOCKETED_STATS`].
+    socketed: BTreeMap<(GemSlot, &'static str), f64>,
+    /// The supports items grant (P6-11r): slot, row stat, level, in the
+    /// order the effects were added.
+    supports: Vec<(GemSlot, &'static str, i64)>,
+    /// The cost and reservation multipliers items give the skills in a
+    /// slot (P6-11bi), in percent.
+    cost: Vec<(GemSlot, f64)>,
 }
 
 impl GemLevels {
@@ -134,21 +310,78 @@ impl GemLevels {
     #[must_use]
     pub fn from_effects(effects: &[Effect]) -> Self {
         let mut totals = BTreeMap::new();
+        let mut socketed = BTreeMap::new();
+        let mut supports = Vec::new();
+        let mut cost = Vec::new();
         for e in effects {
-            if matches!(e.source, Source::Gem { .. }) {
+            if matches!(e.source, Source::Gem { .. }) || e.op != Op::Base {
                 continue;
             }
-            if let (Quantity::Poe1(Poe1Quantity::GemLevel(stat)), Op::Base) = (e.quantity, e.op) {
-                *totals.entry(stat).or_insert(0.0) += e.value;
+            match e.quantity {
+                Quantity::Poe1(Poe1Quantity::GemLevel(stat)) => {
+                    *totals.entry(stat).or_insert(0.0) += e.value;
+                }
+                Quantity::Poe1(Poe1Quantity::SocketedGemLevel(stat, slot)) => {
+                    *socketed.entry((slot, stat)).or_insert(0.0) += e.value;
+                }
+                Quantity::Poe1(Poe1Quantity::SocketedCostMultiplier(slot)) => {
+                    cost.push((slot, e.value));
+                }
+                Quantity::Poe1(Poe1Quantity::ItemSupport(stat, slot)) => {
+                    let fixed = super::item_supports::row(stat).map_or(0, |(_, l, _)| l);
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "a gem level, a small integer stat value"
+                    )]
+                    let level = if fixed > 0 {
+                        fixed
+                    } else {
+                        e.value.round() as i64
+                    };
+                    supports.push((slot, stat, level));
+                }
+                _ => {}
             }
         }
-        Self { totals }
+        Self {
+            totals,
+            socketed,
+            supports,
+            cost,
+        }
     }
 
-    /// The levels a gem with `tags` gains (`None`: a skill an item grants,
-    /// which has no gem). Stat values are integers, so the sum is exact.
+    /// The cost and reservation multipliers, in percent, the item in
+    /// `slot` gives its socketed skills (P6-11bi); none without a slot.
     #[must_use]
-    pub fn bonus(&self, tags: Option<&[String]>) -> i64 {
+    pub fn cost_multipliers(&self, slot: Option<GemSlot>) -> Vec<f64> {
+        self.cost
+            .iter()
+            .filter(|(s, _)| Some(*s) == slot)
+            .map(|(_, v)| *v)
+            .collect()
+    }
+
+    /// The supports items grant the groups in `slot` (P6-11r): each
+    /// granted effect with its level, in PoB's order (the effects' order,
+    /// each row's effects in order).
+    pub fn item_supports(&self, slot: GemSlot) -> impl Iterator<Item = (&'static str, i64)> + '_ {
+        self.supports
+            .iter()
+            .filter(move |(s, _, _)| *s == slot)
+            .flat_map(|&(_, stat, level)| {
+                super::item_supports::row(stat)
+                    .map_or(&[][..], |(_, _, effects)| effects)
+                    .iter()
+                    .map(move |e| (*e, level))
+            })
+    }
+
+    /// The levels a gem with `tags` gains in a group in `slot` (`tags`
+    /// `None`: a skill an item grants, which has no gem). Stat values are
+    /// integers, so the sum is exact.
+    #[must_use]
+    pub fn bonus(&self, tags: Option<&[String]>, slot: Option<GemSlot>) -> i64 {
         let Some(tags) = tags else { return 0 };
         let mut sum = 0.0;
         for (id, words) in LEVEL_STATS {
@@ -156,6 +389,15 @@ impl GemLevels {
                 && words.iter().all(|w| is_type(tags, w))
             {
                 sum += v;
+            }
+        }
+        if let Some(slot) = slot {
+            for (id, word) in SOCKETED_STATS {
+                if let Some(v) = self.socketed.get(&(slot, id))
+                    && is_type(tags, word)
+                {
+                    sum += v;
+                }
             }
         }
         debug_assert!(sum.fract() == 0.0, "gem levels are whole: {sum}");
@@ -170,7 +412,7 @@ impl GemLevels {
     /// Whether the build has any gem level modifier.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.totals.is_empty()
+        self.totals.is_empty() && self.socketed.is_empty() && self.supports.is_empty()
     }
 }
 
@@ -229,22 +471,22 @@ mod tests {
             level("critical_support_gem_level_+", 2.0),
         ]);
         let ice_nova = tags(&["intelligence", "grants_active_skill", "spell", "cold"]);
-        assert_eq!(levels.bonus(Some(&ice_nova)), 5);
+        assert_eq!(levels.bonus(Some(&ice_nova), None), 5);
         let herald = tags(&["grants_active_skill", "cold", "herald", "aura"]);
-        assert_eq!(levels.bonus(Some(&herald)), 2);
+        assert_eq!(levels.bonus(Some(&herald), None), 2);
         let support = tags(&["support", "cold", "critical"]);
-        assert_eq!(levels.bonus(Some(&support)), 2);
-        assert_eq!(levels.bonus(None), 0);
+        assert_eq!(levels.bonus(Some(&support), None), 2);
+        assert_eq!(levels.bonus(None, None), 0);
         assert!(!levels.is_empty());
         assert!(GemLevels::none().is_empty());
-        assert_eq!(GemLevels::none().bonus(Some(&ice_nova)), 0);
+        assert_eq!(GemLevels::none().bonus(Some(&ice_nova), None), 0);
     }
 
     #[test]
     fn a_negative_total_should_lower_the_level() {
         let levels = GemLevels::from_effects(&[level("spell_skill_gem_level_+", -2.0)]);
         assert_eq!(
-            levels.bonus(Some(&tags(&["grants_active_skill", "spell"]))),
+            levels.bonus(Some(&tags(&["grants_active_skill", "spell"])), None),
             -2
         );
     }
@@ -255,6 +497,60 @@ mod tests {
         other.op = Op::Increased;
         let levels = GemLevels::from_effects(&[other]);
         assert!(levels.is_empty());
+    }
+
+    fn socketed(stat: &'static str, slot: GemSlot, value: f64) -> Effect {
+        Effect {
+            quantity: socketed_quantity(stat, slot).expect("a socketed level stat"),
+            op: Op::Base,
+            value,
+            conditions: Conditions::none(),
+            source: Source::Rule("test"),
+        }
+    }
+
+    #[test]
+    fn socketed_levels_should_reach_only_their_slots_matching_gems() {
+        let levels = GemLevels::from_effects(&[
+            socketed("local_socketed_gem_level_+", GemSlot::Helmet, 1.0),
+            socketed("local_socketed_support_gem_level_+", GemSlot::Helmet, 2.0),
+            socketed("local_socketed_cold_gem_level_+", GemSlot::BodyArmour, 1.0),
+            level("cold_skill_gem_level_+", 1.0),
+        ]);
+        let ice_nova = tags(&["intelligence", "grants_active_skill", "spell", "cold"]);
+        let support = tags(&["cold", "support", "intelligence"]);
+        assert_eq!(levels.bonus(Some(&ice_nova), Some(GemSlot::Helmet)), 2);
+        assert_eq!(levels.bonus(Some(&support), Some(GemSlot::Helmet)), 3);
+        assert_eq!(levels.bonus(Some(&ice_nova), Some(GemSlot::BodyArmour)), 2);
+        assert_eq!(levels.bonus(Some(&support), Some(GemSlot::BodyArmour)), 1);
+        assert_eq!(levels.bonus(Some(&ice_nova), Some(GemSlot::Boots)), 1);
+        assert_eq!(levels.bonus(Some(&ice_nova), None), 1);
+        assert_eq!(levels.bonus(None, Some(GemSlot::Helmet)), 0);
+    }
+
+    #[test]
+    fn socketed_table_should_be_sorted_and_slots_named() {
+        assert!(SOCKETED_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert_eq!(GemSlot::of("Weapon 1 Swap"), Some(GemSlot::Weapon1));
+        assert_eq!(GemSlot::of("Body Armour"), Some(GemSlot::BodyArmour));
+        assert_eq!(GemSlot::of("Ring 1"), None);
+        assert_eq!(GemSlot::of("Weapon 1 Abyssal Socket 1"), None);
+        assert!(
+            socketed_quantity(
+                "local_socketed_gem_level_+_per_filled_socket",
+                GemSlot::Helmet
+            )
+            .is_none()
+        );
+        let Some(Quantity::Poe1(q)) =
+            socketed_quantity("local_socketed_gem_level_+", GemSlot::Gloves)
+        else {
+            panic!("quantity");
+        };
+        assert_eq!(
+            q.to_string(),
+            "socketed-gem-level.gloves.local_socketed_gem_level_+"
+        );
     }
 
     #[test]

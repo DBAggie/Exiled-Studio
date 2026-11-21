@@ -17,23 +17,38 @@ pub mod ailment;
 pub mod buffs;
 pub mod charges;
 pub mod collect;
+pub mod combined;
 pub mod conditions;
 pub mod config;
+pub mod costs;
 pub mod damage_taken;
+pub mod devotion;
 pub mod dot;
+pub mod ehp;
 pub mod enemy;
+pub mod enemy_hit;
+pub mod evade;
 pub mod exposure;
 pub mod flasks;
+pub mod full_dps;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
+pub mod item_supports;
 pub mod item_values;
 pub mod keystones;
+pub mod leech;
 pub mod mapping;
 pub mod minion_actor;
+pub mod minion_hit;
 pub mod minions;
+pub mod movement;
 pub mod pantheon;
 pub mod pob_minion;
+pub mod reduction;
+pub mod regen;
+pub mod repeats;
+pub mod resist_conversion;
 #[rustfmt::skip]
 pub mod pob_minions;
 pub mod pob_skill;
@@ -46,6 +61,8 @@ pub mod skill_no_output;
 pub mod sockets;
 pub mod stacks;
 pub mod states;
+pub mod taken;
+pub mod triggers;
 
 pub use mapping::Poe1Mapping;
 pub use pantheon::Poe1Data;
@@ -109,6 +126,87 @@ pub enum Poe1Quantity {
     /// [`exposure`] adds them; a hit adds their sum to the enemy's base
     /// resistance before its maximum ([`hit`]).
     EnemyResistance(DamageType),
+    /// A modifier of one end of a hit's damage range (P6-11bo; PoB's
+    /// `calcDamage`, `CalcOffence.lua` 113 to 138): with no type, PoB's
+    /// `MinDamage` and `MaxDamage` MORE, on the type's damage before what
+    /// other types convert to it; with a type, `Min<Type>Damage` and
+    /// `Max<Type>Damage` MORE and INC, on the sum after it.
+    BoundDamage(Option<DamageType>, Bound),
+    /// Ruthless's terms (P6-11bt; PoB's `RuthlessBlowMaxCount`,
+    /// `RuthlessBlowHitMultiplier`, `RuthlessBlowAilmentMultiplier` BASE):
+    /// read by the hit ([`hit::ruthless_effect`]) and its bleed and poison.
+    Ruthless(RuthlessValue),
+    /// "#% increased Spell Damage per 100 Maximum Mana, up to 40%" (P6-11bw;
+    /// PoB's `Damage` INC with `ModFlag.Spell`, `PerStat` `Mana`, `div`
+    /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
+    /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
+    SpellDamagePer100Mana,
+    /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
+    /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
+    AttackDamagePer450Armour,
+    /// Maximum life gained as extra maximum energy shield, percent (PoB's
+    /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
+    /// phase as one more row.
+    LifeAsEnergyShield,
+    /// Elemental resistances are capped by the highest maximum elemental
+    /// resistance (PoB's `ElementalResistMaxIsHighestResistMax`, Melding of
+    /// the Flesh; P6-11dh): a `Flag` the resistance phase reads.
+    ElementalResistMaxIsHighest,
+    /// Trap throwing speed (PoB's `TrapThrowingSpeed`; P6-11cy):
+    /// `Increased` and `More`, read by [`hit`]'s trap rate.
+    TrapThrowingSpeed,
+    /// Mine laying speed (PoB's `MineLayingSpeed`; P6-11cy): `Increased`
+    /// and `More`, read by [`hit`]'s mine rate.
+    MineLayingSpeed,
+    /// A chance to treat the enemy's elemental resistances as inverted
+    /// (P6-11bx; PoB's `HitsInvertEleResChance` CHANCE, the stat over 100):
+    /// `Base`, a fraction, read by the hit's effective resistance.
+    InvertElementalResistChance,
+    /// "#% increased Armour and Energy Shield from Equipped Body Armour if
+    /// Equipped Helmet, Gloves and Boots all have Armour and Energy Shield"
+    /// (P6-11by; PoB's `Body ArmourESAndArmour` INC with six
+    /// `StatThreshold` tags, `ModParser.lua` 2478): `Increased`, read by the
+    /// body armour's armour and energy shield rows when the three pieces
+    /// each have both.
+    BodyArmourIfHybridPieces,
+    /// The enemy's damage taken while ignited (P6-11bz; a flask's "Enemies
+    /// Ignited by you during Effect take #% increased Damage", PoB's
+    /// `EnemyModifier` `DamageTaken` INC with the enemy's `Ignited`):
+    /// `Increased`, read by [`damage_taken`] under the config's check.
+    IgnitedEnemyDamageTaken,
+    /// The enemy's damage taken on consecrated ground, unscaled by the
+    /// ground's effect (P6-11bz; a flask's "Consecrated Ground created during
+    /// Effect applies #% increased Damage taken to Enemies", PoB's
+    /// `EnemyModifier` `DamageTaken` INC with `OnConsecratedGround`):
+    /// `Increased`, read by [`damage_taken`] under the config's check.
+    ConsecratedEnemyDamageTaken,
+    /// Critical strike chance against an enemy on consecrated ground
+    /// (P6-11ca; a flask's "+#% to Critical Strike Chance against Enemies on
+    /// Consecrated Ground during Effect", PoB's `CritChance` BASE with the
+    /// enemy's `OnConsecratedGround`): `Base`, read by [`damage_taken`]
+    /// under the config's check.
+    ConsecratedCritChance,
+    /// "Maximum Energy Shield is increased by Chance to Block Spell Damage"
+    /// (P6-11cb; PoB's `EnergyShieldIncreasedByChanceToBlockSpellDamage`
+    /// flag, `CalcDefence.lua` 812 to 817: `EnergyShield` INC by the spell
+    /// block chance): `Flag`, read by the primary defences.
+    EnergyShieldFromSpellBlock,
+    /// "Maximum Energy Shield is increased by Chaos Resistance" (P6-11cb;
+    /// PoB's `EnergyShieldIncreasedByChaosResistance`, 819 to 824: by the
+    /// chaos resistance): `Flag`, read by the primary defences.
+    EnergyShieldFromChaosResistance,
+    /// The share of life lost to hits that is lost over 4 seconds instead
+    /// (P6-11ce; PoB's `LifeLossPrevented` BASE, at most 100; a flask's
+    /// "When Hit during effect, #% of Life loss from Damage taken occurs
+    /// over 4 seconds instead"): `Base`, read by the enemy's hit and the
+    /// defence estimate's pools.
+    LifeLossPrevented,
+    /// "#% increased Effect of Arcane Surge on you" (P6-11ch; PoB's
+    /// `ArcaneSurgeEffect` INC): `Increased`, read by [`buffs`].
+    ArcaneSurgeEffect,
+    /// "Arcane Surge also grants #% more Spell Damage to you" (P6-11ch;
+    /// PoB's `ArcaneSurgeDamage` MAX): `Base`, the largest read by [`buffs`].
+    ArcaneSurgeDamage,
     /// A chance to inflict exposure of an elemental damage type (PoB's
     /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
     /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
@@ -151,6 +249,21 @@ pub enum Poe1Quantity {
     /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
     /// skills are set up, as PoB reads its `GemProperty` modifiers.
     GemLevel(&'static str),
+    /// A socketed gem level stat of [`gem_levels::SOCKETED_STATS`] on the
+    /// item in a slot (P6-11q): `Base`, read by [`gem_levels::GemLevels`]
+    /// for the gems of the groups in that slot.
+    SocketedGemLevel(&'static str, gem_levels::GemSlot),
+    /// "Socketed Skill Gems get a #% Cost & Reservation Multiplier" on the
+    /// item in a slot (P6-11bi; PoB's `ExtraSkillMod`
+    /// `SupportManaMultiplier` MORE of the value less 100): `Base`, the
+    /// multiplier in percent, read by [`gem_levels::GemLevels`] for the
+    /// skills of the groups in that slot.
+    SocketedCostMultiplier(gem_levels::GemSlot),
+    /// A support an item grants the gems in its slot, by the stat of
+    /// [`item_supports::ROWS`] (P6-11r): `Base`, the stat's value (the
+    /// support's level unless the row fixes it), read by
+    /// [`gem_levels::GemLevels`] for the groups in that slot.
+    ItemSupport(&'static str, gem_levels::GemSlot),
     /// A minion modifier (P3-8j): "Minions deal #% increased Damage" and
     /// kin, `Increased`. No minion is computed; only [`minions`] reads
     /// them, to give the character those a redirect names.
@@ -159,16 +272,219 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
-    /// A minion modifier PoB applies to the minion's life or defences
-    /// ("Minions have #% increased maximum Life", the golems'; P6-7b3a): a
-    /// `Flag` no character field reads; the minion step makes each one a
-    /// reason on the minion fields until P6-7b3b applies them.
-    MinionPending,
+    /// Block chance per 5% of another block chance (PoB's `PerStat` tag
+    /// with `div = 5`; P6-11f): `Base`, read by [`phases`]. `true`: spell
+    /// block per 5% chance to block attack damage (`BlockChance`); `false`:
+    /// attack block per 5% chance to block on the equipped shield
+    /// (`ShieldBlockChance`).
+    BlockPer5(bool),
+    /// The enemy's projectile damage taken (PoB's `ProjectileDamageTaken`
+    /// INC on the enemy; Sniper's Mark, P6-9e): `Increased`, read only by a
+    /// projectile hit ([`hit`]).
+    EnemyProjectileDamageTaken,
+    /// The enemy's damage taken from trap and mine hits (PoB's
+    /// `TrapMineDamageTaken` INC on the enemy; Bear Trap, P6-11fj):
+    /// `Increased`, read only by a trap or mine skill's hit ([`hit`]).
+    EnemyTrapMineDamageTaken,
+    /// The enemy's damage taken from projectile attack hits (PoB's
+    /// `ProjectileAttackDamageTaken` INC on the enemy; Ensnaring Arrow,
+    /// P6-11fn): `Increased`, read only by a projectile attack's hit
+    /// ([`hit`]).
+    EnemyProjectileAttackDamageTaken,
+    /// The enemy never deals critical strikes (PoB's `NeverCrit` flag on
+    /// the enemy; Hexpass, P6-11fl): a `Flag`, read by the defence
+    /// estimate's enemy crit ([`enemy_hit`]).
+    EnemyNeverCrit,
+    /// A pool's regeneration (P6-10b): `Base` the flat amount per second
+    /// (PoB's `<Pool>Regen` BASE), `Increased` and `More` its rate, read by
+    /// [`regen`].
+    Regen(Pool),
+    /// A pool's regeneration as a percent of the pool per second (PoB's
+    /// `<Pool>RegenPercent` BASE; P6-10b): `Base`, read by [`regen`].
+    RegenPercent(Pool),
+    /// A pool's regeneration as a percent of the pool per minute (the
+    /// game's per-minute stats on a state row, which has no scale; P6-10b):
+    /// `Base`, read by [`regen`] divided by 60.
+    RegenPercentPerMinute(Pool),
+    /// A pool's flat regeneration per minute (a state row's per-minute
+    /// stat, which has no scale; P6-10b): `Base`, read by [`regen`] divided
+    /// by 60.
+    RegenPerMinute(Pool),
+    /// A pool's increased regeneration rate per 1% chance to block spell
+    /// damage (PoB's `<Pool>Regen` INC with `PerStat` `SpellBlockChance`,
+    /// P6-11t): `Base`, read by [`regen`] times the spell block chance,
+    /// floored.
+    RegenIncPerSpellBlock(Pool),
+    /// A pool's flat regeneration per second per 1% uncapped fire
+    /// resistance (PoB's `<Pool>Regen` BASE with `PerStat`
+    /// `FireResistTotal`, P6-11t): `Base`, read by [`regen`] times the
+    /// resistance's total, floored.
+    RegenPerFireResist(Pool),
+    /// Regeneration in percent of the pool per minute per fortification
+    /// stack (P6-11bu; PoB's `<Pool>RegenPercent` BASE per `PerStat`
+    /// `FortificationStacks`): `Base`, read by [`regen`] times the stacks
+    /// ([`enemy_hit::fortification_stacks`]).
+    RegenPerFortification(Pool),
+    /// A stat that changes a pool's regeneration in a way the engine does
+    /// not model (P6-10b; [`mapping::REGEN_REASONS`]): a `Flag` only
+    /// [`regen`] reads, as that field's `unmapped-stat` reason, so the
+    /// character's other fields keep their state.
+    RegenReason(Pool, &'static str),
+    /// A pool's recovery rate (PoB's `<Pool>RecoveryRate`; P6-10b):
+    /// `Increased` and `More`, read by [`regen`].
+    RecoveryRate(Pool),
+    /// Energy shield's recharge rate (PoB's `EnergyShieldRecharge`; P6-10b):
+    /// `Increased` and `More`, read by [`regen`].
+    EnergyShieldRecharge,
+    /// The faster start of energy shield's recharge (PoB's
+    /// `EnergyShieldRechargeFaster`; P6-10b): `Increased`, read by [`regen`].
+    EnergyShieldRechargeFaster,
+    /// Zealot's Oath (PoB's `ZealotsOath`; P6-10b): a `Flag`, read by
+    /// [`regen`].
+    ZealotsOath,
+    /// "You have Consecrated Ground around you while stationary" (PoB's
+    /// `Condition:OnConsecratedGround` with `Condition:Stationary`; P6-10b):
+    /// a `Flag`, read by [`buffs`].
+    ConsecratedWhileStationary,
+    /// Arcane Surge's increased mana regeneration from its sources (PoB's
+    /// `ArcaneSurgeManaRegen`, read as its largest; P6-10b): `Base`, read
+    /// by [`buffs`].
+    ArcaneSurgeManaRegen,
+    /// A hit's chance to ignore the enemy's physical damage reduction (PoB's
+    /// `ChanceToIgnoreEnemyPhysicalDamageReduction`; P6-11j): `Base`, read
+    /// by a hit's armour ([`hit`]).
+    IgnorePdrChance,
+    /// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
+    /// BASE on the enemy; Poacher's Mark, P6-9e): `Base`, added to the
+    /// armour reduction of a physical hit, and alone for physical damage
+    /// over time ([`hit`]).
+    EnemyPhysicalDamageReduction,
+    /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
+    /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
+    CurseLimit,
+    /// A minion modifier for golems only ("Golems have #% increased
+    /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
+    /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
+    /// minion step applies it when the main skill is a golem skill.
+    GolemMinion(minions::MinionValue),
     /// Reservation efficiency of a pool, or of both (PoB's
     /// `<Pool>ReservationEfficiency` and `ReservationEfficiency`, P3-8l):
     /// `Increased`, read by [`skill_modifiers::Totals`] for the other
     /// gems' reservation.
     ReservationEfficiency(Option<Pool>),
+    /// Mana reservation efficiency of herald skills (PoB's
+    /// `ManaReservationEfficiency` INC tagged `SkillType.Herald`; P6-11ag):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for a skill typed
+    /// `Herald`.
+    HeraldManaReservationEfficiency,
+    /// The skill's additional repeats (PoB's `RepeatCount` BASE; P6-11aj),
+    /// read by [`repeats`].
+    RepeatCount,
+    /// The damage of the `n`th repeat (PoB's `RepeatOneDamage` to
+    /// `RepeatThreeDamage` MORE; P6-11aj).
+    RepeatDamage(u8),
+    /// Damage per repeat (PoB's `RepeatPerRepeatDamage` MORE; P6-11aj).
+    RepeatPerRepeatDamage,
+    /// The final repeat's chance to deal double damage (PoB's
+    /// `RepeatFinalDoubleDamageChance` BASE; P6-11aj).
+    RepeatFinalDoubleDamageChance,
+    /// The `Damage` MORE [`repeats`] derives (P6-11aj): read with the
+    /// hit's `Damage` MORE, apart from it (PoB multiplies it in without
+    /// rounding it with the skill's other `Damage` MORE: a PoB oracle
+    /// probe, `docs/phase-6/stat-mop-up.md`, "P6-11aj").
+    RepeatAverageDamage,
+    /// What the character recovers when it blocks (PoB's `LifeOnBlock`,
+    /// `EnergyShieldOnBlock`, `EnergyShieldOnSpellBlock` BASE; P6-11ak),
+    /// read by [`enemy_hit`] for the effective health pool.
+    BlockGain(BlockGain),
+    /// The chance to suppress spell damage is lucky (PoB's
+    /// `SpellSuppressionChanceIsLucky`; P6-11al): a `Flag`, read by
+    /// [`enemy_hit`] for the effective chance.
+    SuppressionLucky,
+    /// Energy shield cannot be recovered above armour (PoB's
+    /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
+    /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
+    ArmourEsRecoveryCap,
+    /// Energy shield protects mana instead of life (PoB's
+    /// `EnergyShieldProtectsMana`; P6-11ap, Eldritch Battery): a `Flag`,
+    /// read by [`enemy_hit`] and [`ehp`] for the pools and by [`costs`] for
+    /// the mana cost per second, paid with energy shield.
+    EsProtectsMana,
+    /// Chaos Inoculation (PoB's `ChaosInoculation`; P6-11ej): a `Flag`,
+    /// read by [`phases`]: life is 1 (`CalcPerform.lua` 81), and life
+    /// gained as energy shield adds 1 (`CalcDefence.lua` 1027).
+    ChaosInoculation,
+    /// Iron Reflexes (PoB's `IronReflexes`; P6-11ek): a `Flag`, read by
+    /// [`phases`]: every evasion row goes to armour (`CalcDefence.lua` 919,
+    /// 980).
+    IronReflexes,
+    /// "Auras from your Skills which affect Allies also affect Enemies"
+    /// (PoB's `AurasAffectEnemies`; P6-11er): a `Flag`, read by [`gems`].
+    AurasAffectEnemies,
+    /// Acrobatics (PoB's `ConvertSpellSuppressionToSpellDodge`; P6-11el): a
+    /// `Flag`. Spell suppression is 0 ([`phases`]), and half of its chance is
+    /// the chance to dodge spell hits, at most 75% ([`enemy_hit`]).
+    SuppressionToSpellDodge,
+    /// Dexterity grants no evasion (PoB's `NoDexBonusToEvasion`; P6-11ek):
+    /// a `Flag`, read by [`phases`] (`CalcPerform.lua` 509).
+    NoDexBonusToEvasion,
+    /// The increases that are both armour's and evasion's (PoB's
+    /// `ArmourAndEvasion` and `Defences` INC; P6-11ek): each such row also
+    /// adds to `Armour` and `Evasion`, and to this marker, which only Iron
+    /// Reflexes' modifier reads to count them once.
+    ArmourAndEvasionShared,
+    /// A skill can wither (PoB's `Condition:CanWither`; P6-11aq): a `Flag`
+    /// from the character's stats, which every active skill then has;
+    /// read by [`damage_taken`] for the enemy's withered stacks.
+    CanWither,
+    /// The share of melee damage taken from Summon Stone Golem of
+    /// Safeguarding's life before yours, percent (PoB's
+    /// `takenFromStoneGolemBeforeYou`; P6-11ar): `Base`, read by
+    /// [`enemy_hit`].
+    TakenFromStoneGolem,
+    /// The effect of your Withered (PoB's `WitherEffect`; P6-11aq):
+    /// `Increased`, read by [`damage_taken`].
+    WitherEffect,
+    /// Physical damage prevented regenerated as energy shield, percent
+    /// (PoB's `PhysicalDamageMitigatedEnergyShieldPseudoRecoup`; P6-11am,
+    /// Divine Shield): `Base`. It reaches no field itself; any recoup makes
+    /// PoB's estimate track recoupable damage, which limits its speed-up
+    /// (`ehp`).
+    PseudoRecoup,
+    /// Damage taken recouped as mana, percent (PoB's `ManaRecoup`;
+    /// P6-11as): `Base`, read by [`enemy_hit`] for `anyRecoup`.
+    ManaRecoup,
+    /// Damage taken recouped as life, percent (PoB's `LifeRecoup`; P6-10a,
+    /// a Glorious Vanity conquest): `Base`, read by [`enemy_hit`] for
+    /// `anyRecoup` as [`Self::ManaRecoup`].
+    LifeRecoup,
+    /// Devotion (PoB's `Devotion`; P6-11az): `Base`, summed by
+    /// [`devotion`].
+    Devotion,
+    /// A line that reads devotion ([`devotion::READERS`], by index): `Base`,
+    /// its value, which [`devotion`] scales and ingests as the stat it
+    /// means.
+    DevotionReader(u8),
+    /// Skills reserve life instead of mana (PoB's `BloodMagicReserved`;
+    /// P6-11an, Blood Magic): a `Flag`, read by
+    /// [`skill_modifiers::Totals`] for the other gems' reservation.
+    ReserveLifeInsteadOfMana,
+    /// "<Skill> has no Reservation" (P6-11fq; PoB's `SkillData`
+    /// reservation keys at 0 for that skill): a `Flag`, the index into
+    /// [`skill_modifiers::NO_RESERVATION_STATS`].
+    SkillNoReservation(u8),
+    /// Energy shield recharge applies to life instead (PoB's
+    /// `EnergyShieldRechargeAppliesToLife`; P6-11ao, Eternal Youth): a
+    /// `Flag`; [`regen`] then sets no energy shield recharge.
+    EsRechargeAppliesToLife,
+    /// The hit's repeat count as [`repeats`] settled it (PoB's
+    /// `output.Repeats`; P6-11aj): `Base`, for the rate and the costs.
+    Repeats,
+    /// The share of fire resistance modifiers that also apply to another
+    /// type, percent (PoB's `FireMaxResConvertTo<To>` when the flag is
+    /// `true`, else `FireResConvertTo<To>`, BASE; P6-11ah), read by
+    /// [`resist_conversion`].
+    ResistConvert(bool, crate::quantity::DamageType),
     /// Reservation of a pool, or of both (PoB's `<Pool>Reserved` and
     /// `Reserved`, P3-8l): `Increased`, read as
     /// [`Self::ReservationEfficiency`].
@@ -177,6 +493,18 @@ pub enum Poe1Quantity {
     /// tagged `Aura` and not `AppliesCurse`, P3-8l): `Increased`, read by
     /// [`skill_modifiers::Totals`] to scale the other gems' auras.
     NonCurseAuraEffect,
+    /// "Auras from your Skills have #% increased Effect on you" (PoB's
+    /// `SkillAuraEffectOnSelf`, P6-11k): `Increased`, read by
+    /// [`skill_modifiers::Totals`] for every aura buff on you.
+    SkillAuraEffectOnSelf,
+    /// Culling Strike (PoB's `CullPercent` MAX 10; P6-12): a `Flag`, read
+    /// by [`combined`].
+    CullingStrike,
+    /// A defence's increase from one equipped piece only (PoB's
+    /// `<Defence>` or `Defences` INC tagged `SlotName`, P6-11k: "#%
+    /// increased Energy Shield from Equipped Shield"): `Increased`, added to
+    /// that piece's modifier ([`phases`]).
+    SlotIncreased(ArmourSlot, Defence),
     /// "Your hits can't be Evaded" (PoB's `CannotBeEvaded`, P3-8m): a
     /// `Flag`; an attack's chance to hit is then 100 ([`hit`]).
     CannotBeEvaded,
@@ -214,6 +542,176 @@ pub enum Poe1Quantity {
     /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
     /// tick cap ([`hit`]).
     ActionSpeed,
+    /// Movement speed (PoB's `MovementSpeed`; P6-10b): `Increased` and
+    /// `More`, read by [`movement`].
+    MovementSpeed,
+    /// "Ignore all Movement Penalties from Armour" (PoB's
+    /// `Condition:IgnoreMovementPenalties` FLAG; P6-11cp): a `Flag`
+    /// [`movement`] reads, which drops the armour bases' movement penalty.
+    IgnoreMovementPenalties,
+    /// A stat that changes movement speed in a way the engine does not model
+    /// (P6-10b; [`mapping::MOVEMENT_REASONS`]): a `Flag` only [`movement`]
+    /// reads, as those fields' `unmapped-stat` reason.
+    MovementReason(&'static str),
+    /// A skill's mana cost (PoB's `ManaCost`; P6-10b): `Increased`, `More`,
+    /// and `Base` (the total), read by [`costs`].
+    ManaCost,
+    /// A skill's cost of any resource (PoB's `Cost`; P6-10b): `Increased`,
+    /// `More`, and `Base`, read by [`costs`].
+    Cost,
+    /// Mana cost added after the support multiplier (PoB's
+    /// `ManaCostNoMult`; P6-10b): `Base`, read by [`costs`].
+    ManaCostNoMult,
+    /// The total mana cost of channelling (`true`) or non-channelling
+    /// skills (PoB's `ManaCost` BASE with a `SkillType` `Channel` tag,
+    /// negated for `false`; P6-11t): `Base`, read by [`costs`] for a main
+    /// skill of that kind.
+    ManaCostChannelling(bool),
+    /// Mana cost efficiency (PoB's `ManaCostEfficiency`; P6-10b):
+    /// `Increased`, read by [`costs`].
+    ManaCostEfficiency,
+    /// Cost efficiency (PoB's `CostEfficiency`; P6-10b): `Increased`, read by
+    /// [`costs`].
+    CostEfficiency,
+    /// A stat that changes the cost in a way the engine does not model
+    /// (P6-10b; [`mapping::COST_REASONS`]): a `Flag` only [`costs`] reads.
+    CostReason(&'static str),
+    /// A skill's life cost (PoB's `LifeCost`; P6-10b part 8): `Increased`,
+    /// `More`, and `Base` (the total), read by [`costs`].
+    LifeCost,
+    /// A skill's energy shield cost (PoB's `ESCost`; P6-10b part 8).
+    EnergyShieldCost,
+    /// Life cost efficiency (PoB's `LifeCostEfficiency`; P6-10b part 8).
+    LifeCostEfficiency,
+    /// Energy shield cost efficiency (PoB's `ESCostEfficiency`; P6-10b
+    /// part 8).
+    EnergyShieldCostEfficiency,
+    /// Skills cost life instead of mana (PoB's `CostLifeInsteadOfMana`;
+    /// P6-10b part 8): a `Flag` [`costs`] reads.
+    CostLifeInsteadOfMana,
+    /// Skills cost energy shield instead of mana or life (PoB's
+    /// `CostESInsteadOfManaOrLife`; P6-10b part 8): a `Flag`.
+    CostEnergyShieldInsteadOfManaOrLife,
+    /// The percent of the mana cost paid in life instead (PoB's
+    /// `HybridManaAndLifeCost_Life`; P6-10b part 8): `Base`.
+    HybridLifeCost,
+    /// A base life cost as a percent of the mana cost (PoB's
+    /// `ManaCostAsLifeCost`; P6-10b part 8): `Base`.
+    ManaCostAsLifeCost,
+    /// A base energy shield cost as a percent of the mana cost (PoB's
+    /// `ManaCostAsEnergyShieldCost`; P6-10b part 8): `Base`.
+    ManaCostAsEnergyShieldCost,
+    /// A damage type's base damage reduction, percent (PoB's
+    /// `<Type>DamageReduction` BASE; P6-10b part 5): read by [`reduction`].
+    DamageReduction(DamageType),
+    /// The largest total recovery per second from a pool's leech, percent
+    /// of the pool (PoB's `Max<Pool>LeechRate`; P6-10b part 7): `Base`,
+    /// `Increased`, and `More`, read by [`leech`].
+    LeechRateMax(Pool),
+    /// The largest recovery of one leech of a pool, percent of the pool
+    /// (PoB's `Max<Pool>LeechInstance`; P6-10b part 7): read by [`leech`].
+    LeechInstanceMax(Pool),
+    /// Damage leeched as a pool, percent (PoB's `Damage<Pool>Leech`,
+    /// `<Type>Damage<Pool>Leech`, `ElementalDamage<Pool>Leech`, and
+    /// `DamageLeech` for life and mana; P6-10b part 9): `Base`, read by
+    /// [`leech`] in the hit's context.
+    DamageLeech(Pool, LeechSource),
+    /// A pool's leech rate (PoB's `<Pool>LeechRate`; P6-10b part 9):
+    /// `Increased` and `More`.
+    LeechRate(Pool),
+    /// The percent of a pool's leech that is instant (PoB's
+    /// `Instant<Pool>Leech`; P6-10b part 9): `Base`.
+    InstantLeech(Pool),
+    /// The skill cannot leech the pool (PoB's `CannotLeech<Pool>`; P6-10b
+    /// part 9): a `Flag`.
+    CannotLeech(Pool),
+    /// Damage the character takes (PoB's `DamageTaken`, `<Type>DamageTaken`,
+    /// `ElementalDamageTaken`, and their `WhenHit` and `OverTime` forms;
+    /// P6-10b part 10): `Increased` and `More`, read by [`taken`].
+    SelfDamageTaken(TakenWhen, TakenOf),
+    /// The enemy's accuracy rating (PoB's enemy `Accuracy`; P6-10b part
+    /// 11): `Increased` and `More` (Blind's), read by [`evade`].
+    EnemyAccuracy,
+    /// The character cannot evade (PoB's `CannotEvade`; P6-10b part 11): a
+    /// `Flag` [`evade`] reads.
+    CannotEvade,
+    /// A stat that changes the enemy's hit in a way the engine does not
+    /// model (P6-10b part 12; a gem's [`gems::BuffStat::Defence`]): a
+    /// `Flag` only [`enemy_hit`] reads, as its fields' reason.
+    EnemyHitReason(&'static str),
+    /// A stat that changes the pools maximum hit reads in a way the engine
+    /// does not model (P6-10b part 13: guard skills, Mind over Matter,
+    /// Divine Shield): a `Flag` only those fields read.
+    PoolReason(&'static str),
+    /// A stat that changes damage taken over time in a way the engine does
+    /// not model (P6-10b part 13): a `Flag` only [`taken`] reads.
+    DotTakenReason(&'static str),
+    /// The enemy's crit chance against the character (PoB's
+    /// `EnemyCritChance` INC; P6-10b part 12).
+    EnemyCritChance,
+    /// Less extra damage taken from crits (PoB's `ReduceCritExtraDamage`
+    /// BASE; P6-10b part 12).
+    CritExtraDamageReduction,
+    /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
+    /// `Increased` (delirium's) and `More`.
+    EnemyDamage,
+    /// A share of a type's damage taken as another (PoB's
+    /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and
+    /// their `FromHits` forms when the flag is set; P6-10b part 12): `Base`.
+    DamageTakenAs(TakenOf, DamageType, bool),
+    /// The percent of armour that applies to a type's damage taken (PoB's
+    /// `ArmourAppliesTo<Type>DamageTaken`; P6-10b part 12): `Base`.
+    ArmourAppliesTo(DamageType),
+    /// The suppressed spell damage prevented (PoB's `SpellSuppressionEffect`
+    /// BASE; P6-10b part 12).
+    SpellSuppressionEffect,
+    /// The maximum fortification (PoB's `MaximumFortification` BASE; P6-10b
+    /// part 12), read by [`enemy_hit`] while Fortified.
+    MaximumFortification,
+    /// The share of maximum life at or below which you count as on low
+    /// life, a fraction (PoB's `LowLifePercentage` BASE; P6-11ad), read by
+    /// [`enemy_hit`] for `LifeRecoverable` with the config's
+    /// `conditionLowLife`.
+    LowLifePercentage,
+    /// The share of a hit a guard skill takes, percent (PoB's
+    /// `GuardAbsorbRate` BASE; P6-11ae), read by [`enemy_hit`].
+    GuardAbsorbRate,
+    /// A guard's absorb limit (PoB's `GuardAbsorbLimit` BASE; P6-11ae).
+    GuardAbsorbLimit,
+    /// A guard's absorb limit per point of armour, a fraction (PoB's
+    /// `GuardAbsorbLimit` BASE `PerStat` `Armour`, Molten Shell's; P6-11ae),
+    /// at most [`Self::GuardAbsorbMax`] in total.
+    GuardAbsorbPerArmour,
+    /// The total cap of [`Self::GuardAbsorbPerArmour`] (PoB's
+    /// `Multiplier:GuardAbsorbMax` BASE; P6-11ae).
+    GuardAbsorbMax,
+    /// The share of damage taken from mana before life, percent (PoB's
+    /// `DamageTakenFromManaBeforeLife` and `<Type>DamageTakenFromManaBeforeLife`
+    /// BASE; P6-10b part 15: mind over matter), read by [`enemy_hit`] and
+    /// [`ehp`].
+    ManaBeforeLife(TakenOf),
+    /// The share of a blocked hit's damage taken, percent (PoB's
+    /// `BlockEffect` BASE; P6-10b part 14), read by [`ehp`].
+    BlockEffect,
+    /// The chance to avoid projectiles (PoB's `AvoidProjectilesChance` BASE;
+    /// P6-10b part 14), read by [`ehp`].
+    AvoidProjectiles,
+    /// A stat that changes the effective health pool alone in a way the
+    /// engine does not model (P6-10b part 14): a `Flag` only [`ehp`]'s
+    /// fields read.
+    EhpReason(&'static str),
+    /// The elemental types' base damage reduction, percent (PoB's
+    /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
+    /// [`reduction`] for fire, cold, and lightning.
+    ElementalDamageReduction,
+    /// A stat that changes the damage reduction in a way the engine does
+    /// not model (P6-10b part 5; [`mapping::REDUCTION_REASONS`]): a `Flag`
+    /// only [`reduction`] reads.
+    ReductionReason(&'static str),
+    /// A stat that changes a hit's rate or DPS in a way the engine does not
+    /// model unless a trigger sets the rate (P6-8a; [`mapping::HIT_REASONS`]):
+    /// a `Flag` only [`hit`] reads.
+    HitReason(&'static str),
     /// A chance to deal double damage, percent (PoB's `DoubleDamageChance`,
     /// P3-8n): `Base`; a hit's damage is scaled by `1 + min(chance, 100) /
     /// 100` ([`hit`]).
@@ -242,6 +740,11 @@ pub enum Poe1Quantity {
     /// "Enemies Ignited or Chilled by you have #% to Elemental
     /// Resistances" (P3-8n): `Base`, read by [`damage_taken`].
     AilmentElementalResistance,
+    /// "#% increased Damage with Hits against Chilled Enemies" (P6-11bf):
+    /// `Increased`, which [`damage_taken`] turns into hit `Damage` INC
+    /// while the enemy is chilled (PoB's `ActorCondition` `Chilled` on the
+    /// enemy).
+    DamageVsChilled,
     /// "Enemies permanently take #% increased Damage for each second
     /// they've ever been Chilled by you" (P3-8n): `Base`, read by
     /// [`damage_taken`].
@@ -250,18 +753,55 @@ pub enum Poe1Quantity {
     /// (PoB's `<Type>ExposureChance` 100 and the enemy's `<Type>Exposure`,
     /// P3-8n): `Base`, the exposure, read by [`exposure`].
     ExposureOnHit(DamageType),
+    /// A pool's regeneration, percent of the pool per minute, while you
+    /// have applied an exposure recently (PoB's `<Pool>RegenPercent` BASE
+    /// with `AppliedExposureRecently`; P6-11au): `Base`, turned into
+    /// [`Poe1Quantity::RegenPercent`] by [`exposure`] when an exposure is on
+    /// the enemy.
+    RegenIfExposureApplied(Pool),
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
+    /// "Allocates <notable> if you have the matching modifier on Forbidden
+    /// Flesh" (`true`, the line on Forbidden Flame) or "... on Forbidden
+    /// Flame" (`false`): PoB's `GrantedAscendancyNode` with its side
+    /// (P6-11es). `Base`, a candidate node hash; `collect` pairs the sides.
+    ForbiddenNode(bool),
     /// "#% increased Effect of Buffs granted by your Golems" (PoB's
     /// `BuffEffect` INC tagged with the `Golem` skill type; P3-close):
     /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
     /// buffs.
     GolemBuffEffect,
+    /// A skill's duration, cooldown, or a warcry's buff or power modifier
+    /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
+    /// warcries alone.
+    SkillTiming(skill_modifiers::SkillTiming),
+    /// Cooldown recovery of a skill type (PoB's `CooldownRecovery` INC with
+    /// a `SkillType` tag; P6-11ex: travel skills): `Increased`, with the
+    /// type's flag, read by the main skill's cooldown ([`hit`]) alone.
+    TypedCooldownRecovery,
+    /// Mana reservation efficiency of skills that throw mines (PoB's
+    /// `ManaReservationEfficiency` INC with `KeywordFlag.Mine`; P6-11ey):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for `RemoteMined`
+    /// skills.
+    MineManaReservationEfficiency,
+    /// Mines thrown at once (PoB's `MineThrowCount` BASE, its base 1 in
+    /// [`hit`]; P6-11fa).
+    MineThrowCount,
+    /// Traps thrown at once (PoB's `TrapThrowCount` BASE, its base 1 in
+    /// [`hit`]; P6-11fa).
+    TrapThrowCount,
+    /// The effect of herald skills' buffs (PoB's `BuffEffect` INC tagged
+    /// `SkillType.Herald`; P6-11at), read by [`skill_modifiers`].
+    HeraldBuffEffect,
     /// "#% increased Effect of your Curses" (PoB's `CurseEffect` INC;
     /// P3-close): `Increased`, read by [`skill_modifiers::Totals`] for
     /// curse gems' effect on the enemy.
     CurseEffect,
+    /// "#% increased Effect of your Marks" (PoB's `CurseEffect` INC tagged
+    /// `SkillType.Mark`; P6-11df): `Increased`, read by
+    /// [`skill_modifiers::Totals`] for marks' effect on the enemy.
+    MarkCurseEffect,
     /// A skill's exposure on the enemy (PoB's enemy `<Type>Exposure` BASE
     /// from a debuff, for example Frost Bomb's; P3-close): `Base`, read by
     /// [`exposure`], which keeps the strongest.
@@ -294,6 +834,14 @@ pub enum Poe1Quantity {
     /// Impales on the enemy at most, added to the character template's
     /// (PoB's `ImpaleStacksMax` BASE; Phase 6).
     ImpaleStacksMax,
+    /// The chance for every impale on the enemy to last an additional hit,
+    /// percent (PoB's `ImpaleAdditionalDurationChance` BASE; P6-11dp):
+    /// the stacks are `ImpaleStacksMax x (1 + chance / 100)`.
+    ImpaleAdditionalDurationChance,
+    /// Spell block per 1% of attack block over its maximum (PoB's
+    /// `SpellBlockChance` BASE per `PerStat` `BlockChanceOverCap`;
+    /// Versatile Combatant; P6-11dq): `Base`, read by the block phase.
+    SpellBlockPerOvercappedBlock,
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
@@ -302,6 +850,10 @@ pub enum Poe1Quantity {
     /// `SelfElementalAilmentDuration`, by conditions; curses such as
     /// Elemental Weakness; Phase 6): `Increased`, read by [`ailment`].
     EnemyAilmentDuration,
+    /// How fast the enemy's debuffs expire (PoB's enemy `BuffExpireFaster`;
+    /// Temporal Chains' `MORE`; P6-11cv): `Increased` and `More`, read by
+    /// [`ailment`] as PoB's `debuffDurationMult`.
+    EnemyBuffExpireFaster,
     /// "Ailments never count as being from Critical Strikes" (PoB's
     /// `AilmentsAreNeverFromCrit`, Elemental Overload; Phase 6): a `Flag`
     /// read by [`ailment`].
@@ -314,13 +866,159 @@ pub enum Poe1Quantity {
     IntimidatingCry(gems::WarcryValue),
 }
 
-/// A pool a skill reserves.
+/// A pool: one a skill reserves (life or mana), or one that regenerates
+/// (P6-10b: energy shield too).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pool {
     /// Life.
     Life,
     /// Mana.
     Mana,
+    /// Energy shield (regeneration only; P6-10b).
+    EnergyShield,
+}
+
+/// A recovery on block (P6-11ak; PoB's text, `ModParser.lua` 382 to 4717).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BlockGain {
+    /// Life, flat (`LifeOnBlock` BASE).
+    Life,
+    /// Life, a percent of maximum life (`LifeOnBlock` BASE 1 with
+    /// `PercentStat` `Life`: `ceil(Life x percent / 100)` per mod).
+    LifePercent,
+    /// Energy shield on blocking spell damage, flat
+    /// (`EnergyShieldOnSpellBlock` BASE).
+    EnergyShieldSpell,
+    /// Energy shield on blocking spell damage, a percent of maximum energy
+    /// shield (`EnergyShieldOnSpellBlock` BASE 1 with `PercentStat`
+    /// `EnergyShield`; P6-11bj).
+    EnergyShieldSpellPercent,
+    /// Energy shield, a percent of armour (`EnergyShieldOnBlock` BASE 1
+    /// with `PercentStat` `Armour`).
+    EnergyShieldPercentOfArmour,
+}
+
+impl BlockGain {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Life => "life",
+            Self::LifePercent => "life-percent",
+            Self::EnergyShieldSpell => "energy-shield-spell",
+            Self::EnergyShieldSpellPercent => "energy-shield-spell-percent",
+            Self::EnergyShieldPercentOfArmour => "energy-shield-percent-of-armour",
+        }
+    }
+}
+
+/// A term of Ruthless (P6-11bt, [`Poe1Quantity::Ruthless`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum RuthlessValue {
+    /// Every this many uses is a Ruthless blow (`RuthlessBlowMaxCount`).
+    MaxCount,
+    /// The blow's hit damage, more in percent (`RuthlessBlowHitMultiplier`).
+    Hit,
+    /// The blow's bleed and poison damage, more in percent
+    /// (`RuthlessBlowAilmentMultiplier`).
+    Ailment,
+}
+
+impl RuthlessValue {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::MaxCount => "max-count",
+            Self::Hit => "hit",
+            Self::Ailment => "ailment",
+        }
+    }
+}
+
+/// When a damage taken modifier applies (P6-10b part 10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TakenWhen {
+    /// Always (PoB's `DamageTaken`).
+    Always,
+    /// From hits (PoB's `DamageTakenWhenHit`).
+    Hit,
+    /// Over time (PoB's `DamageTakenOverTime`).
+    OverTime,
+    /// From attacks (PoB's `AttackDamageTaken` INC and MORE,
+    /// `DamageTakenFromAttacks` BASE; P6-10b part 12).
+    Attack,
+    /// From projectile attacks (PoB's `<Type>DamageTakenFromProjectileAttacks`
+    /// BASE).
+    ProjectileAttack,
+    /// From spells (PoB's `SpellDamageTaken` INC and MORE,
+    /// `DamageTakenFromSpells` BASE).
+    Spell,
+    /// From spell projectiles (PoB's `DamageTakenFromSpellProjectiles` BASE).
+    SpellProjectile,
+}
+
+impl TakenWhen {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::Hit => "hit",
+            Self::OverTime => "over-time",
+            Self::Attack => "attack",
+            Self::ProjectileAttack => "projectile-attack",
+            Self::Spell => "spell",
+            Self::SpellProjectile => "spell-projectile",
+        }
+    }
+}
+
+/// What damage a damage taken modifier reads (P6-10b part 10).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TakenOf {
+    /// All damage.
+    All,
+    /// One type's.
+    Type(DamageType),
+    /// Fire, cold, and lightning.
+    Elemental,
+}
+
+impl TakenOf {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::All => "all",
+            Self::Type(t) => t.name(),
+            Self::Elemental => "elemental",
+        }
+    }
+}
+
+/// What damage a leech line reads (P6-10b part 9): all of it, one type's,
+/// or the elemental types'.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LeechSource {
+    /// Any damage (PoB's `Damage<Pool>Leech`, and `DamageLeech`).
+    Any,
+    /// One type's damage (PoB's `<Type>Damage<Pool>Leech`).
+    Type(DamageType),
+    /// Fire, cold, and lightning damage (PoB's `ElementalDamage<Pool>Leech`).
+    Elemental,
+}
+
+impl LeechSource {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Any => "any",
+            Self::Type(t) => t.name(),
+            Self::Elemental => "elemental",
+        }
+    }
 }
 
 impl Pool {
@@ -330,6 +1028,7 @@ impl Pool {
         match self {
             Self::Life => "life",
             Self::Mana => "mana",
+            Self::EnergyShield => "energy-shield",
         }
     }
 }
@@ -393,6 +1092,11 @@ pub enum WeaponValue {
     Damage(DamageType, Bound),
     /// Attack time, milliseconds (the base's).
     AttackTime,
+    /// A weapon's base attack rate, uses per second, when it has no attack
+    /// time in milliseconds (a minion's weapon from its monster data: PoB's
+    /// `AttackRate = 1 / attackTime`, `CalcActiveSkill.lua` 747; P6-7c):
+    /// `Base`, read by [`hit`] instead of [`Self::AttackTime`].
+    AttackRate,
     /// Local attack speed (`Increased`).
     AttackSpeed,
     /// Critical strike chance, percent: `Base` is the base's and the local
@@ -424,6 +1128,7 @@ impl core::fmt::Display for WeaponValue {
         match self {
             Self::Damage(t, b) => write!(f, "damage.{}.{}", t.name(), b.name()),
             Self::AttackTime => f.write_str("attack-time"),
+            Self::AttackRate => f.write_str("attack-rate"),
             Self::AttackSpeed => f.write_str("attack-speed"),
             Self::CritChance => f.write_str("crit-chance"),
             Self::Quality => f.write_str("quality"),
@@ -461,6 +1166,31 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
+            Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
+            Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
+            Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
+            Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
+            Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
+            Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),
+            Self::MineLayingSpeed => f.write_str("mine-laying-speed"),
+            Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
+            Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
+            Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
+            Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
+            Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
+            Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
+            Self::LifeLossPrevented => f.write_str("life-loss-prevented"),
+            Self::ArcaneSurgeEffect => f.write_str("arcane-surge-effect"),
+            Self::ArcaneSurgeDamage => f.write_str("arcane-surge-damage"),
+            Self::EnergyShieldFromChaosResistance => {
+                f.write_str("energy-shield-from-chaos-resistance")
+            }
+            Self::BoundDamage(t, b) => write!(
+                f,
+                "bound-damage.{}.{}",
+                t.map_or("any", DamageType::name),
+                b.name()
+            ),
             Self::ExposureChance(t) => write!(f, "exposure-chance.{}", t.name()),
             Self::ExtraExposure(None) => f.write_str("extra-exposure"),
             Self::ExtraExposure(Some(t)) => write!(f, "extra-exposure.{}", t.name()),
@@ -472,8 +1202,78 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
+            Self::SocketedCostMultiplier(slot) => write!(f, "socketed-cost-multiplier.{slot:?}"),
+            Self::SocketedGemLevel(stat, slot) => {
+                write!(f, "socketed-gem-level.{}.{stat}", slot.name())
+            }
+            Self::ItemSupport(stat, slot) => {
+                write!(f, "item-support.{}.{stat}", slot.name())
+            }
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
-            Self::MinionPending => f.write_str("minion-pending"),
+            Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
+            Self::CurseLimit => f.write_str("curse-limit"),
+            Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
+            Self::EnemyTrapMineDamageTaken => f.write_str("enemy-trap-mine-damage-taken"),
+            Self::EnemyProjectileAttackDamageTaken => {
+                f.write_str("enemy-projectile-attack-damage-taken")
+            }
+            Self::EnemyNeverCrit => f.write_str("enemy-never-crit"),
+            Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
+            Self::Regen(p) => write!(f, "regen.{}", p.name()),
+            Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),
+            Self::RecoveryRate(p) => write!(f, "recovery-rate.{}", p.name()),
+            Self::LeechRateMax(p) => write!(f, "leech-rate-max.{}", p.name()),
+            Self::LeechInstanceMax(p) => write!(f, "leech-instance-max.{}", p.name()),
+            Self::DamageLeech(p, source) => {
+                write!(f, "damage-leech.{}.{}", p.name(), source.name())
+            }
+            Self::LeechRate(p) => write!(f, "leech-rate.{}", p.name()),
+            Self::InstantLeech(p) => write!(f, "instant-leech.{}", p.name()),
+            Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
+            Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
+            Self::CannotEvade => f.write_str("cannot-evade"),
+            Self::EnemyHitReason(stat) => write!(f, "enemy-hit-reason.{stat}"),
+            Self::PoolReason(stat) => write!(f, "pool-reason.{stat}"),
+            Self::DotTakenReason(stat) => write!(f, "dot-taken-reason.{stat}"),
+            Self::EnemyCritChance => f.write_str("enemy-crit-chance"),
+            Self::CritExtraDamageReduction => f.write_str("crit-extra-damage-reduction"),
+            Self::EnemyDamage => f.write_str("enemy-damage"),
+            Self::DamageTakenAs(from, to, hits) => write!(
+                f,
+                "damage-taken-as.{}.{}{}",
+                from.name(),
+                to.name(),
+                if *hits { ".hits" } else { "" }
+            ),
+            Self::ArmourAppliesTo(t) => write!(f, "armour-applies-to.{}", t.name()),
+            Self::SpellSuppressionEffect => f.write_str("spell-suppression-effect"),
+            Self::MaximumFortification => f.write_str("maximum-fortification"),
+            Self::LowLifePercentage => f.write_str("low-life-percentage"),
+            Self::GuardAbsorbRate => f.write_str("guard-absorb-rate"),
+            Self::GuardAbsorbLimit => f.write_str("guard-absorb-limit"),
+            Self::GuardAbsorbPerArmour => f.write_str("guard-absorb-per-armour"),
+            Self::GuardAbsorbMax => f.write_str("guard-absorb-max"),
+            Self::ManaBeforeLife(o) => write!(f, "mana-before-life.{}", o.name()),
+            Self::BlockEffect => f.write_str("block-effect"),
+            Self::AvoidProjectiles => f.write_str("avoid-projectiles"),
+            Self::EhpReason(stat) => write!(f, "ehp-reason.{stat}"),
+            Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
+            Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
+            Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
+            Self::ZealotsOath => f.write_str("zealots-oath"),
+            Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
+            Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
+            Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
+            Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
+            Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
+            Self::RegenPerFortification(p) => {
+                write!(f, "regen-per-fortification.{}", p.name())
+            }
+            Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
+            Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
+            Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
+            Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
+            Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
             Self::MinionToYou(value, percent) => {
                 write!(f, "minion-to-you.{}.{percent}", value.name())
             }
@@ -484,9 +1284,48 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ReservationEfficiency(Some(pool)) => {
                 write!(f, "reservation-efficiency.{}", pool.name())
             }
+            Self::ResistConvert(max, to) => write!(
+                f,
+                "resist-convert.{}.{}",
+                if *max { "maximum" } else { "resistance" },
+                to.name()
+            ),
+            Self::RepeatCount => f.write_str("repeat-count"),
+            Self::RepeatDamage(n) => write!(f, "repeat-damage.{n}"),
+            Self::RepeatPerRepeatDamage => f.write_str("repeat-per-repeat-damage"),
+            Self::RepeatFinalDoubleDamageChance => f.write_str("repeat-final-double-damage-chance"),
+            Self::Repeats => f.write_str("repeats"),
+            Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
+            Self::SuppressionLucky => f.write_str("suppression-lucky"),
+            Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
+            Self::EsProtectsMana => f.write_str("es-protects-mana"),
+            Self::ChaosInoculation => f.write_str("chaos-inoculation"),
+            Self::IronReflexes => f.write_str("iron-reflexes"),
+            Self::AurasAffectEnemies => f.write_str("auras-affect-enemies"),
+            Self::SuppressionToSpellDodge => f.write_str("suppression-to-spell-dodge"),
+            Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
+            Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),
+            Self::CanWither => f.write_str("can-wither"),
+            Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
+            Self::WitherEffect => f.write_str("wither-effect"),
+            Self::PseudoRecoup => f.write_str("pseudo-recoup"),
+            Self::ManaRecoup => f.write_str("mana-recoup"),
+            Self::LifeRecoup => f.write_str("life-recoup"),
+            Self::Devotion => f.write_str("devotion"),
+            Self::DevotionReader(i) => write!(f, "devotion-reader.{i}"),
+            Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
+            Self::SkillNoReservation(i) => write!(f, "skill-no-reservation.{i}"),
+            Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
+            Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
+            Self::HeraldManaReservationEfficiency => {
+                f.write_str("herald-mana-reservation-efficiency")
+            }
             Self::Reserved(None) => f.write_str("reserved"),
             Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),
             Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
+            Self::SkillAuraEffectOnSelf => f.write_str("skill-aura-effect-on-self"),
+            Self::CullingStrike => f.write_str("culling-strike"),
+            Self::SlotIncreased(s, d) => write!(f, "slot-increased.{}.{}", s.row(), d.name()),
             Self::CannotBeEvaded => f.write_str("cannot-be-evaded"),
             Self::NeverCrit => f.write_str("never-crit"),
             Self::NoCritMultiplier => f.write_str("no-crit-multiplier"),
@@ -497,6 +1336,32 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
             Self::ActionSpeed => f.write_str("action-speed"),
+            Self::MovementSpeed => f.write_str("movement-speed"),
+            Self::IgnoreMovementPenalties => f.write_str("ignore-movement-penalties"),
+            Self::MovementReason(stat) => write!(f, "movement-reason.{stat}"),
+            Self::ManaCost => f.write_str("mana-cost"),
+            Self::Cost => f.write_str("cost"),
+            Self::ManaCostNoMult => f.write_str("mana-cost-no-mult"),
+            Self::ManaCostChannelling(true) => f.write_str("mana-cost-channelling"),
+            Self::ManaCostChannelling(false) => f.write_str("mana-cost-non-channelling"),
+            Self::ManaCostEfficiency => f.write_str("mana-cost-efficiency"),
+            Self::CostEfficiency => f.write_str("cost-efficiency"),
+            Self::CostReason(stat) => write!(f, "cost-reason.{stat}"),
+            Self::LifeCost => f.write_str("life-cost"),
+            Self::EnergyShieldCost => f.write_str("energy-shield-cost"),
+            Self::LifeCostEfficiency => f.write_str("life-cost-efficiency"),
+            Self::EnergyShieldCostEfficiency => f.write_str("energy-shield-cost-efficiency"),
+            Self::CostLifeInsteadOfMana => f.write_str("cost-life-instead-of-mana"),
+            Self::CostEnergyShieldInsteadOfManaOrLife => {
+                f.write_str("cost-energy-shield-instead-of-mana-or-life")
+            }
+            Self::HybridLifeCost => f.write_str("hybrid-life-cost"),
+            Self::ManaCostAsLifeCost => f.write_str("mana-cost-as-life-cost"),
+            Self::ManaCostAsEnergyShieldCost => f.write_str("mana-cost-as-energy-shield-cost"),
+            Self::HitReason(stat) => write!(f, "hit-reason.{stat}"),
+            Self::DamageReduction(t) => write!(f, "damage-reduction.{}", t.name()),
+            Self::ElementalDamageReduction => f.write_str("elemental-damage-reduction"),
+            Self::ReductionReason(stat) => write!(f, "reduction-reason.{stat}"),
             Self::DoubleDamageChance => f.write_str("double-damage-chance"),
             Self::Conversion(from, to) => {
                 write!(f, "conversion.{}.{}", from.name(), to.name())
@@ -507,11 +1372,29 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedGroundEffect => f.write_str("consecrated-ground-effect"),
             Self::ConsecratedGroundDamageTaken => f.write_str("consecrated-ground-damage-taken"),
             Self::AilmentElementalResistance => f.write_str("ailment-elemental-resistance"),
+            Self::DamageVsChilled => f.write_str("damage-vs-chilled"),
             Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
+            Self::RegenIfExposureApplied(p) => {
+                write!(f, "regen-if-exposure-applied.{}", p.name())
+            }
             Self::GrantedPassive => f.write_str("granted-passive"),
+            Self::ForbiddenNode(flesh) => {
+                write!(
+                    f,
+                    "forbidden-node.{}",
+                    if *flesh { "flesh" } else { "flame" }
+                )
+            }
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
+            Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
+            Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
+            Self::MineThrowCount => f.write_str("mine-throw-count"),
+            Self::TrapThrowCount => f.write_str("trap-throw-count"),
+            Self::MineManaReservationEfficiency => f.write_str("mine-mana-reservation-efficiency"),
+            Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
+            Self::MarkCurseEffect => f.write_str("mark-curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
             Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
@@ -522,10 +1405,15 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AilmentEffect => f.write_str("ailment-effect"),
             Self::AilmentsNeverFromCrit => f.write_str("ailments-never-from-crit"),
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
+            Self::EnemyBuffExpireFaster => f.write_str("enemy-buff-expire-faster"),
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
+            Self::SpellBlockPerOvercappedBlock => f.write_str("spell-block-per-overcapped-block"),
+            Self::ImpaleAdditionalDurationChance => {
+                f.write_str("impale-additional-duration-chance")
+            }
         }
     }
 }
@@ -674,6 +1562,98 @@ pub enum Poe1Field {
     /// The main skill's impale damage per second (PoB's `ImpaleDPS`; Phase
     /// 6). Present only when the skill impales.
     ImpaleDps,
+    /// Life regenerated per second (PoB's `LifeRegen`; P6-10b).
+    LifeRegen,
+    /// Mana regenerated per second (PoB's `ManaRegen`; P6-10b).
+    ManaRegen,
+    /// Energy shield regenerated per second (PoB's `EnergyShieldRegen`;
+    /// P6-10b).
+    EnergyShieldRegen,
+    /// Energy shield recharged per second (PoB's `EnergyShieldRecharge`;
+    /// P6-10b).
+    EnergyShieldRecharge,
+    /// Seconds before energy shield starts to recharge (PoB's
+    /// `EnergyShieldRechargeDelay`; P6-10b).
+    EnergyShieldRechargeDelay,
+    /// The movement speed modifier (PoB's `MovementSpeedMod`; P6-10b).
+    MovementSpeedMod,
+    /// The movement speed modifier with action speed (PoB's
+    /// `EffectiveMovementSpeedMod`; P6-10b).
+    EffectiveMovementSpeedMod,
+    /// The main skill's mana cost (PoB's `ManaCost`; P6-10b).
+    ManaCost,
+    /// The main skill's mana cost per second (PoB's `ManaPerSecondCost`;
+    /// P6-10b part 6). Present only with a cost and a computed speed.
+    ManaPerSecondCost,
+    /// The main skill's combined damage per second (PoB's `CombinedDPS`;
+    /// P6-12): the hit's, impale's, and the damage over time's, culled.
+    CombinedDps,
+    /// A damage type's base damage reduction, percent (PoB's
+    /// `Base<Type>DamageReduction`; P6-10b part 5).
+    BaseDamageReduction(DamageType),
+    /// The build's full damage per second (PoB's `FullDPS`; P6-12 part 2):
+    /// the skills included in it, each computed as the main skill.
+    FullDps,
+    /// The largest total recovery per second from a pool's leech (PoB's
+    /// `Max<Pool>LeechRate`; P6-10b part 7). Present with the pool.
+    MaxLeechRate(Pool),
+    /// The largest recovery of one leech of a pool (PoB's
+    /// `Max<Pool>LeechInstance`; P6-10b part 7). Present with the pool.
+    MaxLeechInstance(Pool),
+    /// Life's leech rate cap in percent of life (PoB's
+    /// `MaxLifeLeechRatePercent`; P6-10b part 7). Always present.
+    MaxLifeLeechRatePercent,
+    /// The main skill's life cost (PoB's `LifeCost`; P6-10b part 8).
+    LifeCost,
+    /// The main skill's energy shield cost (PoB's `ESCost`; P6-10b part 8).
+    EnergyShieldCost,
+    /// The main skill's life cost per second (PoB's `LifePerSecondCost`;
+    /// P6-10b part 8). Present only with a cost and a computed speed.
+    LifePerSecondCost,
+    /// The main skill's energy shield cost per second (PoB's
+    /// `ESPerSecondCost`; P6-10b part 8).
+    EnergyShieldPerSecondCost,
+    /// The main skill's leech of a pool per second (PoB's `<Pool>LeechRate`;
+    /// P6-10b part 9). Present when the skill's hit leeches the pool.
+    LeechRate(Pool),
+    /// The multiplier of a type's damage taken over time, with resistance
+    /// and base reduction (PoB's `<Type>TakenDotMult`; P6-10b part 10).
+    TakenDotMult(DamageType),
+    /// The chance to evade the enemy's attacks (PoB's `EvadeChance`; P6-10b
+    /// part 11). Present with evasion.
+    EvadeChance,
+    /// The chance to evade melee attacks (PoB's `MeleeEvadeChance`).
+    MeleeEvadeChance,
+    /// The chance to evade projectile attacks (PoB's
+    /// `ProjectileEvadeChance`).
+    ProjectileEvadeChance,
+    /// The multiplier of the enemy's hit of a type, after every mitigation
+    /// (PoB's final `<Type>TakenHitMult`; P6-10b part 12).
+    TakenHitMult(DamageType),
+    /// The damage reduction against the enemy's hit of a type, armour
+    /// included (PoB's `<Type>DamageReduction`; P6-10b part 12).
+    DamageReduction(DamageType),
+    /// The largest enemy hit of a type the character survives (PoB's
+    /// `<Type>MaximumHitTaken`; P6-10b part 13).
+    MaximumHitTaken(DamageType),
+    /// The second smallest of the five (PoB's
+    /// `SecondMinimalMaximumHitTaken`; P6-10b part 13).
+    SecondMinimalMaximumHitTaken,
+    /// The enemy hits it takes to die (PoB's `NumberOfDamagingHits`;
+    /// P6-10b part 14).
+    NumberOfDamagingHits,
+    /// The same with block, suppression, and avoidance (PoB's
+    /// `NumberOfMitigatedDamagingHits`).
+    NumberOfMitigatedDamagingHits,
+    /// The same with the chance not to be hit (PoB's `TotalNumberOfHits`).
+    TotalNumberOfHits,
+    /// The chance a hit deals damage after block, suppression, and
+    /// avoidance (PoB's `ConfiguredDamageChance`).
+    ConfiguredDamageChance,
+    /// The chance not to be hit (PoB's `ConfiguredNotHitChance`).
+    ConfiguredNotHitChance,
+    /// The effective health pool (PoB's `TotalEHP`).
+    TotalEhp,
 }
 
 impl Poe1Field {
@@ -684,6 +1664,82 @@ impl Poe1Field {
             Self::SpellSuppressionChance => "spell-suppression-chance",
             Self::SpellBlockChance => "spell-block-chance",
             Self::ImpaleDps => "impale-dps",
+            Self::LifeRegen => "life-regen",
+            Self::ManaRegen => "mana-regen",
+            Self::EnergyShieldRegen => "energy-shield-regen",
+            Self::EnergyShieldRecharge => "energy-shield-recharge",
+            Self::EnergyShieldRechargeDelay => "energy-shield-recharge-delay",
+            Self::MovementSpeedMod => "movement-speed",
+            Self::EffectiveMovementSpeedMod => "effective-movement-speed",
+            Self::ManaCost => "mana-cost",
+            Self::ManaPerSecondCost => "mana-per-second-cost",
+            Self::FullDps => "full-dps",
+            Self::MaxLeechRate(p) => match p {
+                Pool::Life => "max-life-leech-rate",
+                Pool::Mana => "max-mana-leech-rate",
+                Pool::EnergyShield => "max-energy-shield-leech-rate",
+            },
+            Self::MaxLeechInstance(p) => match p {
+                Pool::Life => "max-life-leech-instance",
+                Pool::Mana => "max-mana-leech-instance",
+                Pool::EnergyShield => "max-energy-shield-leech-instance",
+            },
+            Self::MaxLifeLeechRatePercent => "max-life-leech-rate-percent",
+            Self::LifeCost => "life-cost",
+            Self::EnergyShieldCost => "energy-shield-cost",
+            Self::LifePerSecondCost => "life-per-second-cost",
+            Self::EnergyShieldPerSecondCost => "energy-shield-per-second-cost",
+            Self::EvadeChance => "evade-chance",
+            Self::TakenHitMult(t) => match t {
+                DamageType::Physical => "physical-taken-hit-mult",
+                DamageType::Fire => "fire-taken-hit-mult",
+                DamageType::Cold => "cold-taken-hit-mult",
+                DamageType::Lightning => "lightning-taken-hit-mult",
+                DamageType::Chaos => "chaos-taken-hit-mult",
+            },
+            Self::MaximumHitTaken(t) => match t {
+                DamageType::Physical => "physical-maximum-hit-taken",
+                DamageType::Fire => "fire-maximum-hit-taken",
+                DamageType::Cold => "cold-maximum-hit-taken",
+                DamageType::Lightning => "lightning-maximum-hit-taken",
+                DamageType::Chaos => "chaos-maximum-hit-taken",
+            },
+            Self::SecondMinimalMaximumHitTaken => "second-minimal-maximum-hit-taken",
+            Self::NumberOfDamagingHits => "number-of-damaging-hits",
+            Self::NumberOfMitigatedDamagingHits => "number-of-mitigated-damaging-hits",
+            Self::TotalNumberOfHits => "total-number-of-hits",
+            Self::ConfiguredDamageChance => "configured-damage-chance",
+            Self::ConfiguredNotHitChance => "configured-not-hit-chance",
+            Self::TotalEhp => "total-ehp",
+            Self::DamageReduction(t) => match t {
+                DamageType::Physical => "physical-damage-reduction",
+                DamageType::Fire => "fire-damage-reduction",
+                DamageType::Cold => "cold-damage-reduction",
+                DamageType::Lightning => "lightning-damage-reduction",
+                DamageType::Chaos => "chaos-damage-reduction",
+            },
+            Self::MeleeEvadeChance => "melee-evade-chance",
+            Self::ProjectileEvadeChance => "projectile-evade-chance",
+            Self::TakenDotMult(t) => match t {
+                DamageType::Physical => "physical-taken-dot-mult",
+                DamageType::Fire => "fire-taken-dot-mult",
+                DamageType::Cold => "cold-taken-dot-mult",
+                DamageType::Lightning => "lightning-taken-dot-mult",
+                DamageType::Chaos => "chaos-taken-dot-mult",
+            },
+            Self::LeechRate(p) => match p {
+                Pool::Life => "life-leech-rate",
+                Pool::Mana => "mana-leech-rate",
+                Pool::EnergyShield => "energy-shield-leech-rate",
+            },
+            Self::CombinedDps => "combined-dps",
+            Self::BaseDamageReduction(t) => match t {
+                DamageType::Physical => "base-physical-damage-reduction",
+                DamageType::Fire => "base-fire-damage-reduction",
+                DamageType::Cold => "base-cold-damage-reduction",
+                DamageType::Lightning => "base-lightning-damage-reduction",
+                DamageType::Chaos => "base-chaos-damage-reduction",
+            },
         }
     }
 }
@@ -857,10 +1913,21 @@ mod tests {
                 "resistances",
                 "block",
                 "primary-defences",
+                "evade",
                 "unreserved",
+                "damage-reduction",
+                "damage-taken",
+                "enemy-hit",
+                "regeneration",
+                "leech",
+                "movement",
                 "minion",
                 "hit",
-                "dot"
+                "dot",
+                "costs",
+                "combined",
+                "minion-hit",
+                "full-dps"
             ]
         );
         assert_eq!(

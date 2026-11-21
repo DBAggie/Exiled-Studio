@@ -8,13 +8,14 @@
 mod common;
 
 use loom_calc::StatMapping;
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_calc::poe1::skill_modifiers::STATS;
 use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 9] = [
+const TEXTS: [(&str, &str); 21] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -49,13 +50,64 @@ const TEXTS: [(&str, &str); 9] = [
         "golem_buff_effect_+%",
         "{0}% increased Effect of Buffs granted by your Golems",
     ),
+    // P6-11at: PoB's `BuffEffect` tagged `SkillType.Herald`.
+    (
+        "herald_effect_on_self_+%",
+        "{0}% increased Effect of Herald Buffs on you",
+    ),
+    // P6-11ag: PoB's `ManaReservationEfficiency` tagged `SkillType.Herald`.
+    (
+        "herald_skills_mana_reservation_efficiency_+%",
+        "{0}% increased Mana Reservation Efficiency of Herald Skills",
+    ),
+    // P6-11ey: PoB's `ManaReservationEfficiency` with `KeywordFlag.Mine`.
+    (
+        "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
+        "{0}% increased Mana Reservation Efficiency of Skills that throw Mines",
+    ),
+    // P6-11bs: PoB's `BuffEffect` with `KeywordFlag.Warcry`, read by the
+    // warcries' scale (`skill_modifiers::Totals::warcry_buff_effect`).
+    ("warcry_buff_effect_+%", "{0}% increased Warcry Buff Effect"),
+    (
+        "base_cooldown_speed_+%",
+        "{0}% increased Cooldown Recovery Rate",
+    ),
+    (
+        "skill_effect_duration_+%",
+        "{0}% increased Skill Effect Duration",
+    ),
+    (
+        "warcry_cooldown_speed_+%",
+        "{0}% increased Warcry Cooldown Recovery Rate",
+    ),
+    ("warcry_duration_+%", "{0}% increased Warcry Duration"),
+    (
+        "warcry_monster_power_+%",
+        "{0}% increased total Power counted by Warcries",
+    ),
+    ("warcry_speed_+%", "{0}% increased Warcry Speed"),
+    // P6-11k: PoB's `SkillAuraEffectOnSelf`.
+    (
+        "aura_effect_on_self_from_your_skills_+%",
+        "Auras from your Skills have {0}% increased Effect on you",
+    ),
+    // P6-11df: PoB's `CurseEffect` with `SkillType.Mark`.
+    (
+        "mark_skills_curse_effect_+%",
+        "{0}% increased Effect of your Marks",
+    ),
 ];
 
 /// `NoEffect` rows whose text names reservation or the effect of auras or
 /// buffs, each checked to reach no slice field (`poe1::mapping::NO_EFFECT`'s
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
-const NO_EFFECT_NAMING: &[&str] = &["base_aura_area_of_effect_+%"];
+const NO_EFFECT_NAMING: &[&str] = &[
+    "base_aura_area_of_effect_+%",
+    // P6-11ey: the mine supports' cost as reservation, read by the
+    // support's ID (`gems::COST_AS_RESERVATION_SUPPORTS`).
+    "remote_mined_by_support",
+];
 
 #[test]
 fn the_texts_should_name_the_rows() {
@@ -102,6 +154,21 @@ fn real_reservation_and_aura_stats_should_be_covered() {
             "{stat}: {text}"
         );
     }
+    // P6-11fq: each no-reservation row's text names its skill, and the
+    // aura rows say "if Cast as an Aura".
+    for (stat, skill, aura) in loom_calc::poe1::skill_modifiers::NO_RESERVATION_STATS {
+        let suffix = if aura {
+            " has no Reservation if Cast as an Aura"
+        } else {
+            " has no Reservation"
+        };
+        assert!(
+            texts
+                .iter()
+                .any(|&(s, t)| s == stat && t == format!("{skill}{suffix}")),
+            "{stat}: {skill}{suffix}"
+        );
+    }
     let names = |t: &str| {
         let t = t.to_ascii_lowercase();
         t.contains("reserv") || (t.contains("effect") && (t.contains("aura") || t.contains("buff")))
@@ -121,6 +188,42 @@ fn real_reservation_and_aura_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
+            // A field's reason marker (P6-10b): still a reason, on that
+            // field alone (Manaweave's cost from unreserved mana).
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    matches!(
+                        t.quantity,
+                        loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::CostReason(_)
+                                | loom_calc::poe1::Poe1Quantity::RegenReason(..)
+                                | loom_calc::poe1::Poe1Quantity::MovementReason(_)
+                        )
+                    )
+                }) => {}
+            // "<Skill> has no Reservation" (P6-11fq): the flag of its row
+            // in `skill_modifiers::NO_RESERVATION_STATS`.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    matches!(
+                        t.quantity,
+                        loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::SkillNoReservation(_)
+                        )
+                    )
+                }) => {}
+            // Blood Magic (P6-11an): its "Skills Reserve Life instead of
+            // Mana" is the flag `skill_modifiers::Totals` reads.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().any(|t| {
+                    t.quantity
+                        == loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::ReserveLifeInsteadOfMana,
+                        )
+                }) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

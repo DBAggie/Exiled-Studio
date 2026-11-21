@@ -17,16 +17,31 @@ pub const FORMAT: u32 = 1;
 /// to every breakdown term and `node` to slot rows (P3-5); revision 3
 /// added the Phase 6 fields ([`PRESENT_NAMES`]), each `applies: present`;
 /// revision 4 added the minion's fields ([`MINION_NAMES`], P6-7b2), each
-/// with a nested PoB path (`pob_path`) and `applies: minion`.
-pub const REVISION: u32 = 4;
+/// with a nested PoB path (`pob_path`) and `applies: minion`; revision 5
+/// added the minion's main skill's hit (P6-7c); revision 6 life and mana
+/// regeneration (P6-10b); revision 7 energy shield regeneration and
+/// recharge (P6-10b); revision 8 movement speed (P6-10b); revision 9 the
+/// main skill's mana cost (P6-10b); revision 10 the combined damage per
+/// second (P6-12); revision 11 the minion's ignite, bleeding, poison,
+/// impale, and combined damage per second (P6-7c3d,
+/// `applies: minion-present`); revision 12 each damage type's base damage
+/// reduction (P6-10b part 5); revision 13 the mana cost per second
+/// (P6-10b part 6); revision 14 the full damage per second (P6-12 part 2);
+/// revision 15 the leech caps (P6-10b part 7); revision 16 the life and
+/// energy shield costs (P6-10b part 8); revision 17 the leech rates (P6-10b
+/// part 9); revision 18 the damage taken over time multipliers (P6-10b part
+/// 10); revision 19 the evade chances (P6-10b part 11); revision 20 the
+/// enemy's hit (P6-10b part 12); revision 21 the maximum hit taken (P6-10b
+/// part 13); revision 22 the effective health pool (P6-10b part 14).
+pub const REVISION: u32 = 22;
 
-/// The minion's fields (slice revision 4; Phase 6 P6-7b2): our id, PoB's
+/// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
 /// result has them only when the main skill has a minion the engine
 /// computes; every one is compared when the oracle's `main_output` has a
 /// `Minion` table or our result has the field (`applies: minion`), so a
 /// minion value of 0 is compared, not skipped.
-pub const MINION_NAMES: [(&str, [&str; 2], &str); 8] = [
+pub const MINION_NAMES: [(&str, [&str; 2], &str); 19] = [
     ("Minion.Life", ["Minion", "Life"], "minion.life"),
     (
         "Minion.EnergyShield",
@@ -55,18 +70,199 @@ pub const MINION_NAMES: [(&str, [&str; 2], &str); 8] = [
         ["Minion", "ChaosResist"],
         "minion.resistance.chaos",
     ),
+    // Revision 5 (P6-7c): the minion's main skill's hit.
+    (
+        "Minion.AverageDamage",
+        ["Minion", "AverageDamage"],
+        "minion.average-damage",
+    ),
+    ("Minion.Speed", ["Minion", "Speed"], "minion.speed"),
+    (
+        "Minion.HitChance",
+        ["Minion", "HitChance"],
+        "minion.hit-chance",
+    ),
+    (
+        "Minion.CritChance",
+        ["Minion", "CritChance"],
+        "minion.crit-chance",
+    ),
+    (
+        "Minion.CritMultiplier",
+        ["Minion", "CritMultiplier"],
+        "minion.crit-multiplier",
+    ),
+    ("Minion.TotalDPS", ["Minion", "TotalDPS"], "minion.hit-dps"),
+    // Revision 11 (P6-7c3d): `applies: minion-present` ([`MINION_PRESENT`]).
+    (
+        "Minion.IgniteDPS",
+        ["Minion", "IgniteDPS"],
+        "minion.ignite-dps",
+    ),
+    (
+        "Minion.BleedDPS",
+        ["Minion", "BleedDPS"],
+        "minion.bleed-dps",
+    ),
+    (
+        "Minion.TotalPoisonDPS",
+        ["Minion", "TotalPoisonDPS"],
+        "minion.poison-dps",
+    ),
+    (
+        "Minion.ImpaleDPS",
+        ["Minion", "ImpaleDPS"],
+        "minion.impale-dps",
+    ),
+    (
+        "Minion.CombinedDPS",
+        ["Minion", "CombinedDPS"],
+        "minion.poe1.combined-dps",
+    ),
+];
+
+/// The minion fields compared only where either side has the mechanic
+/// (slice revision 11, `applies: minion-present`): our field, or the
+/// oracle's minion value other than 0, as `applies: present` for the
+/// character's.
+pub const MINION_PRESENT: [&str; 5] = [
+    "Minion.IgniteDPS",
+    "Minion.BleedDPS",
+    "Minion.TotalPoisonDPS",
+    "Minion.ImpaleDPS",
+    "Minion.CombinedDPS",
 ];
 
 /// The Phase 6 fields (slice revision 3; Phase 6 plan, decision 2): PoB's
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 5] = [
+pub const PRESENT_NAMES: [(&str, &str); 65] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
     ("TotalPoisonDPS", "poison-dps"),
     ("ImpaleDPS", "poe1.impale-dps"),
+    // Revision 6 (P6-10b): regeneration; our result has them whenever the
+    // pool is computed.
+    ("LifeRegen", "poe1.life-regen"),
+    ("ManaRegen", "poe1.mana-regen"),
+    // Revision 7 (P6-10b): energy shield regeneration and recharge; our
+    // result has them whenever energy shield is computed.
+    ("EnergyShieldRegen", "poe1.energy-shield-regen"),
+    ("EnergyShieldRecharge", "poe1.energy-shield-recharge"),
+    (
+        "EnergyShieldRechargeDelay",
+        "poe1.energy-shield-recharge-delay",
+    ),
+    // Revision 8 (P6-10b): movement speed; our result always has them.
+    ("MovementSpeedMod", "poe1.movement-speed"),
+    ("EffectiveMovementSpeedMod", "poe1.effective-movement-speed"),
+    // Revision 9 (P6-10b): the main skill's mana cost; our result always
+    // has it.
+    ("ManaCost", "poe1.mana-cost"),
+    // Revision 10 (P6-12): the main skill's combined damage per second;
+    // our result has it whenever the build has a main skill.
+    ("CombinedDPS", "poe1.combined-dps"),
+    // Revision 12 (P6-10b part 5): each damage type's base damage
+    // reduction; our result always has them.
+    (
+        "BasePhysicalDamageReduction",
+        "poe1.base-physical-damage-reduction",
+    ),
+    ("BaseFireDamageReduction", "poe1.base-fire-damage-reduction"),
+    ("BaseColdDamageReduction", "poe1.base-cold-damage-reduction"),
+    (
+        "BaseLightningDamageReduction",
+        "poe1.base-lightning-damage-reduction",
+    ),
+    (
+        "BaseChaosDamageReduction",
+        "poe1.base-chaos-damage-reduction",
+    ),
+    // Revision 13 (P6-10b part 6): the mana cost per second; our result has
+    // it with a cost and a computed speed.
+    ("ManaPerSecondCost", "poe1.mana-per-second-cost"),
+    // Revision 14 (P6-12 part 2): the build's full damage per second; our
+    // result always has it.
+    ("FullDPS", "poe1.full-dps"),
+    // Revision 15 (P6-10b part 7): the leech caps; our result has each with
+    // its pool, the percent always.
+    ("MaxLifeLeechRate", "poe1.max-life-leech-rate"),
+    (
+        "MaxLifeLeechRatePercent",
+        "poe1.max-life-leech-rate-percent",
+    ),
+    ("MaxLifeLeechInstance", "poe1.max-life-leech-instance"),
+    (
+        "MaxEnergyShieldLeechRate",
+        "poe1.max-energy-shield-leech-rate",
+    ),
+    (
+        "MaxEnergyShieldLeechInstance",
+        "poe1.max-energy-shield-leech-instance",
+    ),
+    ("MaxManaLeechRate", "poe1.max-mana-leech-rate"),
+    ("MaxManaLeechInstance", "poe1.max-mana-leech-instance"),
+    // Revision 16 (P6-10b part 8): the life and energy shield costs, with a
+    // main skill; their costs per second with a cost and a computed speed.
+    ("LifeCost", "poe1.life-cost"),
+    ("ESCost", "poe1.energy-shield-cost"),
+    ("LifePerSecondCost", "poe1.life-per-second-cost"),
+    ("ESPerSecondCost", "poe1.energy-shield-per-second-cost"),
+    // Revision 17 (P6-10b part 9): the leech rates, when the hit leeches.
+    ("LifeLeechRate", "poe1.life-leech-rate"),
+    ("EnergyShieldLeechRate", "poe1.energy-shield-leech-rate"),
+    ("ManaLeechRate", "poe1.mana-leech-rate"),
+    // Revision 18 (P6-10b part 10): the damage taken over time multipliers,
+    // always.
+    ("PhysicalTakenDotMult", "poe1.physical-taken-dot-mult"),
+    ("FireTakenDotMult", "poe1.fire-taken-dot-mult"),
+    ("ColdTakenDotMult", "poe1.cold-taken-dot-mult"),
+    ("LightningTakenDotMult", "poe1.lightning-taken-dot-mult"),
+    ("ChaosTakenDotMult", "poe1.chaos-taken-dot-mult"),
+    // Revision 19 (P6-10b part 11): the evade chances, with evasion.
+    ("EvadeChance", "poe1.evade-chance"),
+    ("MeleeEvadeChance", "poe1.melee-evade-chance"),
+    ("ProjectileEvadeChance", "poe1.projectile-evade-chance"),
+    // Revision 20 (P6-10b part 12): the enemy's hit, with armour and the
+    // evade chances.
+    ("PhysicalTakenHitMult", "poe1.physical-taken-hit-mult"),
+    ("FireTakenHitMult", "poe1.fire-taken-hit-mult"),
+    ("ColdTakenHitMult", "poe1.cold-taken-hit-mult"),
+    ("LightningTakenHitMult", "poe1.lightning-taken-hit-mult"),
+    ("ChaosTakenHitMult", "poe1.chaos-taken-hit-mult"),
+    ("PhysicalDamageReduction", "poe1.physical-damage-reduction"),
+    ("FireDamageReduction", "poe1.fire-damage-reduction"),
+    ("ColdDamageReduction", "poe1.cold-damage-reduction"),
+    (
+        "LightningDamageReduction",
+        "poe1.lightning-damage-reduction",
+    ),
+    ("ChaosDamageReduction", "poe1.chaos-damage-reduction"),
+    // Revision 21 (P6-10b part 13): the maximum hit taken.
+    ("PhysicalMaximumHitTaken", "poe1.physical-maximum-hit-taken"),
+    ("FireMaximumHitTaken", "poe1.fire-maximum-hit-taken"),
+    ("ColdMaximumHitTaken", "poe1.cold-maximum-hit-taken"),
+    (
+        "LightningMaximumHitTaken",
+        "poe1.lightning-maximum-hit-taken",
+    ),
+    ("ChaosMaximumHitTaken", "poe1.chaos-maximum-hit-taken"),
+    (
+        "SecondMinimalMaximumHitTaken",
+        "poe1.second-minimal-maximum-hit-taken",
+    ),
+    // Revision 22 (P6-10b part 14): the effective health pool.
+    ("NumberOfDamagingHits", "poe1.number-of-damaging-hits"),
+    (
+        "NumberOfMitigatedDamagingHits",
+        "poe1.number-of-mitigated-damaging-hits",
+    ),
+    ("TotalNumberOfHits", "poe1.total-number-of-hits"),
+    ("ConfiguredDamageChance", "poe1.configured-damage-chance"),
+    ("ConfiguredNotHitChance", "poe1.configured-not-hit-chance"),
+    ("TotalEHP", "poe1.total-ehp"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),
@@ -376,7 +572,12 @@ impl SliceFile {
             let minion = MINION_NAMES.iter().find(|(id, _, _)| *id == f.id);
             match minion {
                 Some((_, path, _)) => {
-                    if f.applies != "minion"
+                    let applies = if MINION_PRESENT.contains(&f.id.as_str()) {
+                        "minion-present"
+                    } else {
+                        "minion"
+                    };
+                    if f.applies != applies
                         || f.pob_path.as_deref().is_none_or(|p| p != path.as_slice())
                         || f.breakdown.is_some()
                     {
@@ -386,7 +587,7 @@ impl SliceFile {
                         );
                     }
                 }
-                None if f.applies == "minion" || f.pob_path.is_some() => {
+                None if f.applies.starts_with("minion") || f.pob_path.is_some() => {
                     return bad("only a minion field has a PoB path".to_owned());
                 }
                 None => {}
@@ -471,7 +672,13 @@ mod tests {
             .collect();
         assert_eq!(ours, engine);
         assert_eq!(SliceFile::our_name("TotalDPS"), Some("hit-dps"));
-        assert_eq!(SliceFile::our_name("CombinedDPS"), None);
+        // A Phase 6 field (P6-12) has our name too; a PoB id the slice
+        // never names has none.
+        assert_eq!(
+            SliceFile::our_name("CombinedDPS"),
+            Some("poe1.combined-dps")
+        );
+        assert_eq!(SliceFile::our_name("CullingDPS"), None);
     }
 
     #[test]

@@ -1,5 +1,6 @@
 //! Keystones that change the main skill's hit (Phase 3 plan, step 8;
-//! P3-8m): Resolute Technique, Elemental Overload, and Bitter Frost.
+//! P3-8m): Resolute Technique, Elemental Overload, and Bitter Frost; and
+//! Glancing Blows' block (P6-11g, [`KEYSTONES`]).
 //!
 //! What PoB v2.67.2 does. A keystone node's lines are the passive tree's
 //! text (`passive_skill_stat_descriptions.txt`), each read by
@@ -54,9 +55,9 @@
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 
-use super::Poe1Quantity;
+use super::{Poe1Quantity, Pool, TakenOf, TakenWhen};
 
 /// The skill condition Elemental Overload's more damage needs (PoB's
 /// `CritInPast8Sec`): settled by the hit, true when its crit chance is not
@@ -85,8 +86,75 @@ const fn flag(q: Poe1Quantity) -> KeystoneEffect {
 
 /// The keystones, sorted by stat ID (a test checks the order), each read as
 /// PoB reads its lines (module docs). A keystone stat's value is 1, so each
+/// Divine Shield's pseudo recoup, PoB's value (`ModCache.lua` 4760).
+pub const DIVINE_SHIELD_PSEUDO_RECOUP: f64 = 12.0;
+
+/// Mind over Matter's damage taken from mana before life, percent.
+pub const MIND_OVER_MATTER: f64 = 40.0;
+
+/// Glancing Blows' damage taken from blocked hits, percent (`ModParser`'s
+/// "you take (%d+)%% of damage from blocked hits", `BlockEffect` BASE).
+pub const GLANCING_BLOWS_BLOCK_EFFECT: f64 = 65.0;
+
 /// value is the effect's.
 pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
+    // Blood Magic (P6-11an): the tree's "Removes all mana" (`Mana` MORE
+    // -100), "10% more maximum Life" (`Life` MORE 10), "Skills Cost Life
+    // instead of Mana" (`CostLifeInsteadOfMana` FLAG), and "Skills Reserve
+    // Life instead of Mana" (`BloodMagicReserved` FLAG).
+    // Acrobatics (P6-11el): the tree's "Modifiers to Chance to Suppress
+    // Spell Damage instead apply to Chance to Dodge Spell Hits at 50% of
+    // their value" (`ConvertSpellSuppressionToSpellDodge` FLAG,
+    // `SpellSuppressionChance` OVERRIDE 0) and "Maximum Chance to Dodge
+    // Spell Hits is 75%" (`SpellDodgeChanceMax` OVERRIDE 75): the flag, read
+    // by `phases` and `enemy_hit`.
+    (
+        "keystone_acrobatics",
+        &[flag(Poe1Quantity::SuppressionToSpellDodge)],
+    ),
+    (
+        "keystone_blood_magic",
+        &[
+            (
+                Quantity::Mana,
+                Op::More,
+                -100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Life,
+                Op::More,
+                10.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::CostLifeInsteadOfMana),
+            flag(Poe1Quantity::ReserveLifeInsteadOfMana),
+        ],
+    ),
+    // Chaos Inoculation (P6-11ej): the tree's "Maximum Life becomes 1, Immune
+    // to Chaos Damage" (`ChaosInoculation` FLAG, `ChaosDamageTaken` MORE
+    // -100; `ModParser.lua` 2242). Its `FullLife` is `states`'.
+    (
+        "keystone_chaos_inoculation",
+        &[
+            flag(Poe1Quantity::ChaosInoculation),
+            (
+                Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                    TakenWhen::Always,
+                    TakenOf::Type(DamageType::Chaos),
+                )),
+                Op::More,
+                -100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
+    ),
     (
         "keystone_cold_purist",
         &[
@@ -95,6 +163,44 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             flag(Poe1Quantity::DealNo(DamageType::Fire)),
             flag(Poe1Quantity::DealNo(DamageType::Lightning)),
             flag(Poe1Quantity::DealNo(DamageType::Chaos)),
+        ],
+    ),
+    // Divine Shield (P6-11am): the tree's "Cannot Recover Energy Shield to
+    // above Armour" (`ArmourESRecoveryCap` FLAG) and "3% of Physical Damage
+    // prevented from Hits Recently is Regenerated as Energy Shield per
+    // second" (`PhysicalDamageMitigatedEnergyShieldPseudoRecoup` BASE 12,
+    // `ModCache.lua` 4760).
+    (
+        "keystone_divine_shield",
+        &[
+            flag(Poe1Quantity::ArmourEsRecoveryCap),
+            (
+                Quantity::Poe1(Poe1Quantity::PseudoRecoup),
+                Op::Base,
+                DIVINE_SHIELD_PSEUDO_RECOUP,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
+    ),
+    // Eldritch Battery (P6-11ap): the tree's "Spend Energy Shield before
+    // Mana for Skill Mana Costs" (PoB parses it to nothing; the cost moves
+    // with the flag), "Energy Shield protects Mana instead of Life"
+    // (`EnergyShieldProtectsMana` FLAG), and "50% less Energy Shield
+    // Recharge Rate" (`EnergyShieldRecharge` MORE -50).
+    (
+        "keystone_eldritch_battery",
+        &[
+            flag(Poe1Quantity::EsProtectsMana),
+            (
+                Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
         ],
     ),
     (
@@ -122,6 +228,134 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             flag(Poe1Quantity::NoCritMultiplier),
             flag(Poe1Quantity::AilmentsNeverFromCrit),
         ],
+    ),
+    // Glancing Blows (P6-11g): "Chance to Block Attack Damage is doubled"
+    // is `BlockChance` MORE 100, which PoB's spell block also reads
+    // (`CalcDefence.lua` 709 to 713 take the `BlockChance` increases and
+    // mores); its "Chance to Block Spell Damage is doubled"
+    // (`SpellBlockChance` MORE) only scales projectile spell block, and "You
+    // take 65% of Damage from Blocked Hits" is `BlockEffect` BASE 65, which
+    // the effective health pool reads (P6-10b part 14).
+    // Eternal Youth (P6-11ao): the tree's "50% less Life Regeneration Rate"
+    // (`LifeRegen` MORE -50), "50% less maximum Total Life Recovery per
+    // Second from Leech" (`MaxLifeLeechRate` MORE -50), and "Energy Shield
+    // Recharge instead applies to Life" (`EnergyShieldRechargeAppliesToLife`).
+    (
+        "keystone_eternal_youth",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::Regen(Pool::Life)),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::LeechRateMax(Pool::Life)),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::EsRechargeAppliesToLife),
+        ],
+    ),
+    (
+        "keystone_glancing_blows",
+        &[
+            (
+                Quantity::BlockChance,
+                Op::More,
+                100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::BlockEffect),
+                Op::Base,
+                GLANCING_BLOWS_BLOCK_EFFECT,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
+    ),
+    // Lightning Purist (P6-11ei; the game's name for Roiling Tempest's
+    // stat): the tree's "25% more Maximum Lightning Damage"
+    // (`MaxLightningDamage` MORE 25), "50% less Minimum Lightning Damage"
+    // (`MinLightningDamage` MORE -50), and "Cannot deal non-Lightning
+    // Damage" (`DealNoPhysical`, `DealNoCold`, `DealNoFire`, `DealNoChaos`;
+    // `ModCache.lua` 5945, 8049).
+    // Iron Reflexes (P6-11ek): the tree's "Converts all Evasion Rating to
+    // Armour. Dexterity provides no bonus to Evasion Rating" (`IronReflexes`
+    // and `NoDexBonusToEvasion` FLAG; `ModParser.lua` 2230).
+    (
+        "keystone_iron_reflexes",
+        &[
+            flag(Poe1Quantity::IronReflexes),
+            flag(Poe1Quantity::NoDexBonusToEvasion),
+        ],
+    ),
+    (
+        "keystone_lightning_purist",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::BoundDamage(
+                    Some(DamageType::Lightning),
+                    Bound::Max,
+                )),
+                Op::More,
+                25.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::BoundDamage(
+                    Some(DamageType::Lightning),
+                    Bound::Min,
+                )),
+                Op::More,
+                -50.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+            flag(Poe1Quantity::DealNo(DamageType::Physical)),
+            flag(Poe1Quantity::DealNo(DamageType::Cold)),
+            flag(Poe1Quantity::DealNo(DamageType::Fire)),
+            flag(Poe1Quantity::DealNo(DamageType::Chaos)),
+        ],
+    ),
+    // Mind over Matter (P6-10b part 15): the tree's text "40% of Damage is
+    // taken from Mana before Life" (`DamageTakenFromManaBeforeLife` BASE).
+    (
+        "keystone_mana_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaBeforeLife(TakenOf::All)),
+            Op::Base,
+            MIND_OVER_MATTER,
+            Flags::NONE,
+            Flags::NONE,
+            None,
+        )],
+    ),
+    // Pain Attunement (P6-11ei): the tree's "30% more Spell Damage when on
+    // Low Life" (`Damage` MORE 30 with `ModFlag.Spell`, `Condition`
+    // `LowLife`, the config's check, `conditions::LOW_LIFE`).
+    (
+        "keystone_pain_attunement",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            30.0,
+            Flags::SPELL,
+            Flags::NONE,
+            Some(super::conditions::LOW_LIFE),
+        )],
     ),
     (
         "resolute_technique",
