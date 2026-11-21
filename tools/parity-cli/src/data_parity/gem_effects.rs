@@ -223,6 +223,13 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // P6-11fs: a brand beside the main skill has no global effect (the
+    // brands attached are the config's, P6-11ed); Combust and the Frost
+    // enchantment are triggered by their own rule.
+    ("ArmageddonBrand", "Brand"),
+    ("Combust", "Triggered"),
+    ("EnchantmentOfFrostOnKill4", "Triggered"),
+    ("PenanceBrand", "Brand"),
     // P6-11fr: Primal Aegis is triggered by its own rule.
     ("PrimalAegis", "Triggered"),
     // P6-11fr: Bloodrend, an item's triggered spell.
@@ -349,6 +356,20 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fs: the skill's own data, beside the main skill no global effect
+    // (Cremation's fire rate, Dark Pact's life as damage, Vaal Righteous
+    // Fire's burning and sacrifice and its soul key); the Frost enchantment
+    // triggers itself.
+    ("Cremation", "cremationFireRate"),
+    ("Cremation", "cremationFireRateIncrease"),
+    ("DarkPact", "lifeDealtAsChaos"),
+    ("EnchantmentOfFrostOnKill4", "triggered"),
+    ("VaalRighteousFire", "RFMultiplier"),
+    ("VaalRighteousFire", "percentSacrificed"),
+    (
+        "VaalRighteousFire",
+        "skillEffectAppliesToSoulGainPrevention",
+    ),
     // P6-11fr: Primal Aegis triggers itself (an item's skill), with no
     // stat map.
     ("PrimalAegis", "triggered"),

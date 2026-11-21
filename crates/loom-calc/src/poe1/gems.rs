@@ -562,6 +562,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fs: no global effect in PoB (`Data/Skills`).
+    ("ArmageddonBrand", Kind::Inert),
     // Assassin's Mark (P6-9e): PoB's `SelfCritChance` and
     // `SelfCritMultiplier` BASE on the enemy, which a hit adds to its crit
     // chance's base and its extra damage (`CalcOffence.lua` 3015, 3125): the
@@ -778,6 +780,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("Combust", Kind::Inert),
     (
         "Conductivity",
         Kind::Curse {
@@ -818,6 +821,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("Cremation", Kind::Inert),
     // Cyclone (P6-8a, Cast while Channelling's source): its movement speed
     // buff, `MovementSpeed` MORE with `Condition:ChannellingCyclone` (the
     // config's check) as an `unscalable` buff (`Data/Skills/act_dex.lua`
@@ -843,6 +847,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("DarkPact", Kind::Inert),
     ("Dash", Kind::Inert),
     ("Desecrate", Kind::Inert),
     (
@@ -897,6 +902,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("DetonateDead", Kind::Inert),
     (
         "Discipline",
         Kind::Buff {
@@ -957,6 +963,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("EnchantmentOfFrostOnKill4", Kind::Inert),
     (
         "EnduringCry",
         Kind::Warcry {
@@ -1684,6 +1691,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("OrbOfStorms", Kind::Inert),
+    ("PenanceBrand", Kind::Inert),
     // P6-11fo: Phase Run's buff (`act_dex.lua`, `PhaseRun`): movement
     // speed, and physical damage MORE with melee for skills that are not
     // totems' (PoB's negated `SkillType.SummonsTotem` tag,
@@ -2559,6 +2567,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fs: Vaal Righteous Fire's buff (`act_str.lua`): spell damage MORE.
+    // Its burning and the life it takes act on the skill alone.
+    (
+        "VaalRighteousFire",
+        Kind::Buff {
+            name: "Vaal Righteous Fire",
+            effect: EffectType::Buff,
+            stats: &[(
+                "vaal_righteous_fire_spell_damage_+%_final",
+                BuffStat::Rows(&[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)]),
+            )],
+        },
+    ),
     ("VaalSummonSkeletons", Kind::Inert),
     (
         "Vitality",
@@ -2621,6 +2642,18 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("WhirlingBlades", Kind::Inert),
+    // P6-11fs: Wither's debuff slows the enemy ("Withered", reaching no
+    // slice field); its withered stacks are the config's (P6-11aq).
+    (
+        "Wither",
+        Kind::Debuff {
+            name: "Withered",
+            stats: &[(
+                "base_movement_velocity_+%",
+                BuffStat::NoSlice("enemy-movement"),
+            )],
+        },
+    ),
     // Withering Step (P6-11aq): a buff with no reservation whose global
     // effects are Elusive's, `Condition:CanBeElusive` (the stat-less base
     // mod, `act_dex.lua` 17333) and `elusive_effect_+%` (its quality's

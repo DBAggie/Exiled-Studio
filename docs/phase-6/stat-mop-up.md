@@ -3338,3 +3338,24 @@ A Vaal gem grants its base skill too (`gemId` with two granted effects): a build
 - **One away:** a Holy Flame Totem Hierophant's unreserved mana (130 to 98, PoB 181): its Pyroclast Mine of Sabotage with Charged Mines now reserves. The engine was already below PoB's unreserved mana before this, so another cause still reserves more than PoB does.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fs: skills with no global effect, Vaal Righteous Fire's buff, Wither's debuff
+
+Found by counting, across the public and corpus runs, the granted effect IDs the skill table misses (a local instrumented run). A gem's skill ID is not always the effect the table needs: a Vaal gem grants its base skill too (P6-11fr).
+
+**PoB** (`Data/Skills`):
+- **No global effect:** Armageddon Brand, Penance Brand, Combust, Cremation, Dark Pact, Detonate Dead, and the Frost enchantment's triggered spell (`EnchantmentOfFrostOnKill4`).
+- **Vaal Righteous Fire's buff:** `Damage` MORE with spells (`vaal_righteous_fire_spell_damage_+%_final`).
+- **Wither's "Withered" debuff:** only the enemy's movement speed.
+
+**The engine (`gems::SKILLS`):** the seven as `Kind::Inert`, Vaal Righteous Fire as a buff with its row, Wither as a debuff whose stat is `NoSlice`. `data-parity` (`gem_effects`) allows each skill's own data, the brands' type, and the triggered spells, with why; `uncategorized` 0.
+
+**Left for their own steps:**
+- **The banners:** PoB's `AuraEffect` MORE per resource (Valour).
+- **Corrupting Fever:** a buff skill with no stat map, whose effect PoB reads elsewhere.
+- **Herald of the Breach, Flame Surge, Scorching Ray, Wave of Conviction, Sigil of Power, Plague Bearer, Petrified Blood:** each needs a stage, a config condition, or a pool.
+
+**Evidence** (`b-ct`, against P6-11fr's run):
+- **Public:** 0 unexpected. 4 values moved, all toward PoB: a dual-wield Cast on Crit build's damage with Vaal Righteous Fire's buff, and a Righteous Fire Chieftain's full DPS.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
