@@ -98,16 +98,18 @@ fn the_main_skill_should_be_the_main_groups_active_gem_with_its_supports() {
 fn keyword_flags_should_follow_the_skills_types() {
     let types =
         |names: &[&str]| -> BTreeSet<String> { names.iter().map(|n| (*n).to_owned()).collect() };
+    // Every skill that is not a totem's has `SKILL_NOT_TOTEM` (P6-11fo).
+    let nt = |f: Flags| f | Flags::SKILL_NOT_TOTEM;
     for (name, t) in KEYWORD_TYPES {
         assert_eq!(
             keyword_flags(&types(&["Spell", name])),
-            Flags::skill_keyword(t),
+            nt(Flags::skill_keyword(t)),
             "{name}"
         );
     }
     assert_eq!(
         keyword_flags(&types(&["Attack", "Fire", "Lightning"])),
-        Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING
+        nt(Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING)
     );
     // Totem, else trap, else mine (P6-11bk; `CalcActiveSkill.lua` 415).
     assert_eq!(
@@ -116,26 +118,29 @@ fn keyword_flags_should_follow_the_skills_types() {
     );
     assert_eq!(
         keyword_flags(&types(&["Spell", TRAP_TYPE, MINE_TYPE])),
-        Flags::KEYWORD_TRAP
+        nt(Flags::KEYWORD_TRAP)
     );
     assert_eq!(
         keyword_flags(&types(&["Spell", MINE_TYPE])),
-        Flags::KEYWORD_MINE
+        nt(Flags::KEYWORD_MINE)
     );
     // "Projectile Attack Skills" (P6-11co): the `RangedAttack` type.
     assert_eq!(
         keyword_flags(&types(&["Attack", RANGED_ATTACK_TYPE])),
-        Flags::SKILL_RANGED_ATTACK
+        nt(Flags::SKILL_RANGED_ATTACK)
     );
     // "with Brand Skills", "Mark Skills" (P6-11cx).
     assert_eq!(
         keyword_flags(&types(&["Spell", "Brand"])),
-        Flags::SKILL_BRAND
+        nt(Flags::SKILL_BRAND)
     );
-    assert_eq!(keyword_flags(&types(&["Spell", "Mark"])), Flags::SKILL_MARK);
+    assert_eq!(
+        keyword_flags(&types(&["Spell", "Mark"])),
+        nt(Flags::SKILL_MARK)
+    );
     assert_eq!(
         keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),
-        Flags::NONE
+        nt(Flags::NONE)
     );
 }
 
@@ -151,7 +156,7 @@ fn a_type_a_support_adds_should_give_its_keyword() {
     )
     .unwrap()
     .keyword_flags();
-    assert_eq!(base, Flags::NONE);
+    assert_eq!(base, Flags::SKILL_NOT_TOTEM);
     let skills = data.skills.as_mut().unwrap();
     for e in &mut skills.granted_effects {
         if e.id == "SupportTestDamage" {
@@ -165,7 +170,10 @@ fn a_type_a_support_adds_should_give_its_keyword() {
     )
     .unwrap();
     assert!(m.types.contains("Cold"));
-    assert_eq!(m.keyword_flags(), Flags::SKILL_COLD);
+    assert_eq!(
+        m.keyword_flags(),
+        Flags::SKILL_COLD | Flags::SKILL_NOT_TOTEM
+    );
 }
 
 /// Phase 6: a gem the data does not have is skipped, as PoB does
@@ -638,11 +646,17 @@ fn real_skill_types_should_name_the_keyword_types() {
         let active = data.active_skill(id).unwrap();
         keyword_flags(&active.types.iter().cloned().collect())
     };
-    assert_eq!(flags("ice_nova"), Flags::SKILL_COLD);
+    // Neither is a totem's (P6-11fo: `SKILL_NOT_TOTEM`).
+    assert_eq!(
+        flags("ice_nova"),
+        Flags::SKILL_COLD.union(Flags::SKILL_NOT_TOTEM)
+    );
     // P6-11dw: Smite is a melee skill.
     assert_eq!(
         flags("smite"),
-        Flags::SKILL_LIGHTNING.union(Flags::SKILL_MELEE)
+        Flags::SKILL_LIGHTNING
+            .union(Flags::SKILL_MELEE)
+            .union(Flags::SKILL_NOT_TOTEM)
     );
 }
 

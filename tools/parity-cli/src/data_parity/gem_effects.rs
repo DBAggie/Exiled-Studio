@@ -628,6 +628,15 @@ fn is_not_vaal_smite(t: &BTreeMap<String, Value>) -> bool {
 
 /// PoB's `SkillType.Melee` tag (`SkillType.Melee = 20`, `Data/Global.lua`
 /// 237; P6-11dw).
+/// PoB's negated `SkillType.SummonsTotem` tag (26), `Flags::SKILL_NOT_TOTEM`
+/// (P6-11fo).
+fn is_not_totem_skill_type(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("SkillType")
+        && t.get("skillType").and_then(Value::as_i64) == Some(26)
+        && t.get("neg").and_then(Value::as_bool) == Some(true)
+        && t.len() == 3
+}
+
 fn is_melee_skill_type(t: &BTreeMap<String, Value>) -> bool {
     t.get("type").and_then(Value::as_str) == Some("SkillType")
         && t.get("skillType").and_then(Value::as_i64) == Some(20)
@@ -674,7 +683,15 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     if m.tags.iter().any(is_melee_skill_type) {
         f.push("skill-melee");
     }
-    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 512 | 1024);
+    // `ModFlag.Melee` (P6-11fo: Phase Run).
+    if flags & 256 != 0 {
+        f.push("melee");
+    }
+    // The negated `SummonsTotem` tag (P6-11fo), `Flags::SKILL_NOT_TOTEM`.
+    if m.tags.iter().any(is_not_totem_skill_type) {
+        f.push("skill-not-totem");
+    }
+    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 256 | 512 | 1024);
     let rest_kw = kw & !(0x1_0000 | 0x2_0000);
     let mut tags: Vec<String> = m
         .tags
@@ -684,6 +701,7 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         // mod is not a minion's; every row here is the character's.
         .filter(|t| !is_not_minion(t))
         .filter(|t| !is_melee_skill_type(t))
+        .filter(|t| !is_not_totem_skill_type(t))
         // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
         // Vaal Smite has no entry in the engine's tables, so a build with it
         // carries an `unmodelled-gem` reason and the condition is off.
@@ -1111,6 +1129,12 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
             if all.contains(Flags::SKILL_MELEE) {
                 f.push("skill-melee");
             }
+            if all.contains(Flags::MELEE) {
+                f.push("melee");
+            }
+            if all.contains(Flags::SKILL_NOT_TOTEM) {
+                f.push("skill-not-totem");
+            }
             let other = !any.is_empty()
                 || !(Flags::ATTACK
                     | Flags::SPELL
@@ -1119,7 +1143,9 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
                     | Flags::PROJECTILE
                     | Flags::DOT
                     | Flags::AREA
-                    | Flags::SKILL_MELEE)
+                    | Flags::SKILL_MELEE
+                    | Flags::MELEE
+                    | Flags::SKILL_NOT_TOTEM)
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",

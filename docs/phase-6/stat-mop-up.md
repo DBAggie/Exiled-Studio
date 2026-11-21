@@ -3269,3 +3269,17 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected; no other value moved. The Deadeye with Ensnaring Arrow attacks with Elemental Hit, which is not a projectile skill.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fo: Phase Run
+
+**PoB** (`act_dex.lua`, `PhaseRun`): a `Buff` with `base_movement_velocity_+%` (`MovementSpeed` INC) and `phase_run_melee_physical_damage_+%_final`. The second is `PhysicalDamage` MORE with `ModFlag.Melee` and a negated `SkillType.SummonsTotem` tag: it does not apply "to your melee skills used by totems". Its stealth and phasing reach no slice field.
+
+**The engine:**
+- **New `Flags::SKILL_NOT_TOTEM`:** `skill::keyword_flags` sets it on every skill whose types (supports' added types included) lack `SummonsTotem`. It is PoB's negated tag as a flag the rows can require; the tests' expected keyword flags carry it.
+- **`gems::SKILLS`:** Phase Run as a buff with both rows, the damage row requiring physical, melee, and `SKILL_NOT_TOTEM`.
+- **`data-parity` (`gem_effects`):** `ModFlag.Melee` and the negated `SummonsTotem` tag are named on both sides; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fn's run):
+- **Public:** 0 unexpected. 4 values moved, all toward PoB, 2 now equal: an Occultist's movement speed (2.14 to 2.69, PoB 2.69) and a Mirage Archer Toxic Rain build's.
+- **Corpus:** 0 unexpected. 2 values moved toward PoB, both now equal (movement speed 1.62 to 2.17).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -391,6 +391,12 @@ pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
         .iter()
         .filter(|(name, _)| types.contains(*name))
         .fold(flags, |flags, (_, f)| flags | *f);
+    // PoB's negated `SummonsTotem` tag (P6-11fo).
+    let flags = if types.contains(TOTEM_TYPE) {
+        flags
+    } else {
+        flags | Flags::SKILL_NOT_TOTEM
+    };
     if types.contains(TOTEM_TYPE) {
         flags | Flags::KEYWORD_TOTEM
     } else if types.contains(TRAP_TYPE) {

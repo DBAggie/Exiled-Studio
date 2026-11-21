@@ -156,6 +156,10 @@ impl Flags {
     pub const KEYWORD_CURSE: Self = Self(1 << 54);
     /// A skill of the `Travel` type (PoB's `SkillType.Travel` tag; P6-11ex).
     pub const SKILL_TRAVEL: Self = Self(1 << 55);
+    /// A skill not of the `SummonsTotem` type (PoB's negated
+    /// `SkillType.SummonsTotem` tag; P6-11fo, Phase Run's "not to your
+    /// melee skills used by totems").
+    pub const SKILL_NOT_TOTEM: Self = Self(1 << 56);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

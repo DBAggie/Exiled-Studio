@@ -1660,6 +1660,42 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("OrbOfStorms", Kind::Inert),
+    // P6-11fo: Phase Run's buff (`act_dex.lua`, `PhaseRun`): movement
+    // speed, and physical damage MORE with melee for skills that are not
+    // totems' (PoB's negated `SkillType.SummonsTotem` tag,
+    // `Flags::SKILL_NOT_TOTEM`). Its stealth and phasing reach no slice
+    // field.
+    (
+        "PhaseRun",
+        Kind::Buff {
+            name: "Phase Run",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "base_movement_velocity_+%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "phase_run_melee_physical_damage_+%_final",
+                    BuffStat::Rows(&[(
+                        Quantity::Damage,
+                        Op::More,
+                        1.0,
+                        Flags::PHYSICAL
+                            .union(Flags::MELEE)
+                            .union(Flags::SKILL_NOT_TOTEM),
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     // Poacher's Mark (P6-9e): the enemy's physical damage reduction and
     // added physical damage taken (PoB's `SelfPhysicalMin`/`Max` with
     // `ModFlag.Hit`, summed into the hit's added damage as Despair's).
