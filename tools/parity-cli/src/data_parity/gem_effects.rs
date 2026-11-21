@@ -307,6 +307,14 @@ const ALLOWED_MINIONS: &[&str] = &[
 /// Stance mod a `Buff` on the character (the engine scales the Blood
 /// Stance row as an aura's, which PoB's `AuraDebuff` scale also reads).
 const EXTRA_BUFFS: &[(&str, &str)] = &[
+    // P6-11fx: Sigil of Power's enemy less damage is a `Debuff` of its
+    // name; Wave of Conviction's three exposures are each a `Debuff` of the
+    // exposure's name (each a reason when chosen).
+    ("SigilOfPower", "Buff Sigil of Power"),
+    ("SigilOfPower", "Debuff Sigil of Power"),
+    ("WaveOfConviction", "Debuff Cold Exposure"),
+    ("WaveOfConviction", "Debuff Fire Exposure"),
+    ("WaveOfConviction", "Debuff Lightning Exposure"),
     // P6-11fw: a banner's planted flag (`AffectedByPlacedBanner`) is a
     // `Buff` of its name beside its aura; both act only when planted.
     ("DefianceBanner", "Aura Defiance Banner"),
@@ -531,6 +539,8 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 /// field (regeneration, recharge, movement, degeneration, leech, freeze,
 /// damage taken by you).
 const NO_SLICE_NAMES: &[&str] = &[
+    // P6-11fx: Sigil of Power's stage limit, read only with its stages.
+    "Multiplier:SigilOfPowerMaxStages",
     // P6-11fk: Frost Shield's stage limit, read only with its stages.
     "Multiplier:FrostShieldMaxStages",
     "AreaOfEffect",

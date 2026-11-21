@@ -2184,6 +2184,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
+    // P6-11fx: Sigil of Power (`act_int.lua`): added lightning damage per
+    // stage up to its maximum, and the enemy's less damage at the maximum;
+    // the stages are the config's `sigilOfPowerStages`, 1 by default (its
+    // placeholder), so it acts without any input: a reason (the stage
+    // multiplier not modelled).
+    (
+        "SigilOfPower",
+        Kind::Buff {
+            name: "Sigil of Power",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "circle_of_power_enemy_damage_+%_final_at_max_stages",
+                    BuffStat::Reason("sigil-of-power-stages"),
+                ),
+                (
+                    "circle_of_power_max_added_lightning_per_stage",
+                    BuffStat::Reason("sigil-of-power-stages"),
+                ),
+                (
+                    "circle_of_power_max_stages",
+                    BuffStat::NoSlice("sigil-of-power-stage-limit"),
+                ),
+                (
+                    "circle_of_power_min_added_lightning_per_stage",
+                    BuffStat::Reason("sigil-of-power-stages"),
+                ),
+            ],
+        },
+    ),
     // Smite's aura (P6-8a: Smite beside the main skill, as Cast On Critical
     // Strike's source): `LightningMin` and `LightningMax` BASE as a
     // `GlobalEffect` aura without flags, and `EnemyShockChance`
@@ -2704,6 +2734,23 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     },
                 ),
             ],
+        },
+    ),
+    // P6-11fx: Wave of Conviction's exposure (`act_str.lua`): one of fire,
+    // cold, or lightning exposure, the config's `waveOfConvictionExposureType`
+    // (no default: nothing without it) as each mod's `effectCond`. With one
+    // chosen, a reason (its matching rule not modelled here).
+    (
+        "WaveOfConviction",
+        Kind::Debuff {
+            name: "Wave of Conviction",
+            stats: &[(
+                "purge_expose_resist_%_matching_highest_element_damage",
+                BuffStat::ReasonWhenInput {
+                    input: WAVE_OF_CONVICTION_INPUT,
+                    what: "wave-of-conviction-exposure",
+                },
+            )],
         },
     ),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
@@ -3496,6 +3543,9 @@ pub const INFUSION_INPUT: &str = "infusedChannellingInfusion";
 /// The config count of Momentum stacks removed (Swiftness,
 /// `ConfigOptions.lua` 543; P6-11y).
 pub const MOMENTUM_REMOVED_INPUT: &str = "MomentumSwiftnessStacks";
+/// The config list of Wave of Conviction's exposure type
+/// (`ConfigOptions.lua` 736; P6-11fx).
+pub const WAVE_OF_CONVICTION_INPUT: &str = "waveOfConvictionExposureType";
 /// The config check of a planted banner (`ConfigOptions.lua` 287;
 /// P6-11fw).
 pub const BANNER_PLANTED_INPUT: &str = "bannerPlanted";
@@ -3519,6 +3569,7 @@ pub fn is_input(name: &str) -> bool {
         "multiplierEnsnaredStackCount",
         // P6-11fw: a planted banner (its Valour count goes with it).
         BANNER_PLANTED_INPUT,
+        WAVE_OF_CONVICTION_INPUT,
     ]
     .contains(&name)
 }

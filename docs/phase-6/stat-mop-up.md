@@ -3427,3 +3427,23 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 **Evidence** (`b-ct`, against P6-11fv's run):
 - **Public and corpus:** 0 unexpected; no value moved. The banner builds do not plant theirs, so the banner is no longer an unmodelled gem there and still does nothing, as in PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fx: Wave of Conviction and Sigil of Power
+
+**PoB** (`Data/Skills`, `ConfigOptions.lua`):
+- **Wave of Conviction:** its stat gives fire, cold, or lightning exposure, each a `Debuff` with an `effectCond` that only the config list `waveOfConvictionExposureType` sets (no default; 736 to 744). Without a choice it does nothing.
+- **Sigil of Power:** added lightning damage per stage up to its maximum, and the enemy's less damage at the maximum. The stages are the config's `sigilOfPowerStages` (`countAllowZero` with `defaultPlaceholderState = 1`, 620), so it acts at stage 1 without any input.
+
+**The engine (`gems::SKILLS`):**
+- **Wave of Conviction:** a debuff whose stat is `ReasonWhenInput` on the exposure type (`wave-of-conviction-exposure`): nothing without one, as PoB; a reason with one.
+- **Sigil of Power:** a buff whose staged stats are `Reason` (`sigil-of-power-stages`), since PoB applies them by default and the stage multiplier is not modelled. Its stage limit is `NoSlice`.
+- **`data-parity` (`gem_effects`):** both skills' buff identities, and the stage limit as a no-slice name; `uncategorized` 0.
+
+**Left for their own steps:**
+- **Plague Bearer:** PoB's default list value, "Incubating", turns its poison damage on without input.
+- **Scorching Ray:** its exposure's condition is not a config input.
+- **Herald of the Breach:** damage per herald.
+
+**Evidence** (`b-ct`, against P6-11fw's run):
+- **Public and corpus:** 0 unexpected; no value moved. The builds holding them have them unmodelled before and a reason or nothing now, as above.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
