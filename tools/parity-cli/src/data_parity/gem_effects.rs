@@ -356,6 +356,18 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11ft: Generosity's aura does not affect you
+    // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
+    // (`gems::OWN_EFFECT_STATS`).
+    ("SupportGenerosity", "auraCannotAffectSelf"),
+    // P6-11ft: Manaforged Arrows triggers the skill it supports, and Mirage
+    // Archer's mirage uses it; the skill's own kind says what it does.
+    (
+        "SupportManaforgedArrows",
+        "ManaForgedArrowsPercentThreshold",
+    ),
+    ("SupportManaforgedArrows", "triggeredByManaforged"),
+    ("SupportMirageArcher", "triggeredByMirageArcher"),
     // P6-11fs: the skill's own data, beside the main skill no global effect
     // (Cremation's fire rate, Dark Pact's life as damage, Vaal Righteous
     // Fire's burning and sacrifice and its soul key); the Frost enchantment
@@ -593,6 +605,8 @@ const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 /// create its phantasm (`ALLOWED_ADD_MINIONS`; a minion type only counts
 /// into named conditions, as an inert skill's may).
 const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
+    // P6-11ft: Manaforged Arrows triggers the bow skill it supports.
+    ("SupportManaforgedArrows", "Triggered"),
     // P6-11fm: Battlemage's Cry's support triggers the spell it supports;
     // the spell's own kind says what it does.
     ("BattlemagesCrySupport", "Triggered"),

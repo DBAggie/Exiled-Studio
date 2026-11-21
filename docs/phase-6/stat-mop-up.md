@@ -3359,3 +3359,22 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **Public:** 0 unexpected. 4 values moved, all toward PoB: a dual-wield Cast on Crit build's damage with Vaal Righteous Fire's buff, and a Righteous Fire Chieftain's full DPS.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ft: Manaforged Arrows, Mirage Archer beside the main skill, and Generosity
+
+**PoB** (`Data/Skills`):
+- **Manaforged Arrows and Mirage Archer** have no global stat. The first triggers the bow skill it supports; the second's mirage uses it, and Mirage Archer on the main skill is P6-8b's.
+- **Generosity** sets `auraCannotAffectSelf`: the aura it supports affects your allies and minions, not you (`CalcPerform.lua` 2409). Its `non_curse_aura_effect_+%` is the aura's `AuraEffect` INC.
+
+**The engine:**
+- **`gems::SUPPORTS`:** the three, with no global stats.
+- **Generosity:** an aura it supports adds no rows to you (`AURA_NOT_ON_SELF_SUPPORTS`). The minion still gets it (`minion_buffs`), scaled with the support's increase: `non_curse_aura_effect_+%` joins `OWN_EFFECT_STATS`. Test: `aura_not_on_self_supports_should_be_modelled`.
+- **`data-parity` (`gem_effects`):** the trigger keys and Manaforged's `Triggered` type, and Generosity's self flag, allowed with why; `uncategorized` 0.
+- **Left out on purpose, `data-parity` showed why:**
+  - Ballista Totem and Spell Totem make the skill a totem's (`SummonsTotem`, `ReservationBecomesCost`), so a buff under them would wrongly reach you.
+  - Unbound Ailments raises the skill's own chill effect.
+
+**Evidence** (`b-ct`, against P6-11fs's run):
+- **Public:** 0 unexpected. 4 values moved, all toward PoB: an Elemental Hit Deadeye's damage, with its supported skills now modelled.
+- **Corpus:** 0 unexpected. 1 value moved toward PoB: a build's full DPS with its Generosity aura on the minion (195,296 to 480,518, PoB 3,261,033).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

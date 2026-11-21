@@ -2817,6 +2817,9 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportAwakenedMinionDamage", &[]),
     ("SupportAwakenedViciousProjectiles", &[]),
     ("SupportAwakenedVoidManipulation", &[]),
+    // P6-11ft: no global stat in PoB (the supported skill's own damage and
+    // trigger; Mirage Archer beside the main skill, its main-skill part
+    // P6-8b's).
     ("SupportBarrage", &[]),
     // Blasphemy (P6-11r): the hex it supports becomes an aura (its types,
     // so its curse priority and reservation), at its `CurseEffect` MORE
@@ -2880,6 +2883,9 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportFistofWar", &[]),
     ("SupportFocusedBallista", &[]),
     ("SupportFortify", &[]),
+    // P6-11ft: Generosity, its aura not on you
+    // ([`AURA_NOT_ON_SELF_SUPPORTS`]); no global stat.
+    ("SupportGenerosity", &[]),
     ("SupportGreaterChain", &[]),
     ("SupportGreaterMultipleProjectiles", &[]),
     ("SupportGreaterMultistrike", &[]),
@@ -2920,6 +2926,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportIntensify", &[]),
     ("SupportInvertTheRules", &[]),
     ("SupportLifetap", &[]),
+    ("SupportManaforgedArrows", &[]),
     // Mark On Hit (P6-9g): the mark's curse effect
     // ([`MARK_CURSE_EFFECT_STAT`]); PoB reads its trigger stat
     // (`triggerMarkOnRareOrUnique`) nowhere, so the mark applies as cast.
@@ -2931,6 +2938,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportMinionLife", &[]),
     ("SupportMinionPact", &[]),
     ("SupportMinionSpeed", &[]),
+    ("SupportMirageArcher", &[]),
     (
         "SupportMomentum",
         // Swiftness per the config's stacks removed (P6-11y).
@@ -3052,6 +3060,9 @@ pub const HEXTOUCH_CURSE_EFFECT_STAT: &str = "support_hextouch_curse_effect_+%_f
 pub const OWN_EFFECT_STATS: &[(&str, bool)] = &[
     ("aura_effect_+%", true),
     ("golem_buff_effect_+%", false),
+    // P6-11ft: Generosity's increase of the aura it supports (PoB's
+    // `AuraEffect` INC on the skill), which only allies and minions get.
+    ("non_curse_aura_effect_+%", true),
     ("offering_spells_effect_+%", false),
 ];
 
@@ -4714,19 +4725,28 @@ fn one_skill(
                     .entry(name)
                     .or_insert_with(|| active_source.clone());
             }
-            add_rows(
-                input,
-                g,
-                &s.active_gem,
-                name,
-                stats,
-                (scale, buff_scale),
-                config,
-                false,
-                None,
-                &mut collected.merged,
-                ingest,
-            );
+            // Generosity (P6-11ft; PoB's `auraCannotAffectSelf`,
+            // `CalcPerform.lua` 2409): the aura affects your allies and
+            // minions, not you.
+            let not_on_self = aura
+                && s.supports
+                    .iter()
+                    .any(|sup| AURA_NOT_ON_SELF_SUPPORTS.contains(&sup.effect.id.as_str()));
+            if !not_on_self {
+                add_rows(
+                    input,
+                    g,
+                    &s.active_gem,
+                    name,
+                    stats,
+                    (scale, buff_scale),
+                    config,
+                    false,
+                    None,
+                    &mut collected.merged,
+                    ingest,
+                );
+            }
         }
         Kind::Debuff { name, stats } => {
             // An aura's debuff (P6-11fg, PoB's `AuraDebuff`) takes the non-curse
@@ -5366,6 +5386,10 @@ fn reserves(types: &BTreeSet<String>) -> bool {
 /// modifiers (PoB's `ChillingArea`, `CalcPerform.lua` 1393).
 pub const CHILLING_AREA: &str = "ChillingArea";
 
+/// Supports whose aura does not affect you (PoB's `auraCannotAffectSelf`
+/// from `aura_cannot_affect_self`; P6-11ft): Generosity.
+const AURA_NOT_ON_SELF_SUPPORTS: &[&str] = &["SupportGenerosity"];
+
 /// Quality stats that give a skill's own chill effect (PoB's
 /// `EnemyChillEffect` INC; [`guaranteed_chill`]).
 const SKILL_CHILL_QUALITY: &[&str] = &["chill_effect_+%", "cold_ailment_effect_+%"];
@@ -5932,6 +5956,18 @@ mod tests {
 
     /// PoB's mark rule (P6-9e): a second mark takes no slot while one is
     /// held, even a free one.
+    #[test]
+    fn aura_not_on_self_supports_should_be_modelled() {
+        for id in AURA_NOT_ON_SELF_SUPPORTS {
+            assert!(support(id).is_some(), "{id}");
+        }
+        assert!(
+            OWN_EFFECT_STATS
+                .iter()
+                .any(|(s, aura)| *s == "non_curse_aura_effect_+%" && *aura)
+        );
+    }
+
     #[test]
     fn curse_supports_should_be_sorted_modelled_supports() {
         assert!(CURSE_SUPPORTS.windows(2).all(|w| w[0].0 < w[1].0));
