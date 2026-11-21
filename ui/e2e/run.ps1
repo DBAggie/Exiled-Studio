@@ -36,6 +36,30 @@ $env:LOOM_E2E_DIR = $work
 $env:LOOM_DATA_DIR = Join-Path $work 'data'
 $env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1-tree').Path
 
+# Diagnosis for the hosted runner, where msedgedriver cannot create a
+# session ("DevToolsActivePort file doesn't exist") though the workflow
+# passes on a Windows desktop: start the app alone with a fixed DevTools
+# port and say whether WebView2 answers, then stop it. CI only.
+if ($env:CI) {
+  $probeArgs = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
+  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9333'
+  $probe = Start-Process $app -PassThru -RedirectStandardError (Join-Path $work 'probe-err.txt') -RedirectStandardOutput (Join-Path $work 'probe-out.txt')
+  $answer = $null
+  for ($i = 0; $i -lt 60 -and -not $probe.HasExited; $i++) {
+    try { $answer = (Invoke-WebRequest 'http://127.0.0.1:9333/json/version' -UseBasicParsing -TimeoutSec 2).Content; break } catch { Start-Sleep -Seconds 1 }
+  }
+  $probe.Refresh()
+  Write-Output "probe: app exited $($probe.HasExited)$(if ($probe.HasExited) { " (code $($probe.ExitCode))" }), DevTools $(if ($answer) { 'answered' } else { 'did not answer' }) after $i s"
+  if ($answer) { Write-Output $answer }
+  Get-Content (Join-Path $work 'probe-err.txt') -Tail 30 -ErrorAction SilentlyContinue
+  if (-not $probe.HasExited) { Stop-Process $probe -Force }
+  # The WebView2 processes outlive the app for a moment and hold its data
+  # folder; the driver's session must not start before they are gone.
+  for ($i = 0; $i -lt 20 -and (Get-Process msedgewebview2 -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 500 }
+  Get-ChildItem (Join-Path $env:LOCALAPPDATA '*\EBWebView') -Directory -ErrorAction SilentlyContinue | ForEach-Object { "probe: WebView2 data folder $($_.FullName)" }
+  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $probeArgs
+}
+
 $driver = Start-Process $TauriDriver -ArgumentList '--native-driver', $EdgeDriver -PassThru -NoNewWindow
 try {
   # Wait for the driver to listen.

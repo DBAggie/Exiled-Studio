@@ -156,19 +156,27 @@ try {
   step('socket a cluster jewel and allocate a node it adds (T5b)')
   // The large socket 5000 takes the build's large cluster jewel (item 5,
   // added by run.sh and run.ps1); its notables then allocate.
-  // The list re-renders after an allocation, so the box is found again
-  // and cleared and typed into until the driver can (CI saw "element not
-  // interactable" on the first clear).
-  const searchFor = (what) =>
-    until('the node search', async () => {
+  // The list re-renders after an allocation or a socketed jewel, which can
+  // drop what was typed, so the box is found again, cleared, and typed
+  // into until the wanted button shows (CI saw "element not interactable"
+  // on the first clear, and later the added notable never listed).
+  const searchFor = (what, wanted) =>
+    until(`the node search for ${what}`, async () => {
       const box = await find(`//input[@type='search']`)
       await wd('POST', `/session/${session}/element/${box}/clear`, {})
       await wd('POST', `/session/${session}/element/${box}/value`, {
         text: what,
       })
-      return true
+      for (let i = 0; i < 10; i++) {
+        try {
+          return await find(button(wanted))
+        } catch {
+          await sleep(200)
+        }
+      }
+      return false
     })
-  await searchFor('Test Large Jewel Socket')
+  await searchFor('Test Large Jewel Socket', 'Allocate Test Large Jewel Socket')
   await click(button('Allocate Test Large Jewel Socket'), 'the large socket')
   await click(
     button('Choose jewel for Test Large Jewel Socket'),
@@ -179,7 +187,7 @@ try {
     'the cluster jewel',
   )
   await text('Up to date')
-  await searchFor('Test Cluster Notable A')
+  await searchFor('Test Cluster Notable A', 'Allocate Test Cluster Notable A')
   await click(button('Allocate Test Cluster Notable A'), 'the added notable')
   await text('Remove Test Cluster Notable A')
   await text('Up to date')
@@ -227,8 +235,14 @@ try {
   console.error(`e2e workflow failed: ${e.message}`)
   if (session !== undefined) {
     try {
-      const source = await wd('GET', `/session/${session}/source`)
-      console.error(source.slice(0, 4000))
+      // The page's text, not its markup (the markup's icons filled the
+      // first 4,000 characters), and the search box's value.
+      const shown = await wd('POST', `/session/${session}/execute/sync`, {
+        script:
+          "const s = document.querySelector('input[type=search]'); return `search: ${s ? JSON.stringify(s.value) : 'none'}\\n` + document.body.innerText",
+        args: [],
+      })
+      console.error(String(shown).slice(0, 8000))
     } catch {
       // The page is gone.
     }
