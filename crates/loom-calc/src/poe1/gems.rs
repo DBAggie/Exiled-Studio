@@ -2926,6 +2926,28 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportIntensify", &[]),
     ("SupportInvertTheRules", &[]),
     ("SupportLifetap", &[]),
+    // P6-11fu: Maim's debuff (`sup_str.lua` 3589): the enemy's
+    // `PhysicalDamageTaken` INC while it is maimed (its `Maimed` condition,
+    // the config's `conditionEnemyMaimed`), a `Debuff` named "Maim" at scale
+    // 1 ([`DEBUFF_SUPPORTS`]). Its physical damage MORE is the supported
+    // skill's own.
+    (
+        "SupportMaim",
+        &[(
+            "support_maimed_enemies_physical_damage_taken_+%",
+            BuffStat::WhenState {
+                state: super::conditions::ENEMY_MAIMED,
+                var: "Maimed",
+                rows: &[(
+                    Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(DamageType::Physical)),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )],
+            },
+        )],
+    ),
     ("SupportManaforgedArrows", &[]),
     // Mark On Hit (P6-9g): the mark's curse effect
     // ([`MARK_CURSE_EFFECT_STAT`]); PoB reads its trigger stat
@@ -4971,8 +4993,11 @@ fn supports_global(
         }
         let name = support_buff_name(&sup.effect.id);
         // Arcane Surge's mods are `unscalable` (`sup_int.lua` 229 to 233):
-        // scale 1.
-        let scale = if sup.effect.id == "SupportArcaneSurge" {
+        // scale 1. A support's debuff takes `DebuffEffect` alone, a reason
+        // ([`DEPENDS_ON`]): scale 1 (P6-11fu).
+        let scale = if sup.effect.id == "SupportArcaneSurge"
+            || DEBUFF_SUPPORTS.contains(&sup.effect.id.as_str())
+        {
             1.0
         } else {
             totals.buff_scale(false, &s.types, 0.0)
@@ -4993,6 +5018,10 @@ fn supports_global(
     }
 }
 
+/// Supports whose global stats are a debuff on the enemy (P6-11fu, Maim):
+/// not scaled by buff effect.
+const DEBUFF_SUPPORTS: &[&str] = &["SupportMaim"];
+
 /// Whether `stat` is one of a modelled support's global stats
 /// ([`SUPPORTS`]): the main skill's supports apply them as any skill's do
 /// (`supports_global`), so on the skill itself they have no effect
@@ -5010,6 +5039,7 @@ fn support_buff_name(id: &str) -> &'static str {
         "SupportArcaneSurge" => "Arcane Surge",
         "SupportInfusedChannelling" => "Infusion",
         "SupportMomentum" => "Momentum",
+        "SupportMaim" => "Maim",
         "SupportSummonPhantasm" => "Phantasmal Might",
         _ => "support",
     }
@@ -5958,6 +5988,10 @@ mod tests {
     /// held, even a free one.
     #[test]
     fn aura_not_on_self_supports_should_be_modelled() {
+        // P6-11fu: and the debuff supports, with global rows.
+        for id in DEBUFF_SUPPORTS {
+            assert!(support(id).is_some_and(|t| !t.is_empty()), "{id}");
+        }
         for id in AURA_NOT_ON_SELF_SUPPORTS {
             assert!(support(id).is_some(), "{id}");
         }

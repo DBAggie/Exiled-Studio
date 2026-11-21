@@ -3378,3 +3378,17 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **Public:** 0 unexpected. 4 values moved, all toward PoB: an Elemental Hit Deadeye's damage, with its supported skills now modelled.
 - **Corpus:** 0 unexpected. 1 value moved toward PoB: a build's full DPS with its Generosity aura on the minion (195,296 to 480,518, PoB 3,261,033).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fu: Maim Support's debuff
+
+**PoB** (`sup_str.lua` 3585 to 3592, `SupportMaim`): `support_maimed_enemies_physical_damage_taken_+%` gives the enemy `PhysicalDamageTaken` INC under its `Maimed` condition (the config's `conditionEnemyMaimed`), a `GlobalEffect` `Debuff` named "Maim". Whatever skill it supports, the enemy takes it. Its physical damage MORE is the supported skill's own.
+
+**The engine:**
+- **`SupportMaim` in `gems::SUPPORTS`:** a `WhenState` row on `conditions::ENEMY_MAIMED`, `EnemyTypeDamageTaken(Physical)` INC, merged under "Maim".
+- **`DEBUFF_SUPPORTS`:** a support's debuff takes `DebuffEffect` alone, a reason (`DEPENDS_ON`), so `supports_global` adds it at scale 1, not the buff scale. Test: `aura_not_on_self_supports_should_be_modelled` checks it.
+- **`data-parity` (`gem_effects`):** the row equals PoB's; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11ft's run):
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected. 6 values moved, all toward PoB, in one build with Maim and a maimed enemy (its damage, bleed, and leech).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
