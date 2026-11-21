@@ -220,9 +220,7 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   input since P6-11ad), `LowEnergyShield` (the input itself caps the
 ///   energy shield pool, `CalcDefence.lua` 1061, read the same way), `Lifetap`'s `FlaskLifeRecovery`, `Elusive` (avoidance and
 ///   movement speed 808 to 810; Nightblade's crit, `CalcOffence.lua` 521,
-///   with a support that is not modelled), the enemy's `Debilitated` and
-///   `MalignantMadness` (its damage and speed, `CalcSetup.lua` 68 to 71),
-///   `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), and the
+///   with a support that is not modelled), `KilledRecently` (trigger skills, `CalcTriggers.lua` 1136), and the
 ///   player's `Ignited` (its `Burning`, `CalcSetup.lua` 72). The enemy's
 ///   `Withered` stacks (`multiplierWitheredStackCount`) are
 ///   [`super::damage_taken`]'s since P6-11aq (no longer in this list).
@@ -290,15 +288,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionConsumedCorpseRecently",
         &["Condition:ConsumedCorpseRecently"],
     ),
-    (
-        "conditionEnemyDebilitated",
-        &["enemy Condition:Debilitated"],
-    ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
-    (
-        "conditionEnemyMalignantMadness",
-        &["enemy Condition:MalignantMadness"],
-    ),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
     ("conditionFocused", &["Condition:Focused"]),

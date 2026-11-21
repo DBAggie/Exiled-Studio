@@ -129,6 +129,18 @@ pub const SHOCKED_INPUT: &str = "conditionEnemyShocked";
 pub const SHOCK_EFFECT_INPUT: &str = "conditionShockEffect";
 /// The delirium list.
 pub const DELIRIUM_INPUT: &str = "deliriousPercentage";
+/// The config checks that set the enemy's `Debilitated` and
+/// `MalignantMadness` (`ConfigOptions.lua` 528, and Debilitate's), each
+/// giving every actor `Damage` MORE -10 under it (`CalcSetup.lua` 68, 70,
+/// `initModDB`): the enemy deals less damage, which its hit on you reads
+/// (P6-10b part 12; P6-11fp). Their movement and action speed reach no
+/// slice field.
+pub const ENEMY_LESS_DAMAGE_INPUTS: [&str; 2] = [
+    "conditionEnemyDebilitated",
+    "conditionEnemyMalignantMadness",
+];
+/// Their `Damage` MORE.
+const ENEMY_LESS_DAMAGE: f64 = -10.0;
 /// The boss kind list.
 pub const BOSS_INPUT: &str = "enemyIsBoss";
 /// The check that intimidates the enemy.
@@ -382,6 +394,7 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | IGNITED_INPUT
         | CHILLED_SECONDS_INPUT
         | WITHERED_STACKS_INPUT => true,
+        i if ENEMY_LESS_DAMAGE_INPUTS.contains(&i) => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -967,6 +980,23 @@ pub fn damage_taken(
             input: DELIRIUM_INPUT.to_owned(),
         }),
     }
+    for input in ENEMY_LESS_DAMAGE_INPUTS {
+        match last(set, input, ConfigInputKind::Input) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                op: Op::More,
+                value: ENEMY_LESS_DAMAGE,
+                conditions: Conditions::none(),
+                source: Source::Config {
+                    input: input.to_owned(),
+                },
+            }),
+            Some(_) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.to_owned(),
+            }),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1341,6 +1371,8 @@ mod tests {
             INTIMIDATED_INPUT,
             UNNERVED_INPUT,
             BLINDED_INPUT,
+            ENEMY_LESS_DAMAGE_INPUTS[0],
+            ENEMY_LESS_DAMAGE_INPUTS[1],
         ] {
             assert!(!super::super::config::named_only(input), "{input}");
             assert!(!super::super::config::enemy_damage(input), "{input}");

@@ -3283,3 +3283,14 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected. 4 values moved, all toward PoB, 2 now equal: an Occultist's movement speed (2.14 to 2.69, PoB 2.69) and a Mirage Archer Toxic Rain build's.
 - **Corpus:** 0 unexpected. 2 values moved toward PoB, both now equal (movement speed 1.62 to 2.17).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fp: the enemy's Debilitated and Malignant Madness in its damage
+
+**PoB** (`CalcSetup.lua` 68 to 71, `initModDB`): every actor gets `Damage` MORE -10 under its condition `Debilitated` and under `MalignantMadness`, each a `Debuff` (movement and action speed too, which reach no slice field). The config checks `conditionEnemyDebilitated` and `conditionEnemyMalignantMadness` (`ConfigOptions.lua` 528) set the enemy's. Since P6-10b part 12 the enemy's damage reaches the slice: its hit on you reads `calcLib.mod(enemyDB, "Damage")`. Both inputs were still in `config::NAMED_ONLY`, as read only outside the slice.
+
+**The engine:** `damage_taken::ENEMY_LESS_DAMAGE_INPUTS`: each check on gives the enemy's `EnemyDamage` MORE -10 (`damage_taken::damage_taken`). Both left `NAMED_ONLY`, and the stale part of its doc comment is gone. Test: `the_inputs_should_not_be_named_only` lists them.
+
+**Evidence** (`b-ct`, against P6-11fo's run):
+- **Public:** 0 unexpected. 28 values moved, all toward PoB, in three builds with Eldritch Blasphemy's Malignant Madness checked: the maximum hits taken, the physical damage reduction, the hits to die, and the total EHP (an Occultist's 251,664 to 287,753, PoB 364,354).
+- **Corpus:** 0 unexpected. 10 values moved, all toward PoB, in one build.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
