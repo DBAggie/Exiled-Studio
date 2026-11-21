@@ -765,12 +765,16 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     if flags & 256 != 0 {
         f.push("melee");
     }
+    // `KeywordFlag.Poison` (P6-11fy: Plague Bearer), `Flags::POISON`.
+    if kw & 0x20_0000 != 0 {
+        f.push("poison");
+    }
     // The negated `SummonsTotem` tag (P6-11fo), `Flags::SKILL_NOT_TOTEM`.
     if m.tags.iter().any(is_not_totem_skill_type) {
         f.push("skill-not-totem");
     }
     let rest = flags & !(1 | 2 | 4 | 8 | 16 | 256 | 512 | 1024);
-    let rest_kw = kw & !(0x1_0000 | 0x2_0000);
+    let rest_kw = kw & !(0x1_0000 | 0x2_0000 | 0x20_0000);
     let mut tags: Vec<String> = m
         .tags
         .iter()
@@ -1213,6 +1217,9 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
             if all.contains(Flags::SKILL_NOT_TOTEM) {
                 f.push("skill-not-totem");
             }
+            if all.contains(Flags::POISON) {
+                f.push("poison");
+            }
             let other = !any.is_empty()
                 || !(Flags::ATTACK
                     | Flags::SPELL
@@ -1223,7 +1230,8 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
                     | Flags::AREA
                     | Flags::SKILL_MELEE
                     | Flags::MELEE
-                    | Flags::SKILL_NOT_TOTEM)
+                    | Flags::SKILL_NOT_TOTEM
+                    | Flags::POISON)
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",

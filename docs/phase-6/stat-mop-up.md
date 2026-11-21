@@ -3447,3 +3447,18 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 **Evidence** (`b-ct`, against P6-11fw's run):
 - **Public and corpus:** 0 unexpected; no value moved. The builds holding them have them unmodelled before and a reason or nothing now, as above.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fy: Plague Bearer
+
+**PoB** (`act_int.lua`, `PlagueBearer`; `ConfigOptions.lua` 545 to 552): its buff gives `Damage` MORE with `KeywordFlag.Poison` under `modCond = "PlagueBearerIncubating"`. The config list `plagueBearerState` sets that condition for "INC", its default (`defaultIndex = 1`), and "INF" sets the other. So without input the multiplier applies; at level 20 it is a less multiplier on poison.
+
+**The engine:**
+- **`gems::SKILLS`:** Plague Bearer as a buff whose row is `ConfigIs { value: "INF", equal: false }`: it applies unless the state is "Infecting". `plagueBearerState` is among the inputs `poe1::gems` reads.
+- **`data-parity` (`gem_effects`):** `KeywordFlag.Poison` (`Flags::POISON`) is named on both sides. No other row's form changed (the totals are equal); `uncategorized` 0.
+
+**Evidence** (`b-ct`):
+- **New mechanic fixture** `smite-poison-plague-bearer-templar.xml`: the Smite poison fixture with Plague Bearer beside it and no state configured.
+  - PoB's poison DPS goes from 27.28 to 21.88 with it; the engine's total poison DPS is 8.4655 against PoB's 8.4698.
+  - 73 fields match. The 6 differences are the Q11 attack-time rounding the base fixture has too, registered as `game-truth` (DIV-0490 to DIV-0495).
+- **Public and corpus:** 0 unexpected; no other value moved. The public build with Plague Bearer sets "Infecting".
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

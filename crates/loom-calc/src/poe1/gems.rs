@@ -1764,6 +1764,27 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fy: Plague Bearer's buff (`act_int.lua`): poison damage MORE
+    // while incubating (`modCond = "PlagueBearerIncubating"`), which the
+    // config list `plagueBearerState` sets for "INC", its default
+    // (`defaultIndex = 1`, `ConfigOptions.lua` 546): every value but "INF".
+    (
+        "PlagueBearer",
+        Kind::Buff {
+            name: "Plague Bearer",
+            effect: EffectType::Buff,
+            stats: &[(
+                "corrosive_shroud_poison_damage_+%_final_while_accumulating_poison",
+                BuffStat::ConfigIs {
+                    input: PLAGUE_BEARER_INPUT,
+                    value: "INF",
+                    equal: false,
+                    condition: "PlagueBearerIncubating",
+                    rows: &[(Quantity::Damage, Op::More, 1.0, Flags::POISON, NONE)],
+                },
+            )],
+        },
+    ),
     // Poacher's Mark (P6-9e): the enemy's physical damage reduction and
     // added physical damage taken (PoB's `SelfPhysicalMin`/`Max` with
     // `ModFlag.Hit`, summed into the hit's added damage as Despair's).
@@ -3546,6 +3567,9 @@ pub const MOMENTUM_REMOVED_INPUT: &str = "MomentumSwiftnessStacks";
 /// The config list of Wave of Conviction's exposure type
 /// (`ConfigOptions.lua` 736; P6-11fx).
 pub const WAVE_OF_CONVICTION_INPUT: &str = "waveOfConvictionExposureType";
+/// The config list of Plague Bearer's state (`ConfigOptions.lua` 546;
+/// P6-11fy).
+pub const PLAGUE_BEARER_INPUT: &str = "plagueBearerState";
 /// The config check of a planted banner (`ConfigOptions.lua` 287;
 /// P6-11fw).
 pub const BANNER_PLANTED_INPUT: &str = "bannerPlanted";
@@ -3570,6 +3594,7 @@ pub fn is_input(name: &str) -> bool {
         // P6-11fw: a planted banner (its Valour count goes with it).
         BANNER_PLANTED_INPUT,
         WAVE_OF_CONVICTION_INPUT,
+        PLAGUE_BEARER_INPUT,
     ]
     .contains(&name)
 }
