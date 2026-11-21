@@ -2825,6 +2825,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // so its curse priority and reservation), at its `CurseEffect` MORE
     // ([`BLASPHEMY_CURSE_EFFECT_STAT`]); no global stat.
     ("SupportBlasphemy", &[]),
+    // P6-11fv: Bonechill, the chill as cold damage taken
+    // ([`BONECHILL_SUPPORT`], `damage_taken`); its cold damage MORE is the
+    // supported skill's own; no global stat.
+    ("SupportBonechill", &[]),
     ("SupportBrutality", &[]),
     ("SupportBurningDamage", &[]),
     // Cast On Critical Strike's two parts (P6-8a; the awakened gem's attack
@@ -5420,6 +5424,9 @@ pub const CHILLING_AREA: &str = "ChillingArea";
 /// from `aura_cannot_affect_self`; P6-11ft): Generosity.
 const AURA_NOT_ON_SELF_SUPPORTS: &[&str] = &["SupportGenerosity"];
 
+/// Bonechill Support's granted effect (P6-11fv).
+const BONECHILL_SUPPORT: &str = "SupportBonechill";
+
 /// Quality stats that give a skill's own chill effect (PoB's
 /// `EnemyChillEffect` INC; [`guaranteed_chill`]).
 const SKILL_CHILL_QUALITY: &[&str] = &["chill_effect_+%", "cold_ailment_effect_+%"];
@@ -5446,14 +5453,34 @@ pub const NON_HIT_CHILL: &str = "NonHitChill";
 /// chill kept at the character's effect.
 fn guaranteed_chill(s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
     let types = &s.types;
-    if types.contains(CHILLING_AREA)
-        && s.active_gem.quality > 0
+    // Bonechill (P6-11fv; `CalcPerform.lua` 1357 to 1358, 1379, 1397):
+    // any skill it supports gives `HasBonechill` (PoB's `CannotChill`
+    // check comes from modifiers the engine does not read), a chilling area
+    // also the guarantee.
+    if s.supports
+        .iter()
+        .any(|sup| sup.effect.id == BONECHILL_SUPPORT)
+    {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::Bonechill(types.contains(CHILLING_AREA))),
+            op: Op::Flag,
+            value: 1.0,
+            conditions: Conditions::none(),
+            source: source.clone(),
+        });
+    }
+    // Bonechill's own `chill_effect_+%` on every level (P6-11fv) is the
+    // supported skill's `EnemyChillEffect` too.
+    let own_chill = (s.active_gem.quality > 0
         && s.active_gem
             .effect
             .quality
             .iter()
-            .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str()))
-    {
+            .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str())))
+        || s.supports
+            .iter()
+            .any(|sup| sup.effect.id == BONECHILL_SUPPORT);
+    if types.contains(CHILLING_AREA) && own_chill {
         ingest.reason(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "skill-chill-effect",

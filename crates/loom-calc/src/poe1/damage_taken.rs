@@ -339,7 +339,6 @@ pub const CHILL_DEPENDS_ON: &[&str] = &[
     "enemies_near_corpses_created_recently_are_shocked_and_chilled",
     "ice_nova_chill_minimum_slow_%",
     "keystone_pure_elementalist",
-    "local_display_socketed_gems_supported_by_level_x_bonechill",
     "local_flask_non_damaging_ailment_effect_+%_during_flask_effect",
     "map_monster_non_damaging_ailment_effect_+%_on_self",
     "non_damaging_ailment_effect_+%_per_10_devotion",
@@ -834,9 +833,28 @@ fn chill_damage_taken(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             .next()
             .is_some()
     };
+    // Bonechill (P6-11fv, `CalcPerform.lua` 3444): last in the order, and
+    // only when a chilling area with it guarantees the chill or the
+    // config sets the chill's effect (`ChillVal` above 0).
+    let bonechill = |ingest: &Ingest<'_>, guaranteed: bool| {
+        unconditional(ingest, Poe1Quantity::Bonechill(guaranteed), Op::Flag)
+            .next()
+            .is_some()
+    };
+    let configured_chill = || {
+        set.is_some_and(|set| {
+            matches!(
+                last(set, CHILLED_INPUT, ConfigInputKind::Input),
+                Some(ConfigValue::Boolean(true))
+            ) && count(set, CHILL_EFFECT_INPUT).is_ok_and(|v| v.is_some_and(|v| v > 0.0))
+        })
+    };
     let quantity = if flagged(ingest, None) {
         Poe1Quantity::EnemyDamageTaken
-    } else if flagged(ingest, Some(DamageType::Cold)) {
+    } else if flagged(ingest, Some(DamageType::Cold))
+        || bonechill(ingest, true)
+        || (bonechill(ingest, false) && configured_chill())
+    {
         Poe1Quantity::EnemyTypeDamageTaken(DamageType::Cold)
     } else {
         return;

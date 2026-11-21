@@ -3392,3 +3392,23 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **Public:** 0 unexpected; no value moved.
 - **Corpus:** 0 unexpected. 6 values moved, all toward PoB, in one build with Maim and a maimed enemy (its damage, bleed, and leech).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fv: Bonechill
+
+**PoB** (`sup_int.lua` 542, `SupportBonechill`; `CalcPerform.lua`):
+- **`HasBonechill`:** a skill with `supportBonechill` (its base mod) sets it, unless the skill cannot chill (1357, 1358). A chilling area with it also sets `hasGuaranteedBonechill` (1397, 1398).
+- **The chill as damage taken:** the enemy's chill becomes `ColdDamageTaken` INC equal to it, last in the chill's order, only with the guarantee or a configured chill above 0 (`ChillVal`, 3444).
+- **Bonechill's `chill_effect_+%`** (every level) is the supported skill's own `EnemyChillEffect`. Its cold damage MORE is that skill's own too.
+
+**The engine:**
+- **New `Poe1Quantity::Bonechill(guaranteed)`:** `gems::guaranteed_chill` sets it for every skill Bonechill supports, guaranteed for a chilling area. `damage_taken::chill_damage_taken` reads it after Bitter Frost's flags, with PoB's condition.
+- **`SupportBonechill` in `SUPPORTS`;** the socketed-item Bonechill stat leaves `CHILL_DEPENDS_ON`, since `item_supports` joins it as the support.
+- **A chilling area with Bonechill:** its chill effect is a `skill-chill-effect` reason, as a chilling skill's own quality is (P6-11fk).
+- **`data-parity` (`gem_effects`):** Bonechill's flag and chill effect allowed with why; `uncategorized` 0.
+
+**Evidence** (`b-ct`):
+- **New mechanic fixture** `ice-nova-bonechill-witch.xml`: Ice Nova with Arc and Bonechill beside it, the enemy configured as chilled (8).
+  - Average damage is 805.20, equal to PoB's; without Bonechill the engine gives 747.0.
+  - All 78 compared fields equal PoB's.
+- **Public and corpus:** 0 unexpected; no other value moved. The builds with Bonechill neither configure a chill nor have a chilling area with it.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

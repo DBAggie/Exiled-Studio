@@ -356,6 +356,11 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fv: Bonechill's flag is `gems::BONECHILL_SUPPORT` (the chill as
+    // cold damage taken); its chill effect on a chilling area is a
+    // `skill-chill-effect` reason (`gems::guaranteed_chill`).
+    ("SupportBonechill", "EnemyChillEffect"),
+    ("SupportBonechill", "supportBonechill"),
     // P6-11ft: Generosity's aura does not affect you
     // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
     // (`gems::OWN_EFFECT_STATS`).

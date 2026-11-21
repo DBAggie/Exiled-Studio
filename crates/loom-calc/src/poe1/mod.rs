@@ -529,6 +529,11 @@ pub enum Poe1Quantity {
     /// `Some(Cold)` for cold (`ChillEffectIncColdDamageTaken`), read by
     /// [`damage_taken`].
     ChillDamageTaken(Option<DamageType>),
+    /// A skill supported by Bonechill (P6-11fv; PoB's
+    /// `output.HasBonechill`): a `Flag`, `true` when that skill is a
+    /// chilling area (`hasGuaranteedBonechill`), read by
+    /// [`damage_taken`]'s chill.
+    Bonechill(bool),
     /// The effect of the chills you inflict (PoB's `EnemyChillEffect`,
     /// P3-8m): `Increased`, read by [`damage_taken`] to scale a skill's
     /// guaranteed chill.
@@ -1333,6 +1338,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyTypeDamageTaken(t) => write!(f, "enemy-damage-taken.{}", t.name()),
             Self::ChillDamageTaken(None) => f.write_str("chill-damage-taken"),
             Self::ChillDamageTaken(Some(t)) => write!(f, "chill-damage-taken.{}", t.name()),
+            Self::Bonechill(guaranteed) => f.write_str(if *guaranteed {
+                "bonechill.guaranteed"
+            } else {
+                "bonechill"
+            }),
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
             Self::ActionSpeed => f.write_str("action-speed"),
