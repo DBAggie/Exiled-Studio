@@ -3216,3 +3216,22 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected; no value moved. Frost Shield is no longer an unmodelled gem in the three builds that hold it, none of which sets stages. The two with quality 20 carry the `skill-chill-effect` reason.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fl: Hexpass
+
+**PoB** (`sup_int.lua`, `SupportHexpass`): `hexed_enemies_cannot_deal_critical_strikes` gives the enemy `NeverCrit` and `Condition:NeverCrit`, each a `GlobalEffect` of type `Curse`. So it rides on the hex it supports and applies only while that hex holds a curse slot. The defence estimate's enemy crit chance is then 0 (`CalcDefence.lua` 1694). Its hexproof and curse area stats reach no slice field.
+
+**The engine:**
+- **New `Poe1Quantity::EnemyNeverCrit`** (a flag), read by `enemy_hit`'s enemy crit.
+- **`gems::CURSE_SUPPORTS`:** supports whose rows join the curse's rows in its `CurseApplied`, scaled as the curse's are (a flag is not scaled), so they go through PoB's curse slots. Hexpass is the first. It is also in `SUPPORTS`, with no global stats. Test: `curse_supports_should_be_sorted_modelled_supports`.
+- **`data-parity` (`gem_effects`):**
+  - a support in `CURSE_SUPPORTS` checks those rows;
+  - `POB_ROW_COMPANIONS` leaves out PoB's `Condition:NeverCrit`, a companion of the flag that only conditioned mods read;
+  - a flag's own `true` is no longer a tag.
+  - `uncategorized` 0, the totals otherwise unchanged.
+
+**Evidence** (`b-ct`):
+- **New mechanic fixture** `minion-summon-flame-golem-hexpass-witch.xml`: the cursed Flame Golem fixture with Hexpass on its Punishment. In PoB the enemy crit chance goes from 5 to 0 and the total EHP from 745.2 to 757.4. All 86 compared fields equal PoB's.
+- **Public:** 0 unexpected; no other value moved. The two community builds with Hexpass apply no hex the engine models: one is cast through Bane, the other through Eldritch Blasphemy.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

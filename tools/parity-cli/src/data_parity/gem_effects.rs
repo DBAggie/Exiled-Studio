@@ -332,6 +332,18 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
 
 /// Support mods outside the buff the engine models, with why: Guardian's
 /// Blessing's reservation of 0 for an aura (`gems::NO_RESERVATION_SUPPORTS`).
+/// PoB mods that come with a row's flag and act only through it, by stat
+/// and mod name: left out of the row comparison.
+const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
+    // P6-11fl: Hexpass sets the enemy's `NeverCrit` and the condition of
+    // the same name; the condition is read only by mods conditioned on the
+    // enemy never critting, which none of the engine's rows are.
+    (
+        "hexed_enemies_cannot_deal_critical_strikes",
+        "Condition:NeverCrit",
+    ),
+];
+
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // P6-11fk: Frost Shield's quality, its own chill effect: the engine's
     // guaranteed chill makes it a `skill-chill-effect` reason
@@ -681,7 +693,12 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
             ));
         }
     }
-    if let Some(v) = &m.value {
+    // A flag's `true` is the flag itself (P6-11fl: Hexpass's `NeverCrit`).
+    if let Some(v) = m
+        .value
+        .as_ref()
+        .filter(|v| !(m.kind == "FLAG" && **v == Value::Bool(true)))
+    {
         tags.push(format!("value {v}"));
     }
     format!(
@@ -717,6 +734,8 @@ fn pob_name(q: Quantity) -> String {
         // The marks' rows on the enemy (P6-9e).
         Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken) => "ProjectileDamageTaken".into(),
         Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken) => "TrapMineDamageTaken".into(),
+        // P6-11fl: Hexpass's, on the enemy.
+        Quantity::Poe1(Poe1Quantity::EnemyNeverCrit) => "NeverCrit".into(),
         Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
             "PhysicalDamageReduction".into()
         }
@@ -1249,7 +1268,12 @@ fn check_one(
             .mods
             .iter()
             .filter(|s| s.stat == *stat)
-            .flat_map(|s| s.mods.iter().map(move |m| pob_form(m, s.div, s.mult)))
+            .flat_map(|s| {
+                s.mods
+                    .iter()
+                    .filter(|m| !POB_ROW_COMPANIONS.contains(&(*stat, m.name.as_str())))
+                    .map(move |m| pob_form(m, s.div, s.mult))
+            })
             .collect();
         out.check(
             TABLE,
@@ -1390,6 +1414,12 @@ pub fn compare_gem_effects(out: &mut Comparison, export: &Export, effects: &BTre
         if !effects.contains(id) {
             continue;
         }
+        // A support acting through the hex it supports checks its curse
+        // rows (P6-11fl, `gems::CURSE_SUPPORTS`).
+        let stats = gems::CURSE_SUPPORTS
+            .iter()
+            .find(|(s, _)| s == id)
+            .map_or(*stats, |(_, s)| *s);
         let Some(skill) = export.skills.get(*id) else {
             out.check(TABLE, id, "row", json!("present"), Value::Null);
             continue;

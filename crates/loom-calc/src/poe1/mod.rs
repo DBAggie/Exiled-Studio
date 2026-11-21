@@ -286,6 +286,10 @@ pub enum Poe1Quantity {
     /// `TrapMineDamageTaken` INC on the enemy; Bear Trap, P6-11fj):
     /// `Increased`, read only by a trap or mine skill's hit ([`hit`]).
     EnemyTrapMineDamageTaken,
+    /// The enemy never deals critical strikes (PoB's `NeverCrit` flag on
+    /// the enemy; Hexpass, P6-11fl): a `Flag`, read by the defence
+    /// estimate's enemy crit ([`enemy_hit`]).
+    EnemyNeverCrit,
     /// A pool's regeneration (P6-10b): `Base` the flat amount per second
     /// (PoB's `<Pool>Regen` BASE), `Increased` and `More` its rate, read by
     /// [`regen`].
@@ -1201,6 +1205,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
             Self::EnemyTrapMineDamageTaken => f.write_str("enemy-trap-mine-damage-taken"),
+            Self::EnemyNeverCrit => f.write_str("enemy-never-crit"),
             Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
             Self::Regen(p) => write!(f, "regen.{}", p.name()),
             Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),

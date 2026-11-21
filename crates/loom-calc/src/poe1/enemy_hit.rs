@@ -288,7 +288,20 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &mut reasons,
     )?;
     let evade = (melee.value + projectile.value) / 4.0;
-    let crit_chance = (crit * (1.0 + crit_inc / 100.0) * (1.0 - evade / 100.0)).clamp(0.0, 100.0);
+    // The enemy's `NeverCrit` (Hexpass, P6-11fl): 0 (`CalcDefence.lua`
+    // 1694).
+    let never = {
+        let (store, graph) = calc.parts();
+        store
+            .flag(graph, Quantity::Poe1(Poe1Quantity::EnemyNeverCrit), &cx)?
+            .value
+            > 0.0
+    };
+    let crit_chance = if never {
+        0.0
+    } else {
+        (crit * (1.0 + crit_inc / 100.0) * (1.0 - evade / 100.0)).clamp(0.0, 100.0)
+    };
     let crit_damage = match number("enemyCritDamage") {
         Some(v) => v,
         None => {
@@ -1195,6 +1208,7 @@ const fn is_read(quantity: Quantity) -> bool {
         quantity,
         Quantity::Poe1(
             Poe1Quantity::EnemyCritChance
+                | Poe1Quantity::EnemyNeverCrit
                 | Poe1Quantity::CritExtraDamageReduction
                 | Poe1Quantity::EnemyDamage
                 | Poe1Quantity::DamageTakenAs(..)

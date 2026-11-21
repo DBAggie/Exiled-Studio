@@ -2579,6 +2579,25 @@ pub const SKILLS: &[(&str, Kind)] = &[
 /// buff effect modifier scales it (P6-8a).
 const UNSCALABLE: &[&str] = &["Cyclone"];
 
+/// Supports whose stats act through the hex they support (PoB's
+/// `GlobalEffect` `effectType = "Curse"`; P6-11fl), sorted by ID: the
+/// rows join the curse's, so they apply only while it holds a curse slot.
+/// Each is also in [`SUPPORTS`] (its global stats none); its other stats
+/// (Hexpass's hexproof and curse area) reach no slice field.
+pub const CURSE_SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[(
+    "SupportHexpass",
+    &[(
+        "hexed_enemies_cannot_deal_critical_strikes",
+        BuffStat::Rows(&[(
+            Quantity::Poe1(Poe1Quantity::EnemyNeverCrit),
+            Op::Flag,
+            1.0,
+            NONE,
+            NONE,
+        )]),
+    )],
+)];
+
 /// The modelled supports, sorted by granted effect ID, each with its
 /// global stats (a buff of the skill it supports, named by the tag's
 /// `effectName` or that skill's name). Checked as [`SKILLS`].
@@ -2694,6 +2713,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportGreaterVolley", &[]),
     ("SupportGuardiansBlessing", &[]),
     ("SupportGuardiansBlessingMinion", &[]),
+    // P6-11fl: its rows act through the hex ([`CURSE_SUPPORTS`]).
+    ("SupportHexpass", &[]),
     ("SupportHextouch", &[]),
     ("SupportHypothermia", &[]),
     ("SupportIceBite", &[]),
@@ -4662,6 +4683,38 @@ fn one_skill(
                 }
             } else {
                 let mut rows = Vec::new();
+                // The supports' rows on the hex (P6-11fl, Hexpass: PoB's
+                // `GlobalEffect` `effectType = "Curse"` on the support's
+                // stat joins the curse it supports).
+                for sup in &s.supports {
+                    let Some((_, sup_stats)) =
+                        CURSE_SUPPORTS.iter().find(|(id, _)| *id == sup.effect.id)
+                    else {
+                        continue;
+                    };
+                    for (stat, value) in
+                        skill::instance(sup.effect, sup.level, sup.quality, input.data).stats
+                    {
+                        let Some(&(_, BuffStat::Rows(effects))) =
+                            sup_stats.iter().find(|(id, _)| *id == stat)
+                        else {
+                            continue;
+                        };
+                        #[expect(
+                            clippy::cast_precision_loss,
+                            reason = "stat values are small integers, exact as f64"
+                        )]
+                        let value = value as f64;
+                        for &row in effects {
+                            let (quantity, op, divisor, ..) = row;
+                            rows.push((
+                                skill_modifiers::scale(quantity, op, value / divisor, scale),
+                                row,
+                                None,
+                            ));
+                        }
+                    }
+                }
                 for (stat, value) in &instance.stats {
                     let (effects, state) = match stats.iter().find(|(id, _)| id == stat) {
                         Some(&(_, BuffStat::Rows(effects))) => (effects, None),
@@ -5480,6 +5533,7 @@ mod tests {
                         | Poe1Quantity::EnemyBuffExpireFaster
                         | Poe1Quantity::EnemyProjectileDamageTaken
                         | Poe1Quantity::EnemyTrapMineDamageTaken
+                        | Poe1Quantity::EnemyNeverCrit
                         | Poe1Quantity::EnemyPhysicalDamageReduction
                         // P6-10b parts 11 and 12: its accuracy and damage.
                         | Poe1Quantity::EnemyAccuracy
@@ -5661,6 +5715,15 @@ mod tests {
 
     /// PoB's mark rule (P6-9e): a second mark takes no slot while one is
     /// held, even a free one.
+    #[test]
+    fn curse_supports_should_be_sorted_modelled_supports() {
+        assert!(CURSE_SUPPORTS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, stats) in CURSE_SUPPORTS {
+            assert!(SUPPORTS.iter().any(|(s, _)| s == id), "{id}");
+            assert!(stats.windows(2).all(|w| w[0].0 < w[1].0), "{id}");
+        }
+    }
+
     #[test]
     fn curse_slots_should_hold_one_mark() {
         let curses = [
