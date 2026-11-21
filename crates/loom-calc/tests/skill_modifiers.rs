@@ -154,6 +154,21 @@ fn real_reservation_and_aura_stats_should_be_covered() {
             "{stat}: {text}"
         );
     }
+    // P6-11fq: each no-reservation row's text names its skill, and the
+    // aura rows say "if Cast as an Aura".
+    for (stat, skill, aura) in loom_calc::poe1::skill_modifiers::NO_RESERVATION_STATS {
+        let suffix = if aura {
+            " has no Reservation if Cast as an Aura"
+        } else {
+            " has no Reservation"
+        };
+        assert!(
+            texts
+                .iter()
+                .any(|&(s, t)| s == stat && t == format!("{skill}{suffix}")),
+            "{stat}: {skill}{suffix}"
+        );
+    }
     let names = |t: &str| {
         let t = t.to_ascii_lowercase();
         t.contains("reserv") || (t.contains("effect") && (t.contains("aura") || t.contains("buff")))
@@ -186,6 +201,17 @@ fn real_reservation_and_aura_stats_should_be_covered() {
                             loom_calc::poe1::Poe1Quantity::CostReason(_)
                                 | loom_calc::poe1::Poe1Quantity::RegenReason(..)
                                 | loom_calc::poe1::Poe1Quantity::MovementReason(_)
+                        )
+                    )
+                }) => {}
+            // "<Skill> has no Reservation" (P6-11fq): the flag of its row
+            // in `skill_modifiers::NO_RESERVATION_STATS`.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    matches!(
+                        t.quantity,
+                        loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::SkillNoReservation(_)
                         )
                     )
                 }) => {}

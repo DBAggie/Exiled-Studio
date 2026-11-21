@@ -469,6 +469,10 @@ pub enum Poe1Quantity {
     /// P6-11an, Blood Magic): a `Flag`, read by
     /// [`skill_modifiers::Totals`] for the other gems' reservation.
     ReserveLifeInsteadOfMana,
+    /// "<Skill> has no Reservation" (P6-11fq; PoB's `SkillData`
+    /// reservation keys at 0 for that skill): a `Flag`, the index into
+    /// [`skill_modifiers::NO_RESERVATION_STATS`].
+    SkillNoReservation(u8),
     /// Energy shield recharge applies to life instead (PoB's
     /// `EnergyShieldRechargeAppliesToLife`; P6-11ao, Eternal Youth): a
     /// `Flag`; [`regen`] then sets no energy shield recharge.
@@ -1310,6 +1314,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Devotion => f.write_str("devotion"),
             Self::DevotionReader(i) => write!(f, "devotion-reader.{i}"),
             Self::ReserveLifeInsteadOfMana => f.write_str("reserve-life-instead-of-mana"),
+            Self::SkillNoReservation(i) => write!(f, "skill-no-reservation.{i}"),
             Self::EsRechargeAppliesToLife => f.write_str("es-recharge-applies-to-life"),
             Self::RepeatAverageDamage => f.write_str("repeat-average-damage"),
             Self::HeraldManaReservationEfficiency => {

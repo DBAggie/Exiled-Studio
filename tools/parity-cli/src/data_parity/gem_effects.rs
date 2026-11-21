@@ -577,6 +577,9 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // is Blasphemy's share (`RESERVING_SUPPORTS`).
     ("SupportBlasphemy", "Aura"),
     ("SupportBlasphemy", "HasReservation"),
+    // P6-11fq: Eldritch Blasphemy, as Blasphemy.
+    ("SupportEldritchBlasphemy", "Aura"),
+    ("SupportEldritchBlasphemy", "HasReservation"),
     // The trigger supports the engine ports (P6-8a, `poe1::triggers`): the
     // trigger sets the supported spell's rate.
     ("SupportCastOnCritTriggered", "Triggered"),
@@ -597,7 +600,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
 /// Supports whose level rows carry a mana reservation share, which the
 /// engine takes in place of the supported skill's (P6-11r, `poe1::gems`'s
 /// reservation, as PoB's `CalcActiveSkill.lua` 516 and 517).
-const RESERVING_SUPPORTS: &[&str] = &["SupportAutoexertion", "SupportBlasphemy"];
+const RESERVING_SUPPORTS: &[&str] = &[
+    "SupportAutoexertion",
+    "SupportBlasphemy",
+    "SupportEldritchBlasphemy",
+];
 
 /// Supports that add a minion to the skill they support, and the minion:
 /// its own skills grant the character nothing (Summon Phantasm: the

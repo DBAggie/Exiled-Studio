@@ -243,10 +243,77 @@ pub const STATS: [ModifierRow; 21] = [
 /// The effects of a stat of [`STATS`]: `(quantity, op, scale)`.
 #[must_use]
 pub fn effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
+    if let Ok(i) = NO_RESERVATION_STATS.binary_search_by(|(id, ..)| (*id).cmp(stat)) {
+        let i = u8::try_from(i).ok()?;
+        return Some(vec![(
+            Quantity::Poe1(Poe1Quantity::SkillNoReservation(i)),
+            Op::Flag,
+            1.0,
+        )]);
+    }
     let i = STATS.binary_search_by(|(id, ..)| (*id).cmp(stat)).ok()?;
     let (_, q, scale) = STATS[i];
     Some(vec![(Quantity::Poe1(q), Op::Increased, scale)])
 }
+
+/// "<Skill> has no Reservation" and "<Curse> has no Reservation if Cast
+/// as an Aura" (P6-11fq; `ModParser.lua` 5317 to 5328): PoB sets the
+/// named skill's reservation keys to 0 (a `SkillId` tag from its name,
+/// not a Blessing), the second only while the skill is an `Aura`. Each
+/// stat with the skill's name as the game shows it and whether it needs
+/// the aura type, sorted by stat (a test; another test checks each
+/// against the bundle's text).
+pub const NO_RESERVATION_STATS: [(&str, &str, bool); 33] = [
+    ("anger_reserves_no_mana", "Anger", false),
+    ("arctic_armour_no_reservation", "Arctic Armour", false),
+    ("bird_aspect_reserves_no_mana", "Aspect of the Avian", false),
+    ("cat_aspect_reserves_no_mana", "Aspect of the Cat", false),
+    ("chronomancer_reserves_no_mana", "Temporal Rift", false),
+    ("clarity_reserves_no_mana", "Clarity", false),
+    ("conductivity_no_reservation", "Conductivity", true),
+    ("delirium_reserves_no_mana", "Malevolence", false),
+    ("despair_no_reservation", "Despair", true),
+    ("determination_reserves_no_mana", "Determination", false),
+    ("discipline_reserves_no_mana", "Discipline", false),
+    (
+        "elemental_weakness_no_reservation",
+        "Elemental Weakness",
+        true,
+    ),
+    ("enfeeble_no_reservation", "Enfeeble", true),
+    ("envy_reserves_no_mana", "Envy", false),
+    ("flammability_no_reservation", "Flammability", true),
+    ("flesh_stone_no_reservation", "Flesh and Stone", false),
+    ("frostbite_no_reservation", "Frostbite", true),
+    ("grace_reserves_no_mana", "Grace", false),
+    ("haste_reserves_no_mana", "Haste", false),
+    ("hatred_reserves_no_mana", "Hatred", false),
+    ("precision_reserves_no_mana", "Precision", false),
+    ("pride_reserves_no_mana", "Pride", false),
+    ("punishment_no_reservation", "Punishment", true),
+    (
+        "purity_of_elements_reserves_no_mana",
+        "Purity of Elements",
+        false,
+    ),
+    ("purity_of_fire_reserves_no_mana", "Purity of Fire", false),
+    ("purity_of_ice_reserves_no_mana", "Purity of Ice", false),
+    (
+        "purity_of_lightning_reserves_no_mana",
+        "Purity of Lightning",
+        false,
+    ),
+    (
+        "spider_aspect_reserves_no_mana",
+        "Aspect of the Spider",
+        false,
+    ),
+    ("temporal_chains_no_reservation", "Temporal Chains", true),
+    ("vitality_reserves_no_mana", "Vitality", false),
+    ("vulnerability_no_reservation", "Vulnerability", true),
+    ("wrath_reserves_no_mana", "Wrath", false),
+    ("zealotry_reserves_no_mana", "Zealotry", false),
+];
 
 /// The sums of [`STATS`]' quantities.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -264,6 +331,9 @@ pub struct Totals {
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
+    /// The skills with no reservation, a bit per
+    /// [`NO_RESERVATION_STATS`] row (P6-11fq).
+    pub no_reservation: u64,
     /// `Reserved` INC (no pool).
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
@@ -333,6 +403,14 @@ impl Totals {
             let Quantity::Poe1(q) = e.quantity else {
                 continue;
             };
+            if let Poe1Quantity::SkillNoReservation(i) = q {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.no_reservation |= 1 << i;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
             if q == Poe1Quantity::ReserveLifeInsteadOfMana {
                 if e.op == Op::Flag && e.conditions == Conditions::none() {
                     t.reserve_life = true;
@@ -585,6 +663,21 @@ pub fn reserved(
 
 #[cfg(test)]
 mod tests {
+    /// P6-11fq: sorted, one flag per row, at most 64 rows (the bit set).
+    #[test]
+    fn no_reservation_stats_should_be_sorted_flags() {
+        assert!(NO_RESERVATION_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(NO_RESERVATION_STATS.len() <= 64);
+        assert_eq!(
+            effects("despair_no_reservation"),
+            Some(vec![(
+                Quantity::Poe1(Poe1Quantity::SkillNoReservation(8)),
+                Op::Flag,
+                1.0
+            )])
+        );
+    }
+
     /// A flag is not scaled (P6-4b review; `ScaleAddMod` scales numbers).
     #[test]
     fn a_flag_should_not_be_scaled() {

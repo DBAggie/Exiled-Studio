@@ -3294,3 +3294,24 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected. 28 values moved, all toward PoB, in three builds with Eldritch Blasphemy's Malignant Madness checked: the maximum hits taken, the physical damage reduction, the hits to die, and the total EHP (an Occultist's 251,664 to 287,753, PoB 364,354).
 - **Corpus:** 0 unexpected. 10 values moved, all toward PoB, in one build.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fq: Eldritch Blasphemy, and "<Skill> has no Reservation"
+
+**PoB:**
+- **Eldritch Blasphemy** (`sup_int.lua`, `SupportEldritchBlasphemy`, `plusVersionOf = "SupportBlasphemy"`) is Blasphemy with its own reservation share. Its Malignant Madness minion damage needs the player condition `enemyMalignantMadness`, which nothing sets; the enemy's own condition is P6-11fp's.
+- **"<Skill> has no Reservation" and "<Curse> has no Reservation if Cast as an Aura"** (`ModParser.lua` 5317 to 5328) set that skill's reservation keys to 0: by a `SkillId` from its name, never a Blessing, the second only while the skill is an `Aura`.
+
+**The engine:**
+- **`SupportEldritchBlasphemy` in `gems::SUPPORTS`,** as Blasphemy. Its types and reservation share are allowed in `data-parity` as Blasphemy's are.
+- **`skill_modifiers::NO_RESERVATION_STATS`:** the game's 33 stats with the skill's name and whether the aura type is needed.
+  - Each maps to the flag `Poe1Quantity::SkillNoReservation(i)`, collected in `Totals::no_reservation`.
+  - `gems::reservation` gives such a skill no reservation, matched by name as PoB's lookup is.
+  - Tests: `no_reservation_stats_should_be_sorted_flags`; the real-bundle test checks each row's text ("Despair has no Reservation if Cast as an Aura").
+- **Without the second part** Eldritch Blasphemy alone gave an Occultist 10,863 life reserved (unreserved -5,377, PoB 5,486): its two hexes have no reservation from its body armour's lines, which the engine now reads.
+
+**Evidence** (`b-ct`, against P6-11fp's run):
+- **Public:** 0 unexpected. 7 values moved, all toward PoB:
+  - the Occultist's defence estimate, its Eldritch Blasphemy hexes now applied (total EHP 287,753 to 293,684, PoB 364,354; its unreserved life stays at PoB's 5,486);
+  - a Luminary's unreserved mana (-80 to 154, PoB 42) by its own "has no Reservation" line.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

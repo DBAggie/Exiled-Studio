@@ -2769,6 +2769,12 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportDamageOnFullLife", &[]),
     ("SupportDeadlyAilments", &[]),
     ("SupportEfficacy", &[]),
+    // P6-11fq: Eldritch Blasphemy, Blasphemy's plus version: the same
+    // aura, reservation, and `CurseEffect` MORE. Its Malignant Madness
+    // minion damage needs a condition of yours nothing sets (PoB's
+    // `enemyMalignantMadness`; the enemy's own is P6-11fp's); no global
+    // stat.
+    ("SupportEldritchBlasphemy", &[]),
     ("SupportElementalArmy", &[]),
     ("SupportElementalDamageWithAttacks", &[]),
     ("SupportElementalFocus", &[]),
@@ -5342,6 +5348,22 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
             .any(|(id, ty)| *id == sup.effect.id && s.types.contains(*ty))
     });
     if removed {
+        return;
+    }
+    // "<Skill> has no Reservation" (P6-11fq): by the skill's name as PoB's
+    // `gemIdLookup` finds it, the aura ones only for an aura, never a
+    // Blessing.
+    let name = s.active.map(|a| a.name.as_str());
+    let named_free = skill_modifiers::NO_RESERVATION_STATS
+        .iter()
+        .enumerate()
+        .any(|(i, (_, skill, aura))| {
+            totals.no_reservation & (1 << i) != 0
+                && name == Some(*skill)
+                && (!*aura || s.types.contains("Aura"))
+                && !s.types.contains("Blessing")
+        });
+    if named_free {
         return;
     }
     let effect = s.active_gem.effect;
