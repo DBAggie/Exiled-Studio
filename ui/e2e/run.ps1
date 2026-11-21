@@ -42,21 +42,30 @@ $env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe
 # port and say whether WebView2 answers, then stop it. CI only.
 if ($env:CI) {
   $probeArgs = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
-  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9333'
-  $probe = Start-Process $app -PassThru -RedirectStandardError (Join-Path $work 'probe-err.txt') -RedirectStandardOutput (Join-Path $work 'probe-out.txt')
-  $answer = $null
-  for ($i = 0; $i -lt 60 -and -not $probe.HasExited; $i++) {
-    try { $answer = (Invoke-WebRequest 'http://127.0.0.1:9333/json/version' -UseBasicParsing -TimeoutSec 2).Content; break } catch { Start-Sleep -Seconds 1 }
+  # Each variant once: as is, then without the GPU, then also without the
+  # sandbox (both known causes of a WebView2 that never starts on a server).
+  foreach ($extra in @('', '--disable-gpu', '--disable-gpu --no-sandbox')) {
+    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9333 --enable-logging --v=1 $extra".Trim()
+    $probe = Start-Process $app -PassThru -RedirectStandardError (Join-Path $work 'probe-err.txt') -RedirectStandardOutput (Join-Path $work 'probe-out.txt')
+    $answer = $null
+    for ($i = 0; $i -lt 45 -and -not $probe.HasExited; $i++) {
+      try { $answer = (Invoke-WebRequest 'http://127.0.0.1:9333/json/version' -UseBasicParsing -TimeoutSec 2).Content; break } catch { Start-Sleep -Seconds 1 }
+    }
+    $probe.Refresh()
+    Write-Output "probe [$extra]: app exited $($probe.HasExited)$(if ($probe.HasExited) { " (code $($probe.ExitCode))" }), DevTools $(if ($answer) { 'answered' } else { 'did not answer' }) after $i s"
+    Get-Process msedgewebview2 -ErrorAction SilentlyContinue | ForEach-Object { "probe: msedgewebview2 pid $($_.Id)" }
+    Get-Content (Join-Path $work 'probe-err.txt') -Tail 30 -ErrorAction SilentlyContinue
+    if (-not $probe.HasExited) { Stop-Process $probe -Force }
+    # The WebView2 processes outlive the app for a moment and hold its data
+    # folder; the next start must not begin before they are gone.
+    for ($i = 0; $i -lt 20 -and (Get-Process msedgewebview2 -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 500 }
+    Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
   }
-  $probe.Refresh()
-  Write-Output "probe: app exited $($probe.HasExited)$(if ($probe.HasExited) { " (code $($probe.ExitCode))" }), DevTools $(if ($answer) { 'answered' } else { 'did not answer' }) after $i s"
-  if ($answer) { Write-Output $answer }
-  Get-Content (Join-Path $work 'probe-err.txt') -Tail 30 -ErrorAction SilentlyContinue
-  if (-not $probe.HasExited) { Stop-Process $probe -Force }
-  # The WebView2 processes outlive the app for a moment and hold its data
-  # folder; the driver's session must not start before they are gone.
-  for ($i = 0; $i -lt 20 -and (Get-Process msedgewebview2 -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 500 }
-  Get-ChildItem (Join-Path $env:LOCALAPPDATA '*\EBWebView') -Directory -ErrorAction SilentlyContinue | ForEach-Object { "probe: WebView2 data folder $($_.FullName)" }
+  foreach ($data in Get-ChildItem (Join-Path $env:LOCALAPPDATA '*\EBWebView') -Directory -ErrorAction SilentlyContinue) {
+    "probe: WebView2 data folder $($data.FullName)"
+    Get-ChildItem $data.FullName -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'Crashpad|debug\.log|\.dmp$' } | ForEach-Object { "probe: file $($_.FullName) ($($_.Length) bytes)" }
+    Get-ChildItem $data.FullName -Recurse -Filter 'debug.log' -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName -Tail 40 }
+  }
   $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $probeArgs
 }
 
