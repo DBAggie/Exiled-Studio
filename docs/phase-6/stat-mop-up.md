@@ -3235,3 +3235,14 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
 - **Public:** 0 unexpected; no other value moved. The two community builds with Hexpass apply no hex the engine models: one is cast through Bane, the other through Eldritch Blasphemy.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fm: Battlemage's Cry's support effect
+
+**PoB** (`act_str.lua` 868, `BattlemagesCrySupport`): the Battlemage's Cry gem also grants a support (`secondaryGrantedEffectId`). It triggers the spells it supports (`triggeredByBattleMageCry`) with less damage (`support_divine_cry_damage_+%_final`, a local stat), and has no global stat. A curse it triggers applies as any.
+
+**The engine:** the support was not in `gems::SUPPORTS`, so a group with Battlemage's Cry and a spell was an `unmodelled-gem` reason, and its spells (a Vulnerability) did nothing. It is now in `SUPPORTS` with no global stats. `data-parity` (`gem_effects`) allows its `Triggered` type and its trigger key, as Automation's; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fl's run):
+- **Public:** 0 unexpected. 4 values moved, all toward PoB: a Boneshatter Juggernaut's damage (average 88,871 to 115,531, PoB 582,277) with its Vulnerability now applied.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -345,6 +345,9 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fm: Battlemage's Cry's support triggers the spell it supports
+    // (as Automation's); the spell's own kind says what it does.
+    ("BattlemagesCrySupport", "triggeredByBattleMageCry"),
     // P6-11fk: Frost Shield's quality, its own chill effect: the engine's
     // guaranteed chill makes it a `skill-chill-effect` reason
     // (`gems::guaranteed_chill`).
@@ -556,6 +559,9 @@ const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 /// create its phantasm (`ALLOWED_ADD_MINIONS`; a minion type only counts
 /// into named conditions, as an inert skill's may).
 const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
+    // P6-11fm: Battlemage's Cry's support triggers the spell it supports;
+    // the spell's own kind says what it does.
+    ("BattlemagesCrySupport", "Triggered"),
     // Automation triggers the skill it supports (close-out): the skill's
     // own kind says what it does.
     ("SupportAutomation", "Triggered"),

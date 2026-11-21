@@ -2602,6 +2602,11 @@ pub const CURSE_SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[(
 /// global stats (a buff of the skill it supports, named by the tag's
 /// `effectName` or that skill's name). Checked as [`SKILLS`].
 pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
+    // P6-11fm: Battlemage's Cry's second effect (its gem's
+    // `secondaryGrantedEffect`): it triggers the spells it supports with
+    // less damage, a local stat; no global stat, and a triggered curse
+    // applies as any.
+    ("BattlemagesCrySupport", &[]),
     ("SupportAddedColdDamage", &[]),
     // Arcane Surge Support's buff (`effectName = "Arcane Surge"`): its cast
     // speed is the largest any source gives (`ArcaneSurgeCastSpeed` MAX,
