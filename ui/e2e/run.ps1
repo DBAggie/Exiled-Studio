@@ -1,6 +1,7 @@
 # Runs the real-app workflow (ui/e2e/workflow.mjs) on Windows: starts
 # tauri-driver with msedgedriver, then the script. From the repository
-# root, in CI's e2e job (Windows) or by hand:
+# root, by hand (CI runs only the Linux job: on GitHub's Windows runner
+# WebView2 never opens its DevTools port, see .github/workflows/ci.yml):
 #
 #   pwsh ui/e2e/run.ps1 <app binary> <msedgedriver.exe> [<tauri-driver.exe>]
 #
@@ -35,53 +36,6 @@ if ($LASTEXITCODE -ne 0) { throw 'loom-release pack failed' }
 $env:LOOM_E2E_DIR = $work
 $env:LOOM_DATA_DIR = Join-Path $work 'data'
 $env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1-tree').Path
-
-# Diagnosis for the hosted runner, where msedgedriver cannot create a
-# session ("DevToolsActivePort file doesn't exist") though the workflow
-# passes on a Windows desktop: start the app alone with a fixed DevTools
-# port and say whether WebView2 answers, then stop it. CI only.
-if ($env:CI) {
-  # The 2026-11-20 probes: WebView2 starts (no crash dump) but its
-  # DevTools never answer, with or without the GPU and sandbox. A machine
-  # policy can forbid remote debugging: show the Edge and WebView2
-  # policies, then remove the ones that block it (the runner is ours
-  # alone and thrown away after the job).
-  foreach ($key in 'HKLM:\SOFTWARE\Policies\Microsoft\Edge', 'HKLM:\SOFTWARE\Policies\Microsoft\Edge\WebView2', 'HKLM:\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge', 'HKCU:\SOFTWARE\Policies\Microsoft\Edge') {
-    if (Test-Path $key) {
-      "probe: policy key $key"
-      (Get-ItemProperty $key).PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object { "probe:   $($_.Name) = $($_.Value)" }
-      foreach ($name in 'RemoteDebuggingAllowed', 'DeveloperToolsAvailability') {
-        Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue
-      }
-    }
-  }
-  $probeArgs = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
-  # Each variant once: as is, then without the GPU, then also without the
-  # sandbox (both known causes of a WebView2 that never starts on a server).
-  foreach ($extra in @('', '--disable-gpu', '--disable-gpu --no-sandbox')) {
-    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9333 --enable-logging --v=1 $extra".Trim()
-    $probe = Start-Process $app -PassThru -RedirectStandardError (Join-Path $work 'probe-err.txt') -RedirectStandardOutput (Join-Path $work 'probe-out.txt')
-    $answer = $null
-    for ($i = 0; $i -lt 45 -and -not $probe.HasExited; $i++) {
-      try { $answer = (Invoke-WebRequest 'http://127.0.0.1:9333/json/version' -UseBasicParsing -TimeoutSec 2).Content; break } catch { Start-Sleep -Seconds 1 }
-    }
-    $probe.Refresh()
-    Write-Output "probe [$extra]: app exited $($probe.HasExited)$(if ($probe.HasExited) { " (code $($probe.ExitCode))" }), DevTools $(if ($answer) { 'answered' } else { 'did not answer' }) after $i s"
-    Get-Process msedgewebview2 -ErrorAction SilentlyContinue | ForEach-Object { "probe: msedgewebview2 pid $($_.Id)" }
-    Get-Content (Join-Path $work 'probe-err.txt') -Tail 30 -ErrorAction SilentlyContinue
-    if (-not $probe.HasExited) { Stop-Process $probe -Force }
-    # The WebView2 processes outlive the app for a moment and hold its data
-    # folder; the next start must not begin before they are gone.
-    for ($i = 0; $i -lt 20 -and (Get-Process msedgewebview2 -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 500 }
-    Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-  }
-  foreach ($data in Get-ChildItem (Join-Path $env:LOCALAPPDATA '*\EBWebView') -Directory -ErrorAction SilentlyContinue) {
-    "probe: WebView2 data folder $($data.FullName)"
-    Get-ChildItem $data.FullName -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -match 'Crashpad|debug\.log|\.dmp$' } | ForEach-Object { "probe: file $($_.FullName) ($($_.Length) bytes)" }
-    Get-ChildItem $data.FullName -Recurse -Filter 'debug.log' -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName -Tail 40 }
-  }
-  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $probeArgs
-}
 
 $driver = Start-Process $TauriDriver -ArgumentList '--native-driver', $EdgeDriver -PassThru -NoNewWindow
 try {
