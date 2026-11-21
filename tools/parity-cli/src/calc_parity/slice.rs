@@ -32,8 +32,9 @@ pub const FORMAT: u32 = 1;
 /// part 9); revision 18 the damage taken over time multipliers (P6-10b part
 /// 10); revision 19 the evade chances (P6-10b part 11); revision 20 the
 /// enemy's hit (P6-10b part 12); revision 21 the maximum hit taken (P6-10b
-/// part 13); revision 22 the effective health pool (P6-10b part 14).
-pub const REVISION: u32 = 22;
+/// part 13); revision 22 the effective health pool (P6-10b part 14);
+/// revision 23 the ignite's burning ground (P6-11ga).
+pub const REVISION: u32 = 23;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -137,7 +138,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 65] = [
+pub const PRESENT_NAMES: [(&str, &str); 66] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -263,6 +264,9 @@ pub const PRESENT_NAMES: [(&str, &str); 65] = [
     ("ConfiguredDamageChance", "poe1.configured-damage-chance"),
     ("ConfiguredNotHitChance", "poe1.configured-not-hit-chance"),
     ("TotalEHP", "poe1.total-ehp"),
+    // Revision 23 (P6-11ga): the ignite's burning ground; our result has
+    // it when the skill ignites with a share as burning ground.
+    ("BurningGroundDPS", "poe1.burning-ground-dps"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

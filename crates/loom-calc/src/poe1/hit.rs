@@ -1145,7 +1145,8 @@ fn set_ailments(
         super::leech::rates(calc, hit, unvetted)?;
     }
     for ailment in super::ailment::Ailment::ALL {
-        if let Some((dps, mut reasons)) = super::ailment::damaging(calc, hit, enemy, data, ailment)?
+        if let Some((dps, mut reasons, ground)) =
+            super::ailment::damaging(calc, hit, enemy, data, ailment)?
         {
             reasons.extend(unvetted);
             // The stacks read the hit chance too (attacks; a spell's is
@@ -1155,6 +1156,14 @@ fn set_ailments(
             } else {
                 &[Field::CritChance, Field::Speed]
             };
+            // The ignite's burning ground (P6-11ga).
+            if let Some(ground) = ground {
+                calc.set_derived(
+                    Field::Poe1(super::Poe1Field::BurningGroundDps),
+                    phases::query(ground, reasons.clone()),
+                    deps,
+                );
+            }
             calc.set_derived(ailment.field(), phases::query(dps, reasons), deps);
         }
     }
@@ -1480,6 +1489,14 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
         }
         if any {
             calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
+            if ailment == super::ailment::Ailment::Ignite
+                && phases::has(calc, Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround))
+            {
+                calc.set_unsupported(
+                    Field::Poe1(super::Poe1Field::BurningGroundDps),
+                    UnsupportedReason::NotComputed,
+                );
+            }
         }
     }
     // PoB combines a dual wielder's leech per hand (`combineStat`, 3877 to

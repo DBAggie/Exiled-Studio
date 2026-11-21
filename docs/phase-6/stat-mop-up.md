@@ -3475,3 +3475,30 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **New mechanic fixture** `ice-nova-herald-of-the-breach-witch.xml`: the Ice Nova witch with Herald of the Hive in a group of its own. PoB's average damage goes from 727.55 to 749.33 and unreserved mana from 590 to 442; all 77 compared fields match.
 - **Public and corpus:** 0 unexpected. Unreserved mana moves toward PoB in the 3 builds holding the herald (2 now equal; the Penance Brand community build 221 to 88, PoB 78, its remaining gap from elsewhere).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ga: Flame Surge's burning ground (slice revision 23)
+
+**PoB:**
+- **The buff** (`act_int.lua` 6620): Flame Surge gives `IgniteDpsAsBurningGround` MAX 30, an unscalable `GlobalEffect` buff.
+- **The ignite** (`CalcOffence.lua` 5098 to 5108): the share makes `BurningGroundDPS = min(baseVal x effectMod x rateMod x fireEffMult x share / 100, DotDpsCap)`, without the active ignites.
+- **The totals:** `TotalDotDPS` adds it after the ignite (6126), and the full DPS keeps the largest of all skills (`Calcs.lua` 303, 355).
+
+**The engine:**
+- **`Poe1Quantity::IgniteDpsAsBurningGround`:** `Base`. One buff per name applies, so the sum is PoB's largest.
+- **`Poe1Field::BurningGroundDps`** (`poe1.burning-ground-dps`): set by the ignite (`ailment::damaging`) from its own parts, with fire's enemy effect (the ignite's `dot_type`). When a dual-wielding attack's ignite is not computed, neither is the ground.
+- **`poe1::combined` and `poe1::full_dps`:** the ground enters `TotalDotDPS` after the ignite, and the full DPS takes the largest.
+- **`gems::SKILLS`:** Flame Surge as a buff with that row (`Unscalable`).
+- **`data-parity` (`gem_effects`):** the row is printed as PoB's MAX mod; `uncategorized` 0.
+- **Slice revision 23:** `BurningGroundDPS`, applies present.
+- **UI:** the field's label, with the offence fields.
+
+**Not modelled:**
+- Alchemist's Mark's share, a curse on the enemy (`enemyDB`).
+- A skill's own burning ground (`dotIsBurningGround`, 5620 to 5643).
+- A mirage's burning ground.
+- Flame Surge of Combusting's share, which applies only when it is the main skill.
+
+**Evidence** (`b-ct`, against P6-11fz's run):
+- **New mechanic fixture** `ice-nova-ignite-flame-surge-witch.xml`: the Ice Nova ignite fixture with Flame Surge in a group of its own. All 79 compared fields match, among them `BurningGroundDPS` 41.83, the ignite 139.43, and the combined and full DPS 1699.34.
+- **Public and corpus:** 0 unexpected, and no value moved. The new field is not computed in the 7 builds where PoB has it (1 public, 6 corpus): none of them has a computed ignite.
+- **Tests:** the workspace tests, the UI tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

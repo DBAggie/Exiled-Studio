@@ -353,7 +353,7 @@ pub(super) fn damaging(
     enemy: &Enemy,
     data: &dyn CalcData,
     ailment: Ailment,
-) -> Result<Option<(Valued, Reasons)>, CalcError> {
+) -> Result<Option<(Valued, Reasons, Option<Valued>)>, CalcError> {
     let spec = spec(ailment);
     let mut reasons = Reasons::new();
     if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
@@ -762,7 +762,37 @@ pub(super) fn damaging(
         )?;
         phases::pair(calc, dps, cap, Term::Result, true)?
     };
-    Ok((dps.value > 0.0).then_some((dps, reasons)))
+    if dps.value <= 0.0 {
+        return Ok(None);
+    }
+    // The ignite's share as burning ground (P6-11ga; `CalcOffence.lua`
+    // 5098 to 5108): `baseVal x effectMod x rateMod x fireEffMult x
+    // groundMult / 100`, capped, without the active ignites; the ignite's
+    // enemy effect is fire's (`dot_type`).
+    let ground_quantity = Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround);
+    let ground = if ailment == Ailment::Ignite && phases::has(calc, ground_quantity) {
+        let share = phases::sum(
+            calc,
+            ground_quantity,
+            crate::Op::Base,
+            Term::Step("burning-ground-share"),
+            &mut reasons,
+        )?;
+        if share.value > 0.0 {
+            let scaled = phases::product(
+                calc,
+                &[base, effect, rate_mod, enemy_effect, share],
+                Term::Step("burning-ground-scaled"),
+            )?;
+            let ground = hit::percent_of(calc, scaled, Term::Step("burning-ground"))?;
+            Some(phases::pair(calc, ground, cap, Term::Result, true)?)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    Ok(Some((dps, reasons, ground)))
 }
 
 /// PoB's `data.misc.ImpaleStoredDamageBase` (`Modules/Data.lua` 262): an

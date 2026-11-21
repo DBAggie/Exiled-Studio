@@ -7,12 +7,13 @@
 //! `groupCount`, else the gem's `count`, 1 by default). Then:
 //! - `TotalDPS` (the hit's DPS) times the count, when above 0; for a skill
 //!   with a minion, the minion's `TotalDPS` times the count too;
-//! - the largest ignite and the largest bleeding of all the skills;
+//! - the largest ignite, burning ground (P6-11ga), and bleeding of all
+//!   the skills;
 //! - poison (`TotalPoisonDPS`) and impale, each times the count, summed;
 //! - damage over time (`TotalDot`) summed, times the count only for a skill
 //!   whose damage over time stacks (`DotCanStack`);
-//! - `TotalDotDPS = min(bleed + ignite + poison (itself at most the cap) +
-//!   damage over time, DotDpsCap)`; `FullDPS = hits + impale + TotalDotDPS`,
+//! - `TotalDotDPS = min(bleed + ignite + burning ground + poison (itself
+//!   at most the cap) + damage over time, DotDpsCap)`; `FullDPS = hits + impale + TotalDotDPS`,
 //!   times the largest cull multiplier.
 //!
 //! The engine computes each such skill with [`crate::calculate`] on a copy
@@ -23,7 +24,7 @@
 //! is a reason (`full-dps-skill`), counted as nothing. Not modelled, each a
 //! reason: a skill's mirage (PoB adds the mirage's own output), damage over
 //! time of a skill with a count above 1 (`DotCanStack` is not known),
-//! burning and caustic ground, corrupting blood, decay, a Vaal gem's two
+//! a skill's own burning ground and caustic ground, corrupting blood, decay, a Vaal gem's two
 //! effects (PoB counts each by its `enableGlobal` flag), and the skills
 //! PoB counts once by a config condition (Absolution, Dominating Blow,
 //! Holy Strike).
@@ -46,6 +47,7 @@ struct Parts {
     poison: f64,
     dot: f64,
     ignite: f64,
+    ground: f64,
     bleed: f64,
     cull: f64,
 }
@@ -124,6 +126,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let poison = read(Field::PoisonDps, &mut reasons);
         let dot = read(Field::DotDps, &mut reasons);
         let ignite = read(Field::IgniteDps, &mut reasons);
+        let ground = read(Field::Poe1(Poe1Field::BurningGroundDps), &mut reasons);
         let bleed = read(Field::BleedDps, &mut reasons);
         let combined = read(Field::Poe1(Poe1Field::CombinedDps), &mut reasons);
         // The minion's (a skill with a minion).
@@ -140,16 +143,18 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         parts.poison += poison * count + m_poison * count;
         parts.dot += dot;
         parts.ignite = parts.ignite.max(ignite).max(m_ignite);
+        parts.ground = parts.ground.max(ground);
         parts.bleed = parts.bleed.max(bleed).max(m_bleed);
         // The skill's cull multiplier, from its combined DPS over its parts
         // (its Culling Strike: 10/9).
-        let base = hit + impale + (dot + poison + ignite + bleed).min(DOT_DPS_CAP);
+        let base = hit + impale + (dot + poison + ignite + ground + bleed).min(DOT_DPS_CAP);
         if base > 0.0 && combined > base * (1.0 + 1e-12) {
             parts.cull = parts.cull.max(combined / base);
         }
     }
     let total_dot =
-        (parts.bleed + parts.ignite + parts.poison.min(DOT_DPS_CAP) + parts.dot).min(DOT_DPS_CAP);
+        (parts.bleed + parts.ignite + parts.ground + parts.poison.min(DOT_DPS_CAP) + parts.dot)
+            .min(DOT_DPS_CAP);
     let mut value = parts.hits + parts.impale + total_dot;
     if parts.cull > 1.0 {
         value *= parts.cull;

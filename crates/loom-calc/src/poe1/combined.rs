@@ -3,8 +3,9 @@
 //!
 //! What PoB does, for a skill that does not show its average damage:
 //! - `CombinedDPS = TotalDPS + ImpaleDPS + TotalDotDPS`, `TotalDotDPS =
-//!   min(TotalDot + TotalPoisonDPS + IgniteDPS + BleedDPS (+ ground,
-//!   corrupting blood, decay), DotDpsCap)`, the cap `35791394` (`Data.lua`
+//!   min(TotalDot + TotalPoisonDPS + IgniteDPS + BurningGroundDPS +
+//!   BleedDPS (+ caustic ground, corrupting blood, decay), DotDpsCap)`
+//!   (the ignite's burning ground, P6-11ga), the cap `35791394` (`Data.lua`
 //!   255);
 //! - times the cull multiplier `100 / (100 - CullPercent)` (3217 to 3221:
 //!   Culling Strike's 10, [`Poe1Quantity::CullingStrike`]) and the
@@ -247,6 +248,7 @@ pub(super) fn combine(
         Field::DotDps,
         Field::PoisonDps,
         Field::IgniteDps,
+        Field::Poe1(Poe1Field::BurningGroundDps),
         Field::BleedDps,
     ] {
         if calc.field(f).is_some() {

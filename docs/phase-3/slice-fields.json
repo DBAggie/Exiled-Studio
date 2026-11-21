@@ -1,9 +1,10 @@
 {
   "format": 1,
-  "revision": 22,
+  "revision": 23,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
+    "Revision 23 (Phase 6, P6-11ga): the main skill's burning ground from its ignite (BurningGroundDPS), applies present: our result has it when the skill ignites and a share of the ignite is dealt as burning ground (Flame Surge's buff).",
     "Revision 22 (Phase 6, P6-10b part 14): the effective health pool (NumberOfDamagingHits, NumberOfMitigatedDamagingHits, TotalNumberOfHits, ConfiguredDamageChance, ConfiguredNotHitChance, TotalEHP), applies present: our result has them with the enemy's hit of every type.",
     "Revision 21 (Phase 6, P6-10b part 13): the maximum hit taken of each type and the second smallest (<Type>MaximumHitTaken, SecondMinimalMaximumHitTaken), applies present: our result has them with the enemy's hit and the pools.",
     "Revision 20 (Phase 6, P6-10b part 12): the enemy's hit on the character (<Type>TakenHitMult, <Type>DamageReduction), applies present: our result has them with armour and the evade chances.",
@@ -178,6 +179,7 @@
     {"id": "IgniteDPS", "group": "dot", "pob_key": "IgniteDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2b): the main skill's ignite. Our result has the field only when its hit ignites; a dual-wielding attack's is not computed yet."},
     {"id": "BleedDPS", "group": "dot", "pob_key": "BleedDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): the main skill's bleeding (attacks). Our result has the field only when its attack bleeds."},
     {"id": "TotalPoisonDPS", "group": "dot", "pob_key": "TotalPoisonDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2c): every poison of the main skill together. Our result has the field only when its hit poisons."},
+    {"id": "BurningGroundDPS", "group": "dot", "pob_key": "BurningGroundDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-11ga): the ignite's share as burning ground (Flame Surge's buff). Our result has the field only then."},
     {"id": "ImpaleDPS", "group": "dot", "pob_key": "ImpaleDPS", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-2d): the main skill's impales. Our result has the field only when its hit impales."},
     {"id": "BasePhysicalDamageReduction", "group": "defence", "pob_key": "BasePhysicalDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base physical damage reduction from modifiers and endurance charges, at most the character's maximum."},
     {"id": "BaseFireDamageReduction", "group": "defence", "pob_key": "BaseFireDamageReduction", "applies": "present", "comparison": {"rule": "exact"}, "note": "Phase 6 (P6-10b part 5): the base fire damage reduction from modifiers and endurance charges, at most the character's maximum."},

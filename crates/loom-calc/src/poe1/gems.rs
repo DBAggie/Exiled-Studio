@@ -1087,6 +1087,28 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("EssenceDrain", Kind::Inert),
     ("FireTrap", Kind::Inert),
     ("FlameDash", Kind::Inert),
+    // P6-11ga: Flame Surge's buff (`act_int.lua` 6620): the share of the
+    // ignite's damage per second dealt as burning ground
+    // (`IgniteDpsAsBurningGround` MAX, an unscalable `GlobalEffect` buff),
+    // read by the main skill's ignite. Its more damage against burning
+    // enemies is its own hit.
+    (
+        "FlameSurge",
+        Kind::Buff {
+            name: "Flame Surge",
+            effect: EffectType::Buff,
+            stats: &[(
+                "flame_surge_ignite_damage_as_burning_ground_damage_%",
+                BuffStat::Unscalable(&[(
+                    Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     (
         "FlameWall",
         Kind::Buff {

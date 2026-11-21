@@ -295,6 +295,11 @@ pub enum Poe1Quantity {
     /// the enemy; Hexpass, P6-11fl): a `Flag`, read by the defence
     /// estimate's enemy crit ([`enemy_hit`]).
     EnemyNeverCrit,
+    /// The share of the ignite's damage per second dealt as burning ground,
+    /// percent (PoB's `IgniteDpsAsBurningGround` MAX; Flame Surge's buff,
+    /// P6-11ga): `Base`, read by the ignite ([`ailment`]). One buff per
+    /// name applies, so the sum is PoB's largest.
+    IgniteDpsAsBurningGround,
     /// A pool's regeneration (P6-10b): `Base` the flat amount per second
     /// (PoB's `<Pool>Regen` BASE), `Increased` and `More` its rate, read by
     /// [`regen`].
@@ -1223,6 +1228,7 @@ impl core::fmt::Display for Poe1Quantity {
                 f.write_str("enemy-projectile-attack-damage-taken")
             }
             Self::EnemyNeverCrit => f.write_str("enemy-never-crit"),
+            Self::IgniteDpsAsBurningGround => f.write_str("ignite-dps-as-burning-ground"),
             Self::IgnorePdrChance => f.write_str("ignore-pdr-chance"),
             Self::Regen(p) => write!(f, "regen.{}", p.name()),
             Self::RegenPercent(p) => write!(f, "regen-percent.{}", p.name()),
@@ -1572,6 +1578,10 @@ pub enum Poe1Field {
     /// The main skill's impale damage per second (PoB's `ImpaleDPS`; Phase
     /// 6). Present only when the skill impales.
     ImpaleDps,
+    /// The main skill's burning ground from its ignite (PoB's
+    /// `BurningGroundDPS`; P6-11ga). Present only when the skill ignites
+    /// and a share of the ignite is dealt as burning ground.
+    BurningGroundDps,
     /// Life regenerated per second (PoB's `LifeRegen`; P6-10b).
     LifeRegen,
     /// Mana regenerated per second (PoB's `ManaRegen`; P6-10b).
@@ -1674,6 +1684,7 @@ impl Poe1Field {
             Self::SpellSuppressionChance => "spell-suppression-chance",
             Self::SpellBlockChance => "spell-block-chance",
             Self::ImpaleDps => "impale-dps",
+            Self::BurningGroundDps => "burning-ground-dps",
             Self::LifeRegen => "life-regen",
             Self::ManaRegen => "mana-regen",
             Self::EnergyShieldRegen => "energy-shield-regen",

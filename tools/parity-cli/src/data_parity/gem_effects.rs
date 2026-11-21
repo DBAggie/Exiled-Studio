@@ -849,6 +849,8 @@ fn pob_name(q: Quantity) -> String {
         }
         // P6-11fl: Hexpass's, on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyNeverCrit) => "NeverCrit".into(),
+        // P6-11ga: Flame Surge's burning ground.
+        Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround) => "IgniteDpsAsBurningGround".into(),
         Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
             "PhysicalDamageReduction".into()
         }
@@ -1122,6 +1124,8 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             // engine keeps the largest (`poe1::buffs`).
             if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed)
                 || row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen)
+                // P6-11ga: Flame Surge's burning ground, MAX as well.
+                || row.0 == Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround)
             {
                 return f.replacen(" BASE ", " MAX ", 1)
                     + &format!(" tags global {}", json!({ "unscalable": true }));
