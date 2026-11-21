@@ -255,5 +255,5 @@ fn modelled_chilling_skills_should_be_chilling_areas() {
             chilling.push(*id);
         }
     }
-    assert_eq!(chilling, ["ArcticArmour", "Frostblink"]);
+    assert_eq!(chilling, ["ArcticArmour", "FrostShield", "Frostblink"]);
 }

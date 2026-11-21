@@ -333,6 +333,10 @@ const EXTRA_BUFFS: &[(&str, &str)] = &[
 /// Support mods outside the buff the engine models, with why: Guardian's
 /// Blessing's reservation of 0 for an aura (`gems::NO_RESERVATION_SUPPORTS`).
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fk: Frost Shield's quality, its own chill effect: the engine's
+    // guaranteed chill makes it a `skill-chill-effect` reason
+    // (`gems::guaranteed_chill`).
+    ("FrostShield", "EnemyChillEffect"),
     // Automation's trigger of the skill it supports, whose own kind says
     // what it does.
     ("SupportAutomation", "triggered"),
@@ -450,6 +454,8 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 /// field (regeneration, recharge, movement, degeneration, leech, freeze,
 /// damage taken by you).
 const NO_SLICE_NAMES: &[&str] = &[
+    // P6-11fk: Frost Shield's stage limit, read only with its stages.
+    "Multiplier:FrostShieldMaxStages",
     "AreaOfEffect",
     // P6-11fd: Seismic Cry's stun threshold.
     "StunThreshold",

@@ -3195,3 +3195,24 @@ With supports, every support socketed in the slot's other groups joins the skill
 - **Public:** 0 unexpected. 8 values moved, all toward PoB: a mine Assassin's and a Lightning Trap Elementalist's damage (average, total, combined, and full DPS), each with Bear Trap in the build.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fk: Frost Shield
+
+**PoB** (`act_int.lua`, `FrostShield`): every value of its buff scales by `Multiplier:FrostShieldStage`, which only the config's `frostShieldStages` sets (a count with no default, `ConfigOptions.lua` 455):
+- the spell crit chance per stage;
+- the shield's life per stage;
+- the energy shield drain, from one stage;
+- the share of damage the shield takes. It matters only with the shield's life: `CalcDefence.lua` 47 to 52 makes no pool without life, 2444 to 2447.
+
+With no stage, every value is 0. As a `ChillingArea` skill it also chills the enemy, at the default chill times `calcLib.mod(skillModList, "EnemyChillEffect")`, which includes the gem's quality (`cold_ailment_effect_+%`, `CalcPerform.lua` 1393 to 1397).
+
+**The engine:**
+- **`gems::SKILLS`:** Frost Shield as a buff whose staged values are `ReasonWhenInput` on `frostShieldStages` (`frost-shield-stages`). The stage multiplier and the shield's pool are not modelled, so with stages they are reasons; without, nothing, as in PoB. `ReasonWhenInput` now reads a count of 0 as off. The stage limit is `NoSlice`.
+- **Its guaranteed chill applies** as Arctic Armour's and Frostblink's do (`gems::guaranteed_chill`; the real-bundle test's list of chilling skills now names it).
+- **The skill's own chill effect:** a chilling skill whose quality gives it, at a quality above 0, is a `skill-chill-effect` reason (`SKILL_CHILL_QUALITY`); the chill stays at the character's effect.
+- **`data-parity` (`gem_effects`):** Frost Shield's own `EnemyChillEffect` is allowed with that reason, and its stage limit is a no-slice name; `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fj's run):
+- **Public:** 0 unexpected; no value moved. Frost Shield is no longer an unmodelled gem in the three builds that hold it, none of which sets stages. The two with quality 20 carry the `skill-chill-effect` reason.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

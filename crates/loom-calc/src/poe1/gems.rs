@@ -1163,6 +1163,62 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fk: Frost Shield (`act_int.lua`, `FrostShield`). Each of its
+    // values PoB scales by `Multiplier:FrostShieldStage` (the config's
+    // `frostShieldStages`, no default): the spell crit chance per stage, the
+    // shield's life per stage, and with it the share it takes (no pool with
+    // no life, `CalcDefence.lua` 2444 to 2447, 47 to 52), and the energy
+    // shield drain from one stage. With no stage they are 0, as PoB's; with
+    // stages each is a reason (the stage multiplier and the shield's pool
+    // are not modelled).
+    (
+        "FrostShield",
+        Kind::Buff {
+            name: "Frost Shield",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "energy_shield_lost_per_minute",
+                    BuffStat::ReasonWhenInput {
+                        input: "frostShieldStages",
+                        what: "frost-shield-stages",
+                    },
+                ),
+                (
+                    "frost_globe_absorb_damage_%_enemy_in_bubble",
+                    BuffStat::ReasonWhenInput {
+                        input: "frostShieldStages",
+                        what: "frost-shield-stages",
+                    },
+                ),
+                (
+                    "frost_globe_absorb_damage_%_enemy_outside_bubble",
+                    BuffStat::ReasonWhenInput {
+                        input: "frostShieldStages",
+                        what: "frost-shield-stages",
+                    },
+                ),
+                (
+                    "frost_globe_additional_spell_base_critical_strike_chance_per_stage",
+                    BuffStat::ReasonWhenInput {
+                        input: "frostShieldStages",
+                        what: "frost-shield-stages",
+                    },
+                ),
+                (
+                    "frost_globe_health_per_stage",
+                    BuffStat::ReasonWhenInput {
+                        input: "frostShieldStages",
+                        what: "frost-shield-stages",
+                    },
+                ),
+                (
+                    "frost_globe_max_stages",
+                    BuffStat::NoSlice("frost-shield-stage-limit"),
+                ),
+            ],
+        },
+    ),
     (
         "Frostbite",
         Kind::Curse {
@@ -3817,7 +3873,7 @@ pub fn gems(
                     });
                 }
                 // PoB's skill list holds the main skill too.
-                guaranteed_chill(&s.types, source, ingest);
+                guaranteed_chill(s, source, ingest);
                 socket_reasons(g, s, ingest);
                 // Its supports' global effects (Arcane Surge's buff) act
                 // as any skill's.
@@ -4333,7 +4389,7 @@ fn one_skill(
     if s.global_off && kind.buff().is_some() {
         return;
     }
-    guaranteed_chill(&s.types, active_source.clone(), ingest);
+    guaranteed_chill(s, active_source.clone(), ingest);
     let mut supported = true;
     for sup in &s.supports {
         if support(&sup.effect.id).is_none() {
@@ -4797,7 +4853,13 @@ fn add_rows(
             }
             BuffStat::ReasonWhenInput { input: check, what } => {
                 let on = config.and_then(|set| last_input(set, check, ConfigInputKind::Input));
-                if *value != 0 && !matches!(on, None | Some(ConfigValue::Boolean(false))) {
+                // A count at 0 is off too (P6-11fk: Frost Shield's stages).
+                let off = match on {
+                    None | Some(ConfigValue::Boolean(false)) => true,
+                    Some(ConfigValue::Number(n)) => n.value().0 == 0.0,
+                    _ => false,
+                };
+                if *value != 0 && !off {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
                         source: source.clone(),
                         what,
@@ -5052,6 +5114,10 @@ fn reserves(types: &BTreeSet<String>) -> bool {
 /// modifiers (PoB's `ChillingArea`, `CalcPerform.lua` 1393).
 pub const CHILLING_AREA: &str = "ChillingArea";
 
+/// Quality stats that give a skill's own chill effect (PoB's
+/// `EnemyChillEffect` INC; [`guaranteed_chill`]).
+const SKILL_CHILL_QUALITY: &[&str] = &["chill_effect_+%", "cold_ailment_effect_+%"];
+
 /// The skill type that gives one unless the skill cannot chill (PoB's
 /// `NonHitChill` without the `CannotChill` flag).
 pub const NON_HIT_CHILL: &str = "NonHitChill";
@@ -5066,7 +5132,27 @@ pub const NON_HIT_CHILL: &str = "NonHitChill";
 /// it cannot (`CannotChill`, from modifiers the engine does not read): a
 /// reason. Every modelled `NonHitChill` skill is also `ChillingArea` (a
 /// test).
-fn guaranteed_chill(types: &BTreeSet<String>, source: Source, ingest: &mut Ingest<'_>) {
+///
+/// PoB scales the chill by the skill's own `EnemyChillEffect` too
+/// (`calcLib.mod(activeSkill.skillModList, ..., "EnemyChillEffect")`): a
+/// skill whose quality gives it (Frost Shield's `cold_ailment_effect_+%`,
+/// P6-11fk) at a quality above 0 is a `skill-chill-effect` reason, the
+/// chill kept at the character's effect.
+fn guaranteed_chill(s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
+    let types = &s.types;
+    if types.contains(CHILLING_AREA)
+        && s.active_gem.quality > 0
+        && s.active_gem
+            .effect
+            .quality
+            .iter()
+            .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str()))
+    {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "skill-chill-effect",
+        });
+    }
     if types.contains(CHILLING_AREA) {
         ingest.effect(Effect {
             quantity: Quantity::Poe1(Poe1Quantity::SkillChill),
