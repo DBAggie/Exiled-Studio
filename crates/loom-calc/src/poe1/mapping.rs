@@ -8658,6 +8658,25 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_lightning_skill_gem_level_+", "gem-level"),
     ("supported_minion_skill_gem_level_+", "gem-level"),
     ("supported_physical_skill_gem_level_+", "gem-level"),
+    // P6-11fi: supports' weapon restrictions, read by `skill::support_weapons`
+    // (`SUPPORT_WEAPON_STATS`): no modifier.
+    (
+        "supported_skill_can_only_use_axe_and_sword",
+        "weapon-restriction",
+    ),
+    (
+        "supported_skill_can_only_use_axe_mace_and_staff",
+        "weapon-restriction",
+    ),
+    (
+        "supported_skill_can_only_use_dagger_and_claw",
+        "weapon-restriction",
+    ),
+    (
+        "supported_skill_can_only_use_mace_and_staff",
+        "weapon-restriction",
+    ),
+    ("supported_skill_can_only_use_wand", "weapon-restriction"),
     ("supported_strike_skill_gem_level_+", "gem-level"),
     ("taunt_duration_+%", "no-slice"),
     // P6-11u: how long a totem lasts; no slice field.

@@ -141,6 +141,80 @@ pub struct MainSkill<'d> {
     /// group's slot gives its socketed skills (P6-11bi, PoB's
     /// `ExtraSkillMod` `SupportManaMultiplier`).
     pub cost_mores: Vec<f64>,
+    /// The weapon types each applied support allows, as the game states
+    /// them ([`support_weapons`], P6-11fi).
+    pub support_weapons: Vec<&'static [&'static str]>,
+}
+
+/// Supports' weapon restrictions as the game states them (P6-11fi;
+/// maintainer decision 2026-11-20: the game's data first): a support's
+/// stat set carries one of these flag stats ("Supported Skills can only
+/// be used with Maces and Staves"), each with the weapon types it allows,
+/// as PoB's types ([`pob_weapon_type`]; Maces include Sceptres, Staves
+/// Warstaves). PoB keeps its own `weaponTypes` lists on the gems
+/// (`CalcActiveSkill.lua` 287 to 291): for each support with one of these
+/// stats they list the same types, but Fissure Support carries the stat
+/// and has no list in PoB, and PoB lists types for supports with no stat
+/// (Arrow Nova, Barrage, Kinetic Instability, Voidstorm, Ballista Totem),
+/// which the engine does not follow. Sorted (a test).
+pub const SUPPORT_WEAPON_STATS: [(&str, &[&str]); 5] = [
+    (
+        "supported_skill_can_only_use_axe_and_sword",
+        &[
+            "One Handed Axe",
+            "One Handed Sword",
+            "Thrusting One Handed Sword",
+            "Two Handed Axe",
+            "Two Handed Sword",
+        ],
+    ),
+    (
+        "supported_skill_can_only_use_axe_mace_and_staff",
+        &[
+            "One Handed Axe",
+            "One Handed Mace",
+            "Sceptre",
+            "Staff",
+            "Two Handed Axe",
+            "Two Handed Mace",
+        ],
+    ),
+    (
+        "supported_skill_can_only_use_dagger_and_claw",
+        &["Claw", "Dagger"],
+    ),
+    (
+        "supported_skill_can_only_use_mace_and_staff",
+        &["One Handed Mace", "Sceptre", "Staff", "Two Handed Mace"],
+    ),
+    ("supported_skill_can_only_use_wand", &["Wand"]),
+];
+
+/// The weapon types each of `supports` allows ([`SUPPORT_WEAPON_STATS`]),
+/// from its main stat set's implicit and constant stats.
+#[must_use]
+pub fn support_weapons(
+    supports: &[GemEffectRef<'_>],
+    data: &dyn CalcData,
+) -> Vec<&'static [&'static str]> {
+    let mut out = Vec::new();
+    for s in supports {
+        let Some(set) = s.effect.stat_sets.first().and_then(|id| data.stat_set(id)) else {
+            continue;
+        };
+        let stats = set.implicit_stats.iter().map(String::as_str).chain(
+            set.constant_stats
+                .iter()
+                .filter(|c| c.value != 0)
+                .map(|c| c.stat.as_str()),
+        );
+        for stat in stats {
+            if let Some((_, types)) = SUPPORT_WEAPON_STATS.iter().find(|(s, _)| *s == stat) {
+                out.push(*types);
+            }
+        }
+    }
+    out
 }
 
 /// PoB's weapon type for a game item class: its exporter's
@@ -169,14 +243,19 @@ pub(super) fn pob_weapon_type(class: &str) -> Option<&'static str> {
     })
 }
 
-/// [`MainSkill::can_use`] for an active skill row (none: not restricted).
-/// PoB's list keeps only the classes its exporter maps, so a list of other
+/// [`MainSkill::can_use`] for an active skill row (none: not restricted)
+/// and the supports' weapon types ([`support_weapons`]): the held type
+/// must be in each support's list, as in PoB's `getWeaponFlags`. PoB's
+/// list keeps only the classes its exporter maps, so a list of other
 /// classes (Shield Crush's `Shield`) restricts nothing; a held class
 /// without a PoB type is not checked (`getWeaponFlags` finds no info).
-fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
+fn can_use(active: Option<&ActiveSkill>, supports: &[&[&str]], class: &str) -> bool {
     let Some(held) = pob_weapon_type(class) else {
         return true;
     };
+    if supports.iter().any(|types| !types.contains(&held)) {
+        return false;
+    }
     let Some(active) = active else { return true };
     let mut listed = active
         .weapon_classes
@@ -189,16 +268,19 @@ fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
 /// [`MainSkill::disabled_by_hands`] for an active skill row and its types.
 fn disabled_by_hands(
     active: Option<&ActiveSkill>,
+    supports: &[&[&str]],
     types: &BTreeSet<String>,
     hands: &super::collect::Hands,
 ) -> Result<bool, &'static str> {
     use super::collect::Held;
     let has = |t: &str| types.contains(t);
-    let restricted = active.is_some_and(|a| {
-        a.weapon_classes
-            .iter()
-            .any(|c| pob_weapon_type(c).is_some())
-    });
+    let can_use = |class: &str| can_use(active, supports, class);
+    let restricted = !supports.is_empty()
+        || active.is_some_and(|a| {
+            a.weapon_classes
+                .iter()
+                .any(|c| pob_weapon_type(c).is_some())
+        });
     if has("RequiresShield") {
         match hands.off_hand {
             Held::Shield => {}
@@ -216,14 +298,14 @@ fn disabled_by_hands(
         Held::Unknown | Held::Shield | Held::Other => None,
     };
     match main {
-        Some(class) if !can_use(active, class) => return Ok(true),
+        Some(class) if !can_use(class) => return Ok(true),
         None if dual_only => return Ok(true),
         _ => {}
     }
     // The off hand: PoB's `weaponData2` is `{}` (no weapon info) for an
     // empty hand or an item that is not a weapon, which never disables.
     match &hands.off_hand {
-        Held::Weapon(class) if !can_use(active, class) => Ok(true),
+        Held::Weapon(class) if !can_use(class) => Ok(true),
         Held::Weapon(class) => Ok(has("DualWieldRequiresDifferentTypes") && main == Some(class)),
         Held::Unknown if restricted || dual_only => Err("weapon-flags"),
         Held::Unknown => Ok(false),
@@ -248,7 +330,7 @@ impl<'d> MainSkill<'d> {
     /// # Errors
     /// `"requires-shield"` or `"weapon-flags"`: a hand's base is not known.
     pub fn disabled_by_hands(&self, hands: &super::collect::Hands) -> Result<bool, &'static str> {
-        disabled_by_hands(self.active, &self.types, hands)
+        disabled_by_hands(self.active, &self.support_weapons, &self.types, hands)
     }
 
     /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
@@ -266,7 +348,7 @@ impl<'d> MainSkill<'d> {
     /// and the hand's own class decide.
     #[must_use]
     pub fn can_use(&self, class: &str) -> bool {
-        can_use(self.active, class)
+        can_use(self.active, &self.support_weapons, class)
     }
 
     /// The active granted effect.
@@ -855,6 +937,7 @@ pub fn main_skill<'d>(
         .as_ref()
         .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
     let active_gem = supported_level(active_gem, &applied, from_gem, &types, data);
+    let support_weapons = support_weapons(&applied, data);
     Ok(MainSkill {
         group: index,
         active_gem,
@@ -864,6 +947,7 @@ pub fn main_skill<'d>(
         unapplied,
         types,
         cost_mores: levels.cost_multipliers(slot),
+        support_weapons,
     })
 }
 
@@ -1274,20 +1358,76 @@ mod tests {
     fn can_use_should_follow_the_active_skills_weapon_classes() {
         let any = active(&[]);
         let axes = active(&["One Hand Axe", "Unarmed"]);
-        assert!(can_use(None, "Bow"));
-        assert!(can_use(Some(&any), "Bow"));
-        assert!(can_use(Some(&axes), "One Hand Axe"));
-        assert!(can_use(Some(&axes), "Unarmed"));
-        assert!(!can_use(Some(&axes), "Bow"));
+        assert!(can_use(None, &[], "Bow"));
+        assert!(can_use(Some(&any), &[], "Bow"));
+        assert!(can_use(Some(&axes), &[], "One Hand Axe"));
+        assert!(can_use(Some(&axes), &[], "Unarmed"));
+        assert!(!can_use(Some(&axes), &[], "Bow"));
         // Classes PoB's exporter does not map restrict nothing.
         let shields = active(&["Shield"]);
-        assert!(can_use(Some(&shields), "One Hand Sword"));
-        assert!(can_use(Some(&shields), "Unarmed"));
+        assert!(can_use(Some(&shields), &[], "One Hand Sword"));
+        assert!(can_use(Some(&shields), &[], "Unarmed"));
         // A Warstaff is PoB's Staff.
         let staves = active(&["Staff"]);
-        assert!(can_use(Some(&staves), "Warstaff"));
-        assert!(can_use(Some(&active(&["Warstaff"])), "Staff"));
-        assert!(!can_use(Some(&staves), "Bow"));
+        assert!(can_use(Some(&staves), &[], "Warstaff"));
+        assert!(can_use(Some(&active(&["Warstaff"])), &[], "Staff"));
+        assert!(!can_use(Some(&staves), &[], "Bow"));
+    }
+
+    /// Supports' weapon restrictions (P6-11fi): the held type must be in
+    /// each support's list as well as the active skill's; Shockwave's
+    /// maces and staves take a Sceptre and a Warstaff, not an axe or an
+    /// empty hand; a class PoB has no type for is not checked.
+    #[test]
+    fn can_use_should_need_every_supports_weapon_types() {
+        let types = |stat: &str| {
+            SUPPORT_WEAPON_STATS
+                .iter()
+                .find(|(s, _)| *s == stat)
+                .map(|(_, t)| *t)
+                .unwrap()
+        };
+        let shockwave = types("supported_skill_can_only_use_mace_and_staff");
+        let trauma = types("supported_skill_can_only_use_axe_mace_and_staff");
+        for class in ["One Hand Mace", "Sceptre", "Warstaff", "Two Hand Mace"] {
+            assert!(can_use(None, &[shockwave], class), "{class}");
+        }
+        assert!(!can_use(None, &[shockwave], "One Hand Axe"));
+        assert!(!can_use(None, &[shockwave], "Unarmed"));
+        assert!(can_use(None, &[trauma], "One Hand Axe"));
+        // Every list must hold the type.
+        assert!(!can_use(None, &[trauma, shockwave], "Two Hand Axe"));
+        assert!(can_use(None, &[trauma, shockwave], "Staff"));
+        // And the active skill's own list.
+        assert!(!can_use(Some(&active(&["Bow"])), &[shockwave], "Staff"));
+        assert!(can_use(None, &[shockwave], "Shield"));
+        assert!(
+            SUPPORT_WEAPON_STATS.windows(2).all(|w| w[0].0 < w[1].0),
+            "sorted"
+        );
+        for (_, list) in SUPPORT_WEAPON_STATS {
+            for t in list {
+                assert!(
+                    [
+                        "Claw",
+                        "Dagger",
+                        "Wand",
+                        "One Hand Sword",
+                        "Thrusting One Hand Sword",
+                        "One Hand Axe",
+                        "One Hand Mace",
+                        "Staff",
+                        "Two Hand Sword",
+                        "Two Hand Axe",
+                        "Two Hand Mace",
+                        "Sceptre"
+                    ]
+                    .iter()
+                    .any(|c| pob_weapon_type(c) == Some(t)),
+                    "{t} is a PoB weapon type"
+                );
+            }
+        }
     }
 
     /// PoB's effectiveness at an actor's level (`CalcTools.lua` 198 to
@@ -1336,8 +1476,9 @@ mod tests {
         let weapon = |c: &str| Held::Weapon(c.to_owned());
         let swords = active(&["One Hand Sword"]);
         let attack = types(&["Attack"]);
-        let check =
-            |a: Option<&ActiveSkill>, t: &BTreeSet<String>, h: &Hands| disabled_by_hands(a, t, h);
+        let check = |a: Option<&ActiveSkill>, t: &BTreeSet<String>, h: &Hands| {
+            disabled_by_hands(a, &[], t, h)
+        };
         // Unarmed is not among its classes: disabled (Holy Strike).
         assert_eq!(
             check(Some(&swords), &attack, &hands(Held::Empty, Held::Empty)),

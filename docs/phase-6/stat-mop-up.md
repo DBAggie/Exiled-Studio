@@ -3158,3 +3158,25 @@ With supports, every support socketed in the slot's other groups joins the skill
 - **Two moved away**, each where the engine was already past PoB for another cause: a Pathfinder's unreserved mana (220 to 269, PoB 91: its two `{custom}` reservation efficiency lines now apply, as in PoB) and a Flicker Strike Berserker's energy shield recharge (106 to 107, PoB 0; it follows the energy shield, 317 to 320, PoB 3,199).
 - **Corpus:** 0 unexpected. 39 moved, 36 toward PoB, 17 now equal; the three away again past PoB already (unreserved mana, attack speed and its ignite).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fi: supports' weapon restrictions from the game's stats
+
+**Maintainer decision** (2026-11-20): "Game data is king unless PoB seems to have a logical reason to differ mathematically."
+
+**The game:** a support's stat set carries a flag stat for its restriction: `supported_skill_can_only_use_axe_and_sword` (Close Combat), `_axe_mace_and_staff` (Fissure, Trauma, Void Shockwave), `_dagger_and_claw` (Nightblade), `_mace_and_staff` (Shockwave), `_wand` (Sacred Wisps). Each one's description names the weapons ("Supported Skills can only be used with Maces and Staves").
+
+**PoB** (`CalcActiveSkill.lua` 192 to 223, 287 to 291): each applied support's own `weaponTypes` list is added to the active skill's, and the held weapon's type must be in every list, else the skill is disabled.
+- **Where a support has the stat,** PoB's list names the same types (Maces with Sceptres, Staves with Warstaves).
+- **Fissure Support** carries the stat and has no list in PoB, so PoB does not restrict it. The engine follows the game. No fixture holds Fissure Support, so no difference is registered yet; one found later is a `game-truth` entry.
+- **PoB lists types for supports with no such stat** (Arrow Nova, Barrage, Kinetic Instability, Voidstorm, Ballista Totem, Manaforged Arrows). No mathematical reason sets them apart, and the game matches those supports by skill types, which the engine already checks, so the engine does not follow them.
+
+**The engine:**
+- **`skill::SUPPORT_WEAPON_STATS`** maps each stat to PoB's weapon types.
+- **`skill::support_weapons`** reads the applied supports' implicit and constant stats into `MainSkill::support_weapons`.
+- **`MainSkill::can_use` and `disabled_by_hands`** need the held type in every list, as PoB does. A minion's own skills have none.
+- **The five stats are `NoEffect`** (`weapon-restriction`): they change no modifier, and the code above reads them.
+- **Test:** `can_use_should_need_every_supports_weapon_types`.
+
+**Evidence** (`b-ct`, against P6-11fh's run):
+- **Public and corpus:** 0 unexpected; no value moved. The fixtures' Shockwave builds hold maces or staves, and no restriction stat is unmapped now (5 before).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
