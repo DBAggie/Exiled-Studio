@@ -356,6 +356,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11fw: Defiance Banner and War Banner (nothing unless planted, a `banner-valour` reason when planted) (`docs/phase-6/stat-mop-up.md`, "P6-11fw")
 - [x] P6-11fx: Wave of Conviction (a reason with an exposure chosen, nothing otherwise) and Sigil of Power (a reason, PoB's default stage 1) (`docs/phase-6/stat-mop-up.md`, "P6-11fx")
 - [x] P6-11fy: Plague Bearer, its poison damage multiplier while incubating (PoB's default) (`ConfigIs`, `Flags::POISON` in `data-parity`; fixture `smite-poison-plague-bearer-templar.xml`, DIV-0490 to DIV-0495) (`docs/phase-6/stat-mop-up.md`, "P6-11fy")
+- [x] P6-11fz: Herald of the Breach, its more damage per herald and its reservation (`Stack(Herald, Per(DamageMore))`; fixture `ice-nova-herald-of-the-breach-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11fz")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

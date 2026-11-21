@@ -3462,3 +3462,16 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - 73 fields match. The 6 differences are the Q11 attack-time rounding the base fixture has too, registered as `game-truth` (DIV-0490 to DIV-0495).
 - **Public and corpus:** 0 unexpected; no other value moved. The public build with Plague Bearer sets "Infecting".
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fz: Herald of the Breach
+
+**PoB** (`other.lua`, `HeraldOfTheBreach`, named "Herald of the Hive", a skill items grant): its buff gives `Damage` MORE per herald skill affecting you (`Multiplier` `Herald`, a `GlobalEffect` buff), 3% at every level, and it reserves 25% of mana. `Multiplier:Herald` is the count `CalcPerform.lua` 2112 to 2126 takes, the herald itself included. Its pulses (Otherworldly Pressure, the pulse delay) are its own hit, not a global effect.
+
+**The engine:**
+- **`gems::SKILLS`:** Herald of the Breach as a buff whose row is the stack quantity `Stack(Herald, Per(DamageMore))`, which `poe1::stacks::aura_or_herald` multiplies by the herald count `gems::herald_and_aura_counts` already gives. Being in the table, its reservation now counts.
+- **`data-parity` (`gem_effects`):** an effect per herald is printed as its target with PoB's `Multiplier` tag; the buff's name is PoB's. `uncategorized` 0.
+
+**Evidence** (`b-ct`, against P6-11fy's run):
+- **New mechanic fixture** `ice-nova-herald-of-the-breach-witch.xml`: the Ice Nova witch with Herald of the Hive in a group of its own. PoB's average damage goes from 727.55 to 749.33 and unreserved mana from 590 to 442; all 77 compared fields match.
+- **Public and corpus:** 0 unexpected. Unreserved mana moves toward PoB in the 3 builds holding the herald (2 now equal; the Penance Brand community build 221 to 88, PoB 78, its remaining gap from elsewhere).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

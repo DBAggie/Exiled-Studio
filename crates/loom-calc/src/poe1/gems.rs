@@ -1501,6 +1501,31 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    // P6-11fz: Herald of the Breach's buff (`other.lua`, "Herald of the
+    // Hive"): `Damage` MORE per herald skill affecting you (`Multiplier`
+    // `Herald`, a `GlobalEffect` buff), the herald count of
+    // `poe1::stacks::aura_or_herald`. Its pulses (Otherworldly Pressure,
+    // the pulse delay) are its own hit, not a global effect.
+    (
+        "HeraldOfTheBreach",
+        Kind::Buff {
+            name: "Herald of the Hive",
+            effect: EffectType::Buff,
+            stats: &[(
+                "skill_buff_grants_damage_+%_final_per_herald_skill_affecting_you",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::Stack(
+                        super::stacks::StackKind::Herald,
+                        super::stacks::StackValue::Per(super::stacks::PerStack::DamageMore),
+                    )),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     (
         "HeraldOfThunder",
         Kind::Buff {

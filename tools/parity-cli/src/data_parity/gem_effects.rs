@@ -1138,6 +1138,26 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
     effects
         .iter()
         .map(|&(q, op, divisor, all, any)| {
+            // An effect per herald affecting you (P6-11fz: Herald of the
+            // Breach): PoB's `Multiplier` tag `Herald` on the target's mod.
+            if let (
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    loom_calc::poe1::stacks::StackKind::Herald,
+                    loom_calc::poe1::stacks::StackValue::Per(p),
+                )),
+                Op::Base,
+            ) = (q, op)
+            {
+                let (tq, top, tall, tany) = p.target();
+                let mut f = our_form(&[(tq, top, divisor, tall | all, tany | any)], enemy);
+                for s in &mut f {
+                    s.push_str(&format!(
+                        " tags {}",
+                        json!({ "type": "Multiplier", "var": "Herald" })
+                    ));
+                }
+                return f.remove(0);
+            }
             // The enemy's elemental ailment duration (Elemental Weakness,
             // P6-2b): our condition names the ailments PoB's name does.
             let elemental_duration =
