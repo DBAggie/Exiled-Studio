@@ -348,6 +348,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11fo: Phase Run (`Flags::SKILL_NOT_TOTEM`, PoB's negated `SummonsTotem` tag) (`docs/phase-6/stat-mop-up.md`, "P6-11fo")
 - [x] P6-11fp: the enemy's Debilitated and Malignant Madness in its damage (`damage_taken::ENEMY_LESS_DAMAGE_INPUTS`; out of `NAMED_ONLY`) (`docs/phase-6/stat-mop-up.md`, "P6-11fp")
 - [x] P6-11fq: Eldritch Blasphemy (as Blasphemy) and "<Skill> has no Reservation" (`skill_modifiers::NO_RESERVATION_STATS`, `Poe1Quantity::SkillNoReservation`) (`docs/phase-6/stat-mop-up.md`, "P6-11fq")
+- [x] P6-11fr: the Vaal gems' base skills (Blight, Earthquake, Flicker Strike's buff), Vaal Blight's Hinder, Vaal Earthquake, Primal Aegis, Bloodrend, Charged Mines (`docs/phase-6/stat-mop-up.md`, "P6-11fr")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

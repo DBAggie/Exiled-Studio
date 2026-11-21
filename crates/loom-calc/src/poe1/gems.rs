@@ -656,6 +656,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     ("BlastRain", Kind::Inert),
+    // P6-11fr: the base skills a Vaal gem also grants, with no global
+    // effect in PoB (Blight, Earthquake); Flicker Strike's buff below.
+    ("Blight", Kind::Inert),
     // P6-11dw: Blood and Sand (`act_str.lua` 1227): melee skills' more area
     // damage in each stance (`Damage` MORE with `ModFlag.Area` and the
     // `Melee` skill type, the stance PoB's `effectCond`); their area of
@@ -922,6 +925,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("DominatingBlow", Kind::Inert),
     ("DominatingBlowAltX", Kind::Inert),
     ("DoubleStrike", Kind::Inert),
+    ("Earthquake", Kind::Inert),
     ("Earthshatter", Kind::Inert),
     // P6-11au: no global effect in PoB's skill data (`gem_effects`).
     ("ElementalHitAltX", Kind::Inert),
@@ -1172,6 +1176,26 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     )]),
                 ),
             ],
+        },
+    ),
+    // P6-11fr: Flicker Strike beside the main skill (Vaal Flicker Strike's
+    // gem grants it too): its buff's movement speed (`MovementSpeed` INC,
+    // `effectName = "Flick Strike"`).
+    (
+        "FlickerStrike",
+        Kind::Buff {
+            name: "Flick Strike",
+            effect: EffectType::Buff,
+            stats: &[(
+                "flicker_strike_buff_movement_speed_+%",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
         },
     ),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
@@ -1812,6 +1836,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // P6-11fr: Primal Aegis (an item's triggered spell): no stat map in PoB
+    // (its aegis is the granting modifier's).
+    ("PrimalAegis", Kind::Inert),
     // Punishment (P6-9e): the enemy's damage taken while it is on low life
     // (PoB's `Condition` `LowLife` on the enemy, from the config).
     (
@@ -2415,9 +2442,30 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("Tornado", Kind::Inert),
     ("ToxicRain", Kind::Inert),
+    // P6-11fr: Bloodrend (an item's triggered spell): no stat map in PoB.
+    ("TriggeredBloodrend", Kind::Inert),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("UniqueMirageWarriors", Kind::Inert),
+    // P6-11fr: Vaal Blight's Hinder (`act_int.lua`, `VaalBlight`): the
+    // enemy's `ChaosDamageTaken` INC, a `Debuff` named "Hinder". Its damage
+    // over time acts on Vaal Blight alone.
+    (
+        "VaalBlight",
+        Kind::Debuff {
+            name: "Hinder",
+            stats: &[(
+                "hinder_enemy_chaos_damage_taken_+%",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(DamageType::Chaos)),
+                    Op::Increased,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     ("VaalDetonateDead", Kind::Inert),
     // P6-11du: Vaal Discipline's buff (`act_int.lua`): energy shield
     // recharge not delayed by damage, a `DUMMY` mod PoB's calculation never
@@ -2433,6 +2481,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    // P6-11fr: Vaal attacks with no global effect in PoB.
+    ("VaalEarthquake", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
     // P6-11du: Vaal Haste's aura (`act_dex.lua` 9171), Haste's stats; PoB
     // merges buffs by name, so it stacks with Haste.
@@ -2755,6 +2805,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCastWhileChannellingTriggered", &[]),
     ("SupportCastWhileChannellingTriggeredPlus", &[]),
     ("SupportChanceToBleed", &[]),
+    // P6-11fr: no stat map in PoB.
+    ("SupportChargedMines", &[]),
     ("SupportCombustion", &[]),
     ("SupportConcentratedEffect", &[]),
     ("SupportControlledDestruction", &[]),

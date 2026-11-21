@@ -223,6 +223,10 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // P6-11fr: Primal Aegis is triggered by its own rule.
+    ("PrimalAegis", "Triggered"),
+    // P6-11fr: Bloodrend, an item's triggered spell.
+    ("TriggeredBloodrend", "Triggered"),
     // P6-11fg: Pyroclast Mine of Sabotage's aura is a debuff on the enemy
     // (`AuraDebuff`), its reservation the mine's (`gems::reservation`, for
     // every kind); the non-curse aura effect makes it a reason.
@@ -345,6 +349,9 @@ const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
 ];
 
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fr: Primal Aegis triggers itself (an item's skill), with no
+    // stat map.
+    ("PrimalAegis", "triggered"),
     // P6-11fn: Ensnaring Arrow's quality (`BuffEffect`): PoB scales a
     // `Debuff` by `DebuffEffect` alone (`CalcPerform.lua` 2589 to 2593).
     ("EnsnaringArrow", "BuffEffect"),
@@ -392,7 +399,10 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // Molten Shell's reflected fire damage (P6-9e): its own hit's data.
     ("MoltenShell", "moltenShellReflect"),
     // P6-11du: the Vaal auras' soul gain prevention duration, no slice field.
+    // P6-11fr: Vaal Blight and Vaal Earthquake, the same soul key.
+    ("VaalBlight", "skillEffectAppliesToSoulGainPrevention"),
     ("VaalDiscipline", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalEarthquake", "skillEffectAppliesToSoulGainPrevention"),
     ("VaalHaste", "skillEffectAppliesToSoulGainPrevention"),
     ("VaalMoltenShell", "moltenShellReflect"),
     // P6-9f: inert skills' own data, read only when each is the main skill:

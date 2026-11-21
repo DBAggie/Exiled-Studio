@@ -3315,3 +3315,26 @@ With no stage, every value is 0. As a `ChillingArea` skill it also chills the en
   - a Luminary's unreserved mana (-80 to 154, PoB 42) by its own "has no Reservation" line.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11fr: the Vaal gems' base skills, Vaal Blight's Hinder, and four skills with no global effect
+
+A Vaal gem grants its base skill too (`gemId` with two granted effects): a build with Vaal Earthquake, Vaal Flicker Strike, or Vaal Blight had the base skill, not the Vaal one, unmodelled. The engine's skill table missed both.
+
+**PoB** (`Data/Skills`):
+- Earthquake, Blight, Vaal Earthquake, Primal Aegis (an item's triggered spell), Bloodrend (another), and Charged Mines Support have no global effect.
+- Flicker Strike's buff gives `MovementSpeed` INC ("Flick Strike").
+- Vaal Blight's Hinder gives the enemy `ChaosDamageTaken` INC, a `Debuff`.
+
+**The engine (`gems::SKILLS`, `SUPPORTS`):**
+- **Inert:** Blight, Earthquake, Vaal Earthquake, Primal Aegis, Bloodrend.
+- **Buff:** Flicker Strike.
+- **Debuff:** Vaal Blight's Hinder (`EnemyTypeDamageTaken(Chaos)`).
+- **Support:** Charged Mines.
+- **`data-parity` (`gem_effects`):** the Vaal skills' soul key and the two item spells' trigger allowed with why; `uncategorized` 0.
+- **New helper** `local/p6/tools/skills_insert.py` places an entry at its sorted place (one-line entries included).
+
+**Evidence** (`b-ct`, against P6-11fq's run):
+- **Public:** 0 unexpected. 14 values moved, 13 toward PoB: an Essence Drain Occultist's defence estimate (total EHP 75,636 to 89,654, PoB 433,211) and full DPS, with Vaal Blight's Hinder and the base skills now modelled.
+- **One away:** a Holy Flame Totem Hierophant's unreserved mana (130 to 98, PoB 181): its Pyroclast Mine of Sabotage with Charged Mines now reserves. The engine was already below PoB's unreserved mana before this, so another cause still reserves more than PoB does.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
