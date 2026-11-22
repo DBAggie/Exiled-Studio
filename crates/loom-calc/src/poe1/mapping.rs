@@ -5754,6 +5754,13 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // P6-11gu: "Auras from your Skills grant #% increased Attack and Cast
+    // Speed to you and Allies" (`ExtraAuraEffect` of `Speed` INC): each
+    // aura buff adds it, scaled as the aura (`poe1::gems`).
+    (
+        "auras_grant_attack_and_cast_speed_+%_to_you_and_your_allies",
+        &[(Quantity::Poe1(Poe1Quantity::ExtraAuraSpeed), Op::Base, 1.0)],
+    ),
     // MORE (P6-4b).
     (
         "basalt_flask_armour_+%_final",

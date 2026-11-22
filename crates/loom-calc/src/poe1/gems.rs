@@ -4902,12 +4902,17 @@ pub fn minion_buffs(
                         continue;
                     }
                     let aura = effect == EffectType::Aura;
+                    let aura_buff = aura && !s.types.contains("AuraAffectsEnemies");
                     // The offerings' effect (P6-11gg), not the effect on you.
                     let own = own_effect(input, s, aura)
                         + named_golem(totals, s)
                         + named_aura(totals, s, aura)
                         + totals.offering(&s.active_gem.effect.id, false);
                     let scale = totals.buff_scale(aura, &s.types, own);
+                    // The extra aura modifiers (P6-11gu), on the minion too.
+                    if aura_buff {
+                        extra_aura_rows(name, &source, scale, &mut merged, ingest);
+                    }
                     add_rows(
                         input,
                         g,
@@ -5119,6 +5124,11 @@ fn one_skill(
                 && s.supports
                     .iter()
                     .any(|sup| AURA_NOT_ON_SELF_SUPPORTS.contains(&sup.effect.id.as_str()));
+            // The extra aura modifiers (P6-11gu; `CalcPerform.lua` 2394 to
+            // 2420): each aura buff on you adds them at its own scale.
+            if aura && !not_on_self && !s.types.contains("AuraAffectsEnemies") {
+                extra_aura_rows(name, &active_source, scale, &mut collected.merged, ingest);
+            }
             if !not_on_self {
                 add_rows(
                     input,
@@ -5656,6 +5666,51 @@ fn add_rows(
                 *entry = (scaled, source.clone(), row, state);
             }
         }
+    }
+}
+
+/// The speed every aura buff adds ("Auras from your Skills grant #%
+/// increased Attack and Cast Speed to you and Allies", P6-11gu): PoB adds
+/// each `ExtraAuraEffect` mod to the aura's buff, scaled by its multiplier
+/// and merged per aura name. The unconditional sum is the row's value; a
+/// conditional one is a reason.
+pub const EXTRA_AURA_SPEED: &str = "auras_grant_attack_and_cast_speed_+%_to_you_and_your_allies";
+
+fn extra_aura_rows(
+    name: &'static str,
+    source: &Source,
+    scale: f64,
+    merged: &mut Merged,
+    ingest: &mut Ingest<'_>,
+) {
+    let quantity = Quantity::Poe1(Poe1Quantity::ExtraAuraSpeed);
+    let mut sum = 0.0;
+    let mut unread = false;
+    for e in ingest.effects().iter().filter(|e| e.quantity == quantity) {
+        if e.op == Op::Base && e.conditions == Conditions::none() {
+            sum += e.value;
+        } else {
+            unread = true;
+        }
+    }
+    if unread {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "extra-aura-effect",
+        });
+        return;
+    }
+    if sum == 0.0 {
+        return;
+    }
+    let row: HitEffect = (Quantity::Speed, Op::Increased, 1.0, NONE, NONE);
+    let scaled = skill_modifiers::scale(Quantity::Speed, Op::Increased, sum, scale);
+    let entry =
+        merged
+            .entry((name, EXTRA_AURA_SPEED, 0))
+            .or_insert((scaled, source.clone(), row, None));
+    if scaled > entry.0 {
+        *entry = (scaled, source.clone(), row, None);
     }
 }
 

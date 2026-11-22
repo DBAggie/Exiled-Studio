@@ -4004,3 +4004,22 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
 - **Public:** 0 unexpected. Eight values of the Cyclone and Lacerate builds moved, all toward PoB (their effective health pools).
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gu: auras that grant attack and cast speed
+
+**Found** (P6-11gm's scan): "Auras from your Skills grant #% increased Attack and Cast Speed to you and Allies" (`auras_grant_attack_and_cast_speed_+%_to_you_and_your_allies`, the Necromancer's Commander of Darkness) was unmapped, so a reason, in 2 builds.
+
+**PoB:** the line is an `ExtraAuraEffect` of `Speed` INC. `CalcPerform.lua` 2394 to 2420 adds every such mod to each aura buff, scaled by that aura's multiplier and merged per aura name. It reaches you, and the minion, through each aura that affects them.
+
+**The engine:**
+- `Poe1Quantity::ExtraAuraSpeed` (`Base`).
+- `gems::extra_aura_rows` adds, for each aura buff on you (not one that affects enemies, not Generosity's), a `Speed` INC row of the unconditional sum, scaled as the aura with `skill_modifiers::scale`.
+- The row is merged per aura name in the buffs' map. `minion_buffs` does the same for the minion.
+- A conditional sum is a reason.
+- **Found on the way:** the game's text of this stat, like Ngamahu's (P6-11gp), has two lines. A one-line custom line does not resolve on our side, so the fixture allocates the notable instead.
+
+**Evidence** (`b-ct`, against P6-11gt's run):
+- **A new mechanic fixture** matches PoB on every compared field. `ice-nova-commander-of-darkness-witch.xml` is a Necromancer reserving Precision with Commander of Darkness and its path (60791, 5415, 36017; `local/p6/tools/asc_path.py`).
+  - The cast rate is 1.4714 = 1.4286 x 1.03: the 3% at Precision's 5% increased aura effect (node 5415) is 3.15, truncated to 3 by PoB's `ScaleAddMod`.
+- **Public and corpus:** 0 unexpected; no value moved. The two Necromancer builds' compared fields do not take it.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

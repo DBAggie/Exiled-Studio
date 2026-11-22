@@ -444,6 +444,10 @@ pub enum Poe1Quantity {
     /// line): a `Flag`, read by the enemy hit's effective block chances
     /// (`CalcDefence.lua` 737 to 760).
     BlockLucky,
+    /// "Auras from your Skills grant #% increased Attack and Cast Speed to
+    /// you and Allies" (P6-11gu; PoB's `ExtraAuraEffect` of `Speed` INC):
+    /// `Base`, the speed each aura buff adds, read by [`gems`].
+    ExtraAuraSpeed,
     /// Energy shield cannot be recovered above armour (PoB's
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
@@ -1393,6 +1397,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::BlockLucky => f.write_str("block-lucky"),
+            Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),
