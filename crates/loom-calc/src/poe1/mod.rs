@@ -782,6 +782,11 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
     /// buffs.
     GolemBuffEffect,
+    /// "#% increased Effect of the Buff granted by your <Kind> Golems"
+    /// (PoB's `BuffEffect` INC tagged with the golem skill's name,
+    /// transfigured ones included; P6-11gc): `Increased`, read by
+    /// [`skill_modifiers::Totals`] for that golem skill's buff.
+    NamedGolemBuffEffect(skill_modifiers::Golem),
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1403,6 +1408,7 @@ impl core::fmt::Display for Poe1Quantity {
                 )
             }
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
+            Self::NamedGolemBuffEffect(g) => write!(f, "named-golem-buff-effect.{}", g.name()),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),

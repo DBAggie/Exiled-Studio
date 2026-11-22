@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 21] = [
+const TEXTS: [(&str, &str); 26] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -95,6 +95,27 @@ const TEXTS: [(&str, &str); 21] = [
     (
         "mark_skills_curse_effect_+%",
         "{0}% increased Effect of your Marks",
+    ),
+    // P6-11gc: PoB's `BuffEffect` tagged with the golem skill's name.
+    (
+        "base_chaos_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Chaos Golems",
+    ),
+    (
+        "base_fire_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Flame Golems",
+    ),
+    (
+        "base_ice_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Ice Golems",
+    ),
+    (
+        "base_lightning_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Lightning Golems",
+    ),
+    (
+        "base_stone_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Stone Golems",
     ),
 ];
 

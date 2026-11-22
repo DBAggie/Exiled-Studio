@@ -3829,6 +3829,9 @@ pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
 /// on an item or a passive the stat stays unmapped (a reason).
 pub const ALWAYS_HIT_STAT: &str = "global_always_hit";
 
+/// A golem skill's limit (P6-11gc; [`SkillMapping`]).
+pub const GOLEM_LIMIT_STAT: &str = "base_number_of_golems_allowed";
+
 /// Cyclone's movement speed stat (P6-11cr; [`SkillMapping`]).
 pub const CYCLONE_MOVEMENT_STAT: &str = "cyclone_movement_speed_+%_final";
 
@@ -3846,6 +3849,9 @@ impl StatMapping for SkillMapping {
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
             || stat.as_str() == super::hit::DOUBLE_HITS_STAT
             || stat.as_str() == super::hit::ARROW_STAT
+            // A golem skill's own limit: `poe1::gems::golem_limit` reads
+            // the gems (P6-11gc).
+            || stat.as_str() == GOLEM_LIMIT_STAT
             // A support's global effect: `poe1::gems` applies it (P6-11y).
             || super::gems::is_support_global_stat(stat.as_str())
         {
@@ -7936,10 +7942,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11m: minion duration (`Duration` INC for minion skills): no slice
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
-    // P3-8n: "Maximum # Summoned Golems" (`ActiveGolemLimit`): only golem
-    // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
-    // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
-    ("base_number_of_golems_allowed", "golems"),
     ("base_number_of_projectiles", "projectile-count"),
     // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
     ("base_number_of_skeletons_allowed", "minion-count"),
@@ -8741,11 +8743,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     // P3-8n: damage from a mana cost (PoB `PercentStat` of `ManaCost`).
-    // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
-    (
-        "damage_+%_per_active_golem",
-        "base_number_of_golems_allowed",
-    ),
     (
         "light_radius_additive_modifiers_apply_to_damage",
         "light_radius_+%",

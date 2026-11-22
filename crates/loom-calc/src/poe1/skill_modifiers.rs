@@ -109,6 +109,72 @@ impl SkillTiming {
     }
 }
 
+/// A golem skill a buff effect names (P6-11gc; PoB's `ModParser.lua` 479
+/// to 484, "effect of the buff granted by your <kind> golems", a
+/// `SkillName` tag with `includeTransfigured`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Golem {
+    /// Summon Chaos Golem.
+    Chaos,
+    /// Summon Flame Golem.
+    Flame,
+    /// Summon Ice Golem.
+    Ice,
+    /// Summon Lightning Golem.
+    Lightning,
+    /// Summon Stone Golem.
+    Stone,
+}
+
+impl Golem {
+    /// Every golem, in [`Golem`]'s order (its index in
+    /// [`Totals::named_golem_buff_effect`]).
+    pub const ALL: [Self; 5] = [
+        Self::Chaos,
+        Self::Flame,
+        Self::Ice,
+        Self::Lightning,
+        Self::Stone,
+    ];
+
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Chaos => "chaos",
+            Self::Flame => "flame",
+            Self::Ice => "ice",
+            Self::Lightning => "lightning",
+            Self::Stone => "stone",
+        }
+    }
+
+    /// The base skill's active skill ID; a transfigured one adds `_alt_x`
+    /// or `_alt_y` (the game's `ActiveSkills`).
+    #[must_use]
+    pub const fn active_skill(self) -> &'static str {
+        match self {
+            Self::Chaos => "summon_chaos_golem",
+            Self::Flame => "summon_flame_golem",
+            Self::Ice => "summon_ice_golem",
+            Self::Lightning => "summon_lightning_golem",
+            Self::Stone => "summon_stone_golem",
+        }
+    }
+
+    /// Whether `active` (an active skill ID) is this golem's skill or a
+    /// transfigured one (PoB's `includeTransfigured`: the gem's game ID,
+    /// which a transfigured gem shares).
+    #[must_use]
+    pub fn is(self, active: &str) -> bool {
+        let base = active
+            .strip_suffix("_alt_x")
+            .or_else(|| active.strip_suffix("_alt_y"))
+            .unwrap_or(active);
+        base == self.active_skill()
+    }
+}
+
 /// One stat's quantity (`Increased`) and scale.
 type ModifierRow = (&'static str, Poe1Quantity, f64);
 
@@ -134,7 +200,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 21] = [
+pub const STATS: [ModifierRow; 26] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -142,14 +208,38 @@ pub const STATS: [ModifierRow; 21] = [
         Poe1Quantity::SkillAuraEffectOnSelf,
         1.0,
     ),
+    // P6-11gc: "#% increased Effect of the Buff granted by your Chaos
+    // Golems" (`BuffEffect` INC, the golem skill's name).
+    (
+        "base_chaos_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Chaos),
+        1.0,
+    ),
     (
         "base_cooldown_speed_+%",
         Poe1Quantity::SkillTiming(SkillTiming::CooldownRecovery),
         1.0,
     ),
+    // P6-11gc: the Flame and Ice Golems' (the game's stat says fire).
+    (
+        "base_fire_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Flame),
+        1.0,
+    ),
+    (
+        "base_ice_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Ice),
+        1.0,
+    ),
     (
         "base_life_reservation_efficiency_+%",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Life)),
+        1.0,
+    ),
+    // P6-11gc: the Lightning Golems'.
+    (
+        "base_lightning_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Lightning),
         1.0,
     ),
     (
@@ -161,6 +251,13 @@ pub const STATS: [ModifierRow; 21] = [
     (
         "base_reservation_efficiency_+%",
         Poe1Quantity::ReservationEfficiency(None),
+        1.0,
+    ),
+    // P6-11gc: "#% increased Effect of the Buff granted by your Stone
+    // Golems" (`BuffEffect` INC, the golem skill's name).
+    (
+        "base_stone_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Stone),
         1.0,
     ),
     ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
@@ -342,6 +439,9 @@ pub struct Totals {
     pub aura_on_self: f64,
     /// `BuffEffect` INC of golem skills (P3-close).
     pub golem_buff_effect: f64,
+    /// `BuffEffect` INC of each named golem skill, by [`Golem::ALL`]
+    /// (P6-11gc).
+    pub named_golem_buff_effect: [f64; 5],
     /// `BuffEffect` INC of herald skills (P6-11at).
     pub herald_buff_effect: f64,
     /// `CurseEffect` INC (P3-close).
@@ -429,6 +529,7 @@ impl Totals {
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
+                Poe1Quantity::NamedGolemBuffEffect(g) => &mut t.named_golem_buff_effect[g as usize],
                 Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::MarkCurseEffect => &mut t.mark_curse_effect,
@@ -492,6 +593,18 @@ impl Totals {
             terms.efficiency = crate::math::max(own + self.efficiency, -100.0);
         }
         terms
+    }
+
+    /// The `BuffEffect` INC the named golem modifiers give the skill whose
+    /// active skill is `active` (P6-11gc): its golem's sum, else 0. Added
+    /// to a buff's own effect ([`Self::buff_scale`]'s `own`).
+    #[must_use]
+    pub fn named_golem(&self, active: Option<&str>) -> f64 {
+        let Some(active) = active else { return 0.0 };
+        Golem::ALL
+            .iter()
+            .find(|g| g.is(active))
+            .map_or(0.0, |&g| self.named_golem_buff_effect[g as usize])
     }
 
     /// The scale of a buff of `effect` from a skill of `types` (module
@@ -886,6 +999,15 @@ mod tests {
         };
         assert_eq!(h.buff_scale(false, &types(&["Buff", "Herald"]), 0.0), 1.4);
         assert_eq!(h.buff_scale(false, &types(&["Buff", "Golem"]), 0.0), 1.0);
+        // P6-11gc: a named golem's buff effect, its transfigured skills'
+        // too; no other golem's.
+        let mut n = Totals::default();
+        n.named_golem_buff_effect[Golem::Lightning as usize] = 31.0;
+        assert_eq!(n.named_golem(Some("summon_lightning_golem")), 31.0);
+        assert_eq!(n.named_golem(Some("summon_lightning_golem_alt_x")), 31.0);
+        assert_eq!(n.named_golem(Some("summon_flame_golem")), 0.0);
+        assert_eq!(n.named_golem(Some("lightning_golem_wrath")), 0.0);
+        assert_eq!(n.named_golem(None), 0.0);
         let c = Totals {
             curse_effect: 30.0,
             ..Totals::default()

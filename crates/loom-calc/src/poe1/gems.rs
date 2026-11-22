@@ -3942,6 +3942,71 @@ pub fn brand_attach_limit(input: &CalcInput<'_>) -> Option<f64> {
     best
 }
 
+/// The number of summoned golems (P6-11gc; PoB's `output.ActiveGolemLimit`,
+/// `CalcPerform.lua` 1401 to 1413): over the skills of the main group and
+/// the enabled groups in an enabled slot whose minion list
+/// ([`super::pob_skill::PobSkill::minions`]) has a minion limited by
+/// `ActiveGolemLimit` (not hostile), the largest `floor(val x more)`: `val`
+/// the skill's `ActiveGolemLimit` BASE (its gems'
+/// `base_number_of_golems_allowed`, plus the character's `extra`; 0 when
+/// the sum is 0, `calcLib.val`), `more` its supports' `ActiveMinionLimit`
+/// MORE (`support_undead_army_minion_maximum_count_+%_final`, `sup_int.lua`
+/// 1063). 0 without one, as PoB's unset output.
+#[must_use]
+pub fn golem_limit(input: &CalcInput<'_>, extra: f64) -> f64 {
+    const STAT: &str = "base_number_of_golems_allowed";
+    const MORE: &str = "support_undead_army_minion_maximum_count_+%_final";
+    let build = input.build;
+    let levels = GemLevels::none();
+    let Ok(groups) = skill::active_groups(build) else {
+        return 0.0;
+    };
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let mut best: f64 = 0.0;
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, &levels) {
+            if s.global_off {
+                continue;
+            }
+            let golem = super::pob_skill::skill(&s.active_gem.effect.id).is_some_and(|p| {
+                p.minions.iter().any(|m| {
+                    super::pob_minion::minion(m)
+                        .is_some_and(|m| m.limit == Some("ActiveGolemLimit") && m.hostile.is_none())
+                })
+            });
+            if !golem {
+                continue;
+            }
+            let mut base = extra;
+            let mut more = 1.0;
+            for gem in std::iter::once(&s.active_gem).chain(&s.supports) {
+                let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
+                for (id, v) in &instance.stats {
+                    #[expect(clippy::cast_precision_loss, reason = "a small count, exact as f64")]
+                    let v = *v as f64;
+                    if id == STAT {
+                        base += v;
+                    } else if id == MORE {
+                        more *= 1.0 + v / 100.0;
+                    }
+                }
+            }
+            if base != 0.0 {
+                best = best.max(crate::math::floor(base * more));
+            }
+        }
+    }
+    best
+}
+
 /// What the table says about an active skill.
 #[must_use]
 pub fn kind(id: &str) -> Option<Kind> {
@@ -4709,6 +4774,12 @@ fn own_effect(input: &CalcInput<'_>, s: &GroupSkill<'_>, aura: bool) -> f64 {
     sum
 }
 
+/// The named golem buff effect for `s`'s buff (P6-11gc,
+/// [`Totals::named_golem`]).
+fn named_golem(totals: &Totals, s: &GroupSkill<'_>) -> f64 {
+    totals.named_golem(s.active.map(|a| a.id.as_str()))
+}
+
 /// Whether PoB applies the skill's buff to the main skill's minion
 /// (`CalcPerform.lua` 2282 and 2427): an aura (every self aura reaches
 /// allies), or a buff with `skillData.buffMinions` or `buffAllies`.
@@ -4795,7 +4866,8 @@ pub fn minion_buffs(
                         continue;
                     }
                     let aura = effect == EffectType::Aura;
-                    let scale = totals.buff_scale(aura, &s.types, own_effect(input, s, aura));
+                    let own = own_effect(input, s, aura) + named_golem(totals, s);
+                    let scale = totals.buff_scale(aura, &s.types, own);
                     add_rows(
                         input,
                         g,
@@ -4961,7 +5033,7 @@ fn one_skill(
             let own = if effect == EffectType::Guard {
                 0.0
             } else {
-                own_effect(input, s, aura)
+                own_effect(input, s, aura) + named_golem(totals, s)
             };
             // An `unscalable` buff (Cyclone's movement speed, P6-8a): scale 1.
             let scale = if UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
@@ -4971,7 +5043,11 @@ fn one_skill(
             };
             // An aura skill's `Buff` rows (Sand Stance) take the buff effect.
             let buff_scale = if aura && !UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
-                totals.buff_scale(false, &s.types, own_effect(input, s, false))
+                totals.buff_scale(
+                    false,
+                    &s.types,
+                    own_effect(input, s, false) + named_golem(totals, s),
+                )
             } else {
                 scale
             };

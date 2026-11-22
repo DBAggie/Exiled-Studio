@@ -3522,3 +3522,27 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - `ice-nova-ignite-scorching-ray-stages-witch.xml`, at 4 stages: none (ignite 139.43, the base fixture's).
 - **Public and corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gc: summoned golems; each golem's buff effect
+
+**PoB:**
+- **The golem count** (`CalcPerform.lua` 1401 to 1413): for each active skill whose minion list has a minion limited by `ActiveGolemLimit`, `floor(calcLib.val(skillModList, "ActiveGolemLimit") x More("ActiveMinionLimit"))`, and `output.ActiveGolemLimit` keeps the largest. The skill's list holds its gem's `base_number_of_golems_allowed` (1) and the character's "+# to maximum number of Summoned Golems".
+- **"#% increased Damage per Summoned Golem"** (`damage_+%_per_active_golem`): `Damage` INC with `PerStat` `ActiveGolemLimit`, which `GetStat` reads from that output.
+  - **Correction:** P6-11dc said nothing sets the output, so PoB applies 0. That was wrong: line 1412 sets it, and PoB applies the line per golem, as the game does. The maintainer's game-truth item for it is closed.
+- **"#% increased Effect of the Buff granted by your <Kind> Golems"** (`base_<kind>_golem_granted_buff_effect_+%`, `ModParser.lua` 479 to 484): `BuffEffect` INC tagged with the golem skill's name, transfigured skills included.
+
+**The engine:**
+- **`poe1::stacks::golems`:** the count from `gems::golem_limit`. It takes the skills of the main group and of the enabled groups in an enabled slot with a golem minion (PoB's minion data). Each skill's limit is its gems' `base_number_of_golems_allowed` plus the character's (`StackKind::Golems`, `Maximum`), times its supports' `ActiveMinionLimit` MORE, floored. The count is the largest of them, and 0 without a golem skill. The damage per golem applies times the count.
+  - "Maximum number of Summoned Golems is Doubled" and the Primordial jewels' line stay unmapped, so they are reasons.
+- **`Poe1Quantity::NamedGolemBuffEffect`** (`skill_modifiers::Golem`): five `skill_modifiers::STATS` rows. `Totals::named_golem` adds the matching golem's sum to a buff's own effect, matched by the active skill's ID with `_alt_x` or `_alt_y` stripped.
+- **Mapping:** the character's `base_number_of_golems_allowed` is now that stack row; it was a no-slice row. On a golem gem, the stat has no effect (`SkillMapping`), because the count reads the gems.
+
+**Evidence** (`b-ct`, against P6-11gb's run):
+- **Two new mechanic fixtures** from the Ice Nova fixture, with Summon Lightning Golem and custom lines (31% increased effect of its buff, 10% increased damage per summoned golem). All compared fields match in each:
+  - `ice-nova-lightning-golem-witch.xml`, with one more golem allowed: two golems (average damage 873.06);
+  - `ice-nova-lightning-golem-one-witch.xml`: one golem (800.17).
+- **Public:** 0 unexpected. One value moved, toward PoB: the Penance Brand build's mana regeneration, from the Lightning Golem's buff, 77.4 to 84.3 (PoB 81.9). The build has other reasons (timeless jewels).
+- **Corpus:** 0 unexpected. Eight values moved, all toward PoB, and one now equals PoB.
+  - Three builds' mana regeneration, one now equal (81.9).
+  - One build's average damage, ignite, combined DPS, total DPS, and life leech from the damage per golem.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

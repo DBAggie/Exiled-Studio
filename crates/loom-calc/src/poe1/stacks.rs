@@ -105,6 +105,8 @@ pub enum StackKind {
     /// Your brands attached to the enemy (P6-11ew; PoB's enemy
     /// `Multiplier:BrandsAttached`, [`brands`]).
     BrandsAttached,
+    /// Golems summoned (P6-11gc; PoB's `ActiveGolemLimit`, [`golems`]).
+    Golems,
 }
 
 impl StackKind {
@@ -124,6 +126,7 @@ impl StackKind {
             Self::Totems => "totems",
             Self::NearbyCorpses => "nearby-corpses",
             Self::BrandsAttached => "brands-attached",
+            Self::Golems => "golems",
         }
     }
 }
@@ -349,6 +352,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Rage,
         StackValue::Per(PerStack::AttackSpeed),
     ),
+    // P6-11gc: "+# to maximum number of Summoned Golems" (`ActiveGolemLimit`
+    // BASE, on every golem skill's list).
+    (
+        "base_number_of_golems_allowed",
+        StackKind::Golems,
+        StackValue::Maximum,
+    ),
     // P6-11ew: "You can Cast an additional Brand" (`ActiveBrandLimit` BASE).
     (
         "base_total_number_of_sigils_allowed",
@@ -373,6 +383,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
     (
         "damage_+%_for_each_herald_affecting_you",
         StackKind::Herald,
+        StackValue::Per(PerStack::Damage),
+    ),
+    // P6-11gc: "#% increased Damage per Summoned Golem" (`Damage` INC,
+    // `PerStat` `ActiveGolemLimit`).
+    (
+        "damage_+%_per_active_golem",
+        StackKind::Golems,
         StackValue::Per(PerStack::Damage),
     ),
     (
@@ -985,6 +1002,31 @@ pub fn totems(
         }
         None => 0.0,
     };
+    apply(ingest, &effects, multiplier(n), None);
+}
+
+/// Adds the effects per summoned golem (P6-11gc; PoB's `PerStat`
+/// `ActiveGolemLimit`, which reads the output `CalcPerform.lua` 1412 sets):
+/// [`super::gems::golem_limit`] with the character's "+# to maximum number
+/// of Summoned Golems". 0 without a golem skill.
+pub fn golems(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(StackKind::Golems, StackValue::Per(_)))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let extra = sum(ingest, StackKind::Golems, StackValue::Maximum).0;
+    let n = super::gems::golem_limit(input, extra);
     apply(ingest, &effects, multiplier(n), None);
 }
 
