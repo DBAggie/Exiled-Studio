@@ -4418,3 +4418,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected. Seven EHP and maximum hit values of one Elementalist build moved toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hm: missing unreserved life gained before an enemy hit
+
+**Found** (P6-11gm's scan): "Gain #% of Missing Unreserved Life before being Hit by an Enemy" (`missing_unreserved_life_%_gained_as_life_before_hit`) was a reason in 3 builds.
+
+**PoB** (`CalcDefence.lua` 2647 to 2666, 2793 to 2798): with more than one damaging hit, `DamageIn.MissingLifeBeforeEnemyHit` is the `MissingLifeBeforeEnemyHit` BASE sum. In `numberOfHitsToDie`'s mitigated run:
+- before each hit, life is `min(life + X x (LifeUnreserved - life) / 100, LifeRecoverable)` (at X = 0 that is the clamp the engine already did);
+- for the accelerated hits, the same times `gainMult - 1`, at most `gainMult x LifeRecoverable`;
+- a value other than 0 sets `GainWhenHit`, which limits the speed-up to 4, also in the recursive run, which does not carry the value itself.
+
+**The engine:**
+- `Poe1Quantity::MissingLifeBeforeHit` (`Base`), read by `enemy_hit` into `ehp::Character::missing_life`.
+- `ehp::Gains::missing_life` carries it on the mitigated run's top level; `ehp::hits_to_die` applies both steps, and `Gains::when_hit` is PoB's `GainWhenHit`.
+- The tests: `gems`'s reservation-word guard and `skill_modifiers`'s coverage test know the stat is not a reservation's.
+
+**Evidence** (`b-ct`, against P6-11hl's run):
+- **Two new mechanic fixtures**, both matching PoB on every field. Each has the line at 20%, "+1000 to maximum Life", and the enemy at level 40, not a boss, so there is more than one damaging hit:
+  - `ice-nova-missing-life-before-hit-witch.xml`: 58 mitigated hits against 16.6 damaging;
+  - `ice-nova-missing-life-before-hit-block-witch.xml`: with block as well.
+- **Public:** 0 unexpected. Three EHP values of `rf-chieftain-life-stack.xml` moved toward PoB.
+- **Corpus:** 0 unexpected. Six EHP values of two builds moved toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

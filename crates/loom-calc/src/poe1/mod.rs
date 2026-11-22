@@ -464,6 +464,10 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// "Gain #% of Missing Unreserved Life before being Hit by an Enemy"
+    /// (P6-11hm; PoB's `MissingLifeBeforeEnemyHit` BASE, `CalcDefence.lua`
+    /// 2649 to 2662, 2794): `Base`, percent, read by the EHP estimate.
+    MissingLifeBeforeHit,
     /// "Triggers Level # Primal Aegis when Allocated / Primal Aegis can take
     /// 75 Elemental Damage per Allocated Notable Passive Skill" (P6-11hl):
     /// a `Flag`; `collect` turns it into [`Self::ElementalAegis`].
@@ -1488,6 +1492,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::MissingLifeBeforeHit => f.write_str("missing-life-before-hit"),
             Self::PrimalAegis => f.write_str("primal-aegis"),
             Self::ElementalAegis => f.write_str("elemental-aegis"),
             Self::SpellDamageToAttacks => f.write_str("spell-damage-to-attacks"),

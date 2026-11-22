@@ -7825,6 +7825,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11hm: "Gain #% of Missing Unreserved Life before being Hit by an
+    // Enemy" (`MissingLifeBeforeEnemyHit` BASE).
+    (
+        "missing_unreserved_life_%_gained_as_life_before_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MissingLifeBeforeHit),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
     // hash; `collect` adds the node.
     (

@@ -264,6 +264,15 @@ fn real_reservation_and_aura_stats_should_be_covered() {
                             loom_calc::poe1::Poe1Quantity::ReserveLifeInsteadOfMana,
                         )
                 }) => {}
+            // "Gain #% of Missing Unreserved Life before being Hit by an
+            // Enemy" (P6-11hm): the EHP estimate's, not a reservation.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    t.quantity
+                        == loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::MissingLifeBeforeHit,
+                        )
+                }) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

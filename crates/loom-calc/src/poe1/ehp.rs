@@ -116,6 +116,9 @@ pub(super) struct Character {
     pub(super) prevented: f64,
     /// The shared elemental aegis (PoB's `sharedElementalAegis`; P6-11hl).
     pub(super) elemental_aegis: f64,
+    /// The percent of missing unreserved life gained before each enemy hit
+    /// (PoB's `MissingLifeBeforeEnemyHit`; P6-11hm).
+    pub(super) missing_life: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -128,12 +131,21 @@ pub(super) struct Gains {
     pub(super) energy_shield: f64,
     /// PoB's `LimitEHPSpeedup` for another cause (tracked recoup).
     pub(super) limit: bool,
+    /// The percent of missing life gained before each hit (PoB's
+    /// `DamageIn.MissingLifeBeforeEnemyHit`, the mitigated run's top level
+    /// alone; P6-11hm).
+    pub(super) missing_life: f64,
 }
 
 impl Gains {
-    /// Whether any gain is not 0 (PoB's `GainWhenHit`).
+    /// Whether any flat gain is not 0.
     fn any(&self) -> bool {
         self.life != 0.0 || self.mana != 0.0 || self.energy_shield != 0.0
+    }
+
+    /// PoB's `GainWhenHit`: a flat gain or missing life gained.
+    fn when_hit(&self) -> bool {
+        self.any() || self.missing_life != 0.0
     }
 }
 
@@ -332,6 +344,16 @@ fn hits_to_die(
             damage[i] = (d > 0.0).then_some(d * iteration_multiplier);
             damage_total += d;
         }
+        if (gains.any() || clamp) && (iteration_multiplier > 1.0 || cycles > 1.0) {
+            let mult = iteration_multiplier * cycles;
+            // Missing life before each of the hits at once (`CalcDefence.lua`
+            // 2649 to 2651; P6-11hm).
+            if clamp && gains.missing_life != 0.0 {
+                pools.life = (pools.life
+                    + gains.missing_life * (ch.life - pools.life) * (mult - 1.0) / 100.0)
+                    .min(mult * ch.life);
+            }
+        }
         if gains.any() && (iteration_multiplier > 1.0 || cycles > 1.0) {
             let mult = iteration_multiplier * cycles;
             pools.life = (pools.life + gains.life * (mult - 1.0)).min(mult * ch.life);
@@ -340,8 +362,11 @@ fn hits_to_die(
                 .min(mult * ch.energy_shield);
         }
         if clamp {
+            // `min(life + missing% x (unreserved - life) / 100, recoverable)`
+            // (2661 to 2663; P6-11hm), the clamp alone at 0.
             if pools.life > 0.0 {
-                pools.life = pools.life.min(ch.life);
+                pools.life =
+                    (pools.life + gains.missing_life * (ch.life - pools.life) / 100.0).min(ch.life);
             }
             if pools.mana > 0.0 {
                 pools.mana = pools.mana.min(ch.mana);
@@ -360,13 +385,20 @@ fn hits_to_die(
         }
         iteration_multiplier = 1.0;
         if !cycles_ran && pools.life > 0.0 && run.iterations < MAX_ITERATIONS {
-            let speed_up = if gains.any() || gains.limit {
+            let speed_up = if gains.when_hit() || gains.limit {
                 LIMITED_SPEED_UP
             } else {
                 SPEED_UP
             };
             let faster = damage_in.map(|d| d * speed_up);
-            let n = hits_to_die(&faster, cycles * speed_up, run, ch, gains, false);
+            // The recursion carries `GainWhenHit` and the flat gains, not
+            // the missing life (2702 to 2708).
+            let inner = Gains {
+                missing_life: 0.0,
+                limit: gains.limit || gains.missing_life != 0.0,
+                ..gains
+            };
+            let n = hits_to_die(&faster, cycles * speed_up, run, ch, inner, false);
             iteration_multiplier = ((n - 1.0) * speed_up - 1.0).max(1.0);
             if iteration_multiplier == f64::INFINITY {
                 return f64::INFINITY;
@@ -470,6 +502,7 @@ pub(super) fn estimate(
             energy_shield: m.energy_shield_on_block * block_chance
                 + m.energy_shield_on_spell_block / 2.0 * block_chance,
             limit: false,
+            missing_life: ch.missing_life,
         }
     } else {
         Gains::default()
@@ -478,7 +511,7 @@ pub(super) fn estimate(
     // made, its speed-up limited.
     // Tracked life loss over time too (P6-11ce; 2832 to 2837).
     gains.limit = ch.recoup || tracks_loss;
-    let mitigated = if damage_chance == 100.0 && !gains.any() && !gains.limit {
+    let mitigated = if damage_chance == 100.0 && !gains.when_hit() && !gains.limit {
         damaging
     } else {
         let damage_in = taken_hit
@@ -561,6 +594,7 @@ mod tests {
             golem: 0.0,
             prevented: 0.0,
             elemental_aegis: 0.0,
+            missing_life: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -593,6 +627,7 @@ mod tests {
             golem: 0.0,
             prevented: 0.0,
             elemental_aegis: 0.0,
+            missing_life: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -629,6 +664,7 @@ mod tests {
             golem: 100.0,
             prevented: 0.0,
             elemental_aegis: 0.0,
+            missing_life: 0.0,
         };
         let pools = Pools {
             life: ch.life,

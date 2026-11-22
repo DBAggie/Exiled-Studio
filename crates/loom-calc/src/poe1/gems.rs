@@ -6449,6 +6449,9 @@ mod tests {
             "supported_active_skill_gem_level_+",
             // P6-11ck: Enhance's supported quality, the same way.
             "supported_active_skill_gem_quality_%",
+            // P6-11hm: missing unreserved life gained before a hit, read by
+            // the EHP estimate, not a reservation.
+            "missing_unreserved_life_%_gained_as_life_before_hit",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

@@ -1119,6 +1119,13 @@ fn maximum_hit(
             golem,
             prevented,
             elemental_aegis,
+            missing_life: sum(
+                calc,
+                Poe1Quantity::MissingLifeBeforeHit,
+                Op::Base,
+                &cx,
+                &mut reasons,
+            )?,
         };
         super::ehp::estimate(
             calc,
