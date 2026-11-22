@@ -83,6 +83,8 @@ struct Pools {
     elemental_aegis: f64,
     /// The ward left (P6-11hn).
     ward: f64,
+    /// Frost Shield's life left (P6-11ho).
+    frost: f64,
 }
 
 /// What the estimate reads of the character.
@@ -123,6 +125,10 @@ pub(super) struct Character {
     pub(super) missing_life: f64,
     /// Ward (PoB's `output.Ward`; P6-11hn).
     pub(super) ward: f64,
+    /// Frost Shield's share of each hit, percent, and its life (PoB's
+    /// `alliesTakenBeforeYou.frostShield`, after the golem's; P6-11ho).
+    pub(super) frost_rate: f64,
+    pub(super) frost: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -176,6 +182,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut life = pools.life.max(0.0);
     let mut guard = pools.guard;
     let mut golem = pools.golem;
+    let mut frost = pools.frost;
     let mut elemental_aegis = pools.elemental_aegis;
     let mut ward = pools.ward.max(0.0);
     let ward_before = ward;
@@ -222,6 +229,12 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         if golem > 0.0 {
             let taken = (remainder * ch.golem_rate / 100.0).min(golem);
             golem = crate::math::floor(golem - taken);
+            remainder -= taken;
+        }
+        // Frost Shield after it (P6-11ho; `allyLifePoolList`'s order).
+        if frost > 0.0 {
+            let taken = (remainder * ch.frost_rate / 100.0).min(frost);
+            frost = crate::math::floor(frost - taken);
             remainder -= taken;
         }
         // The shared elemental aegis takes an elemental hit next, all of it
@@ -312,6 +325,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             // A hit that took any ward breaks it: no chance to avoid the
             // break is modelled (409).
             ward: crate::math::floor(if ward < ward_before { 0.0 } else { ward }),
+            frost,
         },
         crate::math::ceil(overkill),
     )
@@ -349,6 +363,7 @@ fn hits_to_die(
         elemental_aegis: ch.elemental_aegis,
         // An accelerated run leaves ward out: it breaks (2590 to 2593).
         ward: if cycles > 1.0 { 0.0 } else { ch.ward },
+        frost: ch.frost,
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -614,6 +629,8 @@ mod tests {
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
+            frost_rate: 0.0,
+            frost: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -648,6 +665,8 @@ mod tests {
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
+            frost_rate: 0.0,
+            frost: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -657,6 +676,7 @@ mod tests {
             golem: 0.0,
             elemental_aegis: 0.0,
             ward: 0.0,
+            frost: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, overkill) = reduce(pools, &hit, &ch);
@@ -687,6 +707,8 @@ mod tests {
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
+            frost_rate: 0.0,
+            frost: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -696,6 +718,7 @@ mod tests {
             golem: ch.golem,
             elemental_aegis: 0.0,
             ward: 0.0,
+            frost: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, _) = reduce(pools, &hit, &ch);

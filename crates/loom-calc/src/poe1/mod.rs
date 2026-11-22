@@ -471,6 +471,12 @@ pub enum Poe1Quantity {
     /// Ward (P6-11hn; PoB's `Ward`): `Base` the global flat ("+# to Ward"),
     /// `Increased` and `More` its modifier, read by [`phases::ward`].
     Ward,
+    /// Frost Shield's life (P6-11ho; PoB's `FrostGlobeHealth` BASE, the
+    /// skill's life per stage): `Base`.
+    FrostShieldLife,
+    /// The share of each hit Frost Shield takes, percent (P6-11ho; PoB's
+    /// `FrostGlobeDamageMitigation` BASE): `Base`.
+    FrostShieldShare,
     /// "Triggers Level # Primal Aegis when Allocated / Primal Aegis can take
     /// 75 Elemental Damage per Allocated Notable Passive Skill" (P6-11hl):
     /// a `Flag`; `collect` turns it into [`Self::ElementalAegis`].
@@ -1497,6 +1503,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GainAsRandom => f.write_str("gain-as-random"),
             Self::MissingLifeBeforeHit => f.write_str("missing-life-before-hit"),
             Self::Ward => f.write_str("ward"),
+            Self::FrostShieldLife => f.write_str("frost-shield-life"),
+            Self::FrostShieldShare => f.write_str("frost-shield-share"),
             Self::PrimalAegis => f.write_str("primal-aegis"),
             Self::ElementalAegis => f.write_str("elemental-aegis"),
             Self::SpellDamageToAttacks => f.write_str("spell-damage-to-attacks"),

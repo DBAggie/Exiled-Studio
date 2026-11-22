@@ -257,6 +257,20 @@ pub enum BuffStat {
         /// The rows.
         rows: &'static [HitEffect],
     },
+    /// Applies when the config check `input` is on, or with `neg` when it
+    /// is off: it sets the enemy's condition `var` (PoB's `ActorCondition`
+    /// tag on the enemy, negated with `neg`; Frost Shield's share with the
+    /// enemy in or outside its area; P6-11ho).
+    EnemyCheck {
+        /// The config check.
+        input: &'static str,
+        /// The enemy's condition.
+        var: &'static str,
+        /// Whether the rows apply with the condition off.
+        neg: bool,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Applies only when the config check `input` is on: it sets the
     /// condition PoB's `modCond` names, which nothing else sets
     /// (`CalcActiveSkill.lua` 806 drops a mod whose `modCond` fails;
@@ -305,6 +319,9 @@ pub enum BuffStat {
         input: &'static str,
         /// PoB's multiplier name.
         var: &'static str,
+        /// The count's limit, if any (PoB's `limitVar`: Frost Shield's
+        /// stages at most its `FrostShieldMaxStages`; P6-11ho).
+        limit: Option<u32>,
         /// The rows.
         rows: &'static [HitEffect],
     },
@@ -1321,14 +1338,16 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
-    // P6-11fk: Frost Shield (`act_int.lua`, `FrostShield`). Each of its
-    // values PoB scales by `Multiplier:FrostShieldStage` (the config's
-    // `frostShieldStages`, no default): the spell crit chance per stage, the
-    // shield's life per stage, and with it the share it takes (no pool with
-    // no life, `CalcDefence.lua` 2444 to 2447, 47 to 52), and the energy
-    // shield drain from one stage. With no stage they are 0, as PoB's; with
-    // stages each is a reason (the stage multiplier and the shield's pool
-    // are not modelled).
+    // P6-11fk: Frost Shield (`act_int.lua`, `FrostShield`). PoB scales its
+    // crit chance and life by `Multiplier:FrostShieldStage` (the config's
+    // `frostShieldStages`, no default) at most `FrostShieldMaxStages` (the
+    // gem's constant 4). P6-11ho: the stages apply; the shield's life and
+    // share are a pool before yours (`poe1::enemy_hit`, `CalcDefence.lua`
+    // 2444 to 2447, 47 to 52: none without life). The share is 20% with
+    // the enemy in the area (the config's `conditionEnemyInFrostGlobe`),
+    // else 60%. The energy shield drain (`EnergyShieldDegen` from one
+    // stage) changes only the net regeneration (`CalcDefence.lua` 1288 to
+    // 1292, 3397), no slice field.
     (
         "FrostShield",
         Kind::Buff {
@@ -1337,37 +1356,60 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "energy_shield_lost_per_minute",
-                    BuffStat::ReasonWhenInput {
-                        input: "frostShieldStages",
-                        what: "frost-shield-stages",
-                    },
+                    BuffStat::NoSlice("energy-shield-degeneration"),
                 ),
                 (
                     "frost_globe_absorb_damage_%_enemy_in_bubble",
-                    BuffStat::ReasonWhenInput {
-                        input: "frostShieldStages",
-                        what: "frost-shield-stages",
+                    BuffStat::EnemyCheck {
+                        input: FROST_GLOBE_INPUT,
+                        var: "EnemyInFrostGlobe",
+                        neg: false,
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::FrostShieldShare),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
                     },
                 ),
                 (
                     "frost_globe_absorb_damage_%_enemy_outside_bubble",
-                    BuffStat::ReasonWhenInput {
-                        input: "frostShieldStages",
-                        what: "frost-shield-stages",
+                    BuffStat::EnemyCheck {
+                        input: FROST_GLOBE_INPUT,
+                        var: "EnemyInFrostGlobe",
+                        neg: true,
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::FrostShieldShare),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
                     },
                 ),
                 (
                     "frost_globe_additional_spell_base_critical_strike_chance_per_stage",
-                    BuffStat::ReasonWhenInput {
-                        input: "frostShieldStages",
-                        what: "frost-shield-stages",
+                    BuffStat::PerCount {
+                        input: FROST_SHIELD_STAGES_INPUT,
+                        var: "FrostShieldStage",
+                        limit: Some(FROST_SHIELD_MAX_STAGES),
+                        rows: &[(Quantity::CritChance, Op::Base, 100.0, Flags::SPELL, NONE)],
                     },
                 ),
                 (
                     "frost_globe_health_per_stage",
-                    BuffStat::ReasonWhenInput {
-                        input: "frostShieldStages",
-                        what: "frost-shield-stages",
+                    BuffStat::PerCount {
+                        input: FROST_SHIELD_STAGES_INPUT,
+                        var: "FrostShieldStage",
+                        limit: Some(FROST_SHIELD_MAX_STAGES),
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::FrostShieldLife),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
                     },
                 ),
                 (
@@ -3210,6 +3252,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
             BuffStat::PerCount {
                 input: MOMENTUM_REMOVED_INPUT,
                 var: "MomentumStacksRemoved",
+                limit: None,
                 rows: &[(
                     Quantity::Poe1(Poe1Quantity::MovementSpeed),
                     Op::Increased,
@@ -3679,6 +3722,17 @@ pub const BANNER_PLANTED_INPUT: &str = "bannerPlanted";
 /// `MAX`; P6-9e).
 pub const PRIDE_INPUT: &str = "prideEffect";
 
+/// Frost Shield's stages (P6-11ho; PoB's `frostShieldStages`,
+/// `ConfigOptions.lua` 455).
+const FROST_SHIELD_STAGES_INPUT: &str = "frostShieldStages";
+
+/// The enemy in Frost Shield's area (P6-11ho; `ConfigOptions.lua` 2016).
+const FROST_GLOBE_INPUT: &str = "conditionEnemyInFrostGlobe";
+
+/// Frost Shield's maximum stages (`frost_globe_max_stages`, the gem's
+/// constant).
+const FROST_SHIELD_MAX_STAGES: u32 = 4;
+
 /// The config inputs this module reads.
 #[must_use]
 pub fn is_input(name: &str) -> bool {
@@ -3691,7 +3745,9 @@ pub fn is_input(name: &str) -> bool {
         INFUSION_INPUT,
         WARCRY_POWER_INPUT,
         // P6-11fk, P6-11fn: Frost Shield's stages, Ensnaring Arrow's stacks.
-        "frostShieldStages",
+        FROST_SHIELD_STAGES_INPUT,
+        // P6-11ho: the enemy in Frost Shield's area.
+        FROST_GLOBE_INPUT,
         "multiplierEnsnaredStackCount",
         // P6-11fw: a planted banner (its Valour count goes with it).
         BANNER_PLANTED_INPUT,
@@ -5594,6 +5650,22 @@ fn add_rows(
                     }
                 }
             }
+            BuffStat::EnemyCheck {
+                input: check,
+                neg,
+                rows,
+                ..
+            } => match config.and_then(|set| last_input(set, check, ConfigInputKind::Input)) {
+                None | Some(ConfigValue::Boolean(false)) if neg => (rows, None),
+                Some(ConfigValue::Boolean(true)) if !neg => (rows, None),
+                None | Some(ConfigValue::Boolean(_)) => continue,
+                Some(_) => {
+                    ingest.reason(UnsupportedReason::UnmodelledConfig {
+                        input: check.to_owned(),
+                    });
+                    continue;
+                }
+            },
             BuffStat::BloodStance(rows) => {
                 if !stance_blood {
                     continue;
@@ -5609,6 +5681,7 @@ fn add_rows(
             }
             BuffStat::PerCount {
                 input: counted,
+                limit,
                 rows,
                 ..
             } => {
@@ -5617,6 +5690,9 @@ fn add_rows(
                         if n.value().0.is_finite() && n.value().0 != 0.0 =>
                     {
                         count = n.value().0;
+                        if let Some(limit) = limit {
+                            count = crate::math::min(count, f64::from(limit));
+                        }
                     }
                     Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => continue,
                     None => continue,
@@ -6326,6 +6402,7 @@ mod tests {
                 | BuffStat::WhenState { rows: e, .. }
                 | BuffStat::MinionOnly(e)
                 | BuffStat::PerPower { rows: e, .. }
+                | BuffStat::EnemyCheck { rows: e, .. }
                 | BuffStat::ConfigIs { rows: e, .. } => e,
                 BuffStat::NoSlice(_)
                 | BuffStat::Defence(_)

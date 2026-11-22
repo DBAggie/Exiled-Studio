@@ -593,6 +593,23 @@ const LOW_ES_INPUT: &str = "conditionLowEnergyShield";
 /// PoB's `data.misc.LowPoolThreshold` (`Data.lua` 233).
 const LOW_POOL_THRESHOLD: f64 = 0.5;
 
+/// Frost Shield's share of each hit, percent, and its life (P6-11ho;
+/// `CalcDefence.lua` 2444, 2445, `buildAllyLifePools`): `(0, 0)` unless
+/// both are above 0, the share at most 100.
+fn frost_shield(
+    calc: &mut Calc<'_>,
+    cx: &crate::condition::QueryContext,
+    reasons: &mut Reasons,
+) -> Result<(f64, f64), CalcError> {
+    let life = sum(calc, Poe1Quantity::FrostShieldLife, Op::Base, cx, reasons)?;
+    let share = sum(calc, Poe1Quantity::FrostShieldShare, Op::Base, cx, reasons)?;
+    Ok(if life > 0.0 && share > 0.0 {
+        (share.min(100.0), life)
+    } else {
+        (0.0, 0.0)
+    })
+}
+
 /// The maximum hit of each type (P6-10b part 13): PoB's
 /// `<Type>MaximumHitTaken` and `SecondMinimalMaximumHitTaken`
 /// (`CalcDefence.lua` 2214 to 2556, 3120 to 3325).
@@ -829,6 +846,7 @@ fn maximum_hit(
         .map(|e| e.value)
         .fold(0.0_f64, f64::max);
     let ward = phases::ward(calc, &mut pool_reasons)?;
+    let (frost_rate, frost) = frost_shield(calc, &cx, &mut pool_reasons)?;
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
@@ -885,7 +903,18 @@ fn maximum_hit(
             let protected = guard / share * (1.0 - share);
             pools[i] = (pools[i] - protected).max(0.0) + pools[i].min(protected) / (1.0 - share);
         }
-        // The golem's pool, undone after the guard (3147 to 3160).
+        // The ally pools undone after the guard, in reverse order (3147 to
+        // 3160): Frost Shield (P6-11ho), then the golem.
+        if frost > 0.0 {
+            if frost_rate >= 100.0 {
+                pools[i] += frost;
+            } else {
+                let share = frost_rate / 100.0;
+                let protected = frost / share * (1.0 - share);
+                pools[i] =
+                    (pools[i] - protected).max(0.0) + pools[i].min(protected) / (1.0 - share);
+            }
+        }
         if golem > 0.0 {
             if golem_rate >= 100.0 {
                 pools[i] += golem;
@@ -1123,6 +1152,8 @@ fn maximum_hit(
             prevented,
             elemental_aegis,
             ward: phases::ward(calc, &mut reasons)?,
+            frost_rate: frost_shield(calc, &cx, &mut reasons)?.0,
+            frost: frost_shield(calc, &cx, &mut reasons)?.1,
             missing_life: sum(
                 calc,
                 Poe1Quantity::MissingLifeBeforeHit,

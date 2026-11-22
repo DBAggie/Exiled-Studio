@@ -543,6 +543,9 @@ const NO_SLICE_NAMES: &[&str] = &[
     "Multiplier:SigilOfPowerMaxStages",
     // P6-11fk: Frost Shield's stage limit, read only with its stages.
     "Multiplier:FrostShieldMaxStages",
+    // P6-11ho: Frost Shield's energy shield drain, read only by the net
+    // regeneration (`CalcDefence.lua` 1288 to 1292, 3397).
+    "EnergyShieldDegen",
     "AreaOfEffect",
     // P6-11fd: Seismic Cry's stun threshold.
     "StunThreshold",
@@ -883,6 +886,9 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::GuardAbsorbMax) => "Multiplier:GuardAbsorbMax".into(),
         // Summon Stone Golem of Safeguarding's (P6-11ar).
         Quantity::Poe1(Poe1Quantity::TakenFromStoneGolem) => "takenFromStoneGolemBeforeYou".into(),
+        // P6-11ho: Frost Shield.
+        Quantity::Poe1(Poe1Quantity::FrostShieldLife) => "FrostGlobeHealth".into(),
+        Quantity::Poe1(Poe1Quantity::FrostShieldShare) => "FrostGlobeDamageMitigation".into(),
         // Arctic Armour's (P6-11z).
         Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
             format!("{}DamageTakenWhenHit", title(t.name()))
@@ -1066,6 +1072,18 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             ),
         ),
         BuffStat::MinionOnly(rows) => (rows, String::new()),
+        // The enemy's condition (P6-11ho), negated with `neg`.
+        BuffStat::EnemyCheck { var, neg, rows, .. } => (
+            rows,
+            format!(
+                " tags {}",
+                if *neg {
+                    json!({ "actor": "enemy", "neg": true, "type": "ActorCondition", "var": var })
+                } else {
+                    json!({ "actor": "enemy", "type": "ActorCondition", "var": var })
+                }
+            ),
+        ),
         // A warcry's rows per power (P6-11bs): PoB's `GlobalEffect` tag
         // carries the step and the cap.
         #[expect(
@@ -1423,6 +1441,7 @@ fn check_one(
             | BuffStat::WhenState { .. }
             | BuffStat::MinionOnly(_)
             | BuffStat::PerPower { .. }
+            | BuffStat::EnemyCheck { .. }
             | BuffStat::ConfigIs { .. } => {}
         }
     }

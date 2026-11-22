@@ -4476,3 +4476,27 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Ten EHP and maximum hit values of `poisonous-concoction-of-bouncing-pathfinder.xml` moved toward PoB.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ho: Frost Shield
+
+**Found** (the open task "Frost Shield (stages, the enemy in its globe)"): with the config's `frostShieldStages` set, each of Frost Shield's values was an `unmodelled-skill` reason (P6-11fk).
+
+**PoB** (`act_int.lua` 8014 to 8075, `CalcDefence.lua` 31 to 52, 262 to 277, 2441 to 2447, 3147 to 3160):
+- **Per stage:** the spell crit chance and `FrostGlobeHealth` are counted per `Multiplier:FrostShieldStage`, at most `FrostShieldMaxStages` (the gem's 4).
+- **The share:** `FrostGlobeDamageMitigation` is 20% with the enemy in the area (the config's `conditionEnemyInFrostGlobe`, an enemy `ActorCondition`), else 60%.
+- **The pool:** `buildAllyLifePools` makes an ally pool when both the life and the share are above 0. It drains after the Stone Golem's: the share of each hit, up to the life left, floored.
+- **The maximum hit:** the ally pools are undone after the guard in reverse order, Frost Shield first.
+- **The drain:** `EnergyShieldDegen` from one stage reaches only the net regeneration (1288 to 1292, 3397), which is not a slice field.
+
+**The engine:**
+- `poe1::gems`: Frost Shield's per-stage rows are `BuffStat::PerCount` with a new `limit` (PoB's `limitVar`). The two shares are `BuffStat::EnemyCheck`, a new variant: the config check, negated for outside. The drain is `NoSlice`.
+- `Poe1Quantity::FrostShieldLife` and `FrostShieldShare`.
+- `enemy_hit::frost_shield` reads them into `ehp::Character` and into the maximum hit's pools. `ehp::reduce` drains the shield after the golem.
+- `data-parity`'s `gem_effects` checks both new variants against PoB's mods: the `Multiplier` tag, and the enemy's `ActorCondition`. `uncategorized` stays 0.
+
+**Evidence** (`b-ct`, against P6-11hn's run):
+- **Two new mechanic fixtures**, both matching PoB on every field (P6-11hn's binary left all of their fields partial):
+  - `ice-nova-frost-shield-witch.xml`: 4 stages, the enemy outside. PoB's probe gives `FrostShieldLife` 3640, mitigation 60, crit chance 9.02.
+  - `ice-nova-frost-shield-in-area-witch.xml`: 6 stages counted as 4, the enemy inside (20%), against several hits.
+- **Public and corpus:** 0 unexpected, no value moved. The community builds with Frost Shield set no stages.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
