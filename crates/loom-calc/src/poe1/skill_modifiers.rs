@@ -200,7 +200,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 28] = [
+pub const STATS: [ModifierRow; 30] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -306,6 +306,13 @@ pub const STATS: [ModifierRow; 28] = [
         Poe1Quantity::OfferingBuffEffect,
         1.0,
     ),
+    // P6-11gn: "Pride has #% increased Aura Effect" (`AuraEffect` INC with
+    // the `SkillName` Pride).
+    (
+        "pride_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(0),
+        1.0,
+    ),
     (
         "reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(None),
@@ -322,6 +329,13 @@ pub const STATS: [ModifierRow; 28] = [
     (
         "skill_effect_duration_+%",
         Poe1Quantity::SkillTiming(SkillTiming::Duration),
+        1.0,
+    ),
+    // P6-11gn: "#% increased Vulnerability Curse Effect" (`CurseEffect` INC
+    // with the `SkillName` Vulnerability).
+    (
+        "vulnerability_curse_effect_+%",
+        Poe1Quantity::NamedSkillEffect(1),
         1.0,
     ),
     (
@@ -350,6 +364,29 @@ pub const STATS: [ModifierRow; 28] = [
         "warcry_speed_+%",
         Poe1Quantity::SkillTiming(SkillTiming::WarcrySpeed),
         1.0,
+    ),
+];
+
+/// What a named skill effect modifies (P6-11gn).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NamedEffect {
+    /// The skill's aura effect (`AuraEffect` INC): its aura scale alone.
+    Aura,
+    /// The skill's curse effect (`CurseEffect` INC): its curse scale.
+    Curse,
+}
+
+/// The named skill effect modifiers (P6-11gn; PoB's `AuraEffect` or
+/// `CurseEffect` INC with a `SkillName` tag, `ModParser.lua`'s "<skill> has
+/// #% increased aura effect" and "#% increased <skill> curse effect"):
+/// the stat, the skill's granted effect ID, and what it modifies, by
+/// [`Poe1Quantity::NamedSkillEffect`]'s index.
+pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 2] = [
+    ("pride_aura_effect_+%", "Pride", NamedEffect::Aura),
+    (
+        "vulnerability_curse_effect_+%",
+        "Vulnerability",
+        NamedEffect::Curse,
     ),
 ];
 
@@ -489,6 +526,9 @@ pub struct Totals {
     pub herald_buff_effect: f64,
     /// `BuffEffect` INC of the offering skills (P6-11gg).
     pub offering_buff_effect: f64,
+    /// Each named skill effect, by [`NAMED_SKILL_EFFECTS`]' index
+    /// (P6-11gn).
+    pub named_skill_effect: [f64; 2],
     /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
     pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
@@ -587,6 +627,7 @@ impl Totals {
                 Poe1Quantity::NamedGolemBuffEffect(g) => &mut t.named_golem_buff_effect[g as usize],
                 Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
                 Poe1Quantity::OfferingBuffEffect => &mut t.offering_buff_effect,
+                Poe1Quantity::NamedSkillEffect(i) => &mut t.named_skill_effect[usize::from(i)],
                 Poe1Quantity::OfferingEffectOnYou => &mut t.offering_effect_on_you,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::MarkCurseEffect => &mut t.mark_curse_effect,
@@ -680,6 +721,18 @@ impl Totals {
         } else {
             self.offering_buff_effect
         }
+    }
+
+    /// The named skill effect of `kind` for the skill of the granted
+    /// effect `id` (P6-11gn, [`NAMED_SKILL_EFFECTS`]): its sum, else 0.
+    #[must_use]
+    pub fn named_skill(&self, id: &str, kind: NamedEffect) -> f64 {
+        NAMED_SKILL_EFFECTS
+            .iter()
+            .enumerate()
+            .filter(|(_, (_, skill, k))| *skill == id && *k == kind)
+            .map(|(i, _)| self.named_skill_effect[i])
+            .sum()
     }
 
     /// Whether the buff of the skill of the granted effect `id` reaches you
@@ -1091,6 +1144,15 @@ mod tests {
         assert_eq!(n.named_golem(Some("summon_flame_golem")), 0.0);
         assert_eq!(n.named_golem(Some("lightning_golem_wrath")), 0.0);
         assert_eq!(n.named_golem(None), 0.0);
+        // P6-11gn: a named skill's effect, for that skill and kind alone.
+        let p = Totals {
+            named_skill_effect: [20.0, 15.0],
+            ..Totals::default()
+        };
+        assert_eq!(p.named_skill("Pride", NamedEffect::Aura), 20.0);
+        assert_eq!(p.named_skill("Pride", NamedEffect::Curse), 0.0);
+        assert_eq!(p.named_skill("Vulnerability", NamedEffect::Curse), 15.0);
+        assert_eq!(p.named_skill("Hatred", NamedEffect::Aura), 0.0);
         // P6-11gg: the offerings' effect, on you with the effect on you.
         let o = Totals {
             offering_buff_effect: 20.0,

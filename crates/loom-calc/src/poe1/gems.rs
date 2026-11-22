@@ -4792,6 +4792,16 @@ fn named_golem(totals: &Totals, s: &GroupSkill<'_>) -> f64 {
     totals.named_golem(s.active.map(|a| a.id.as_str()))
 }
 
+/// The named aura effect for `s`'s aura (P6-11gn, Pride's): 0 for a buff
+/// that is not an aura.
+fn named_aura(totals: &Totals, s: &GroupSkill<'_>, aura: bool) -> f64 {
+    if aura {
+        totals.named_skill(&s.active_gem.effect.id, skill_modifiers::NamedEffect::Aura)
+    } else {
+        0.0
+    }
+}
+
 /// Whether PoB applies the skill's buff to the main skill's minion
 /// (`CalcPerform.lua` 2282 and 2427): an aura (every self aura reaches
 /// allies), or a buff with `skillData.buffMinions` or `buffAllies`.
@@ -4881,6 +4891,7 @@ pub fn minion_buffs(
                     // The offerings' effect (P6-11gg), not the effect on you.
                     let own = own_effect(input, s, aura)
                         + named_golem(totals, s)
+                        + named_aura(totals, s, aura)
                         + totals.offering(&s.active_gem.effect.id, false);
                     let scale = totals.buff_scale(aura, &s.types, own);
                     add_rows(
@@ -5054,6 +5065,7 @@ fn one_skill(
             } else {
                 own_effect(input, s, aura)
                     + named_golem(totals, s)
+                    + named_aura(totals, s, aura)
                     + totals.offering(&s.active_gem.effect.id, on_you)
             };
             // An `unscalable` buff (Cyclone's movement speed, P6-8a): scale 1.
@@ -5233,6 +5245,9 @@ fn one_skill(
             } else {
                 own
             };
+            // A named curse's own increase (P6-11gn: Vulnerability's).
+            let own = own
+                + totals.named_skill(&s.active_gem.effect.id, skill_modifiers::NamedEffect::Curse);
             let scale = totals.curse_scale_with(own) * more;
             if !instance.problems.is_empty() {
                 for p in &instance.problems {

@@ -3792,3 +3792,33 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
 - **Public:** 0 unexpected; no value moved.
 - **Corpus:** 0 unexpected. Four values of one build moved toward PoB: its average damage, ignite, and DPS.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gn: Pride's aura effect and Vulnerability's curse effect
+
+**Found** (P6-11gm's scan of the stats PoB parses): two stats were unmapped, so reasons, each in 2 builds:
+- `pride_aura_effect_+%` ("Pride has #% increased Aura Effect");
+- `vulnerability_curse_effect_+%` ("#% increased Vulnerability Curse Effect").
+
+The scan's output now goes to `local/p6/scan/`, which a step's evidence run does not clear.
+
+**PoB:**
+- The first line is `AuraEffect` INC, the second `CurseEffect` INC, each with a `SkillName` tag of the skill (`includeTransfigured`).
+- So each enters only that skill's aura scale or curse scale (`CalcPerform.lua` 2392 onward for an aura, 2619 onward for a curse).
+
+**The engine:**
+- **`skill_modifiers`:**
+  - `NAMED_SKILL_EFFECTS` holds each stat, the skill's granted effect ID, and what it modifies (`NamedEffect::Aura` or `Curse`).
+  - Two `STATS` rows, 30 in all, on `Poe1Quantity::NamedSkillEffect(i)`.
+  - `Totals::named_skill` reads them.
+- **`gems`:**
+  - An aura's scale adds its named aura effect (`named_aura`): on you, and on the minion in `minion_buffs`.
+  - A curse's scale adds its named curse effect, beside a mark's.
+- **The texts test** (`tests/skill_modifiers.rs`) checks both game texts against the bundle.
+
+**Evidence** (`b-ct`, against P6-11gm's run):
+- **Two new mechanic fixtures.** All fields match PoB except the Q11 floored attack time, registered as `game-truth` DIV-0509 to DIV-0519 as the base fixtures' are:
+  - `smite-pride-aura-effect-templar.xml`: P6-9e's Pride fixture with "Pride has 40% increased Aura Effect", DPS 110.87 to 111.54 in PoB;
+  - `smite-vulnerability-curse-effect-templar.xml`: P6-11ds's Hextouch fixture with "40% increased Vulnerability Curse Effect", bleeding 29.01 to 42.56 in PoB.
+- **Public:** 0 unexpected. Eleven values of the Cyclone and Lacerate builds moved, all toward PoB.
+- **Corpus:** 0 unexpected. Six values of one build moved, all toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

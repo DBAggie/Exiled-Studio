@@ -804,6 +804,11 @@ pub enum Poe1Quantity {
     /// `Increased`, read by [`skill_modifiers::Totals`] for an offering's
     /// buff, on you and on minions.
     OfferingBuffEffect,
+    /// A named skill's own effect modifier (P6-11gn): `Increased`, the
+    /// index into [`skill_modifiers::NAMED_SKILL_EFFECTS`] (Pride's aura
+    /// effect, Vulnerability's curse effect), read by
+    /// [`skill_modifiers::Totals`] for that skill alone.
+    NamedSkillEffect(u8),
     /// `BuffEffectOnPlayer` INC of the offering skills ("Your Offerings
     /// have #% reduced Effect on you", P6-11gg): `Increased`, read for an
     /// offering's buff on you alone.
@@ -1444,6 +1449,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::NamedGolemBuffEffect(g) => write!(f, "named-golem-buff-effect.{}", g.name()),
             Self::OfferingBuffEffect => f.write_str("offering-buff-effect"),
+            Self::NamedSkillEffect(i) => write!(f, "named-skill-effect.{i}"),
             Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
