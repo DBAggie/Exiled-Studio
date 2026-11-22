@@ -464,6 +464,9 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// The chance to deal triple damage (P6-11hi; PoB's `TripleDamageChance`
+    /// BASE, from brutal charges): `Base`, percent.
+    TripleDamageChance,
     /// "#% increased Attack Damage per 75 Armour or Evasion Rating on
     /// Shield" (P6-11hh; PoB's `Damage` INC, `ModFlag.Attack`, `PerStat`
     /// `ArmourOnWeapon 2` plus `EvasionOnWeapon 2`, div 75): `Base`, the
@@ -1467,6 +1470,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::TripleDamageChance => f.write_str("triple-damage-chance"),
             Self::DamagePerShieldDefences => f.write_str("damage-per-shield-defences"),
             Self::CritPerShieldEnergyShield(multiplier) => {
                 if *multiplier {

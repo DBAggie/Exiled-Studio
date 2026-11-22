@@ -2824,7 +2824,9 @@ fn double_damage(
 ) -> Result<Option<Valued>, CalcError> {
     let quantity = Quantity::Poe1(Poe1Quantity::DoubleDamageChance);
     let has = phases::has(calc, quantity);
-    if !has && uptime.is_none() {
+    let triple_quantity = Quantity::Poe1(Poe1Quantity::TripleDamageChance);
+    let has_triple = phases::has(calc, triple_quantity);
+    if !has && uptime.is_none() && !has_triple {
         return Ok(None);
     }
     let mut chance = if has {
@@ -2852,11 +2854,37 @@ fn double_damage(
         Term::Step("double-damage-capped"),
         true,
     )?;
+    // Triple damage (P6-11hi; `CalcOffence.lua` 3192 to 3208): `min(T,
+    // 100)`; it takes the double damage's place when both happen, `D - T x
+    // D / 100`, and adds `2 x T / 100`.
+    let (chance, triple) = if has_triple {
+        let t = sum_in(
+            calc,
+            triple_quantity,
+            Op::Base,
+            cx,
+            Term::Step("triple-damage-chance"),
+            reasons,
+        )?;
+        let t = phases::pair(calc, t, hundred, Term::Step("triple-damage-capped"), true)?;
+        let t_share = percent(calc, t, Term::Step("triple-damage-share"))?;
+        let overlap = phases::product(calc, &[t_share, chance], Term::Step("double-and-triple"))?;
+        let d = difference(calc, chance, overlap, Term::Step("double-without-triple"))?;
+        let zero = phases::constant(calc, "no-negative-double-damage", 0.0)?;
+        let d = phases::pair(calc, d, zero, Term::Step("double-at-least-zero"), false)?;
+        let two = phases::constant(calc, "triple-damage-extra", 2.0)?;
+        let t2 = phases::product(calc, &[t_share, two], Term::Step("triple-damage-effect"))?;
+        (d, Some(t2))
+    } else {
+        (chance, None)
+    };
     let effect = percent(calc, chance, Term::Step("double-damage-effect"))?;
     let one = phases::constant(calc, "one", 1.0)?;
+    let mut terms = vec![one, effect];
+    terms.extend(triple);
     Ok(Some(phases::total(
         calc,
-        &[one, effect],
+        &terms,
         Term::Step("scaled-damage-effect"),
     )?))
 }

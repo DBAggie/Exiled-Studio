@@ -96,6 +96,17 @@ pub enum ChargeValue {
     /// count is the maximum, whatever the config set): `Base`, any value
     /// above 0 on.
     CountAsMaximum,
+    /// "Gain Brutal Charges instead of Endurance Charges" (P6-11hi; PoB's
+    /// `EnduranceChargesConvertToBrutalCharges`, `CalcPerform.lua` 1042 to
+    /// 1046): `Base`, any value above 0 on, on endurance charges.
+    ToBrutal,
+    /// "Maximum Brutal Charges is equal to Maximum Endurance Charges"
+    /// (P6-11hi; `MaximumEnduranceChargesEqualsMaximumBrutalCharges`, 975).
+    BrutalMaximumIsEndurance,
+    /// "Modifiers to Minimum Endurance Charges instead apply to Minimum
+    /// Brutal Charges" (P6-11hi;
+    /// `MinimumEnduranceChargesEqualsMinimumBrutalCharges`, 974).
+    BrutalMinimumIsEndurance,
     /// An effect per charge (a mod with PoB's `Multiplier:<Kind>Charge`
     /// tag).
     Per(PerCharge),
@@ -110,6 +121,9 @@ impl ChargeValue {
             Self::Minimum => "minimum",
             Self::MaximumFromPower => "maximum-from-power",
             Self::CountAsMaximum => "count-as-maximum",
+            Self::ToBrutal => "to-brutal",
+            Self::BrutalMaximumIsEndurance => "brutal-maximum-is-endurance",
+            Self::BrutalMinimumIsEndurance => "brutal-minimum-is-endurance",
             Self::Per(p) => p.name(),
         }
     }
@@ -411,6 +425,12 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::Evasion),
     ),
+    // P6-11hi: "Gain Brutal Charges instead of Endurance Charges".
+    (
+        "gain_brutal_charges_instead_of_endurance_charges",
+        ChargeKind::Endurance,
+        ChargeValue::ToBrutal,
+    ),
     // P6-11bq: "Regenerate # Life per second per Endurance Charge"
     // (`LifeRegen` BASE per `Multiplier:EnduranceCharge`).
     (
@@ -439,6 +459,12 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeValue::Maximum,
     ),
     ("max_power_charges", ChargeKind::Power, ChargeValue::Maximum),
+    // P6-11hi: "Maximum Brutal Charges is equal to Maximum Endurance Charges".
+    (
+        "maximum_brutal_charges_is_equal_to_maximum_endurance_charges",
+        ChargeKind::Endurance,
+        ChargeValue::BrutalMaximumIsEndurance,
+    ),
     (
         "maximum_frenzy_charges_is_equal_to_maximum_power_charges",
         ChargeKind::Frenzy,
@@ -459,6 +485,12 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "mine_throwing_speed_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::MineLayingSpeed),
+    ),
+    // P6-11hi: "Modifiers to Minimum Endurance Charges instead apply to Minimum Brutal Charges".
+    (
+        "modifiers_to_minimum_endurance_charges_instead_apply_to_brutal_charges",
+        ChargeKind::Endurance,
+        ChargeValue::BrutalMinimumIsEndurance,
     ),
     (
         "movement_velocity_+%_per_frenzy_charge",
@@ -524,6 +556,10 @@ pub fn modifier(stat: &str) -> Option<(ChargeKind, ChargeValue)> {
         .ok()
         .map(|i| (MODIFIERS[i].1, MODIFIERS[i].2))
 }
+
+/// The character constant of the triple damage chance per brutal charge
+/// (`CalcSetup.lua` 540).
+const TRIPLE_DAMAGE_PER_BRUTAL_STAT: &str = "chance_to_deal_triple_damage_%_per_brutal_charge";
 
 /// One kind of charge.
 #[derive(Debug, Clone, Copy)]
@@ -751,6 +787,52 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
         } else {
             0.0
         };
+        // Brutal charges (P6-11hi; `CalcPerform.lua` 974, 975, 1042 to
+        // 1046, 3069 to 3073): the endurance charges become brutal charges,
+        // `max(endurance, min(brutal maximum, brutal minimum))`, and are 0
+        // unless the character counts as having the maximum;
+        // with the charges used, each brutal charge gives the character's
+        // triple damage chance.
+        if charge.kind == ChargeKind::Endurance
+            && modifiers(ingest, ChargeKind::Endurance, ChargeValue::ToBrutal).0 > 0.0
+        {
+            if use_on {
+                let flag = |v| modifiers(ingest, ChargeKind::Endurance, v).0 > 0.0;
+                let brutal_max = if flag(ChargeValue::BrutalMaximumIsEndurance) {
+                    max
+                } else {
+                    0.0
+                };
+                let brutal_min = if flag(ChargeValue::BrutalMinimumIsEndurance) {
+                    min
+                } else {
+                    0.0
+                };
+                let brutal = used.max(brutal_min.min(brutal_max));
+                match data.character_constant(TRIPLE_DAMAGE_PER_BRUTAL_STAT) {
+                    #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+                    Some(per) if brutal > 0.0 => ingest.effect(Effect {
+                        quantity: Quantity::Poe1(Poe1Quantity::TripleDamageChance),
+                        op: Op::Base,
+                        value: per as f64 * brutal,
+                        conditions: Conditions::none(),
+                        source: Source::Config {
+                            input: charge.use_input.to_owned(),
+                        },
+                    }),
+                    Some(_) => {}
+                    None => ingest.indeterminate(IndeterminateReason::MissingData {
+                        table: "character_constants",
+                        key: TRIPLE_DAMAGE_PER_BRUTAL_STAT.to_owned(),
+                    }),
+                }
+            }
+            // `HaveMaximumEnduranceCharges` sets the endurance charges to the
+            // maximum after the conversion (1078 to 1080).
+            if !at_max {
+                continue;
+            }
+        }
         let count = if at_max { max } else { used.max(min.min(max)) };
         if count == 0.0 {
             continue;

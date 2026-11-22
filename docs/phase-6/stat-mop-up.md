@@ -4330,3 +4330,30 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected. Five values of the ShieldDB build moved, all toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hi: brutal charges
+
+**Found** (P6-11gm's scan): Arn's Anguish's three brutal charge lines were reasons in 2 builds.
+
+**PoB:**
+- **The conversion** (`CalcPerform.lua` 974, 975, 1042 to 1046): with `EnduranceChargesConvertToBrutalCharges`, the brutal charges are `max(endurance charges, min(brutal maximum, brutal minimum))`, and the endurance charges are 0.
+  - The brutal maximum is the endurance maximum with `MaximumEnduranceChargesEqualsMaximumBrutalCharges`, else 0.
+  - The brutal minimum is the endurance minimum with `MinimumEnduranceChargesEqualsMinimumBrutalCharges`, else 0.
+  - `HaveMaximumEnduranceCharges` then sets the endurance charges back to their maximum (1078 to 1080).
+- **Triple damage** (3069 to 3073): with the charges used, `TripleDamageChance` BASE is the character's `chance_to_deal_triple_damage_%_per_brutal_charge` per brutal charge.
+- **In the hit** (`CalcOffence.lua` 3192 to 3208): `T = min(T, 100)`, the double damage chance becomes `max(D - T x D / 100, 0)`, and the scaled damage effect is `1 + D / 100 + 2 x T / 100`.
+
+**The engine:**
+- `charges::ChargeValue::ToBrutal`, `BrutalMaximumIsEndurance`, and `BrutalMinimumIsEndurance` on endurance charges.
+- `charges::charges` counts the brutal charges, adds `Poe1Quantity::TripleDamageChance` when they are used, and gives the endurance charges no effect unless the character counts as having the maximum.
+- `hit::double_damage` applies PoB's triple damage terms.
+
+**Evidence** (`b-ct`, against P6-11hh's run):
+- **Three new mechanic fixtures**, all matching PoB on every field:
+  - `smite-brutal-charges-templar.xml`: three brutal charges used, with a 20% double damage chance;
+  - `smite-brutal-charges-minimum-templar.xml`: a minimum endurance charge, unused, so no endurance charge and no triple damage;
+  - `smite-brutal-charges-maximum-templar.xml`: counting as maximum endurance charges, so they stay.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. Seven values moved, all toward PoB: two Shield Crush builds' damage.
+  - A first version without the maximum's reset moved 54 defence values away. PoB's probe of the build (`local/p6/tools/pob_out.lua`) showed 8 endurance and 8 brutal charges, which led to the reset.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
