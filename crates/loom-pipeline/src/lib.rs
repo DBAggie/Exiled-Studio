@@ -22,6 +22,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+pub mod radius_jewels;
 pub mod timeless;
 
 use loom_calc::input::Conquest;
@@ -525,7 +526,17 @@ pub fn resolve_passives_with(
     // Tattoos and the other overrides (P6-11av), by the spec's numbers.
     let overrides = overrides(spec);
     let tattooed: BTreeSet<u32> = overrides.keys().map(|n| now(NodeId(*n))).collect();
-    let conquered = timeless::conquests(build, spec, tree, timeless, rolls, &tattooed);
+    let mut conquered = timeless::conquests(build, spec, tree, timeless, rolls, &tattooed);
+    // Radius jewels that change the nodes in their radius (P6-11gv): not a
+    // node a Timeless jewel conquers.
+    // An unallocated tattooed node gives its tattoo's stats to a jewel that
+    // copies it.
+    let tattoo_stats: BTreeMap<u32, Conquest> = overrides
+        .iter()
+        .map(|(n, name)| (now(NodeId(*n)), tattoo(tattoos, name)))
+        .collect();
+    let radius = radius_jewels::changes(build, spec, tree, rolls, &conquered, &tattoo_stats);
+    conquered.extend(radius);
     let is_cluster = |n: u32| n & loom_tree::poe1::CLUSTER_NODE_BIT != 0;
     ResolvedPassives {
         nodes: nodes

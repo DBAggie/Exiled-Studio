@@ -4023,3 +4023,39 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
   - The cast rate is 1.4714 = 1.4286 x 1.03: the 3% at Precision's 5% increased aura effect (node 5415) is 3.15, truncated to 3 by PoB's `ScaleAddMod`.
 - **Public and corpus:** 0 unexpected; no value moved. The two Necromancer builds' compared fields do not take it.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gv: radius jewels that change the passives in their radius
+
+**Found** (P6-11gm's scan): three radius jewel stats were unmapped, so reasons:
+- "Passive Skills in Radius also grant #% increased Physical Damage" (5 builds);
+- Unnatural Instinct's "Allocated Small Passive Skills in Radius grant nothing" (3 builds);
+- "Grants all bonuses of Unallocated Small Passive Skills in Radius" (3 builds).
+
+The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant_<stat>`, each the global `<stat>` at the jewel's value.
+
+**PoB:** its jewel functions (`ModParser.lua` 6093 onward), run per node by `CalcSetup.lua` `buildModListForNode` (117 to 165):
+- **"Also grant"** (`jewelOtherFuncs`, 6217 to 6282): every allocated node in the radius but keystones, sockets, class starts, and masteries gains the stat. A node a Timeless jewel conquers is skipped (6496 to 6511).
+- **"Grant nothing"** (6192): an allocated small passive (`Normal`) in the radius loses all its mods, additions from other jewels included (the wipe follows the first pass, 131).
+- **"Grants all bonuses"** (`jewelSelfUnallocFuncs`, 6362): the unallocated small passives in the radius (`extraRadiusNodeList`, 794 to 800) give their mods to the jewel. A tattooed one gives its tattoo's.
+- **The radius** is `nodesInRadius` (`PassiveTree.lua` 630 to 660) with the version's ring.
+
+**The engine:**
+- **`loom_pipeline::radius_jewels`** (new, the host's): for each jewel in an allocated socket, the ring as for Timeless jewels (`loom_tree::poe1::radius::in_ring`), and the changes as `Conquest` entries:
+  - added stats on the allocated nodes;
+  - an emptied node for "grant nothing";
+  - the unallocated small nodes' stats (a tattoo's when the spec overrides the node) added to the socket node.
+- A value that does not settle, a copied node a Timeless jewel conquers, or a tattoo the data does not know is a `radius-jewel` reason on the socket.
+- **`resolve_passives_with`** adds the changes after the Timeless jewels' conquests, and gives the module the spec's tattoos.
+- **The 15 jewel stats** are `NoEffect` "radius-jewel" in the engine's mapping.
+
+**Evidence** (`b-ct`, against P6-11gu's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is the P6-10a Abyss fixture's tree (socket 41263) with a rare Crimson Jewel:
+  - `ice-nova-radius-also-grant-witch.xml`: Medium, +5 life and 10% increased cold damage per allocated passive, life 1346;
+  - `ice-nova-unnatural-instinct-witch.xml`: Small, with 55247 and 63799 left unallocated so their stats are copied, life 1198 (1130 without the copy line, in PoB too).
+- **PoB checks, kept local:** PoB with and without each Unnatural Instinct line on three public builds. The copy adds the same in PoB as in the engine: 2% spell block, 10 Dexterity, 9% movement speed.
+  - A tattooed unallocated node (7112 in the Pathfinder build, Tattoo of the Tasalio Warrior) first gave its own +10 Dexterity. It now gives the tattoo's line, as PoB does.
+- **Public:** 0 unexpected.
+  - 98 values moved: 93 toward PoB (17 now equal), 5 away.
+  - The away ones are older base gaps that the copy no longer hides. The Hierophant's spell block is 70 in PoB and 72 here; it is 68 in PoB without the copy and 70 here. The Facebreaker build's movement speed is already 6% above PoB's without the copy. Mana unreserved is far from PoB's in two builds (154 against 42). None is traced here.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

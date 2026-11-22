@@ -8608,6 +8608,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_item_allow_modification_while_corrupted", "display"),
     ("local_item_implicit_modifier_limit", "display"),
     ("local_item_sell_price_doubled", "display"),
+    // P6-11gv: a radius jewel's own line, which the host applies to the
+    // nodes in its radius (`loom_pipeline::radius_jewels`).
+    (
+        "local_jewel_allocated_non_notable_passives_in_radius_grant_nothing",
+        "radius-jewel",
+    ),
+    (
+        "local_jewel_copy_stats_from_unallocated_non_notable_passives_in_radius",
+        "radius-jewel",
+    ),
     // P6-11ea: radius jewels' allocation stats (Intuitive Leap, Thread of Hope's
     // ring, Impossible Escape): the pipeline reads them when it resolves the
     // passives (`loom_pipeline`, `RING_STAT`, `LEAP_STAT`, `ESCAPE_STAT`); they
@@ -8634,6 +8644,58 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "local_unique_jewel_nearby_disconnected_passives_can_be_allocated",
         "tree-allocation",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_additional_all_attributes",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_base_chaos_damage_resistance_%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_base_maximum_life",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_base_maximum_mana",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_chaos_damage_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_cold_damage_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_critical_strike_chance_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_evasion_rating_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_fire_damage_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_lightning_damage_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_maximum_energy_shield_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_physical_damage_+%",
+        "radius-jewel",
+    ),
+    (
+        "local_unique_jewel_passives_in_radius_grant_physical_damage_reduction_rating_+%",
+        "radius-jewel",
     ),
     (
         "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
