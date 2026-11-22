@@ -3936,3 +3936,32 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
   - A Juggernaut build's armour went from 23938 to 30499 (PoB 30838) and its chaos damage reduction is PoB's 80%.
   - Away: that build's elemental and physical maximum hits, already above PoB's (22971 against 20364 cold), grow with its armour; and two ignites, already above PoB's, grow 0.1% with the hit chance. Neither cause is traced here.
 - **Tests:** a new test `iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour`; the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gr: attack speed per enemy in close range; armour per second stationary; the curse limit from power charges
+
+**Found** (P6-11gm's scan): three stats PoB parses, each unmapped (a reason) in 2 builds:
+- "#% increased Attack Speed per Enemy in Close Range";
+- "#% increased Armour per second you've been stationary, up to a maximum of 100%";
+- "Your Curse Limit is equal to your maximum Power Charges".
+
+**PoB:**
+- **Attack speed.** `Speed` INC with `ModFlag.Attack`, the `Multiplier` `NearbyEnemies`, and `AtCloseRange`.
+- **Armour.** `Armour` INC with the `Multiplier` `StationarySeconds` (`limit` 100 / value) and `Stationary`. Both come from the config's `conditionStationary` count.
+- **The curse limit.** `CurseLimitIsMaximumPowerCharges`: the enemy's curse limit is `PowerChargesMax` instead of the `EnemyCurseLimit` sum (`CalcPerform.lua` 3156).
+
+**The engine:**
+- **`stacks`:**
+  - `PerStack::AttackSpeedAtCloseRange` on P6-11v's nearby enemy count, with the `AtCloseRange` state.
+  - `StackKind::StationarySeconds` from the stationary count, with `PerStack::ArmourUpTo100` (`min(value x seconds, 100)`). The input joins `stacks::INPUTS`.
+- **The curse limit:** `Poe1Quantity::CurseLimitIsMaximumPowerCharges` (`Flag`). `gems`' curse slots take `charges::power_maximum` (the character's `max_power_charges` and the maximum modifiers) as the limit; a conditional flag is a reason.
+- **The charges guard test** allows the row, which reads the maximum and changes no count.
+
+**Evidence** (`b-ct`, against P6-11gq's run):
+- **Four new mechanic fixtures** match PoB on every compared field:
+  - `smite-attack-speed-per-close-enemy-templar.xml`: 3 enemies at close range, 30%;
+  - `ice-nova-armour-per-stationary-second-witch.xml`: 4 seconds, 40%;
+  - `ice-nova-armour-per-stationary-second-capped-witch.xml`: 15 seconds, 100%;
+  - `ice-nova-curse-limit-power-charges-witch.xml`: P6-9b's three curses, all three applied with 3 power charges.
+- **Public:** 0 unexpected. Twelve values of the Holy Flame Totem and Shock Nova Hierophant builds moved, all toward PoB (their curses).
+- **Corpus:** 0 unexpected. Fifteen values moved, all toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

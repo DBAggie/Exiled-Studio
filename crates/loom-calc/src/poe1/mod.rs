@@ -390,6 +390,10 @@ pub enum Poe1Quantity {
     /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
     /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
     CurseLimit,
+    /// "Your Curse Limit is equal to your maximum Power Charges" (P6-11gr;
+    /// PoB's `CurseLimitIsMaximumPowerCharges`, `CalcPerform.lua` 3156): a
+    /// `Flag`, read by [`gems`]' curse slots.
+    CurseLimitIsMaximumPowerCharges,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -1287,6 +1291,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
+            Self::CurseLimitIsMaximumPowerCharges => {
+                f.write_str("curse-limit-is-maximum-power-charges")
+            }
             Self::EnemyProjectileDamageTaken => f.write_str("enemy-projectile-damage-taken"),
             Self::EnemyTrapMineDamageTaken => f.write_str("enemy-trap-mine-damage-taken"),
             Self::EnemyProjectileAttackDamageTaken => {

@@ -110,6 +110,9 @@ pub enum StackKind {
     /// Trinity's lowest resonance (P6-11gd; PoB's
     /// `Multiplier:ResonanceCount`, the config's `configResonanceCount`).
     Resonance,
+    /// Seconds you have been stationary (P6-11gr; PoB's
+    /// `Multiplier:StationarySeconds`, the config's `conditionStationary`).
+    StationarySeconds,
 }
 
 impl StackKind {
@@ -131,6 +134,7 @@ impl StackKind {
             Self::BrandsAttached => "brands-attached",
             Self::Golems => "golems",
             Self::Resonance => "resonance",
+            Self::StationarySeconds => "stationary-seconds",
         }
     }
 }
@@ -229,6 +233,12 @@ pub enum PerStack {
     /// P6-11gd): the target is fire's, and [`stacks`] adds cold's and
     /// lightning's (PoB's `ElementalPenetration` is all three).
     ElementalPenetrationIfAll25,
+    /// Attack speed per enemy in close range (P6-11gr; `Speed` INC with
+    /// `ModFlag.Attack`, `AtCloseRange`).
+    AttackSpeedAtCloseRange,
+    /// Armour per second stationary, up to 100% (P6-11gr; `Armour` INC,
+    /// `Stationary`, the multiplier's `limit` 100 / value).
+    ArmourUpTo100,
 }
 
 impl PerStack {
@@ -250,6 +260,8 @@ impl PerStack {
             Self::ManaRegenPercentPerMinute => "per.mana-regen-percent-per-minute",
             Self::LifeRegenPercentPerMinute => "per.life-regen-percent-per-minute",
             Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
+            Self::AttackSpeedAtCloseRange => "per.attack-speed-at-close-range",
+            Self::ArmourUpTo100 => "per.armour-up-to-100",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
             Self::EnemyDamageTaken => "per.enemy-damage-taken",
             Self::ElementalPenetrationIfAll25 => "per.elemental-penetration-if-all-25",
@@ -295,6 +307,10 @@ impl PerStack {
                 Flags::NONE,
             ),
             Self::DamageMore => (Quantity::Damage, Op::More, Flags::NONE, Flags::NONE),
+            Self::AttackSpeedAtCloseRange => {
+                (Quantity::Speed, Op::Increased, Flags::ATTACK, Flags::NONE)
+            }
+            Self::ArmourUpTo100 => (Quantity::Armour, Op::Increased, Flags::NONE, Flags::NONE),
             Self::ManaRegenPercentPerMinute => (
                 Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(super::Pool::Mana)),
                 Op::Base,
@@ -354,12 +370,26 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Totems,
         StackValue::Per(PerStack::ArcaneSurgeEffect),
     ),
+    // P6-11gr: "#% increased Armour per second you've been stationary, up
+    // to a maximum of 100%" (`Armour` INC per `StationarySeconds`).
+    (
+        "armour_+%_per_second_while_stationary_up_to_100",
+        StackKind::StationarySeconds,
+        StackValue::Per(PerStack::ArmourUpTo100),
+    ),
     // P6-11ep: "Attack Skills have +# to maximum number of Summoned Ballista
     // Totems" (`ActiveBallistaLimit` BASE, `SkillType.TotemsAreBallistae`).
     (
         "attack_skills_additional_ballista_totems_allowed",
         StackKind::Totems,
         StackValue::BallistaMaximum,
+    ),
+    // P6-11gr: "#% increased Attack Speed per Enemy in Close Range" (`Speed`
+    // INC, `ModFlag.Attack`, per `NearbyEnemies`, `AtCloseRange`).
+    (
+        "attack_speed_+%_per_enemy_in_close_range",
+        StackKind::NearbyEnemies,
+        StackValue::Per(PerStack::AttackSpeedAtCloseRange),
     ),
     // P6-11dt: "Every Rage also grants #% increased Attack Speed" (`Speed`
     // INC with `ModFlag.Attack` per `Multiplier:RageEffect`).
@@ -630,7 +660,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 10] = [
+pub const INPUTS: [&str; 11] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -641,6 +671,7 @@ pub const INPUTS: [&str; 10] = [
     CORPSES_INPUT,
     RESONANCE_INPUT,
     BRANDS_INPUT,
+    super::buffs::STATIONARY_INPUT,
 ];
 
 /// The config's count of brands attached to the enemy, when not the
@@ -912,6 +943,39 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
         }
     }
 
+    // Seconds stationary (P6-11gr): the config's count (`Multiplier:
+    // StationarySeconds`; `Stationary` above 0); armour per second up to
+    // 100% (the multiplier's `limit` 100 / value).
+    let effects = per(ingest, StackKind::StationarySeconds);
+    if !effects.is_empty() {
+        let input = super::buffs::STATIONARY_INPUT;
+        match count(set, input, false) {
+            Err(()) => ingest.reason(reason(input)),
+            Ok(None) => {}
+            Ok(Some(n)) => {
+                let n = multiplier(n);
+                for e in &effects {
+                    if e.value == 0.0 || n <= 0.0 {
+                        continue;
+                    }
+                    let value = e.value * n.min(100.0 / e.value);
+                    let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity
+                    else {
+                        continue;
+                    };
+                    let (quantity, op, all, any) = p.target();
+                    ingest.effect(Effect {
+                        quantity,
+                        op,
+                        value,
+                        conditions: Conditions::none().with_all(all).with_any(any),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+        }
+    }
+
     // Nearby enemies (P6-11v): both counts, the rare or unique one also
     // when 0 (`countAllowZero`).
     let effects = per(ingest, StackKind::NearbyEnemies);
@@ -944,17 +1008,26 @@ fn nearby_enemies(ingest: &mut Ingest<'_>, effects: &[Effect], count: f64, only_
                 (e.value * count).min(NEARBY_LIMIT_TOTAL)
             }
             PerStack::PhysicalReductionIfOnlyOne if only_one => e.value * count.min(1.0),
+            // P6-11gr: per enemy, while at close range.
+            PerStack::AttackSpeedAtCloseRange => e.value * count,
             _ => 0.0,
         };
         if value == 0.0 {
             continue;
         }
         let (quantity, op, all, any) = p.target();
+        let mut conditions = Conditions::none().with_all(all).with_any(any);
+        if p == PerStack::AttackSpeedAtCloseRange {
+            conditions = conditions.with_state(
+                crate::condition::ConditionKey::new(super::conditions::AT_CLOSE_RANGE),
+                true,
+            );
+        }
         ingest.effect(Effect {
             quantity,
             op,
             value,
-            conditions: Conditions::none().with_all(all).with_any(any),
+            conditions,
             source: e.source.clone(),
         });
     }

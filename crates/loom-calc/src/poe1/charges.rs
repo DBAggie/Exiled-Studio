@@ -647,6 +647,18 @@ fn modifiers(ingest: &Ingest<'_>, kind: ChargeKind, value: ChargeValue) -> (f64,
     (sum, first)
 }
 
+/// The maximum power charges (P6-11gr; PoB's `PowerChargesMax`): the
+/// character's `max_power_charges` and the unconditional maximum
+/// modifiers, at least 0. `None` without the constant.
+#[must_use]
+pub fn power_maximum(ingest: &Ingest<'_>, data: &dyn CalcData) -> Option<f64> {
+    let power = CHARGES.iter().find(|c| c.kind == ChargeKind::Power)?;
+    let (more, _) = modifiers(ingest, ChargeKind::Power, ChargeValue::Maximum);
+    #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+    let base = data.character_constant(power.max_stat)? as f64;
+    Some((base + more).max(0.0))
+}
+
 /// Adds the effects of the charges (module docs): from the active config
 /// set's `use` and override inputs and the charge modifiers ingested so
 /// far, so it runs after every other source. The constant effects' source
@@ -922,8 +934,14 @@ mod tests {
             .chain(ROWS.iter().map(|r| r.0))
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        // P6-11gr: the curse limit from the maximum power charges, which
+        // `power_maximum` gives `poe1::gems`; it changes no charge count.
+        let reads_maximum = ["has_curse_limit_equal_to_maximum_power_charges"];
         for id in ids {
-            assert!(!names_a_charge(id), "{id}: revisit poe1::charges");
+            assert!(
+                !names_a_charge(id) || reads_maximum.contains(&id),
+                "{id}: revisit poe1::charges"
+            );
         }
         // The charge modifiers map only to their own quantity, read here,
         // and no other table holds one (the mapping asks them first).

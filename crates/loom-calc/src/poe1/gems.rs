@@ -4656,6 +4656,20 @@ fn apply(
             }
         }
     }
+    // "Your Curse Limit is equal to your maximum Power Charges" (P6-11gr;
+    // `CalcPerform.lua` 3156): the maximum power charges instead.
+    let power_limit = Quantity::Poe1(Poe1Quantity::CurseLimitIsMaximumPowerCharges);
+    let flagged: Vec<bool> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == power_limit && e.op == Op::Flag && e.value != 0.0)
+        .map(|e| e.conditions == Conditions::none())
+        .collect();
+    if flagged.contains(&false) {
+        limit = f64::NAN;
+    } else if !flagged.is_empty() {
+        limit = super::charges::power_maximum(ingest, input.data).unwrap_or(f64::NAN);
+    }
     if limit.is_nan() {
         for c in &curses {
             ingest.reason(UnsupportedReason::UnmodelledSkill {

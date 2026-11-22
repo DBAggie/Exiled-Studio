@@ -6803,6 +6803,16 @@ pub const ROWS: &[Row] = &[
             ),
         ],
     ),
+    // P6-11gr: "Your Curse Limit is equal to your maximum Power Charges"
+    // (`CurseLimitIsMaximumPowerCharges` FLAG).
+    (
+        "has_curse_limit_equal_to_maximum_power_charges",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CurseLimitIsMaximumPowerCharges),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b: "#% more Mana Cost of Skills" (`ManaCost` MORE).
     (
         "hierophant_mana_cost_+%_final",
