@@ -1897,6 +1897,65 @@ fn per_shield_energy_shield(
     )?))
 }
 
+/// Arcane Might's share of the spell damage increases for an attack hit in
+/// `cx` (P6-11hk): the increases that need `SPELL`, which match the hit's
+/// context with `ATTACK` swapped for `SPELL` and not without either,
+/// times the largest [`Poe1Quantity::SpellDamageToAttacks`] over 100.
+/// `None` without the effect. The engine's `SPELL` stands for PoB's
+/// `ModFlag.Spell` and `KeywordFlag.Spell` both; PoB copies only the
+/// first, so a spell keyword's increase is counted here too.
+fn spell_damage_to_attacks(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::SpellDamageToAttacks);
+    let Some(best) = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == q && e.op == Op::Base && matches!(e.conditions.applies(cx), Applies::Yes)
+        })
+        .max_by(|a, b| a.value.total_cmp(&b.value))
+        .cloned()
+    else {
+        return Ok(None);
+    };
+    let neither = cx.flags.without(Flags::ATTACK);
+    let spell_cx = calc.context(neither | Flags::SPELL);
+    let neither_cx = calc.context(neither);
+    let with_spell = sum_in(
+        calc,
+        Quantity::Damage,
+        Op::Increased,
+        &spell_cx,
+        Term::Step("spell-damage-increases"),
+        reasons,
+    )?;
+    let without = sum_in(
+        calc,
+        Quantity::Damage,
+        Op::Increased,
+        &neither_cx,
+        Term::Step("untyped-damage-increases"),
+        reasons,
+    )?;
+    let spell_only = difference(
+        calc,
+        with_spell,
+        without,
+        Term::Step("spell-only-increases"),
+    )?;
+    let share = leaf(calc, best.source.clone(), q, best.value)?;
+    let share = percent(calc, share, Term::Step("arcane-might-share"))?;
+    Ok(Some(phases::product(
+        calc,
+        &[spell_only, share],
+        Term::Step("arcane-might"),
+    )?))
+}
+
 /// The share of a pool's increases a Transfiguration gives as damage
 /// (PoB's `data.misc.Transfiguration`, `Data.lua` 252).
 const TRANSFIGURATION: f64 = 0.3;
@@ -3109,6 +3168,14 @@ fn damage_per_stat(
         let share = phases::constant(calc, "transfiguration", TRANSFIGURATION)?;
         let scaled = phases::product(calc, &[inc, share], Term::Step("transfiguration-scaled"))?;
         out.push(floor(calc, scaled, Term::Step("transfiguration"))?);
+    }
+    // Arcane Might (P6-11hk; `CalcOffence.lua` 618 to 631): each `Damage`
+    // INC whose flags include `Spell` is also an attack's, at the largest
+    // value's percent.
+    if cx.flags.contains(Flags::ATTACK)
+        && let Some(extra) = spell_damage_to_attacks(calc, cx, reasons)?
+    {
+        out.push(extra);
     }
     // Attack damage per 75 of the shield's armour and evasion (P6-11hh).
     let per_shield = Quantity::Poe1(Poe1Quantity::DamagePerShieldDefences);

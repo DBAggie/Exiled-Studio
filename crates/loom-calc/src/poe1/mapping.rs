@@ -3944,6 +3944,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // A shield attack's own damage and added damage
                     // (P6-11he).
                     | Poe1Quantity::ShieldAttackDamage(..)
+                    // Arcane Might (P6-11hk).
+                    | Poe1Quantity::SpellDamageToAttacks
                     | Poe1Quantity::ShieldAddedDamage(..)
                     | Poe1Quantity::RepeatDamage(_)
                     | Poe1Quantity::RepeatPerRepeatDamage
@@ -5847,6 +5849,15 @@ pub const ROWS: &[Row] = &[
             -1.0,
         )],
     ),
+    // P6-11hk: a skill's "#% Arcane Might" (`SkillStatMap.lua` 910).
+    (
+        "active_skill_additive_spell_damage_modifiers_apply_to_attack_damage_at_%_value",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamageToAttacks),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "additional_all_attributes",
         &[
@@ -5914,6 +5925,24 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::Transfiguration(1)),
             Op::Flag,
             1.0,
+        )],
+    ),
+    // P6-11hk: "Attacks have 100% Arcane Might" (`ModParser.lua` 3415).
+    (
+        "additive_spell_damage_modifiers_apply_to_attack_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamageToAttacks),
+            Op::Base,
+            100.0,
+        )],
+    ),
+    // P6-11hk: "Attacks have 150% Arcane Might" (`ModParser.lua` 3415).
+    (
+        "additive_spell_damage_modifiers_apply_to_attack_damage_at_150%_value",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamageToAttacks),
+            Op::Base,
+            150.0,
         )],
     ),
     (

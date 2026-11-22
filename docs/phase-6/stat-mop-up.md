@@ -4375,3 +4375,24 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Three values of `shock-nova-archmage-hierophant.xml` moved toward PoB.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hk: Arcane Might (spell damage increases on attacks)
+
+**Found** (P6-11gm's scan): Kinetic Blast of Clustering's and Kinetic Fusillade's "#% Arcane Might" (`active_skill_additive_spell_damage_modifiers_apply_to_attack_damage_at_%_value`) was a reason in 2 public builds.
+
+**PoB** (`CalcOffence.lua` 618 to 631; `SkillStatMap.lua` 910; `ModParser.lua` 3413 to 3416): with `SpellDamageAppliesToAttacks`, each `Damage` INC whose flags include `ModFlag.Spell` is copied as an attack's at the largest `ImprovedSpellDamageAppliesToAttacks` (`MAX`, 100 without one) over 100.
+
+**The engine:**
+- `Poe1Quantity::SpellDamageToAttacks` (`Base`, the percent). It comes from the skill stat, "Attacks have 100% Arcane Might", and "Attacks have 150% Arcane Might".
+- `hit::spell_damage_to_attacks` adds the spell-only increases at the largest share to an attack hit's damage increase.
+  - The spell-only increases are the hit's context with `ATTACK` swapped for `SPELL`, minus the context without either.
+  - Approximation: the engine's `SPELL` is PoB's `ModFlag.Spell` and `KeywordFlag.Spell` both, so an increase that needs only the spell keyword is copied here and not in PoB. None of the fixtures or builds that moved has one.
+- Not mapped: the wand and retaliation variants (conditions), and "Modifiers to Spell Damage also apply to Attack Damage" (PoB leaves the text unparsed).
+
+**Evidence** (`b-ct`, against P6-11hj's run):
+- **Two new mechanic fixtures**, both matching PoB on every field:
+  - `smite-arcane-might-templar.xml`: 150% with spell, generic, and attack increases;
+  - `smite-arcane-might-largest-templar.xml`: 100% and 150%, so the largest counts.
+- **Public:** 0 unexpected. Ten values of the two Kinetic builds moved toward PoB.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
