@@ -6518,6 +6518,17 @@ pub const ROWS: &[Row] = &[
         "damage_taken_goes_to_mana_%",
         &[(Quantity::Poe1(Poe1Quantity::ManaRecoup), Op::Base, 1.0)],
     ),
+    // P6-11ha: projectile damage as the distance travelled increases
+    // (`Damage` with PoB's `DistanceRamp`): `collect` scales it by the
+    // skill's distance.
+    (
+        "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceRampDamage(true)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 10: "#% increased Damage taken from Damage Over Time"
     // (`DamageTakenOverTime` INC).
     (
@@ -7834,6 +7845,17 @@ pub const ROWS: &[Row] = &[
                 TakenWhen::ProjectileAttack,
                 TakenOf::Type(DamageType::Physical),
             )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11ha: projectile damage as the distance travelled increases
+    // (`Damage` with PoB's `DistanceRamp`): `collect` scales it by the
+    // skill's distance.
+    (
+        "projectile_damage_+%_max_as_distance_travelled_increases",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceRampDamage(false)),
             Op::Base,
             1.0,
         )],

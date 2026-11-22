@@ -4154,3 +4154,30 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Four values of the mine Assassin build moved toward PoB (its random element). Its ignite went from not computed to partial: the fire share lets it ignite, under its other reasons.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ha: projectile damage as the distance travelled increases
+
+**Found** (P6-11gm's scan): reasons, 3 builds each, kept unmapped by `config::DEPENDS_ON` since P3-12:
+- Longshot's "Projectiles gain Damage as they travel farther, dealing up to #% increased Damage with Hits to targets";
+- the Deadeye's Far Shot, "... up to #% more Damage with Hits and Ailments".
+
+**PoB:**
+- **The lines.** `Damage` INC with `ModFlag.Hit` and `ModFlag.Projectile`, and `Damage` MORE on hits and ailments. Each has the `DistanceRamp` tag `{35, 0}, {70, 1}` (`ModParser.lua` 2499, 2644).
+- **The ramp** multiplies the value by 0 up to 35 units, 1 from 70, linear between (`Classes/ModStore.lua` 555 to 570).
+- **The distance** is the skill's `skillDist`: for a melee skill the config's `meleeDistance` (placeholder 15), for any other its `projectileDistance` (placeholder 40), the input or else the placeholder (`CalcActiveSkill.lua` 446 to 451).
+
+**The engine:**
+- `Poe1Quantity::DistanceRampDamage` (`Base`).
+- `collect::distance_ramps` turns each line into `Damage` at the ramp of the main skill's distance: the increased line with `HIT` and `PROJECTILE`, the more line on hits and ailments. A distance of another type is a reason.
+- The two stats left `config::DEPENDS_ON`.
+- Both lines' game texts have two lines, so the fixtures allocate Far Shot (a Ranger Deadeye, path 56856, 28995, 45313) and anoint Longshot.
+
+**Evidence** (`b-ct`, against P6-11gz's run):
+- **Two new mechanic fixtures.** Both match PoB but the base fixture's Q11 floored attack time (DIV-0541 to DIV-0552):
+  - `burning-arrow-far-shot-ranger.xml`: distance 56, so 0.6 of 30% more;
+  - `burning-arrow-longshot-templar.xml`: distance 70, the full 60% increased.
+- **Public:** 0 unexpected. Four values of the Elemental Hit Deadeye build moved toward PoB.
+- **Corpus:** 0 unexpected. Eleven values moved, 8 toward PoB and 3 away.
+  - The away ones are the "Lightning Arrow" build's average damage and two ignites. That build's tree is 3_23, where Far Shot was the old mechanic (PoB's `FarShot` flag: 20% less to 60% more damage over distance), while the engine, with no 3_23 tree pack, reads the 3_29 node.
+  - PoB's own run of that build at distances 35, 40, and 70 shows the gap is the tree version's: ours gains 42% from 35 to 70, PoB's 52%.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

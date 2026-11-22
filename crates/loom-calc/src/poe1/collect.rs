@@ -106,6 +106,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     staff_sockets(input, ingest);
     // Physical damage as a random element (P6-11gz).
     random_gains(build, ingest);
+    // Damage as projectiles travel farther (P6-11ha).
+    distance_ramps(input, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
@@ -1139,6 +1141,96 @@ fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                 crate::condition::ConditionKey::new(super::states::USING_STAFF),
                 true,
             ),
+            source: e.source,
+        });
+    }
+}
+
+/// The distance inputs (`ConfigOptions.lua` 1763, 1764): a melee skill
+/// reads `meleeDistance`, any other `projectileDistance`, the input or its
+/// placeholder (`CalcActiveSkill.lua` 446 to 451); PoB's placeholders
+/// default to these (P6-11ha).
+const DISTANCES: [(&str, f64); 2] = [("meleeDistance", 15.0), ("projectileDistance", 40.0)];
+
+/// PoB's `DistanceRamp` `{35, 0}, {70, 1}` of the projectile damage lines
+/// (`ModParser.lua` 2499, 2644; `Classes/ModStore.lua` 555 to 570): 0 up to
+/// 35, 1 from 70, linear between.
+fn ramp(distance: f64) -> f64 {
+    ((distance - 35.0) / 35.0).clamp(0.0, 1.0)
+}
+
+/// Damage as projectiles travel farther (P6-11ha): each
+/// [`Poe1Quantity::DistanceRampDamage`] effect becomes `Damage` at
+/// [`ramp`] of the main skill's distance (PoB's `skillDist`): the
+/// increased line's with `ModFlag.Hit` and `ModFlag.Projectile`, the more
+/// line's on hits and ailments (`KeywordFlag.Hit`, `KeywordFlag.Ailment`).
+/// A distance of another type is a reason; without a main skill, nothing.
+fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::DistanceRampDamage(_))
+            ) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let build = input.build;
+    let Ok(main) = skill::main_skill(build, input.data, &GemLevels::none()) else {
+        return;
+    };
+    let (name, default) = if main.types.contains("Melee") {
+        DISTANCES[0]
+    } else {
+        DISTANCES[1]
+    };
+    let read =
+        |kind| active_config(build).and_then(|set| super::config::last_input(set, name, kind));
+    let distance = match read(ConfigInputKind::Input).or_else(|| read(ConfigInputKind::Placeholder))
+    {
+        None => default,
+        Some(loom_domain::ConfigValue::Number(n)) => n.value().0,
+        Some(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: name.to_owned(),
+            });
+            return;
+        }
+    };
+    let factor = ramp(distance);
+    for e in lines {
+        let Quantity::Poe1(Poe1Quantity::DistanceRampDamage(more)) = e.quantity else {
+            continue;
+        };
+        let value = e.value * factor;
+        if value == 0.0 {
+            continue;
+        }
+        let (op, conditions) = if more {
+            (
+                Op::More,
+                e.conditions
+                    .clone()
+                    .with_any(crate::condition::Flags::HIT | crate::condition::Flags::AILMENT),
+            )
+        } else {
+            (
+                Op::Increased,
+                e.conditions
+                    .clone()
+                    .with_all(crate::condition::Flags::HIT | crate::condition::Flags::PROJECTILE),
+            )
+        };
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op,
+            value,
+            conditions,
             source: e.source,
         });
     }

@@ -464,6 +464,11 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// "Projectiles gain Damage as they travel farther, dealing up to #%
+    /// increased (`false`) / more (`true`) Damage" (P6-11ha; PoB's `Damage`
+    /// INC or MORE with the `DistanceRamp` tag `{35, 0}, {70, 1}`): `Base`,
+    /// which `collect` scales by the skill's distance.
+    DistanceRampDamage(bool),
     /// "Inflict <Type> Exposure on Hit if you've cast <curse> in the past
     /// 10 seconds" (P6-11gz; PoB's enemy `<Type>Exposure` BASE -10 with the
     /// `SelfCast<Curse>` condition): `Base`, a candidate of [`exposure`]'s
@@ -1421,6 +1426,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::DistanceRampDamage(more) => f.write_str(if *more {
+                "distance-ramp-more"
+            } else {
+                "distance-ramp-increased"
+            }),
             Self::ExposureIfSelfCast(t) => write!(f, "exposure-if-self-cast.{}", t.name()),
             Self::CoveredInRing(ash) => f.write_str(if *ash {
                 "covered-in-ash"
