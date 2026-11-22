@@ -381,6 +381,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11gv: radius jewels that change the passives in their radius (`loom_pipeline::radius_jewels`: the 13 "also grant" stats, Unnatural Instinct's two lines, tattoos copied as PoB); fixtures `ice-nova-radius-also-grant-witch.xml`, `ice-nova-unnatural-instinct-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gv")
 - [x] P6-11gw: flask duration `NoEffect` (recovery only) and instant recovery out of the flask conditions (`flasks::INSTANT_STAT`); fixtures `ice-nova-instant-life-flask-witch.xml`, `ice-nova-life-flask-in-use-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gw")
 - [x] P6-11gx: Arcane Surge per 200 mana spent (`stacks`), the off hand's more attack speed (`hit::attack_rate`), and a Magmatic Strikes fixture; DIV-0528 to DIV-0534 (`docs/phase-6/stat-mop-up.md`, "P6-11gx")
+- [x] P6-11gy: Covered in Ash and Covered in Frost (`damage_taken::covered`: the rings' lines and the config's checks); fixtures `ice-nova-covered-in-frost-witch.xml`, `ice-nova-covered-in-frost-left-ring-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gy")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

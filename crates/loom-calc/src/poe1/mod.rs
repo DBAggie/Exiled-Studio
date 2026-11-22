@@ -452,6 +452,13 @@ pub enum Poe1Quantity {
     /// `ModFlag.Attack`, `OffHandAttack`, the `Attack` skill type): `More`,
     /// read by the off hand's attack rate alone.
     OffHandSpeedMore,
+    /// A ring's "Left Ring slot: Cover Enemies in Ash for # seconds when you
+    /// Ignite them" (`true`) or "Right Ring slot: Cover Enemies in Frost
+    /// ... when you Freeze them" (P6-11gy; PoB's `CoveredInAshEffect` or
+    /// `CoveredInFrostEffect` BASE 20 with `SlotNumber` 1 or 2 and the
+    /// enemy's `Ignited` or `Frozen`): `Base`, read by [`damage_taken`]'s
+    /// covering.
+    CoveredInRing(bool),
     /// Energy shield cannot be recovered above armour (PoB's
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
@@ -1403,6 +1410,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockLucky => f.write_str("block-lucky"),
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
+            Self::CoveredInRing(ash) => f.write_str(if *ash {
+                "covered-in-ash"
+            } else {
+                "covered-in-frost"
+            }),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),

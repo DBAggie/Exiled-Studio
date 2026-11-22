@@ -4107,3 +4107,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Ten values of the Shock Nova build moved, all toward PoB; its speed is now PoB's 8.164.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gy: Covered in Ash and Covered in Frost
+
+**Found** (P6-11gm's scan): the rings' "Left Ring slot: Cover Enemies in Ash for # seconds when you Ignite them" and "Right Ring slot: Cover Enemies in Frost ... when you Freeze them" were reasons (2 builds each). The config's "Is the enemy covered in Ash/Frost?" checks were unmodelled inputs.
+
+**PoB:**
+- **The lines.** `CoveredInAshEffect` or `CoveredInFrostEffect` BASE 20 (the line's number is its duration), with `SlotNumber` 1 or 2 (the item in `Ring 1` or `Ring 2`) and the enemy's `Ignited` or `Frozen`.
+- **The checks.** `conditionEnemyCoveredInAsh` and `...Frost` give BASE 20 (`ConfigOptions.lua` 1980, 1983). The enemy's `Ignited` and `Frozen` come only from `conditionEnemyIgnited` and `conditionEnemyFrozen` (1852, 1898).
+- **The effect.** `CalcPerform.lua` 916 to 923 gives the enemy `FireDamageTaken` (`ColdDamageTaken`) INC `min(effect, 20)`.
+
+**The engine:**
+- `Poe1Quantity::CoveredInRing` (`Base`).
+- **`damage_taken::covered`:** the check's 20, plus 20 for each line in its ring (`collect::items_in_use`) while its ailment's check is on, capped at 20, as `EnemyTypeDamageTaken` INC.
+- **Inputs:** the module now handles the two covering checks and `conditionEnemyFrozen`. That check sets only the enemy's `Frozen`, which no mapped row reads.
+
+**Evidence** (`b-ct`, against P6-11gx's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with a frost ring and the enemy frozen:
+  - `ice-nova-covered-in-frost-witch.xml`: right ring, average damage 1242.75;
+  - `ice-nova-covered-in-frost-left-ring-witch.xml`: left ring, which does not apply, 1035.63.
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected. Five values of one build moved, all toward PoB (its average damage and ignite).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

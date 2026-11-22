@@ -147,6 +147,100 @@ pub const BOSS_INPUT: &str = "enemyIsBoss";
 pub const INTIMIDATED_INPUT: &str = "conditionEnemyIntimidated";
 /// The check that unnerves the enemy.
 pub const UNNERVED_INPUT: &str = "conditionEnemyUnnerved";
+/// "Is the enemy covered in Ash?" (`ConfigOptions.lua` 1980; P6-11gy):
+/// `CoveredInAshEffect` BASE 20.
+pub const COVERED_IN_ASH_INPUT: &str = "conditionEnemyCoveredInAsh";
+/// "Is the enemy covered in Frost?" (1983; P6-11gy): `CoveredInFrostEffect`
+/// BASE 20.
+pub const COVERED_IN_FROST_INPUT: &str = "conditionEnemyCoveredInFrost";
+/// A covering's effect from the config or a ring (PoB's BASE 20), and its
+/// cap (`CalcPerform.lua` 916 to 923: `m_min(effect, 20)`).
+const COVERED_EFFECT: f64 = 20.0;
+/// "Is the enemy Frozen?" (`ConfigOptions.lua` 1898): the enemy's `Frozen`
+/// alone, which only the covering in frost reads (P6-11gy; no mapped row
+/// reads the condition).
+pub const FROZEN_INPUT: &str = "conditionEnemyFrozen";
+
+/// Covered in Ash and Covered in Frost (P6-11gy; `CalcPerform.lua` 916 to
+/// 923): the enemy's fire (cold) damage taken INC `min(effect, 20)`, the
+/// effect the config's check's 20 plus each ring line's 20 that applies:
+/// the ash line in the left ring (`Ring 1`, PoB's `SlotNumber` 1) while
+/// the enemy is ignited, the frost line in the right ring (`Ring 2`)
+/// while it is frozen, each condition its config check's alone (PoB's
+/// enemy `Ignited` and `Frozen`, `ConfigOptions.lua` 1852 and 1898).
+fn covered(input: &crate::input::CalcInput<'_>, set: &ConfigSet, ingest: &mut Ingest<'_>) {
+    let places = super::collect::items_in_use(input.build);
+    for (ash, check_input, ailment_input, ring, ty) in [
+        (
+            true,
+            COVERED_IN_ASH_INPUT,
+            IGNITED_INPUT,
+            "Ring 1",
+            DamageType::Fire,
+        ),
+        (
+            false,
+            COVERED_IN_FROST_INPUT,
+            FROZEN_INPUT,
+            "Ring 2",
+            DamageType::Cold,
+        ),
+    ] {
+        let mut effect = 0.0;
+        let mut source = None;
+        match check(set, check_input) {
+            Ok(true) => {
+                effect += COVERED_EFFECT;
+                source = Some(Source::Config {
+                    input: check_input.to_owned(),
+                });
+            }
+            Ok(false) => {}
+            Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: check_input.to_owned(),
+            }),
+        }
+        let lines: Vec<Source> = ingest
+            .effects()
+            .iter()
+            .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::CoveredInRing(ash)))
+            .map(|e| e.source.clone())
+            .collect();
+        if !lines.is_empty() {
+            match check(set, ailment_input) {
+                Ok(true) => {
+                    for line in lines {
+                        let Source::Item { item, .. } = line else {
+                            continue;
+                        };
+                        let in_ring = places.iter().any(|(id, place)| {
+                            *id == item
+                                && matches!(place, super::collect::ItemPlace::Slot(s) if s == ring)
+                        });
+                        if in_ring {
+                            effect += COVERED_EFFECT;
+                            source.get_or_insert(line);
+                        }
+                    }
+                }
+                Ok(false) => {}
+                Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: ailment_input.to_owned(),
+                }),
+            }
+        }
+        if let (true, Some(source)) = (effect > 0.0, source) {
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(ty)),
+                op: Op::Increased,
+                value: effect.min(COVERED_EFFECT),
+                conditions: Conditions::none(),
+                source,
+            });
+        }
+    }
+}
+
 /// The check that blinds the enemy.
 pub const BLINDED_INPUT: &str = "conditionEnemyBlinded";
 /// The count of the enemy's Withered stacks (P6-11aq).
@@ -396,7 +490,10 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | CONSECRATED_INPUT
         | IGNITED_INPUT
         | CHILLED_SECONDS_INPUT
-        | WITHERED_STACKS_INPUT => true,
+        | WITHERED_STACKS_INPUT
+        | COVERED_IN_ASH_INPUT
+        | COVERED_IN_FROST_INPUT
+        | FROZEN_INPUT => true,
         i if ENEMY_LESS_DAMAGE_INPUTS.contains(&i) => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
@@ -979,6 +1076,7 @@ pub fn damage_taken(
     enemy_states(set, ingest);
     let Some(set) = set else { return };
     conditions(set, ingest);
+    covered(input, set, ingest);
     match shock(set, ingest) {
         Ok(Some((shock, source))) => ingest.effect(Effect {
             source,

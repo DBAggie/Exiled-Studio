@@ -7285,6 +7285,17 @@ pub const ROWS: &[Row] = &[
         "local_flask_skill_mana_cost_+%_during_flask_effect",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Increased, 1.0)],
     ),
+    // P6-11gy: a ring's covering of the enemy (`CoveredIn<Ash|Frost>Effect`
+    // BASE 20, `SlotNumber`, the enemy's ailment): `damage_taken` reads it,
+    // the value 20 (the line's number is its duration).
+    (
+        "local_left_ring_slot_cover_in_ash_for_x_seconds_when_igniting_enemy",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CoveredInRing(true)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11ce: a flask's "When Hit during effect, #% of Life loss from Damage
     // taken occurs over 4 seconds instead" (`LifeLossPrevented` BASE,
     // `UsingFlask`; `poe1::flasks::FLASK_ROWS`).
@@ -7296,6 +7307,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
+    // P6-11gy: a ring's covering of the enemy (`CoveredIn<Ash|Frost>Effect`
+    // BASE 20, `SlotNumber`, the enemy's ailment): `damage_taken` reads it,
+    // the value 20 (the line's number is its duration).
+    (
+        "local_right_ring_slot_cover_in_frost_for_x_seconds_when_freezing_enemy",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CoveredInRing(false)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // from reservation (`CalcPerform.lua` 546), which no modelled
     // modifier reads; [`super::enemy_hit`] reads it for `LifeRecoverable`.
     (
