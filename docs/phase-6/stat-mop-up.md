@@ -3655,3 +3655,26 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
 - **Corpus:** 0 unexpected. Seven values of one Necromancer build moved, all toward PoB. Its spell block (61) and mana regeneration (33.6) now equal PoB's.
 - **Data-parity:** `uncategorized` 0.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gh: a weapon's attack speed per 8% quality
+
+**Found:** `local_attack_speed_+%_per_8%_quality` ("#% increased Attack Speed per 8% Quality", an alternate quality's line) was unmapped, so a reason. It sits on a weapon in 3 builds.
+
+**PoB:**
+- `ModParser.lua` 5756 reads the line as `AlternateQualityLocalAttackSpeedPer8Quality` INC.
+- `Item.lua` 2246 adds it to the weapon's local attack speed as `m_floor(quality / 8 x sum)`, the sum of the weapon's lines. The product is floored once, not the quality steps.
+
+**The engine:**
+- `WeaponValue::AttackSpeedPer8Quality` (`Base`) holds the line, mapped in `mapping.rs`.
+- `collect` turns the weapon's lines into its local `WeaponValue::AttackSpeed` INC, `floor(quality / 8 x sum)`, beside P3-8n's elemental damage per 2% quality.
+
+**Evidence** (`b-ct`, against P6-11gg's run):
+- **Two new mechanic fixtures:** Smite with a magic Rusted Hatchet.
+  - `smite-attack-speed-per-quality-templar.xml`: quality 20 and 3% per 8% quality, so 7.5 floored to 7%.
+  - `smite-attack-speed-per-quality-12-templar.xml`: quality 12 and 2%, so 3%.
+  - Every field matches PoB except those of Q11's rounding. PoB rounds 1.50 x 1.07 = 1.605 to 1.61 (1.55 for 3%). The game floors the attack time to 623 ms (647 ms), so 1.6051 (1.5456).
+  - These are registered as Q11 `game-truth` entries DIV-0496 to DIV-0508, as the base fixture `smite-axe-lines-templar.xml`.
+- **Public:** 0 unexpected. Five values of the Elemental Hit of the Spectrum build moved toward PoB.
+- **Corpus:** 0 unexpected. Four values of one build moved: its speed and DPS toward PoB.
+  - Its energy shield cost per second moved away (138.6 to 140.8, PoB 100.9). It is the cost per attack times the speed, and that build's cost per attack was already above PoB's (40.0 against 28.0) for another reason, not traced here.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

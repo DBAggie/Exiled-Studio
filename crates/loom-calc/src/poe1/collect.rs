@@ -1314,6 +1314,33 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         })
         .cloned()
         .collect();
+    // P6-11gh: "#% increased Attack Speed per 8% Quality": the weapon's
+    // local attack speed, `floor(quality / 8 x sum)` (PoB's `Item.lua`
+    // 2246: the sum of the weapon's lines, the product floored once).
+    let per8: Vec<&Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::AttackSpeedPer8Quality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .collect();
+    if let Some(first) = per8.first() {
+        let source = first.source.clone();
+        let sum: f64 = per8.iter().map(|e| e.value).sum();
+        let inc = (quality / 8.0 * sum).floor();
+        if inc != 0.0 {
+            ingest.effect(Effect {
+                quantity: value(WeaponValue::AttackSpeed),
+                op: Op::Increased,
+                value: inc,
+                conditions: Conditions::none(),
+                source,
+            });
+        }
+    }
     let steps = (quality / 2.0 + 0.0001).floor();
     for e in per {
         if steps * e.value != 0.0 {

@@ -9409,6 +9409,13 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
         "local_attack_speed_+%",
         &[(weapon(WeaponValue::AttackSpeed), Op::Increased)],
     ),
+    // P6-11gh: "#% increased Attack Speed per 8% Quality" (PoB's
+    // `AlternateQualityLocalAttackSpeedPer8Quality`, `ModParser.lua` 5756):
+    // `collect` scales it by the weapon's quality.
+    (
+        "local_attack_speed_+%_per_8%_quality",
+        &[(weapon(WeaponValue::AttackSpeedPer8Quality), Op::Base)],
+    ),
     (
         "local_critical_strike_chance_+%",
         &[(weapon(WeaponValue::CritChance), Op::Increased)],

@@ -1149,6 +1149,11 @@ pub enum WeaponValue {
     /// `Base`; `collect` turns it into the character's elemental damage
     /// times `floor(quality / 2)`.
     ElementalDamagePerQuality,
+    /// "#% increased Attack Speed per 8% Quality" (P6-11gh; an alternate
+    /// quality's): `Base`; `collect` turns it into the weapon's local attack
+    /// speed, `floor(quality / 8 x sum)` (PoB's
+    /// `AlternateQualityLocalAttackSpeedPer8Quality`, `Item.lua` 2246).
+    AttackSpeedPer8Quality,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -1163,6 +1168,7 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::AttackSpeedPer8Quality => f.write_str("attack-speed-per-8-quality"),
             Self::Accuracy => f.write_str("accuracy"),
         }
     }
