@@ -4200,3 +4200,23 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - PoB's run of "Example Light Arrow" with and without its bow mastery: the mastery adds 24.8% there and 25.0% here.
   - The away moves are that build's base gap: 62701 here against 52284 in PoB without the mastery, its tree 3_22.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hc: the enemy's fire resistance against damage over time while stationary
+
+**Found** (P6-11gm's scan): the Chieftain's Ramako, Sun's Light, "Nearby Enemy Monsters' Fire Resistance against Damage over Time is #% while you are Stationary" (`nearby_enemies_fire_dot_resistance_is_%_while_you_are_stationary`), was a reason in 3 builds.
+
+**PoB:** the enemy's `FireResist` OVERRIDE with `ModFlag.Dot` and the player's `Stationary` condition. `calcResistForType` reads `enemyDB:Override(cfg, "FireResist")` in place of the enemy's sum; the maximum and the floor still apply.
+
+**The engine:**
+- `Poe1Quantity::EnemyResistOverride(t)` (`Base`, the value) and `EnemyResistOverrideOn(t)` (`Flag`), both with `Flags::DOT` and `conditions::STATIONARY`, as one `STATE_ROWS` row.
+- `hit::enemy_resistance`: where the flag is on in the context, the override takes the sum's place (exposure included), before the maximum and the floor.
+
+**A data gap found** (for the maintainer): in build 26530219's `PassiveSkills`, Ramako has no stats, nor do Void Beacon, Augury of Penitence, and Unwavering Crusade (the "nearby enemies" ascendancy auras; the game probably grants them as buffs), while tree packs 3_25 to 3_28 and PoB's 3_29 export carry them. A build on 3_29 with these nodes keeps their lines out of the calculation. The fixtures use tree 3_28.
+
+**Evidence** (`b-ct`, against P6-11hb's run):
+- **Two new mechanic fixtures**, both matching PoB on every field:
+  - `ice-nova-ignite-ramako-marauder.xml`: stationary for 2 seconds; PoB's ignite DPS 357.70;
+  - `ice-nova-ignite-ramako-moving-marauder.xml`: not stationary; 149.04.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. Three values moved, all toward PoB (two Chieftain builds' full and ignite DPS).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

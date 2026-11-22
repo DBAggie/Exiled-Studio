@@ -5033,6 +5033,26 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::IGNITED,
         )],
     ),
+    // P6-11hc: "Nearby Enemy Monsters' Fire Resistance against Damage over
+    // Time is #% while you are Stationary" (the enemy's `FireResist`
+    // OVERRIDE with `ModFlag.Dot`, the player's `Stationary`).
+    (
+        "nearby_enemies_fire_dot_resistance_is_%_while_you_are_stationary",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistOverride(DamageType::Fire)),
+                Op::Base,
+                Flags::DOT,
+                conditions::STATIONARY,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::EnemyResistOverrideOn(DamageType::Fire)),
+                Op::Flag,
+                Flags::DOT,
+                conditions::STATIONARY,
+            ),
+        ],
+    ),
     // P6-11fb: "You gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
     // FLAG, `KilledRecently`; `poe1::buffs`).
     (
@@ -11437,6 +11457,24 @@ mod tests {
                         Op::Increased,
                         NONE,
                         conditions::LEECHING,
+                    ),
+                ],
+            ),
+            // P6-11hc: the enemy's fire resistance against damage over time.
+            (
+                "nearby_enemies_fire_dot_resistance_is_%_while_you_are_stationary",
+                vec![
+                    config(
+                        Quantity::Poe1(Poe1Quantity::EnemyResistOverride(DamageType::Fire)),
+                        Op::Base,
+                        Flags::DOT,
+                        conditions::STATIONARY,
+                    ),
+                    config(
+                        Quantity::Poe1(Poe1Quantity::EnemyResistOverrideOn(DamageType::Fire)),
+                        Op::Flag,
+                        Flags::DOT,
+                        conditions::STATIONARY,
                     ),
                 ],
             ),

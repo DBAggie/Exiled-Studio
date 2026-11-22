@@ -3066,11 +3066,29 @@ fn enemy_resistance(
 ) -> Result<Valued, CalcError> {
     let base = enemy.resistances[index].unwrap_or(0.0);
     let resist = leaf(calc, Source::Enemy, Quantity::Resistance(t), base)?;
+    // An override of the resistance where its conditions match (P6-11hc;
+    // `calcResistForType`'s `enemyDB:Override(cfg, <Type>Resist)`): it takes
+    // the sum's place; the maximum and the floor still apply.
+    let on = Quantity::Poe1(Poe1Quantity::EnemyResistOverrideOn(t));
+    let overridden = if phases::has(calc, on) && flag_on(calc, on, cx, reasons)?.is_some() {
+        Some(sum_in(
+            calc,
+            Quantity::Poe1(Poe1Quantity::EnemyResistOverride(t)),
+            Op::Base,
+            cx,
+            Term::Step("enemy-resistance-override"),
+            reasons,
+        )?)
+    } else {
+        None
+    };
     // The enemy's `<Type>Resist` BASE sums its base and the exposure
     // (`calcResistForType`; P3-8k, [`super::exposure`]), only when there
     // is one, so a hit without it keeps its graph.
     let exposure = Quantity::Poe1(Poe1Quantity::EnemyResistance(t));
-    let resist = if phases::has(calc, exposure) {
+    let resist = if let Some(o) = overridden {
+        o
+    } else if phases::has(calc, exposure) {
         let exposed = sum_in(
             calc,
             exposure,

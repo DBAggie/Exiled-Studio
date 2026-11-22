@@ -464,6 +464,14 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// The enemy's resistance to a type overridden (P6-11hc; PoB's enemy
+    /// `<Type>Resist` OVERRIDE, `calcResistForType`): `Base`, the value,
+    /// read with [`Self::EnemyResistOverrideOn`] by the enemy's resistance
+    /// in the contexts its conditions match.
+    EnemyResistOverride(crate::quantity::DamageType),
+    /// Whether [`Self::EnemyResistOverride`] applies in a context: a `Flag`
+    /// with the same conditions.
+    EnemyResistOverrideOn(crate::quantity::DamageType),
     /// "#% increased Projectile Speed" (P6-11hb; PoB's `ProjectileSpeed`
     /// INC): `Increased`, read only when it also applies to bow damage
     /// ([`Self::ProjectileSpeedToBowDamage`]).
@@ -1435,6 +1443,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::EnemyResistOverride(t) => write!(f, "enemy-resist-override.{}", t.name()),
+            Self::EnemyResistOverrideOn(t) => write!(f, "enemy-resist-override-on.{}", t.name()),
             Self::ProjectileSpeed => f.write_str("projectile-speed"),
             Self::ProjectileSpeedToBowDamage => f.write_str("projectile-speed-to-bow-damage"),
             Self::DistanceRampDamage(more) => f.write_str(if *more {
