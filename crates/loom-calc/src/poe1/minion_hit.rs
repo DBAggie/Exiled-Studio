@@ -309,6 +309,7 @@ fn minion_skill<'d>(
         arrow,
         part,
         known_parts: hit::pob_vetted(id, 0),
+        shield: None,
         skill,
     }))
 }

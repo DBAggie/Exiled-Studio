@@ -163,6 +163,10 @@ impl Flags {
     /// A skill of the `Herald` type (PoB's `SkillType.Herald` tag;
     /// P6-11gq).
     pub const SKILL_HERALD: Self = Self(1 << 57);
+    /// A skill of the `RequiresShield` type (PoB's
+    /// `SkillType.RequiresShield` tag; P6-11he: Multistrike's more attack
+    /// speed for Shield Crush).
+    pub const SKILL_REQUIRES_SHIELD: Self = Self(1 << 58);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

@@ -464,6 +464,16 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// A shield attack's own off-hand damage (P6-11he; the skill stats
+    /// `off_hand_local_<minimum|maximum>_added_<type>_damage`, PoB's
+    /// `setOffHand<Type>Min` and `Max`): `Base`, the shield's weapon damage
+    /// when the main skill is a shield attack.
+    ShieldAttackDamage(crate::quantity::DamageType, crate::quantity::Bound),
+    /// A shield attack's added damage per 15 of the shield's own armour
+    /// (mask 1), evasion rating (2), or both summed (3) (P6-11he; PoB's
+    /// `<Type>Min` and `Max` BASE with `PerStat` `ArmourOnWeapon 2`,
+    /// `EvasionOnWeapon 2`, div 15): `Base`, the value per step.
+    ShieldAddedDamage(crate::quantity::DamageType, crate::quantity::Bound, u8),
     /// "#% increased Attack Speed per 150 Accuracy Rating" (P6-11hd; PoB's
     /// `Speed` INC with `PerStat` `Accuracy`): `Base`, the value per step,
     /// read by the attack's rate with the hand's accuracy.
@@ -1447,6 +1457,12 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::ShieldAttackDamage(t, b) => {
+                write!(f, "shield-attack-damage.{}.{}", t.name(), b.name())
+            }
+            Self::ShieldAddedDamage(t, b, mask) => {
+                write!(f, "shield-added-damage.{}.{}.{mask}", t.name(), b.name())
+            }
             Self::AttackSpeedPerAccuracy => f.write_str("attack-speed-per-accuracy"),
             Self::EnemyResistOverride(t) => write!(f, "enemy-resist-override.{}", t.name()),
             Self::EnemyResistOverrideOn(t) => write!(f, "enemy-resist-override-on.{}", t.name()),

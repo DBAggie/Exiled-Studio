@@ -1405,6 +1405,30 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
     hands
 }
 
+/// The shield in the weapon set in use's off hand (P6-11he: the item a
+/// shield attack hits with), when its base is known to be one.
+#[must_use]
+pub fn shield(input: &CalcInput<'_>) -> Option<ItemId> {
+    let set = active_item_set(input.build)?;
+    let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
+    set.slots.typed().find_map(|entry| {
+        let slot = entry.slot.as_str();
+        let id = entry.item?;
+        if id.0 == 0
+            || !slot_in_use(slot, second)
+            || slot.strip_suffix(" Swap").unwrap_or(slot) != "Weapon 2"
+        {
+            return None;
+        }
+        let base = input
+            .options
+            .item_bases
+            .get(&id)
+            .and_then(|name| name.find(input.data));
+        (Held::of(base) == Held::Shield).then_some(id)
+    })
+}
+
 /// The item in the main hand: a weapon's base properties and local lines
 /// act on the weapon ([`weapon`]); another item's lines are global, and
 /// its being in the main hand is a reason.

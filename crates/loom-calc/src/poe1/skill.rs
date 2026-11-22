@@ -416,7 +416,7 @@ pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
 /// Skills", "Mark Skills"; P6-11dw: Blood and Sand's melee skills; P6-11eo:
 /// "Curse Skills", PoB's curse keyword). A test checks the names against
 /// the real bundle.
-pub const SKILL_TYPE_FLAGS: [(&str, Flags); 7] = [
+pub const SKILL_TYPE_FLAGS: [(&str, Flags); 8] = [
     ("AppliesCurse", Flags::KEYWORD_CURSE),
     // P6-11ex: "Travel Skills".
     ("Travel", Flags::SKILL_TRAVEL),
@@ -426,6 +426,8 @@ pub const SKILL_TYPE_FLAGS: [(&str, Flags); 7] = [
     ("Melee", Flags::SKILL_MELEE),
     // P6-11gq: "Herald Skills deal #% increased Damage".
     ("Herald", Flags::SKILL_HERALD),
+    // P6-11he: Multistrike's more attack speed for shield skills.
+    ("RequiresShield", Flags::SKILL_REQUIRES_SHIELD),
 ];
 /// The skill type of a totem skill (the game's `ActiveSkillType`).
 pub const TOTEM_TYPE: &str = "SummonsTotem";

@@ -4238,3 +4238,33 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - That build attacks with its off hand and has 5037 accuracy here against PoB's 4212, so 33 steps against 28. Its speed was already above PoB's (2.57 against 2.0 without the notable, PoB's run of the build with the node removed).
   - PoB's run with and without the node: the speed gains ×1.194 there and ×1.225 here, the difference being the accuracy gap.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11he: shield attacks
+
+**Found** (P6-11gm's scan): the shield attack skills' own stats were reasons in 4 builds (`off_hand_local_<minimum|maximum>_added_physical_damage`, and the added damage per 15 of the shield's armour and evasion). The engine computed those skills with the main hand's weapon.
+
+**PoB:**
+- **The skill** (`CalcActiveSkill.lua` 269 to 279): a `shieldAttack` skill needs a shield, attacks with the off hand only (`weapon2Attack`), its weapon flags 0, and the main hand does not decide between melee and projectile.
+- **The weapon** (`CalcOffence.lua` 1957 to 1983): a shield has no weapon data (`Item.lua` 2488), so the off hand's source is the skill's `setOffHand<Type>Min` and `Max`, the level's `critChance`, and `1000 / attackTime`. No local increase or quality reaches it.
+- **The added damage** (`SkillStatMap.lua` 1675 to 1697): `<Type>Min` and `Max` BASE with `PerStat` `ArmourOnWeapon 2`, `EvasionOnWeapon 2`, or both, div 15. Those are the shield's own armour and evasion before global modifiers (`CalcDefence.lua` 496, 500), and the damage is added damage (times damage effectiveness).
+- **Multistrike and Greater Multistrike** (`SkillStatMap.lua` 297; `sup_str.lua` 3960 to 3974, 4044 to 4060, 4113 to 4130): the repeat count, the more attack speed, and each repeat's damage each have a second entry for `SkillType.RequiresShield`.
+
+**The engine:**
+- `hit::attack_skill` takes a shield attack (`shieldAttack` in PoB's skill flags) with the shield in the off hand (`collect::shield`); its part comes from `attack_part`, split out of `attack_skill`.
+- `hit::shield_weapon_data` is the weapon: `Poe1Quantity::ShieldAttackDamage`, the level's crit (no `skill-crit-chance` reason), and `1000 / attackTime`.
+- `hit::shield_added` adds `Poe1Quantity::ShieldAddedDamage` per 15 of `phases::piece` (the shield's own armour, evasion, or both) to the added damage.
+- `Flags::SKILL_REQUIRES_SHIELD` (from the `RequiresShield` type) carries the Multistrike entries.
+- `attack_is_melee_override` is `NoEffect` (PoB's stat map has no entry; the melee flag is its skill data's).
+- The shield skills stay `Partial` (`pob-skill-data`): Shield Crush's distance damage (`MeleeProximity`), Spectral Shield Throw's shards and chains.
+
+**Evidence** (`b-ct`, against P6-11hd's run):
+- **Three new mechanic fixtures**, all matching PoB on every field:
+  - `shield-crush-templar.xml`: a Splendid Round Shield of quality 20;
+  - `shield-crush-defences-templar.xml`: the shield's own armour and evasion raised, while a global armour line does not reach the added damage;
+  - `shield-crush-multistrike-templar.xml`: Multistrike's count, speed, and repeat damage.
+- Spectral Shield Throw with the same shield matches PoB too (`local`, not a fixture: none of its fields is `Complete`).
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. 32 values moved, 26 toward PoB and 6 away.
+  - The away ones are two Shield Crush builds' speed, mana per second, and one build's crit. Their old values came from the main-hand weapon.
+  - A PoB probe of one build's off-hand `Speed` mods (`local/p6/tools/pob_tab.lua`) shows the mores equal here (1.5 x 0.9 x 1.1). The increase lacks Soul Eater's 210% (its item stats are reasons) and 5% of the per-accuracy line (P6-11hd's accuracy gap).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

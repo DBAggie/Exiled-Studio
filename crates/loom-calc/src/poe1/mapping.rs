@@ -1453,13 +1453,23 @@ pub const HIT_ROWS: &[HitRow] = &[
     // alternative is not modelled: no such skill is a modelled attack).
     (
         "base_melee_attack_repeat_count",
-        &[(
-            Quantity::Poe1(Poe1Quantity::RepeatCount),
-            Op::Base,
-            1.0,
-            NONE,
-            Flags::WEAPON_MELEE.union(Flags::UNARMED),
-        )],
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatCount),
+                Op::Base,
+                1.0,
+                NONE,
+                Flags::WEAPON_MELEE.union(Flags::UNARMED),
+            ),
+            // P6-11he: PoB's second entry, for skills that require a shield.
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatCount),
+                Op::Base,
+                1.0,
+                Flags::SKILL_REQUIRES_SHIELD,
+                NONE,
+            ),
+        ],
     ),
     // P6-11ef: "Damage Penetrates #% of Enemy Elemental Resistances"
     // (`ElementalPenetration` BASE).
@@ -2475,33 +2485,63 @@ pub const HIT_ROWS: &[HitRow] = &[
     // `RepeatThreeDamage` MORE with a melee weapon or unarmed).
     (
         "multistrike_damage_+%_final_on_first_repeat",
-        &[(
-            Quantity::Poe1(Poe1Quantity::RepeatDamage(1)),
-            Op::More,
-            1.0,
-            NONE,
-            Flags::WEAPON_MELEE.union(Flags::UNARMED),
-        )],
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(1)),
+                Op::More,
+                1.0,
+                NONE,
+                Flags::WEAPON_MELEE.union(Flags::UNARMED),
+            ),
+            // P6-11he: PoB's second entry, for skills that require a shield.
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(1)),
+                Op::More,
+                1.0,
+                Flags::SKILL_REQUIRES_SHIELD,
+                NONE,
+            ),
+        ],
     ),
     (
         "multistrike_damage_+%_final_on_second_repeat",
-        &[(
-            Quantity::Poe1(Poe1Quantity::RepeatDamage(2)),
-            Op::More,
-            1.0,
-            NONE,
-            Flags::WEAPON_MELEE.union(Flags::UNARMED),
-        )],
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(2)),
+                Op::More,
+                1.0,
+                NONE,
+                Flags::WEAPON_MELEE.union(Flags::UNARMED),
+            ),
+            // P6-11he: PoB's second entry, for skills that require a shield.
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(2)),
+                Op::More,
+                1.0,
+                Flags::SKILL_REQUIRES_SHIELD,
+                NONE,
+            ),
+        ],
     ),
     (
         "multistrike_damage_+%_final_on_third_repeat",
-        &[(
-            Quantity::Poe1(Poe1Quantity::RepeatDamage(3)),
-            Op::More,
-            1.0,
-            NONE,
-            Flags::WEAPON_MELEE.union(Flags::UNARMED),
-        )],
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(3)),
+                Op::More,
+                1.0,
+                NONE,
+                Flags::WEAPON_MELEE.union(Flags::UNARMED),
+            ),
+            // P6-11he: PoB's second entry, for skills that require a shield.
+            (
+                Quantity::Poe1(Poe1Quantity::RepeatDamage(3)),
+                Op::More,
+                1.0,
+                Flags::SKILL_REQUIRES_SHIELD,
+                NONE,
+            ),
+        ],
     ),
     // P6-11fa: "+# Mines thrown" (`SkillStatMap.lua` 1848: `MineThrowCount`
     // BASE).
@@ -3188,13 +3228,24 @@ pub const HIT_ROWS: &[HitRow] = &[
     ),
     (
         "support_multiple_attacks_melee_attack_speed_+%_final",
-        &[(
-            Quantity::Speed,
-            Op::More,
-            1.0,
-            Flags::ATTACK,
-            Flags::WEAPON_MELEE.union(Flags::UNARMED),
-        )],
+        &[
+            (
+                Quantity::Speed,
+                Op::More,
+                1.0,
+                Flags::ATTACK,
+                Flags::WEAPON_MELEE.union(Flags::UNARMED),
+            ),
+            // P6-11he: PoB's second entry, for skills that require a
+            // shield (both apply to one that has both).
+            (
+                Quantity::Speed,
+                Op::More,
+                1.0,
+                Flags::ATTACK.union(Flags::SKILL_REQUIRES_SHIELD),
+                Flags::NONE,
+            ),
+        ],
     ),
     // P6-11dn: Vicious Projectiles (PoB `sup_dex.lua` 4360 to 4372): chaos
     // damage over time MORE (`ChaosDamage` with `KeywordFlag.ChaosDot`).
@@ -3839,6 +3890,10 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::DoubleDamageChance
                     // The repeats (P6-11aj).
                     | Poe1Quantity::RepeatCount
+                    // A shield attack's own damage and added damage
+                    // (P6-11he).
+                    | Poe1Quantity::ShieldAttackDamage(..)
+                    | Poe1Quantity::ShieldAddedDamage(..)
                     | Poe1Quantity::RepeatDamage(_)
                     | Poe1Quantity::RepeatPerRepeatDamage
                     | Poe1Quantity::RepeatFinalDoubleDamageChance
@@ -7708,6 +7763,182 @@ pub const ROWS: &[Row] = &[
         "number_of_additional_curses_allowed",
         &[(Quantity::Poe1(Poe1Quantity::CurseLimit), Op::Base, 1.0)],
     ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_maximum_added_cold_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Cold,
+                Bound::Max,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_maximum_added_fire_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Fire,
+                Bound::Max,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_maximum_added_physical_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Physical,
+                Bound::Max,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_minimum_added_cold_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Cold,
+                Bound::Min,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_minimum_added_fire_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Fire,
+                Bound::Min,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's own off-hand damage (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_local_minimum_added_physical_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(
+                DamageType::Physical,
+                Bound::Min,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_maximum_added_cold_damage_per_15_shield_evasion",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Cold,
+                Bound::Max,
+                2,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_maximum_added_fire_damage_per_15_shield_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Fire,
+                Bound::Max,
+                1,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_maximum_added_physical_damage_per_15_shield_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Physical,
+                Bound::Max,
+                1,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Physical,
+                Bound::Max,
+                3,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_minimum_added_cold_damage_per_15_shield_evasion",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Cold,
+                Bound::Min,
+                2,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_minimum_added_fire_damage_per_15_shield_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Fire,
+                Bound::Min,
+                1,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_minimum_added_physical_damage_per_15_shield_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Physical,
+                Bound::Min,
+                1,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    // P6-11he: a shield attack's added damage per 15 on the shield (PoB's `SkillStatMap.lua`).
+    (
+        "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(
+                DamageType::Physical,
+                Bound::Min,
+                3,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11n: "#% less Damage taken from Damage Over Time" (`DamageTakenOverTime`
     // MORE).
     (
@@ -8253,6 +8484,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11at: "Herald Skills have #% increased Area of Effect"
     // (`AreaOfEffect` INC, `SkillType.Herald`): area.
     ("area_of_effect_+%_with_herald_skills", "area"),
+    // P6-11he: a skill's "attack is melee" stat (Shield Crush's): PoB's stat
+    // map has no entry; the melee flag is its skill data's, which the
+    // engine reads.
+    ("attack_is_melee_override", "skill-flags"),
     // P6-11ba: chances to blind, taunt, or hinder on hit (yours and your
     // minions'), the Abyss jewels' additions: PoB parses none of these lines,
     // and the enemy is Blinded only by the config's condition.

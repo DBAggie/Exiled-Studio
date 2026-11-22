@@ -115,7 +115,7 @@
 
 use std::collections::BTreeMap;
 
-use loom_domain::{Build, ItemId};
+use loom_domain::{Build, ItemId, SocketGroup};
 
 use super::collect;
 use super::enemy::{self, Enemy, EnemyProblem};
@@ -455,6 +455,10 @@ pub struct AttackSkill<'d> {
     /// ([`pob_vetted`]); without PoB's data, the part's flags are the
     /// game's (`Melee` type, `is_area_damage`).
     pub known_parts: bool,
+    /// A shield attack (P6-11he; PoB's `shieldAttack`): the level's attack
+    /// time in milliseconds; `weapon` is then the shield, the attack's only
+    /// hand the off hand.
+    pub shield: Option<i64>,
 }
 
 impl AttackSkill<'_> {
@@ -606,6 +610,34 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
+    // A shield attack (P6-11he; PoB's `shieldAttack` flag,
+    // `CalcActiveSkill.lua` 269 to 279): the skill needs a shield and
+    // attacks with the off hand only, its weapon flags 0, its weapon the
+    // skill's own values ([`shield_weapon_data`]); the main hand's weapon
+    // does not decide between melee and projectile.
+    if super::pob_skill::skill(&effect.id).is_some_and(|p| p.flags.contains(&"shieldAttack")) {
+        let shield = collect::shield(input)?;
+        let (part, known_parts) = attack_part(&skill, main_group, data)?;
+        let arrow = skill::instance(effect, gem.level, gem.quality, data)
+            .stats
+            .iter()
+            .any(|(s, v)| s == ARROW_STAT && *v != 0);
+        return Some(AttackSkill {
+            skill,
+            group,
+            level,
+            attack_speed_multiplier: level_row.attack_speed_multiplier,
+            weapon: shield,
+            weapon_flags: Flags::NONE,
+            off_weapon: None,
+            off_weapon_flags: Flags::NONE,
+            double_hits: false,
+            arrow,
+            part,
+            known_parts,
+            shield: Some(level_row.attack_time),
+        });
+    }
     let hands = collect::hands(input);
     let (weapon, base) = hands.main.clone()?;
     // PoB disables a skill its weapon cannot use (`weaponTypes`,
@@ -644,31 +676,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         .stats
         .iter()
         .any(|(s, v)| s == ARROW_STAT && *v != 0);
-    // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
-    // is 1 (P6-6b: PoB's parts and flags from its skill data).
-    let wanted = main_group
-        .gems
-        .typed()
-        .nth(gem.gem)
-        .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
-        .and_then(|v| v.parse::<usize>().ok())
-        .unwrap_or(1);
-    // Part 0: PoB would index a part that does not exist.
-    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
-        return None;
-    }
-    let (mut part, known_parts) = match pob_part(&effect.id, wanted) {
-        Some((p, index)) => (p, pob_vetted(&effect.id, index)),
-        None => (
-            SkillPart {
-                name: "",
-                melee: has("Melee"),
-                area: is_area_damage(&skill, data),
-                projectile: false,
-            },
-            false,
-        ),
-    };
+    let (mut part, known_parts) = attack_part(&skill, main_group, data)?;
     // The main-hand weapon decides between melee and projectile
     // (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears the
     // projectile flag, a ranged one (bow, wand: not melee in PoB's
@@ -687,6 +695,44 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         arrow,
         part,
         known_parts,
+        shield: None,
+    })
+}
+
+/// The attack's part (PoB's `skillPart`, P6-6b) and whether PoB's data of
+/// it is read in full; `None` for part 0 of a skill with parts.
+fn attack_part(
+    skill: &MainSkill<'_>,
+    main_group: &SocketGroup,
+    data: &dyn CalcData,
+) -> Option<(SkillPart, bool)> {
+    let effect = skill.effect();
+    let gem = skill.active_gem;
+    let has = |t: &str| skill.types.contains(t);
+    // PoB: `m_min(#parts, skillPart or 1)`; an empty or missing attribute
+    // is 1 (P6-6b: PoB's parts and flags from its skill data).
+    let wanted = main_group
+        .gems
+        .typed()
+        .nth(gem.gem)
+        .and_then(|g| skill::attribute(&g.attributes, "skillPart"))
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(1);
+    // Part 0: PoB would index a part that does not exist.
+    if wanted == 0 && super::pob_skill::skill(&effect.id).is_some_and(|p| !p.parts.is_empty()) {
+        return None;
+    }
+    Some(match pob_part(&effect.id, wanted) {
+        Some((p, index)) => (p, pob_vetted(&effect.id, index)),
+        None => (
+            SkillPart {
+                name: "",
+                melee: has("Melee"),
+                area: is_area_damage(skill, data),
+                projectile: false,
+            },
+            false,
+        ),
     })
 }
 
@@ -1273,7 +1319,10 @@ fn hand_rate(
     let cx = calc.context(flags);
     let mut unvetted = unvetted.clone();
     let mut weapon_reasons = Reasons::new();
-    let weapon = weapon_data(calc, item, hand, &mut weapon_reasons)?;
+    let weapon = match attack.shield {
+        Some(ms) => shield_weapon_data(calc, attack, ms, &mut weapon_reasons)?,
+        None => weapon_data(calc, item, hand, &mut weapon_reasons)?,
+    };
     unvetted.extend(&weapon_reasons);
     let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, hand, &cx)?;
     speed_reasons.extend(&unvetted);
@@ -1411,13 +1460,20 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     // (`source.CritChance`); a level's own attack crit chance replaces the
     // off hand's weapon crit (`skillData.CritChance`), which is not
     // modelled: a reason for either hand.
-    if attack.level.attack_crit_chance != 0 {
+    // A shield attack's crit is the level's (P6-11he, [`shield_weapon_data`]).
+    if attack.level.attack_crit_chance != 0 && attack.shield.is_none() {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: "skill-crit-chance",
         });
     }
-    let main_rate = hand_rate(calc, attack, Hand::Main, attack.weapon, flags, &unvetted)?;
+    // A shield attack hits with the off hand only (P6-11he).
+    let hand = if attack.shield.is_some() {
+        Hand::Off
+    } else {
+        Hand::Main
+    };
+    let main_rate = hand_rate(calc, attack, hand, attack.weapon, flags, &unvetted)?;
     let Some(off_item) = attack.off_weapon else {
         let speed = main_rate.speed.0;
         let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
@@ -1697,6 +1753,119 @@ pub(super) struct WeaponData {
     /// Critical strike chance, percent.
     pub(super) crit: Valued,
 }
+
+/// A shield attack's weapon (P6-11he; `CalcOffence.lua` 1957 to 1983): a
+/// shield has no weapon data (`Item.lua` 2488), so the off hand's source is
+/// the skill's own damage ([`Poe1Quantity::ShieldAttackDamage`], PoB's
+/// `setOffHand<Type>Min` and `Max`), the level's crit chance
+/// (`skillData.CritChance`), and `1000 / attackTime`.
+fn shield_weapon_data(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    attack_time: i64,
+    reasons: &mut Reasons,
+) -> Result<WeaponData, CalcError> {
+    let cx = calc.context(Flags::NONE);
+    let mut damage = [None; 5];
+    for (slot, t) in damage.iter_mut().zip(TYPES) {
+        let mut range = Vec::new();
+        for b in Bound::ALL {
+            let q = Quantity::Poe1(Poe1Quantity::ShieldAttackDamage(t, b));
+            range.push(sum_in(calc, q, Op::Base, &cx, Term::Base, reasons)?);
+        }
+        if range[0].value > 0.0 && range[1].value > 0.0 {
+            *slot = Some([range[0], range[1]]);
+        }
+    }
+    if attack_time <= 0 {
+        reasons
+            .indeterminate
+            .insert(IndeterminateReason::MissingData {
+                table: "granted_effects_per_level",
+                key: "attack_time".to_owned(),
+            });
+    }
+    #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+    let ms = attack_time as f64;
+    let ms = leaf(
+        calc,
+        attack.source(),
+        Quantity::Poe1(Poe1Quantity::Weapon(WeaponValue::AttackTime)),
+        ms,
+    )?;
+    let thousand = phases::constant(calc, "milliseconds", 1000.0)?;
+    let rate = quotient(calc, thousand, ms, Term::Step("weapon-rate"))?;
+    #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+    let crit = attack.level.attack_crit_chance as f64 / 100.0;
+    let crit = leaf(
+        calc,
+        attack.source(),
+        Quantity::Poe1(Poe1Quantity::SkillCritChance),
+        crit,
+    )?;
+    Ok(WeaponData { damage, rate, crit })
+}
+
+/// A shield attack's added damage of type `ty` per 15 of the shield's own
+/// armour, evasion rating, or both (P6-11he; PoB's `PerStat` with
+/// `ArmourOnWeapon 2` and `EvasionOnWeapon 2`, the shield's armour and
+/// evasion before global modifiers, `CalcDefence.lua` 496, 500); `None`
+/// when no effect gives any, so other hits keep their graph.
+fn shield_added(
+    calc: &mut Calc<'_>,
+    ty: DamageType,
+    b: Bound,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    use super::{ArmourSlot, Defence};
+    let mut terms = Vec::new();
+    for mask in [1_u8, 2, 3] {
+        let q = Quantity::Poe1(Poe1Quantity::ShieldAddedDamage(ty, b, mask));
+        if !phases::has(calc, q) {
+            continue;
+        }
+        let mut parts = Vec::new();
+        if mask & 1 != 0 {
+            parts.push(phases::piece(
+                calc,
+                ArmourSlot::Weapon2,
+                Defence::Armour,
+                reasons,
+            )?);
+        }
+        if mask & 2 != 0 {
+            parts.push(phases::piece(
+                calc,
+                ArmourSlot::Weapon2,
+                Defence::Evasion,
+                reasons,
+            )?);
+        }
+        let stat = phases::total(calc, &parts, Term::Step("shield-defences"))?;
+        terms.push(per_value(
+            calc,
+            q,
+            stat,
+            SHIELD_DEFENCE_STEP,
+            None,
+            cx,
+            reasons,
+        )?);
+    }
+    if terms.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(phases::total(
+        calc,
+        &terms,
+        Term::Step("shield-added-damage"),
+    )?))
+}
+
+/// The shield's armour or evasion per step of a shield attack's added
+/// damage (PoB's `div = 15`).
+const SHIELD_DEFENCE_STEP: f64 = 15.0;
 
 /// The values of the weapon in `hand` (module docs, step 8).
 pub(super) fn weapon_data(
@@ -4159,6 +4328,12 @@ fn passes(
                 Term::Step("added-damage"),
                 reasons,
             )?;
+            let added = match shield_added(calc, ty, b, &cx, reasons)? {
+                Some(extra) => {
+                    phases::total(calc, &[added, extra], Term::Step("added-with-shield"))?
+                }
+                None => added,
+            };
             // `source x baseMultiplier + added x damageEffectiveness`.
             let from_skill =
                 phases::product(calc, &[source, base_multiplier], Term::Step("from-skill"))?;
