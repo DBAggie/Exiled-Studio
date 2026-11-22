@@ -3730,3 +3730,23 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
   - Eleven of its values moved toward PoB, among them its maximum hits taken and leech maximums.
   - Four moved away (life regeneration, the effective health pool, and its hit counts). They were already below PoB's and fall with life.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gk: attack and cast speed while Focused
+
+**Found:** `attack_and_cast_speed_+%_while_focused` ("#% increased Attack and Cast Speed while Focused") was unmapped, a reason, in 3 builds. The config's "Are you Focused?" (`conditionFocused`) set only a named condition, so it sat in `config::NAMED_ONLY`.
+
+**PoB:**
+- `ModParser.lua` 1731 reads "while focused" as the condition `Focused`, and the line as `Speed` INC with it.
+- The condition comes only from the config check (`ConfigOptions.lua` 992). No skill or modifier PoB reads sets it.
+
+**The engine:**
+- `conditions::FOCUSED`, settled from `conditionFocused` in `conditions::CHECKS`. The input left `config::NAMED_ONLY`.
+- The stat is a `STATE_ROWS` row: `Speed` INC with that condition.
+
+**Evidence** (`b-ct`, against P6-11gj's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with "20% increased Attack and Cast Speed while Focused":
+  - `ice-nova-speed-while-focused-witch.xml`: the check on, cast rate 1.71;
+  - `ice-nova-speed-while-focused-off-witch.xml`: the check off, 1.43.
+- **Public:** 0 unexpected. Eight values of the Shock Nova build moved, all toward PoB; its speed is 7.90, PoB 8.16.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

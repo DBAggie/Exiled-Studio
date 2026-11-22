@@ -4082,6 +4082,12 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_SHIELD,
         )],
     ),
+    // P6-11gk: "#% increased Attack and Cast Speed while Focused" (`Speed`
+    // INC, `Focused`, `ModParser.lua` 1731).
+    (
+        "attack_and_cast_speed_+%_while_focused",
+        &[(Quantity::Speed, Op::Increased, NONE, conditions::FOCUSED)],
+    ),
     (
         "attack_and_cast_speed_+%_while_leeching",
         &[(Quantity::Speed, Op::Increased, NONE, conditions::LEECHING)],
@@ -11036,6 +11042,11 @@ mod tests {
                         conditions::LEECHING,
                     ),
                 ],
+            ),
+            // P6-11gk: focused.
+            (
+                "attack_and_cast_speed_+%_while_focused",
+                vec![(Quantity::Speed, Op::Increased, NONE, conditions::FOCUSED)],
             ),
             (
                 "attack_and_cast_speed_+%_while_leeching",

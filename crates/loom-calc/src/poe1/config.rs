@@ -291,7 +291,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
-    ("conditionFocused", &["Condition:Focused"]),
     ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
     ("conditionHitRecently", &["Condition:HitRecently"]),
     (

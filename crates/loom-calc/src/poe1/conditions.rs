@@ -33,6 +33,8 @@
 //! - `buffArcaneSurge`: `Condition:ArcaneSurge` (1002), which
 //!   `CalcPerform.lua` (686) turns into `AffectedByArcaneSurge` (the buff's
 //!   own effect is [`super::buffs`]');
+//! - `conditionFocused`: `Focused` (992; P6-11gk), which no skill or
+//!   modifier PoB reads sets;
 //! - `conditionUsedMinionSkillRecently`: `UsedMinionSkillRecently` (1526;
 //!   P6-11cm), which `CalcPerform.lua` (249) also sets from the main skill
 //!   ([`used_minion_skill`]). Its implied `UsedSkillRecently` is the UI's.
@@ -66,6 +68,10 @@ pub const ATTACKED_RECENTLY: &str = "AttackedRecently";
 /// "if you've Cast a Spell Recently" (PoB's `CastSpellRecently`; P6-11em):
 /// its check (1489), or a main skill that is a spell and no attack.
 pub const CAST_SPELL_RECENTLY: &str = "CastSpellRecently";
+
+/// "while Focused" (PoB's `Focused`; P6-11gk): its check alone
+/// (`ConfigOptions.lua` 992).
+pub const FOCUSED: &str = "Focused";
 
 /// "if you've used a Life Flask in the past 10 seconds", "during effect of
 /// any Life Flask" (PoB's `UsingLifeFlask`; P6-11cq): from the active
@@ -250,6 +256,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyMaimed", ENEMY_MAIMED),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
+    // P6-11gk: focused.
+    ("conditionFocused", FOCUSED),
     ("conditionFullLife", FULL_LIFE),
     // P6-11ei: being ignited.
     ("conditionIgnited", IGNITED),
