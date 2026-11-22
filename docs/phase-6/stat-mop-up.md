@@ -3546,3 +3546,25 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - Three builds' mana regeneration, one now equal (81.9).
   - One build's average damage, ignite, combined DPS, total DPS, and life leech from the damage per golem.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gd: Trinity Support's resonance
+
+**PoB** (`sup_int.lua` 6592 to 6597; `ConfigOptions.lua` 708):
+- **The count:** the config's `configResonanceCount` ("Lowest Resonance Count", shown with Trinity) sets `Multiplier:ResonanceCount` to the input clamped to 0 to 50. Nothing is set at 0 or without the input.
+- **The damage:** `elemental_damage_+%_final_per_5_lowest_resonance` (3 per 5) is `ElementalDamage` MORE per `ResonanceCount` with `div` 5, so `floor(n / 5 + 0.0001)` times.
+- **The penetration:** `damage_penetrates_%_elemental_resistances_while_all_resonance_is_25` is `ElementalPenetration` BASE with a `MultiplierThreshold` of 25.
+- Both are the supported skill's, so the ignite takes the more damage too.
+
+**The engine:**
+- **`poe1::stacks`:** `StackKind::Resonance` with the two rows, read from the config's input (`stacks::RESONANCE_INPUT`, moved out of `config::NAMED_ONLY`). `stacks::resonance` applies the more damage per 5, and from 25 the penetration of fire, cold, and lightning (`PerStack::ElementalPenetrationIfAll25`).
+- An input that is not a number is a reason under its input, as the other counts.
+
+**Evidence** (`b-ct`, against P6-11gc's run):
+- **Two new mechanic fixtures** from the Ice Nova ignite fixture, with Trinity Support on Ice Nova. All compared fields match in each:
+  - `ice-nova-ignite-trinity-witch.xml`, at a resonance of 50: average damage 1823.15, ignite 181.35;
+  - `ice-nova-ignite-trinity-20-witch.xml`, at 20: average damage 1190.01, ignite 156.16. No penetration.
+- **Public:** 0 unexpected. Four values moved toward PoB (the Elemental Hit Deadeye build's damage), none away.
+- **Corpus:** 0 unexpected. Ten values moved, eight toward PoB.
+  - The two moved away are two builds' ignite, which was above PoB's before this step (1658.6 against 1482.3, and 1951.0 against 2175.0, which it now passes).
+  - The fixtures show PoB's ignite takes the more damage, so both builds' remaining gap is from something else.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -107,6 +107,9 @@ pub enum StackKind {
     BrandsAttached,
     /// Golems summoned (P6-11gc; PoB's `ActiveGolemLimit`, [`golems`]).
     Golems,
+    /// Trinity's lowest resonance (P6-11gd; PoB's
+    /// `Multiplier:ResonanceCount`, the config's `configResonanceCount`).
+    Resonance,
 }
 
 impl StackKind {
@@ -127,6 +130,7 @@ impl StackKind {
             Self::NearbyCorpses => "nearby-corpses",
             Self::BrandsAttached => "brands-attached",
             Self::Golems => "golems",
+            Self::Resonance => "resonance",
         }
     }
 }
@@ -220,6 +224,11 @@ pub enum PerStack {
     /// The enemy's increased damage taken (`DamageTaken` INC on the enemy;
     /// P6-11ew).
     EnemyDamageTaken,
+    /// Elemental penetration while the lowest resonance is at least 25
+    /// (`ElementalPenetration` BASE with a `MultiplierThreshold` of 25;
+    /// P6-11gd): the target is fire's, and [`stacks`] adds cold's and
+    /// lightning's (PoB's `ElementalPenetration` is all three).
+    ElementalPenetrationIfAll25,
 }
 
 impl PerStack {
@@ -243,6 +252,7 @@ impl PerStack {
             Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
             Self::EnemyDamageTaken => "per.enemy-damage-taken",
+            Self::ElementalPenetrationIfAll25 => "per.elemental-penetration-if-all-25",
             Self::EnemyDamageWithAny => "per.enemy-damage-with-any",
             Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
                 "per.energy-shield-regen-percent-per-minute-up-to-2"
@@ -304,6 +314,12 @@ impl PerStack {
                 Flags::NONE,
             ),
             Self::DamageMoreWithAny => (Quantity::Damage, Op::More, Flags::NONE, Flags::NONE),
+            Self::ElementalPenetrationIfAll25 => (
+                Quantity::Penetration(crate::quantity::DamageType::Fire),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
             Self::EnemyDamageTaken => (
                 Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
                 Op::Increased,
@@ -396,6 +412,21 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "damage_+%_per_your_aura_or_herald_skill_affecting_you",
         StackKind::AuraOrHerald,
         StackValue::Per(PerStack::Damage),
+    ),
+    // P6-11gd: Trinity's penetration while every resonance is at least 25
+    // (`ElementalPenetration` BASE, `MultiplierThreshold` 25 on
+    // `ResonanceCount`).
+    (
+        "damage_penetrates_%_elemental_resistances_while_all_resonance_is_25",
+        StackKind::Resonance,
+        StackValue::Per(PerStack::ElementalPenetrationIfAll25),
+    ),
+    // P6-11gd: Trinity's more elemental damage per 5 lowest resonance
+    // (`ElementalDamage` MORE, `Multiplier` `ResonanceCount` `div` 5).
+    (
+        "elemental_damage_+%_final_per_5_lowest_resonance",
+        StackKind::Resonance,
+        StackValue::Per(PerStack::ElementalDamageMore),
     ),
     (
         "elemental_damage_+%_final_per_righteous_charge",
@@ -578,6 +609,16 @@ pub const MOMENTUM_INPUT: &str = "MomentumStacks";
 pub const INTENSITY_INPUT: &str = "intensifyIntensity";
 /// The config's non-instant spells input.
 pub const SPELLS_INPUT: &str = "multiplierNonInstantSpellCastRecently";
+/// The config's lowest resonance input (P6-11gd; `ConfigOptions.lua`
+/// 708, Trinity's).
+pub const RESONANCE_INPUT: &str = "configResonanceCount";
+/// The largest resonance the config sets (`m_min(val, 50)`).
+const RESONANCE_LIMIT: f64 = 50.0;
+/// Trinity's penetration threshold (its `MultiplierThreshold`).
+const RESONANCE_THRESHOLD: f64 = 25.0;
+/// Trinity's more elemental damage per this much resonance (its `div`).
+const RESONANCE_DIV: f64 = 5.0;
+
 /// The config's nearby enemies input (P6-11v).
 pub const NEARBY_INPUT: &str = "multiplierNearbyEnemies";
 /// The total limit of Lunaris's "for each nearby Enemy, up to 8%" (the
@@ -589,7 +630,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 9] = [
+pub const INPUTS: [&str; 10] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -598,6 +639,7 @@ pub const INPUTS: [&str; 9] = [
     NEARBY_INPUT,
     TOTEMS_INPUT,
     CORPSES_INPUT,
+    RESONANCE_INPUT,
     BRANDS_INPUT,
 ];
 
@@ -858,6 +900,18 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
         }
     }
 
+    // Trinity's resonance (P6-11gd): the config's count, at most 50 (0
+    // applies nothing); more elemental damage per 5, and the penetration
+    // from 25.
+    let effects = per(ingest, StackKind::Resonance);
+    if !effects.is_empty() {
+        match count(set, RESONANCE_INPUT, false) {
+            Err(()) => ingest.reason(reason(RESONANCE_INPUT)),
+            Ok(None) => {}
+            Ok(Some(n)) => resonance(ingest, &effects, n.clamp(0.0, RESONANCE_LIMIT)),
+        }
+    }
+
     // Nearby enemies (P6-11v): both counts, the rare or unique one also
     // when 0 (`countAllowZero`).
     let effects = per(ingest, StackKind::NearbyEnemies);
@@ -1003,6 +1057,47 @@ pub fn totems(
         None => 0.0,
     };
     apply(ingest, &effects, multiplier(n), None);
+}
+
+/// Adds Trinity's effects at a lowest resonance of `n` (P6-11gd;
+/// `sup_int.lua` 6592 to 6597): the more elemental damage per 5
+/// (`floor(n / 5 + 0.0001)`, PoB's `div`), and the elemental penetration,
+/// fire, cold, and lightning, from 25.
+fn resonance(ingest: &mut Ingest<'_>, effects: &[Effect], n: f64) {
+    use crate::quantity::DamageType;
+    for e in effects {
+        let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity else {
+            continue;
+        };
+        let (quantity, op, all, any) = p.target();
+        let conditions = Conditions::none().with_all(all).with_any(any);
+        if p == PerStack::ElementalPenetrationIfAll25 {
+            if n < RESONANCE_THRESHOLD {
+                continue;
+            }
+            for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+                ingest.effect(Effect {
+                    quantity: Quantity::Penetration(t),
+                    op,
+                    value: e.value,
+                    conditions: conditions.clone(),
+                    source: e.source.clone(),
+                });
+            }
+            continue;
+        }
+        let value = e.value * multiplier(n / RESONANCE_DIV);
+        if value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions,
+            source: e.source.clone(),
+        });
+    }
 }
 
 /// Adds the effects per summoned golem (P6-11gc; PoB's `PerStat`

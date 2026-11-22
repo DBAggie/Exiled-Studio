@@ -327,7 +327,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionUsedWarcryInPast8Seconds",
         &["Condition:UsedWarcryInPast8Seconds"],
     ),
-    ("configResonanceCount", &["Multiplier:ResonanceCount"]),
     (
         "configSpectralTigerCount",
         &[

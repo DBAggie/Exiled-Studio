@@ -360,6 +360,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ga: Flame Surge's burning ground from the ignite (`Poe1Field::BurningGroundDps`, slice revision 23; fixture `ice-nova-ignite-flame-surge-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11ga")
 - [x] P6-11gb: Scorching Ray's fire exposure at its maximum stages (`BuffStat::AtMaxStages`; fixtures `ice-nova-ignite-scorching-ray-witch.xml`, `ice-nova-ignite-scorching-ray-stages-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11gb")
 - [x] P6-11gc: summoned golems (`stacks::golems`, `gems::golem_limit`: damage per summoned golem) and each golem's buff effect (`Poe1Quantity::NamedGolemBuffEffect`); P6-11dc's reading of PoB corrected; fixtures `ice-nova-lightning-golem-witch.xml`, `ice-nova-lightning-golem-one-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gc")
+- [x] P6-11gd: Trinity Support's resonance from the config (`StackKind::Resonance`; fixtures `ice-nova-ignite-trinity-witch.xml`, `ice-nova-ignite-trinity-20-witch.xml`) (`docs/phase-6/stat-mop-up.md`, "P6-11gd")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report
