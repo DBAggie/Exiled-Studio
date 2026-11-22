@@ -4268,3 +4268,27 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - The away ones are two Shield Crush builds' speed, mana per second, and one build's crit. Their old values came from the main-hand weapon.
   - A PoB probe of one build's off-hand `Speed` mods (`local/p6/tools/pob_tab.lua`) shows the mores equal here (1.5 x 0.9 x 1.1). The increase lacks Soul Eater's 210% (its item stats are reasons) and 5% of the per-accuracy line (P6-11hd's accuracy gap).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hf: Soul Eater
+
+**Found** (P6-11he's probe of a Shield Crush build): PoB's off-hand speed had 210% increased from Soul Eater. The build's "Eat a Soul when you Hit a Rare or Unique Enemy, no more than once every 0.5 seconds" and "+# to maximum number of Eaten Souls" were reasons (2 builds).
+
+**PoB:**
+- **Can have Soul Eater:** `Condition:CanHaveSoulEater` from "Soul Eater", "Eat a Soul when you Hit a Rare or Unique Enemy, no more than once every # seconds", and Double Strike's or Dual Strike's chance (`ModParser.lua` 3975, 4305, 4306).
+- **The souls:** the config's `multiplierSoulEater` (`ConfigOptions.lua` 986: `Multiplier:SoulEaterStack` in combat).
+- **The effect** (`CalcPerform.lua` 935 to 938): `Speed` INC 5 per soul with `ModFlag.Attack`, and again with `ModFlag.Cast`. The multiplier's `limit` is `SoulEaterMax`: the character's `soul_eater_maximum_stacks` (`CalcSetup.lua` 49) plus "+# to maximum number of Eaten Souls".
+
+**The engine:**
+- `stacks::StackKind::SoulEater`: the three lines as `CanGain`, "+# to maximum number of Eaten Souls" as `Maximum`.
+- `stacks::stacks` reads `stacks::SOUL_EATER_INPUT` (no longer in `config::NAMED_ONLY`), and adds `5 x min(floor(souls), maximum)` as attack and cast `Speed` increases.
+- Not mapped, so still reasons:
+  - the timed lines PoB reads with a condition (during a flask effect, after a Vaal skill, on killing blow);
+  - "Maximum # Eaten Soul";
+  - "Eat a Soul when you Kill a Rare or Unique Enemy with this Weapon".
+  - PoB leaves the last two unparsed, as it does the hit line at exactly one second ("once every second").
+
+**Evidence** (`b-ct`, against P6-11he's run):
+- **Two new mechanic fixtures**, both matching PoB on every field, each with "Soul Eater", "+10 to maximum number of Eaten Souls", and 60 souls in the config (so the maximum of 55 applies): `smite-soul-eater-templar.xml` (attack speed) and `ice-nova-soul-eater-witch.xml` (cast speed).
+- **Public:** 0 unexpected, no value moved. The oracle record of P6-11he's `shield-crush-multistrike-templar.xml` was rerun for its corrected comment.
+- **Corpus:** 0 unexpected. Nine values moved, all toward PoB (the two Shield Crush builds' speed, now 7.80 against 8.16 and 8.77 against 8.87, their mana per second and DPS).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

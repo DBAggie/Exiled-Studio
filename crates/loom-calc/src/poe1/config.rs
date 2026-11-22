@@ -377,7 +377,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "enemy Condition:NearbyRareOrUniqueEnemy",
         ],
     ),
-    ("multiplierSoulEater", &["Multiplier:SoulEaterStack"]),
     ("multiplierSummonedMinion", &["Multiplier:SummonedMinion"]),
     (
         "multiplierWarcryUsedRecently",

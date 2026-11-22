@@ -116,6 +116,9 @@ pub enum StackKind {
     /// Mana spent recently (P6-11gx; PoB's `Multiplier:ManaSpentRecently`,
     /// the config's `multiplierManaSpentRecently`).
     ManaSpentRecently,
+    /// Eaten souls (P6-11hf; PoB's `Multiplier:SoulEaterStack`, the config's
+    /// `multiplierSoulEater`, with `Condition:CanHaveSoulEater`).
+    SoulEater,
 }
 
 impl StackKind {
@@ -139,6 +142,7 @@ impl StackKind {
             Self::Resonance => "resonance",
             Self::StationarySeconds => "stationary-seconds",
             Self::ManaSpentRecently => "mana-spent-recently",
+            Self::SoulEater => "soul-eater",
         }
     }
 }
@@ -463,6 +467,12 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Resonance,
         StackValue::Per(PerStack::ElementalPenetrationIfAll25),
     ),
+    // P6-11hf: "#% chance to gain Soul Eater for # seconds on Killing Blow ... with Double Strike or Dual Strike" (`ModParser.lua` 4306).
+    (
+        "double_and_dual_strike_soul_eater_for_20_seconds_on_rare_or_unique_kill_chance_%",
+        StackKind::SoulEater,
+        StackValue::CanGain,
+    ),
     // P6-11gd: Trinity's more elemental damage per 5 lowest resonance
     // (`ElementalDamage` MORE, `Multiplier` `ResonanceCount` `div` 5).
     (
@@ -478,6 +488,12 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
     (
         "gain_max_rage_on_losing_temporal_chains_debuff",
         StackKind::Rage,
+        StackValue::CanGain,
+    ),
+    // P6-11hf: "Eat a Soul when you Hit a Rare or Unique Enemy, no more than once every # seconds" (`ModParser.lua` 4305).
+    (
+        "gain_soul_eater_stack_on_hit_vs_unique_cooldown_ms",
+        StackKind::SoulEater,
         StackValue::CanGain,
     ),
     // P6-11bc: "Gain # Rage on Attack Hit": PoB's `Condition:CanGainRage`,
@@ -607,6 +623,18 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::BrandsAttached,
         StackValue::Per(PerStack::EnemyDamageTaken),
     ),
+    // P6-11hf: "Soul Eater" (`ModParser.lua` 3975).
+    (
+        "soul_eater_from_unique",
+        StackKind::SoulEater,
+        StackValue::CanGain,
+    ),
+    // P6-11hf: "+# to maximum number of Eaten Souls" (`SoulEaterMax` BASE, `ModParser.lua` 4310).
+    (
+        "soul_eater_maximum_stacks_+",
+        StackKind::SoulEater,
+        StackValue::Maximum,
+    ),
     (
         "support_momentum_attack_speed_+%_per_stack",
         StackKind::Momentum,
@@ -672,7 +700,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 12] = [
+pub const INPUTS: [&str; 13] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -685,7 +713,16 @@ pub const INPUTS: [&str; 12] = [
     BRANDS_INPUT,
     super::buffs::STATIONARY_INPUT,
     MANA_SPENT_INPUT,
+    SOUL_EATER_INPUT,
 ];
+
+/// The config's eaten souls (`ConfigOptions.lua` 986:
+/// `Multiplier:SoulEaterStack` BASE in combat; P6-11hf).
+pub const SOUL_EATER_INPUT: &str = "multiplierSoulEater";
+
+/// The attack and cast speed one eaten soul gives (`CalcPerform.lua` 937,
+/// 938: `Speed` INC 5 per `SoulEaterStack`).
+const SOUL_EATER_SPEED: f64 = 5.0;
 
 /// The config's mana spent recently (`ConfigOptions.lua` 1358:
 /// `Multiplier:ManaSpentRecently`; P6-11gx).
@@ -957,6 +994,37 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Err(()) => ingest.reason(reason(RESONANCE_INPUT)),
             Ok(None) => {}
             Ok(Some(n)) => resonance(ingest, &effects, n.clamp(0.0, RESONANCE_LIMIT)),
+        }
+    }
+
+    // Soul Eater (P6-11hf; `CalcPerform.lua` 935 to 938): with
+    // `CanHaveSoulEater`, 5% increased attack and cast speed per eaten soul,
+    // the config's count at most `SoulEaterMax` (the character's
+    // `soul_eater_maximum_stacks` plus "+# to maximum number of Eaten
+    // Souls"; the multiplier's `limit`).
+    let (can, _) = sum(ingest, StackKind::SoulEater, StackValue::CanGain);
+    if can != 0.0 {
+        match count(set, SOUL_EATER_INPUT, false) {
+            Err(()) => ingest.reason(reason(SOUL_EATER_INPUT)),
+            Ok(None) => {}
+            Ok(Some(n)) => {
+                if let Some(base) = constant(ingest, "soul_eater_maximum_stacks") {
+                    let max = base + sum(ingest, StackKind::SoulEater, StackValue::Maximum).0;
+                    let souls = multiplier(n).min(max);
+                    if souls != 0.0 {
+                        let source = config(SOUL_EATER_INPUT);
+                        for flags in [Flags::ATTACK, Flags::CAST] {
+                            ingest.effect(Effect {
+                                quantity: Quantity::Speed,
+                                op: Op::Increased,
+                                value: SOUL_EATER_SPEED * souls,
+                                conditions: Conditions::none().with_all(flags),
+                                source: source.clone(),
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 
