@@ -369,6 +369,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11gj: Strength provides no bonus to Maximum Life (`Poe1Quantity::NoStrBonusToLife`, `phases::strength_life`); fixtures `ice-nova-no-life-from-strength-witch.xml`, `ice-nova-life-as-energy-shield-no-strength-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gj")
 - [x] P6-11gk: attack and cast speed while Focused (`conditions::FOCUSED` from `conditionFocused`, a `STATE_ROWS` row); fixtures `ice-nova-speed-while-focused-witch.xml`, `ice-nova-speed-while-focused-off-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gk")
 - [x] P6-11gl: Socketed Gems deal more Elemental Damage (`GemSlot::main_skill_state` settled by `states`, the line an `InSlot` row); fixtures `ice-nova-socketed-elemental-damage-witch.xml`, `ice-nova-socketed-elemental-damage-elsewhere-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gl")
+- [x] P6-11gm: damage per 100 Strength (`hit::DAMAGE_PER_STAT`) and accuracy equal to twice Strength (`hit::accuracy`); fixtures `smite-damage-per-strength-templar.xml`, `smite-accuracy-from-strength-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gm")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

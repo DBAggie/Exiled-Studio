@@ -368,6 +368,9 @@ const SERVER_TICK_TIME: f64 = 0.033;
 /// PoB's `data.misc.AccuracyPerDexBase`: accuracy rating per dexterity.
 const ACCURACY_PER_DEXTERITY: f64 = 2.0;
 
+/// "Gain Accuracy Rating equal to twice your Strength" (P6-11gm).
+const ACCURACY_PER_STRENGTH: f64 = 2.0;
+
 /// The enemy's base maximum resistance (PoB's `data.misc.EnemyMaxResist`,
 /// the monster template's).
 const ENEMY_MAX_RESIST_STAT: &str = "base_maximum_all_resistances_%";
@@ -1895,6 +1898,22 @@ fn accuracy(
             Term::Step("from-dexterity"),
         )?);
     }
+    // "Gain Accuracy Rating equal to twice your Strength" (P6-11gm; PoB's
+    // `Accuracy` BASE 2 per strength).
+    let from_strength = Quantity::Poe1(Poe1Quantity::AccuracyFromStrength);
+    if phases::has(calc, from_strength)
+        && flag_on(calc, from_strength, cx, reasons)?.is_some()
+        && let Some((node, value)) = calc
+            .field(Field::Strength)
+            .and_then(|f| Some((f.node?, f.value?)))
+    {
+        let per = phases::constant(calc, "accuracy-per-strength", ACCURACY_PER_STRENGTH)?;
+        terms.push(phases::product(
+            calc,
+            &[Valued { node, value }, per],
+            Term::Step("from-strength"),
+        )?);
+    }
     terms.push(sum_in(
         calc,
         Quantity::Accuracy,
@@ -2693,7 +2712,7 @@ pub(super) fn damage_modifiers(
 type PerStat = (Poe1Quantity, Flags, Field, f64, Option<f64>);
 
 /// The damage increases per stat the hit reads (P6-11bw, P6-11cw).
-const DAMAGE_PER_STAT: [PerStat; 2] = [
+const DAMAGE_PER_STAT: [PerStat; 3] = [
     // "#% increased Spell Damage per 100 Maximum Mana, up to 40%".
     (
         Poe1Quantity::SpellDamagePer100Mana,
@@ -2709,6 +2728,15 @@ const DAMAGE_PER_STAT: [PerStat; 2] = [
         Flags::ATTACK,
         Field::Armour,
         450.0,
+        None,
+    ),
+    // "#% increased Damage per 100 Strength" (P6-11gm; untagged, `PerStat`
+    // `Str` `div` 100, no limit).
+    (
+        Poe1Quantity::DamagePer100Strength,
+        Flags::NONE,
+        Field::Strength,
+        100.0,
         None,
     ),
 ];

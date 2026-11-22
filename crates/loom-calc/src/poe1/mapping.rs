@@ -1912,6 +1912,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "damage_+%_for_you_and_allies_affected_by_your_auras",
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // P6-11gm: "#% increased Damage per 100 Strength" (`Damage` INC,
+    // `PerStat` `Str` `div` 100): the hit's computed term
+    // (`hit::DAMAGE_PER_STAT`).
+    (
+        "damage_+%_per_100_strength",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamagePer100Strength),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
     (
         "damage_+%_with_bow_skills",
@@ -2089,6 +2102,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "fire_dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::FIRE, NONE)],
+    ),
+    // P6-11gm: "Gain Accuracy Rating equal to twice your Strength"
+    // (`Accuracy` BASE 2, `PerStat` `Str`): `hit`'s accuracy adds it.
+    (
+        "gain_accuracy_rating_equal_to_2_times_strength",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AccuracyFromStrength),
+            Op::Flag,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // PoB `SkillStatMap.lua` 998: `BleedChance` BASE 100 (P6-2c).
     (

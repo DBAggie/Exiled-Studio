@@ -144,6 +144,14 @@ pub enum Poe1Quantity {
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
+    /// The damage increase per 100 strength (P6-11gm; PoB's `Damage` INC
+    /// with `PerStat` `Str` `div` 100): `Base`, read by [`hit`] from the
+    /// strength field.
+    DamagePer100Strength,
+    /// "Gain Accuracy Rating equal to twice your Strength" (P6-11gm; PoB's
+    /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
+    /// `Flag`, read by [`hit`]'s accuracy.
+    AccuracyFromStrength,
     /// Maximum life gained as extra maximum energy shield, percent (PoB's
     /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
     /// phase as one more row.
@@ -1207,6 +1215,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
+            Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
+            Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),

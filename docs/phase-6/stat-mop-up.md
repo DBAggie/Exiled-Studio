@@ -3770,3 +3770,25 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
 - **Public:** 0 unexpected. Three values of the Righteous Fire build moved toward PoB (its burning damage). Its Righteous Fire is socketed with the line.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gm: damage per 100 Strength; accuracy equal to twice Strength
+
+**Found:** PoB's own parser was run on the game text of every stat still unmapped in two or more builds (local, `local/p6/tools/gm_scan.py` with `tools/oracle/data/pob_parse_lines.lua`). 60 of 123 parse; this step takes two of them, each unmapped in 2 builds:
+- `damage_+%_per_100_strength` ("#% increased Damage per 100 Strength");
+- `gain_accuracy_rating_equal_to_2_times_strength` ("Gain Accuracy Rating equal to twice your Strength").
+
+**PoB:**
+- **Damage.** `Damage` INC with `PerStat` `Str` `div` 100 (`ModParser.lua` 1468): `floor(Str / 100 + 0.0001)` steps. It is untagged, so it reaches hits and ailments.
+- **Accuracy.** `Accuracy` BASE 2 with `PerStat` `Str` (2921), so twice Strength.
+
+**The engine:**
+- **Damage.** `Poe1Quantity::DamagePer100Strength` (`Base`) is one more `hit::DAMAGE_PER_STAT` entry: no flag, `Field::Strength`, step 100, no limit. It sits beside P6-11cw's attack damage per 450 armour, a term of the damage increase sum for hits and, through `hit::damage_modifiers`, for ailments.
+- **Accuracy.** `Poe1Quantity::AccuracyFromStrength` (`Flag`) makes `hit::accuracy` add `Str x 2` to the accuracy base, beside Dexterity's term.
+
+**Evidence** (`b-ct`, against P6-11gl's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is P3-12h's Smite fixture with "+200 to Strength" and the line:
+  - `smite-damage-per-strength-templar.xml`;
+  - `smite-accuracy-from-strength-templar.xml`: the hit chance is 51%, against 22% without it.
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected. Four values of one build moved toward PoB: its average damage, ignite, and DPS.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
