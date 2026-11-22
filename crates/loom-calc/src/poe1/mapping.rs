@@ -1895,6 +1895,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cold_dot_multiplier_+",
         &[(Quantity::DotMultiplier, Op::Base, 1.0, Flags::COLD, NONE)],
     ),
+    // P6-11hg: "#% to Critical Strike Multiplier per 10 Maximum Energy Shield
+    // on Shield" (`CritMultiplier` BASE, `PerStat` `EnergyShieldOnWeapon 2`).
+    (
+        "critical_multiplier_+%_per_10_max_es_on_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritPerShieldEnergyShield(true)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)],
@@ -2576,6 +2588,32 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "occultist_cold_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::COLD, NONE)],
+    ),
+    // P6-11hg: "#% to Off Hand Critical Strike Chance per 10 Maximum Energy
+    // Shield on Shield" (`CritChance` BASE with `OffHandAttack` and
+    // `SkillType.Attack`; the stat in hundredths, so divided by 100).
+    (
+        "off_hand_critical_strike_chance_+_per_10_es_on_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritPerShieldEnergyShield(false)),
+            Op::Base,
+            100.0,
+            Flags::ATTACK.union(Flags::OFF_HAND_ATTACK),
+            NONE,
+        )],
+    ),
+    // P6-11hg: "#% to Off Hand Critical Strike Multiplier per 10 Maximum
+    // Energy Shield on Shield" (`CritMultiplier` BASE with `OffHandAttack`
+    // and `SkillType.Attack`).
+    (
+        "off_hand_critical_strike_multiplier_+_per_10_es_on_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritPerShieldEnergyShield(true)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK.union(Flags::OFF_HAND_ATTACK),
+            NONE,
+        )],
     ),
     // P6-11b: "+#% to Critical Strike Multiplier with One Handed Melee Weapons": `CritMultiplier` BASE, `ModFlag.Weapon1H`, `WeaponMelee`, `Hit`.
     (

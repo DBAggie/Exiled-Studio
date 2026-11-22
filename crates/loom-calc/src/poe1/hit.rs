@@ -1437,8 +1437,14 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     }
     // Each hand's config adds its weapon's flags (`weapon1Cfg`,
     // `weapon2Cfg`, `CalcActiveSkill.lua` 470 to 479; P6-11b).
-    let off_flags = flags | attack.off_weapon_flags;
-    let flags = flags | attack.weapon_flags;
+    // PoB's `OffHandAttack` condition (P6-11hg): the off hand's context,
+    // and a shield attack's only one.
+    let off_flags = flags | attack.off_weapon_flags | Flags::OFF_HAND_ATTACK;
+    let flags = if attack.shield.is_some() {
+        flags | attack.weapon_flags | Flags::OFF_HAND_ATTACK
+    } else {
+        flags | attack.weapon_flags
+    };
     let mut unvetted = Reasons::new();
     // The repeats in the skill's config, the main hand's flags (P6-11aj).
     let skill_cx = calc.context(flags);
@@ -1863,6 +1869,38 @@ fn shield_added(
     )?))
 }
 
+/// Critical strike chance (`multiplier` false) or multiplier per 10 of the
+/// shield's maximum energy shield (P6-11hg; PoB's `PerStat`
+/// `EnergyShieldOnWeapon 2`, the shield's own energy shield before global
+/// modifiers, `CalcDefence.lua` 492); `None` without such an effect, so
+/// other hits keep their graph.
+fn per_shield_energy_shield(
+    calc: &mut Calc<'_>,
+    multiplier: bool,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    use super::{ArmourSlot, Defence};
+    let q = Quantity::Poe1(Poe1Quantity::CritPerShieldEnergyShield(multiplier));
+    if !phases::has(calc, q) {
+        return Ok(None);
+    }
+    let es = phases::piece(calc, ArmourSlot::Weapon2, Defence::EnergyShield, reasons)?;
+    Ok(Some(per_value(
+        calc,
+        q,
+        es,
+        SHIELD_ENERGY_SHIELD_STEP,
+        None,
+        cx,
+        reasons,
+    )?))
+}
+
+/// The shield's maximum energy shield per step of the crit lines (PoB's
+/// `div = 10`).
+const SHIELD_ENERGY_SHIELD_STEP: f64 = 10.0;
+
 /// The shield's armour or evasion per step of a shield attack's added
 /// damage (PoB's `div = 15`).
 const SHIELD_DEFENCE_STEP: f64 = 15.0;
@@ -2234,6 +2272,10 @@ fn crit_chance(
         Term::Step("crit-base-effects"),
         &mut reasons,
     )?;
+    let added = match per_shield_energy_shield(calc, false, cx, &mut reasons)? {
+        Some(extra) => phases::total(calc, &[added, extra], Term::Step("crit-base-with-shield"))?,
+        None => added,
+    };
     // `(baseCrit + base)`.
     let base = phases::total(calc, &[skill_base, added], Term::Base)?;
     let (inc, more) = modifiers(calc, Quantity::CritChance, cx, &mut reasons)?;
@@ -2308,6 +2350,9 @@ fn crit_multiplier(
         Term::Step("crit-multiplier-effects"),
         &mut reasons,
     )?);
+    if let Some(extra) = per_shield_energy_shield(calc, true, cx, &mut reasons)? {
+        terms.push(extra);
+    }
     let sum = phases::total(calc, &terms, Term::Base)?;
     let extra = percent(calc, sum, Term::Step("extra-damage"))?;
     let rounded = round_2(calc, extra, Term::Step("extra-damage-rounded"))?;

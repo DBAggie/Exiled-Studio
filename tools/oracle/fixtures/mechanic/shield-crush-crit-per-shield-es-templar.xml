@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11hg): Shield Crush with an Archon Kite Shield of quality 20 and the custom lines "+0.15% to Off Hand Critical
+     Strike Chance", "+4% to Off Hand Critical Strike Multiplier", and "+2% to Critical Strike Multiplier", each per 10
+     Maximum Energy Shield on Shield: all three apply to the off-hand attack (PoB's `PerStat` `EnergyShieldOnWeapon 2`,
+     the off-hand ones with `OffHandAttack`).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Shield Crush" skillId="ShieldCrush" variantId="ShieldCrush" gemId="Metadata/Items/Gems/SkillGemShieldCrush" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Rusted Hatchet
+Quality: 0
+Implicits: 0
+		</Item>
+		<Item id="2">
+Rarity: NORMAL
+Archon Kite Shield
+Quality: 20
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Weapon 2" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				+0.15% to Off Hand Critical Strike Chance per 10 Maximum Energy Shield on Shield
+				+4% to Off Hand Critical Strike Multiplier per 10 Maximum Energy Shield on Shield
+				+2% to Critical Strike Multiplier per 10 Maximum Energy Shield on Shield
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

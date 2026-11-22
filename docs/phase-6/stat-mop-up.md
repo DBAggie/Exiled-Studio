@@ -4292,3 +4292,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved. The oracle record of P6-11he's `shield-crush-multistrike-templar.xml` was rerun for its corrected comment.
 - **Corpus:** 0 unexpected. Nine values moved, all toward PoB (the two Shield Crush builds' speed, now 7.80 against 8.16 and 8.77 against 8.87, their mana per second and DPS).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hg: crit per 10 maximum energy shield on the shield
+
+**Found** (P6-11gm's scan): reasons in 3 builds each:
+- "+#% to Off Hand Critical Strike Chance per 10 Maximum Energy Shield on Shield";
+- "+#% to Off Hand Critical Strike Multiplier per 10 ...";
+- "+#% to Critical Strike Multiplier per 10 Maximum Energy Shield on Shield".
+
+**PoB** (`ModParser.lua` 1503): `CritChance` and `CritMultiplier` BASE with `PerStat` `EnergyShieldOnWeapon 2`, div 10, the shield's own maximum energy shield before global modifiers (`CalcDefence.lua` 492). The off-hand lines add `Condition:OffHandAttack` (the off hand's `weapon2Cfg`, `CalcActiveSkill.lua` 476) and `SkillType.Attack`. The crit chance stat is in hundredths.
+
+**The engine:**
+- `Flags::OFF_HAND_ATTACK`, PoB's `OffHandAttack`, is set in the off hand's context of a dual-wielding attack and in a shield attack's context.
+- `Poe1Quantity::CritPerShieldEnergyShield` (`Base`): the off-hand lines with `ATTACK` and `OFF_HAND_ATTACK`, the other without conditions.
+- `hit::crit_chance` and `hit::crit_multiplier` add `floor(es / 10 + 0.0001) x value` of `phases::piece` (the shield's energy shield) to their bases (`hit::per_shield_energy_shield`).
+
+**Evidence** (`b-ct`, against P6-11hf's run):
+- **Two new mechanic fixtures**, each with an Archon Kite Shield of quality 20 and the three lines:
+  - `shield-crush-crit-per-shield-es-templar.xml`: all three apply to the off-hand attack. It matches PoB on every field.
+  - `smite-crit-per-shield-es-templar.xml`: only the line without "Off Hand" reaches the main hand. It matches PoB but the base fixture's Q11 floored attack time (DIV-0559 to DIV-0564).
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. 18 values moved, all toward PoB, 4 now equal (three Shield Crush builds' crit multiplier and one crit chance).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

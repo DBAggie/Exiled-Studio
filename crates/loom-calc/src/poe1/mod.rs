@@ -464,6 +464,11 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// Critical strike chance (`false`) or multiplier (`true`) per 10 of the
+    /// shield's maximum energy shield (P6-11hg; PoB's `CritChance` and
+    /// `CritMultiplier` BASE with `PerStat` `EnergyShieldOnWeapon 2`, div
+    /// 10): `Base`, the value per step, read by the hit's crit.
+    CritPerShieldEnergyShield(bool),
     /// A shield attack's own off-hand damage (P6-11he; the skill stats
     /// `off_hand_local_<minimum|maximum>_added_<type>_damage`, PoB's
     /// `setOffHand<Type>Min` and `Max`): `Base`, the shield's weapon damage
@@ -1457,6 +1462,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::CritPerShieldEnergyShield(multiplier) => {
+                if *multiplier {
+                    f.write_str("crit-multiplier-per-shield-energy-shield")
+                } else {
+                    f.write_str("crit-chance-per-shield-energy-shield")
+                }
+            }
             Self::ShieldAttackDamage(t, b) => {
                 write!(f, "shield-attack-damage.{}.{}", t.name(), b.name())
             }

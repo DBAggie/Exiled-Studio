@@ -167,6 +167,10 @@ impl Flags {
     /// `SkillType.RequiresShield` tag; P6-11he: Multistrike's more attack
     /// speed for Shield Crush).
     pub const SKILL_REQUIRES_SHIELD: Self = Self(1 << 58);
+    /// An attack's off-hand pass (PoB's `OffHandAttack` skill condition,
+    /// `weapon2Cfg`, `CalcActiveSkill.lua` 476; P6-11hg): set in the off
+    /// hand's context of a dual-wielding attack and of a shield attack.
+    pub const OFF_HAND_ATTACK: Self = Self(1 << 59);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

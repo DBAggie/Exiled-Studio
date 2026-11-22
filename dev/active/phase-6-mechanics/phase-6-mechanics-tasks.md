@@ -389,6 +389,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11hd: attack speed per 150 accuracy rating (`Poe1Quantity::AttackSpeedPerAccuracy`, `hit::attack_rate` with the hand's accuracy); fixtures `smite-attack-speed-per-accuracy-templar.xml`, `smite-accuracy-no-speed-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hd")
 - [x] P6-11he: shield attacks (`hit::shield_weapon_data`, `hit::shield_added`, `Flags::SKILL_REQUIRES_SHIELD` for Multistrike); fixtures `shield-crush-templar.xml`, `shield-crush-defences-templar.xml`, `shield-crush-multistrike-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11he")
 - [x] P6-11hf: Soul Eater (`stacks::StackKind::SoulEater`: attack and cast speed per eaten soul, at most the maximum); fixtures `smite-soul-eater-templar.xml`, `ice-nova-soul-eater-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hf")
+- [x] P6-11hg: crit per 10 maximum energy shield on the shield (`Flags::OFF_HAND_ATTACK`, `Poe1Quantity::CritPerShieldEnergyShield`); fixtures `shield-crush-crit-per-shield-es-templar.xml`, `smite-crit-per-shield-es-templar.xml`; DIV-0559 to DIV-0564 (`docs/phase-6/stat-mop-up.md`, "P6-11hg")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report
