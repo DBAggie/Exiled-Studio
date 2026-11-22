@@ -459,7 +459,7 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// - `ignites_apply_fire_resistance_+`: Combustion's fire resistance on an
 ///   ignited enemy (`CalcPerform.lua` 2709 to 2716); `conditionEnemyIgnited`
 ///   is [`super::damage_taken`]'s since P3-8n, and Combustion's support is
-///   not modelled.
+///   [`super::gems`]' since P6-11hr (no longer listed).
 /// - Chill's damage taken flags and Bonechill's stats: moved in P3-8m to
 ///   [`super::keystones`], [`super::damage_taken::CHILL_STATS`] (mapped),
 ///   and [`super::damage_taken::CHILL_DEPENDS_ON`], with the chill inputs.
@@ -534,7 +534,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
     "gain_x_rage_on_melee_crit",
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
-    "ignites_apply_fire_resistance_+",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
     "keystone_point_blank",

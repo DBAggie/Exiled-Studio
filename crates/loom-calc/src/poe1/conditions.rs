@@ -157,6 +157,12 @@ pub const ENEMY_BURNING: &str = "Enemy:Burning";
 /// check `conditionEnemyBleeding`, `ConfigOptions.lua`; P6-11dp).
 pub const ENEMY_BLEEDING: &str = "Enemy:Bleeding";
 
+/// The enemy is blinded (PoB's enemy `Blinded`, from its config check
+/// `conditionEnemyBlinded`, `ConfigOptions.lua` 1835; P6-11hr). PoB's
+/// other sources are modifiers giving the enemy the condition, unmapped
+/// stats, so reasons.
+pub const ENEMY_BLINDED: &str = "Enemy:Blinded";
+
 /// The enemy is maimed (PoB's enemy `Maimed`, set only by its config check
 /// `conditionEnemyMaimed`, `ConfigOptions.lua` 1825; P6-11ec).
 pub const ENEMY_MAIMED: &str = "Enemy:Maimed";
@@ -312,6 +318,9 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionConsumedCorpseRecently", CONSUMED_CORPSE_RECENTLY),
     ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyBleeding", ENEMY_BLEEDING),
+    // P6-11hr: blinded, for the rows against a blinded enemy (the blind's
+    // less evasion is `damage_taken`'s).
+    ("conditionEnemyBlinded", ENEMY_BLINDED),
     ("conditionEnemyBurning", ENEMY_BURNING),
     ("conditionEnemyCursed", ENEMY_CURSED),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),

@@ -65,7 +65,7 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 Evidence, sources, and key lists are in `data-parity-rules-poe1.json`.
 
 ## P3-12h: table `gem_effects`
-Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB").
+Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB"). Since P6-11hr one rule, `gem-effects-combustion-calc-perform` (`representation`, 2 differences): Combustion's stat map gives `CombustionFireResist` on the supported skill, which `CalcPerform.lua` (2709 to 2714) turns into the ignited enemy's fire resistance; the engine's table holds that result (`docs/phase-6/stat-mop-up.md`, "P6-11hr").
 
 ## P3-12i: the skills' `color`
 The bundle carries each granted effect's colour (`attribute`, the game's `GrantedEffects.Attribute` as stored); PoB's export (format 5) writes each skill's `color`, which its exporter copies from the same column (`src/Export/Scripts/skills.lua` 157). Table `skills`, field `color`: 1,508 values compared (every skill both sides hold), 0 differences; the other counts are unchanged (534 differences, `uncategorized` 0). Two PoB skills without a colour (`HarvestNessaCrabScreechDebuff`, `HarvestRhexScreechDebuff`) are among the 13 PoB-only rows.

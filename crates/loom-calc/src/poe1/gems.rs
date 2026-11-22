@@ -3126,7 +3126,25 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportChanceToBleed", &[]),
     // P6-11fr: no stat map in PoB.
     ("SupportChargedMines", &[]),
-    ("SupportCombustion", &[]),
+    // P6-11hr: Combustion's "Ignites from Supported Skills apply -#% to
+    // Fire Resistance" (`CombustionFireResist` BASE, -10 at every level;
+    // `CalcPerform.lua` 2709 to 2716): the enemy's fire resistance while the
+    // config ignites it, from a skill that can ignite ([`supports_global`]).
+    // PoB applies the first such skill's value, every one -10; not scaled
+    // by debuff effect (PoB adds it to the enemy directly). Its more fire
+    // damage is the supported skill's own (`HIT_ROWS`).
+    (
+        "SupportCombustion",
+        &[(
+            "ignites_apply_fire_resistance_+",
+            BuffStat::EnemyCheck {
+                input: super::damage_taken::IGNITED_INPUT,
+                var: "Ignited",
+                neg: false,
+                rows: &[(enemy_res(DamageType::Fire), Op::Base, 1.0, NONE, NONE)],
+            },
+        )],
+    ),
     ("SupportConcentratedEffect", &[]),
     ("SupportControlledDestruction", &[]),
     ("SupportCooldownRecovery", &[]),
@@ -5475,6 +5493,11 @@ fn supports_global(
         if table.is_empty() {
             continue;
         }
+        // Combustion only from a skill that can ignite (PoB's `CannotIgnite`
+        // check, `CalcPerform.lua` 2712; [`cannot_ignite`]).
+        if sup.effect.id == "SupportCombustion" && cannot_ignite(input, s) {
+            continue;
+        }
         let name = support_buff_name(&sup.effect.id);
         // Arcane Surge's mods are `unscalable` (`sup_int.lua` 229 to 233):
         // scale 1. A support's debuff takes `DebuffEffect` alone, a reason
@@ -5503,9 +5526,9 @@ fn supports_global(
     }
 }
 
-/// Supports whose global stats are a debuff on the enemy (P6-11fu, Maim):
-/// not scaled by buff effect.
-const DEBUFF_SUPPORTS: &[&str] = &["SupportMaim"];
+/// Supports whose global stats are a debuff on the enemy (P6-11fu, Maim;
+/// P6-11hr, Combustion): not scaled by buff effect.
+const DEBUFF_SUPPORTS: &[&str] = &["SupportCombustion", "SupportMaim"];
 
 /// Whether `stat` is one of a modelled support's global stats
 /// ([`SUPPORTS`]): the main skill's supports apply them as any skill's do
@@ -5524,6 +5547,7 @@ fn support_buff_name(id: &str) -> &'static str {
         "SupportArcaneSurge" => "Arcane Surge",
         "SupportInfusedChannelling" => "Infusion",
         "SupportMomentum" => "Momentum",
+        "SupportCombustion" => "Combustion",
         "SupportMaim" => "Maim",
         "SupportSummonPhantasm" => "Phantasmal Might",
         _ => "support",
@@ -6100,6 +6124,27 @@ fn cannot_chill(input: &CalcInput<'_>, s: &GroupSkill<'_>) -> bool {
             .stats
             .iter()
             .any(|(id, _)| CANNOT_CHILL_STATS.contains(&id.as_str()))
+    })
+}
+
+/// The gem stats that make a skill unable to ignite (PoB's `CannotIgnite`
+/// flags, `SkillStatMap.lua` 1062, 1071, 1211; P6-11hr): Elemental Focus's,
+/// and a skill's own `never_ignite` (Flame Surge's).
+pub const CANNOT_IGNITE_STATS: &[&str] = &[
+    "cannot_inflict_status_ailments",
+    "never_any_ailment",
+    "never_ignite",
+];
+
+/// Whether a gem of `s` has a stat of [`CANNOT_IGNITE_STATS`] (P6-11hr,
+/// Combustion). Modifiers that give `CannotIgnite` otherwise are unmapped
+/// stats, so reasons.
+fn cannot_ignite(input: &CalcInput<'_>, s: &GroupSkill<'_>) -> bool {
+    std::iter::once(&s.active_gem).chain(&s.supports).any(|g| {
+        skill::instance(g.effect, g.level, g.quality, input.data)
+            .stats
+            .iter()
+            .any(|(id, _)| CANNOT_IGNITE_STATS.contains(&id.as_str()))
     })
 }
 

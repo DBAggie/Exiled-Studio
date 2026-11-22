@@ -4555,3 +4555,42 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, and 6 values move toward PoB: OccVortex's hit and damage over time, and smite-inquisitor-act5's full DPS (Fortify on its Static Strike).
 - **Corpus:** 0 unexpected; 9 values move toward PoB, and 3 move away in one Vortex build where PoB gives 0 damage. Those 3 fields were already nonzero and stay partial.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hr: Combustion, against a blinded enemy, after consuming a corpse
+
+**Found** (the unmapped stats left in single builds): Combustion Support's two stats, "#% increased Critical Strike Chance against Blinded Enemies", "#% increased Damage if you have Consumed a corpse Recently", and projectile speed on a gem were unmapped, each in two builds.
+
+**PoB** (`Data/Skills/sup_int.lua` 928 to 941; `CalcPerform.lua` 2254, 2709 to 2720; `SkillStatMap.lua` 663, 1062, 1071, 1211, 1344, 2199; `ConfigOptions.lua` 1599, 1835):
+- **Combustion's more fire damage:** `support_chance_to_ignite_fire_damage_+%_final` is `FireDamage` MORE.
+- **Combustion's fire resistance:**
+  - `ignites_apply_fire_resistance_+` is `CombustionFireResist` BASE on the supported skill, -10 at every level and quality.
+  - `CalcPerform` reads it in its loop over every active skill. While the enemy is `Ignited` (the config), the first skill with Damage or Attack type that has Combustion and no `CannotIgnite` adds its value to the enemy's `FireResist` (a debuff named Combustion, not scaled by debuff effect). Then `appliedCombustion` stops the loop.
+  - `CannotIgnite` comes from a gem's `cannot_inflict_status_ailments` (Elemental Focus), `never_any_ailment`, or `never_ignite` (Flame Surge's own stat).
+- **Against blinded enemies:** `CritChance` INC with the enemy's `Blinded`, set by the config check `conditionEnemyBlinded`.
+- **After consuming a corpse:** `Damage` INC with `ConsumedCorpseRecently`, from its config checks.
+- **Projectile speed:** `ProjectileSpeed` INC.
+
+**The engine:**
+- `HIT_ROWS`: Combustion's more fire damage.
+- `poe1::gems`:
+  - `SupportCombustion`'s support table has its fire resistance as a `BuffStat::EnemyCheck` on `conditionEnemyIgnited` (the enemy's fire resistance, BASE).
+  - Combustion is a debuff support (scale 1), named Combustion.
+  - `supports_global` skips it on a skill that cannot ignite (`cannot_ignite`, `CANNOT_IGNITE_STATS`).
+  - Every Combustion is -10, so the merged value is PoB's first.
+  - Another source of `CannotIgnite` is an unmapped stat, so a reason.
+- `config::DEPENDS_ON` no longer lists `ignites_apply_fire_resistance_+`.
+- `conditions`: `ENEMY_BLINDED` from `conditionEnemyBlinded`.
+- `STATE_ROWS`: crit chance against a blinded enemy, damage after consuming a corpse.
+- `ProjectileSpeed` is a hit quantity, so a gem's projectile speed reaches the hit's bow damage flag (P6-11hb) and no longer leaves a reason.
+- **Data-parity (`gem_effects`):** the new rule `gem-effects-combustion-calc-perform` (`representation`, 2 differences). PoB's stat map has the skill's mod, and the engine's table has the debuff `CalcPerform` makes of it. `uncategorized` is 0.
+
+**Evidence** (`b-ct`, against P6-11hq's run):
+- **Six new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-combustion-ignited-witch.xml`: Ice Nova supported by Combustion, with added fire damage, against an ignited enemy.
+  - `ice-nova-combustion-other-group-witch.xml`: Arc supported by Combustion in another group lowers the fire resistance for Ice Nova (PoB's fire hit 90 against 75 without).
+  - `ice-nova-combustion-never-ignite-witch.xml`: Flame Surge's Combustion applies nothing, because Flame Surge never ignites.
+  - `ice-nova-combustion-elemental-focus-witch.xml`: Elemental Focus stops Combustion's resistance.
+  - `ice-nova-corpse-blinded-lines-witch.xml` and `ice-nova-corpse-blinded-lines-off-witch.xml`: the two lines with their checks on and off.
+- **Public:** 0 unexpected, and 4 values move toward PoB (holy-flame-totem-hierophant.xml's hit).
+- **Corpus:** 0 unexpected, and 12 values move toward PoB; one build's crit chance now equals PoB's.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

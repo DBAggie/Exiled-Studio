@@ -941,6 +941,25 @@
         "v2.67.2:src/Export/Scripts/tattooPassives.lua:76",
         "game:PassiveSkillOverrides.StatValues"
       ]
+    },
+    {
+      "id": "gem-effects-combustion-calc-perform",
+      "category": "representation",
+      "table": "gem_effects",
+      "fields": [
+        "global_stats",
+        "row.ignites_apply_fire_resistance_+"
+      ],
+      "keys": [
+        "SupportCombustion"
+      ],
+      "count": 2,
+      "evidence": "P6-11hr: Combustion's stat map gives CombustionFireResist BASE, a mod on the supported skill, not a GlobalEffect; CalcPerform turns it into the ignited enemy's FireResist BASE (a Debuff named Combustion, the first supported skill that can ignite). The engine's support table holds that result: the same effect in the form PoB applies it, so PoB's global stats lack the stat and its row is the skill mod.",
+      "sources": [
+        "v2.67.2:src/Data/Skills/sup_int.lua:931",
+        "v2.67.2:src/Modules/CalcPerform.lua:2709",
+        "v2.67.2:src/Modules/CalcPerform.lua:2714"
+      ]
     }
   ]
 }

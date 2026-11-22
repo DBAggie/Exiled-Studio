@@ -3253,6 +3253,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_cast_on_melee_kill_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11hr: Combustion's more fire damage (`sup_int.lua` 928:
+    // `FireDamage` MORE), as "#% more Elemental Damage" below; its fire
+    // resistance on the ignited enemy is `poe1::gems`' support table.
+    (
+        "support_chance_to_ignite_fire_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, Flags::FIRE)],
+    ),
     (
         "support_controlled_destruction_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
@@ -4077,6 +4084,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Damage against a chilled enemy (P6-11hq:
                     // Hypothermia's).
                     | Poe1Quantity::DamageVsChilled
+                    // Projectile speed (P6-11hr), read only by the hit's
+                    // bow damage flag (P6-11hb).
+                    | Poe1Quantity::ProjectileSpeed
             )
     )
 }
@@ -4556,6 +4566,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ENEMY_BLEEDING,
         )],
     ),
+    // P6-11hr: "#% increased Critical Strike Chance against Blinded
+    // Enemies" (`CritChance` INC, enemy `Blinded`; `SkillStatMap.lua` 663).
+    (
+        "critical_strike_chance_+%_vs_blinded_enemies",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_BLINDED,
+        )],
+    ),
     // P6-11o: "#% increased Critical Strike Chance while affected by Wrath".
     (
         "critical_strike_chance_+%_while_affected_by_wrath",
@@ -4683,6 +4704,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::SHATTERED_ENEMY_RECENTLY,
+        )],
+    ),
+    // P6-11hr: "#% increased Damage if you have Consumed a corpse Recently"
+    // (`Damage` INC, `ConsumedCorpseRecently`; `SkillStatMap.lua` 2199).
+    (
+        "damage_+%_if_you_have_consumed_a_corpse_recently",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            conditions::CONSUMED_CORPSE_RECENTLY,
         )],
     ),
     // P3-8n: "if you have Shocked an Enemy Recently" (1815).
@@ -12908,6 +12940,25 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::ENEMY_MARKED,
+                )],
+            ),
+            // P6-11hr: against a blinded enemy, after consuming a corpse.
+            (
+                "critical_strike_chance_+%_vs_blinded_enemies",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_BLINDED,
+                )],
+            ),
+            (
+                "damage_+%_if_you_have_consumed_a_corpse_recently",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    conditions::CONSUMED_CORPSE_RECENTLY,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.
