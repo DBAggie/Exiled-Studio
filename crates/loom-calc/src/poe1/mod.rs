@@ -464,6 +464,10 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// "#% increased Attack Speed per 150 Accuracy Rating" (P6-11hd; PoB's
+    /// `Speed` INC with `PerStat` `Accuracy`): `Base`, the value per step,
+    /// read by the attack's rate with the hand's accuracy.
+    AttackSpeedPerAccuracy,
     /// The enemy's resistance to a type overridden (P6-11hc; PoB's enemy
     /// `<Type>Resist` OVERRIDE, `calcResistForType`): `Base`, the value,
     /// read with [`Self::EnemyResistOverrideOn`] by the enemy's resistance
@@ -1443,6 +1447,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::AttackSpeedPerAccuracy => f.write_str("attack-speed-per-accuracy"),
             Self::EnemyResistOverride(t) => write!(f, "enemy-resist-override.{}", t.name()),
             Self::EnemyResistOverrideOn(t) => write!(f, "enemy-resist-override-on.{}", t.name()),
             Self::ProjectileSpeed => f.write_str("projectile-speed"),

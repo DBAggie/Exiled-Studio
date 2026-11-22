@@ -4220,3 +4220,21 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected. Three values moved, all toward PoB (two Chieftain builds' full and ignite DPS).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hd: attack speed per 150 accuracy rating
+
+**Found** (P6-11gm's scan): the notable's "1% increased Attack Speed per 150 Accuracy Rating" (`attack_speed_+%_per_200_accuracy_rating`; the stat ID keeps an older 200) was a reason in 2 builds.
+
+**PoB:** `Speed` INC with `ModFlag.Attack` and `PerStat` `Accuracy` 150 (`ModParser.lua` 1490). `GetStat` falls back to the pass's `cfg.skillStats`, which is the hand's output (`CalcOffence.lua` 1943, 1960), so the hand's own final accuracy is read: `floor(accuracy / 150 + 0.0001) x value`.
+
+**The engine:**
+- `Poe1Quantity::AttackSpeedPerAccuracy` (`Base`).
+- `hit::attack_rate` computes the hand's accuracy when the store has it and adds the per-step term to the speed's increase (`hit::per_value`, split out of `per_stat`; `rate` takes its computed extras as `RateExtras`).
+
+**Evidence** (`b-ct`, against P6-11hc's run):
+- **Two new mechanic fixtures**, both matching PoB on every field: `smite-attack-speed-per-accuracy-templar.xml` (806 accuracy, so 5%; PoB's speed 1.1475 against 1.105) and its base `smite-accuracy-no-speed-templar.xml`.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. Twelve values moved: 10 toward PoB, 2 away (one build's speed and mana cost per second).
+  - That build attacks with its off hand and has 5037 accuracy here against PoB's 4212, so 33 steps against 28. Its speed was already above PoB's (2.57 against 2.0 without the notable, PoB's run of the build with the node removed).
+  - PoB's run with and without the node: the speed gains ×1.194 there and ×1.225 here, the difference being the accuracy gap.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

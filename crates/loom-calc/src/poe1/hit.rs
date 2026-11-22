@@ -2260,7 +2260,7 @@ fn cast_rate(
         !spell.skill.types.contains("Channel"),
         !spell.skill.types.contains("SummonsTotem"),
         limit,
-        None,
+        RateExtras::default(),
     )?;
     reasons.extend(&cooldown_reasons);
     Ok((value, reasons))
@@ -2438,6 +2438,23 @@ fn attack_rate(
     } else {
         None
     };
+    // "#% increased Attack Speed per 150 Accuracy Rating" (P6-11hd; PoB's
+    // `Speed` INC with `PerStat` `Accuracy`, read with the hand's final
+    // accuracy): one more term of the speed's increase.
+    let per_accuracy = Quantity::Poe1(Poe1Quantity::AttackSpeedPerAccuracy);
+    let mut extra_inc = Vec::new();
+    if phases::has(calc, per_accuracy) {
+        let accuracy = accuracy(calc, cx, hand, &mut off_reasons)?;
+        extra_inc.push(per_value(
+            calc,
+            per_accuracy,
+            accuracy,
+            ATTACK_SPEED_ACCURACY_STEP,
+            None,
+            cx,
+            &mut off_reasons,
+        )?);
+    }
     let (value, mut reasons) = rate(
         calc,
         base_time,
@@ -2445,11 +2462,28 @@ fn attack_rate(
         !attack.skill.types.contains("Channel"),
         !attack.skill.types.contains("SummonsTotem"),
         None,
-        extra,
+        RateExtras {
+            more: extra,
+            inc: &extra_inc,
+        },
     )?;
     reasons.extend(&off_reasons);
     Ok((value, reasons))
 }
+
+/// Computed terms of a rate's speed modifier beyond the store's: a more
+/// multiplier (P6-11gx, the off hand's own) and increases (P6-11hd, per
+/// accuracy).
+#[derive(Default)]
+struct RateExtras<'a> {
+    more: Option<Valued>,
+    inc: &'a [Valued],
+}
+
+/// The accuracy per step of "#% increased Attack Speed per 150 Accuracy
+/// Rating": the game's text says 150 (the stat ID keeps an older 200), and
+/// PoB reads the text (`ModParser.lua` 1490).
+const ATTACK_SPEED_ACCURACY_STEP: f64 = 150.0;
 
 /// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`,
 /// with a cooldown's `limit` taken before the tick cap.
@@ -2460,7 +2494,7 @@ fn rate(
     capped: bool,
     self_cast: bool,
     limit: Option<Valued>,
-    extra_more: Option<Valued>,
+    extras: RateExtras<'_>,
 ) -> Result<(Valued, Reasons), CalcError> {
     // Stats that change the rate or DPS a way not modelled (PoB's
     // `showAverage`), read here: a trigger's rate never reaches this
@@ -2473,8 +2507,14 @@ fn rate(
         },
         |_| false,
     );
-    let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
-    let more = match extra_more {
+    let (inc, more) = if extras.inc.is_empty() {
+        modifiers(calc, Quantity::Speed, cx, &mut reasons)?
+    } else {
+        let inc = increased_with(calc, Quantity::Speed, cx, extras.inc, &mut reasons)?;
+        let more = more(calc, Quantity::Speed, cx, &mut reasons)?;
+        (inc, more)
+    };
+    let more = match extras.more {
         Some(extra) => phases::product(calc, &[more, extra], Term::More)?,
         None => more,
     };
@@ -2827,6 +2867,24 @@ fn per_stat(
     }) else {
         return Ok(None);
     };
+    per_value(calc, q, stat, div, limit, cx, reasons).map(Some)
+}
+
+/// `min(floor(stat / div + 0.0001) x value, limit)` of `q`'s `Base` effects
+/// in `cx` (PoB's `PerStat` tag) for a computed `stat` ([`per_stat`]'s
+/// body; P6-11hd reads it with the accuracy).
+///
+/// # Errors
+/// A graph error.
+fn per_value(
+    calc: &mut Calc<'_>,
+    q: Quantity,
+    stat: Valued,
+    div: f64,
+    limit: Option<f64>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
     let per = sum_in(
         calc,
         q,
@@ -2850,16 +2908,10 @@ fn per_stat(
     let count = Valued { node, value };
     let total = phases::product(calc, &[count, per], Term::Step("per-stat"))?;
     let Some(limit) = limit else {
-        return Ok(Some(total));
+        return Ok(total);
     };
     let limit = phases::constant(calc, "per-stat-limit", limit)?;
-    Ok(Some(phases::pair(
-        calc,
-        total,
-        limit,
-        Term::Step("per-stat-capped"),
-        true,
-    )?))
+    phases::pair(calc, total, limit, Term::Step("per-stat-capped"), true)
 }
 
 /// `1 + (sum + extras) / 100` of `quantity`'s `Increased` effects in `cx`

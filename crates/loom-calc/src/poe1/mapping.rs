@@ -5828,6 +5828,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11hd: "#% increased Attack Speed per 150 Accuracy Rating" (`Speed`
+    // INC, `ModFlag.Attack`, `PerStat` `Accuracy` 150).
+    (
+        "attack_speed_+%_per_200_accuracy_rating",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AttackSpeedPerAccuracy),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11gu: "Auras from your Skills grant #% increased Attack and Cast
     // Speed to you and Allies" (`ExtraAuraEffect` of `Speed` INC): each
     // aura buff adds it, scaled as the aura (`poe1::gems`).
