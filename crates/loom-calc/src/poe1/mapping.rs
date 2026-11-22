@@ -6656,6 +6656,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11gj: "Strength provides no bonus to Maximum Life"
+    // (`NoStrBonusToLife` FLAG, `ModParser.lua` 5430).
+    (
+        "gain_no_maximum_life_from_strength",
+        &[(
+            Quantity::Poe1(Poe1Quantity::NoStrBonusToLife),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     (
         "global_defences_+%",
         &[

@@ -351,7 +351,8 @@ fn attributes(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// from stats the mapping does not know yet, which make the fields
 /// `Partial`.
 fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
-    let str_bonus = bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")?;
+    let mut flag_reasons = Reasons::new();
+    let str_bonus = strength_life(calc, &mut flag_reasons)?;
     let parts = chain(
         calc,
         Quantity::Life,
@@ -363,6 +364,7 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let rounded = round(calc, parts.product, Term::Step("rounded"))?;
     let life = at_least(calc, rounded, "minimum", 1.0)?;
     let mut reasons = parts.reasons;
+    reasons.extend(&flag_reasons);
     let life = match chaos_inoculation(calc, &mut reasons)? {
         Some(flag) => {
             let one = constant(calc, "chaos-inoculation-life", 1.0)?;
@@ -394,6 +396,16 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &[Field::Intelligence],
     );
     Ok(())
+}
+
+/// Life from strength, `floor(Str / 2)`, unless "Strength provides no
+/// bonus to Maximum Life" (P6-11gj; PoB's `NoStrBonusToLife`,
+/// `CalcPerform.lua` 496).
+fn strength_life(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<Option<Valued>, CalcError> {
+    if flag_of(calc, Poe1Quantity::NoStrBonusToLife, reasons)?.is_some() {
+        return Ok(None);
+    }
+    bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")
 }
 
 /// Chaos Inoculation's flag when it is on (P6-11ej; PoB's
@@ -1389,7 +1401,7 @@ fn life_as_energy_shield(
         )?;
         return Ok(Some(row));
     }
-    let str_bonus = bonus(calc, Field::Strength, 0.5, "half", "life-from-strength")?;
+    let str_bonus = strength_life(calc, reasons)?;
     let life_effects = sum(
         calc,
         Quantity::Life,

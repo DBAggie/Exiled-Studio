@@ -3706,3 +3706,27 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
   - Its life moved from 3997 to 4282, past PoB's 4142, so its maximum hits taken passed PoB's too.
   - Its belt also has "gain no maximum life from Strength" (`gain_no_maximum_life_from_strength`), still unmapped and a reason on the life field. The engine still counts Strength's 80 life (Strength 160), which PoB drops. Without it, the base life would be 1750 against PoB's 1770.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gj: Strength provides no bonus to Maximum Life
+
+**Found:** `gain_no_maximum_life_from_strength` ("Strength provides no bonus to Maximum Life") was unmapped, a reason. One corpus Necromancer build has it on its belt.
+- P6-11gi counted that build's abyss jewels. Its life then passed PoB's (4282, PoB 4142), since the engine still added Strength's 80 life that PoB drops.
+
+**PoB:**
+- `ModParser.lua` 5430 reads the line as the flag `NoStrBonusToLife`.
+- `CalcPerform.lua` 496 then adds no `Life` BASE `floor(Str / 2)` from "Strength".
+
+**The engine:**
+- `Poe1Quantity::NoStrBonusToLife`, a `Flag` mapped from the stat.
+- `phases::strength_life` gives no strength bonus while the flag is on. It is read by both places that add Strength's life: life itself, and the life base of life gained as energy shield (P6-11dd).
+
+**Evidence** (`b-ct`, against P6-11gi's run):
+- **Two new mechanic fixtures** match PoB on every compared field:
+  - `ice-nova-no-life-from-strength-witch.xml`: Ice Nova with "+100 to Strength" and the line;
+  - `ice-nova-life-as-energy-shield-no-strength-witch.xml`: P6-11dd's life-as-energy-shield fixture with the line.
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected.
+  - The Necromancer build's life moved from 4282 to 4095 (PoB 4142). Its base life is now 1750 against PoB's 1770: the gap left after P6-11gi, not traced here.
+  - Eleven of its values moved toward PoB, among them its maximum hits taken and leech maximums.
+  - Four moved away (life regeneration, the effective health pool, and its hit counts). They were already below PoB's and fall with life.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

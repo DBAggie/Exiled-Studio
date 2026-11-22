@@ -433,6 +433,10 @@ pub enum Poe1Quantity {
     /// Dexterity grants no evasion (PoB's `NoDexBonusToEvasion`; P6-11ek):
     /// a `Flag`, read by [`phases`] (`CalcPerform.lua` 509).
     NoDexBonusToEvasion,
+    /// Strength grants no life (PoB's `NoStrBonusToLife`, "Strength
+    /// provides no bonus to Maximum Life"; P6-11gj): a `Flag`, read by the
+    /// life step.
+    NoStrBonusToLife,
     /// The increases that are both armour's and evasion's (PoB's
     /// `ArmourAndEvasion` and `Defences` INC; P6-11ek): each such row also
     /// adds to `Armour` and `Evasion`, and to this marker, which only Iron
@@ -1339,6 +1343,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AurasAffectEnemies => f.write_str("auras-affect-enemies"),
             Self::SuppressionToSpellDodge => f.write_str("suppression-to-spell-dodge"),
             Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
+            Self::NoStrBonusToLife => f.write_str("no-str-bonus-to-life"),
             Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),
             Self::CanWither => f.write_str("can-wither"),
             Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),
