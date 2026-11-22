@@ -4500,3 +4500,31 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - `ice-nova-frost-shield-in-area-witch.xml`: 6 stages counted as 4, the enemy inside (20%), against several hits.
 - **Public and corpus:** 0 unexpected, no value moved. The community builds with Frost Shield set no stages.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hp: Bear Trap (a trap with a cooldown)
+
+**Found** (the open task "... Bear Trap ..."): Bear Trap as the main skill left its hit fields not computed. `hit::spell_skill` refused a trap or a mine with a cooldown. Once it was let through, its damage was 0: Bear Trap's base damage is its `secondary_*` stats, which were unmapped.
+
+**PoB** (`CalcOffence.lua` 1218 to 1267, 333, 5983; `CalcActiveSkill.lua` 353 to 359, 427; `SkillStatMap.lua` 30 to 89):
+- **The rate:** a trap's cooldown is `TrapCooldown`, which caps nothing, so the rate is the throwing rate. With a cooldown the throw count is 1, unless the config overrides it. A mine that is not a trap sets `output.Cooldown`, which would cap its laying rate.
+- **The damage:** `secondary_minimum/maximum_base_<type>_damage` are `skill("<Type>Min/Max")`, as the `spell_*` ones.
+- **The flags:** `ModFlag.Spell` needs the base flag `spell`, and the spell keyword needs the Spell type without the base flag `cast`. Bear Trap's base flags are cast, duration, and trap, so spell modifiers do not reach it.
+- **The debuff:** its own debuff, `TrapMineDamageTaken` INC, reaches its own hit (3488).
+- **`showAverage`:** kept for a trap with a cooldown (Bear Trap's `base_skill_show_average_damage_instead_of_dps`), so `CombinedDPS` starts from `AverageDamage`.
+
+**The engine:**
+- `hit::spell_skill` lets a trap with a cooldown through. A mine-only skill with a cooldown stays not computed.
+- `hit::throw_count` is 1 with a cooldown.
+- The hit's spell flags follow PoB's base flags when the skill has PoB's data.
+- `HIT_ROWS`:
+  - the ten `secondary_*` base damage stats;
+  - Bear Trap's `bear_trap_damage_taken_+%_from_traps_and_mines` as `EnemyTrapMineDamageTaken`, now a hit quantity.
+- `combined::shows_average` handles a trap's or a mine's `showAverage` with a cooldown.
+- Its other stats PoB reads into no output: five more in `skill_no_output::STATS`.
+
+**Evidence** (`b-ct`, against P6-11ho's run):
+- **Two new mechanic fixtures**, both matching PoB on every computed field:
+  - `bear-trap-witch.xml`: PoB's probe gives `AverageDamage` 558.94, `Speed` 1.667, `TrapCooldown` 4.026, `TotalDPS` 931.56, `CombinedDPS` 558.94.
+  - `bear-trap-modifiers-witch.xml`: spell damage, trap damage and throwing speed, cooldown recovery, and an additional trap.
+- **Public and corpus:** 0 unexpected, no value moved. The spell flag rule moved no other skill.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

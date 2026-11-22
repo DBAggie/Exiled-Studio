@@ -1199,6 +1199,10 @@ mod tests {
             "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
             "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
             "chance_to_freeze_shock_ignite_%",
+            // P6-11hp: Bear Trap's debuff as the main skill, the enemy's
+            // damage taken from traps and mines that a trap's or a mine's
+            // hit reads (`hit`, as another group's Bear Trap in `poe1::gems`).
+            "bear_trap_damage_taken_+%_from_traps_and_mines",
             // P6-11as: damage you take recouped as mana (`poe1::enemy_hit`).
             "damage_taken_goes_to_mana_%",
             // P6-10a: and as life, the same way.

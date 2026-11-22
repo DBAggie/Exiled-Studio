@@ -96,7 +96,8 @@
 //! P6-6d, `Partial` through [`TOTEM_REASON`]; traps and mines since P6-6e,
 //! `Partial` through [`TRAP_MINE_REASON`], their attacks and DoT not
 //! computed), with a cast time (a cooldown caps the rate since P6-7c3b,
-//! [`cooldown_limit`]; a trap's or a mine's cooldown is not modelled); or
+//! [`cooldown_limit`]; a trap's cooldown does not, P6-11hp; a mine's alone
+//! is not modelled); or
 //! an attack
 //! that is none of those but an attack, without a cooldown, with a weapon
 //! in the main hand of a class the skill can use and no weapon in the off
@@ -529,10 +530,12 @@ pub fn spell_skill<'d>(
     let effect = skill.effect();
     let gem = skill.active_gem;
     let level_row = skill::effect_level(effect, gem.level)?;
-    // A cooldown caps the rate (P6-7c3b, [`cast_rate`]); a trap's or a
-    // mine's cooldown is PoB's trap cooldown, not modelled.
-    if effect.cast_time <= 0 || (level_row.cooldown != 0 && (has("Trapped") || has("RemoteMined")))
-    {
+    // A cooldown caps the rate (P6-7c3b, [`cast_rate`]). A trap's is PoB's
+    // `TrapCooldown` (P6-11hp; `CalcOffence.lua` 1259 to 1267), which caps
+    // nothing: the rate is the throwing rate. A mine's that is not a trap
+    // is PoB's `output.Cooldown` (1286), which would cap the laying rate:
+    // not modelled.
+    if effect.cast_time <= 0 || (level_row.cooldown != 0 && has("RemoteMined") && !has("Trapped")) {
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;
@@ -1078,11 +1081,19 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         matches!(trigger, super::triggers::Outcome::Rate(_, _, true)),
     );
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::SPELL
-        | Flags::KEYWORD_SPELL
-        | Flags::CAST
-        | Flags::HIT
-        | spell.skill.keyword_flags();
+    // PoB's spell flags (P6-11hp; `CalcActiveSkill.lua` 353 to 359, 427):
+    // `ModFlag.Spell` with the base flag `spell`, the spell keyword for a
+    // Spell type without the base flag `cast` (Bear Trap has neither: spell
+    // modifiers do not reach its damage). A skill without PoB's data keeps
+    // both.
+    let pob = super::pob_skill::skill(&spell.skill.effect().id);
+    let mut flags = Flags::CAST | Flags::HIT | spell.skill.keyword_flags();
+    if pob.is_none_or(|p| p.flag("spell")) {
+        flags = flags | Flags::SPELL;
+    }
+    if pob.is_none_or(|p| !p.flag("cast")) {
+        flags = flags | Flags::KEYWORD_SPELL;
+    }
     if spell.area {
         flags = flags | Flags::AREA;
     }
@@ -2496,12 +2507,13 @@ fn cast_rate(
         // + (count - 1) x 0.1` before the tick cap; the time is then divided
         // by each count, so the rate is the capped speed times them.
         let trap = spell.skill.types.contains("Trapped");
+        let cooldown = spell.cooldown != 0;
         let mut counts = Vec::new();
         if mine {
-            counts.push(throw_count(calc, true, cx, &mut reasons)?);
+            counts.push(throw_count(calc, true, cooldown, cx, &mut reasons)?);
         }
         if trap {
-            counts.push(throw_count(calc, false, cx, &mut reasons)?);
+            counts.push(throw_count(calc, false, cooldown, cx, &mut reasons)?);
         }
         let speed = if mine {
             let count = counts[0];
@@ -2548,12 +2560,14 @@ fn cast_rate(
 }
 
 /// A throw count (P6-11fa): the config's `minesPerThrow` or `trapsPerThrow`
-/// when set (an `OVERRIDE`), else `calcLib.val`: the base 1 plus the
-/// counts' BASE sum (no INC or MORE is mapped). A value of another type is
-/// the input's reason.
+/// when set (an `OVERRIDE`), else 1 for a skill with a cooldown (P6-11hp;
+/// `CalcOffence.lua` 1231 to 1233, 1321 to 1323), else `calcLib.val`: the
+/// base 1 plus the counts' BASE sum (no INC or MORE is mapped). A value of
+/// another type is the input's reason.
 fn throw_count(
     calc: &mut Calc<'_>,
     mine: bool,
+    cooldown: bool,
     cx: &QueryContext,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
@@ -2580,6 +2594,9 @@ fn throw_count(
     } else {
         Poe1Quantity::TrapThrowCount
     });
+    if cooldown {
+        return phases::constant(calc, "throw-count-cooldown", 1.0);
+    }
     let base = phases::constant(calc, "throw-count-base", 1.0)?;
     if !phases::has(calc, q) {
         return Ok(base);

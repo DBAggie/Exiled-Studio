@@ -230,7 +230,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Minion damage "if you've used a Minion Skill Recently": done in P6-11cm.
 - [x] P6-11bs: warcry power and uptime (`gems::warcry_terms`, `BuffStat::PerPower`, `skill_modifiers::SkillTiming`); Enduring Cry's regeneration and Intimidating Cry's movement speed; fixtures `ice-nova-warcry-power-witch.xml`, `ice-nova-warcry-power-config-witch.xml` (`docs/phase-6/gems.md`, "P6-11bs")
 - [x] P6-11bt: Ruthless (`hit::ruthless_effect`); fixture `smite-ruthless-bleed-templar.xml` (Q11 DIV-0320 to DIV-0326) (`docs/phase-6/gems.md`, "P6-11bt")
-- [ ] Spellslinger (the supported spell reserves and triggers from wand attacks), Blood and Sand, Bear Trap, mines (Frost Shield done in P6-11ho)
+- [ ] Spellslinger (the supported spell reserves and triggers from wand attacks), Blood and Sand, mines (a mine-only skill with a cooldown; a trap's, a mine's, and a totem's cost per second) (Frost Shield done in P6-11ho, Bear Trap in P6-11hp)
 - [ ] P6-9 remaining: Skitterbots (data run), the other skills with their own buffs (`docs/phase-6/gems.md`, "P6-9e", "Not yet")
 ## P6-10a: timeless jewels
 - [x] P6-10a part 1: extraction roots `TIMELESS_TABLES_POE1` (the three tables read; 718 rows as PoB's export); `docs/phase-6/timeless.md`
@@ -398,6 +398,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11hm: missing unreserved life gained before an enemy hit (`Poe1Quantity::MissingLifeBeforeHit`, `ehp::hits_to_die`); fixtures `ice-nova-missing-life-before-hit-witch.xml`, `ice-nova-missing-life-before-hit-block-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hm")
 - [x] P6-11hn: ward (`phases::ward`, the ward pool in `ehp` and the maximum hit); fixtures `ice-nova-ward-witch.xml`, `ice-nova-ward-boss-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hn")
 - [x] P6-11ho: Frost Shield (stages with `BuffStat::PerCount`'s limit, `BuffStat::EnemyCheck`, the shield's pool after the golem's in `ehp` and the maximum hit); fixtures `ice-nova-frost-shield-witch.xml`, `ice-nova-frost-shield-in-area-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11ho")
+- [x] P6-11hp: Bear Trap, a trap with a cooldown (`hit::spell_skill`, `hit::throw_count`, PoB's spell flags, secondary damage, `combined::shows_average`); fixtures `bear-trap-witch.xml`, `bear-trap-modifiers-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hp")
 - [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

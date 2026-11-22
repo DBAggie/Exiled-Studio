@@ -185,6 +185,25 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     }
 }
 
+/// Whether PoB's `showAverage` holds for a trap's or a mine's skill
+/// (P6-11hp): its `base_skill_show_average_damage_instead_of_dps` (the
+/// marker [`Poe1Quantity::HitReason`]) and a cooldown.
+fn shows_average(calc: &Calc<'_>, skill: &super::skill::MainSkill<'_>) -> bool {
+    let trap_or_mine = [super::skill::TRAP_TYPE, super::skill::MINE_TYPE]
+        .iter()
+        .any(|t| skill.types.contains(*t));
+    trap_or_mine
+        && super::skill::effect_level(skill.effect(), skill.active_gem.level)
+            .is_some_and(|l| l.cooldown != 0)
+        && phases::has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::HitReason(SHOW_AVERAGE_STAT)),
+        )
+}
+
+/// PoB's `showAverage` stat (`SkillStatMap.lua` 136).
+const SHOW_AVERAGE_STAT: &str = "base_skill_show_average_damage_instead_of_dps";
+
 /// The combined damage per second of `skill` from the fields the actor
 /// computed (the character's main skill, or the minion's under the minion
 /// actor, P6-7c3d: every field is then the minion's copy).
@@ -207,7 +226,16 @@ pub(super) fn combine(
     };
     let mut deps = Vec::new();
     let mut terms = Vec::new();
-    if let Some(hit) = value_of(calc, Field::HitDps) {
+    // PoB's `showAverage` (P6-11hp; `CalcOffence.lua` 333, 5983): the base is
+    // `AverageDamage`, not `TotalDPS`. A trap's or a mine's keeps it only
+    // with a cooldown (1218 to 1222; Bear Trap). Elsewhere the stat is the
+    // rate's reason (`hit::rate`), which a trap's or a mine's rate does not
+    // read.
+    let show_average = shows_average(calc, skill);
+    if show_average && let Some(avg) = value_of(calc, Field::AverageDamage) {
+        deps.push(Field::AverageDamage);
+        terms.push(avg);
+    } else if let Some(hit) = value_of(calc, Field::HitDps) {
         deps.push(Field::HitDps);
         terms.push(hit);
     } else if has_hit(&skill.types) {

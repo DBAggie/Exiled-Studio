@@ -1603,6 +1603,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11hp: Bear Trap's debuff as the main skill (PoB's
+    // `TrapMineDamageTaken` INC, a `GlobalEffect` debuff on the enemy that a
+    // trap's or a mine's hit reads, `CalcOffence.lua` 3488); another
+    // group's is `poe1::gems`'.
+    (
+        "bear_trap_damage_taken_+%_from_traps_and_mines",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11n: the Berserker's "#% more Damage" (`Damage` MORE).
     (
         "berserker_damage_+%_final",
@@ -2820,6 +2834,48 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    (
+        "secondary_maximum_base_chaos_damage",
+        &[(skill_base(CHAOS_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_maximum_base_cold_damage",
+        &[(skill_base(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_maximum_base_fire_damage",
+        &[(skill_base(FIRE_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_maximum_base_lightning_damage",
+        &[(skill_base(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_maximum_base_physical_damage",
+        &[(skill_base(PHYS, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_minimum_base_chaos_damage",
+        &[(skill_base(CHAOS_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_minimum_base_cold_damage",
+        &[(skill_base(COLD_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_minimum_base_fire_damage",
+        &[(skill_base(FIRE_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "secondary_minimum_base_lightning_damage",
+        &[(skill_base(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // P6-11hp: a skill's secondary damage (Bear Trap's), read as its
+    // base damage (PoB `SkillStatMap.lua` 30 to 89: `skill("<Type>Min")`).
+    (
+        "secondary_minimum_base_physical_damage",
+        &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
     // P6-11di: "#% increased Brand Damage" (`Damage` INC with
     // `KeywordFlag.Brand`, which PoB sets from the `Brand` skill type, as
     // `Flags::SKILL_BRAND`; P6-11cx). A brand is not a main skill whose hit
@@ -3928,6 +3984,8 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     // Ruthless (P6-11bt).
                     | Poe1Quantity::Ruthless(_)
+                    // Bear Trap's debuff as the main skill (P6-11hp).
+                    | Poe1Quantity::EnemyTrapMineDamageTaken
                     // Trap and mine speeds (P6-11cy).
                     | Poe1Quantity::TrapThrowingSpeed
                     | Poe1Quantity::MineLayingSpeed
