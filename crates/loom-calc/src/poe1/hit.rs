@@ -1897,6 +1897,10 @@ fn per_shield_energy_shield(
     )?))
 }
 
+/// The shield's armour and evasion per step of "Attack Damage per 75 Armour
+/// or Evasion Rating on Shield" (PoB's `div = 75`).
+const SHIELD_DAMAGE_STEP: f64 = 75.0;
+
 /// The shield's maximum energy shield per step of the crit lines (PoB's
 /// `div = 10`).
 const SHIELD_ENERGY_SHIELD_STEP: f64 = 10.0;
@@ -3025,6 +3029,23 @@ fn damage_per_stat(
         if let Some(v) = per_stat(calc, spec, cx, reasons)? {
             out.push(v);
         }
+    }
+    // Attack damage per 75 of the shield's armour and evasion (P6-11hh).
+    let per_shield = Quantity::Poe1(Poe1Quantity::DamagePerShieldDefences);
+    if phases::has(calc, per_shield) {
+        use super::{ArmourSlot, Defence};
+        let armour = phases::piece(calc, ArmourSlot::Weapon2, Defence::Armour, reasons)?;
+        let evasion = phases::piece(calc, ArmourSlot::Weapon2, Defence::Evasion, reasons)?;
+        let stat = phases::total(calc, &[armour, evasion], Term::Step("shield-defences"))?;
+        out.push(per_value(
+            calc,
+            per_shield,
+            stat,
+            SHIELD_DAMAGE_STEP,
+            None,
+            cx,
+            reasons,
+        )?);
     }
     // Projectile speed as bow damage (P6-11hb; `CalcOffence.lua` 645 to
     // 651): each `ProjectileSpeed` INC, as tabulated with no skill flags,

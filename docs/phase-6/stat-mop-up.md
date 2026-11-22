@@ -4314,3 +4314,19 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected. 18 values moved, all toward PoB, 4 now equal (three Shield Crush builds' crit multiplier and one crit chance).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hh: attack damage per 75 armour or evasion rating on the shield
+
+**Found** (P6-11he's ShieldDB build): "#% increased Attack Damage per 75 Armour or Evasion Rating on Shield" (`attack_damage_+%_per_75_armour_or_evasion_on_shield`) was a reason in 1 build.
+
+**PoB** (`ModParser.lua` 1518): `Damage` INC with `ModFlag.Attack` and `PerStat` `statList` `ArmourOnWeapon 2`, `EvasionOnWeapon 2`, div 75: the shield's own armour and evasion summed.
+
+**The engine:**
+- `Poe1Quantity::DamagePerShieldDefences` (`Base`, `ATTACK`).
+- `hit::damage_per_stat` adds `floor((armour + evasion) / 75 + 0.0001) x value` of `phases::piece` to the hit's damage increase.
+
+**Evidence** (`b-ct`, against P6-11hg's run):
+- **A new mechanic fixture**, `smite-damage-per-shield-defences-templar.xml`: Smite with a Splendid Round Shield of quality 20 and the line at 2%. It matches PoB but the base fixture's Q11 floored attack time (DIV-0565 to DIV-0570).
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. Five values of the ShieldDB build moved, all toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

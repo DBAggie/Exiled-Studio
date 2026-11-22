@@ -332,6 +332,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11hh: "#% increased Attack Damage per 75 Armour or Evasion Rating on
+    // Shield" (`Damage` INC, `ModFlag.Attack`, `PerStat` of the shield's
+    // armour and evasion, div 75).
+    (
+        "attack_damage_+%_per_75_armour_or_evasion_on_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamagePerShieldDefences),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     // P6-10b: "#% increased Mana Cost of Attacks" (`ManaCost` INC,
     // `SkillType` Attack).
     (
