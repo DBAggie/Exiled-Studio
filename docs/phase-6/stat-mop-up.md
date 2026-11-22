@@ -3846,3 +3846,51 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
 - **Public:** 0 unexpected. Nineteen values of the Cyclone and Shock Nova builds moved, all toward PoB; nine now equal it. The Cyclone build's life is 5234 and the Shock Nova build's mana 8373, as PoB.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gp: flask lines during the effect; conditions from config checks
+
+**Found** (P6-11gm's scan): nine more stats PoB parses, each unmapped (a reason) in 2 to 4 builds.
+- **Four flask lines "during Effect":** life regeneration, mana cost, avoid stun, the effect of shock on you, and life leeched from damage taken.
+- **Lines with a condition** only a config check sets:
+  - consumed a corpse recently (life regeneration, and area of effect for you and your minions);
+  - on caustic ground (chaos damage taken over time);
+  - Ngamahu's Flames' Magmatic Strikes (physical damage as extra fire);
+  - "while not Ignited, Frozen or Shocked" (armour).
+
+**PoB:**
+- **The flask lines** are the global mods with `UsingFlask`.
+  - The engine's flask lines act only while the flask is active (P6-4b), so life regeneration is an alias of `life_regeneration_rate_per_minute_%` and the mana cost a row of its own.
+  - Avoid stun reaches no slice field.
+  - `SelfShockEffect` is read only for a shock on you (`CalcPerform.lua` 849), which only the checks `conditionShocked` and `conditionOnShockedGround` give. Both stay reasons (no engine module reads them).
+  - No PoB module reads `DamageTakenWhenHitLifeLeech`. These three are `NoEffect`.
+- **The conditions.** Each is a `Condition` flag set only by its check:
+  - `conditionConsumedCorpseRecently`, and by implication `conditionConsumedCorpseInPast2Sec` and the count `multiplierCorpseConsumedRecently` (`ConfigOptions.lua` 1599 to 1608);
+  - `conditionOnCausticGround` (1157);
+  - `buffNgamahuFlamesAdvance` (1469);
+  - `Ignited`, `Frozen`, `Shocked` from `conditionIgnited`, `conditionFrozen`, `conditionShocked`, `conditionOnShockedGround`. The armour line's tag is their negation.
+
+**The engine:**
+- **Flasks:** `flasks::ALIASES`, `FLASK_ROWS`, and `NO_EFFECT_LOCAL` gain the flask lines. The mana cost line left `mapping::COST_REASONS`.
+- **`conditions`:**
+  - `CHECKS` gains the corpse, caustic ground, and Magmatic Strikes checks, which left `config::NAMED_ONLY`.
+  - The corpse count settles `CONSUMED_CORPSE_RECENTLY` too.
+  - `NOT_IGNITED_FROZEN_SHOCKED` is settled true when every one of the four checks is off, false when any is on.
+- **`STATE_ROWS`** gains four rows. The caustic ground row left `DOT_TAKEN_REASONS`, which is now empty.
+- **`NO_EFFECT`** gains the area row.
+- **The real-bundle exposure test** lists the armour row among the config-condition rows (it names shock).
+- **Left for later:**
+  - Ngamahu's line in a custom modifier block is unresolved on our side. The game's template has two lines, while PoB (and its unique data) writes it as one.
+  - A one-line reading of a two-line template would be a new import tolerance (a new `Adapted` kind, ADR-015 Amendment 1's list), not part of a stat step.
+  - The build that carries the stat gets it from a passive, by stat ID, so the row acts there.
+
+**Evidence** (`b-ct`, against P6-11go's run):
+- **Three new mechanic fixtures** match PoB on every compared field:
+  - `ice-nova-config-conditions-on-witch.xml`: the corpse and caustic ground checks on, armour 35 and chaos damage taken over time x 2;
+  - `ice-nova-config-conditions-off-witch.xml`: a corpse count of 2, the ignited check on, caustic ground off, armour 27 and x 1.6;
+  - `ice-nova-flask-regen-mana-cost-witch.xml`: an active flask with both lines.
+- **Public:** 0 unexpected; five fields went from partial to complete.
+- **Corpus:** 0 unexpected.
+  - Eleven values moved, all toward PoB; nine now equal it (one build's armour 3953 and its effective health pool, another's mana cost 15).
+  - Two builds' life regeneration went from partial to indeterminate: their flask's regeneration line has a range the corpus run does not settle (P3-8b's rolled values).
+- **Tasks:** the staff socket task was premised on PoB never setting the socket multiplier. It does, and P6-11go applies the lines as PoB does, so the task is ticked. The task on attack speed per 8% quality and the offerings' effect is ticked with what is left of it (the game's item wording of the offerings' line).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

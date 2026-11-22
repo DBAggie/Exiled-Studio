@@ -90,7 +90,7 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 10] = [
+pub const NO_EFFECT_LOCAL: [&str; 13] = [
     // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
     // `UsingFlask`): no slice field.
     "local_avoid_shock_%_during_flask_effect",
@@ -98,8 +98,15 @@ pub const NO_EFFECT_LOCAL: [&str; 10] = [
     // P6-11dp: area of effect during the effect (`AreaOfEffect` INC,
     // `UsingFlask`): area, no slice field.
     "local_flask_area_of_effect_+%_during_flask_effect",
+    // P6-11gp: avoid stun during the effect (`AvoidStun` BASE,
+    // `UsingFlask`): no slice field.
+    "local_flask_avoid_stun_chance_%_during_flask_effect",
     "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
     "local_flask_gain_X_charges_when_hit",
+    // P6-11gp: life leeched from damage taken during the effect
+    // (`DamageTakenWhenHitLifeLeech` BASE, `UsingFlask`): no module of PoB
+    // reads the mod.
+    "local_flask_life_leech_on_damage_taken_%_permyriad_during_flask_effect",
     // P6-11dr: energy shield recovered on kill during the effect
     // (`EnergyShieldOnKill` BASE, `UsingFlask`): no slice field.
     "local_flask_recover_%_maximum_energy_shield_on_kill_during_flask_effect",
@@ -107,6 +114,12 @@ pub const NO_EFFECT_LOCAL: [&str; 10] = [
     "local_flask_remove_curses_on_use",
     "local_flask_use_on_full_charges",
     "local_self_curse_effect_+%_during_flask_effect",
+    // P6-11gp: the effect of shock on you during the effect
+    // (`SelfShockEffect` INC, `UsingFlask`): PoB reads it only for a shock
+    // on you, which only its `conditionShocked` and `conditionOnShockedGround`
+    // checks give (`CalcPerform.lua` 849), each a reason (no engine module
+    // reads them).
+    "local_self_shock_effect_+%_during_flask_effect",
     // P6-11ea: smoke ground on use: no slice field.
     "local_smoke_ground_on_flask_use_radius",
 ];
@@ -138,6 +151,12 @@ pub const ALIASES: &[(&str, &str)] = &[
     ),
     // "#% increased Evasion Rating during Effect".
     ("local_flask_evasion_+%_while_healing", "evasion_rating_+%"),
+    // "Regenerate #% of Life per second during Effect" (P6-11gp;
+    // `LifeRegenPercent` BASE, `UsingFlask`).
+    (
+        "local_flask_life_regeneration_per_minute_%_during_flask_effect",
+        "life_regeneration_rate_per_minute_%",
+    ),
     // "#% increased Movement Speed during Effect" (P6-10b).
     (
         "local_flask_movement_speed_+%_while_healing",
@@ -169,6 +188,8 @@ pub const FLASK_ROWS: &[&str] = &[
     "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect",
     "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
     "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
+    // P6-11gp: "#% increased Mana Cost of Skills during Effect".
+    "local_flask_skill_mana_cost_+%_during_flask_effect",
     // P6-11ce.
     "local_life_loss_%_to_prevent_during_flask_effect_to_lose_over_time",
 ];

@@ -4295,6 +4295,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_RECENTLY,
         )],
     ),
+    // P6-11gp: "#% increased Chaos Damage over Time taken while on Caustic
+    // Ground" (`ChaosDamageTakenOverTime` INC, `OnCausticGround`).
+    (
+        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::OverTime,
+                TakenOf::Type(DamageType::Chaos),
+            )),
+            Op::Increased,
+            NONE,
+            conditions::ON_CAUSTIC_GROUND,
+        )],
+    ),
     // P6-11fb: "#% increased Critical Strike Chance if you haven't dealt a Critical
     // Strike Recently" (`CritChance` INC, `CritRecently` negated).
     (
@@ -4642,6 +4656,18 @@ pub const STATE_ROWS: &[StateRow] = &[
         "evasion_rating_+%_while_moving",
         &[(Quantity::Evasion, Op::Increased, NONE, conditions::MOVING)],
     ),
+    // P6-11gp: Ngamahu's Flames' "Every 10 seconds, gain #% of Physical
+    // Damage as Extra Fire Damage for 4 seconds" (`PhysicalDamageGainAsFire`
+    // BASE, `NgamahuFlamesAdvance`).
+    (
+        "every_10_seconds_physical_damage_%_to_add_as_fire_for_3_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, DamageType::Fire)),
+            Op::Base,
+            NONE,
+            conditions::NGAMAHU_FLAMES_ADVANCE,
+        )],
+    ),
     (
         "global_critical_strike_chance_+%_while_holding_staff",
         &[(
@@ -4707,6 +4733,18 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "life_mastery_count_maximum_life_+%_final",
         &[(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+    ),
+    // P6-11gp: "Regenerate #% of Life per second if you've Consumed a corpse
+    // Recently" (`LifeRegenPercent` BASE, `ConsumedCorpseRecently`), per
+    // minute.
+    (
+        "life_regeneration_rate_per_minute_%_if_consumed_corpse_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+            Op::Base,
+            NONE,
+            conditions::CONSUMED_CORPSE_RECENTLY,
+        )],
     ),
     // P6-10b: "Regenerate #% of Life per second while stationary" (the
     // Soul of Shakari's; `LifeRegenPercent` BASE, `Stationary`), per minute.
@@ -4985,6 +5023,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::MOVING,
+        )],
+    ),
+    // P6-11gp: "#% increased Armour while not Ignited, Frozen or Shocked"
+    // (`Armour` INC with the condition that none holds).
+    (
+        "physical_damage_reduction_rating_+%_while_not_ignited_frozen_shocked",
+        &[(
+            Quantity::Armour,
+            Op::Increased,
+            NONE,
+            conditions::NOT_IGNITED_FROZEN_SHOCKED,
         )],
     ),
     // P6-11dp: "#% chance to Impale Enemies on Hit with Attacks while using
@@ -7147,6 +7196,13 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // below" (`LowLifePercentage` BASE, a fraction: `ModCache.lua` 12888
+    // P6-11gp: a flask's "#% increased Mana Cost of Skills during Effect"
+    // (`ManaCost` INC, `UsingFlask`): the flask's lines act only while it is
+    // active (`poe1::flasks`), so the mod is the plain one.
+    (
+        "local_flask_skill_mana_cost_+%_during_flask_effect",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Increased, 1.0)],
+    ),
     // P6-11ce: a flask's "When Hit during effect, #% of Life loss from Damage
     // taken occurs over 4 seconds instead" (`LifeLossPrevented` BASE,
     // `UsingFlask`; `poe1::flasks::FLASK_ROWS`).
@@ -7942,6 +7998,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11ds: Hextouch's chance to apply the linked hex on hit (PoB: display only;
     // the hex's own support, `SupportCurseOnHitCurse`, applies it).
     ("apply_linked_curses_on_hit_%", "trigger"),
+    // P6-11gp: area of effect for you and your minions if you've consumed a
+    // corpse recently: area, no slice field.
+    (
+        "area_of_effect_+%_for_you_and_minions_if_consumed_corpse_recently",
+        "area",
+    ),
     // P6-11as: "#% increased Area of Effect per Endurance Charge"
     // (`AreaOfEffect` INC per `EnduranceCharge`): area, as
     // `base_skill_area_of_effect_+%`.
@@ -8980,9 +9042,9 @@ pub const EHP_REASONS: &[&str] = &[
 
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to
-/// [`Poe1Quantity::DotTakenReason`]. PoB's text: chaos damage taken over
-/// time while in a caustic cloud (a condition).
-pub const DOT_TAKEN_REASONS: &[&str] = &["chaos_damage_taken_over_time_+%_while_in_caustic_cloud"];
+/// [`Poe1Quantity::DotTakenReason`]. None left: chaos damage taken over
+/// time on caustic ground is a [`STATE_ROWS`] row since P6-11gp.
+pub const DOT_TAKEN_REASONS: &[&str] = &[];
 
 /// Stats that change the main skill's mana cost in a way the engine does
 /// not model (P6-10b), sorted: each maps to [`Poe1Quantity::CostReason`],
@@ -8996,7 +9058,6 @@ pub const DOT_TAKEN_REASONS: &[&str] = &["chaos_damage_taken_over_time_+%_while_
 pub const COST_REASONS: &[&str] = &[
     "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
-    "local_flask_skill_mana_cost_+%_during_flask_effect",
     "mana_cost_+%_while_on_full_energy_shield",
     "manaweave_cost_equals_%_unreserved_mana",
     "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
@@ -10604,6 +10665,8 @@ mod tests {
                         conditions::ENEMY_MARKED,
                         // P6-11dz: from the active flasks.
                         conditions::USING_FLASK,
+                        // P6-11gp: from the ignited, frozen, and shocked checks.
+                        conditions::NOT_IGNITED_FROZEN_SHOCKED,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -11089,6 +11152,46 @@ mod tests {
                         conditions::LEECHING,
                     ),
                 ],
+            ),
+            // P6-11gp: config checks.
+            (
+                "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::OverTime,
+                        TakenOf::Type(DamageType::Chaos),
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::ON_CAUSTIC_GROUND,
+                )],
+            ),
+            (
+                "every_10_seconds_physical_damage_%_to_add_as_fire_for_3_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, DamageType::Fire)),
+                    Op::Base,
+                    NONE,
+                    conditions::NGAMAHU_FLAMES_ADVANCE,
+                )],
+            ),
+            (
+                "life_regeneration_rate_per_minute_%_if_consumed_corpse_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(Pool::Life)),
+                    Op::Base,
+                    NONE,
+                    conditions::CONSUMED_CORPSE_RECENTLY,
+                )],
+            ),
+            (
+                "physical_damage_reduction_rating_+%_while_not_ignited_frozen_shocked",
+                vec![config(
+                    Quantity::Armour,
+                    Op::Increased,
+                    NONE,
+                    conditions::NOT_IGNITED_FROZEN_SHOCKED,
+                )],
             ),
             // P6-11gk: focused.
             (

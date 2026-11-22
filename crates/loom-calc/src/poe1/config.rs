@@ -260,10 +260,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
     (
-        "buffNgamahuFlamesAdvance",
-        &["Condition:NgamahuFlamesAdvance"],
-    ),
-    (
         "carrionGolemNearbyMinion",
         &["Multiplier:NearbyNonGolemMinion"],
     ),
@@ -279,14 +275,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionChilledEnemyRecently",
         &["Condition:ChilledEnemyRecently"],
-    ),
-    (
-        "conditionConsumedCorpseInPast2Sec",
-        &["Condition:ConsumedCorpseInPast2Sec"],
-    ),
-    (
-        "conditionConsumedCorpseRecently",
-        &["Condition:ConsumedCorpseRecently"],
     ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
@@ -358,10 +346,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     (
         "multiplierCorpseConsumedRecently",
-        &[
-            "Multiplier:CorpseConsumedRecently",
-            "Condition:ConsumedCorpseRecently",
-        ],
+        &["Multiplier:CorpseConsumedRecently"],
     ),
     (
         "multiplierEnemyHallowingFlame",

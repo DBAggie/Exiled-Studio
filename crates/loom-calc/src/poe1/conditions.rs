@@ -69,6 +69,38 @@ pub const ATTACKED_RECENTLY: &str = "AttackedRecently";
 /// its check (1489), or a main skill that is a spell and no attack.
 pub const CAST_SPELL_RECENTLY: &str = "CastSpellRecently";
 
+/// "if you've Consumed a corpse Recently" (PoB's `ConsumedCorpseRecently`;
+/// P6-11gp): its check, or the check of a corpse consumed in the past 2
+/// seconds (`implyCond`, `ConfigOptions.lua` 1599 to 1603).
+pub const CONSUMED_CORPSE_RECENTLY: &str = "ConsumedCorpseRecently";
+
+/// The count of corpses consumed recently (P6-11gp), which sets
+/// [`CONSUMED_CORPSE_RECENTLY`] too.
+const CORPSES_CONSUMED_INPUT: &str = "multiplierCorpseConsumedRecently";
+
+/// "while on Caustic Ground" (PoB's `OnCausticGround`; P6-11gp): its check
+/// (`ConfigOptions.lua` 1157).
+pub const ON_CAUSTIC_GROUND: &str = "OnCausticGround";
+
+/// Ngamahu's Flames' Magmatic Strikes (PoB's `NgamahuFlamesAdvance`;
+/// P6-11gp): its check (`ConfigOptions.lua` 1469).
+pub const NGAMAHU_FLAMES_ADVANCE: &str = "NgamahuFlamesAdvance";
+
+/// "while not Ignited, Frozen or Shocked" (P6-11gp): the engine's key for
+/// PoB's condition that none of `Ignited`, `Frozen`, `Shocked` holds
+/// (`ModParser.lua`'s `neg` `varList`), settled from their checks
+/// ([`settle`]).
+pub const NOT_IGNITED_FROZEN_SHOCKED: &str = "NotIgnitedFrozenShocked";
+
+/// The checks that set `Ignited`, `Frozen`, or `Shocked` on you
+/// (`ConfigOptions.lua` 1171, 1181, 1193, 1199).
+const IGNITED_FROZEN_SHOCKED_INPUTS: [&str; 4] = [
+    "conditionFrozen",
+    "conditionIgnited",
+    "conditionOnShockedGround",
+    "conditionShocked",
+];
+
 /// "while Focused" (PoB's `Focused`; P6-11gk): its check alone
 /// (`ConfigOptions.lua` 992).
 pub const FOCUSED: &str = "Focused";
@@ -234,6 +266,8 @@ pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
 pub const CHECKS: &[(&str, &str)] = &[
     ("buffArcaneSurge", ARCANE_SURGE),
     ("buffLifetap", LIFETAP),
+    // P6-11gp: Magmatic Strikes.
+    ("buffNgamahuFlamesAdvance", NGAMAHU_FLAMES_ADVANCE),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     // P6-11em: attacked recently; the main skill too (`settle`).
@@ -246,6 +280,16 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionBlockedSpellRecently", "BlockedSpellRecently"),
     // P6-11em: cast a spell recently; the main skill too (`settle`).
     ("conditionCastSpellRecently", CAST_SPELL_RECENTLY),
+    // P6-11gp: a corpse consumed recently (the past 2 seconds implies it).
+    (
+        "conditionConsumedCorpseInPast2Sec",
+        "ConsumedCorpseInPast2Sec",
+    ),
+    (
+        "conditionConsumedCorpseInPast2Sec",
+        CONSUMED_CORPSE_RECENTLY,
+    ),
+    ("conditionConsumedCorpseRecently", CONSUMED_CORPSE_RECENTLY),
     ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyBleeding", ENEMY_BLEEDING),
     ("conditionEnemyBurning", ENEMY_BURNING),
@@ -274,6 +318,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionLowLife", LOW_LIFE),
     ("conditionMoving", MOVING),
     ("conditionOnBurningGround", ON_BURNING_GROUND),
+    // P6-11gp: on caustic ground.
+    ("conditionOnCausticGround", ON_CAUSTIC_GROUND),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
     (
@@ -414,6 +460,30 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             }
             None => {}
         }
+    }
+    // The count of corpses consumed recently also sets the condition
+    // (P6-11gp; its `implyCond` and `Condition:ConsumedCorpseRecently` mod,
+    // `ConfigOptions.lua` 1605 to 1608): a count above 0 settles it true,
+    // a value of another type leaves it unsettled.
+    match set.and_then(|s| last(s, CORPSES_CONSUMED_INPUT, ConfigInputKind::Input)) {
+        Some(ConfigValue::Number(n)) if n.value().0 > 0.0 => {
+            out.insert(ConditionKey::new(CONSUMED_CORPSE_RECENTLY), true);
+        }
+        None | Some(ConfigValue::Number(_)) => {}
+        Some(_) => {
+            out.remove(&ConditionKey::new(CONSUMED_CORPSE_RECENTLY));
+        }
+    }
+    // Not ignited, frozen, or shocked (P6-11gp): every check off settles it
+    // true, any on false; a value of another type leaves it unsettled.
+    let checks: Vec<Option<bool>> = IGNITED_FROZEN_SHOCKED_INPUTS
+        .iter()
+        .map(|name| check(set, name))
+        .collect();
+    if checks.contains(&Some(true)) {
+        out.insert(ConditionKey::new(NOT_IGNITED_FROZEN_SHOCKED), false);
+    } else if checks.iter().all(Option::is_some) {
+        out.insert(ConditionKey::new(NOT_IGNITED_FROZEN_SHOCKED), true);
     }
     // A minion skill used recently (P6-11cm): the check or the main skill.
     // Attacked and cast a spell recently (P6-11em): the same.

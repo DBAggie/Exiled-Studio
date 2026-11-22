@@ -102,7 +102,11 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// Rows whose text names shock but which read a condition the config
 /// settles (`poe1::conditions`, P3-8n): "if you have Shocked an Enemy
 /// Recently".
-const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
+const CONDITION_ROWS: &[&str] = &[
+    "damage_+%_if_you_have_shocked_recently",
+    // P6-11gp: the config's checks of being ignited, frozen, or shocked.
+    "physical_damage_reduction_rating_+%_while_not_ignited_frozen_shocked",
+];
 
 /// Rows whose text names shock but which map only another part (P3-8c):
 /// "#% chance to Freeze, Shock and Ignite" is the ignite chance; the
