@@ -3023,6 +3023,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             ),
         ],
     ),
+    // P6-11gf: Concentrated Effect's more area damage (PoB `sup_int.lua`
+    // 1104: `Damage` MORE with `ModFlag.Area`).
+    (
+        "support_area_concentrate_area_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
+    ),
     (
         "support_attack_skills_elemental_damage_+%_final",
         &[(
@@ -8612,6 +8618,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
     ),
+    // P6-11gf: Concentrated Effect's less area of effect (`AreaOfEffect`
+    // MORE, `sup_int.lua` 1101), as `active_skill_area_of_effect_+%_final`.
+    (
+        "support_concentrated_effect_skill_area_of_effect_+%_final",
+        "area",
+    ),
     // P6-11aj: Greater Spell Echo's area per repeat (`RepeatPerRepeatAreaOfEffect`): the area, no slice field.
     (
         "support_greater_spell_echo_area_of_effect_+%_per_repeat",
@@ -10417,12 +10429,12 @@ mod tests {
             )),
             StatMap::Effects(_)
         ));
-        // Left unmapped: area of effect (it can change a hit's count).
+        // Area of effect reaches no slice field (P3-8e; P6-11gf).
         assert_eq!(
             Poe1Mapping.map(&StatId::new(
                 "support_concentrated_effect_skill_area_of_effect_+%_final"
             )),
-            StatMap::Unmapped
+            StatMap::NoEffect
         );
     }
 

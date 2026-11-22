@@ -3593,3 +3593,28 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - PoB gives the build no ignite (its combined DPS equals its total), so the change is PoB's.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gf: 57 more supports an item grants; Concentrated Effect
+
+**Found:** `item_supports::ROWS` (P6-11r, 203 rows) lacked 84 stats whose game text is PoB's item support line, "Socketed Gems are Supported by Level N <Support>".
+- Among them are the older `local_display_socketed_gems_get_*_level` stats, and those written "supported" in lowercase.
+- They were unmapped, so reasons. Concentrated Effect (2 builds), Increased Area of Effect, Minion Damage (2 builds), and Hypothermia were among the build lines.
+
+**PoB:** PoB's own `modLib.parseMod` on each line at level 20 (`tools/oracle/data/pob_parse_lines.lua`, output kept locally):
+- **57 stats** give `ExtraSupport` alone. "Cast On Critical Strike" gives two supports.
+- **19** also give an `ExtraSkill`, and **8** PoB does not parse ("Blessed Calling", "Call To Arms", "Cluster Trap", "Edify", "Harrowing Throng", "Increased Duration", "Magnetism", "Ward"). These stay reasons, as in P6-11r.
+
+**The engine:**
+- **`item_supports::ROWS`:** the 57 rows, so 260 in all. Each is the stat's value as the level, with PoB's support IDs.
+- **The bundle test** (`real_item_support_rows_should_name_their_gems`) now reads the line in lowercase, as PoB matches it. It checks every row's text and gem against the bundle, and all 260 pass.
+- **Concentrated Effect's own stats:**
+  - `support_area_concentrate_area_damage_+%_final` is a hit row: `Damage` MORE with `ModFlag.Area`, `sup_int.lua` 1104.
+  - `support_concentrated_effect_skill_area_of_effect_+%_final` is a `NoEffect` "area" row, as `active_skill_area_of_effect_+%_final`. Area of effect reaches no slice field (P3-8e). A P3-10 test had kept it unmapped and now expects `NoEffect`.
+
+**Evidence** (`b-ct`, against P6-11ge's run):
+- **Two new mechanic fixtures:** Ice Nova alone from a magic body armour. All compared fields match in each:
+  - `ice-nova-item-concentrated-effect-witch.xml`: "Socketed Gems are Supported by Level 20 Concentrated Effect";
+  - `ice-nova-item-increased-critical-damage-witch.xml`: "... supported by Level 20 Increased Critical Damage", in lowercase as the game writes it.
+- **Public:** 0 unexpected. Four values of the Vortex build moved, all toward PoB.
+- **Corpus:** 0 unexpected. Six values moved, all toward PoB; one build's life cost now equals PoB's (194).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`, the item support test among them), clippy, and rustfmt pass.

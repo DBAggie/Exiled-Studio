@@ -842,7 +842,11 @@ fn real_item_support_rows_should_name_their_gems() {
             .iter()
             .filter(|(s, _)| *s == stat)
             .find_map(|(_, text)| {
-                let (lead, rest) = text.split_once(" Supported by Level ")?;
+                // PoB matches the line lowercased: "supported" in either
+                // case (P6-11gf). The text is ASCII, so the index holds.
+                const SEP: &str = " supported by level ";
+                let at = text.to_ascii_lowercase().find(SEP)?;
+                let (lead, rest) = (&text[..at], &text[at + SEP.len()..]);
                 let (n, name) = rest.split_once(' ')?;
                 let fits = if level == 0 {
                     n.contains('{')
