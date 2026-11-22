@@ -137,6 +137,13 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
             out.insert(ConditionKey::new(key), v);
         }
     }
+    // The main skill's socket slot (P6-11gl): each slot's state, true for
+    // the main group's slot alone; unsettled when the skills are not known.
+    if let Some(slot) = main_skill_slot(input) {
+        for s in super::gem_levels::GemSlot::ALL {
+            out.insert(ConditionKey::new(s.main_skill_state()), Some(s) == slot);
+        }
+    }
     // The config's condition checks (P3-8n).
     super::conditions::settle(input, &mut out);
     if let Some(v) = six_life_masteries(input) {
@@ -152,6 +159,31 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         out.insert(ConditionKey::new(NO_LIFE_MODIFIERS_ON_BODY_ARMOUR), v);
     }
     out
+}
+
+/// The slot the main skill's group is socketed in (P6-11gl): PoB's main
+/// socket group (`mainSocketGroup`, clamped as [`super::skill::main_skill`]
+/// clamps it), its slot as [`super::gem_levels::GemSlot::of`] reads it
+/// (`Some(None)`: no slot, or no group). `None` when the skill groups are
+/// not certain.
+fn main_skill_slot(input: &CalcInput<'_>) -> Option<Option<super::gem_levels::GemSlot>> {
+    let build = input.build;
+    let groups = super::skill::active_groups(build).ok()?;
+    if groups.is_empty() {
+        return Some(None);
+    }
+    let wanted = build
+        .character
+        .main_socket_group
+        .as_ref()
+        .map_or(1, |s| *s.value() as usize);
+    let group = groups[wanted.clamp(1, groups.len()) - 1];
+    Some(
+        group
+            .slot
+            .as_ref()
+            .and_then(|s| super::gem_levels::GemSlot::of(s.as_str())),
+    )
 }
 
 /// A hand's weapon as PoB's `data.weaponTypeInfo` (`Modules/Data.lua`

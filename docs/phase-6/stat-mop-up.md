@@ -3750,3 +3750,23 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
 - **Public:** 0 unexpected. Eight values of the Shock Nova build moved, all toward PoB; its speed is 7.90, PoB 8.16.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gl: Socketed Gems deal more Elemental Damage
+
+**Found:** `local_display_socketed_gems_elemental_damage_+%_final` ("Socketed Gems deal #% more Elemental Damage") was unmapped, a reason, in 4 builds. No line yet acted on the main skill alone by the slot its gems are socketed in.
+
+**PoB:**
+- `ModParser.lua` 1237 reads the prefix "socketed gems" as a `SocketedIn` tag with the item's slot, so the line is `ElementalDamage` MORE on the skills socketed in that item.
+- `ElementalDamage` scales the skill's fire, cold, and lightning damage, its hits and its damage over time.
+
+**The engine:**
+- **The state.** `GemSlot::main_skill_state` gives one state per gem slot, "the main skill's group is socketed here". `states::states` settles it from PoB's main socket group and its slot: true for that slot alone, false for the others. It stays unsettled while the skill groups are not certain.
+- **The line.** `InSlot` maps the stat (`gem_levels::SOCKETED_ELEMENTAL_DAMAGE_STAT`) to `Damage` MORE, `Flags::ELEMENTAL` any, with the item's slot state. That is the condition the global "more elemental damage" rows use.
+
+**Evidence** (`b-ct`, against P6-11gk's run):
+- **Two new mechanic fixtures** match PoB on every compared field:
+  - `ice-nova-socketed-elemental-damage-witch.xml`: the line on the body armour Ice Nova is socketed in, average damage 1346.27;
+  - `ice-nova-socketed-elemental-damage-elsewhere-witch.xml`: the line on a helmet, which does not apply, 1035.63.
+- **Public:** 0 unexpected. Three values of the Righteous Fire build moved toward PoB (its burning damage). Its Righteous Fire is socketed with the line.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -114,6 +114,31 @@ pub enum GemSlot {
 }
 
 impl GemSlot {
+    /// Every slot, in [`GemSlot`]'s order.
+    pub const ALL: [Self; 6] = [
+        Self::Weapon1,
+        Self::Weapon2,
+        Self::Helmet,
+        Self::BodyArmour,
+        Self::Gloves,
+        Self::Boots,
+    ];
+
+    /// The state that the main skill's group is socketed in this slot
+    /// (P6-11gl; PoB's `SocketedIn` tag on the main skill), which
+    /// [`super::states`] settles.
+    #[must_use]
+    pub const fn main_skill_state(self) -> &'static str {
+        match self {
+            Self::Weapon1 => "MainSkillSocketedIn:weapon-1",
+            Self::Weapon2 => "MainSkillSocketedIn:weapon-2",
+            Self::Helmet => "MainSkillSocketedIn:helmet",
+            Self::BodyArmour => "MainSkillSocketedIn:body-armour",
+            Self::Gloves => "MainSkillSocketedIn:gloves",
+            Self::Boots => "MainSkillSocketedIn:boots",
+        }
+    }
+
     /// The slot of PoB's slot name, " Swap" dropped as PoB drops it for a
     /// group's slot (`CalcSetup.lua` 1634). `None`: a slot without gem
     /// sockets (jewellery, flasks, jewels).
@@ -169,6 +194,13 @@ pub fn socketed_quantity(stat: &str, slot: GemSlot) -> Option<Quantity> {
         .map(|i| Quantity::Poe1(Poe1Quantity::SocketedGemLevel(SOCKETED_STATS[i].0, slot)))
 }
 
+/// "Socketed Gems deal #% more Elemental Damage" (P6-11gl; PoB's
+/// `ElementalDamage` MORE with `SocketedIn` the item's slot,
+/// `ModParser.lua` 1237): the main skill's hit, while it is socketed in the
+/// item's slot ([`GemSlot::main_skill_state`]).
+pub const SOCKETED_ELEMENTAL_DAMAGE_STAT: &str =
+    "local_display_socketed_gems_elemental_damage_+%_final";
+
 /// "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (P6-11bi;
 /// the game's stat ID keeps its misspelling).
 pub const SOCKETED_COST_STAT: &str = "local_display_socketed_gems_get_mana_multplier_%";
@@ -186,6 +218,22 @@ pub struct InSlot<'a> {
 impl StatMapping for InSlot<'_> {
     fn map(&self, stat: &StatId) -> StatMap {
         // A support the item grants its socketed gems (P6-11r).
+        // P6-11gl: more elemental damage for the main skill's hit while
+        // it is socketed here.
+        if stat.as_str() == SOCKETED_ELEMENTAL_DAMAGE_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Damage,
+                op: Op::More,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none()
+                    .with_any(crate::condition::Flags::ELEMENTAL)
+                    .with_state(
+                        crate::condition::ConditionKey::new(self.slot.main_skill_state()),
+                        true,
+                    ),
+            }]);
+        }
         let support = super::item_supports::row(stat.as_str())
             .map(|(id, _, _)| Quantity::Poe1(Poe1Quantity::ItemSupport(id, self.slot)));
         match socketed_quantity(stat.as_str(), self.slot).or(support) {
