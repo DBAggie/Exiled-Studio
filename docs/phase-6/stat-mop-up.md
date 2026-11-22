@@ -4059,3 +4059,26 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - The away ones are older base gaps that the copy no longer hides. The Hierophant's spell block is 70 in PoB and 72 here; it is 68 in PoB without the copy and 70 here. The Facebreaker build's movement speed is already 6% above PoB's without the copy. Mana unreserved is far from PoB's in two builds (154 against 42). None is traced here.
 - **Corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gw: flask duration and instant recovery
+
+**Found** (P6-11gm's scan): three flask stats were reasons, each in 2 builds:
+- "#% increased Flask Effect Duration" (`flask_duration_+%`);
+- a recovery flask's own "#% increased Duration" (`local_flask_duration_+%`, which P6-4b left a reason "until recovery is computed");
+- "Instant Recovery" (`local_flask_recovers_instantly`).
+
+**PoB:**
+- **The durations** are read only by a recovery flask's recovery (`CalcPerform.lua` 1576 to 1643): the `LifeRecovery` and `ManaRecovery` rates, which no slice field reads.
+- **Instant recovery** is the flask's `instantPerc`. A flask that recovers all at once sets no `UsingFlask`, `UsingLifeFlask`, or `Using<base>` condition (1733 to 1748).
+
+**The engine:**
+- **The durations** are `NoEffect` on every flask (`flasks::DURATION_STATS`), and the global stat is `NoEffect` "flask-duration".
+- **Instant recovery** (`flasks::INSTANT_STAT`) is `NoEffect` as a line. `flasks::using_flask` and `using_life_flask` now leave out an active flask that has it (`using_slots`).
+- **The test** `active_flasks_should_scale_and_merge_their_buffs` now expects a life flask's duration to leave life complete.
+
+**Evidence** (`b-ct`, against P6-11gv's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is P6-11dz's "during any Flask Effect" fixture with an active Divine Life Flask:
+  - `ice-nova-instant-life-flask-witch.xml`: "Instant Recovery", not in use, average damage 1062.66;
+  - `ice-nova-life-flask-in-use-witch.xml`: in use, 1263.93.
+- **Public and corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

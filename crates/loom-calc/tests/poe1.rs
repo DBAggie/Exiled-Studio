@@ -1073,7 +1073,8 @@ fn active_flasks_should_scale_and_merge_their_buffs() {
         &[("Flask 1", 2, true), ("Flask 2", 3, true)],
     ));
     assert_eq!(partial_reasons(&same, fire), ["unmodelled-item"]);
-    // A life flask: no buff, and its duration is unmapped (recovery).
+    // A life flask: no buff, and its duration reaches no slice field (its
+    // recovery rate; P6-11gw).
     let life = run(&with_items(
         witch(1),
         vec![flask_item(
@@ -1083,7 +1084,7 @@ fn active_flasks_should_scale_and_merge_their_buffs() {
         )],
         &[("Flask 1", 2, true)],
     ));
-    assert_eq!(partial_reasons(&life, Field::Life), ["unmapped-stat"]);
+    assert_eq!(state(&life, Field::Life), StateKind::Complete);
     // Data without the flask table: the active flask stays a reason.
     let mut data = Data::new();
     data.flasks = None;

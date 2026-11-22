@@ -379,6 +379,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11gt: lucky block if blocked recently (`Poe1Quantity::BlockLucky`, `enemy_hit::lucky`); fixtures `ice-nova-lucky-block-witch.xml`, `ice-nova-lucky-block-off-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gt")
 - [x] P6-11gu: auras that grant attack and cast speed (`gems::extra_aura_rows`); fixture `ice-nova-commander-of-darkness-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gu")
 - [x] P6-11gv: radius jewels that change the passives in their radius (`loom_pipeline::radius_jewels`: the 13 "also grant" stats, Unnatural Instinct's two lines, tattoos copied as PoB); fixtures `ice-nova-radius-also-grant-witch.xml`, `ice-nova-unnatural-instinct-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gv")
+- [x] P6-11gw: flask duration `NoEffect` (recovery only) and instant recovery out of the flask conditions (`flasks::INSTANT_STAT`); fixtures `ice-nova-instant-life-flask-witch.xml`, `ice-nova-life-flask-in-use-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gw")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

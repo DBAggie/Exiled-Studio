@@ -79,9 +79,9 @@ pub const CHARGE_STATS: [&str; 3] = [
 ];
 
 /// A flask's duration stats: read into the item's flask data, which only a
-/// recovery flask's recovery reads (`CalcPerform.lua` 1627). `NoEffect`
-/// on a utility flask; unmapped (a reason) on a recovery flask until
-/// recovery is computed (P6-10b).
+/// recovery flask's recovery reads (`CalcPerform.lua` 1627, the
+/// `LifeRecovery` and `ManaRecovery` rates, which no slice field reads;
+/// P6-11gw): `NoEffect`.
 pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_duration_+%_final"];
 
 /// A flask's own lines that reach no slice field (P6-11i), sorted, each as
@@ -221,7 +221,8 @@ impl StatMapping for FlaskMapping {
         }
         if CHARGE_STATS.contains(&id)
             || NO_EFFECT_LOCAL.contains(&id)
-            || (!self.recovery && DURATION_STATS.contains(&id))
+            || DURATION_STATS.contains(&id)
+            || id == INSTANT_STAT
         {
             return StatMap::NoEffect;
         }
@@ -392,13 +393,46 @@ fn base_of<'d>(
     }
 }
 
+/// "Instant Recovery" (P6-11gw; PoB's `FlaskInstantRecovery` BASE 100, the
+/// flask's `instantPerc`): a flask with it recovers all at once, so it
+/// sets no `Using` condition (`CalcPerform.lua` 1733 to 1748). The line
+/// itself reaches no slice field (its recovery is the `LifeRecovery` rate).
+pub const INSTANT_STAT: &str = "local_flask_recovers_instantly";
+
+/// Whether the item `id` recovers all at once ([`INSTANT_STAT`] on one of
+/// its selected lines).
+fn all_instant(input: &CalcInput<'_>, id: ItemId) -> bool {
+    input.build.items.item(id).is_some_and(|item| {
+        item.body.lines.iter().any(|l| match &l.kind {
+            loom_domain::LineKind::Modifier(m) if m.selected => match &m.resolution {
+                LineResolution::Resolved {
+                    result: Resolved::Stats(stats),
+                    ..
+                } => stats.iter().any(|s| s.stat.as_str() == INSTANT_STAT),
+                _ => false,
+            },
+            _ => false,
+        })
+    })
+}
+
+/// The active flasks that do not recover all at once (P6-11gw): the ones
+/// that set PoB's `Using` conditions.
+fn using_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
+    active_slots(input)
+        .into_iter()
+        .filter(|(id, _)| !all_instant(input, *id))
+        .collect()
+}
+
 /// Whether the character is using a flask (PoB's `UsingFlask`; P6-11dz,
 /// `CalcPerform.lua` 1735): an active flask whose recovery is not all
-/// instant. The lines that make recovery instant are unmapped stats, a
-/// reason wherever they appear, so an active flask counts.
+/// instant ([`INSTANT_STAT`], P6-11gw). PoB's global
+/// `LifeFlaskInstantRecovery` lines are unmapped stats, a reason wherever
+/// they appear.
 #[must_use]
 pub fn using_flask(input: &CalcInput<'_>) -> bool {
-    !active_slots(input).is_empty()
+    !using_slots(input).is_empty()
 }
 
 /// Whether the character is using a life flask (PoB's `UsingLifeFlask`;
@@ -407,7 +441,7 @@ pub fn using_flask(input: &CalcInput<'_>) -> bool {
 /// is not known.
 #[must_use]
 pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
-    let slots = active_slots(input);
+    let slots = using_slots(input);
     if slots.is_empty() {
         return Some(false);
     }
@@ -591,9 +625,11 @@ mod tests {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
             assert_eq!(map(&life, s), StatMap::NoEffect);
         }
-        for s in DURATION_STATS {
+        // P6-11gw: a recovery flask's duration and instant recovery reach
+        // no slice field either.
+        for s in DURATION_STATS.into_iter().chain([INSTANT_STAT]) {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
-            assert_eq!(map(&life, s), StatMap::Unmapped);
+            assert_eq!(map(&life, s), StatMap::NoEffect);
         }
         // A local line no row reads stays a reason; one the game's
         // mapping reads as `NoEffect` (P6-11m) is `NoEffect` (P6-11n).

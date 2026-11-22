@@ -8438,6 +8438,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("fire_damage_to_return_to_melee_attacker", "reflect"),
     ("flask_charges_recovered_per_3_seconds", "flask"),
     ("flask_charges_used_+%", "flask"),
+    // P6-11gw: "#% increased Flask Effect Duration" (`FlaskDuration` INC):
+    // only a recovery flask's recovery rate reads it (`CalcPerform.lua` 1576
+    // to 1643), which no slice field reads.
+    ("flask_duration_+%", "flask-duration"),
     // P6-11n: "#% increased Life Recovered" by flasks (`FlaskLifeRecovery`
     // INC): no field.
     ("flask_life_to_recover_+%", "flask"),
