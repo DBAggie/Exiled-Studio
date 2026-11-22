@@ -3795,6 +3795,53 @@ fn applied_curses(input: &CalcInput<'_>, levels: &GemLevels) -> Vec<bool> {
     out
 }
 
+/// The curses cast by you (P6-11gz; PoB's `SelfCast<Curse>`,
+/// `CalcPerform.lua` 2603): every curse skill of the gem table among the
+/// enabled groups ([`applied_curses`]'), applied or not, whose types (with
+/// its supports') are neither `Triggered` nor `Aura`. `None` when the skill
+/// groups are not certain.
+#[must_use]
+pub fn self_cast_curses(input: &CalcInput<'_>) -> Option<BTreeSet<&'static str>> {
+    let build = input.build;
+    let levels = GemLevels::none();
+    let groups = skill::active_groups(build).ok()?;
+    let main_group = skill::main_skill(build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
+    let mut out = BTreeSet::new();
+    for (g, group) in groups.iter().enumerate() {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        if (main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)))
+            || skill::attribute(&group.attributes, "source").is_some()
+        {
+            continue;
+        }
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        for s in skill::group_skills(group, group_matches, input.data, &levels) {
+            if let Some(Kind::Curse { name, .. }) = kind(&s.active_gem.effect.id)
+                && !s.types.contains("Triggered")
+                && !s.types.contains("Aura")
+            {
+                out.insert(name);
+            }
+        }
+    }
+    Some(out)
+}
+
+/// The curse names of the gem table (P6-11gz), for the self-cast states.
+#[must_use]
+pub fn curse_names() -> Vec<&'static str> {
+    SKILLS
+        .iter()
+        .filter_map(|(_, k)| match k {
+            Kind::Curse { name, .. } => Some(*name),
+            _ => None,
+        })
+        .collect()
+}
+
 /// The auras the gem table applies to the character, by PoB's buff name
 /// (a Vaal aura's without "Vaal "; P6-11o): what PoB's `AffectedBy<Name>`
 /// conditions read (`CalcPerform.lua` 2417 to 2419). The groups are

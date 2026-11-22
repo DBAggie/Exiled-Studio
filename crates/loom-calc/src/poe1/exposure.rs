@@ -224,12 +224,9 @@ pub const DEPENDS_ON: &[&str] = &[
     "graft_skill_inflict_fire_exposure_on_hit_%_chance",
     "graft_skill_inflict_lightning_exposure_on_hit_%_chance",
     "inflict_all_exposure_on_enemies_when_suppressing_their_spell",
-    "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
     "inflict_cold_exposure_on_hit_%_chance_at_devotion_threshold",
-    "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
     "inflict_fire_exposure_nearby_on_reaching_maximum_rage",
     "inflict_fire_exposure_on_hit_%_chance_at_devotion_threshold",
-    "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
     "inflict_lightning_exposure_on_hit_%_chance_at_devotion_threshold",
     "keystone_elemental_equilibrium",
     "local_display_nearby_enemies_have_fire_exposure",
@@ -309,7 +306,11 @@ fn from_config(quantity: Poe1Quantity, value: f64, input: &str) -> Effect {
 /// Adds Elemental Army's chance and the enemy's exposure from the active
 /// config set (module docs). Runs after every other source; a value the
 /// engine does not read as PoB does is a reason under its input.
-pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+pub fn exposure(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     if let Some(set) = set {
         match army(set) {
             Ok(None) => {}
@@ -357,6 +358,30 @@ pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             conditions: Conditions::none(),
             source: e.source.clone(),
         }));
+        // An exposure on hit while a curse you cast holds (P6-11gz): PoB's -10
+        // when every state of the effect is settled true.
+        let self_cast: Vec<Effect> = ingest
+            .effects()
+            .iter()
+            .filter(|e| {
+                e.quantity == Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(t))
+                    && e.op == Op::Base
+                    && e.conditions.all == crate::condition::Flags::NONE
+                    && e.conditions.any == crate::condition::Flags::NONE
+                    && e.conditions
+                        .states
+                        .iter()
+                        .all(|(k, on)| settled.get(k) == Some(on))
+            })
+            .map(|e| Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyResistance(t)),
+                op: Op::Base,
+                value: EXPOSURE,
+                conditions: Conditions::none(),
+                source: e.source.clone(),
+            })
+            .collect();
+        candidates.extend(self_cast);
         // A skill's debuff (Frost Bomb's, `poe1::gems`; close-out): PoB's
         // enemy `<Type>Exposure` mods, after the config's and the hits'.
         let skill: Vec<Effect> = bases(ingest, Poe1Quantity::SkillExposure(t))
@@ -489,7 +514,11 @@ mod tests {
         ] {
             let mut ingest = Ingest::new(&Poe1Mapping);
             ingest.effect(on_hit(value));
-            exposure(Some(config), &mut ingest);
+            exposure(
+                Some(config),
+                &std::collections::BTreeMap::new(),
+                &mut ingest,
+            );
             assert_eq!(cold(&ingest), [want], "{value}");
         }
     }

@@ -104,6 +104,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // After every passive, item, and config line: life and mana per staff
     // socket (P6-11go).
     staff_sockets(input, ingest);
+    // Physical damage as a random element (P6-11gz).
+    random_gains(build, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
@@ -129,7 +131,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
     // effect and minimum (P3-8k).
-    super::exposure::exposure(active_config(build), ingest);
+    super::exposure::exposure(active_config(build), &super::states::states(input), ingest);
     super::damage_taken::damage_taken(input, active_config(build), ingest);
     // After every source of resistance modifiers, buffs included (P6-11ah).
     super::resist_conversion::resist_conversion(ingest);
@@ -1139,6 +1141,63 @@ fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             ),
             source: e.source,
         });
+    }
+}
+
+/// PoB's `physMode` config list ("Random element mode", `ConfigOptions.lua`):
+/// how a random element gain splits (P6-11gz).
+pub const PHYS_MODE_INPUT: &str = "physMode";
+
+/// Physical damage gained as a random element (P6-11gz; `CalcOffence.lua`
+/// 944 to 965): each [`Poe1Quantity::GainAsRandom`] effect becomes, with its
+/// conditions, a third each of `GainAs(Physical, Fire)`, `Cold`, and
+/// `Lightning` in PoB's default `AVERAGE` mode, or the whole of one type in
+/// `FIRE`, `COLD`, or `LIGHTNING`. Another value is a reason.
+fn random_gains(build: &Build, ingest: &mut Ingest<'_>) {
+    let gains: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::GainAsRandom) && e.op == Op::Base)
+        .cloned()
+        .collect();
+    if gains.is_empty() {
+        return;
+    }
+    let mode = active_config(build)
+        .and_then(|set| super::config::last_input(set, PHYS_MODE_INPUT, ConfigInputKind::Input));
+    let types: &[DamageType] = match mode {
+        None => &[DamageType::Fire, DamageType::Cold, DamageType::Lightning],
+        Some(loom_domain::ConfigValue::String(s)) => match s.as_str() {
+            "AVERAGE" => &[DamageType::Fire, DamageType::Cold, DamageType::Lightning],
+            "FIRE" => &[DamageType::Fire],
+            "COLD" => &[DamageType::Cold],
+            "LIGHTNING" => &[DamageType::Lightning],
+            _ => {
+                ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: PHYS_MODE_INPUT.to_owned(),
+                });
+                return;
+            }
+        },
+        Some(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: PHYS_MODE_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    #[expect(clippy::cast_precision_loss, reason = "one to three types")]
+    let share = types.len() as f64;
+    for e in gains {
+        for t in types {
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, *t)),
+                op: Op::Base,
+                value: e.value / share,
+                conditions: e.conditions.clone(),
+                source: e.source.clone(),
+            });
+        }
     }
 }
 

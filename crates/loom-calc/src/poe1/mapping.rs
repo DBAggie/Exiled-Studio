@@ -4680,6 +4680,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::NGAMAHU_FLAMES_ADVANCE,
         )],
     ),
+    // P6-11gz: "Gain #% of Physical Damage as a Random Element if you've cast
+    // Elemental Weakness in the past 10 seconds" (`PhysicalDamageGainAsRandom`
+    // BASE, `SelfCastElementalWeakness`).
+    (
+        "gain_+%_physical_damage_as_random_element_if_cast_elemental_weakness_in_past_10_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAsRandom),
+            Op::Base,
+            NONE,
+            conditions::SELF_CAST_ELEMENTAL_WEAKNESS,
+        )],
+    ),
     (
         "global_critical_strike_chance_+%_while_holding_staff",
         &[(
@@ -4717,6 +4729,38 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::ENEMY_BURNING,
+        )],
+    ),
+    // P6-11gz: as the Flammability line.
+    (
+        "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Cold)),
+            Op::Base,
+            NONE,
+            conditions::SELF_CAST_FROSTBITE,
+        )],
+    ),
+    // P6-11gz: "Inflict Fire Exposure on Hit if you've cast Flammability in
+    // the past 10 seconds" (the enemy's `FireExposure` BASE -10,
+    // `SelfCastFlammability`): `exposure`'s candidate.
+    (
+        "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Fire)),
+            Op::Base,
+            NONE,
+            conditions::SELF_CAST_FLAMMABILITY,
+        )],
+    ),
+    // P6-11gz: as the Flammability line.
+    (
+        "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Lightning)),
+            Op::Base,
+            NONE,
+            conditions::SELF_CAST_CONDUCTIVITY,
         )],
     ),
     // P6-10b: "#% increased Recovery rate of Life and Energy Shield if
@@ -10865,6 +10909,11 @@ mod tests {
                         conditions::USING_FLASK,
                         // P6-11gp: from the ignited, frozen, and shocked checks.
                         conditions::NOT_IGNITED_FROZEN_SHOCKED,
+                        // P6-11gz: from the curses cast by you.
+                        conditions::SELF_CAST_ELEMENTAL_WEAKNESS,
+                        conditions::SELF_CAST_FLAMMABILITY,
+                        conditions::SELF_CAST_FROSTBITE,
+                        conditions::SELF_CAST_CONDUCTIVITY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -11350,6 +11399,43 @@ mod tests {
                         conditions::LEECHING,
                     ),
                 ],
+            ),
+            // P6-11gz: the curses cast by you.
+            (
+                "gain_+%_physical_damage_as_random_element_if_cast_elemental_weakness_in_past_10_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::GainAsRandom),
+                    Op::Base,
+                    NONE,
+                    conditions::SELF_CAST_ELEMENTAL_WEAKNESS,
+                )],
+            ),
+            (
+                "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Fire)),
+                    Op::Base,
+                    NONE,
+                    conditions::SELF_CAST_FLAMMABILITY,
+                )],
+            ),
+            (
+                "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Cold)),
+                    Op::Base,
+                    NONE,
+                    conditions::SELF_CAST_FROSTBITE,
+                )],
+            ),
+            (
+                "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::ExposureIfSelfCast(DamageType::Lightning)),
+                    Op::Base,
+                    NONE,
+                    conditions::SELF_CAST_CONDUCTIVITY,
+                )],
             ),
             // P6-11gt: lucky block if blocked recently.
             (

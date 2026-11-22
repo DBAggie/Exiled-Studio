@@ -104,6 +104,11 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// Recently".
 const CONDITION_ROWS: &[&str] = &[
     "damage_+%_if_you_have_shocked_recently",
+    // P6-11gz: exposure while a curse you cast holds (`poe1::exposure`
+    // reads them with the settled states).
+    "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
+    "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
+    "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
     // P6-11gp: the config's checks of being ignited, frozen, or shocked.
     "physical_damage_reduction_rating_+%_while_not_ignited_frozen_shocked",
 ];

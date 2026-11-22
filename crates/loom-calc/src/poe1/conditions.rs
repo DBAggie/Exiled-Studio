@@ -104,6 +104,23 @@ const IGNITED_FROZEN_SHOCKED_INPUTS: [&str; 4] = [
     "conditionShocked",
 ];
 
+/// "if you've cast Elemental Weakness in the past 10 seconds" (PoB's
+/// `SelfCastElementalWeakness`; P6-11gz): [`self_cast`]'s.
+pub const SELF_CAST_ELEMENTAL_WEAKNESS: &str = "SelfCastElementalWeakness";
+/// "if you've cast Flammability in the past 10 seconds" (P6-11gz).
+pub const SELF_CAST_FLAMMABILITY: &str = "SelfCastFlammability";
+/// "if you've cast Frostbite in the past 10 seconds" (P6-11gz).
+pub const SELF_CAST_FROSTBITE: &str = "SelfCastFrostbite";
+/// "if you've cast Conductivity in the past 10 seconds" (P6-11gz).
+pub const SELF_CAST_CONDUCTIVITY: &str = "SelfCastConductivity";
+
+/// The state key of a curse cast by you (PoB's `SelfCast<Curse>`, the name
+/// without spaces).
+#[must_use]
+pub fn self_cast(curse: &str) -> String {
+    format!("SelfCast{}", curse.replace(' ', ""))
+}
+
 /// "while Focused" (PoB's `Focused`; P6-11gk): its check alone
 /// (`ConfigOptions.lua` 992).
 pub const FOCUSED: &str = "Focused";
@@ -482,6 +499,14 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         None | Some(ConfigValue::Number(_)) => {}
         Some(_) => {
             out.remove(&ConditionKey::new(CONSUMED_CORPSE_RECENTLY));
+        }
+    }
+    // The curses cast by you (P6-11gz): each of the gem table's curses,
+    // true when cast by you, false otherwise; unsettled when the skills are
+    // not certain.
+    if let Some(cast) = super::gems::self_cast_curses(input) {
+        for name in super::gems::curse_names() {
+            out.insert(ConditionKey::new(self_cast(name)), cast.contains(name));
         }
     }
     // Not ignited, frozen, or shocked (P6-11gp): every check off settles it

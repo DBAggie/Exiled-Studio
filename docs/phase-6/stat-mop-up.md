@@ -4129,3 +4129,28 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; no value moved.
 - **Corpus:** 0 unexpected. Five values of one build moved, all toward PoB (its average damage and ignite).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gz: curses cast by you; physical damage as a random element; exposure if a curse was cast
+
+**Found** (P6-11gm's scan): reasons, in 2 or 3 builds each:
+- "Gain #% of Physical Damage as a Random Element if you've cast Elemental Weakness in the past 10 seconds";
+- "Inflict Fire Exposure on Hit if you've cast Flammability in the past 10 seconds", and its Frostbite and Conductivity twins.
+
+**PoB:**
+- **Cast by you.** `SelfCast<Curse>` is set for every curse skill in the list that is not `Triggered` or `Aura`, applied or not (`CalcPerform.lua` 2603).
+- **The random element** is `PhysicalDamageGainAsRandom` BASE. In the default `physMode` `AVERAGE` it is a third each as fire, cold, and lightning; in `FIRE`, `COLD`, or `LIGHTNING` it is all one type (`CalcOffence.lua` 944 to 965).
+- **The exposure** is the enemy's `<Type>Exposure` BASE -10 with `SelfCast<Curse>` (`ModParser.lua` 4236 to 4239).
+
+**The engine:**
+- **The conditions.** `gems::self_cast_curses` (the gem table's curses in the enabled groups whose types lack `Triggered` and `Aura`) settles `conditions::self_cast(<curse>)` for every curse of the table, in `conditions::settle`.
+- **The random element.** `Poe1Quantity::GainAsRandom` (a `STATE_ROWS` row with `SelfCastElementalWeakness`). `collect::random_gains` splits it, with its conditions, into `GainAs(Physical, <type>)` by the config's `physMode`; another value is a reason.
+- **The exposure.** `Poe1Quantity::ExposureIfSelfCast(<type>)`, three `STATE_ROWS` rows. `exposure` takes the settled states and adds -10 as a candidate while the row's state holds. The three left `exposure::DEPENDS_ON`; the real-bundle exposure test lists them among the condition rows.
+- **Found on the way:** the game's Frostbite line reads "Cold Exposure on Hit if you've cast Frostbite in the past 10 seconds" (no "Inflict"), which PoB's pattern does not match. No build has it, so no fixture of it either side would read alike.
+
+**Evidence** (`b-ct`, against P6-11gy's run):
+- **Two new mechanic fixtures:**
+  - `smite-random-element-elemental-weakness-templar.xml`: P3-12h's Smite with Elemental Weakness, 30% as a random element. It matches PoB on every field.
+  - `burning-arrow-flammability-exposure-templar.xml`: Burning Arrow with Flammability and the fire exposure line. It matches PoB but the base fixture's Q11 floored attack time (DIV-0535 to DIV-0540).
+- **Public:** 0 unexpected. Four values of the mine Assassin build moved toward PoB (its random element). Its ignite went from not computed to partial: the fire share lets it ignite, under its other reasons.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

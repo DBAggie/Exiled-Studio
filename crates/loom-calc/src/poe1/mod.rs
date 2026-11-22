@@ -459,6 +459,16 @@ pub enum Poe1Quantity {
     /// enemy's `Ignited` or `Frozen`): `Base`, read by [`damage_taken`]'s
     /// covering.
     CoveredInRing(bool),
+    /// Physical damage gained as a random element (P6-11gz; PoB's
+    /// `PhysicalDamageGainAsRandom` BASE): `Base`, which `collect` turns
+    /// into a third each to fire, cold, and lightning (PoB's default
+    /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
+    GainAsRandom,
+    /// "Inflict <Type> Exposure on Hit if you've cast <curse> in the past
+    /// 10 seconds" (P6-11gz; PoB's enemy `<Type>Exposure` BASE -10 with the
+    /// `SelfCast<Curse>` condition): `Base`, a candidate of [`exposure`]'s
+    /// while its state holds.
+    ExposureIfSelfCast(crate::quantity::DamageType),
     /// Energy shield cannot be recovered above armour (PoB's
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
@@ -1410,6 +1420,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockLucky => f.write_str("block-lucky"),
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
+            Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::ExposureIfSelfCast(t) => write!(f, "exposure-if-self-cast.{}", t.name()),
             Self::CoveredInRing(ash) => f.write_str(if *ash {
                 "covered-in-ash"
             } else {
