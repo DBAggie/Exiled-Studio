@@ -2772,6 +2772,26 @@ fn damage_per_stat(
             out.push(v);
         }
     }
+    // Projectile speed as bow damage (P6-11hb; `CalcOffence.lua` 645 to
+    // 651): each `ProjectileSpeed` INC, as tabulated with no skill flags,
+    // is also `Damage` INC with `ModFlag.Bow` and `ModFlag.Hit`.
+    let flag = Quantity::Poe1(Poe1Quantity::ProjectileSpeedToBowDamage);
+    let speed = Quantity::Poe1(Poe1Quantity::ProjectileSpeed);
+    if cx.flags.contains(Flags::BOW | Flags::HIT)
+        && phases::has(calc, flag)
+        && phases::has(calc, speed)
+        && flag_on(calc, flag, cx, reasons)?.is_some()
+    {
+        let none = calc.context(Flags::NONE);
+        out.push(sum_in(
+            calc,
+            speed,
+            Op::Increased,
+            &none,
+            Term::Step("projectile-speed-as-bow-damage"),
+            reasons,
+        )?);
+    }
     Ok(out)
 }
 

@@ -4181,3 +4181,22 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - The away ones are the "Lightning Arrow" build's average damage and two ignites. That build's tree is 3_23, where Far Shot was the old mechanic (PoB's `FarShot` flag: 20% less to 60% more damage over distance), while the engine, with no 3_23 tree pack, reads the 3_29 node.
   - PoB's own run of that build at distances 35, 40, and 70 shows the gap is the tree version's: ours gains 42% from 35 to 70, PoB's 52%.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hb: projectile speed also applies to bow damage
+
+**Found** (P6-11gm's scan): the bow mastery's "Increases and Reductions to Projectile Speed also apply to Damage with Bows" (`arrow_speed_additive_modifiers_also_apply_to_bow_damage`) was a reason in 3 builds. "#% increased Projectile Speed" was `NoEffect` (P6-11f: no slice field read it).
+
+**PoB:** `ProjectileSpeedAppliesToBowDamage` (`CalcOffence.lua` 645 to 651) copies each `ProjectileSpeed` INC, tabulated with no skill flags, as `Damage` INC with `ModFlag.Bow` and `ModFlag.Hit`.
+
+**The engine:**
+- "#% increased Projectile Speed" is `Poe1Quantity::ProjectileSpeed` (`Increased`), which only this flag reads.
+- The line is `Poe1Quantity::ProjectileSpeedToBowDamage` (`Flag`).
+- `hit::damage_per_stat` adds the projectile speed's sum, read with no flags, as one more term of the damage increase of a bow hit while the flag is on. Ailments (no `HIT`) do not take it, as in PoB.
+
+**Evidence** (`b-ct`, against P6-11ha's run):
+- **A new mechanic fixture**, `burning-arrow-projectile-speed-damage-templar.xml`: Burning Arrow with the line and "30% increased Projectile Speed". PoB's DPS is 6.97, 5.34 in the base fixture. It matches PoB but the base fixture's Q11 floored attack time (DIV-0553 to DIV-0558).
+- **Public:** 0 unexpected. Four values of the Elemental Hit Deadeye build moved toward PoB.
+- **Corpus:** 0 unexpected. Eight values moved: 6 toward PoB, 2 away (the two Light Arrow builds' average damage).
+  - PoB's run of "Example Light Arrow" with and without its bow mastery: the mastery adds 24.8% there and 25.0% here.
+  - The away moves are that build's base gap: 62701 here against 52284 in PoB without the mastery, its tree 3_22.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

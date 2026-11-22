@@ -464,6 +464,15 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// "#% increased Projectile Speed" (P6-11hb; PoB's `ProjectileSpeed`
+    /// INC): `Increased`, read only when it also applies to bow damage
+    /// ([`Self::ProjectileSpeedToBowDamage`]).
+    ProjectileSpeed,
+    /// "Increases and Reductions to Projectile Speed also apply to Damage
+    /// with Bows" (P6-11hb; PoB's `ProjectileSpeedAppliesToBowDamage`,
+    /// `CalcOffence.lua` 645 to 651): a `Flag`; a bow hit's damage increase
+    /// adds the projectile speed's.
+    ProjectileSpeedToBowDamage,
     /// "Projectiles gain Damage as they travel farther, dealing up to #%
     /// increased (`false`) / more (`true`) Damage" (P6-11ha; PoB's `Damage`
     /// INC or MORE with the `DistanceRamp` tag `{35, 0}, {70, 1}`): `Base`,
@@ -1426,6 +1435,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::ProjectileSpeed => f.write_str("projectile-speed"),
+            Self::ProjectileSpeedToBowDamage => f.write_str("projectile-speed-to-bow-damage"),
             Self::DistanceRampDamage(more) => f.write_str(if *more {
                 "distance-ramp-more"
             } else {

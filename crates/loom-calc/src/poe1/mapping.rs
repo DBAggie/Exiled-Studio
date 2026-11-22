@@ -5798,6 +5798,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // P6-11hb: "Increases and Reductions to Projectile Speed also apply to
+    // Damage with Bows" (`ProjectileSpeedAppliesToBowDamage` FLAG).
+    (
+        "arrow_speed_additive_modifiers_also_apply_to_bow_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ProjectileSpeedToBowDamage),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-11gu: "Auras from your Skills grant #% increased Attack and Cast
     // Speed to you and Allies" (`ExtraAuraEffect` of `Speed` INC): each
     // aura buff adds it, scaled as the aura (`poe1::gems`).
@@ -6194,6 +6204,16 @@ pub const ROWS: &[Row] = &[
     (
         "base_physical_damage_reduction_rating",
         &[(Quantity::Armour, Op::Base, 1.0)],
+    ),
+    // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC); since
+    // P6-11hb a quantity, which only the bow damage flag reads.
+    (
+        "base_projectile_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ProjectileSpeed),
+            Op::Increased,
+            1.0,
+        )],
     ),
     (
         "base_resist_all_elements_%",
@@ -8281,8 +8301,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_number_of_spectres_allowed", "minion-count"),
     // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
     ("base_number_of_zombies_allowed", "minion-count"),
-    // P6-11f: "#% increased Projectile Speed" (`ProjectileSpeed` INC): no slice field.
-    ("base_projectile_speed_+%", "projectile-speed"),
     ("base_secondary_skill_effect_duration", "skill-duration"),
     // P6-11em: ignite duration on you and the chance to be frozen, shocked,
     // and ignited (PoB parses neither): no slice field.
