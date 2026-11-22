@@ -1687,6 +1687,26 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11ge: Elemental Focus's "Cannot inflict Elemental Ailments" (PoB
+    // `SkillStatMap.lua` 1062: `CannotShock`, `CannotChill`,
+    // `CannotFreeze`, `CannotIgnite`, `CannotScorch`, `CannotBrittle`,
+    // `CannotSap`). Only the ignite reaches a slice field through the
+    // hit: PoB reads the others for the hit's own chances (no slice
+    // field), for a guaranteed ailment scaled by the main skill's list
+    // with `ChecksHighestDamage` (`CalcPerform.lua` 3517; those stats are
+    // `damage_taken`'s reasons), and for Bonechill and a non-hit chill
+    // (`CalcPerform.lua` 1357, 1393), which `poe1::gems` reads from the
+    // skill's gems ([`super::gems::CANNOT_CHILL_STATS`]).
+    (
+        "cannot_inflict_status_ailments",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CannotInflict(Ailment::Ignite)),
+            Op::Flag,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // PoB `Data/Skills/sup_str.lua` 1158 (Cast when Damage Taken's own
     // stat map): `Damage` MORE (P6-8a).
     (

@@ -3568,3 +3568,28 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
   - The two moved away are two builds' ignite, which was above PoB's before this step (1658.6 against 1482.3, and 1951.0 against 2175.0, which it now passes).
   - The fixtures show PoB's ignite takes the more damage, so both builds' remaining gap is from something else.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ge: Elemental Focus cannot inflict elemental ailments
+
+**PoB:**
+- **The stat:** Elemental Focus's `cannot_inflict_status_ailments` sets seven flags on the supported skill's list (`SkillStatMap.lua` 1062): `CannotShock`, `CannotChill`, `CannotFreeze`, `CannotIgnite`, `CannotScorch`, `CannotBrittle`, `CannotSap`.
+- **Where PoB reads them:**
+  - **The hit's chances** (`CalcOffence.lua` 4119): no ignite, and no chance of the others. The others' chances reach no slice field.
+  - **A guaranteed ailment's effect:** read from the main skill's list only with `ChecksHighestDamage` (`CalcPerform.lua` 3517). The stats that set that flag are `damage_taken`'s reasons.
+  - **Bonechill** (1357): `HasBonechill` only for a chilling area, a non-hit chill, or a skill without `CannotChill`.
+  - **A non-hit chill** (1393): only without `CannotChill`.
+
+**The engine:**
+- **Mapping:** the stat is `CannotInflict(Ignite)`, a flag `poe1::ailment` reads, so the supported skill deals no ignite.
+- **`poe1::gems`:** a skill whose gems hold the stat (`gems::CANNOT_CHILL_STATS`) gets no Bonechill unless it is a chilling area or a non-hit chill, and its non-hit chill is no reason (it does not chill).
+- The other flags reach no slice field, as the mapping's comment records.
+
+**Evidence** (`b-ct`, against P6-11gd's run):
+- **Two new mechanic fixtures.** All compared fields match in each:
+  - `ice-nova-ignite-elemental-focus-witch.xml`: the Ice Nova ignite fixture with Elemental Focus on Ice Nova. No ignite, and average damage 1423.97.
+  - `ice-nova-bonechill-elemental-focus-witch.xml`: the Bonechill fixture with Elemental Focus beside Bonechill on Arc. Bonechill gives nothing: average damage 747.00, against 805.20 without the support.
+- **Public:** 0 unexpected. Two values of the Holy Flame Totem build moved: its combined and full DPS lost the ignite (10898.47).
+  - Numerically they moved away from PoB, whose values are far higher for other reasons.
+  - PoB gives the build no ignite (its combined DPS equals its total), so the change is PoB's.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

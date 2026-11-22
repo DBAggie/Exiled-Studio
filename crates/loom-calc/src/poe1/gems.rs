@@ -4410,7 +4410,7 @@ pub fn gems(
                     });
                 }
                 // PoB's skill list holds the main skill too.
-                guaranteed_chill(s, source, ingest);
+                guaranteed_chill(input, s, source, ingest);
                 socket_reasons(g, s, ingest);
                 // Its supports' global effects (Arcane Surge's buff) act
                 // as any skill's.
@@ -4933,7 +4933,7 @@ fn one_skill(
     if s.global_off && kind.buff().is_some() {
         return;
     }
-    guaranteed_chill(s, active_source.clone(), ingest);
+    guaranteed_chill(input, s, active_source.clone(), ingest);
     let mut supported = true;
     for sup in &s.supports {
         if support(&sup.effect.id).is_none() {
@@ -5792,15 +5792,26 @@ pub const NON_HIT_CHILL: &str = "NonHitChill";
 /// skill whose quality gives it (Frost Shield's `cold_ailment_effect_+%`,
 /// P6-11fk) at a quality above 0 is a `skill-chill-effect` reason, the
 /// chill kept at the character's effect.
-fn guaranteed_chill(s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
+fn guaranteed_chill(
+    input: &CalcInput<'_>,
+    s: &GroupSkill<'_>,
+    source: Source,
+    ingest: &mut Ingest<'_>,
+) {
     let types = &s.types;
     // Bonechill (P6-11fv; `CalcPerform.lua` 1357 to 1358, 1379, 1397):
     // any skill it supports gives `HasBonechill` (PoB's `CannotChill`
     // check comes from modifiers the engine does not read), a chilling area
     // also the guarantee.
+    // PoB gives it only to a chilling area, a non-hit chill, or a skill
+    // that can chill (`CalcPerform.lua` 1357): a skill whose gems cannot
+    // (Elemental Focus, P6-11ge) does not get it.
     if s.supports
         .iter()
         .any(|sup| sup.effect.id == BONECHILL_SUPPORT)
+        && (types.contains(CHILLING_AREA)
+            || types.contains(NON_HIT_CHILL)
+            || !cannot_chill(input, s))
     {
         ingest.effect(Effect {
             quantity: Quantity::Poe1(Poe1Quantity::Bonechill(types.contains(CHILLING_AREA))),
@@ -5835,12 +5846,28 @@ fn guaranteed_chill(s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>)
             conditions: Conditions::none(),
             source,
         });
-    } else if types.contains(NON_HIT_CHILL) {
+    } else if types.contains(NON_HIT_CHILL) && !cannot_chill(input, s) {
         ingest.reason(UnsupportedReason::UnmodelledSkill {
             source,
             what: "guaranteed-chill",
         });
     }
+}
+
+/// The gem stats that make a skill unable to chill (PoB's `CannotChill`
+/// from its stat map; P6-11ge): Elemental Focus's.
+pub const CANNOT_CHILL_STATS: &[&str] = &["cannot_inflict_status_ailments"];
+
+/// Whether a gem of `s` (its active gem or a support) has a stat of
+/// [`CANNOT_CHILL_STATS`] (P6-11ge). Modifiers that give `CannotChill`
+/// otherwise are unmapped stats, so reasons.
+fn cannot_chill(input: &CalcInput<'_>, s: &GroupSkill<'_>) -> bool {
+    std::iter::once(&s.active_gem).chain(&s.supports).any(|g| {
+        skill::instance(g.effect, g.level, g.quality, input.data)
+            .stats
+            .iter()
+            .any(|(id, _)| CANNOT_CHILL_STATS.contains(&id.as_str()))
+    })
 }
 
 /// The skill's reservation (module docs), one effect per pool and kind.
