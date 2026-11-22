@@ -394,6 +394,11 @@ pub enum Poe1Quantity {
     /// PoB's `CurseLimitIsMaximumPowerCharges`, `CalcPerform.lua` 3156): a
     /// `Flag`, read by [`gems`]' curse slots.
     CurseLimitIsMaximumPowerCharges,
+    /// "#% chance to gain Arcane Surge when you Kill an Enemy" (P6-11gs;
+    /// PoB's `Condition:ArcaneSurge` FLAG with `KilledRecently`): a `Flag`,
+    /// read by [`buffs`]' Arcane Surge; [`conditions`] settles the condition
+    /// from the passive tree's and items' stats.
+    ArcaneSurgeOnKill,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -1291,6 +1296,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Minion(value) => write!(f, "minion.{}", value.name()),
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
+            Self::ArcaneSurgeOnKill => f.write_str("arcane-surge-on-kill"),
             Self::CurseLimitIsMaximumPowerCharges => {
                 f.write_str("curse-limit-is-maximum-power-charges")
             }

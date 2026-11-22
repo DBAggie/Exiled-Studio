@@ -6769,6 +6769,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11gs: "#% chance to gain Arcane Surge when you Kill an Enemy"
+    // (`Condition:ArcaneSurge` FLAG with `KilledRecently`).
+    (
+        "gain_arcane_surge_on_kill_chance_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeOnKill),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P3-8n: "Gain Convergence when you Hit a Unique Enemy"
     // (`Condition:CanGainConvergence`, 2661; `poe1::buffs`).
     (

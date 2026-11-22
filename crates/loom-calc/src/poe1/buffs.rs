@@ -271,7 +271,11 @@ fn check(set: Option<&ConfigSet>, input: &str) -> Result<bool, ()> {
 }
 
 /// Arcane Surge's cast speed (module docs), with the check on.
-fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+fn arcane_surge(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     // An Arcane Surge Support's buff (`poe1::gems`, close-out): its cast
     // speed is a gem's effect; its source is that gem.
     let support = ingest
@@ -284,9 +288,27 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         .map(|e| e.source.clone());
     // A value of another type: `conditions::handles` leaves it a reason.
     let checked = check(set, ARCANE_SURGE_INPUT) == Ok(true);
-    if !checked && support.is_none() {
+    // On kill (P6-11gs): the stat's flag while killed recently.
+    let on_kill = if settled.get(&crate::condition::ConditionKey::new(
+        super::conditions::KILLED_RECENTLY,
+    )) == Some(&true)
+    {
+        ingest
+            .effects()
+            .iter()
+            .find(|e| {
+                e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeOnKill)
+                    && e.op == Op::Flag
+                    && e.value != 0.0
+            })
+            .map(|e| e.source.clone())
+    } else {
+        None
+    };
+    if !checked && support.is_none() && on_kill.is_none() {
         return;
     }
+    let support = support.or(on_kill);
     let speed = ingest
         .effects()
         .iter()
@@ -424,7 +446,7 @@ pub fn buffs(
     settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
     ingest: &mut Ingest<'_>,
 ) {
-    arcane_surge(set, ingest);
+    arcane_surge(set, settled, ingest);
     convergence(set, ingest);
     consecrated_ground(set, ingest);
     constant_buff(

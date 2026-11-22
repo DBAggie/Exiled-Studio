@@ -3965,3 +3965,22 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
 - **Public:** 0 unexpected. Twelve values of the Holy Flame Totem and Shock Nova Hierophant builds moved, all toward PoB (their curses).
 - **Corpus:** 0 unexpected. Fifteen values moved, all toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gs: Arcane Surge on kill
+
+**Found** (P6-11gm's scan): "#% chance to gain Arcane Surge when you Kill an Enemy" (`gain_arcane_surge_on_kill_chance_%`, a Hierophant passive) was unmapped, so a reason, in 2 builds.
+
+**PoB:** `Condition:ArcaneSurge` FLAG with `KilledRecently`, as the config's `buffArcaneSurge` sets it. `CalcPerform.lua` 686 to 705 then gives Arcane Surge's cast speed and mana regeneration and sets `AffectedByArcaneSurge`.
+
+**The engine:**
+- `Poe1Quantity::ArcaneSurgeOnKill` (`Flag`).
+- **`buffs`:** Arcane Surge is on with its check, an Arcane Surge Support, or the flag while killed recently. The settled conditions now reach `buffs::arcane_surge`.
+- **`conditions`:** the condition `AffectedByArcaneSurge` (`conditions::ARCANE_SURGE`) is settled before the modifiers are ingested, so `conditions::settle` sets it when killed recently holds and the build has the stat.
+- **`states::build_has_stat`** finds the stat among the allocated passives and mastery effects, the lines of the items in use, and the lines of the enabled custom modifier blocks.
+
+**Evidence** (`b-ct`, against P6-11gr's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with the line as a custom line:
+  - `ice-nova-arcane-surge-on-kill-witch.xml`: killed recently on, cast rate 1.71;
+  - `ice-nova-arcane-surge-on-kill-off-witch.xml`: killed recently off, 1.43.
+- **Public and corpus:** 0 unexpected; no value moved. The two Hierophant builds do not set killed recently.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

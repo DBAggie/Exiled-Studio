@@ -74,6 +74,9 @@ pub const CAST_SPELL_RECENTLY: &str = "CastSpellRecently";
 /// seconds (`implyCond`, `ConfigOptions.lua` 1599 to 1603).
 pub const CONSUMED_CORPSE_RECENTLY: &str = "ConsumedCorpseRecently";
 
+/// "#% chance to gain Arcane Surge when you Kill an Enemy" (P6-11gs).
+pub const ARCANE_SURGE_ON_KILL_STAT: &str = "gain_arcane_surge_on_kill_chance_%";
+
 /// The count of corpses consumed recently (P6-11gp), which sets
 /// [`CONSUMED_CORPSE_RECENTLY`] too.
 const CORPSES_CONSUMED_INPUT: &str = "multiplierCorpseConsumedRecently";
@@ -460,6 +463,13 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             }
             None => {}
         }
+    }
+    // Arcane Surge on kill (P6-11gs; `Condition:ArcaneSurge` with
+    // `KilledRecently`): with the stat, killed recently sets Arcane Surge.
+    if out.get(&ConditionKey::new(KILLED_RECENTLY)) == Some(&true)
+        && super::states::build_has_stat(input, ARCANE_SURGE_ON_KILL_STAT)
+    {
+        out.insert(ConditionKey::new(ARCANE_SURGE), true);
     }
     // The count of corpses consumed recently also sets the condition
     // (P6-11gp; its `implyCond` and `Condition:ConsumedCorpseRecently` mod,

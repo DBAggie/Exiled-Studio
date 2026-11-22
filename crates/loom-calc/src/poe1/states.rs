@@ -290,6 +290,53 @@ fn using_wand(hands: &collect::Hands) -> Option<bool> {
 /// [`NO_LIFE_MODIFIERS_STAT`] (it is a Life Mastery's): only then is the
 /// condition settled (it reads every mod of the data). From another source
 /// the stat meets it unsettled, a reason.
+/// Whether an allocated passive, an allocated mastery effect, a line of an
+/// item in use, or a line of an enabled custom modifier block has `stat`
+/// with a value other than 0 (P6-11gs): a
+/// condition a modifier sets, settled before the modifiers are ingested.
+#[must_use]
+pub fn build_has_stat(input: &CalcInput<'_>, stat: &str) -> bool {
+    let has = |stats: Option<&[crate::input::StatAmount]>| {
+        stats.is_some_and(|stats| stats.iter().any(|s| s.stat == stat && s.value != 0))
+    };
+    let tree = collect::active_spec(input.build).is_some_and(|spec| {
+        spec.nodes
+            .value()
+            .iter()
+            .any(|n| has(collect::node_stats(input, n.0)))
+            || spec
+                .mastery_effects
+                .value()
+                .iter()
+                .any(|m| has(collect::effect_stats(input, m.effect)))
+    });
+    let resolved = |r: &LineResolution| match r {
+        LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } => stats
+            .iter()
+            .any(|s| s.stat.as_str() == stat && crate::ingest::settle(&s.value) != Some(0.0)),
+        _ => false,
+    };
+    let items = collect::items_in_use(input.build).iter().any(|(id, _)| {
+        input.build.items.item(*id).is_some_and(|item| {
+            item.body.lines.iter().any(|l| match &l.kind {
+                LineKind::Modifier(m) => resolved(&m.resolution),
+                _ => false,
+            })
+        })
+    });
+    // The config's enabled custom modifier blocks (P3-12c).
+    let custom = collect::active_config(input.build).is_some_and(|set| {
+        set.custom_modifiers
+            .iter()
+            .filter(|b| b.enabled)
+            .any(|b| b.lines.iter().any(|l| resolved(&l.resolution)))
+    });
+    tree || items || custom
+}
+
 fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
     let has = |stats: Option<&[crate::input::StatAmount]>| {
         stats.is_some_and(|stats| stats.iter().any(|s| s.stat == NO_LIFE_MODIFIERS_STAT))
