@@ -4357,3 +4357,21 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Corpus:** 0 unexpected. Seven values moved, all toward PoB: two Shield Crush builds' damage.
   - A first version without the maximum's reset moved 54 defence values away. PoB's probe of the build (`local/p6/tools/pob_out.lua`) showed 8 endurance and 8 brutal charges, which led to the reset.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hj: Transfiguration of Body, Mind, and Soul
+
+**Found** (P6-11gm's scan): "Transfiguration of Mind" (`additive_mana_modifiers_apply_to_damage_at_30%_value`) was a reason in 2 builds. Body and Soul have the same form.
+
+**PoB** (`CalcOffence.lua` 511 to 519): with `TransfigurationOfBody`, `Mind`, or `Soul`, `Damage` INC `floor(<Life|Mana|EnergyShield> INC x 0.3)` (`data.misc.Transfiguration`), the pool's increases with no skill flags. Body's is for attacks, Mind's for any hit, Soul's for spells. Energy shield's increases include intelligence's `floor(Int / 10)` (`CalcPerform.lua` 518).
+
+**The engine:**
+- `Poe1Quantity::Transfiguration` (`Flag`).
+- `hit::damage_per_stat` adds each Transfiguration's floored share to the hit's damage increase. Soul's sum adds the intelligence bonus (`phases::bonus`), which the engine applies in the defence phase rather than through the store.
+
+**Evidence** (`b-ct`, against P6-11hi's run):
+- **Two new mechanic fixtures**, both matching PoB on every field:
+  - `ice-nova-transfiguration-witch.xml`: Mind and Soul. A first version without the intelligence bonus was one percent short.
+  - `smite-transfiguration-templar.xml`: Body and Mind, and Soul's not applied to the attack.
+- **Public:** 0 unexpected. Three values of `shock-nova-archmage-hierophant.xml` moved toward PoB.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

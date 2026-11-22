@@ -5889,6 +5889,33 @@ pub const ROWS: &[Row] = &[
         "additional_strength_and_intelligence",
         &[(STR, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
+    // P6-11hj: Transfiguration of Soul (`TransfigurationOfSoul` FLAG).
+    (
+        "additive_energy_shield_modifiers_apply_to_spell_damage_at_30%_value",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Transfiguration(2)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // P6-11hj: Transfiguration of Body (`TransfigurationOfBody` FLAG).
+    (
+        "additive_life_modifiers_apply_to_attack_damage_at_30%_value",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Transfiguration(0)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // P6-11hj: Transfiguration of Mind (`TransfigurationOfMind` FLAG).
+    (
+        "additive_mana_modifiers_apply_to_damage_at_30%_value",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Transfiguration(1)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     (
         "all_attributes_+%",
         &[

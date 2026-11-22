@@ -1897,6 +1897,10 @@ fn per_shield_energy_shield(
     )?))
 }
 
+/// The share of a pool's increases a Transfiguration gives as damage
+/// (PoB's `data.misc.Transfiguration`, `Data.lua` 252).
+const TRANSFIGURATION: f64 = 0.3;
+
 /// The shield's armour and evasion per step of "Attack Damage per 75 Armour
 /// or Evasion Rating on Shield" (PoB's `div = 75`).
 const SHIELD_DAMAGE_STEP: f64 = 75.0;
@@ -3057,6 +3061,54 @@ fn damage_per_stat(
         if let Some(v) = per_stat(calc, spec, cx, reasons)? {
             out.push(v);
         }
+    }
+    // Transfiguration of Body, Mind, and Soul (P6-11hj; `CalcOffence.lua`
+    // 511 to 519): `floor(<pool> INC x 0.3)`, the pool's increases with no
+    // skill flags, as one more damage increase of attacks, any hit, or
+    // spells.
+    for (n, pool, need) in [
+        (0_u8, Quantity::Life, Flags::ATTACK),
+        (1, Quantity::Mana, Flags::NONE),
+        (2, Quantity::EnergyShield, Flags::SPELL),
+    ] {
+        let flag = Quantity::Poe1(Poe1Quantity::Transfiguration(n));
+        if !cx.flags.contains(need)
+            || !phases::has(calc, flag)
+            || flag_on(calc, flag, cx, reasons)?.is_none()
+        {
+            continue;
+        }
+        let none = calc.context(Flags::NONE);
+        let inc = sum_in(
+            calc,
+            pool,
+            Op::Increased,
+            &none,
+            Term::Step("transfiguration-increases"),
+            reasons,
+        )?;
+        // Energy shield's increases include intelligence's `floor(Int / 10)`
+        // (`CalcPerform.lua` 518), which the engine adds in the defence
+        // phase ([`phases::bonus`]), not to the store.
+        let inc = if n == 2
+            && let Some(int) = phases::bonus(
+                calc,
+                Field::Intelligence,
+                0.1,
+                "tenth",
+                "energy-shield-from-intelligence",
+            )? {
+            phases::total(
+                calc,
+                &[inc, int],
+                Term::Step("transfiguration-with-intelligence"),
+            )?
+        } else {
+            inc
+        };
+        let share = phases::constant(calc, "transfiguration", TRANSFIGURATION)?;
+        let scaled = phases::product(calc, &[inc, share], Term::Step("transfiguration-scaled"))?;
+        out.push(floor(calc, scaled, Term::Step("transfiguration"))?);
     }
     // Attack damage per 75 of the shield's armour and evasion (P6-11hh).
     let per_shield = Quantity::Poe1(Poe1Quantity::DamagePerShieldDefences);

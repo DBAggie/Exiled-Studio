@@ -464,6 +464,11 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// Transfiguration of Body (0), Mind (1), or Soul (2) (P6-11hj; PoB's
+    /// `TransfigurationOf<Body|Mind|Soul>` flags, `CalcOffence.lua` 511 to
+    /// 519): a `Flag`; the hit's damage increase adds `floor(Life, Mana, or
+    /// EnergyShield INC x 0.3)`, for attacks, any hit, or spells.
+    Transfiguration(u8),
     /// The chance to deal triple damage (P6-11hi; PoB's `TripleDamageChance`
     /// BASE, from brutal charges): `Base`, percent.
     TripleDamageChance,
@@ -1470,6 +1475,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::Transfiguration(n) => write!(f, "transfiguration.{n}"),
             Self::TripleDamageChance => f.write_str("triple-damage-chance"),
             Self::DamagePerShieldDefences => f.write_str("damage-per-shield-defences"),
             Self::CritPerShieldEnergyShield(multiplier) => {
