@@ -7316,6 +7316,17 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
+    // P6-11go: "#% increased maximum Life per Red Socket on equipped Staff": `collect` turns it
+    // into the pool's increase per socket of that colour in the main hand
+    // while it holds a staff.
+    (
+        "maximum_life_+%_per_red_socket_on_staff",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(true)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 7: "#% increased Maximum Recovery per Life Leech"
     // (`MaxLifeLeechInstance` INC; PoB's skill map reads the life and
     // energy shield stats as the rate, items' lines as the instance).
@@ -7348,6 +7359,17 @@ pub const ROWS: &[Row] = &[
         ],
     ),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
+    // P6-11go: "#% increased maximum Mana per Blue Socket on equipped Staff": `collect` turns it
+    // into the pool's increase per socket of that colour in the main hand
+    // while it holds a staff.
+    (
+        "maximum_mana_+%_per_blue_socket_on_staff",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(false)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 7: "#% increased Maximum Recovery per Mana Leech"
     // (`MaxManaLeechInstance` INC; PoB's skill map reads the life and
     // energy shield stats as the rate, items' lines as the instance).

@@ -101,6 +101,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // passives, as PoB's `CalcSetup.lua` 1299.
     forbidden_pairs(input, spec, ingest);
     config(build, ingest);
+    // After every passive, item, and config line: life and mana per staff
+    // socket (P6-11go).
+    staff_sockets(input, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
@@ -1079,6 +1082,63 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 what: "missing",
             }),
         }
+    }
+}
+
+/// "#% increased maximum Life per Red Socket on equipped Staff" and its
+/// Mana per Blue Socket (P6-11go): each `Base` value of
+/// [`Poe1Quantity::PerStaffSocket`] times the main hand's sockets of that
+/// colour (PoB's `RedSocketInWeapon 1`, counted from the item in the main
+/// hand of the weapon set in use, as PoB names a swap slot by its set's
+/// slot), as the pool's `Increased` with the `UsingStaff` state (PoB's
+/// `Condition` tag). Sockets the engine cannot count are a reason.
+fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let per: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(e.quantity, Quantity::Poe1(Poe1Quantity::PerStaffSocket(_)))
+                && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if per.is_empty() {
+        return;
+    }
+    let build = input.build;
+    let second = active_item_set(build)
+        .is_some_and(|set| attribute(&set.attributes, "useSecondWeaponSet") == Some("true"));
+    let slot = if second { "Weapon 1 Swap" } else { "Weapon 1" };
+    for e in per {
+        let Quantity::Poe1(Poe1Quantity::PerStaffSocket(life)) = e.quantity else {
+            continue;
+        };
+        let (colour, pool) = if life {
+            ('R', Quantity::Life)
+        } else {
+            ('B', Quantity::Mana)
+        };
+        let Some(count) = super::sockets::colour_count(build, slot, colour) else {
+            ingest.reason(UnsupportedReason::UnmodelledItem {
+                item: ItemId(0),
+                slot: slot.to_owned(),
+                what: "staff-sockets",
+            });
+            continue;
+        };
+        if count == 0 || e.value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: pool,
+            op: Op::Increased,
+            value: e.value * f64::from(count),
+            conditions: e.conditions.with_state(
+                crate::condition::ConditionKey::new(super::states::USING_STAFF),
+                true,
+            ),
+            source: e.source,
+        });
     }
 }
 

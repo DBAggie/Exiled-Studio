@@ -371,6 +371,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11gl: Socketed Gems deal more Elemental Damage (`GemSlot::main_skill_state` settled by `states`, the line an `InSlot` row); fixtures `ice-nova-socketed-elemental-damage-witch.xml`, `ice-nova-socketed-elemental-damage-elsewhere-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gl")
 - [x] P6-11gm: damage per 100 Strength (`hit::DAMAGE_PER_STAT`) and accuracy equal to twice Strength (`hit::accuracy`); fixtures `smite-damage-per-strength-templar.xml`, `smite-accuracy-from-strength-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11gm")
 - [x] P6-11gn: Pride's aura effect and Vulnerability's curse effect (`skill_modifiers::NAMED_SKILL_EFFECTS`); fixtures `smite-pride-aura-effect-templar.xml`, `smite-vulnerability-curse-effect-templar.xml`, Q11 DIV-0509 to DIV-0519 (`docs/phase-6/stat-mop-up.md`, "P6-11gn")
+- [x] P6-11go: life per red socket and mana per blue socket on an equipped staff (`collect::staff_sockets`, `sockets::colour_count`); fixtures `ice-nova-staff-sockets-witch.xml`, `ice-nova-staff-sockets-wand-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11go")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

@@ -161,6 +161,20 @@ fn sockets(build: &Build, slot: &str) -> Sockets {
     }
 }
 
+/// The number of sockets of `colour` (`R`, `G`, `B`, or `W`) of the item
+/// in `slot` of the active item set (P6-11go; PoB's
+/// `Multiplier:<Colour>SocketIn<slot>`, `Item.lua` 2207 to 2219): 0 with
+/// no item; `None` when the sockets are not known, or every colour matches
+/// (`colourAlwaysMatches`, whose sockets the engine does not read).
+#[must_use]
+pub fn colour_count(build: &Build, slot: &str, colour: char) -> Option<u32> {
+    match sockets(build, slot) {
+        Sockets::None => Some(0),
+        Sockets::Colours(c) => u32::try_from(c.iter().filter(|x| **x == colour).count()).ok(),
+        Sockets::Always | Sockets::Unknown(_) => None,
+    }
+}
+
 /// The socket colour of a granted effect's `attribute` (PoB's `colours`).
 const fn colour(attribute: i64) -> Option<char> {
     match attribute {

@@ -152,6 +152,12 @@ pub enum Poe1Quantity {
     /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
     /// `Flag`, read by [`hit`]'s accuracy.
     AccuracyFromStrength,
+    /// "#% increased maximum Life per Red Socket on equipped Staff" (`true`)
+    /// and its Mana per Blue Socket (`false`) (P6-11go; PoB's `Life` or
+    /// `Mana` INC with the `Multiplier` `RedSocketInWeapon 1` or
+    /// `BlueSocketInWeapon 1` and `UsingStaff`): `Base`, the value per
+    /// socket, which `collect` turns into the pool's increase.
+    PerStaffSocket(bool),
     /// Maximum life gained as extra maximum energy shield, percent (PoB's
     /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
     /// phase as one more row.
@@ -1222,6 +1228,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
+            Self::PerStaffSocket(life) => f.write_str(if *life {
+                "life-per-red-staff-socket"
+            } else {
+                "mana-per-blue-staff-socket"
+            }),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),

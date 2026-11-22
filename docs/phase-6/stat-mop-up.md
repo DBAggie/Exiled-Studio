@@ -3822,3 +3822,27 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
 - **Public:** 0 unexpected. Eleven values of the Cyclone and Lacerate builds moved, all toward PoB.
 - **Corpus:** 0 unexpected. Six values of one build moved, all toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11go: life per red socket and mana per blue socket on a staff
+
+**Found** (P6-11gm's scan): two passives' stats were unmapped, so reasons, each in 2 builds:
+- `maximum_life_+%_per_red_socket_on_staff` ("#% increased maximum Life per Red Socket on equipped Staff");
+- `maximum_mana_+%_per_blue_socket_on_staff`, its Mana per Blue Socket.
+
+**PoB:**
+- `ModParser.lua` 1435 reads "per red socket on equipped staff" as the `Multiplier` `RedSocketInWeapon 1` with the condition `UsingStaff`, the blue one alike.
+- `Item.lua` 2207 to 2219 adds one `Multiplier:<Colour>SocketIn<slot>` per socket of that colour on the item in the slot. A swap slot counts as its set's slot.
+
+**The engine:**
+- `Poe1Quantity::PerStaffSocket` (`Base`) holds each line.
+- `collect::staff_sockets` runs after the passives, items, and the config's custom lines. It turns each line into `Life` (or `Mana`) INC, the value times the main hand's sockets of that colour, with the `UsingStaff` state.
+- `sockets::colour_count` counts the sockets as `sockets` reads them for socket colour quality (P3-12i). An item whose sockets it cannot count is a reason.
+- **Found on the way:** a Driftwood Wand is an ambiguous base in the bundle (`unmodelled-item` `ambiguous-base`), so the wand fixture holds a Carved Wand. Not traced here.
+
+**Evidence** (`b-ct`, against P6-11gn's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with "10% increased maximum Life per Red Socket on equipped Staff" and "15% increased maximum Mana per Blue Socket on equipped Staff":
+  - `ice-nova-staff-sockets-witch.xml`: a Quarterstaff with `R-R-B-G`, so life x 1.20 and mana x 1.15;
+  - `ice-nova-staff-sockets-wand-witch.xml`: a Carved Wand with `R-B-B`, so neither applies.
+- **Public:** 0 unexpected. Nineteen values of the Cyclone and Shock Nova builds moved, all toward PoB; nine now equal it. The Cyclone build's life is 5234 and the Shock Nova build's mana 8373, as PoB.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
