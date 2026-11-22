@@ -113,6 +113,9 @@ pub enum StackKind {
     /// Seconds you have been stationary (P6-11gr; PoB's
     /// `Multiplier:StationarySeconds`, the config's `conditionStationary`).
     StationarySeconds,
+    /// Mana spent recently (P6-11gx; PoB's `Multiplier:ManaSpentRecently`,
+    /// the config's `multiplierManaSpentRecently`).
+    ManaSpentRecently,
 }
 
 impl StackKind {
@@ -135,6 +138,7 @@ impl StackKind {
             Self::Golems => "golems",
             Self::Resonance => "resonance",
             Self::StationarySeconds => "stationary-seconds",
+            Self::ManaSpentRecently => "mana-spent-recently",
         }
     }
 }
@@ -363,6 +367,14 @@ impl PerStack {
 /// The stack modifiers the engine models (module docs), sorted by stat
 /// ID, each as PoB v2.67.2 reads its text or skill stat.
 pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
+    // P6-11gx: "#% increased Effect of Arcane Surge on you per 200 Mana spent
+    // Recently, up to 50%" (`ArcaneSurgeEffect` INC per `ManaSpentRecently`,
+    // `div` 200, `limit` 50).
+    (
+        "arcane_surge_effect_+%_per_200_mana_spent_recently_up_to_50%",
+        StackKind::ManaSpentRecently,
+        StackValue::Per(PerStack::ArcaneSurgeEffect),
+    ),
     // P6-11ep: "#% increased effect of Arcane Surge on you per Summoned Totem"
     // (`ArcaneSurgeEffect` INC per `TotemsSummoned`).
     (
@@ -660,7 +672,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 11] = [
+pub const INPUTS: [&str; 12] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -672,7 +684,12 @@ pub const INPUTS: [&str; 11] = [
     RESONANCE_INPUT,
     BRANDS_INPUT,
     super::buffs::STATIONARY_INPUT,
+    MANA_SPENT_INPUT,
 ];
+
+/// The config's mana spent recently (`ConfigOptions.lua` 1358:
+/// `Multiplier:ManaSpentRecently`; P6-11gx).
+pub const MANA_SPENT_INPUT: &str = "multiplierManaSpentRecently";
 
 /// The config's count of brands attached to the enemy, when not the
 /// maximum (`ConfigOptions.lua` 323: `Multiplier:ConfigBrandsAttachedToEnemy`).
@@ -940,6 +957,37 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Err(()) => ingest.reason(reason(RESONANCE_INPUT)),
             Ok(None) => {}
             Ok(Some(n)) => resonance(ingest, &effects, n.clamp(0.0, RESONANCE_LIMIT)),
+        }
+    }
+
+    // Mana spent recently (P6-11gx): Arcane Surge's effect per 200, up to
+    // 50% (the `Multiplier`'s `div` 200, `limit` 50, `limitTotal`).
+    let effects = per(ingest, StackKind::ManaSpentRecently);
+    if !effects.is_empty() {
+        match count(set, MANA_SPENT_INPUT, false) {
+            Err(()) => ingest.reason(reason(MANA_SPENT_INPUT)),
+            Ok(None) => {}
+            Ok(Some(n)) => {
+                let steps = (n / 200.0 + 0.0001).floor();
+                for e in &effects {
+                    let value = (e.value * steps).min(50.0);
+                    if value == 0.0 {
+                        continue;
+                    }
+                    let Quantity::Poe1(Poe1Quantity::Stack(_, StackValue::Per(p))) = e.quantity
+                    else {
+                        continue;
+                    };
+                    let (quantity, op, all, any) = p.target();
+                    ingest.effect(Effect {
+                        quantity,
+                        op,
+                        value,
+                        conditions: Conditions::none().with_all(all).with_any(any),
+                        source: e.source.clone(),
+                    });
+                }
+            }
         }
     }
 

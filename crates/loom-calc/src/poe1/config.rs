@@ -364,10 +364,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Multiplier:EnemyKilledRecently"],
     ),
     (
-        "multiplierManaSpentRecently",
-        &["Multiplier:ManaSpentRecently"],
-    ),
-    (
         "multiplierMineDetonatedRecently",
         &["Multiplier:MineDetonatedRecently"],
     ),

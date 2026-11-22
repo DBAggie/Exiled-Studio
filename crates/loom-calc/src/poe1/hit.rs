@@ -1275,7 +1275,7 @@ fn hand_rate(
     let mut weapon_reasons = Reasons::new();
     let weapon = weapon_data(calc, item, hand, &mut weapon_reasons)?;
     unvetted.extend(&weapon_reasons);
-    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
+    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, hand, &cx)?;
     speed_reasons.extend(&unvetted);
     Ok(HandRate {
         hand,
@@ -2260,6 +2260,7 @@ fn cast_rate(
         !spell.skill.types.contains("Channel"),
         !spell.skill.types.contains("SummonsTotem"),
         limit,
+        None,
     )?;
     reasons.extend(&cooldown_reasons);
     Ok((value, reasons))
@@ -2409,6 +2410,7 @@ fn attack_rate(
     calc: &mut Calc<'_>,
     attack: &AttackSkill<'_>,
     weapon_rate: Valued,
+    hand: Hand,
     cx: &QueryContext,
 ) -> Result<(Valued, Reasons), CalcError> {
     #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -2427,14 +2429,26 @@ fn attack_rate(
     )?;
     let one = phases::constant(calc, "one", 1.0)?;
     let base_time = quotient(calc, one, skill_rate, Term::Step("attack-time"))?;
-    rate(
+    // The off hand's own more attack speed (P6-11gx: "#% more Attack speed
+    // with Offhand", PoB's `OffHandAttack` condition), in the more product.
+    let off_hand = Quantity::Poe1(Poe1Quantity::OffHandSpeedMore);
+    let mut off_reasons = Reasons::new();
+    let extra = if hand == Hand::Off && phases::has(calc, off_hand) {
+        Some(more(calc, off_hand, cx, &mut off_reasons)?)
+    } else {
+        None
+    };
+    let (value, mut reasons) = rate(
         calc,
         base_time,
         cx,
         !attack.skill.types.contains("Channel"),
         !attack.skill.types.contains("SummonsTotem"),
         None,
-    )
+        extra,
+    )?;
+    reasons.extend(&off_reasons);
+    Ok((value, reasons))
 }
 
 /// `min(1 / (base time / round((1 + inc / 100) x more, 2)), 1 / 0.033)`,
@@ -2446,6 +2460,7 @@ fn rate(
     capped: bool,
     self_cast: bool,
     limit: Option<Valued>,
+    extra_more: Option<Valued>,
 ) -> Result<(Valued, Reasons), CalcError> {
     // Stats that change the rate or DPS a way not modelled (PoB's
     // `showAverage`), read here: a trigger's rate never reaches this
@@ -2459,6 +2474,10 @@ fn rate(
         |_| false,
     );
     let (inc, more) = modifiers(calc, Quantity::Speed, cx, &mut reasons)?;
+    let more = match extra_more {
+        Some(extra) => phases::product(calc, &[more, extra], Term::More)?,
+        None => more,
+    };
     let modifier = phases::product(calc, &[inc, more], Term::Step("modifier"))?;
     let modifier = round_2(calc, modifier, Term::Step("modifier-rounded"))?;
     let time = quotient(calc, base_time, modifier, Term::Step("time"))?;

@@ -448,6 +448,10 @@ pub enum Poe1Quantity {
     /// you and Allies" (P6-11gu; PoB's `ExtraAuraEffect` of `Speed` INC):
     /// `Base`, the speed each aura buff adds, read by [`gems`].
     ExtraAuraSpeed,
+    /// "#% more Attack speed with Offhand" (P6-11gx; PoB's `Speed` MORE with
+    /// `ModFlag.Attack`, `OffHandAttack`, the `Attack` skill type): `More`,
+    /// read by the off hand's attack rate alone.
+    OffHandSpeedMore,
     /// Energy shield cannot be recovered above armour (PoB's
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
@@ -1398,6 +1402,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
             Self::BlockLucky => f.write_str("block-lucky"),
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
+            Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),

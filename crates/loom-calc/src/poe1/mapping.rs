@@ -7814,6 +7814,16 @@ pub const ROWS: &[Row] = &[
             (CHAOS, Op::Base, 1.0),
         ],
     ),
+    // P6-11gx: "#% more Attack speed with Offhand" (`Speed` MORE,
+    // `OffHandAttack`): the off hand's attack rate alone (`poe1::hit`).
+    (
+        "runegraft_offhand_attack_speed_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::OffHandSpeedMore),
+            Op::More,
+            1.0,
+        )],
+    ),
     // P6-11k: "#% increased Defences from Equipped Shield" (`Defences` INC,
     // `SlotName` Weapon 2): each defence of the shield.
     (

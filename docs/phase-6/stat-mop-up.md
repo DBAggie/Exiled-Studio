@@ -4082,3 +4082,28 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - `ice-nova-life-flask-in-use-witch.xml`: in use, 1263.93.
 - **Public and corpus:** 0 unexpected; no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gx: Arcane Surge per mana spent; the off hand's more attack speed
+
+**Found** (P6-11gm's scan): two stats PoB parses were reasons:
+- "#% increased Effect of Arcane Surge on you per 200 Mana spent Recently, up to 50%" (Arcane Capacitor, 2 builds);
+- the runegraft's "#% more Attack speed with Offhand" (3 builds).
+
+**PoB:**
+- **Arcane Surge.** `ArcaneSurgeEffect` INC with the `Multiplier` `ManaSpentRecently` (`div` 200, `limit` 50, `limitTotal`), from the config's `multiplierManaSpentRecently` (`ConfigOptions.lua` 1358).
+- **Off-hand speed.** `Speed` MORE with `ModFlag.Attack`, `OffHandAttack`, and the `Attack` skill type: the off hand's pass alone, in its speed's more product before PoB rounds the modifier.
+
+**The engine:**
+- **Arcane Surge.** `stacks::StackKind::ManaSpentRecently` from the config's count (it left `config::NAMED_ONLY`): `PerStack::ArcaneSurgeEffect` per 200, at most 50, which `buffs`' Arcane Surge reads (P6-11ch).
+- **Off-hand speed.** `Poe1Quantity::OffHandSpeedMore` (`More`). `hit::attack_rate` takes the hand, and for the off hand `rate` multiplies its more product by it before the rounding.
+- **Magmatic Strikes.** P6-11gp's row now has a fixture, through an anoint ("Allocates Magmatic Strikes"). The game's two-line text does not fit a custom line on our side.
+
+**Evidence** (`b-ct`, against P6-11gw's run):
+- **Four new mechanic fixtures.** All fields match PoB but the dual wielding one's Q11 floored attack times (DIV-0528 to DIV-0534, as its base fixture's):
+  - `ice-nova-arcane-capacitor-witch.xml`: 700 mana spent, 30%;
+  - `ice-nova-arcane-capacitor-capped-witch.xml`: 2000, the 50% cap;
+  - `smite-dual-wield-offhand-speed-templar.xml`;
+  - `smite-magmatic-strikes-templar.xml`.
+- **Public:** 0 unexpected. Ten values of the Shock Nova build moved, all toward PoB; its speed is now PoB's 8.164.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
