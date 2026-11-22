@@ -725,8 +725,9 @@ fn an_item_in_two_slots_should_count_in_each() {
 }
 
 /// A jewel in "<parent> Abyssal Socket <n>" counts when the parent has at
-/// least `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111); a parent
-/// that scales its abyss jewels is a reason (close-out).
+/// least `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111;
+/// close-out); a parent that scales its abyss jewels scales the jewel's
+/// modifiers (P6-11gi, PoB's `ScaleAddList`).
 #[test]
 fn an_abyssal_socket_should_count_by_its_parents_sockets() {
     let jewel = || item(3, vec![modifier(vec![stat("additional_strength", 16)])]);
@@ -745,12 +746,21 @@ fn an_abyssal_socket_should_count_by_its_parents_sockets() {
     let r = run_belt("local_has_X_abyss_sockets", "Belt Abyssal Socket 2");
     assert_eq!(value(&r, Field::Strength), 14.0);
     assert_eq!(state(&r, Field::Strength), StateKind::Complete);
-    // A parent that scales its abyss jewels: not modelled.
-    let r = run_belt(
-        "local_socketed_abyss_jewel_effect_+%",
-        "Belt Abyssal Socket 1",
+    // A parent with one socket and 50% increased effect: 16 x 1.5 = 24.
+    let scaling = item(
+        2,
+        vec![
+            modifier(vec![stat("local_has_X_abyss_sockets", 1)]),
+            modifier(vec![stat("local_socketed_abyss_jewel_effect_+%", 50)]),
+        ],
     );
-    assert!(partial_reasons(&r, Field::Strength).contains(&"unmodelled-item"));
+    let r = run(&with_items(
+        witch(1),
+        vec![scaling, jewel()],
+        &[("Belt", 2, false), ("Belt Abyssal Socket 1", 3, false)],
+    ));
+    assert_eq!(value(&r, Field::Strength), 38.0);
+    assert_eq!(state(&r, Field::Strength), StateKind::Complete);
 }
 
 /// A jewel in two sockets counts in each; a unique one (PoB disables a

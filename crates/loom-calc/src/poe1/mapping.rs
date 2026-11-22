@@ -8390,6 +8390,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_jewel_variable_ring_radius_value", "tree-allocation"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
+    // P6-11gi: the parent's "#% increased Effect of Socketed Abyss Jewels":
+    // `collect` scales its abyss jewels' modifiers by it.
+    ("local_socketed_abyss_jewel_effect_+%", "abyss-jewel-effect"),
     // P6-8a: the gems a trigger support supports; PoB has no row.
     (
         "local_support_gem_max_skill_level_requirement_to_support",

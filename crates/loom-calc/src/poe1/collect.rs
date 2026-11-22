@@ -839,18 +839,22 @@ fn slot_kind(slot: &str) -> SlotKind {
 /// The parent item's stat that gives it abyssal sockets ("Has # Abyssal
 /// Sockets", PoB's `AbyssalSocketCount`, `Item.lua` 2589).
 const ABYSS_SOCKETS: &str = "local_has_X_abyss_sockets";
-/// A parent item's stat that scales its socketed abyss jewels: not
-/// modelled, a reason.
+/// A parent item's stat that scales its socketed abyss jewels (P6-11gi;
+/// PoB's local `SocketedJewelEffect` INC, `ModParser.lua` 846:
+/// `socketedJewelEffectModifier`, `Item.lua` 2639).
 const ABYSS_JEWEL_EFFECT: &str = "local_socketed_abyss_jewel_effect_+%";
 
 /// Whether the abyssal slot `slot` ("<parent> Abyssal Socket <n>") holds
 /// an active socket (close-out): PoB's `ItemSlotControl` makes socket `n`
 /// inactive, and empties it, when the parent slot's item has fewer than
 /// `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111), so its jewel
-/// counts only when `n` is at most the parent's count. `None` when that
-/// is not known: a parent line that does not resolve or settle, or one
-/// that scales its socketed abyss jewels.
-fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
+/// counts only when `n` is at most the parent's count. With it, the scale
+/// of the jewel's modifiers: `1 + inc / 100`, `inc` the parent's
+/// [`ABYSS_JEWEL_EFFECT`] lines summed (P6-11gi; PoB's
+/// `socketedJewelEffectModifier`, the jewel's mods added by `ScaleAddList`,
+/// `CalcSetup.lua` 956 and 1167). `None` when that is not known: a parent
+/// line that does not resolve or settle.
+fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<(bool, f64)> {
     let (parent, n) = slot.split_once(" Abyssal Socket ")?;
     let n: i64 = n.trim().parse().ok()?;
     let Some(parent_id) = set
@@ -860,10 +864,11 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
         .and_then(|e| e.item)
         .filter(|id| id.0 != 0)
     else {
-        return Some(false);
+        return Some((false, 1.0));
     };
     let item = build.items.item(parent_id)?;
     let mut count = 0;
+    let mut inc = 0.0;
     for line in &item.body.lines {
         let LineKind::Modifier(m) = &line.kind else {
             continue;
@@ -875,7 +880,7 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
             } => {
                 for s in stats {
                     if s.stat.as_str() == ABYSS_JEWEL_EFFECT {
-                        return None;
+                        inc += crate::ingest::settle(&s.value)?;
                     }
                     if s.stat.as_str() == ABYSS_SOCKETS {
                         #[expect(clippy::cast_possible_truncation, reason = "a socket count")]
@@ -890,7 +895,7 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
             _ => return None,
         }
     }
-    Some(n <= count)
+    Some((n <= count, 1.0 + inc / 100.0))
 }
 
 /// Whether `slot` is a flask slot (PoB's `Flask 1` to `Flask 5`).
@@ -947,7 +952,7 @@ pub fn items_in_use(build: &Build) -> Vec<(ItemId, ItemPlace)> {
                 continue;
             }
             if matches!(slot_kind(slot), SlotKind::Abyssal)
-                && abyssal_active(build, set, slot) != Some(true)
+                && !abyssal_active(build, set, slot).is_some_and(|(active, _)| active)
             {
                 continue;
             }
@@ -997,11 +1002,25 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 // An active flask acts through `poe1::flasks` (P6-4b).
                 SlotKind::Flask => continue,
                 SlotKind::Abyssal => match abyssal_active(build, set, slot) {
-                    // Its lines act as any jewel's (close-out).
-                    Some(true) => {}
+                    // Its lines act as any jewel's (close-out), scaled by
+                    // the parent's effect of socketed abyss jewels
+                    // (P6-11gi; `skill_modifiers::scale`, PoB's
+                    // `ScaleAddMod`).
+                    Some((true, scale)) => {
+                        if let Some(item) = build.items.item(id) {
+                            let start = ingest.effects().len();
+                            item_lines_in(item, GemSlot::of(slot), ingest);
+                            ingest.rescale_from(start, &|q, op, v| {
+                                super::skill_modifiers::scale(q, op, v, scale)
+                            });
+                        } else {
+                            ingest.reason(unmodelled("missing"));
+                        }
+                        continue;
+                    }
                     // PoB empties an abyssal slot its parent lacks
                     // (`ItemSlotControl.lua` 98 to 111).
-                    Some(false) => continue,
+                    Some((false, _)) => continue,
                     None => {
                         ingest.reason(unmodelled("abyssal-socket"));
                         continue;

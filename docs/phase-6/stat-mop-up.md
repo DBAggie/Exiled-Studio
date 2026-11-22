@@ -3678,3 +3678,31 @@ Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOn
 - **Corpus:** 0 unexpected. Four values of one build moved: its speed and DPS toward PoB.
   - Its energy shield cost per second moved away (138.6 to 140.8, PoB 100.9). It is the cost per attack times the speed, and that build's cost per attack was already above PoB's (40.0 against 28.0) for another reason, not traced here.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gi: the effect of socketed abyss jewels
+
+**Found:** `local_socketed_abyss_jewel_effect_+%` ("#% increased Effect of Socketed Abyss Jewels", Darkness Enthroned) was a reason. Since the close-out, an abyssal slot whose parent carried it was left out whole, an `unmodelled-item` `abyssal-socket` reason. This affected 3 builds.
+
+**PoB:**
+- The line is a local `SocketedJewelEffect` INC (`ModParser.lua` 846).
+- The parent item keeps `socketedJewelEffectModifier = 1 + inc / 100` (`Item.lua` 2639).
+- An abyss jewel in that item's abyssal slot is added with `ScaleAddList` at that scale (`CalcSetup.lua` 956, 1167). `ScaleAddMod` keeps the integer part of a whole value scaled and rounded to two decimals, and floors a value that is not whole to one decimal.
+
+**The engine:**
+- `collect::abyssal_active` returns the scale beside whether the socket is active: the parent's lines summed.
+- The jewel's lines go in through `item_lines_in`, and the effects they add are rescaled by `skill_modifiers::scale`, PoB's `ScaleAddMod`, as an active flask's are (P6-4b).
+- The parent's own line is `NoEffect` "abyss-jewel-effect".
+- The close-out unit test `an_abyssal_socket_should_count_by_its_parents_sockets` now expects the scale: 16 Strength at 50% gives 24.
+
+**Evidence** (`b-ct`, against P6-11gh's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with a rare belt of one abyssal socket and a rare abyss jewel (+16 Intelligence, 10 to 20 added cold damage to spells, +30 life):
+  - `ice-nova-abyss-jewel-effect-25-witch.xml`: 25%, so 20 Intelligence, 12 to 25, and 37 life (12.5 and 37.5 truncated);
+  - `ice-nova-abyss-jewel-effect-75-witch.xml`: 75%, so 28, 17 to 35, and 52.
+- **A PoB check, kept local:** the same jewel in both abyssal sockets of a belt counts twice in PoB too (Intelligence 60 to 88), as the engine counts it (close-out).
+- **Public:** 0 unexpected.
+  - 17 values of the Animate Guardian build moved toward PoB. Its life (4258) and life regeneration now equal PoB's.
+  - Its energy shield recharge moved away (570 to 604, PoB 412). The recharge was already above PoB's for another reason and scales with energy shield, which moved toward PoB (2673 to 2832, PoB 3218).
+- **Corpus:** 0 unexpected. One Necromancer build has Darkness Enthroned with the same jewel in both sockets. 12 of its values moved toward PoB and 4 away.
+  - Its life moved from 3997 to 4282, past PoB's 4142, so its maximum hits taken passed PoB's too.
+  - Its belt also has "gain no maximum life from Strength" (`gain_no_maximum_life_from_strength`), still unmapped and a reason on the life field. The engine still counts Strength's 80 life (Strength 160), which PoB drops. Without it, the base life would be 1750 against PoB's 1770.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
