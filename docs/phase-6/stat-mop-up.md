@@ -3618,3 +3618,40 @@ Found by counting, across the public and corpus runs, the granted effect IDs the
 - **Public:** 0 unexpected. Four values of the Vortex build moved, all toward PoB.
 - **Corpus:** 0 unexpected. Six values moved, all toward PoB; one build's life cost now equals PoB's (194).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`, the item support test among them), clippy, and rustfmt pass.
+
+## P6-11gg: the offerings' effect, and offerings that also affect you
+
+**Found:** three stats were unmapped, so reasons:
+- `offering_spells_effect_+%` ("Your Offerings have #% increased Effect"), from the minion offence mastery, in 3 builds;
+- the Necromancer's Mistress of Sacrifice: `offerings_also_buff_you` ("Your Offering Skills also affect you") and `self_offering_effect_+%` ("Your Offerings have #% reduced Effect on you"), in 3 builds.
+
+Until now the offerings' buffs reached minions alone (P6-9e, `BuffStat::MinionOnly`).
+
+**PoB:**
+- **The effect.** PoB's tree text "#% increased effect of Offerings" is `BuffEffect` INC tagged with the four offerings' names (`ModParser.lua` 486). It scales the buff on you and on minions (`CalcPerform.lua` 2274, 2284).
+- **"Your Offering Skills also affect you"** is an `ExtraSkillMod` that sets the offerings' `buffNotPlayer` to false (2923). Their buff then reaches you as any `Buff` does (2270 to 2280).
+- **"Your Offerings have #% reduced Effect on you"** is `BuffEffectOnPlayer` INC on the offerings (2924). Only the scale on you reads it, not the minion's.
+
+**The engine:**
+- **`skill_modifiers`:**
+  - Two `STATS` rows, 28 in all: `Poe1Quantity::OfferingBuffEffect` and `OfferingEffectOnYou`.
+  - The flag `OFFERINGS_AFFECT_YOU_STAT`, a `Flag` of `Poe1Quantity::OfferingsAffectYou`.
+  - `OFFERING_SKILLS` (Blood, Bone, Flesh, and Spirit Offering).
+  - `Totals::offering` and `Totals::offering_on_you`.
+- **`gems`:**
+  - An offering's buff scale on minions adds the offerings' effect.
+  - With the flag, the buff's `MinionOnly` rows apply to you too (`add_rows`' new `minion_only_on_you`), at the offerings' effect plus the effect on you.
+  - Flesh Offering's movement speed was `NoSlice` "movement". It is now a `MinionOnly` `MovementSpeed` row, since movement speed became a slice field in P6-10b.
+- **The texts test** (`tests/skill_modifiers.rs`) checks both rows' game texts against the bundle.
+- **Not modelled:** Spirit Offering and Blood Offering are not in the gem table. With them, the gem stays an `unmodelled-gem` reason, as before.
+
+**Evidence** (`b-ct`, against P6-11gf's run):
+- **Two new mechanic fixtures** match PoB on every compared field:
+  - `minion-raise-zombie-offerings-on-you-witch.xml`: P6-9e's zombie fixture with both of Mistress of Sacrifice's lines as custom lines. The offerings act on you at half effect (block 17, spell block 34), and the zombie's buffs are unchanged.
+  - `ice-nova-flesh-offering-on-you-witch.xml`: Ice Nova with Flesh Offering in another group and "Your Offering Skills also affect you". Flesh Offering's cast speed and movement speed act on you.
+- **Public:** 0 unexpected. Eight values moved, all toward PoB:
+  - the Animate Guardian build's full DPS (the offering effect on its minion);
+  - the Forged Frostbearer build's block, spell block, mana regeneration, and effective health pool.
+- **Corpus:** 0 unexpected. Seven values of one Necromancer build moved, all toward PoB. Its spell block (61) and mana regeneration (33.6) now equal PoB's.
+- **Data-parity:** `uncategorized` 0.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

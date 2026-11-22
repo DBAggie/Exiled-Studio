@@ -66,7 +66,8 @@
 //!   pick follows its table order, so none applies and each is an
 //!   `unmodelled-skill` `guard-slot` reason. A buff stat only minions get
 //!   (`buffNotPlayer`, the offerings: [`BuffStat::MinionOnly`]) acts in
-//!   [`minion_buffs`] alone.
+//!   [`minion_buffs`] alone, and on you too while "Your Offering Skills
+//!   also affect you" (P6-11gg, [`skill_modifiers::Totals::offering_on_you`]).
 //! - [`Kind::Debuff`]: its rows on the enemy, merged per name (Frost Bomb's
 //!   exposure, [`Poe1Quantity::SkillExposure`], which [`super::exposure`]
 //!   compares with the others).
@@ -1245,7 +1246,18 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         NONE,
                     )]),
                 ),
-                ("base_movement_velocity_+%", BuffStat::NoSlice("movement")),
+                // P6-11gg: on you with "Your Offering Skills also affect
+                // you" (`MovementSpeed` INC, a slice field since P6-10b).
+                (
+                    "base_movement_velocity_+%",
+                    BuffStat::MinionOnly(&[(
+                        Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                        Op::Increased,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
                 (
                     "cast_speed_+%_granted_from_skill",
                     BuffStat::MinionOnly(&[(
@@ -4866,7 +4878,10 @@ pub fn minion_buffs(
                         continue;
                     }
                     let aura = effect == EffectType::Aura;
-                    let own = own_effect(input, s, aura) + named_golem(totals, s);
+                    // The offerings' effect (P6-11gg), not the effect on you.
+                    let own = own_effect(input, s, aura)
+                        + named_golem(totals, s)
+                        + totals.offering(&s.active_gem.effect.id, false);
                     let scale = totals.buff_scale(aura, &s.types, own);
                     add_rows(
                         input,
@@ -4877,6 +4892,7 @@ pub fn minion_buffs(
                         (scale, scale),
                         config,
                         true,
+                        false,
                         None,
                         &mut merged,
                         ingest,
@@ -5028,12 +5044,17 @@ fn one_skill(
             stats,
         } => {
             let aura = effect == EffectType::Aura;
+            // An offering's buff on you (P6-11gg, Mistress of Sacrifice):
+            // its `MinionOnly` rows apply, with the effect on you.
+            let on_you = totals.offering_on_you(&s.active_gem.effect.id);
             // PoB's guard scale reads the character's modifiers alone
             // (`modStore` the `modDB`): no gem's own effect stat.
             let own = if effect == EffectType::Guard {
                 0.0
             } else {
-                own_effect(input, s, aura) + named_golem(totals, s)
+                own_effect(input, s, aura)
+                    + named_golem(totals, s)
+                    + totals.offering(&s.active_gem.effect.id, on_you)
             };
             // An `unscalable` buff (Cyclone's movement speed, P6-8a): scale 1.
             let scale = if UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
@@ -5082,6 +5103,7 @@ fn one_skill(
                     (scale, buff_scale),
                     config,
                     false,
+                    on_you,
                     None,
                     &mut collected.merged,
                     ingest,
@@ -5107,6 +5129,7 @@ fn one_skill(
                     stats,
                     (1.0, 1.0),
                     config,
+                    false,
                     false,
                     None,
                     &mut collected.merged,
@@ -5150,6 +5173,7 @@ fn one_skill(
                 stats,
                 (scale, 1.0),
                 config,
+                false,
                 false,
                 terms.ok(),
                 &mut collected.merged,
@@ -5329,6 +5353,7 @@ fn supports_global(
             (scale, scale),
             config,
             false,
+            false,
             None,
             &mut collected.merged,
             ingest,
@@ -5376,6 +5401,7 @@ fn add_rows(
     (scale, buff_scale): (f64, f64),
     config: Option<&ConfigSet>,
     for_minion: bool,
+    minion_only_on_you: bool,
     warcry: Option<WarcryTerms>,
     merged: &mut Merged,
     ingest: &mut Ingest<'_>,
@@ -5552,7 +5578,7 @@ fn add_rows(
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
             BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
             BuffStat::MinionOnly(rows) => {
-                if !for_minion {
+                if !for_minion && !minion_only_on_you {
                     continue;
                 }
                 (rows, None)

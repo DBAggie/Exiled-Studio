@@ -200,7 +200,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 26] = [
+pub const STATS: [ModifierRow; 28] = [
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -298,10 +298,26 @@ pub const STATS: [ModifierRow; 26] = [
         Poe1Quantity::NonCurseAuraEffect,
         1.0,
     ),
+    // P6-11gg: "Your Offerings have #% increased Effect" (PoB's tree text
+    // "increased effect of Offerings": `BuffEffect` INC with the offerings'
+    // `SkillName` tag, `ModParser.lua` 486).
+    (
+        "offering_spells_effect_+%",
+        Poe1Quantity::OfferingBuffEffect,
+        1.0,
+    ),
     (
         "reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(None),
         -2.0,
+    ),
+    // P6-11gg: "Your Offerings have #% reduced Effect on you" (Mistress of
+    // Sacrifice; `BuffEffectOnPlayer` INC on the offerings, `ModParser.lua`
+    // 2924).
+    (
+        "self_offering_effect_+%",
+        Poe1Quantity::OfferingEffectOnYou,
+        1.0,
     ),
     (
         "skill_effect_duration_+%",
@@ -337,9 +353,33 @@ pub const STATS: [ModifierRow; 26] = [
     ),
 ];
 
-/// The effects of a stat of [`STATS`]: `(quantity, op, scale)`.
+/// "Your Offering Skills also affect you" (P6-11gg; Mistress of
+/// Sacrifice): PoB's `ExtraSkillMod` setting `buffNotPlayer` to false on
+/// the four offerings (`ModParser.lua` 2923), so their buff reaches you as
+/// a `Buff` does (`CalcPerform.lua` 2270 to 2280).
+pub const OFFERINGS_AFFECT_YOU_STAT: &str = "offerings_also_buff_you";
+
+/// The offering skills PoB's `SkillName` tags name ("Bone Offering", "Flesh
+/// Offering", "Spirit Offering", "Blood Offering", `ModParser.lua` 486 and
+/// 2923 to 2925), by granted effect ID.
+pub const OFFERING_SKILLS: [&str; 4] = [
+    "BloodOffering",
+    "BoneOffering",
+    "FleshOffering",
+    "SpiritOffering",
+];
+
+/// The effects of a stat of [`STATS`] (or [`OFFERINGS_AFFECT_YOU_STAT`],
+/// a `Flag`): `(quantity, op, scale)`.
 #[must_use]
 pub fn effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
+    if stat == OFFERINGS_AFFECT_YOU_STAT {
+        return Some(vec![(
+            Quantity::Poe1(Poe1Quantity::OfferingsAffectYou),
+            Op::Flag,
+            1.0,
+        )]);
+    }
     if let Ok(i) = NO_RESERVATION_STATS.binary_search_by(|(id, ..)| (*id).cmp(stat)) {
         let i = u8::try_from(i).ok()?;
         return Some(vec![(
@@ -428,6 +468,9 @@ pub struct Totals {
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
+    /// The offerings' buff reaches you too (P6-11gg,
+    /// [`OFFERINGS_AFFECT_YOU_STAT`], an unconditional flag).
+    pub offerings_affect_you: bool,
     /// The skills with no reservation, a bit per
     /// [`NO_RESERVATION_STATS`] row (P6-11fq).
     pub no_reservation: u64,
@@ -444,6 +487,10 @@ pub struct Totals {
     pub named_golem_buff_effect: [f64; 5],
     /// `BuffEffect` INC of herald skills (P6-11at).
     pub herald_buff_effect: f64,
+    /// `BuffEffect` INC of the offering skills (P6-11gg).
+    pub offering_buff_effect: f64,
+    /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
+    pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
     pub curse_effect: f64,
     /// `CurseEffect` INC of mark skills (P6-11df).
@@ -511,6 +558,14 @@ impl Totals {
                 }
                 continue;
             }
+            if q == Poe1Quantity::OfferingsAffectYou {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.offerings_affect_you = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
             if q == Poe1Quantity::ReserveLifeInsteadOfMana {
                 if e.op == Op::Flag && e.conditions == Conditions::none() {
                     t.reserve_life = true;
@@ -531,6 +586,8 @@ impl Totals {
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
                 Poe1Quantity::NamedGolemBuffEffect(g) => &mut t.named_golem_buff_effect[g as usize],
                 Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
+                Poe1Quantity::OfferingBuffEffect => &mut t.offering_buff_effect,
+                Poe1Quantity::OfferingEffectOnYou => &mut t.offering_effect_on_you,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::MarkCurseEffect => &mut t.mark_curse_effect,
                 Poe1Quantity::SkillTiming(timing) => match timing {
@@ -605,6 +662,32 @@ impl Totals {
             .iter()
             .find(|g| g.is(active))
             .map_or(0.0, |&g| self.named_golem_buff_effect[g as usize])
+    }
+
+    /// The `BuffEffect` INC the offering modifiers give the skill of the
+    /// granted effect `id` (P6-11gg): [`Self::offering_buff_effect`] for
+    /// an offering ([`OFFERING_SKILLS`]), else 0; with `on_you`, the effect
+    /// on you ([`Self::offering_effect_on_you`], PoB's `BuffEffectOnPlayer`,
+    /// which the minion's scale leaves out) too. Added to a buff's own
+    /// effect.
+    #[must_use]
+    pub fn offering(&self, id: &str, on_you: bool) -> f64 {
+        if !OFFERING_SKILLS.contains(&id) {
+            return 0.0;
+        }
+        if on_you {
+            self.offering_buff_effect + self.offering_effect_on_you
+        } else {
+            self.offering_buff_effect
+        }
+    }
+
+    /// Whether the buff of the skill of the granted effect `id` reaches you
+    /// although PoB's `buffNotPlayer` keeps it from you (P6-11gg): an
+    /// offering while [`Self::offerings_affect_you`].
+    #[must_use]
+    pub fn offering_on_you(&self, id: &str) -> bool {
+        self.offerings_affect_you && OFFERING_SKILLS.contains(&id)
     }
 
     /// The scale of a buff of `effect` from a skill of `types` (module
@@ -1008,6 +1091,22 @@ mod tests {
         assert_eq!(n.named_golem(Some("summon_flame_golem")), 0.0);
         assert_eq!(n.named_golem(Some("lightning_golem_wrath")), 0.0);
         assert_eq!(n.named_golem(None), 0.0);
+        // P6-11gg: the offerings' effect, on you with the effect on you.
+        let o = Totals {
+            offering_buff_effect: 20.0,
+            offering_effect_on_you: -50.0,
+            ..Totals::default()
+        };
+        assert_eq!(o.offering("BoneOffering", false), 20.0);
+        assert_eq!(o.offering("FleshOffering", true), -30.0);
+        assert_eq!(o.offering("Clarity", true), 0.0);
+        assert!(!o.offering_on_you("BoneOffering"));
+        let o = Totals {
+            offerings_affect_you: true,
+            ..o
+        };
+        assert!(o.offering_on_you("SpiritOffering"));
+        assert!(!o.offering_on_you("Clarity"));
         let c = Totals {
             curse_effect: 30.0,
             ..Totals::default()

@@ -787,6 +787,19 @@ pub enum Poe1Quantity {
     /// transfigured ones included; P6-11gc): `Increased`, read by
     /// [`skill_modifiers::Totals`] for that golem skill's buff.
     NamedGolemBuffEffect(skill_modifiers::Golem),
+    /// `BuffEffect` INC of the offering skills ("#% increased effect of
+    /// Offerings", PoB's `SkillName` tag of the four offerings; P6-11gg):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for an offering's
+    /// buff, on you and on minions.
+    OfferingBuffEffect,
+    /// `BuffEffectOnPlayer` INC of the offering skills ("Your Offerings
+    /// have #% reduced Effect on you", P6-11gg): `Increased`, read for an
+    /// offering's buff on you alone.
+    OfferingEffectOnYou,
+    /// "Your Offering Skills also affect you" (PoB's `buffNotPlayer` set to
+    /// false on the offerings, P6-11gg): a `Flag`, read by
+    /// [`skill_modifiers::Totals`].
+    OfferingsAffectYou,
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1409,6 +1422,9 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
             Self::NamedGolemBuffEffect(g) => write!(f, "named-golem-buff-effect.{}", g.name()),
+            Self::OfferingBuffEffect => f.write_str("offering-buff-effect"),
+            Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
+            Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),
