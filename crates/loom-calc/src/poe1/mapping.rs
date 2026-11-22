@@ -7456,6 +7456,13 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11hl: the Elementalist's Primal Aegis (`ElementalAegisValue` MAX 75
+    // per `AllocatedNotable`, `ModParser.lua` 2828; the 75 is the game's
+    // description text, the stat the level).
+    (
+        "local_display_cast_primal_aegis_on_gain_skill",
+        &[(Quantity::Poe1(Poe1Quantity::PrimalAegis), Op::Flag, 1.0)],
+    ),
     // P6-11bn: "Nearby Enemies have #% to <Type> Resistance" and "to all
     // Resistances" (`EnemyModifier` `<Type>Resist` BASE; all: `ElementalResist`
     // and `ChaosResist`): the enemy's resistance, as a curse's.
@@ -9527,6 +9534,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "projectile-count",
     ),
     ("warcry_skill_area_of_effect_+%", "area"),
+    // P6-11hl: "Other Aegis Skills are Disabled" (`DisableSkill` for
+    // `SkillType.Aegis` but Primal Aegis): no other aegis skill is modelled
+    // (each keeps its own reason).
+    (
+        "your_aegis_skills_except_primal_are_disabled",
+        "aegis-skills",
+    ),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",

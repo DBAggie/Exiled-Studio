@@ -34,7 +34,8 @@
 //!   (floored after each take), and what is left carries to the next hit.
 //!
 //! Not modelled, each a reason (unmapped stats, markers, or config): a
-//! type's own guard, ward, aegis, allies taking damage, life loss
+//! type's own guard, ward, a type's own or the shared aegis (the shared
+//! elemental one is P6-11hl's), allies taking damage, life loss
 //! prevented, recoup, life, mana, or energy shield gained on block or
 //! suppression, dodge, avoiding all damage from hits or a type's damage,
 //! lucky or unlucky block and suppression, the enemy reducing block.
@@ -78,6 +79,8 @@ struct Pools {
     guard: f64,
     /// Summon Stone Golem of Safeguarding's life left (P6-11ar).
     golem: f64,
+    /// The shared elemental aegis left (P6-11hl).
+    elemental_aegis: f64,
 }
 
 /// What the estimate reads of the character.
@@ -111,6 +114,8 @@ pub(super) struct Character {
     /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce). The share
     /// below half life (Petrified Blood's) is 0: no modelled source gives it.
     pub(super) prevented: f64,
+    /// The shared elemental aegis (PoB's `sharedElementalAegis`; P6-11hl).
+    pub(super) elemental_aegis: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -155,6 +160,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut life = pools.life.max(0.0);
     let mut guard = pools.guard;
     let mut golem = pools.golem;
+    let mut elemental_aegis = pools.elemental_aegis;
     let life_pool = life_hit_pool(life, ch.max_life, ch.prevented);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
@@ -198,6 +204,13 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         if golem > 0.0 {
             let taken = (remainder * ch.golem_rate / 100.0).min(golem);
             golem = crate::math::floor(golem - taken);
+            remainder -= taken;
+        }
+        // The shared elemental aegis takes an elemental hit next, all of it
+        // up to what is left (P6-11hl; `CalcDefence.lua` 285 to 290).
+        if ty != DamageType::Physical && ty != DamageType::Chaos && elemental_aegis > 0.0 {
+            let taken = remainder.min(elemental_aegis);
+            elemental_aegis -= taken;
             remainder -= taken;
         }
         // The shared guard takes its share next (P6-11ae).
@@ -270,6 +283,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mana: crate::math::floor(mana),
             guard,
             golem,
+            elemental_aegis,
         },
         crate::math::ceil(overkill),
     )
@@ -304,6 +318,7 @@ fn hits_to_die(
         mana: ch.mana,
         guard: ch.guard,
         golem: ch.golem,
+        elemental_aegis: ch.elemental_aegis,
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -545,6 +560,7 @@ mod tests {
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            elemental_aegis: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -576,6 +592,7 @@ mod tests {
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            elemental_aegis: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -583,6 +600,7 @@ mod tests {
             mana: 0.0,
             guard: ch.guard,
             golem: 0.0,
+            elemental_aegis: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, overkill) = reduce(pools, &hit, &ch);
@@ -610,6 +628,7 @@ mod tests {
             golem_rate: 3.75,
             golem: 100.0,
             prevented: 0.0,
+            elemental_aegis: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -617,6 +636,7 @@ mod tests {
             mana: 0.0,
             guard: ch.guard,
             golem: ch.golem,
+            elemental_aegis: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, _) = reduce(pools, &hit, &ch);

@@ -4396,3 +4396,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Ten values of the two Kinetic builds moved toward PoB.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hl: Primal Aegis
+
+**Found** (P6-11gm's scan): the Elementalist's Bastion of Elements had two reasons in 155 corpus documents: "Triggers Level # Primal Aegis when Allocated" (`local_display_cast_primal_aegis_on_gain_skill`) and "Other Aegis Skills are Disabled".
+
+**PoB:**
+- **The value:** "Primal Aegis can take 75 Elemental Damage per Allocated Notable Passive Skill" is `ElementalAegisValue` MAX 75 per `Multiplier:AllocatedNotable` (`ModParser.lua` 2828; `CalcSetup.lua` 677: the spec's allocated nodes of type `Notable`). It becomes `sharedElementalAegis` (`CalcDefence.lua` 2419).
+- **The hit pools** (3135): an elemental type's total hit pool adds it.
+- **The EHP** (`reducePoolsByDamage`, 285 to 290): an elemental hit drains it before guard, all of the hit up to what is left.
+- "Other Aegis Skills are Disabled" disables `SkillType.Aegis` but Primal Aegis.
+
+**The engine:**
+- `Poe1Quantity::PrimalAegis` (`Flag`). `collect::primal_aegis` turns it into `Poe1Quantity::ElementalAegis`: 75 per allocated, connected notable. The 75 is the game's description text; the stat's value is the level. A node of unknown kind is a reason.
+- `enemy_hit::maximum_hit`'s pools and `ehp::reduce` add the shared elemental aegis for elemental types.
+- "Other Aegis Skills are Disabled" is `NoEffect`: no other aegis skill is modelled, and each keeps its own reason.
+- A type's own aegis and the shared aegis have no modelled source.
+
+**Evidence** (`b-ct`, against P6-11hk's run):
+- **A new mechanic fixture**, `ice-nova-primal-aegis-witch.xml`: an Elementalist with Bastion of Elements (path 16023, 6052, 4917; one notable). It matches PoB on every field. PoB's probe gives `sharedElementalAegis` 75 and fire's total hit pool 1200 against chaos's 1125.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected. Seven EHP and maximum hit values of one Elementalist build moved toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

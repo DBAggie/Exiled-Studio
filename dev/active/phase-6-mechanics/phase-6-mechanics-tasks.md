@@ -394,6 +394,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11hi: brutal charges (`charges::ChargeValue::ToBrutal`, triple damage in `hit::double_damage`); fixtures `smite-brutal-charges-templar.xml`, `smite-brutal-charges-minimum-templar.xml`, `smite-brutal-charges-maximum-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hi")
 - [x] P6-11hj: Transfiguration of Body, Mind, and Soul (`Poe1Quantity::Transfiguration`, `hit::damage_per_stat`); fixtures `ice-nova-transfiguration-witch.xml`, `smite-transfiguration-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hj")
 - [x] P6-11hk: Arcane Might (`Poe1Quantity::SpellDamageToAttacks`, `hit::spell_damage_to_attacks`); fixtures `smite-arcane-might-templar.xml`, `smite-arcane-might-largest-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hk")
+- [x] P6-11hl: Primal Aegis (`collect::primal_aegis`, the shared elemental aegis in `enemy_hit` and `ehp`); fixture `ice-nova-primal-aegis-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hl")
 - [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

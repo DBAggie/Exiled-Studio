@@ -108,6 +108,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     random_gains(build, ingest);
     // Damage as projectiles travel farther (P6-11ha).
     distance_ramps(input, ingest);
+    // Primal Aegis per allocated notable (P6-11hl).
+    primal_aegis(input, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
@@ -1232,6 +1234,55 @@ fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             value,
             conditions,
             source: e.source,
+        });
+    }
+}
+
+/// Primal Aegis's elemental damage per allocated notable (P6-11hl; the
+/// game's description of `local_display_cast_primal_aegis_on_gain_skill`).
+const PRIMAL_AEGIS_PER_NOTABLE: f64 = 75.0;
+
+/// Primal Aegis (P6-11hl; `ModParser.lua` 2828, `CalcSetup.lua` 677):
+/// `ElementalAegisValue` 75 per allocated notable (PoB's
+/// `Multiplier:AllocatedNotable`, the active spec's allocated, connected
+/// nodes of type `Notable`, ascendancy and cluster notables among them).
+/// A node whose kind is not known is a reason.
+fn primal_aegis(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let Some(source) = ingest
+        .effects()
+        .iter()
+        .find(|e| e.quantity == Quantity::Poe1(Poe1Quantity::PrimalAegis) && e.value != 0.0)
+        .map(|e| e.source.clone())
+    else {
+        return;
+    };
+    let Some(spec) = active_spec(input.build) else {
+        return;
+    };
+    let mut notables = 0.0;
+    for n in spec.nodes.value() {
+        if !input.options.passives.connected(*n) {
+            continue;
+        }
+        match node_kind(input, n.0) {
+            Some(k) if k.notable => notables += 1.0,
+            Some(_) => {}
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *n },
+                    what: "unknown-node-kind",
+                });
+                return;
+            }
+        }
+    }
+    if notables > 0.0 {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::ElementalAegis),
+            op: Op::Base,
+            value: PRIMAL_AEGIS_PER_NOTABLE * notables,
+            conditions: Conditions::none(),
+            source,
         });
     }
 }

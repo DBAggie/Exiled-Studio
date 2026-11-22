@@ -464,6 +464,14 @@ pub enum Poe1Quantity {
     /// into a third each to fire, cold, and lightning (PoB's default
     /// `physMode` `AVERAGE`, `CalcOffence.lua` 944 to 965).
     GainAsRandom,
+    /// "Triggers Level # Primal Aegis when Allocated / Primal Aegis can take
+    /// 75 Elemental Damage per Allocated Notable Passive Skill" (P6-11hl):
+    /// a `Flag`; `collect` turns it into [`Self::ElementalAegis`].
+    PrimalAegis,
+    /// The shared elemental aegis (P6-11hl; PoB's `ElementalAegisValue` MAX,
+    /// `sharedElementalAegis`, `CalcDefence.lua` 2419): `Base`, the pool
+    /// elemental hits drain before guard; the largest counts.
+    ElementalAegis,
     /// "#% Arcane Might" (P6-11hk; PoB's `SpellDamageAppliesToAttacks` flag
     /// with `ImprovedSpellDamageAppliesToAttacks` MAX, `CalcOffence.lua`
     /// 618 to 631): `Base`, the percent at which spell damage increases
@@ -1480,6 +1488,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ExtraAuraSpeed => f.write_str("extra-aura-speed"),
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
+            Self::PrimalAegis => f.write_str("primal-aegis"),
+            Self::ElementalAegis => f.write_str("elemental-aegis"),
             Self::SpellDamageToAttacks => f.write_str("spell-damage-to-attacks"),
             Self::Transfiguration(n) => write!(f, "transfiguration.{n}"),
             Self::TripleDamageChance => f.write_str("triple-damage-chance"),

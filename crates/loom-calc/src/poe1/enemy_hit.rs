@@ -604,7 +604,8 @@ const LOW_POOL_THRESHOLD: f64 = 0.5;
 ///   half of maximum life;
 /// - each type's total hit pool: the life pool, plus the energy shield
 ///   (`EnergyShieldRecoveryCap`, the maximum) unless the type bypasses it
-///   (chaos does, 100%), plus ward, aegis, and guard (none);
+///   (chaos does, 100%), plus ward (none), the shared elemental aegis for
+///   an elemental type (P6-11hl), and guard;
 /// - for each type the hit converts to (the type itself without taken as):
 ///   with no armour applied, `max(pool / share / (resMult x (1 -
 ///   DamageReduction / 100)) - flat, 0) / takenMult`; with armour, PoB's
@@ -814,6 +815,19 @@ fn maximum_hit(
     )?
     .min(100.0);
     let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented);
+    // The shared elemental aegis (P6-11hl; `CalcDefence.lua` 2419: the
+    // largest `ElementalAegisValue`).
+    let elemental_aegis = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ElementalAegis)
+                && e.op == Op::Base
+                && e.conditions == crate::store::Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(0.0_f64, f64::max);
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
@@ -854,6 +868,12 @@ fn maximum_hit(
         } else {
             with_mana
         };
+        // An elemental type's aegis (`CalcDefence.lua` 3135: the type's own
+        // and the shared one have no modelled source, so the shared
+        // elemental one).
+        if ty != DamageType::Physical && ty != DamageType::Chaos {
+            pools[i] += elemental_aegis;
+        }
         // The guard (`CalcDefence.lua` 3136 to 3146).
         if guard_rate >= 100.0 {
             pools[i] += guard;
@@ -1098,6 +1118,7 @@ fn maximum_hit(
             golem_rate,
             golem,
             prevented,
+            elemental_aegis,
         };
         super::ehp::estimate(
             calc,
