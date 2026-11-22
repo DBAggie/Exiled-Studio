@@ -736,12 +736,16 @@ mod tests {
         // P6-10b part 12: the maximum, which the enemy's hit reads while
         // Fortified (`poe1::enemy_hit`, reading the check itself); P6-11bu:
         // life regeneration per stack, which `poe1::regen` reads with the
-        // same stacks (`enemy_hit::fortification_stacks`).
+        // same stacks (`enemy_hit::fortification_stacks`); P6-11hq: Fortify
+        // Support's more damage, which neither reads nor changes
+        // fortification (`sup_str.lua` 2631 to 2636).
         for id in ids {
             assert!(
                 !id.contains("fortif")
                     || id == "base_max_fortification"
-                    || id == "life_regeneration_per_minute_%_per_fortification",
+                    || id == "life_regeneration_per_minute_%_per_fortification"
+                    || id == "support_fortify_melee_damage_+%_final"
+                    || id == "support_fortify_ailment_damage_+%_final_from_melee_hits",
                 "{id}: revisit NAMED_ONLY"
             );
         }

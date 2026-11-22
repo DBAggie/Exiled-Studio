@@ -883,21 +883,29 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             }
         }
     }
-    // P6-11bf: damage with hits against a chilled enemy ([`chilled`]).
-    let vs_chilled: Vec<Effect> =
-        unconditional(ingest, Poe1Quantity::DamageVsChilled, Op::Increased)
-            .cloned()
-            .collect();
+    // P6-11bf: damage with hits against a chilled enemy ([`chilled`]): the
+    // increase with `KeywordFlag.Hit`; P6-11hq: Hypothermia's more damage
+    // (the only MORE, a gem stat of the main skill) with `KeywordFlag.Hit`
+    // or `Ailment`.
+    let vs_chilled: Vec<Effect> = [Op::Increased, Op::More]
+        .into_iter()
+        .flat_map(|op| unconditional(ingest, Poe1Quantity::DamageVsChilled, op).cloned())
+        .collect();
     if !vs_chilled.is_empty() {
         match chilled(set, ingest) {
             Err(input) => ingest.reason(reason(input)),
             Ok(true) => {
                 for e in &vs_chilled {
+                    let conditions = if e.op == Op::More {
+                        Conditions::none().with_any(Flags::HIT.union(Flags::AILMENT))
+                    } else {
+                        Conditions::none().with_all(Flags::HIT)
+                    };
                     ingest.effect(Effect {
                         quantity: Quantity::Damage,
-                        op: Op::Increased,
+                        op: e.op,
                         value: e.value,
-                        conditions: Conditions::none().with_all(Flags::HIT),
+                        conditions,
                         source: e.source.clone(),
                     });
                 }

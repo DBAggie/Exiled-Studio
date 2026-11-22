@@ -4528,3 +4528,30 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
   - `bear-trap-modifiers-witch.xml`: spell damage, trap damage and throwing speed, cooldown recovery, and an additional trap.
 - **Public and corpus:** 0 unexpected, no value moved. The spell flag rule moved no other skill.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hq: Fortify and Hypothermia supports
+
+**Found** (the unmapped stats left in single builds, `unmapped.py`): Fortify Support's two stats were unmapped in three builds, and Hypothermia's two in two builds. A support's unmapped stat is a reason on every field of the skill it supports.
+
+**PoB** (`Data/Skills/sup_str.lua` 2631 to 2636, `sup_dex.lua` 2346 to 2357, `SkillStatMap.lua` 1056):
+- **Fortify:** `support_fortify_melee_damage_+%_final` is `Damage` MORE with `ModFlag.Melee`. `support_fortify_ailment_damage_+%_final_from_melee_hits` is `Damage` MORE with `ModFlag.MeleeHit` and `ModFlag.Ailment`: an ailment from a melee hit. Neither reads or changes fortification.
+- **Hypothermia:**
+  - `support_hypothermia_damage_+%_vs_chilled_enemies_final` is `Damage` MORE with `KeywordFlag.Hit` or `Ailment`, while the enemy is `Chilled`.
+  - `support_hypothermia_cold_damage_over_time_+%_final` is `ColdDamage` MORE with `KeywordFlag.ColdDot`.
+  - Its quality and constant stat `additional_chance_to_freeze_chilled_enemies_%` is `EnemyFreezeChance` BASE against a chilled enemy. No slice field reads the freeze.
+
+**The engine:**
+- `HIT_ROWS`: Fortify's two rows (`Flags::MELEE`; `Flags::MELEE_HIT` with `Flags::AILMENT`, which `poe1::ailment` gives an ailment from a melee hit) and Hypothermia's cold damage over time (as Burning Damage's row).
+- `ROWS`: Hypothermia's more damage against a chilled enemy as `DamageVsChilled` MORE. `DamageVsChilled` is now a hit quantity, so the main skill's gem may carry it.
+- `damage_taken`: P6-11bf's chilled gate applies the MORE too, with `KeywordFlag.Hit` or `Ailment` (the increase keeps `Hit` alone).
+- `NO_EFFECT`: the freeze chance (`freeze`).
+- Tests: the fortification guard (`config`) lists Fortify's two rows; the chill coverage test (`keystones_chill`, real bundle) lists Hypothermia's two stats.
+
+**Evidence** (`b-ct`, against P6-11hp's run):
+- **Three new mechanic fixtures:**
+  - `ice-nova-hypothermia-chilled-witch.xml`: Ice Nova with Hypothermia against an enemy the config chills. It matches PoB on every computed field (average hit 938.42).
+  - `ice-nova-hypothermia-witch.xml`: the same without the chill. It matches PoB (727.55).
+  - `smite-fortify-templar.xml`: Smite with Fortify, a Rusted Hatchet, and a chance to bleed. Its only differences from PoB are the attack rate's Q11 rounding, registered as DIV-0571 to DIV-0576.
+- **Public:** 0 unexpected, and 6 values move toward PoB: OccVortex's hit and damage over time, and smite-inquisitor-act5's full DPS (Fortify on its Static Strike).
+- **Corpus:** 0 unexpected; 9 values move toward PoB, and 3 move away in one Vortex build where PoB gives 0 damage. Those 3 fields were already nonzero and stay partial.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

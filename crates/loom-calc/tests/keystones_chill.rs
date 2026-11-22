@@ -108,6 +108,9 @@ const TEXTS: [(&str, &str); 18] = [
 const NO_EFFECT_NAMING: &[&str] = &[
     "active_skill_base_secondary_area_of_effect_radius",
     "active_skill_secondary_area_of_effect_description_mode",
+    // P6-11hq: Hypothermia's chance to freeze a chilled enemy (no slice
+    // field reads the freeze), reading the chill, never setting it.
+    "additional_chance_to_freeze_chilled_enemies_%",
     // P6-11as: avoiding chill on you.
     "base_avoid_chill_%",
     // P6-11eb (listed in P6-11ei): chill immunity on you (`ChillImmune`),
@@ -126,6 +129,8 @@ const ENEMY_ROWS: &[&str] = &[
     "damage_+%_vs_chilled_enemies",
     "ignites_and_chill_apply_elemental_resistance_+",
     "permanent_damage_+%_per_second_of_chill",
+    // P6-11hq: Hypothermia's more damage while the enemy is chilled.
+    "support_hypothermia_damage_+%_vs_chilled_enemies_final",
 ];
 
 #[test]

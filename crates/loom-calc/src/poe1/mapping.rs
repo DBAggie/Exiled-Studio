@@ -3278,6 +3278,25 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_efficacy_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // P6-11hq: Fortify Support's more damage with hits and ailments from
+    // melee hits (`sup_str.lua` 2631 to 2636: `Damage` MORE with
+    // `ModFlag.MeleeHit` and `ModFlag.Ailment`, an ailment's flags carry
+    // `MeleeHit` from a melee hit, `poe1::ailment`) and its more melee
+    // damage (`Damage` MORE, `ModFlag.Melee`).
+    (
+        "support_fortify_ailment_damage_+%_final_from_melee_hits",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE_HIT.union(Flags::AILMENT),
+            NONE,
+        )],
+    ),
+    (
+        "support_fortify_melee_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::MELEE, NONE)],
+    ),
     // P6-11n: "#% more Elemental Damage" (`ElementalDamage` MORE).
     (
         "support_gem_elemental_damage_+%_final",
@@ -3292,6 +3311,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::More,
             1.0,
             NONE,
+            NONE,
+        )],
+    ),
+    // P6-11hq: Hypothermia's more cold damage over time (`sup_dex.lua`
+    // 2349: `ColdDamage` MORE with `KeywordFlag.ColdDot`), as Burning
+    // Damage's row; its more damage against a chilled enemy is a `ROWS`
+    // row.
+    (
+        "support_hypothermia_cold_damage_over_time_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::COLD.union(Flags::COLD_DOT),
             NONE,
         )],
     ),
@@ -4041,6 +4074,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::DealNo(..)
                     // P6-11j.
                     | Poe1Quantity::IgnorePdrChance
+                    // Damage against a chilled enemy (P6-11hq:
+                    // Hypothermia's).
+                    | Poe1Quantity::DamageVsChilled
             )
     )
 }
@@ -8512,6 +8548,15 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11hq: Hypothermia's "#% more Damage with Hits and Ailments
+    // against Chilled Enemies" (`sup_dex.lua` 2346: `Damage` MORE with
+    // `KeywordFlag.Hit` or `Ailment`, the enemy's `Chilled`):
+    // `poe1::damage_taken` applies it while the enemy is chilled, as
+    // "damage_+%_vs_chilled_enemies".
+    (
+        "support_hypothermia_damage_+%_vs_chilled_enemies_final",
+        &[(Quantity::Poe1(Poe1Quantity::DamageVsChilled), Op::More, 1.0)],
+    ),
     // P6-10b: Inspiration Support's "#% more Mana Cost" (`ManaCost` MORE,
     // its `statMap`).
     (
@@ -8702,6 +8747,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "charge-gain-chance",
     ),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
+    // P6-11hq: Hypothermia's "#% chance to Freeze Chilled Enemies"
+    // (`EnemyFreezeChance` BASE against a chilled enemy): no slice field.
+    ("additional_chance_to_freeze_chilled_enemies_%", "freeze"),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
     // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
