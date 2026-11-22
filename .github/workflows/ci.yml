@@ -238,8 +238,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     # A cache miss fetches PoB and builds LuaJIT; a hang must not run for hours.
     # 90 since Phase 6 (PR #167): over 250 fixtures, 3 runs each, took 44 to
-    # 46 minutes on the runners, past the former 45.
-    timeout-minutes: 90
+    # 46 minutes on the runners, past the former 45. 150 since P6-11hm: with
+    # the fixtures each step adds, successful runs took 49 to 84 minutes, and
+    # the Linux run of 698abc68 was cut at 90.
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
