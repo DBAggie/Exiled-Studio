@@ -1936,6 +1936,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11gq: "Herald Skills deal #% increased Damage" (`Damage` INC,
+    // `SkillType.Herald`).
+    (
+        "damage_+%_with_herald_skills",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::SKILL_HERALD,
+            NONE,
+        )],
+    ),
     // P6-11ed: "#% increased Damage with Two Handed Weapons" (`Damage` INC
     // with `ModFlag.Weapon2H` and `Hit`).
     (
@@ -5745,6 +5757,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11gq: "#% of Armour also applies to Chaos Damage taken from Hits"
+    // (`ArmourAppliesToChaosDamageTaken` BASE), the valued twin of
+    // `base_armour_applies_to_chaos_damage`.
+    (
+        "base_armour_%_applies_to_chaos_damage",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArmourAppliesTo(DamageType::Chaos)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 12: "Armour also applies to Chaos Damage taken from Hits" (`ArmourAppliesToChaosDamageTaken` BASE).
     (
         "base_armour_applies_to_chaos_damage",
@@ -6180,6 +6203,16 @@ pub const ROWS: &[Row] = &[
         "base_strength_and_intelligence",
         &[(STR, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
+    // P6-11gq: "#% increased Blind Effect" (an `EnemyModifier` of
+    // `BlindEffect` INC): `damage_taken`'s Blind reads it.
+    (
+        "blind_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyBlindEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     ("block_chance_+%", &[(BLOCK, Op::Increased, 1.0)]),
     // P6-11f: "+#% Chance to Block Attack Damage per 5% Chance to Block on
     // Equipped Shield" (`BlockChance` BASE, `PerStat` `ShieldBlockChance`
@@ -6397,6 +6430,16 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::DamageVsChilled),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // P6-11gq: "Armour from Equipped Body Armour is doubled" (`Armour` MORE
+    // 100, `SlotName` Body Armour, `globalLimit` 100).
+    (
+        "damage_reduction_rating_from_body_armour_doubled",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BodyArmourArmourDoubled),
+            Op::Flag,
             1.0,
         )],
     ),
@@ -8136,6 +8179,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // a projectile's contact position, reflected cold damage, totems' taunt.
     ("base_totem_range", "no-slice"),
     ("base_trap_duration", "skill-duration"),
+    // P6-11gq: explosions on kill (PoB's `ExplodeMod` and `CanExplode`):
+    // PoB adds an "On Kill Monster Explosion" group of its own
+    // (`CalcSetup.lua` 1405 to 1440), never the main skill or in full DPS
+    // (`includeInFullDPS` unset): no slice field.
+    (
+        "bleeding_enemies_explode_for_%_life_as_physical_damage",
+        "explosion",
+    ),
     ("blight_scout_tower_range_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
@@ -8327,6 +8378,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "explode_cursed_enemies_for_25%_life_as_chaos_on_kill_chance_%",
         "explode",
     ),
+    // P6-11gq: as the bleeding enemies' explosion.
+    (
+        "explode_enemies_for_25%_life_as_chaos_on_kill_chance_%",
+        "explosion",
+    ),
     // P6-11dj: on-kill explosions (PoB's `ExplodeMod` LIST and `CanExplode`): read
     // only by PoB's own "On Kill Monster Explosion" skill (`EnemyExplode`, a
     // group PoB adds with source "Explode"), which no game gem grants: the
@@ -8411,6 +8467,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // not read the line (no mod), so it reaches none of PoB's outputs; no
     // minion field reads damage taken.
     ("golem_immunity_to_elemental_damage", "minion-defence"),
+    // P6-11gq: guard skills' cooldown and duration (`CooldownRecovery` and
+    // `Duration` INC, `SkillType.Guard`): PoB applies a guard's buff
+    // without its uptime (`CalcPerform.lua` 2298 to 2310): no slice field.
+    ("guard_skill_cooldown_recovery_+%", "guard-timing"),
+    ("guard_skill_effect_duration_+%", "guard-timing"),
     // P6-11bc: "Modifiers to Chance to Avoid being Shocked apply to all
     // Elemental Ailments" (PoB's `ShockAvoidAppliesToElementalAilments`
     // flag): ailments on you, no slice field.

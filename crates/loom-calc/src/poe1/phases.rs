@@ -1036,6 +1036,19 @@ fn defence_modifier(
     extra_inc: Option<Valued>,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
+    defence_modifier_with(calc, quantity, extra_inc, None, reasons)
+}
+
+/// [`defence_modifier`] with one more factor in its more product (P6-11gq:
+/// the body armour's doubled armour, PoB's `Armour` MORE with the
+/// `SlotName`, which its slot row shows as the row's more).
+fn defence_modifier_with(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    extra_inc: Option<Valued>,
+    extra_more: Option<Valued>,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
     let effects = sum(
         calc,
         quantity,
@@ -1051,17 +1064,15 @@ fn defence_modifier(
     let (store, graph) = calc.parts();
     let more = store.more_rounded(graph, quantity, &cx)?;
     reasons.extend(&more.reasons);
-    product(
-        calc,
-        &[
-            inc,
-            Valued {
-                node: more.node,
-                value: more.value,
-            },
-        ],
-        Term::Step("modifier"),
-    )
+    let more = Valued {
+        node: more.node,
+        value: more.value,
+    };
+    let more = match extra_more {
+        Some(extra) => product(calc, &[more, extra], Term::More)?,
+        None => more,
+    };
+    product(calc, &[inc, more], Term::Step("modifier"))
 }
 
 /// The shield's own chance to block, when the off hand holds one:
@@ -1495,6 +1506,13 @@ pub(super) fn primary_defence(
         return Ok((value, reasons));
     }
     let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
+    // "Armour from Equipped Body Armour is doubled" (P6-11gq): the body
+    // armour's armour row times 2, once (PoB's `globalLimit` 100).
+    let doubled = if defence == Defence::Armour {
+        body_armour_doubled(calc, &mut reasons)?
+    } else {
+        None
+    };
     let mut rows = Vec::new();
     for slot in ArmourSlot::ALL {
         if !has(
@@ -1518,7 +1536,8 @@ pub(super) fn primary_defence(
                 && matches!(defence, Defence::Armour | Defence::EnergyShield)
                 && has(calc, hybrid)
                 && hybrid_pieces(calc, &mut reasons)?;
-            let modifier = if has(calc, own) || hybrid_applies {
+            let slot_more = doubled.filter(|_| slot == ArmourSlot::BodyArmour);
+            let modifier = if has(calc, own) || hybrid_applies || slot_more.is_some() {
                 let mut incs = Vec::new();
                 if has(calc, own) {
                     incs.push(sum(
@@ -1538,12 +1557,16 @@ pub(super) fn primary_defence(
                         &mut reasons,
                     )?);
                 }
-                let slot_inc = total(calc, &incs, Term::Step("slot-increases"))?;
-                let extra_inc = match extra {
-                    Some(e) => total(calc, &[e, slot_inc], Term::Step("extra-and-slot"))?,
-                    None => slot_inc,
+                let extra_inc = if incs.is_empty() {
+                    extra
+                } else {
+                    let slot_inc = total(calc, &incs, Term::Step("slot-increases"))?;
+                    Some(match extra {
+                        Some(e) => total(calc, &[e, slot_inc], Term::Step("extra-and-slot"))?,
+                        None => slot_inc,
+                    })
                 };
-                defence_modifier(calc, quantity, Some(extra_inc), &mut reasons)?
+                defence_modifier_with(calc, quantity, extra_inc, slot_more, &mut reasons)?
             } else {
                 modifier
             };
@@ -1562,7 +1585,7 @@ pub(super) fn primary_defence(
         rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
     }
     if let Some(flag) = iron_reflexes {
-        iron_reflexes_rows(calc, flag, &mut rows, &mut reasons)?;
+        iron_reflexes_rows(calc, flag, doubled, &mut rows, &mut reasons)?;
     }
     rows.extend(life_row);
     let sum = total(calc, &rows, Term::Step("slots"))?;
@@ -1571,12 +1594,31 @@ pub(super) fn primary_defence(
     Ok((value, reasons))
 }
 
+/// "Armour from Equipped Body Armour is doubled" when on (P6-11gq; PoB's
+/// `Armour` MORE 100 with the `SlotName` Body Armour, at most once): the
+/// flag times 2.
+fn body_armour_doubled(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let Some(flag) = flag_of(calc, Poe1Quantity::BodyArmourArmourDoubled, reasons)? else {
+        return Ok(None);
+    };
+    let two = constant(calc, "body-armour-armour-doubled", 2.0)?;
+    Ok(Some(product(
+        calc,
+        &[flag, two],
+        Term::Step("body-armour-armour-doubled"),
+    )?))
+}
+
 /// Iron Reflexes' armour rows (P6-11ek; `CalcDefence.lua` 919 to 923 and
 /// 980 to 984): each piece's evasion, then the global evasion base, times
 /// [`iron_reflexes_modifier`], after armour's own rows as in PoB.
 fn iron_reflexes_rows(
     calc: &mut Calc<'_>,
     flag: Valued,
+    doubled: Option<Valued>,
     rows: &mut Vec<Valued>,
     reasons: &mut Reasons,
 ) -> Result<(), CalcError> {
@@ -1598,10 +1640,16 @@ fn iron_reflexes_rows(
             } else {
                 shared
             };
+            // The body armour's evasion counts as its armour, so its
+            // `SlotName` doubling applies (P6-11gq).
+            let mut factors = vec![base, modifier, flag];
+            if slot == ArmourSlot::BodyArmour {
+                factors.extend(doubled);
+            }
             rows.push(product(
                 calc,
-                &[base, modifier, flag],
-                Term::Step("slot.conversion.evasion-to-armour"),
+                &factors,
+                Term::Step(slot.evasion_to_armour_row()),
             )?);
         }
     }
@@ -1613,9 +1661,11 @@ fn iron_reflexes_rows(
         reasons,
     )?;
     if flat.value > 0.0 {
+        // The row's base as PoB's breakdown shows it (P6-11gq).
+        let base = total(calc, &[flat], Term::Base)?;
         rows.push(product(
             calc,
-            &[flat, shared, flag],
+            &[base, shared, flag],
             Term::Step("slot.conversion.evasion-to-armour"),
         )?);
     }

@@ -183,6 +183,15 @@ pub enum Poe1Quantity {
     /// body armour's armour and energy shield rows when the three pieces
     /// each have both.
     BodyArmourIfHybridPieces,
+    /// "Armour from Equipped Body Armour is doubled" (P6-11gq; PoB's
+    /// `Armour` MORE 100 with the `SlotName` Body Armour, once however many
+    /// sources: `globalLimit` 100): a `Flag`, read by the body armour's
+    /// armour row.
+    BodyArmourArmourDoubled,
+    /// The enemy's Blind effect (P6-11gq; "#% increased Blind Effect", an
+    /// `EnemyModifier` of `BlindEffect` INC): `Increased`, read by
+    /// [`damage_taken`]'s Blind.
+    EnemyBlindEffect,
     /// The enemy's damage taken while ignited (P6-11bz; a flask's "Enemies
     /// Ignited by you during Effect take #% increased Damage", PoB's
     /// `EnemyModifier` `DamageTaken` INC with the enemy's `Ignited`):
@@ -1239,6 +1248,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::MineLayingSpeed => f.write_str("mine-laying-speed"),
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
+            Self::BodyArmourArmourDoubled => f.write_str("body-armour-armour-doubled"),
+            Self::EnemyBlindEffect => f.write_str("enemy-blind-effect"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
@@ -1544,6 +1555,22 @@ impl ArmourSlot {
             Self::Boots => "slot.boots",
             Self::BodyArmour => "slot.body-armour",
             Self::Weapon2 => "slot.weapon-2",
+        }
+    }
+
+    /// The step name of the piece's evasion counted as armour under Iron
+    /// Reflexes (P6-11gq): not a `slot.` row, since PoB's armour breakdown
+    /// shows only the global evasion's (`slot.conversion.evasion-to-armour`,
+    /// `CalcDefence.lua` 980 to 984); PoB prints the piece's own in its
+    /// evasion breakdown (914 to 918), whose value it does not count.
+    #[must_use]
+    pub const fn evasion_to_armour_row(self) -> &'static str {
+        match self {
+            Self::Helmet => "piece-evasion-to-armour.helmet",
+            Self::Gloves => "piece-evasion-to-armour.gloves",
+            Self::Boots => "piece-evasion-to-armour.boots",
+            Self::BodyArmour => "piece-evasion-to-armour.body-armour",
+            Self::Weapon2 => "piece-evasion-to-armour.weapon-2",
         }
     }
 

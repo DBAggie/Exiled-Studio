@@ -191,7 +191,11 @@ pub const BLIND_LESS_EVASION: f64 = -20.0;
 /// [`BLIND_LESS_EVASION`]: they must stay reasons (a test checks each is
 /// `Unmapped` through every mapping; the real-bundle test that they are
 /// stats).
-pub const BLIND_DEPENDS_ON: &[&str] = &["blind_effect_+%"];
+pub const BLIND_DEPENDS_ON: &[&str] = &[];
+
+/// "#% increased Blind Effect" (P6-11gq): read by Blind's less evasion and
+/// accuracy ([`conditions`]).
+pub const BLIND_EFFECT_STAT: &str = "blind_effect_+%";
 
 /// The largest shock without modifiers (`ailmentData.Shock.max`,
 /// `Modules/Data.lua` 427).
@@ -463,13 +467,35 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
                 input: input.to_owned(),
             }),
             Ok(true) if input == BLINDED_INPUT => {
+                // Blind's effect (P6-11gq): `1 + inc / 100`, `inc` the
+                // `BlindEffect` INC (`CalcPerform.lua` 826); one that is
+                // not unconditional is a reason.
+                let mut inc = 0.0;
+                let mut unread = false;
+                for e in ingest
+                    .effects()
+                    .iter()
+                    .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::EnemyBlindEffect))
+                {
+                    if e.op == Op::Increased && e.conditions == Conditions::none() {
+                        inc += e.value;
+                    } else {
+                        unread = true;
+                    }
+                }
+                if unread {
+                    ingest.reason(UnsupportedReason::UnmodelledConfig {
+                        input: input.to_owned(),
+                    });
+                }
+                let less = (BLIND_LESS_EVASION * (1.0 + inc / 100.0)).floor();
                 // Blind's less evasion and, since P6-10b part 11, its less
                 // accuracy (`CalcPerform.lua` 831 and 832): the same value.
                 for quantity in [Poe1Quantity::EnemyEvasion, Poe1Quantity::EnemyAccuracy] {
                     ingest.effect(Effect {
                         quantity: Quantity::Poe1(quantity),
                         op: Op::More,
-                        value: BLIND_LESS_EVASION,
+                        value: less,
                         conditions: Conditions::none(),
                         source: Source::Config {
                             input: input.to_owned(),
@@ -1187,7 +1213,11 @@ mod tests {
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
         for id in ids {
-            assert!(!names(id, &words), "{id}: revisit poe1::damage_taken");
+            // P6-11gq: Blind's effect, which this module reads.
+            assert!(
+                !names(id, &words) || id == BLIND_EFFECT_STAT,
+                "{id}: revisit poe1::damage_taken"
+            );
         }
         for (id, _) in NO_EFFECT {
             assert!(

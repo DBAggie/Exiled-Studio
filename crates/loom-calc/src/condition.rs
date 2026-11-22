@@ -160,6 +160,9 @@ impl Flags {
     /// `SkillType.SummonsTotem` tag; P6-11fo, Phase Run's "not to your
     /// melee skills used by totems").
     pub const SKILL_NOT_TOTEM: Self = Self(1 << 56);
+    /// A skill of the `Herald` type (PoB's `SkillType.Herald` tag;
+    /// P6-11gq).
+    pub const SKILL_HERALD: Self = Self(1 << 57);
     /// The weapon flags an attack's ailments keep (PoB's
     /// `ModFlag.WeaponMask`, `0x2FFF0000`: the types, melee, ranged, and
     /// two-handed; not one-handed (`0x10000000` is outside the mask) and not

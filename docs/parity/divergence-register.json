@@ -10398,6 +10398,164 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-22",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0520",
+      "mechanic": "PoB's evasion breakdown under Iron Reflexes prints each piece's evasion as an evasion row (CalcDefence.lua 914 to 918, breakdown.slot with Evasion's modifiers) though the value goes to armour (919 to 920) and evasion is 0; its armour breakdown shows only the global evasion's conversion. The engine's evasion is 0 with no row, and the piece's evasion counted as armour is a step outside the slot rows (`piece-evasion-to-armour.<slot>`), so the row has no node.",
+      "fixture": "ice-nova-body-armour-doubled-iron-reflexes-witch.xml",
+      "field": "/breakdowns/Evasion/slots/0/base",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "38",
+      "successor_value": null,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcDefence.lua 914 to 921: the evasion breakdown row is written before the Iron Reflexes branch adds the piece's evasion to armour instead of evasion",
+        "Loom fixture ice-nova-body-armour-doubled-iron-reflexes-witch.xml (P6-11gq): Armour 667 = 76 (body armour armour, doubled) + 76 (body armour evasion, doubled) + 515 (global evasion), matching PoB; Evasion 0, matching PoB"
+      ],
+      "test": "crates/loom-calc/tests/poe1.rs::iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0521",
+      "mechanic": "PoB's evasion breakdown under Iron Reflexes prints each piece's evasion as an evasion row (CalcDefence.lua 914 to 918, breakdown.slot with Evasion's modifiers) though the value goes to armour (919 to 920) and evasion is 0; its armour breakdown shows only the global evasion's conversion. The engine's evasion is 0 with no row, and the piece's evasion counted as armour is a step outside the slot rows (`piece-evasion-to-armour.<slot>`), so the row has no node.",
+      "fixture": "ice-nova-body-armour-doubled-iron-reflexes-witch.xml",
+      "field": "/breakdowns/Evasion/slots/0/total",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "38.00",
+      "successor_value": null,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcDefence.lua 914 to 921: the evasion breakdown row is written before the Iron Reflexes branch adds the piece's evasion to armour instead of evasion",
+        "Loom fixture ice-nova-body-armour-doubled-iron-reflexes-witch.xml (P6-11gq): Armour 667 = 76 (body armour armour, doubled) + 76 (body armour evasion, doubled) + 515 (global evasion), matching PoB; Evasion 0, matching PoB"
+      ],
+      "test": "crates/loom-calc/tests/poe1.rs::iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0522",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0523",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 152.86571540625,
+      "successor_value": 152.78932074587703,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0524",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 15.299999999999999,
+      "successor_value": 15.292353823088455,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0525",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 152.86571540625,
+      "successor_value": 152.78932074587703,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0526",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 152.86571540625,
+      "successor_value": 152.78932074587703,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0527",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-blind-effect-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "152.9",
+      "successor_value": "152.8",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-blind-effect-templar.xml (P6-11gq): Blind's effect on the base fixture (the enemy's evasion and accuracy 28% less); every other field matches PoB; the weapon's attack time floored to whole milliseconds, as the base fixture"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-22",
+      "status": "accepted"
     }
   ]
 }

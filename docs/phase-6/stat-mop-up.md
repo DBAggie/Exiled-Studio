@@ -3894,3 +3894,45 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
   - Two builds' life regeneration went from partial to indeterminate: their flask's regeneration line has a range the corpus run does not settle (P3-8b's rolled values).
 - **Tasks:** the staff socket task was premised on PoB never setting the socket multiplier. It does, and P6-11go applies the lines as PoB does, so the task is ticked. The task on attack speed per 8% quality and the offerings' effect is ticked with what is left of it (the game's item wording of the offerings' line).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gq: armour from body armour doubled; armour against chaos; Blind's effect; Herald damage; guard timing and explosions
+
+**Found** (P6-11gm's scan): eight stats PoB parses, each unmapped (a reason) in 2 builds:
+- "Armour from Equipped Body Armour is doubled" (`damage_reduction_rating_from_body_armour_doubled`);
+- "#% of Armour also applies to Chaos Damage taken from Hits" (`base_armour_%_applies_to_chaos_damage`);
+- "#% increased Blind Effect" (`blind_effect_+%`, P3-12g's `BLIND_DEPENDS_ON`);
+- "Herald Skills deal #% increased Damage";
+- guard skills' duration and cooldown recovery;
+- two explosions on kill.
+
+**PoB:**
+- **Body armour doubled.** `Armour` MORE 100 with the `SlotName` Body Armour, at most once (`globalLimit` 100). `CalcDefence.lua`'s slot loop reads it in the body armour's armour row and, under Iron Reflexes, in its evasion row counted as armour (907 to 921).
+- **Armour against chaos.** `ArmourAppliesToChaosDamageTaken` BASE, the valued twin of P6-10b part 12's row.
+- **Blind's effect.** `BlindEffect` INC on the enemy: Blind is `floor(-20 x (1 + inc / 100))`% less evasion and accuracy (`CalcPerform.lua` 824 to 835).
+- **Herald damage.** `Damage` INC with `SkillType.Herald`.
+- **Guard timing.** `Duration` and `CooldownRecovery` INC with `SkillType.Guard`. A guard's buff applies without its uptime (2298 to 2310), so neither reaches a slice field.
+- **Explosions.** `ExplodeMod` and `CanExplode` make an "On Kill Monster Explosion" group of PoB's own (`CalcSetup.lua` 1405 to 1440). It is never the main skill and never in full DPS: no slice field.
+
+**The engine:**
+- **Body armour doubled.**
+  - `Poe1Quantity::BodyArmourArmourDoubled` (`Flag`). `phases::primary_defence` puts the flag times 2 into the body armour row's more (`defence_modifier_with`), so its slot breakdown's "more" is PoB's 2.00.
+  - Under Iron Reflexes the body armour's evasion row is doubled too.
+  - That piece row is now `piece-evasion-to-armour.<slot>`, outside the `slot.` rows. PoB's armour breakdown shows only the global evasion's conversion; before, the piece row and the global row shared one name.
+  - The global conversion row has a `base` node, as PoB's breakdown has.
+- **Armour against chaos:** a row on P6-10b's `ArmourAppliesTo(Chaos)`.
+- **Blind's effect:** `Poe1Quantity::EnemyBlindEffect` (`Increased`), read by `damage_taken`'s Blind. `BLIND_DEPENDS_ON` is empty.
+- **Herald damage:** `Flags::SKILL_HERALD` from the `Herald` skill type (`skill::SKILL_TYPE_FLAGS`), and a hit row.
+- **`NoEffect`:** guard timing (`guard-timing`) and the explosions (`explosion`).
+- **Register:** PoB's evasion breakdown prints a piece's evasion as an evasion row under Iron Reflexes (914 to 918) though evasion is 0 and the value goes to armour. Two `pob-bug` entries, DIV-0520 and DIV-0521, with the test `iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour`.
+
+**Evidence** (`b-ct`, against P6-11gp's run):
+- **Three new mechanic fixtures:**
+  - `ice-nova-body-armour-doubled-witch.xml`: a Plate Vest doubled, flat armour not, armour against chaos. Armour 554, matching PoB.
+  - `ice-nova-body-armour-doubled-iron-reflexes-witch.xml`: a Scale Vest under Iron Reflexes. Armour 667 = 76 + 76 + 515, matching PoB, with the two `pob-bug` breakdown rows.
+  - `smite-blind-effect-templar.xml`: P3-12g's Blind fixture with "40% increased Blind Effect", hit chance 28 as PoB's. Q11 DIV-0522 to DIV-0527.
+- **Public:** 0 unexpected; no value moved.
+- **Corpus:** 0 unexpected. 69 values moved: 58 toward PoB (16 now equal), 11 away.
+  - Two builds' hit and evade chances now equal PoB's (Blind's effect).
+  - A Juggernaut build's armour went from 23938 to 30499 (PoB 30838) and its chaos damage reduction is PoB's 80%.
+  - Away: that build's elemental and physical maximum hits, already above PoB's (22971 against 20364 cold), grow with its armour; and two ignites, already above PoB's, grow 0.1% with the hit chance. Neither cause is traced here.
+- **Tests:** a new test `iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour`; the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

@@ -1592,6 +1592,51 @@ fn an_armour_piece_should_add_its_local_value_as_a_row() {
     assert_eq!(state(&r, Field::Armour), StateKind::Complete);
 }
 
+/// "Armour from Equipped Body Armour is doubled" (P6-11gq): the body
+/// armour's armour row's more is 2, and under Iron Reflexes its evasion,
+/// counted as armour, is doubled too; the global rows are not.
+#[test]
+fn iron_reflexes_should_count_a_doubled_body_armours_evasion_as_armour() {
+    let doubled = || {
+        modifier(vec![stat(
+            "damage_reduction_rating_from_body_armour_doubled",
+            1,
+        )])
+    };
+    // Test Plate: armour 120 at the top, doubled: 240.
+    let plate = item(2, vec![]);
+    let ring = item(1, vec![doubled()]);
+    let b = with_items(
+        witch(90),
+        vec![plate, ring],
+        &[("Body Armour", 2, false), ("Ring 1", 1, false)],
+    );
+    let r = run_with(&b, &with_bases(&[(2, "Test Plate")]));
+    assert_eq!(value(&r, Field::Armour), 240.0);
+    assert_eq!(step(&r, Field::Armour, "slot.body-armour"), Some(240.0));
+    assert_eq!(state(&r, Field::Armour), StateKind::Complete);
+    // Test Robe (evasion 20 at the top) with Iron Reflexes: the robe's
+    // evasion x 2 as armour (Iron Reflexes takes Dexterity's evasion bonus
+    // away); the global 15 is not doubled; evasion 0.
+    let robe = item(2, vec![]);
+    let ring = item(
+        1,
+        vec![doubled(), modifier(vec![stat("keystone_iron_reflexes", 1)])],
+    );
+    let b = with_items(
+        witch(90),
+        vec![robe, ring],
+        &[("Body Armour", 2, false), ("Ring 1", 1, false)],
+    );
+    let r = run_with(&b, &with_bases(&[(2, "Test Robe")]));
+    assert_eq!(
+        step(&r, Field::Armour, "piece-evasion-to-armour.body-armour"),
+        Some(40.0)
+    );
+    assert_eq!(value(&r, Field::Armour), 55.0);
+    assert_eq!(value(&r, Field::Evasion), 0.0);
+}
+
 #[test]
 fn attribute_bonuses_should_scale_every_row() {
     // Test Robe in the helmet: energy shield 50, evasion 10 to 20 (20 at
