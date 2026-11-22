@@ -81,6 +81,8 @@ struct Pools {
     golem: f64,
     /// The shared elemental aegis left (P6-11hl).
     elemental_aegis: f64,
+    /// The ward left (P6-11hn).
+    ward: f64,
 }
 
 /// What the estimate reads of the character.
@@ -119,6 +121,8 @@ pub(super) struct Character {
     /// The percent of missing unreserved life gained before each enemy hit
     /// (PoB's `MissingLifeBeforeEnemyHit`; P6-11hm).
     pub(super) missing_life: f64,
+    /// Ward (PoB's `output.Ward`; P6-11hn).
+    pub(super) ward: f64,
 }
 
 /// What each enemy hit gives back (PoB's `DamageIn.LifeWhenHit`,
@@ -173,6 +177,8 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut guard = pools.guard;
     let mut golem = pools.golem;
     let mut elemental_aegis = pools.elemental_aegis;
+    let mut ward = pools.ward.max(0.0);
+    let ward_before = ward;
     let life_pool = life_hit_pool(life, ch.max_life, ch.prevented);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
@@ -229,6 +235,13 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         if guard > 0.0 {
             let taken = (remainder * ch.guard_rate / 100.0).min(guard);
             guard = crate::math::floor(guard - taken);
+            remainder -= taken;
+        }
+        // Ward takes all of the hit up to what is left (P6-11hn;
+        // `CalcDefence.lua` 309 to 315, no bypass, always active).
+        if ward > 0.0 {
+            let taken = remainder.min(ward);
+            ward -= taken;
             remainder -= taken;
         }
         if energy_shield > 0.0 && bypass < 1.0 && !ch.eb {
@@ -296,6 +309,9 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             guard,
             golem,
             elemental_aegis,
+            // A hit that took any ward breaks it: no chance to avoid the
+            // break is modelled (409).
+            ward: crate::math::floor(if ward < ward_before { 0.0 } else { ward }),
         },
         crate::math::ceil(overkill),
     )
@@ -331,6 +347,8 @@ fn hits_to_die(
         guard: ch.guard,
         golem: ch.golem,
         elemental_aegis: ch.elemental_aegis,
+        // An accelerated run leaves ward out: it breaks (2590 to 2593).
+        ward: if cycles > 1.0 { 0.0 } else { ch.ward },
     };
     let mut iteration_multiplier = 1.0;
     let mut damage_total = 0.0;
@@ -595,6 +613,7 @@ mod tests {
             prevented: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
+            ward: 0.0,
         };
         let mut run = Run { iterations: 0 };
         let hits = hits_to_die(
@@ -628,6 +647,7 @@ mod tests {
             prevented: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
+            ward: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -636,6 +656,7 @@ mod tests {
             guard: ch.guard,
             golem: 0.0,
             elemental_aegis: 0.0,
+            ward: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, overkill) = reduce(pools, &hit, &ch);
@@ -665,6 +686,7 @@ mod tests {
             prevented: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
+            ward: 0.0,
         };
         let pools = Pools {
             life: ch.life,
@@ -673,6 +695,7 @@ mod tests {
             guard: ch.guard,
             golem: ch.golem,
             elemental_aegis: 0.0,
+            ward: 0.0,
         };
         let hit = [Some(1000.0), None, None, None, None];
         let (after, _) = reduce(pools, &hit, &ch);

@@ -4680,6 +4680,13 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
             (Quantity::Armour, Op::Increased, NONE, states::USING_STAFF),
             (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
+            // P6-11hn: `Defences` INC is in ward's modifier too.
+            (
+                Quantity::Poe1(Poe1Quantity::Ward),
+                Op::Increased,
+                NONE,
+                states::USING_STAFF,
+            ),
             (
                 Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
                 Op::Increased,
@@ -6478,6 +6485,11 @@ pub const ROWS: &[Row] = &[
         "base_strength_and_intelligence",
         &[(STR, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
+    // P6-11hn: "+# to Ward" (`Ward` BASE).
+    (
+        "base_ward",
+        &[(Quantity::Poe1(Poe1Quantity::Ward), Op::Base, 1.0)],
+    ),
     // P6-11gq: "#% increased Blind Effect" (an `EnemyModifier` of
     // `BlindEffect` INC): `damage_taken`'s Blind reads it.
     (
@@ -7089,6 +7101,8 @@ pub const ROWS: &[Row] = &[
         "global_defences_+%",
         &[
             (Quantity::EnergyShield, Op::Increased, 1.0),
+            // P6-11hn: PoB's `Defences` INC is in ward's modifier too.
+            (Quantity::Poe1(Poe1Quantity::Ward), Op::Increased, 1.0),
             (Quantity::Armour, Op::Increased, 1.0),
             (Quantity::Evasion, Op::Increased, 1.0),
             // P6-11ek: Iron Reflexes counts it once.
@@ -8346,6 +8360,15 @@ pub const ROWS: &[Row] = &[
                 Op::Increased,
                 1.0,
             ),
+            // P6-11hn: and the shield's ward.
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Weapon2,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
         ],
     ),
     // P6-11k: "#% increased Energy Shield from Equipped Shield"
@@ -8436,6 +8459,58 @@ pub const ROWS: &[Row] = &[
     (
         "support_inspiration_mana_cost_+%_final",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
+    ),
+    // P6-11hn: "#% increased Ward" (`Ward` INC).
+    (
+        "ward_+%",
+        &[(Quantity::Poe1(Poe1Quantity::Ward), Op::Increased, 1.0)],
+    ),
+    // P6-11hn: "#% increased Ward from Equipped Armour Items" (`Ward` INC,
+    // `SlotName` each armour slot): each piece's ward row.
+    (
+        "ward_from_armour_item_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Helmet,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Gloves,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Boots,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::BodyArmour,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Weapon2,
+                    Defence::Ward,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+        ],
     ),
     // P6-11aq: "#% increased Effect of Withered" (`WitherEffect` INC; read
     // by `poe1::damage_taken` for the enemy's withered stacks).
@@ -9709,14 +9784,10 @@ pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 ///
 /// P6-11aw, ward (Heroic Tragedy's conquests): increased ward and ward
 /// from armour items (`Ward` INC), which PoB's effective health pool reads
-/// through `output.Ward` (`CalcDefence.lua` 223); the engine has no ward
-/// pool. "#% chance to Restore Ward when you Block" PoB reads only in part,
+/// through `output.Ward` (`CalcDefence.lua` 223); rows since P6-11hn,
+/// with the ward pool. "#% chance to Restore Ward when you Block" PoB reads only in part,
 /// so applies none of it.
-pub const EHP_REASONS: &[&str] = &[
-    "restore_ward_on_block_%",
-    "ward_+%",
-    "ward_from_armour_item_+%",
-];
+pub const EHP_REASONS: &[&str] = &["restore_ward_on_block_%"];
 
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to
@@ -10083,13 +10154,15 @@ pub const CUSTOM_PATTERNS: &[(&str, Quantity, Op)] = &[
 /// `ArmourAndEnergyShield`, `EvasionAndEnergyShield`, `Defences`, and
 /// `BlockChance` mods, which `calcLocal` takes for the item's own values
 /// (`Classes/Item.lua`, the armour branch): a hybrid acts on each defence
-/// it names. Ward is not in the slice: its local stats have no effect on
-/// the computed fields.
+/// it names. Ward (P6-11hn) is the effective health pool's: its local
+/// stats and PoB's local `Defences` (`defencesInc`, `Item.lua` 2315 to
+/// 2343) act on the piece's ward.
 type LocalRow = (&'static str, &'static [(PieceValue, Op)]);
 
 const ARMOUR: PieceValue = PieceValue::Defence(Defence::Armour);
 const EVASION: PieceValue = PieceValue::Defence(Defence::Evasion);
 const ES: PieceValue = PieceValue::Defence(Defence::EnergyShield);
+const WARD: PieceValue = PieceValue::Defence(Defence::Ward);
 
 /// The local stats of armour pieces (`stat_descriptions.txt`: "+# to
 /// Armour", "+# to Evasion Rating", "+# to maximum Energy Shield", "+# to
@@ -10116,6 +10189,7 @@ pub const LOCAL_ROWS: &[LocalRow] = &[
             (ARMOUR, Op::Increased),
             (EVASION, Op::Increased),
             (ES, Op::Increased),
+            (WARD, Op::Increased),
         ],
     ),
     ("local_base_evasion_rating", &[(EVASION, Op::Base)]),
@@ -10142,8 +10216,8 @@ pub const LOCAL_ROWS: &[LocalRow] = &[
         "local_physical_damage_reduction_rating_+%",
         &[(ARMOUR, Op::Increased)],
     ),
-    ("local_ward", &[]),
-    ("local_ward_+%", &[]),
+    ("local_ward", &[(WARD, Op::Base)]),
+    ("local_ward_+%", &[(WARD, Op::Increased)]),
 ];
 
 /// The mapping of an armour piece's lines: its local stats act on the
@@ -10950,7 +11024,8 @@ mod tests {
             [
                 (q(ARMOUR), Op::Increased),
                 (q(EVASION), Op::Increased),
-                (q(ES), Op::Increased)
+                (q(ES), Op::Increased),
+                (q(WARD), Op::Increased)
             ]
         );
         for (stat, values) in [
@@ -10972,8 +11047,8 @@ mod tests {
             piece("local_block_chance_+%"),
             [(q(PieceValue::Block), Op::Increased)]
         );
-        assert_eq!(m.map(&StatId::new("local_ward")), StatMap::NoEffect);
-        assert_eq!(m.map(&StatId::new("local_ward_+%")), StatMap::NoEffect);
+        assert_eq!(piece("local_ward"), [(q(WARD), Op::Base)]);
+        assert_eq!(piece("local_ward_+%"), [(q(WARD), Op::Increased)]);
         // Global stats on the piece are the game's.
         assert_eq!(piece("base_maximum_life"), [(Quantity::Life, Op::Base)]);
         assert_eq!(
@@ -11025,6 +11100,7 @@ mod tests {
             effects("global_defences_+%"),
             [
                 (Quantity::EnergyShield, Op::Increased, 1.0),
+                (Quantity::Poe1(Poe1Quantity::Ward), Op::Increased, 1.0),
                 (Quantity::Armour, Op::Increased, 1.0),
                 (Quantity::Evasion, Op::Increased, 1.0),
                 (
@@ -11460,6 +11536,7 @@ mod tests {
                     staff(Quantity::EnergyShield, Op::Increased, NONE),
                     staff(Quantity::Armour, Op::Increased, NONE),
                     staff(Quantity::Evasion, Op::Increased, NONE),
+                    staff(Quantity::Poe1(Poe1Quantity::Ward), Op::Increased, NONE),
                     staff(
                         Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared),
                         Op::Increased,

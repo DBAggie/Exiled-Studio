@@ -4440,3 +4440,39 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. Three EHP values of `rf-chieftain-life-stack.xml` moved toward PoB.
 - **Corpus:** 0 unexpected. Six EHP values of two builds moved toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hn: ward
+
+**Found** (the open task "A ward pool"): ward had no pool. Its local stats on armour (`local_ward`, `local_ward_+%`) were `NoEffect`. Its global lines (`ward_+%`, `ward_from_armour_item_+%`, Heroic Tragedy's) were EHP reasons in two public builds.
+
+**PoB:**
+- **The value** (`CalcDefence.lua` 829 to 948, 1052): `output.Ward` is the sum of two parts, then `max(floor(sum), 0)`:
+  - each armour piece's ward above 0 times `calcLib.mod(modDB, slotCfg, "Ward", "Defences")`;
+  - the global `Ward` BASE times the same modifier without a slot.
+- **The piece's ward** (`Item.lua` 2308 to 2343) is computed as its armour: the base's ward range and `WardBasePercentile`, local `Ward` and local `Defences` increases, and quality.
+- **The lines:** "#% increased Ward from Equipped Armour Items" is `Ward` INC with the armour slots' `SlotName`. "#% increased Global Defences" is `Defences` INC, so it reaches ward too.
+- **The EHP** (`reducePoolsByDamage`, 309 to 315):
+  - Ward takes all of a hit, up to what is left, after the guards and before energy shield.
+  - A hit that takes any ward breaks it unless a chance to avoid the break applies (409).
+  - `numberOfHitsToDie` leaves ward out of an accelerated run (2590 to 2593).
+- **The maximum hit** (3124 to 3133): each type's total hit pool adds ward.
+
+**The engine:**
+- `Defence::Ward`, outside `Defence::ALL` (the slice's defences): the piece's ward is `phases::piece`'s, from `ArmourBase::ward` (the armour types table).
+- `Poe1Quantity::Ward`: rows for `base_ward`, `ward_+%`, and `ward_from_armour_item_+%` (each slot's `SlotIncreased`). It is also a row of `global_defences_+%`, `defences_+%_while_wielding_staff`, the shield's `Defences` line, and the local triple hybrid.
+- `phases::ward`, read by `enemy_hit` into `ehp::Character::ward` and the maximum hit's pools.
+- `ehp::reduce` drains ward and breaks it. `hits_to_die` starts an accelerated run without it.
+- Still reasons:
+  - "#% chance to Restore Ward when you Block";
+  - the bypass lines;
+  - Wicked Ward;
+  - Ghostwrithe's energy shield increases applied to ward;
+  - armour and evasion converted to ward.
+
+**Evidence** (`b-ct`, against P6-11hm's run):
+- **Two new mechanic fixtures**, both matching PoB on every field (P6-11hm's binary differed from PoB on 12 fields of the two):
+  - `ice-nova-ward-witch.xml`: a Runic Crown and Runic Gauntlets against several hits. PoB's probe gives `Ward` 652.
+  - `ice-nova-ward-boss-witch.xml`: against the default Pinnacle boss.
+- **Public:** 0 unexpected. Ten EHP and maximum hit values of `poisonous-concoction-of-bouncing-pathfinder.xml` moved toward PoB.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

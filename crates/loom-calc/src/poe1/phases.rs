@@ -1192,6 +1192,69 @@ pub(super) fn piece(
     round(calc, raw, Term::Base)
 }
 
+/// Ward (P6-11hn; `CalcDefence.lua` 829 to 948, 1052): each equipped armour
+/// piece's ward above 0 times `calcLib.mod(modDB, slotCfg, "Ward",
+/// "Defences")` (the global increases, the piece's own `SlotName` ones,
+/// and the more multipliers), plus the global flat `Ward` BASE times the
+/// same without a slot, `max(floor(sum), 0)`. Ghostwrithe's energy shield
+/// increases applied to ward and the body armour's armour and evasion
+/// converted to ward have no row: their stats are reasons. A plain value,
+/// as the other pools [`super::enemy_hit`] reads.
+pub(super) fn ward(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<f64, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::Ward);
+    let mut rows = Vec::new();
+    for slot in ArmourSlot::ALL {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) {
+            continue;
+        }
+        let base = piece(calc, slot, Defence::Ward, reasons)?;
+        if base.value > 0.0 {
+            let own = Quantity::Poe1(Poe1Quantity::SlotIncreased(slot, Defence::Ward));
+            let own = if has(calc, own) {
+                sum(
+                    calc,
+                    own,
+                    Op::Increased,
+                    Term::Step("ward-slot-increased"),
+                    reasons,
+                )?
+                .value
+            } else {
+                0.0
+            };
+            rows.push((base.value, own));
+        }
+    }
+    let flat = sum(calc, q, Op::Base, Term::Step("ward-flat"), reasons)?.value;
+    if rows.is_empty() && flat <= 0.0 {
+        return Ok(0.0);
+    }
+    let inc = sum(
+        calc,
+        q,
+        Op::Increased,
+        Term::Step("ward-increased"),
+        reasons,
+    )?
+    .value;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let more = store.more_rounded(graph, q, &cx)?;
+    reasons.extend(&more.reasons);
+    let more = more.value;
+    let mut ward: f64 = rows
+        .iter()
+        .map(|&(base, own)| base * (1.0 + (inc + own) / 100.0) * more)
+        .sum();
+    if flat > 0.0 {
+        ward += flat * (1.0 + inc / 100.0) * more;
+    }
+    Ok(math::floor(ward).max(0.0))
+}
+
 /// `round(clamp((shown / (inc x quality) - flat) / range, 0, 1), 4)`
 /// ([`piece`]).
 fn derived_percentile(

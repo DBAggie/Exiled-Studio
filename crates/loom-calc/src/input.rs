@@ -258,6 +258,8 @@ pub struct ArmourBase {
     pub evasion: Range,
     /// Energy shield.
     pub energy_shield: Range,
+    /// Ward (P6-11hn).
+    pub ward: Range,
     /// A shield's chance to block, percent.
     pub block: Option<i64>,
     /// The base's movement speed change, percent (the armour types table;
@@ -380,6 +382,7 @@ impl CalcData for Bundle {
                         armour: range(&a.armour),
                         evasion: range(&a.evasion),
                         energy_shield: range(&a.energy_shield),
+                        ward: range(&a.ward),
                         block,
                         movement_speed: a.movement_speed,
                     })

@@ -604,7 +604,7 @@ const LOW_POOL_THRESHOLD: f64 = 0.5;
 ///   half of maximum life;
 /// - each type's total hit pool: the life pool, plus the energy shield
 ///   (`EnergyShieldRecoveryCap`, the maximum) unless the type bypasses it
-///   (chaos does, 100%), plus ward (none), the shared elemental aegis for
+///   (chaos does, 100%), plus ward (P6-11hn), the shared elemental aegis for
 ///   an elemental type (P6-11hl), and guard;
 /// - for each type the hit converts to (the type itself without taken as):
 ///   with no armour applied, `max(pool / share / (resMult x (1 -
@@ -828,6 +828,7 @@ fn maximum_hit(
         })
         .map(|e| e.value)
         .fold(0.0_f64, f64::max);
+    let ward = phases::ward(calc, &mut pool_reasons)?;
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
@@ -874,6 +875,8 @@ fn maximum_hit(
         if ty != DamageType::Physical && ty != DamageType::Chaos {
             pools[i] += elemental_aegis;
         }
+        // Ward, with no bypass (`CalcDefence.lua` 3124 to 3133; P6-11hn).
+        pools[i] += ward;
         // The guard (`CalcDefence.lua` 3136 to 3146).
         if guard_rate >= 100.0 {
             pools[i] += guard;
@@ -1119,6 +1122,7 @@ fn maximum_hit(
             golem,
             prevented,
             elemental_aegis,
+            ward: phases::ward(calc, &mut reasons)?,
             missing_life: sum(
                 calc,
                 Poe1Quantity::MissingLifeBeforeHit,

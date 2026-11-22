@@ -396,7 +396,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11hk: Arcane Might (`Poe1Quantity::SpellDamageToAttacks`, `hit::spell_damage_to_attacks`); fixtures `smite-arcane-might-templar.xml`, `smite-arcane-might-largest-templar.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hk")
 - [x] P6-11hl: Primal Aegis (`collect::primal_aegis`, the shared elemental aegis in `enemy_hit` and `ehp`); fixture `ice-nova-primal-aegis-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hl")
 - [x] P6-11hm: missing unreserved life gained before an enemy hit (`Poe1Quantity::MissingLifeBeforeHit`, `ehp::hits_to_die`); fixtures `ice-nova-missing-life-before-hit-witch.xml`, `ice-nova-missing-life-before-hit-block-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hm")
-- [ ] A ward pool (`Ward`, `WardRechargeFaster`, the ward lines of the timeless additions and Wicked Ward)
+- [x] P6-11hn: ward (`phases::ward`, the ward pool in `ehp` and the maximum hit); fixtures `ice-nova-ward-witch.xml`, `ice-nova-ward-boss-witch.xml` (`docs/phase-6/stat-mop-up.md`, "P6-11hn")
+- [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report
 - [x] P6-12 part 1: `combined-dps` (`poe1::combined`, slice revision 10; Culling Strike's multiplier); a flag stat at 0 sets no flag (`smite-bleed-templar.xml`'s bleeding computed again); Q11 DIV-0133 to DIV-0173; `docs/phase-6/combined-dps.md`

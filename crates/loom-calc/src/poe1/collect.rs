@@ -1795,6 +1795,7 @@ fn shown_defence(key: &str) -> Option<Defence> {
         "Armour" => Some(Defence::Armour),
         "Evasion" | "Evasion Rating" => Some(Defence::Evasion),
         "Energy Shield" => Some(Defence::EnergyShield),
+        "Ward" => Some(Defence::Ward),
         _ => None,
     }
 }
@@ -1805,6 +1806,7 @@ fn percentile_defence(key: &str) -> Option<Defence> {
         "ArmourBasePercentile" => Some(Defence::Armour),
         "EvasionBasePercentile" => Some(Defence::Evasion),
         "EnergyShieldBasePercentile" => Some(Defence::EnergyShield),
+        "WardBasePercentile" => Some(Defence::Ward),
         _ => None,
     }
 }
@@ -1839,6 +1841,7 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
         (Defence::Armour, base.armour),
         (Defence::Evasion, base.evasion),
         (Defence::EnergyShield, base.energy_shield),
+        (Defence::Ward, base.ward),
     ] {
         #[expect(
             clippy::cast_precision_loss,

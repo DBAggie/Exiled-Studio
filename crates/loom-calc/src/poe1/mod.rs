@@ -468,6 +468,9 @@ pub enum Poe1Quantity {
     /// (P6-11hm; PoB's `MissingLifeBeforeEnemyHit` BASE, `CalcDefence.lua`
     /// 2649 to 2662, 2794): `Base`, percent, read by the EHP estimate.
     MissingLifeBeforeHit,
+    /// Ward (P6-11hn; PoB's `Ward`): `Base` the global flat ("+# to Ward"),
+    /// `Increased` and `More` its modifier, read by [`phases::ward`].
+    Ward,
     /// "Triggers Level # Primal Aegis when Allocated / Primal Aegis can take
     /// 75 Elemental Damage per Allocated Notable Passive Skill" (P6-11hl):
     /// a `Flag`; `collect` turns it into [`Self::ElementalAegis`].
@@ -1493,6 +1496,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::OffHandSpeedMore => f.write_str("off-hand-speed-more"),
             Self::GainAsRandom => f.write_str("gain-as-random"),
             Self::MissingLifeBeforeHit => f.write_str("missing-life-before-hit"),
+            Self::Ward => f.write_str("ward"),
             Self::PrimalAegis => f.write_str("primal-aegis"),
             Self::ElementalAegis => f.write_str("elemental-aegis"),
             Self::SpellDamageToAttacks => f.write_str("spell-damage-to-attacks"),
@@ -1754,6 +1758,9 @@ pub enum Defence {
     Evasion,
     /// Energy shield.
     EnergyShield,
+    /// Ward (P6-11hn): not in [`Self::ALL`], the slice's defences; read by
+    /// the effective health pool alone.
+    Ward,
 }
 
 impl Defence {
@@ -1767,6 +1774,7 @@ impl Defence {
             Self::Armour => "armour",
             Self::Evasion => "evasion",
             Self::EnergyShield => "energy-shield",
+            Self::Ward => "ward",
         }
     }
 }

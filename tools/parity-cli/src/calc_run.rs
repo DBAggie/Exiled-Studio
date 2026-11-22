@@ -500,6 +500,7 @@ impl CalcData for OverlayData<'_> {
                     armour: range("armour", a.armour),
                     evasion: range("evasion", a.evasion),
                     energy_shield: range("energy_shield", a.energy_shield),
+                    ward: range("ward", a.ward),
                     block: a.block.map(|b| self.int("bases", name, "block", b)),
                     movement_speed: a.movement_speed,
                 }))
