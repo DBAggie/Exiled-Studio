@@ -3984,3 +3984,23 @@ The scan's output now goes to `local/p6/scan/`, which a step's evidence run does
   - `ice-nova-arcane-surge-on-kill-off-witch.xml`: killed recently off, 1.43.
 - **Public and corpus:** 0 unexpected; no value moved. The two Hierophant builds do not set killed recently.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11gt: lucky block if blocked recently
+
+**Found** (P6-11gm's scan): "Chance to Block Attack or Spell Damage is Lucky if you've Blocked Recently" (`spell_and_attack_block_chance_is_lucky_if_blocked_recently`, a Gladiator passive) was unmapped, so a reason, in 2 builds.
+
+**PoB:**
+- The line is the four `<Type>BlockChanceIsLucky` FLAGs with `BlockedRecently`.
+- `CalcDefence.lua` 737 to 760 rolls each effective block chance twice when its flag is on, `1 - (1 - p)^2`, for the effective health pool.
+
+**The engine:**
+- `Poe1Quantity::BlockLucky` (`Flag`), a `STATE_ROWS` row with P6-11g's `BlockedRecently`.
+- The enemy hit's mitigation takes the attack and spell block chances through `lucky`, the roll P6-11al wrote for lucky suppression, now shared by both.
+
+**Evidence** (`b-ct`, against P6-11gs's run):
+- **Two new mechanic fixtures** match PoB on every compared field. Each is Ice Nova with 30% attack and 20% spell block and the line:
+  - `ice-nova-lucky-block-witch.xml`: blocked recently on, effective health pool 1319;
+  - `ice-nova-lucky-block-off-witch.xml`: off, 994.
+- **Public:** 0 unexpected. Eight values of the Cyclone and Lacerate builds moved, all toward PoB (their effective health pools).
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

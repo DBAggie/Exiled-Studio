@@ -5148,6 +5148,18 @@ pub const STATE_ROWS: &[StateRow] = &[
         "shield_spell_block_%",
         &[(SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD)],
     ),
+    // P6-11gt: "Chance to Block Attack or Spell Damage is Lucky if you've
+    // Blocked Recently" (the four `<Type>BlockChanceIsLucky` FLAGs,
+    // `BlockedRecently`).
+    (
+        "spell_and_attack_block_chance_is_lucky_if_blocked_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BlockLucky),
+            Op::Flag,
+            NONE,
+            conditions::BLOCKED_RECENTLY,
+        )],
+    ),
     // P6-11a: "+#% chance to Block Spell Damage while holding a Staff or
     // Shield": `SpellBlockChance` BASE, `UsingStaff` or `UsingShield`; two
     // rows, never both (a staff is two-handed).
@@ -11233,6 +11245,16 @@ mod tests {
                         conditions::LEECHING,
                     ),
                 ],
+            ),
+            // P6-11gt: lucky block if blocked recently.
+            (
+                "spell_and_attack_block_chance_is_lucky_if_blocked_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::BlockLucky),
+                    Op::Flag,
+                    NONE,
+                    conditions::BLOCKED_RECENTLY,
+                )],
             ),
             // P6-11gp: config checks.
             (

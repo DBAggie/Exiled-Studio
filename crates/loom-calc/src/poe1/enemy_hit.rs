@@ -1063,8 +1063,15 @@ fn maximum_hit(
             life_on_block,
             energy_shield_on_block,
             energy_shield_on_spell_block,
-            block: field(calc, Field::BlockChance),
-            spell_block: field(calc, Field::Poe1(Poe1Field::SpellBlockChance)),
+            // Lucky block (P6-11gt): each chance rolled twice.
+            block: {
+                let chance = field(calc, Field::BlockChance);
+                lucky(calc, chance, Poe1Quantity::BlockLucky, &cx, &mut reasons)?
+            },
+            spell_block: {
+                let chance = field(calc, Field::Poe1(Poe1Field::SpellBlockChance));
+                lucky(calc, chance, Poe1Quantity::BlockLucky, &cx, &mut reasons)?
+            },
             block_effect,
             suppression: {
                 let chance = field(calc, Field::Poe1(Poe1Field::SpellSuppressionChance));
@@ -1224,6 +1231,7 @@ const fn is_read(quantity: Quantity) -> bool {
                 | Poe1Quantity::GuardAbsorbMax
                 | Poe1Quantity::BlockGain(_)
                 | Poe1Quantity::SuppressionLucky
+                | Poe1Quantity::BlockLucky
                 | Poe1Quantity::ArmourEsRecoveryCap
                 | Poe1Quantity::EsProtectsMana
                 | Poe1Quantity::SuppressionToSpellDodge
@@ -1301,8 +1309,20 @@ fn effective_suppression(
     cx: &crate::condition::QueryContext,
     reasons: &mut Reasons,
 ) -> Result<f64, CalcError> {
+    lucky(calc, chance, Poe1Quantity::SuppressionLucky, cx, reasons)
+}
+
+/// `chance` (a percent) rolled twice when the `flag` is on (PoB's
+/// `IsLucky`: `1 - (1 - p)^2`), else as it is.
+fn lucky(
+    calc: &mut Calc<'_>,
+    chance: f64,
+    flag: Poe1Quantity,
+    cx: &crate::condition::QueryContext,
+    reasons: &mut Reasons,
+) -> Result<f64, CalcError> {
     let (store, graph) = calc.parts();
-    let lucky = store.flag(graph, Quantity::Poe1(Poe1Quantity::SuppressionLucky), cx)?;
+    let lucky = store.flag(graph, Quantity::Poe1(flag), cx)?;
     reasons.extend(&lucky.reasons);
     if lucky.value == 0.0 {
         return Ok(chance);

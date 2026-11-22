@@ -438,6 +438,12 @@ pub enum Poe1Quantity {
     /// `SpellSuppressionChanceIsLucky`; P6-11al): a `Flag`, read by
     /// [`enemy_hit`] for the effective chance.
     SuppressionLucky,
+    /// The chances to block attack and spell damage (and their projectile
+    /// variants) are lucky (P6-11gt; PoB's `BlockChanceIsLucky`,
+    /// `SpellBlockChanceIsLucky`, and the projectile ones, all from one
+    /// line): a `Flag`, read by the enemy hit's effective block chances
+    /// (`CalcDefence.lua` 737 to 760).
+    BlockLucky,
     /// Energy shield cannot be recovered above armour (PoB's
     /// `ArmourESRecoveryCap`; P6-11am, Divine Shield): a `Flag`, read by
     /// [`enemy_hit`] for `EnergyShieldRecoveryCap`.
@@ -1386,6 +1392,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Repeats => f.write_str("repeats"),
             Self::BlockGain(g) => write!(f, "block-gain.{}", g.name()),
             Self::SuppressionLucky => f.write_str("suppression-lucky"),
+            Self::BlockLucky => f.write_str("block-lucky"),
             Self::ArmourEsRecoveryCap => f.write_str("armour-es-recovery-cap"),
             Self::EsProtectsMana => f.write_str("es-protects-mana"),
             Self::ChaosInoculation => f.write_str("chaos-inoculation"),
