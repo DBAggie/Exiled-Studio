@@ -3557,6 +3557,45 @@ const DURATION_MORE_STATS: &[&str] = &[
     "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final",
 ];
 
+/// The warcry power (P6-11bs, P6-11hz; `CalcPerform.lua` 1311 and 2327):
+/// the config's override (its input, else its placeholder), else
+/// `max(base x (1 + inc / 100), 0)`, `base` 20 against a boss. With `inc`
+/// 0 it is PoB's `Multiplier:WarcryPower` (`output.WarcryPower`, the base
+/// alone).
+///
+/// # Errors
+/// `warcry-power` for a config power that is not a number.
+pub fn warcry_power(
+    input: &CalcInput<'_>,
+    config: Option<&ConfigSet>,
+    inc: f64,
+) -> Result<f64, &'static str> {
+    let number = |kind| match config.and_then(|set| last_input(set, WARCRY_POWER_INPUT, kind)) {
+        None => Ok(None),
+        Some(ConfigValue::Number(n)) if n.value().0.is_finite() => {
+            Ok((n.value().0 != 0.0).then_some(n.value().0))
+        }
+        Some(_) => Err("warcry-power"),
+    };
+    let power = match number(ConfigInputKind::Input)? {
+        Some(p) => p,
+        None => match number(ConfigInputKind::Placeholder)? {
+            Some(p) => p,
+            None => {
+                let base = if super::enemy::enemy(input.build, input.data).kind
+                    == super::enemy::BossKind::None
+                {
+                    0.0
+                } else {
+                    BOSS_WARCRY_POWER
+                };
+                crate::math::max(base * (1.0 + inc / 100.0), 0.0)
+            }
+        },
+    };
+    Ok(power)
+}
+
 /// A warcry's terms ([`WarcryTerms`]), or the reason the engine cannot
 /// read them.
 ///
@@ -3597,29 +3636,7 @@ pub fn warcry_terms(
         return Err("warcry-uptime");
     }
     // The power.
-    let number = |kind| match config.and_then(|set| last_input(set, WARCRY_POWER_INPUT, kind)) {
-        None => Ok(None),
-        Some(ConfigValue::Number(n)) if n.value().0.is_finite() => {
-            Ok((n.value().0 != 0.0).then_some(n.value().0))
-        }
-        Some(_) => Err("warcry-power"),
-    };
-    let power = match number(ConfigInputKind::Input)? {
-        Some(p) => p,
-        None => match number(ConfigInputKind::Placeholder)? {
-            Some(p) => p,
-            None => {
-                let base = if super::enemy::enemy(input.build, input.data).kind
-                    == super::enemy::BossKind::None
-                {
-                    0.0
-                } else {
-                    BOSS_WARCRY_POWER
-                };
-                crate::math::max(base * (1.0 + totals.warcry_power / 100.0), 0.0)
-            }
-        },
-    };
+    let power = warcry_power(input, config, totals.warcry_power)?;
     // The duration.
     let base = stat("base_skill_effect_duration") / 1000.0;
     let inc = stat("skill_effect_duration_+%") + totals.duration + totals.warcry_duration;

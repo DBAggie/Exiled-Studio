@@ -133,6 +133,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::stacks::brands(input, active_config(build), ingest);
     // Golems summoned (P6-11gc).
     super::stacks::golems(input, ingest);
+    // Armour per warcry power (P6-11hz).
+    warcry_power_armour(input, ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
@@ -1268,6 +1270,58 @@ fn accuracy_per_level(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             source: e.source,
         });
     }
+}
+
+/// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry, up
+/// to a maximum of 100%" (P6-11hz; `ModParser.lua` 2566): the lines'
+/// sum times `floor(power / 5)` (PoB's `Multiplier` tag, `div` 5), at most
+/// 100 (`globalLimit`, one key for every such line), as `Armour` INC while
+/// [`super::conditions::USED_WARCRY_IN_PAST_8_SECONDS`]. The power is
+/// PoB's `Multiplier:WarcryPower` ([`super::gems::warcry_power`] without
+/// increases); a config power that is not a number is a reason.
+fn warcry_power_armour(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArmourPerWarcryPower) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    let Some(first) = lines.first() else {
+        return;
+    };
+    if lines.iter().any(|e| e.conditions != Conditions::none()) {
+        ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+        });
+        return;
+    }
+    let power = match super::gems::warcry_power(input, active_config(input.build), 0.0) {
+        Ok(p) => p,
+        Err(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    let per: f64 = lines.iter().map(|e| e.value).sum();
+    let value = (per * crate::math::floor(power / 5.0 + 0.0001)).min(100.0);
+    if value == 0.0 {
+        return;
+    }
+    let source = first.source.clone();
+    ingest.effect(Effect {
+        quantity: Quantity::Armour,
+        op: Op::Increased,
+        value,
+        conditions: Conditions::none().with_state(
+            crate::condition::ConditionKey::new(super::conditions::USED_WARCRY_IN_PAST_8_SECONDS),
+            true,
+        ),
+        source,
+    });
 }
 
 /// Damage as projectiles travel farther (P6-11ha): each

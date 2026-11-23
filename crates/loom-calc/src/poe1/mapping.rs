@@ -8713,6 +8713,18 @@ pub const ROWS: &[Row] = &[
         "support_inspiration_mana_cost_+%_final",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
     ),
+    // P6-11hz: "Gain #% increased Armour per 5 Power for 8 seconds when you
+    // Warcry, up to a maximum of 100%" (`ModParser.lua` 2566: `Armour` INC
+    // per `Multiplier:WarcryPower`, `div` 5, `globalLimit` 100, while
+    // `UsedWarcryInPast8Seconds`): `collect` scales it by the power.
+    (
+        "warcry_physical_damage_reduction_rating_+%_per_5_power_for_8_seconds",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArmourPerWarcryPower),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11hn: "#% increased Ward" (`Ward` INC).
     (
         "ward_+%",
@@ -9901,6 +9913,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "wand_attacks_fire_an_additional_projectile",
         "projectile-count",
+    ),
+    // P6-11hz: warcries' chance to grant a charge per power (PoB leaves the
+    // line unparsed; the charges are the config's).
+    (
+        "warcry_chance_to_gain_frenzy_power_endurance_charge_%_per_power",
+        "charge-gain-chance",
     ),
     ("warcry_skill_area_of_effect_+%", "area"),
     // P6-11hl: "Other Aegis Skills are Disabled" (`DisableSkill` for

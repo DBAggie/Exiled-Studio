@@ -4755,3 +4755,29 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected; 30 values move, 18 toward PoB (4 now equal), 12 away. The 12 are two Shield Crush builds whose maximum hits taken were already below PoB's. PoB's output for them has every type's `EnergyShieldBypass` at 100 and a hit pool of life alone, the shape the engine now has; the gap left is the life, resistances, and block those builds already differ in.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hz: armour per warcry power; warcries' charge chance
+
+**Found** (the unmapped stats left in single builds): "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry, up to a maximum of 100%" and "Warcries have #% Chance to grant an Endurance, Frenzy or Power Charge per Power" (two builds each).
+
+**PoB** (`ModParser.lua` 1858, 2566; `CalcPerform.lua` 1311, 1312; `ConfigOptions.lua` 732, 1558, 1563, 1612):
+- The armour line is `Armour` INC per `Multiplier:WarcryPower` (`div` 5, so `floor(power / 5)`), `globalLimit` 100 (one key, `WarningCall`, for every such line), while `UsedWarcryInPast8Seconds`.
+- `Multiplier:WarcryPower` is `output.WarcryPower`: the config's override, else the `WarcryPower` BASE (20 against a boss), with no increase.
+- `UsedWarcryInPast8Seconds` comes from its own check, and the check "Have you used a Warcry Recently?" and the warcry count imply it.
+- The charge line is left unparsed.
+
+**The engine:**
+- `Poe1Quantity::ArmourPerWarcryPower` (`ROWS`); `collect::warcry_power_armour` makes `Armour` INC of the lines' sum times `floor(power / 5)`, at most 100, under `conditions::USED_WARCRY_IN_PAST_8_SECONDS`.
+- `conditions`: the new check `conditionUsedWarcryInPast8Seconds` (out of `config::NAMED_ONLY`), also set when used a warcry recently is (with its count).
+- `gems::warcry_power` holds the power read `warcry_terms` used (the multiplier is it with no increase).
+- `NO_EFFECT`: `warcry_chance_to_gain_frenzy_power_endurance_charge_%_per_power` (`charge-gain-chance`; the charges test lists it).
+- **Left:** exerted attacks' damage (`empowered_attack_damage_+%`, PoB's `ExertIncrease`) needs PoB's exerted uptime, the largest of six warcries' uptimes, of which the engine has Intimidating Cry's; `number_of_warcries_exerting_this_action` goes with it.
+
+**Evidence** (`b-ct`, against P6-11hy's run):
+- **Three new mechanic fixtures**, each matching PoB on every computed field (Ice Nova with a Plate Vest and the 25% line):
+  - `ice-nova-warcry-power-armour-witch.xml`: the check, the default Pinnacle boss (power 20): armour 54, 100% increased (the limit).
+  - `ice-nova-warcry-power-armour-count-witch.xml`: one warcry used recently and power 10: armour 41.
+  - `ice-nova-warcry-power-armour-off-witch.xml`: no check: armour 27.
+- **Public:** 0 unexpected; 14 values move toward PoB, facebreaker-luminary.xml's armour (17,554) now equal.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

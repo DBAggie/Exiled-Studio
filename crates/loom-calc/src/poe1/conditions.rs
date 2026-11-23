@@ -273,6 +273,11 @@ pub const KILLED_RECENTLY_COUNT_INPUT: &str = "multiplierKilledRecently";
 /// `conditionUsedWarcryRecently` or a `multiplierWarcryUsedRecently` above
 /// 0, `ConfigOptions.lua` 1558, 1612; P6-11ev).
 pub const USED_WARCRY_RECENTLY: &str = "UsedWarcryRecently";
+/// "if you've Warcried in the past 8 seconds" (PoB's
+/// `UsedWarcryInPast8Seconds`; P6-11hz): its check
+/// (`ConfigOptions.lua` 1563), or [`USED_WARCRY_RECENTLY`] and its count,
+/// which imply it (1558, 1612).
+pub const USED_WARCRY_IN_PAST_8_SECONDS: &str = "UsedWarcryInPast8Seconds";
 /// The count of warcries used recently, which sets
 /// [`USED_WARCRY_RECENTLY`] above 0.
 pub const WARCRY_RECENTLY_COUNT_INPUT: &str = "multiplierWarcryUsedRecently";
@@ -376,6 +381,11 @@ pub const CHECKS: &[(&str, &str)] = &[
     // P6-11hu: summoned a totem recently; a totem main skill too (`settle`).
     ("conditionSummonedTotemRecently", SUMMONED_TOTEM_RECENTLY),
     (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
+    // P6-11hz: warcried in the past 8 seconds; implied too (`settle`).
+    (
+        "conditionUsedWarcryInPast8Seconds",
+        USED_WARCRY_IN_PAST_8_SECONDS,
+    ),
     // P6-11ev: used a warcry recently; a warcry count too (`settle`).
     ("conditionUsedWarcryRecently", USED_WARCRY_RECENTLY),
     ("conditionUsingFlask", USING_FLASK),
@@ -705,6 +715,19 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         (Some(false), Some(false)) => {}
         _ => {
             out.remove(&key);
+        }
+    }
+    // Warcried in the past 8 seconds (P6-11hz): its check, or used a warcry
+    // recently (with its count), which imply it.
+    let recent = out.get(&ConditionKey::new(USED_WARCRY_RECENTLY)).copied();
+    let key8 = ConditionKey::new(USED_WARCRY_IN_PAST_8_SECONDS);
+    match (out.get(&key8).copied(), recent) {
+        (Some(true), _) | (_, Some(true)) => {
+            out.insert(key8, true);
+        }
+        (Some(false), Some(false)) => {}
+        _ => {
+            out.remove(&key8);
         }
     }
     // Hit recently: a count above 0 sets it too; "not hit recently" is its

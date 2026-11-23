@@ -995,6 +995,9 @@ mod tests {
         // Intensify's area per intensity (its "charge" is intensity,
         // `poe1::stacks`): area, not a slice field.
         "support_spell_boost_area_of_effect_+%_final_per_charge",
+        // P6-11hz: warcries' chance to grant a charge per power, which PoB
+        // leaves unparsed (the charges are the config's).
+        "warcry_chance_to_gain_frenzy_power_endurance_charge_%_per_power",
     ];
 
     /// The module's argument: no row of the mapping's tables reads or

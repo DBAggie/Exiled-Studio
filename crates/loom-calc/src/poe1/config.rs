@@ -307,10 +307,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         ],
     ),
     (
-        "conditionUsedWarcryInPast8Seconds",
-        &["Condition:UsedWarcryInPast8Seconds"],
-    ),
-    (
         "configSpectralTigerCount",
         &[
             "Multiplier:SpectralTigerConfig",
@@ -377,10 +373,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierWarcryUsedRecently",
         // Its `UsedWarcryRecently` is settled with the check's (P6-11ev,
-        // `poe1::conditions`); the others are no row's.
+        // `poe1::conditions`), and with it `UsedWarcryInPast8Seconds`
+        // (P6-11hz); the others are no row's.
         &[
             "Multiplier:WarcryUsedRecently",
-            "Condition:UsedWarcryInPast8Seconds",
             "Condition:UsedSkillRecently",
         ],
     ),
