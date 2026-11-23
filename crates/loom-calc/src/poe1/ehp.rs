@@ -110,6 +110,9 @@ pub(super) struct Character {
     /// Eldritch Battery (PoB's `EnergyShieldProtectsMana`; P6-11ap): the
     /// shield takes mind over matter's share before mana, not the hit.
     pub(super) eb: bool,
+    /// Every type bypasses energy shield (PoB's `UnblockedDamageDoesBypassES`;
+    /// P6-11hy), as chaos does.
+    pub(super) all_bypass: bool,
     /// Summon Stone Golem of Safeguarding's share of each hit, percent, and
     /// its life (PoB's `alliesTakenBeforeYou.stoneGolem`; P6-11ar).
     pub(super) golem_rate: f64,
@@ -201,7 +204,8 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mana
         };
         let with_mana = life_pool + mom_pool;
-        if ch.eb && ty != DamageType::Chaos {
+        let bypasses = ty == DamageType::Chaos || ch.all_bypass;
+        if ch.eb && !bypasses {
             // `CalcDefence.lua` 254 to 256, with no bypass.
             es_pools[i] = crate::math::floor(
                 max_mom
@@ -211,7 +215,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mom_pools[i] = crate::math::floor((max_mom - es_pools[i]).min(mom_pool));
             continue;
         }
-        es_pools[i] = if ty == DamageType::Chaos {
+        es_pools[i] = if bypasses {
             crate::math::floor((with_mana / 1.0 - with_mana).min(energy_shield))
         } else {
             crate::math::floor(energy_shield)
@@ -223,7 +227,11 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         let Some(mut remainder) = damage[i] else {
             continue;
         };
-        let bypass = if ty == DamageType::Chaos { 1.0 } else { 0.0 };
+        let bypass = if ty == DamageType::Chaos || ch.all_bypass {
+            1.0
+        } else {
+            0.0
+        };
         // An ally takes its share first (P6-11ar; `CalcDefence.lua` 266 to
         // 277), floored after each take.
         if golem > 0.0 {
@@ -623,6 +631,7 @@ mod tests {
             guard: 0.0,
             recoup: false,
             eb: false,
+            all_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
@@ -659,6 +668,7 @@ mod tests {
             guard: 1000.0,
             recoup: false,
             eb: false,
+            all_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
@@ -701,6 +711,7 @@ mod tests {
             guard: 10_000.0,
             recoup: false,
             eb: false,
+            all_bypass: false,
             golem_rate: 3.75,
             golem: 100.0,
             prevented: 0.0,

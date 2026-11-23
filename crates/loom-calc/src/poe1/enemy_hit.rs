@@ -621,7 +621,8 @@ fn frost_shield(
 ///   half of maximum life;
 /// - each type's total hit pool: the life pool, plus the energy shield
 ///   (`EnergyShieldRecoveryCap`, the maximum) unless the type bypasses it
-///   (chaos does, 100%), plus ward (P6-11hn), the shared elemental aegis for
+///   (chaos does, 100%, and every type with Emperor's Vigilance's
+///   `UnblockedDamageDoesBypassES`, P6-11hy), plus ward (P6-11hn), the shared elemental aegis for
 ///   an elemental type (P6-11hl), and guard;
 /// - for each type the hit converts to (the type itself without taken as):
 ///   with no armour applied, `max(pool / share / (resMult x (1 -
@@ -707,6 +708,23 @@ fn maximum_hit(
     let eb = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsProtectsMana)) && {
         let (store, graph) = calc.parts();
         let q = store.flag(graph, Quantity::Poe1(Poe1Quantity::EsProtectsMana), &cx)?;
+        pool_reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
+    // "Damage taken from Unblocked hits always bypasses Energy Shield"
+    // (P6-11hy; `CalcDefence.lua` 2282 to 2285): every type bypasses it.
+    // Its blocked line (`BlockedDamageDoesntBypassES`, 2806) needs a bypass
+    // below 100, so with this flag it never applies, as in PoB.
+    let all_bypass = phases::has(
+        calc,
+        Quantity::Poe1(Poe1Quantity::UnblockedDamageBypassesEs),
+    ) && {
+        let (store, graph) = calc.parts();
+        let q = store.flag(
+            graph,
+            Quantity::Poe1(Poe1Quantity::UnblockedDamageBypassesEs),
+            &cx,
+        )?;
         pool_reasons.extend(&q.reasons);
         q.value != 0.0
     };
@@ -872,8 +890,13 @@ fn maximum_hit(
     }
     let mut pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
-        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291).
-        let bypass = if ty == DamageType::Chaos { 100.0 } else { 0.0 };
+        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291),
+        // and every type with Emperor's Vigilance (P6-11hy).
+        let bypass = if ty == DamageType::Chaos || all_bypass {
+            100.0
+        } else {
+            0.0
+        };
         let with_mana = mom_hit_pool(
             life_pool,
             mom[i],
@@ -1147,6 +1170,7 @@ fn maximum_hit(
             guard,
             recoup,
             eb,
+            all_bypass,
             golem_rate,
             golem,
             prevented,

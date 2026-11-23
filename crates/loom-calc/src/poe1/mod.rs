@@ -969,6 +969,11 @@ pub enum Poe1Quantity {
     /// `CannotGainWarcryBuffs`; P6-11hw, Call to Arms): a `Flag`, read by
     /// [`skill_modifiers::Totals`].
     CannotGainWarcryBuffs,
+    /// "Damage taken from Unblocked hits always bypasses Energy Shield"
+    /// (PoB's `UnblockedDamageDoesBypassES`, `CalcDefence.lua` 2282;
+    /// P6-11hy, Emperor's Vigilance): a `Flag`; every type then bypasses
+    /// energy shield as chaos does, read by [`enemy_hit`] and [`ehp`].
+    UnblockedDamageBypassesEs,
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1662,6 +1667,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
+            Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),

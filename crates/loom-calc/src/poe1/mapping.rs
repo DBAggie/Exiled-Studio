@@ -4816,6 +4816,22 @@ pub const STATE_ROWS: &[StateRow] = &[
         "damage_+%_while_wielding_wand",
         &[(Quantity::Damage, Op::Increased, NONE, states::USING_WAND)],
     ),
+    // P6-11hy: Emperor's Vigilance's "Damage taken from Blocked Hits cannot
+    // bypass Energy Shield" and "Damage taken from Unblocked hits always
+    // bypasses Energy Shield" (`ModParser.lua` 4705, `ModCache.lua` 8366:
+    // `BlockedDamageDoesntBypassES` and `UnblockedDamageDoesBypassES` FLAG,
+    // each unless `EVBypass`): the second flag, read by `enemy_hit` and
+    // `ehp`; the first then never applies (`CalcDefence.lua` 2806 needs a
+    // bypass below 100).
+    (
+        "damage_from_hits_always_and_only_bypasses_energy_shield_when_not_blocked",
+        &[(
+            Quantity::Poe1(Poe1Quantity::UnblockedDamageBypassesEs),
+            Op::Flag,
+            NONE,
+            conditions::NOT_EV_BYPASS,
+        )],
+    ),
     // P6-11ba: "#% increased Damage over Time while Dual Wielding": `Damage`
     // INC, `ModFlag.Dot`, `DualWielding`.
     (
@@ -11679,6 +11695,8 @@ mod tests {
                         // P6-11fb: the negations of the crit and kill checks.
                         conditions::NOT_CRIT_RECENTLY,
                         conditions::NOT_KILLED_RECENTLY,
+                        // P6-11hy: the negation of Emperor's Vigilance's check.
+                        conditions::NOT_EV_BYPASS,
                         // P6-11cq: from the active flasks.
                         conditions::USING_LIFE_FLASK,
                         // P6-11ct: from the heralds among the skills.
@@ -13099,6 +13117,16 @@ mod tests {
                     Op::Flag,
                     NONE,
                     conditions::SUMMONED_TOTEM_RECENTLY,
+                )],
+            ),
+            // P6-11hy: Emperor's Vigilance's bypass, unless disabled.
+            (
+                "damage_from_hits_always_and_only_bypasses_energy_shield_when_not_blocked",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::UnblockedDamageBypassesEs),
+                    Op::Flag,
+                    NONE,
+                    conditions::NOT_EV_BYPASS,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.

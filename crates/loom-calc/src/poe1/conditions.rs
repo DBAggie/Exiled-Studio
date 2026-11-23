@@ -196,6 +196,11 @@ pub const NOT_KILLED_RECENTLY: &str = "NotKilledRecently";
 /// P6-11hu): its check (`ConfigOptions.lua` 1109), or a main skill that
 /// is a totem (`CalcPerform.lua` 265 to 267, [`summoned_totem`]).
 pub const SUMMONED_TOTEM_RECENTLY: &str = "SummonedTotemRecently";
+/// "Disable Emperor's Vigilance Bypass" (PoB's `Condition:EVBypass`,
+/// `ConfigOptions.lua` 245; P6-11hy).
+pub const EV_BYPASS: &str = "EVBypass";
+/// [`EV_BYPASS`] negated (P6-11hy): Emperor's Vigilance's lines need it.
+pub const NOT_EV_BYPASS: &str = "NotEVBypass";
 /// The main skill is used by you: not of the `SummonsTotem`,
 /// `RemoteMined`, or `Trapped` type (with its supports' added types),
 /// and not the mirage's (P6-11hv; PoB's negated `SkillType` list and
@@ -301,6 +306,8 @@ pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
 /// input (a test checks); an input may set several, and several inputs
 /// one: the condition holds when any of its inputs is on (P6-11g).
 pub const CHECKS: &[(&str, &str)] = &[
+    // P6-11hy: Emperor's Vigilance's bypass disabled.
+    ("EVBypass", EV_BYPASS),
     ("buffArcaneSurge", ARCANE_SURGE),
     ("buffLifetap", LIFETAP),
     // P6-11gp: Magmatic Strikes.
@@ -731,6 +738,8 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     for (key, not) in [
         (CRIT_RECENTLY, NOT_CRIT_RECENTLY),
         (KILLED_RECENTLY, NOT_KILLED_RECENTLY),
+        // P6-11hy: Emperor's Vigilance's bypass.
+        (EV_BYPASS, NOT_EV_BYPASS),
     ] {
         if let Some(v) = out.get(&ConditionKey::new(key)).copied() {
             out.insert(ConditionKey::new(not), !v);

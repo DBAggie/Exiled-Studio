@@ -4733,3 +4733,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 37 values move, 10 toward PoB and now equal: lacerate-bleed-gladiator.xml's life (3,834), unreserved life, life regeneration, and leech caps; rf-chieftain-life-stack.xml's energy shield, its recharge, evasion, and energy shield leech caps. The 27 that move away are fields far from PoB for other reasons (both builds' damage over time and EHP, the life-stacking build's life), each losing the attribute bonus PoB drops too. Every field of both builds stays `Partial`.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hy: Emperor's Vigilance's energy shield bypass
+
+**Found** (the unmapped stats left in single builds): `damage_from_hits_always_and_only_bypasses_energy_shield_when_not_blocked` (four builds), Emperor's Vigilance's "Damage taken from Blocked Hits cannot bypass Energy Shield" and "Damage taken from Unblocked hits always bypasses Energy Shield".
+
+**PoB** (`ModParser.lua` 4705; `ModCache.lua` 8366; `CalcDefence.lua` 2279 to 2299, 2806; `ConfigOptions.lua` 245):
+- The lines are `BlockedDamageDoesntBypassES` and `UnblockedDamageDoesBypassES` FLAG, each unless `Condition:EVBypass` (the config check "Disable Emperor's Vigilance Bypass").
+- With `UnblockedDamageDoesBypassES` every type's `EnergyShieldBypass` is 100, so each type's hit pool and the EHP leave energy shield out, as for chaos.
+- `BlockedDamageDoesntBypassES` changes the estimate's bypass only for a type whose bypass is below 100, which with the other flag none is, so it never applies.
+
+**The engine:**
+- `Poe1Quantity::UnblockedDamageBypassesEs`, a `STATE_ROWS` flag under `conditions::NOT_EV_BYPASS` (the negation of the new check `EVBypass`, `conditions::EV_BYPASS`).
+- `enemy_hit`: every type bypasses energy shield with the flag (the maximum hit pools, Eldritch Battery's shield of a type that does not bypass); `ehp::Character::all_bypass` does the same in the estimate.
+- Two stats this step found already deliberate reasons stay so (the game applies them, PoB does not): `take_half_area_damage_from_hit_%_chance` (`POOL_REASONS`) and `self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently` (`ENEMY_HIT_REASONS`).
+
+**Evidence** (`b-ct`, against P6-11hx's run):
+- **Two new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-emperors-vigilance-witch.xml`: Ice Nova with Emperor's Vigilance (its current lines) and "+300 to maximum Energy Shield": the fire maximum hit taken 690 and total EHP 908 (without the bypass 1,123 and 1,479).
+  - `ice-nova-emperors-vigilance-disabled-witch.xml`: the same with the config check: the shield protects life again.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected; 30 values move, 18 toward PoB (4 now equal), 12 away. The 12 are two Shield Crush builds whose maximum hits taken were already below PoB's. PoB's output for them has every type's `EnergyShieldBypass` at 100 and a hit pool of life alone, the shape the engine now has; the gap left is the life, resistances, and block those builds already differ in.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
