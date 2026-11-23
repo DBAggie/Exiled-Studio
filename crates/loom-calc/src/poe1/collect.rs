@@ -115,6 +115,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
+    // After the gems (Shield Crush's and Close Combat's stats; P6-11ht).
+    melee_proximity(input, ingest);
+    accuracy_per_level(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
     // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
     // after every source of their modifiers, before the enemy's damage
@@ -1161,6 +1164,112 @@ fn ramp(distance: f64) -> f64 {
     ((distance - 35.0) / 35.0).clamp(0.0, 1.0)
 }
 
+/// The main skill's distance (PoB's `skillDist`, [`DISTANCES`]): `None`
+/// without a main skill, or with a distance of another type (a reason).
+fn skill_distance(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) -> Option<f64> {
+    let build = input.build;
+    let main = skill::main_skill(build, input.data, &GemLevels::none()).ok()?;
+    let (name, default) = if main.types.contains("Melee") {
+        DISTANCES[0]
+    } else {
+        DISTANCES[1]
+    };
+    let read =
+        |kind| active_config(build).and_then(|set| super::config::last_input(set, name, kind));
+    match read(ConfigInputKind::Input).or_else(|| read(ConfigInputKind::Placeholder)) {
+        None => Some(default),
+        Some(loom_domain::ConfigValue::Number(n)) => Some(n.value().0),
+        Some(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: name.to_owned(),
+            });
+            None
+        }
+    }
+}
+
+/// PoB's `MeleeProximity` tag with `ramp = {1, 0}` (`Classes/ModStore.lua`
+/// 575 to 587): the full value up to 15, falling by a 25th per unit from
+/// 16 to 39, 0 from 40. Between 15 and 16, and between 39 and 40, no
+/// branch of PoB's applies and the value stays whole.
+fn proximity(distance: f64) -> f64 {
+    if distance <= 15.0 {
+        1.0
+    } else if (16.0..=39.0).contains(&distance) {
+        1.0 - (distance - 15.0) / 25.0
+    } else if distance >= 40.0 {
+        0.0
+    } else {
+        1.0
+    }
+}
+
+/// Damage by melee proximity (P6-11ht): each
+/// [`Poe1Quantity::MeleeProximityDamage`] effect becomes `Damage` MORE at
+/// [`proximity`] of the main skill's distance, with its row's flags. After
+/// the gems, whose stats carry Shield Crush's and Close Combat's.
+fn melee_proximity(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::MeleeProximityDamage) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let Some(distance) = skill_distance(input, ingest) else {
+        return;
+    };
+    let factor = proximity(distance);
+    for e in lines {
+        let value = e.value * factor;
+        if value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value,
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
+}
+
+/// "+# to Accuracy Rating per Level" (P6-11ht): each
+/// [`Poe1Quantity::AccuracyPerLevel`] effect becomes `Accuracy` BASE times
+/// the character's level (PoB's `Multiplier:Level`, the level clamped to
+/// 1..100 as [`character`]'s).
+fn accuracy_per_level(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::AccuracyPerLevel) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    let level = input
+        .build
+        .character
+        .level
+        .as_ref()
+        .map_or(1, |l| *l.value())
+        .clamp(1, 100);
+    for e in lines {
+        ingest.effect(Effect {
+            quantity: Quantity::Accuracy,
+            op: Op::Base,
+            value: e.value * f64::from(level),
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
+}
+
 /// Damage as projectiles travel farther (P6-11ha): each
 /// [`Poe1Quantity::DistanceRampDamage`] effect becomes `Damage` at
 /// [`ramp`] of the main skill's distance (PoB's `skillDist`): the
@@ -1182,27 +1291,8 @@ fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     if lines.is_empty() {
         return;
     }
-    let build = input.build;
-    let Ok(main) = skill::main_skill(build, input.data, &GemLevels::none()) else {
+    let Some(distance) = skill_distance(input, ingest) else {
         return;
-    };
-    let (name, default) = if main.types.contains("Melee") {
-        DISTANCES[0]
-    } else {
-        DISTANCES[1]
-    };
-    let read =
-        |kind| active_config(build).and_then(|set| super::config::last_input(set, name, kind));
-    let distance = match read(ConfigInputKind::Input).or_else(|| read(ConfigInputKind::Placeholder))
-    {
-        None => default,
-        Some(loom_domain::ConfigValue::Number(n)) => n.value().0,
-        Some(_) => {
-            ingest.reason(UnsupportedReason::UnmodelledConfig {
-                input: name.to_owned(),
-            });
-            return;
-        }
     };
     let factor = ramp(distance);
     for e in lines {

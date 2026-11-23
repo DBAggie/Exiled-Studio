@@ -488,6 +488,11 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   maps, `Data/Skills/act_dex.lua`, `act_str.lua`, `sup_dex.lua`).
 ///   Freezing Pulse and Eye of Winter add theirs in their own skill code
 ///   (`act_int.lua`), outside any stat: those skills are not modelled.
+///   Since P6-11ht the three `MeleeProximity` stats
+///   (`shield_crush_damage_+%_final_from_distance`,
+///   `slayer_damage_+%_final_from_distance`,
+///   `support_slashing_damage_+%_final_from_distance`) are mapped and
+///   scaled by the distance in `collect`, so they are no longer listed.
 /// - `physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%`:
 ///   reads `Multiplier:HallowingFlameStacksRemovedByAlly` (`ModParser.lua`
 ///   2898).
@@ -553,11 +558,8 @@ pub const DEPENDS_ON: &[&str] = &[
     "regenerate_1_rage_per_x_mana_regeneration",
     "retaliation_skills_gain_X_rage_per_enemy_hit",
     "shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed",
-    "shield_crush_damage_+%_final_from_distance",
-    "slayer_damage_+%_final_from_distance",
     "spell_block_is_maximum_if_not_blocked_recently",
     "support_rage_gain_rage_on_melee_hit_cooldown_ms",
-    "support_slashing_damage_+%_final_from_distance",
     "virtual_life_leech_does_not_stop_at_full_life",
     "warcry_grant_X_rage_per_5_power",
     "you_and_nearby_party_members_gain_x_rage_when_you_warcry",

@@ -544,6 +544,15 @@ pub enum Poe1Quantity {
     /// INC or MORE with the `DistanceRamp` tag `{35, 0}, {70, 1}`): `Base`,
     /// which `collect` scales by the skill's distance.
     DistanceRampDamage(bool),
+    /// "Deal up to #% more Melee Damage to Enemies, based on proximity" and
+    /// Shield Crush's more damage from distance (P6-11ht; PoB's `Damage`
+    /// MORE with the `MeleeProximity` tag, `ramp = {1, 0}`): `Base`, which
+    /// `collect` scales by the skill's distance.
+    MeleeProximityDamage,
+    /// "+# to Accuracy Rating per Level" (P6-11ht; PoB's `Accuracy` BASE
+    /// per `Multiplier:Level`): `Base`, which `collect` multiplies by the
+    /// character's level.
+    AccuracyPerLevel,
     /// "Inflict <Type> Exposure on Hit if you've cast <curse> in the past
     /// 10 seconds" (P6-11gz; PoB's enemy `<Type>Exposure` BASE -10 with the
     /// `SelfCast<Curse>` condition): `Base`, a candidate of [`exposure`]'s
@@ -1534,6 +1543,8 @@ impl core::fmt::Display for Poe1Quantity {
             } else {
                 "distance-ramp-increased"
             }),
+            Self::MeleeProximityDamage => f.write_str("melee-proximity-damage"),
+            Self::AccuracyPerLevel => f.write_str("accuracy-per-level"),
             Self::ExposureIfSelfCast(t) => write!(f, "exposure-if-self-cast.{}", t.name()),
             Self::CoveredInRing(ash) => f.write_str(if *ash {
                 "covered-in-ash"

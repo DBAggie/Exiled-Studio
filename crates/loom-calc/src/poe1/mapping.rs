@@ -2876,6 +2876,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "secondary_minimum_base_physical_damage",
         &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
+    // P6-11ht: Shield Crush's more damage from distance (`act_str.lua`
+    // 9874: `Damage` MORE with `ModFlag.Hit` and the `MeleeProximity` tag):
+    // `collect` scales it by the skill's distance.
+    (
+        "shield_crush_damage_+%_final_from_distance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MeleeProximityDamage),
+            Op::Base,
+            1.0,
+            Flags::HIT,
+            NONE,
+        )],
+    ),
     // P6-11di: "#% increased Brand Damage" (`Damage` INC with
     // `KeywordFlag.Brand`, which PoB sets from the `Brand` skill type, as
     // `Flags::SKILL_BRAND`; P6-11cx). A brand is not a main skill whose hit
@@ -2934,6 +2947,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             NONE,
+            NONE,
+        )],
+    ),
+    // P6-11ht: Impact's "Deal up to #% more Melee Damage to Enemies, based
+    // on proximity" (`ModParser.lua` 2995: `Damage` MORE with
+    // `ModFlag.Attack` and `ModFlag.Melee`, the `MeleeProximity` tag).
+    (
+        "slayer_damage_+%_final_from_distance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MeleeProximityDamage),
+            Op::Base,
+            1.0,
+            Flags::ATTACK.union(Flags::MELEE),
             NONE,
         )],
     ),
@@ -3526,6 +3552,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Base,
             1.0,
             Flags::MELEE,
+            NONE,
+        )],
+    ),
+    // P6-11ht: Close Combat's "Supported Skills deal up to #% more Melee
+    // Damage to Enemies, based on proximity" (`sup_dex.lua` 1175: `Damage`
+    // MORE with `ModFlag.Attack` and `ModFlag.Melee`, the `MeleeProximity`
+    // tag).
+    (
+        "support_slashing_damage_+%_final_from_distance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MeleeProximityDamage),
+            Op::Base,
+            1.0,
+            Flags::ATTACK.union(Flags::MELEE),
             NONE,
         )],
     ),
@@ -4123,6 +4163,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Projectile speed (P6-11hr), read only by the hit's
                     // bow damage flag (P6-11hb).
                     | Poe1Quantity::ProjectileSpeed
+                    // Damage by melee proximity (P6-11ht: Shield Crush's,
+                    // Close Combat's), `Damage` once `collect` scales it.
+                    | Poe1Quantity::MeleeProximityDamage
             )
     )
 }
@@ -6007,6 +6050,16 @@ pub const STATE_ROWS: &[StateRow] = &[
 ///   name saying the game applies 150% of it; until that is settled it is
 ///   unmapped (the fields are `Partial`).
 pub const ROWS: &[Row] = &[
+    // P6-11ht: "+# to Accuracy Rating per Level" (`Accuracy` BASE per
+    // `Multiplier:Level`): `collect` multiplies it by the character's level.
+    (
+        "accuracy_rating_per_level",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AccuracyPerLevel),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P3-8n: "#% increased Action Speed" (the canonical stat is negated:
     // "#% reduced Action Speed" for a positive value), PoB's `ActionSpeed`
     // INC; the hit scales a self-cast skill's rate by it.
@@ -9653,6 +9706,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_override_pvp_scaling_time_ms", "display"),
+    // P6-11ht: Impact's area of effect per enemy killed recently (no slice field
+    // reads area).
+    (
+        "slayer_area_of_effect_+%_per_enemy_killed_recently_up_to_50%",
+        "area",
+    ),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's

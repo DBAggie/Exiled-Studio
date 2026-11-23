@@ -4381,6 +4381,66 @@
       "expect": "ok",
       "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
       "description": "Burning Arrow with a Short Bow supported by Ballista Totem and Focused Ballista: Focused Ballista's more attack speed and less damage (P6-11hs)."
+    },
+    {
+      "id": "shield-crush-proximity-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/shield-crush-proximity-templar.xml",
+      "sha256": "3455b613815b9fc264a5ae736bd9bb12f8dfa78c24f0d0c74c8dccdbe22fc2ef",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Shield Crush (quality 20) with a Driftwood Club and a Splintered Tower Shield at the default melee distance: its more damage from distance whole (P6-11ht)."
+    },
+    {
+      "id": "shield-crush-proximity-distance-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/shield-crush-proximity-distance-templar.xml",
+      "sha256": "f534824eeb1bed97a79255a5f2b1e7ceff9a7246baf163e790ac68205212a3a7",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Shield Crush (quality 20) at a melee distance of 25: its more damage from distance at 60% (PoB's MeleeProximity ramp; P6-11ht)."
+    },
+    {
+      "id": "shield-crush-proximity-far-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/shield-crush-proximity-far-templar.xml",
+      "sha256": "69a5e20ccc8ea9ebd4722d79f247d10ca0796d7ab253c03f2a5b10797a6a2f0c",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Shield Crush (quality 20) at a melee distance of 45: no more damage from distance (P6-11ht)."
+    },
+    {
+      "id": "smite-impact-slayer.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-impact-slayer.xml",
+      "sha256": "d1721fe5f98ccc4636d2471e1a2919ac4160bea6abbcce53d6f2ed326dfcb216",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "HitChance", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Smite with a Karui Maul, a Slayer with Impact at a melee distance of 30: 40% of its more melee damage (P6-11ht)."
+    },
+    {
+      "id": "smite-impact-close-slayer.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-impact-close-slayer.xml",
+      "sha256": "e4a603bc2eda0062f7015af9da744ddfb08c01a4de9fd523056f992ba21160c6",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "HitChance", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Smite with a Karui Maul, a Slayer with Impact at the default melee distance: its more melee damage whole (P6-11ht)."
+    },
+    {
+      "id": "smite-accuracy-per-level-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-accuracy-per-level-templar.xml",
+      "sha256": "80858d9240b4c5d7098eabebc09b88e32668163343c01fc22ea618a99c8d9319",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "HitChance", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Smite with a Karui Maul and +3 to Accuracy Rating per Level at level 90: the hit chance (P6-11ht)."
     }
   ]
 }

@@ -4618,3 +4618,30 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected. 8 values move: the attack rate of kinetic-fusillade-ballista-hierophant.xml toward PoB, and its damage away, because that build was already far below PoB for its own unmapped Kinetic Fusillade stats; the less damage is PoB's too.
 - **Corpus:** 0 unexpected; one build's full DPS moves away, the same Ballista build kind with other reasons left.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ht: melee proximity damage and accuracy per level
+
+**Found** (the unmapped stats left in single builds): Shield Crush's more damage from distance (three corpus builds), "+# to Accuracy Rating per Level" (two builds), and Impact's area per enemy killed recently. Impact's "Deal up to #% more Melee Damage to Enemies, based on proximity" and Close Combat's were listed in `config::DEPENDS_ON` (P3-12b) until the engine read the distance.
+
+**PoB** (`Data/Skills/act_str.lua` 9874, 9889; `sup_dex.lua` 1175; `ModParser.lua` 2995; `Classes/ModStore.lua` 575 to 587; `CalcActiveSkill.lua` 446 to 464):
+- **Melee proximity:** `shield_crush_damage_+%_final_from_distance` is `Damage` MORE with `ModFlag.Hit`; Impact's `slayer_damage_+%_final_from_distance` and Close Combat's `support_slashing_damage_+%_final_from_distance` are `Damage` MORE with `ModFlag.Attack` and `ModFlag.Melee`. Each carries the `MeleeProximity` tag, `ramp = {1, 0}`: the whole value up to a distance of 15, falling by a 25th per unit from 16 to 39, 0 from 40 (between 15 and 16 and between 39 and 40 no branch applies, so the value stays whole).
+- **The distance** is the skill's `skillDist`: `meleeDistance` for a melee skill, else `projectileDistance`, the input or its placeholder (15 and 40).
+- **Shield Crush's stat** comes only from its quality (0.5 per 1%), so a gem at quality 0 has none.
+- **Accuracy per level:** `Accuracy` BASE per `Multiplier:Level`, the character's level.
+- **Impact's area** per enemy killed recently reaches no slice field.
+
+**The engine:**
+- `Poe1Quantity::MeleeProximityDamage` (`HIT_ROWS`, a hit quantity for the gems' stats) and `Poe1Quantity::AccuracyPerLevel` (`ROWS`).
+- `collect`: `melee_proximity`, after the gems (whose stats carry Shield Crush's and Close Combat's), makes each a `Damage` MORE at PoB's ramp of the main skill's distance with its row's flags; `accuracy_per_level` makes `Accuracy` BASE times the level. The distance read is shared with P6-11ha's ramps (`skill_distance`).
+- `config::DEPENDS_ON` no longer lists the three proximity stats.
+- `NO_EFFECT`: `slayer_area_of_effect_+%_per_enemy_killed_recently_up_to_50%` (`area`).
+- A custom line "Deal up to #% more Melee Damage to Enemies, based on proximity" stays ambiguous (Impact's and Close Combat's stats share the text, and no item mod carries either), so the fixtures allocate Impact on a Slayer's tree. Close Combat's other stats (Combat Rush, damage at close range) are still unmapped, so it has no fixture of its own.
+
+**Evidence** (`b-ct`, against P6-11hs's run):
+- **Six new mechanic fixtures**, each matching PoB on every computed field:
+  - `shield-crush-proximity-templar.xml`, `-distance-` (25), `-far-` (45): Shield Crush at quality 20 with a Driftwood Club and a Splintered Tower Shield; its 10% more damage whole, at 60%, and none.
+  - `smite-impact-slayer.xml` (distance 30, 40% of Impact's 15%) and `smite-impact-close-slayer.xml` (default distance, whole).
+  - `smite-accuracy-per-level-templar.xml`: "+3 to Accuracy Rating per Level" at level 90, the hit chance.
+- **Public:** 0 unexpected; 5 values of cyclone-shockwave-slayer.xml (Impact) move toward PoB.
+- **Corpus:** 0 unexpected; 16 values move toward PoB, 4 of them now equal.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
