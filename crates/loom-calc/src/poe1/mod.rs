@@ -961,6 +961,10 @@ pub enum Poe1Quantity {
     /// false on the offerings, P6-11gg): a `Flag`, read by
     /// [`skill_modifiers::Totals`].
     OfferingsAffectYou,
+    /// "Your Warcries do not grant Buffs or Charges to You" (PoB's
+    /// `CannotGainWarcryBuffs`; P6-11hw, Call to Arms): a `Flag`, read by
+    /// [`skill_modifiers::Totals`].
+    CannotGainWarcryBuffs,
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1652,6 +1656,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::NamedSkillEffect(i) => write!(f, "named-skill-effect.{i}"),
             Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
+            Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),

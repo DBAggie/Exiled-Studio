@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 20] = [
+const TEXTS: [(&str, &str); 21] = [
     // P6-11ap: Eldritch Battery.
     (
         "keystone_eldritch_battery",
@@ -72,6 +72,11 @@ const TEXTS: [(&str, &str); 20] = [
         "Converts all Evasion Rating to Armour. Dexterity provides no bonus to Evasion Rating",
     ),
     // P6-11ej: Chaos Inoculation.
+    // P6-11hw: Call to Arms.
+    (
+        "keystone_call_to_arms",
+        "Your Warcries do not grant Buffs or Charges to You\\n100% more Warcry Duration",
+    ),
     (
         "keystone_chaos_inoculation",
         "Maximum Life becomes 1, Immune to Chaos Damage",

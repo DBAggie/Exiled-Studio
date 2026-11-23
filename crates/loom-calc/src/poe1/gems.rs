@@ -3623,9 +3623,12 @@ pub fn warcry_terms(
     // The duration.
     let base = stat("base_skill_effect_duration") / 1000.0;
     let inc = stat("skill_effect_duration_+%") + totals.duration + totals.warcry_duration;
+    // P6-11hw: the character's warcry duration MORE (Call to Arms).
     let more = DURATION_MORE_STATS
         .iter()
-        .fold(1.0, |m, id| m * (1.0 + stat(id) / 100.0));
+        .fold(totals.warcry_duration_more(), |m, id| {
+            m * (1.0 + stat(id) / 100.0)
+        });
     let duration = base * crate::math::max((1.0 + inc / 100.0) * more, 0.0);
     // The cooldown.
     #[expect(
@@ -5299,9 +5302,13 @@ fn one_skill(
             // `CannotShareWarcryBuffs` flag, `CalcPerform.lua` 2326): their
             // rows do not apply to you. Their exerts and reservation are read
             // elsewhere, as for any warcry.
-            if s.supports
-                .iter()
-                .any(|sup| sup.effect.id == AUTOEXERTION_SUPPORT)
+            // P6-11hw: Call to Arms' "Your Warcries do not grant Buffs or
+            // Charges to You" (PoB's `CannotGainWarcryBuffs`, 2338): no
+            // buff on you, its exerts and reservation as any warcry's.
+            if totals.cannot_gain_warcry_buffs
+                || s.supports
+                    .iter()
+                    .any(|sup| sup.effect.id == AUTOEXERTION_SUPPORT)
             {
                 supports_global(input, g, s, totals, config, collected, ingest);
                 reservation(s, &active_source, totals, ingest);

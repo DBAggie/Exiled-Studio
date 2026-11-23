@@ -181,6 +181,26 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             flag(Poe1Quantity::ReserveLifeInsteadOfMana),
         ],
     ),
+    // Call to Arms (P6-11hw): the tree's "Your Warcries do not grant Buffs or
+    // Charges to You" (`CannotGainWarcryBuffs` FLAG, `ModCache.lua` 13113)
+    // and "100% more Warcry Duration" (`Duration` MORE 100 with
+    // `KeywordFlag.Warcry`, 2929), both read by `poe1::gems`' warcries.
+    (
+        "keystone_call_to_arms",
+        &[
+            flag(Poe1Quantity::CannotGainWarcryBuffs),
+            (
+                Quantity::Poe1(Poe1Quantity::SkillTiming(
+                    super::skill_modifiers::SkillTiming::WarcryDuration,
+                )),
+                Op::More,
+                100.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
+    ),
     // Chaos Inoculation (P6-11ej): the tree's "Maximum Life becomes 1, Immune
     // to Chaos Damage" (`ChaosInoculation` FLAG, `ChaosDamageTaken` MORE
     // -100; `ModParser.lua` 2242). Its `FullLife` is `states`'.

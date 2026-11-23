@@ -4693,3 +4693,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 9 values of kinetic-fusillade-ballista-hierophant.xml move toward PoB, its mana regeneration now equal.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests (the keystone text test lists both), loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hw: Call to Arms
+
+**Found** (the unmapped stats left in single builds): the keystone Call to Arms (`keystone_call_to_arms`, two builds), left by P6-11hv.
+
+**PoB** (`ModCache.lua` 2929, 13113; `CalcPerform.lua` 2311 to 2350):
+- "Your Warcries do not grant Buffs or Charges to You" is `CannotGainWarcryBuffs` FLAG: `CalcPerform` then adds no warcry buff to the player (2338). The warcry's exerts and the buff for minions are not touched.
+- "100% more Warcry Duration" is `Duration` MORE 100 with `KeywordFlag.Warcry`, which enters the warcry's uptime (duration over cooldown).
+
+**The engine:**
+- `Poe1Quantity::CannotGainWarcryBuffs`, read into `skill_modifiers::Totals::cannot_gain_warcry_buffs`; `poe1::gems`' warcry branch then adds no buff row to you, as for Autoexertion's warcries (its exerts and reservation stay).
+- `Totals::warcry_duration_more` (warcries' `Duration` MORE, at most two) multiplies the duration in `gems::warcry_terms`.
+- `poe1::keystones::KEYSTONES`: `keystone_call_to_arms` gives both. The keystone text test lists it.
+- **Left:** Supreme Prodigy (no inherent bonuses from attributes) stays a reason.
+
+**Evidence** (`b-ct`, against P6-11hv's run):
+- **Two new mechanic fixtures**, each the copy of an existing warcry fixture with the custom line "Call to Arms", which PoB reads as the keystone:
+  - `ice-nova-warcry-call-to-arms-witch.xml`: Intimidating Cry and Enduring Cry give no movement speed (1.05 before, 1) and no life regeneration (38.3 before, 0); matches PoB on every computed field.
+  - `smite-battlemages-cry-call-to-arms-templar.xml`: Battlemage's Cry gives no crit chance (1.93% before, 1.65%); matches PoB but the Q11 attack rate (DIV-0577 to DIV-0582, `game-truth`, as the base fixture's).
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected; one build's life regeneration moves away from PoB (289.8 to 93.7, PoB 287.5). The build's spec is tree 3_15, which the engine has no data for, so the build is `indeterminate` (the tree version reason): the engine reads node 23090 as 3.29's Call to Arms, PoB reads its 3_15 tree, where that node is not Call to Arms.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

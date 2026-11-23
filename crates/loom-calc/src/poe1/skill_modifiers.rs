@@ -508,6 +508,12 @@ pub struct Totals {
     /// The offerings' buff reaches you too (P6-11gg,
     /// [`OFFERINGS_AFFECT_YOU_STAT`], an unconditional flag).
     pub offerings_affect_you: bool,
+    /// Your warcries grant you no buff (P6-11hw; PoB's
+    /// `CannotGainWarcryBuffs`, an unconditional flag).
+    pub cannot_gain_warcry_buffs: bool,
+    /// `Duration` MORE of warcries, each as its percent (P6-11hw: Call to
+    /// Arms' 100% more); [`Self::warcry_duration_more`] multiplies them.
+    pub warcry_duration_more_pct: [f64; 2],
     /// The skills with no reservation, a bit per
     /// [`NO_RESERVATION_STATS`] row (P6-11fq).
     pub no_reservation: u64,
@@ -606,6 +612,22 @@ impl Totals {
                 }
                 continue;
             }
+            if q == Poe1Quantity::CannotGainWarcryBuffs {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.cannot_gain_warcry_buffs = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            // P6-11hw: warcries' more duration (Call to Arms), two at most.
+            if q == Poe1Quantity::SkillTiming(SkillTiming::WarcryDuration) && e.op == Op::More {
+                match t.warcry_duration_more_pct.iter_mut().find(|v| **v == 0.0) {
+                    Some(slot) if e.conditions == Conditions::none() => *slot = e.value,
+                    _ => t.unread = true,
+                }
+                continue;
+            }
             if q == Poe1Quantity::ReserveLifeInsteadOfMana {
                 if e.op == Op::Flag && e.conditions == Conditions::none() {
                     t.reserve_life = true;
@@ -653,6 +675,14 @@ impl Totals {
             *sum += e.value;
         }
         t
+    }
+
+    /// Warcries' `Duration` MORE as a factor (P6-11hw).
+    #[must_use]
+    pub fn warcry_duration_more(&self) -> f64 {
+        self.warcry_duration_more_pct
+            .iter()
+            .fold(1.0, |m, v| m * (1.0 + v / 100.0))
     }
 
     /// The reservation terms of `pool` (module docs): the pool's and the
