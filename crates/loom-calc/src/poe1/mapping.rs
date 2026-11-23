@@ -3147,6 +3147,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
+    // P6-11hs: Multiple Totems' "#% less Damage" (`sup_str.lua` 3893:
+    // `Damage` MORE).
+    (
+        "support_additional_totem_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P6-11fa: Swift Assembly's chances for 1, 2, or 3 additional traps or
     // mines (`SkillStatMap.lua` 1852 to 1866: both counts BASE, `div` 100,
     // 100 / 2, 100 / 3: the expected extra count).
@@ -3223,6 +3229,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ELEMENTAL,
         )],
     ),
+    // P6-11hs: Ballista Totem's "#% less Attack Speed" (`sup_str.lua` 4532:
+    // `Speed` MORE with `ModFlag.Attack`).
+    (
+        "support_attack_totem_attack_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
+    ),
     // P6-7c2: Brutality's own `statMap` (`Data/Skills/sup_str.lua` 802):
     // `PhysicalDamage` MORE.
     (
@@ -3284,6 +3296,17 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_efficacy_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+    // P6-11hs: Focused Ballista's more attack speed and less damage
+    // (`sup_dex.lua` 1929 to 1934: `Speed` MORE with `ModFlag.Attack`,
+    // `Damage` MORE).
+    (
+        "support_focused_ballista_totem_attack_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "support_focused_ballista_totem_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
     // P6-11hq: Fortify Support's more damage with hits and ailments from
     // melee hits (`sup_str.lua` 2631 to 2636: `Damage` MORE with
@@ -3505,7 +3528,14 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::MELEE,
             NONE,
         )],
-    ), // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
+    ),
+    // P6-11hs: Spell Totem's "#% less Cast Speed" (`sup_str.lua` 5048:
+    // `Speed` MORE with `ModFlag.Cast`).
+    (
+        "support_spell_totem_cast_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::CAST, NONE)],
+    ),
+    // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
     (
         "support_storm_barrier_damage_+%_final",
@@ -3525,6 +3555,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             DAMAGING_AILMENTS,
         )],
+    ),
+    // P6-11hs: Spell Totem's and Ballista Totem's "#% less Damage"
+    // (`sup_str.lua` 4535, 5051: `Damage` MORE).
+    (
+        "support_totem_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
     // P6-11cy: Trap and Mine Damage's more damage (`Damage` MORE with `bor(KeywordFlag.Trap, KeywordFlag.Mine)`, either keyword).
     (
@@ -8923,6 +8959,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `gems::COST_AS_RESERVATION_SUPPORTS`), the mine's duration, detonation
     // time, and PvP scaling (no PoB calc module reads them).
     ("base_skill_is_mined", "no-slice"),
+    // P6-11hs: the totem supports' markers (PoB maps none, `is_totem` display only).
+    ("base_skill_is_totemified", "skill type marker"),
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     ("base_stun_recovery_+%", "stun"),
@@ -9249,7 +9287,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "immune_to_elemental_ailments_while_on_consecrated_ground_at_devotion_threshold",
         "no-slice",
     ),
+    ("is_ranged_attack_totem", "skill type marker"),
     ("is_remote_mine", "no-slice"),
+    ("is_totem", "skill type marker"),
     // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
     // list for `poe1::skill_modifiers` (the golem gems are modelled).
     // P3-8n: the stats that add damage from a mana cost stay unmapped
@@ -9560,6 +9600,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("rage_loss_delay_ms", "rage-duration"),
     // P6-11br: projectile directions (PoB does not parse it).
     ("random_projectile_direction", "targeting"),
+    // P6-11hs: a ballista that attacks only when you attack (PoB maps none; the
+    // rate is the totem's), the totem's level (PoB's `totemLevel`: the totem's
+    // life only).
+    (
+        "ranged_attack_totem_only_attacks_when_owner_attacks",
+        "no-slice",
+    ),
     // P6-11em: "Recover #% of Energy Shield over 1 second when you take
     // Physical Damage from an Enemy Hit" (PoB does not parse it): no recovery
     // field reads a hit taken.
@@ -9619,6 +9666,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("stun_duration_+%_per_endurance_charge", "stun"),
     // P6-11f: "#% increased Stun Threshold" (`StunThreshold` INC): no slice field.
     ("stun_threshold_+%", "stun"),
+    ("summon_2_totems", "skill type marker"),
     // P6-8b: read by `poe1::combined` (the mirage count).
     ("summon_mirage_archer_on_hit", "mirage"),
     ("summon_totem_cast_speed_+%", "no-slice"),
@@ -9730,6 +9778,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("totem_elemental_resistance_%", "no-slice"),
     ("totem_life_+%", "no-slice"),
     ("totem_placement_range_+%", "no-slice"),
+    ("totem_support_gem_level", "no-slice"),
     (
         "totems_taunt_enemies_around_them_for_x_seconds_when_summoned",
         "no-slice",

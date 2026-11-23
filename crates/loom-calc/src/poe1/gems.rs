@@ -6574,6 +6574,9 @@ mod tests {
             // P6-11hm: missing unreserved life gained before a hit, read by
             // the EHP estimate, not a reservation.
             "missing_unreserved_life_%_gained_as_life_before_hit",
+            // P6-11hs: the totem's level (PoB's `totemLevel`, the totem's
+            // life), not a gem's level.
+            "totem_support_gem_level",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

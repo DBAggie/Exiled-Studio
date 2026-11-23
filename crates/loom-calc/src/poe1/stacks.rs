@@ -421,6 +421,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Golems,
         StackValue::Maximum,
     ),
+    // P6-11hs: Multiple Totems' "+# to maximum number of Summoned Totems"
+    // on the supported skill (`SkillStatMap.lua` 1883: `ActiveTotemLimit`
+    // BASE).
+    (
+        "base_number_of_totems_allowed",
+        StackKind::Totems,
+        StackValue::Maximum,
+    ),
     // P6-11ew: "You can Cast an additional Brand" (`ActiveBrandLimit` BASE).
     (
         "base_total_number_of_sigils_allowed",

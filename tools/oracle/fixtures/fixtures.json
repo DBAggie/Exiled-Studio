@@ -4341,6 +4341,46 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "CombinedDPS", "ConfiguredDamageChance", "ConfiguredNotHitChance", "CritChance", "CritMultiplier", "Dex", "ESCost", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "FullDPS", "Int", "Life", "LifeCost", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaCost", "ManaPerSecondCost", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS", "TotalEHP", "TotalNumberOfHits"],
       "description": "Ice Nova with the same two lines, neither config check on (P6-11hr)."
+    },
+    {
+      "id": "ice-nova-spell-totem-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-spell-totem-witch.xml",
+      "sha256": "b66b9b5eb26ff6debf61b207f5229aaf6dbce43b51d29e0597382017e0ab6007",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Ice Nova supported by Spell Totem: its less damage and less cast speed, with \"3% more Damage per Summoned Totem\" at the base limit of one totem (P6-11hs)."
+    },
+    {
+      "id": "ice-nova-spell-totem-multiple-totems-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-spell-totem-multiple-totems-witch.xml",
+      "sha256": "bdd0609af72324911ae7c68d28a640339c8dd48dc5e2291f034239cf4f2a9fb1",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Ice Nova supported by Spell Totem and Multiple Totems: Multiple Totems' less damage and its two more totems, read by \"3% more Damage per Summoned Totem\" (P6-11hs)."
+    },
+    {
+      "id": "burning-arrow-ballista-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/burning-arrow-ballista-templar.xml",
+      "sha256": "2b248270504c673b2d5488611270a43c945166d5e6dc50a20b82da7fbacaa840",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Burning Arrow with a Short Bow supported by Ballista Totem: its less damage and less attack speed (P6-11hs)."
+    },
+    {
+      "id": "burning-arrow-ballista-focused-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/burning-arrow-ballista-focused-templar.xml",
+      "sha256": "71fab483eb63a7c1b50bfa05df0d4d8ddf522c1b236b5e9379d0ca7fc161356b",
+      "expect": "ok",
+      "targets": ["Armour", "BaseChaosDamageReduction", "BaseColdDamageReduction", "BaseFireDamageReduction", "BaseLightningDamageReduction", "BasePhysicalDamageReduction", "BlockChance", "ChaosDamageReduction", "ChaosMaximumHitTaken", "ChaosResist", "ChaosTakenDotMult", "ChaosTakenHitMult", "ColdDamageReduction", "ColdMaximumHitTaken", "ColdResist", "ColdTakenDotMult", "ColdTakenHitMult", "ConfiguredDamageChance", "ConfiguredNotHitChance", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "EvadeChance", "Evasion", "FireDamageReduction", "FireMaximumHitTaken", "FireResist", "FireTakenDotMult", "FireTakenHitMult", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningDamageReduction", "LightningMaximumHitTaken", "LightningResist", "LightningTakenDotMult", "LightningTakenHitMult", "Mana", "ManaRegen", "ManaUnreserved", "MaxEnergyShieldLeechInstance", "MaxEnergyShieldLeechRate", "MaxLifeLeechInstance", "MaxLifeLeechRate", "MaxLifeLeechRatePercent", "MaxManaLeechInstance", "MaxManaLeechRate", "MeleeEvadeChance", "MovementSpeedMod", "NumberOfDamagingHits", "NumberOfMitigatedDamagingHits", "PhysicalDamageReduction", "PhysicalMaximumHitTaken", "PhysicalTakenDotMult", "PhysicalTakenHitMult", "ProjectileEvadeChance", "SecondMinimalMaximumHitTaken", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalEHP", "TotalNumberOfHits"],
+      "description": "Burning Arrow with a Short Bow supported by Ballista Totem and Focused Ballista: Focused Ballista's more attack speed and less damage (P6-11hs)."
     }
   ]
 }

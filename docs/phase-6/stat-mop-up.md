@@ -4594,3 +4594,27 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, and 4 values move toward PoB (holy-flame-totem-hierophant.xml's hit).
 - **Corpus:** 0 unexpected, and 12 values move toward PoB; one build's crit chance now equals PoB's.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hs: the totem supports
+
+**Found** (the unmapped stats left in single builds): the stats of Ballista Totem, Multiple Totems, and Focused Ballista were unmapped in two builds (kinetic-fusillade-ballista-hierophant.xml and one corpus build). Spell Totem's are the same kind, with no build using it yet.
+
+**PoB** (`Data/Skills/sup_str.lua` 3883 to 3906, 4513 to 4560, 5034 to 5066; `sup_dex.lua` 1918 to 1950; `SkillStatMap.lua` 188, 1883, 2368):
+- **Damage:** `support_totem_damage_+%_final` (Spell Totem, Ballista Totem), `support_additional_totem_damage_+%_final` (Multiple Totems), and `support_focused_ballista_totem_damage_+%_final` are `Damage` MORE.
+- **Speed:** `support_attack_totem_attack_speed_+%_final` (Ballista Totem) and `support_focused_ballista_totem_attack_speed_+%_final` are `Speed` MORE with `ModFlag.Attack`; `support_spell_totem_cast_speed_+%_final` is `Speed` MORE with `ModFlag.Cast`.
+- **Totem limit:** Multiple Totems' constant `base_number_of_totems_allowed` (2) is `ActiveTotemLimit` BASE on the supported skill.
+- **Not read:** `is_totem` is display only; `base_skill_is_totemified`, `is_ranged_attack_totem`, `summon_2_totems`, and `ranged_attack_totem_only_attacks_when_owner_attacks` have no stat map entry. `totem_support_gem_level` is `totemLevel`, which only the totem's life reads.
+
+**The engine:**
+- `HIT_ROWS`: the six MORE rows.
+- `poe1::stacks::MODIFIERS`: `base_number_of_totems_allowed` is the totems' maximum, so the main skill's limit (P6-11ep) counts Multiple Totems' two.
+- `NO_EFFECT`: the four markers (`skill type marker`) and the other two (`no-slice`). The gems test that guards level stats lists `totem_support_gem_level` as checked.
+
+**Evidence** (`b-ct`, against P6-11hr's run):
+- **Four new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-spell-totem-witch.xml`: Ice Nova supported by Spell Totem, with "3% more Damage per Summoned Totem" at one totem.
+  - `ice-nova-spell-totem-multiple-totems-witch.xml`: the same with Multiple Totems, three totems.
+  - `burning-arrow-ballista-templar.xml` and `burning-arrow-ballista-focused-templar.xml`: Burning Arrow with a Short Bow, supported by Ballista Totem, then with Focused Ballista too.
+- **Public:** 0 unexpected. 8 values move: the attack rate of kinetic-fusillade-ballista-hierophant.xml toward PoB, and its damage away, because that build was already far below PoB for its own unmapped Kinetic Fusillade stats; the less damage is PoB's too.
+- **Corpus:** 0 unexpected; one build's full DPS moves away, the same Ballista build kind with other reasons left.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
