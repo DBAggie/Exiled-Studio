@@ -4668,3 +4668,28 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 15 values move toward PoB, 4 of them now equal (holy-flame-totem-hierophant.xml's and kinetic-fusillade-ballista-hierophant.xml's movement speed; their speed and DPS move toward).
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hv: Ancestral Bond and Runebinder
+
+**Found** (the unmapped stats left in single builds): the keystones Ancestral Bond (two Hierophant totem builds) and Runebinder (two builds). Each is one stat, `keystone_ancestral_bond` and `keystone_runebinder`, whose description is two lines.
+
+**PoB** (`ModParser.lua` 2334, 5252; `CalcPerform.lua` 1320 to 1338; `CalcOffence.lua` 1874):
+- **Ancestral Bond:** "You can't deal Damage with Skills yourself" is `DealNoDamage` FLAG with a negated `SkillType` list (`SummonsTotem`, `RemoteMined`, `Trapped`) and a negated `usedByMirage` condition; "+1 to maximum number of Summoned Totems" is `ActiveTotemLimit` BASE 1.
+- **Runebinder:** "-1 to maximum number of Summoned Totems" is `ActiveTotemLimit` BASE -1; "You can have an additional Brand Attached to an Enemy" is `BrandsAttachedLimit` BASE 1, which each brand skill sums with its own gems' limit (`CalcPerform`'s attach limit, at most the active brand limit).
+- A keystone node allocated without a path to the class start is not counted (PoB's tree, and the engine's `unconnected-node` reason), so the fixtures name each keystone in a custom line, which PoB reads as the keystone (`Keystone` LIST).
+
+**The engine:**
+- `poe1::keystones::KEYSTONES`: Ancestral Bond's `DealNo` of every damage type under the new state `conditions::SKILL_USED_BY_YOU` and the totems' maximum +1; Runebinder's totems' maximum -1 and `StackValue::AttachMaximum` +1 for brands attached.
+- `conditions::skill_used_by_you`: false for the mirage's calculation and a main skill of the totem, mine, or trap type (with its supports' added types); unsettled when the main skill is not certain.
+- `stacks::brands` adds the character's `AttachMaximum` to each brand skill's limit.
+- **Left:** Call to Arms (its "Your Warcries do not grant Buffs or Charges to You" needs the warcry buffs to read it) and Supreme Prodigy (no inherent bonuses from attributes) stay reasons.
+
+**Evidence** (`b-ct`, against P6-11hu's run):
+- **Five new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-totem-ancestral-bond-witch.xml`: Ice Nova with Spell Totem: the totem deals its damage, two totems (3% more damage per totem).
+  - `ice-nova-ancestral-bond-witch.xml`: self-cast Ice Nova deals no damage.
+  - `ice-nova-totem-runebinder-witch.xml`: Spell Totem with Runebinder: no totem.
+  - `ice-nova-armageddon-brand-runebinder-witch.xml` and `ice-nova-armageddon-brand-witch.xml`: damage taken per brand attached, two brands with Runebinder, one without.
+- **Public:** 0 unexpected; 9 values of kinetic-fusillade-ballista-hierophant.xml move toward PoB, its mana regeneration now equal.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests (the keystone text test lists both), loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

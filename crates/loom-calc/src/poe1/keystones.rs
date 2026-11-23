@@ -1,6 +1,9 @@
 //! Keystones that change the main skill's hit (Phase 3 plan, step 8;
 //! P3-8m): Resolute Technique, Elemental Overload, and Bitter Frost; and
-//! Glancing Blows' block (P6-11g, [`KEYSTONES`]).
+//! Glancing Blows' block (P6-11g, [`KEYSTONES`]); Ancestral Bond and
+//! Runebinder (P6-11hv: their totem and brand limits, and Ancestral Bond's
+//! "You can't deal Damage with Skills yourself" under
+//! [`super::conditions::SKILL_USED_BY_YOU`]).
 //!
 //! What PoB v2.67.2 does. A keystone node's lines are the passive tree's
 //! text (`passive_skill_stat_descriptions.txt`), each read by
@@ -57,6 +60,7 @@ use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
+use super::stacks::{StackKind, StackValue};
 use super::{Poe1Quantity, Pool, TakenOf, TakenWhen};
 
 /// The skill condition Elemental Overload's more damage needs (PoB's
@@ -78,6 +82,32 @@ const fn flag(q: Poe1Quantity) -> KeystoneEffect {
         Quantity::Poe1(q),
         Op::Flag,
         1.0,
+        Flags::NONE,
+        Flags::NONE,
+        None,
+    )
+}
+
+/// Ancestral Bond's `DealNo` of one type, for a skill used by you
+/// (P6-11hv).
+const fn deal_no(t: DamageType) -> KeystoneEffect {
+    (
+        Quantity::Poe1(Poe1Quantity::DealNo(t)),
+        Op::Flag,
+        1.0,
+        Flags::NONE,
+        Flags::NONE,
+        Some(super::conditions::SKILL_USED_BY_YOU),
+    )
+}
+
+/// A change to the maximum number of summoned totems (P6-11hv; PoB's
+/// `ActiveTotemLimit` BASE, read by [`super::stacks::totems`]).
+const fn totems(n: f64) -> KeystoneEffect {
+    (
+        Quantity::Poe1(Poe1Quantity::Stack(StackKind::Totems, StackValue::Maximum)),
+        Op::Base,
+        n,
         Flags::NONE,
         Flags::NONE,
         None,
@@ -111,6 +141,22 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
     (
         "keystone_acrobatics",
         &[flag(Poe1Quantity::SuppressionToSpellDodge)],
+    ),
+    // Ancestral Bond (P6-11hv): the tree's "You can't deal Damage with
+    // Skills yourself" (`DealNoDamage` FLAG unless the skill is a totem, a
+    // mine, or a trap, or the mirage's; `ModParser.lua` 5252: every type's
+    // `DealNo`, under `conditions::SKILL_USED_BY_YOU`) and "+1 to maximum
+    // number of Summoned Totems" (`ActiveTotemLimit` BASE 1).
+    (
+        "keystone_ancestral_bond",
+        &[
+            deal_no(DamageType::Physical),
+            deal_no(DamageType::Fire),
+            deal_no(DamageType::Cold),
+            deal_no(DamageType::Lightning),
+            deal_no(DamageType::Chaos),
+            totems(1.0),
+        ],
     ),
     (
         "keystone_blood_magic",
@@ -356,6 +402,27 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             Flags::NONE,
             Some(super::conditions::LOW_LIFE),
         )],
+    ),
+    // Runebinder (P6-11hv): the tree's "-1 to maximum number of Summoned
+    // Totems" (`ActiveTotemLimit` BASE -1) and "You can have an additional
+    // Brand Attached to an Enemy" (`BrandsAttachedLimit` BASE 1,
+    // `ModParser.lua` 2334).
+    (
+        "keystone_runebinder",
+        &[
+            totems(-1.0),
+            (
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::BrandsAttached,
+                    StackValue::AttachMaximum,
+                )),
+                Op::Base,
+                1.0,
+                Flags::NONE,
+                Flags::NONE,
+                None,
+            ),
+        ],
     ),
     (
         "resolute_technique",

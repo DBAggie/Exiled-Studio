@@ -165,6 +165,10 @@ pub enum StackValue {
     /// `SkillType.TotemsAreBallistae`; P6-11ep): `Base`, counted only for a
     /// ballista main skill.
     BallistaMaximum,
+    /// The brands attached to an enemy (PoB's `BrandsAttachedLimit` BASE
+    /// on the character; P6-11hv, Runebinder): `Base`, added to each brand
+    /// skill's own limit.
+    AttachMaximum,
     /// An effect per stack.
     Per(PerStack),
 }
@@ -180,6 +184,7 @@ impl StackValue {
             Self::Intimidate => "intimidate",
             Self::Effect => "effect",
             Self::BallistaMaximum => "ballista-maximum",
+            Self::AttachMaximum => "attach-maximum",
             Self::Per(p) => p.name(),
         }
     }
@@ -1381,7 +1386,8 @@ pub fn nearby_corpses(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
 
 /// Adds the effects per brand attached to the enemy (P6-11ew; PoB's
 /// `CalcPerform.lua` 1320 to 1332): for each brand skill, its attach limit
-/// ([`super::gems::brand_attach_limit`]: its gems' `BrandsAttachedLimit`)
+/// ([`super::gems::brand_attach_limit`]: its gems' `BrandsAttachedLimit`,
+/// plus the character's, [`StackValue::AttachMaximum`])
 /// at most the active brand limit (3 plus "You can Cast an additional
 /// Brand"), or the config's count at most that; the largest over the brand
 /// skills. 0 without one, as PoB's unset multiplier.
@@ -1420,6 +1426,9 @@ pub fn brands(
     let Some(attach) = super::gems::brand_attach_limit(input) else {
         return;
     };
+    // P6-11hv: the character's `BrandsAttachedLimit` (Runebinder) is in
+    // every brand skill's list too.
+    let attach = attach + sum(ingest, StackKind::BrandsAttached, StackValue::AttachMaximum).0;
     let active = ACTIVE_BRAND_LIMIT + sum(ingest, StackKind::BrandsAttached, StackValue::Maximum).0;
     let limit = attach.min(active);
     let n = match configured {

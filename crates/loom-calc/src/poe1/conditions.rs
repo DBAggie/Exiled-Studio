@@ -196,6 +196,13 @@ pub const NOT_KILLED_RECENTLY: &str = "NotKilledRecently";
 /// P6-11hu): its check (`ConfigOptions.lua` 1109), or a main skill that
 /// is a totem (`CalcPerform.lua` 265 to 267, [`summoned_totem`]).
 pub const SUMMONED_TOTEM_RECENTLY: &str = "SummonedTotemRecently";
+/// The main skill is used by you: not of the `SummonsTotem`,
+/// `RemoteMined`, or `Trapped` type (with its supports' added types),
+/// and not the mirage's (P6-11hv; PoB's negated `SkillType` list and
+/// negated `usedByMirage` of Ancestral Bond's "You can't deal Damage with
+/// Skills yourself", `ModParser.lua` 5252). Settled from the main skill
+/// ([`skill_used_by_you`]).
+pub const SKILL_USED_BY_YOU: &str = "SkillUsedByYou";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
@@ -409,6 +416,28 @@ pub fn summoned_totem(input: &CalcInput<'_>) -> Option<bool> {
     }
 }
 
+/// [`SKILL_USED_BY_YOU`] for the build's main skill (P6-11hv): `false`
+/// for the mirage's calculation, a totem, a mine, or a trap; `None` when
+/// the main skill is not certain; `true` without one (PoB's tag passes
+/// an empty skill type list).
+#[must_use]
+pub fn skill_used_by_you(input: &CalcInput<'_>) -> Option<bool> {
+    use super::skill::{self, SkillProblem};
+    if input.options.mirage.is_some() {
+        return Some(false);
+    }
+    let levels = super::gem_levels::GemLevels::none();
+    match skill::main_skill(input.build, input.data, &levels) {
+        Ok(s) => Some(
+            ![skill::TOTEM_TYPE, skill::MINE_TYPE, skill::TRAP_TYPE]
+                .iter()
+                .any(|t| s.types.contains(*t)),
+        ),
+        Err(SkillProblem::NoActiveSkill) => Some(true),
+        Err(_) => None,
+    }
+}
+
 /// [`MainSkillRecently`] for the build's main skill.
 #[must_use]
 pub fn main_skill_recently(input: &CalcInput<'_>) -> Option<MainSkillRecently> {
@@ -584,6 +613,10 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 out.remove(&key);
             }
         }
+    }
+    // The main skill used by you (P6-11hv): no config check sets it.
+    if let Some(v) = skill_used_by_you(input) {
+        out.insert(ConditionKey::new(SKILL_USED_BY_YOU), v);
     }
     // The enemy cursed (P6-11cu): the check, or a curse applied.
     let key = ConditionKey::new(ENEMY_CURSED);
