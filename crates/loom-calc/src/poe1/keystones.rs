@@ -444,6 +444,15 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
             ),
         ],
     ),
+    // Supreme Ostentation (P6-11hx; Elegant Hubris' keystone for Caspiro,
+    // the game's `keystone_supreme_prodigy`): "Ignore Attribute Requirements"
+    // (`IgnoreAttributeRequirements` FLAG, read only by the requirements,
+    // no slice field) and "Gain no inherent bonuses from Attributes"
+    // (`NoAttributeBonuses` FLAG, `ModCache.lua` 9192): the flag.
+    (
+        "keystone_supreme_prodigy",
+        &[flag(Poe1Quantity::NoAttributeBonuses)],
+    ),
     (
         "resolute_technique",
         &[

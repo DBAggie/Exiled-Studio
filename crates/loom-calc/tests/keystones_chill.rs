@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 21] = [
+const TEXTS: [(&str, &str); 22] = [
     // P6-11ap: Eldritch Battery.
     (
         "keystone_eldritch_battery",
@@ -98,6 +98,11 @@ const TEXTS: [(&str, &str); 21] = [
     (
         "keystone_runebinder",
         "-1 to maximum number of Summoned Totems\\nYou can have an additional Brand Attached to an Enemy",
+    ),
+    // P6-11hx: Supreme Prodigy.
+    (
+        "keystone_supreme_prodigy",
+        "Ignore Attribute Requirements\\nGain no inherent bonuses from Attributes",
     ),
     // P6-10b part 15: Mind over Matter.
     (

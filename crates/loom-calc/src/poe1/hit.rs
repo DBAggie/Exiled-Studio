@@ -2172,9 +2172,11 @@ fn accuracy(
         Quantity::Accuracy,
         from_level,
     )?];
+    // No accuracy from dexterity with Supreme Prodigy (P6-11hx).
     if let Some((node, value)) = calc
         .field(Field::Dexterity)
         .and_then(|f| Some((f.node?, f.value?)))
+        .filter(|_| !phases::no_attribute_bonuses(calc))
     {
         let per = phases::constant(calc, "accuracy-per-dexterity", ACCURACY_PER_DEXTERITY)?;
         terms.push(phases::product(

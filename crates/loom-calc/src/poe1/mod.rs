@@ -589,6 +589,10 @@ pub enum Poe1Quantity {
     /// provides no bonus to Maximum Life"; P6-11gj): a `Flag`, read by the
     /// life step.
     NoStrBonusToLife,
+    /// "Gain no inherent bonuses from Attributes" (PoB's
+    /// `NoAttributeBonuses`, `CalcPerform.lua` 494; P6-11hx, Supreme
+    /// Prodigy): a `Flag`, read by [`phases::bonus`] and the hit's accuracy.
+    NoAttributeBonuses,
     /// The increases that are both armour's and evasion's (PoB's
     /// `ArmourAndEvasion` and `Defences` INC; P6-11ek): each such row also
     /// adds to `Armour` and `Evasion`, and to this marker, which only Iron
@@ -1563,6 +1567,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SuppressionToSpellDodge => f.write_str("suppression-to-spell-dodge"),
             Self::NoDexBonusToEvasion => f.write_str("no-dex-bonus-to-evasion"),
             Self::NoStrBonusToLife => f.write_str("no-str-bonus-to-life"),
+            Self::NoAttributeBonuses => f.write_str("no-attribute-bonuses"),
             Self::ArmourAndEvasionShared => f.write_str("armour-and-evasion-shared"),
             Self::CanWither => f.write_str("can-wither"),
             Self::TakenFromStoneGolem => f.write_str("taken-from-stone-golem"),

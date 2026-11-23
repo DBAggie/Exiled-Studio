@@ -274,6 +274,11 @@ pub(super) fn bonus(
     label: &'static str,
     term: &'static str,
 ) -> Result<Option<Valued>, CalcError> {
+    // Supreme Prodigy's "Gain no inherent bonuses from Attributes"
+    // (P6-11hx): only the keystone maps to the flag, unconditionally.
+    if no_attribute_bonuses(calc) {
+        return Ok(None);
+    }
     let Some((node, value)) = calc
         .field(attribute)
         .and_then(|f| Some((f.node?, f.value?)))
@@ -530,6 +535,13 @@ pub(super) fn marker_reasons(
 }
 
 /// Whether the store holds any effect on `quantity`.
+/// Whether the attributes grant no inherent bonus (P6-11hx; PoB's
+/// `NoAttributeBonuses`, `CalcPerform.lua` 494): the keystone's
+/// unconditional flag is present.
+pub(super) fn no_attribute_bonuses(calc: &Calc<'_>) -> bool {
+    has(calc, Quantity::Poe1(Poe1Quantity::NoAttributeBonuses))
+}
+
 pub(super) fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
     calc.store()
         .effects()

@@ -4715,3 +4715,21 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected; one build's life regeneration moves away from PoB (289.8 to 93.7, PoB 287.5). The build's spec is tree 3_15, which the engine has no data for, so the build is `indeterminate` (the tree version reason): the engine reads node 23090 as 3.29's Call to Arms, PoB reads its 3_15 tree, where that node is not Call to Arms.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hx: Supreme Ostentation (`keystone_supreme_prodigy`)
+
+**Found** (the unmapped stats left in single builds): `keystone_supreme_prodigy` in two public builds, lacerate-bleed-gladiator.xml and rf-chieftain-life-stack.xml. It is not a tree keystone. It is Elegant Hubris' keystone for Caspiro, "Supreme Ostentation" (`poe1/timeless.json`, `eternal_keystone_3_v2`), which replaces a keystone in the jewel's radius. Its description is "Ignore Attribute Requirements" and "Gain no inherent bonuses from Attributes".
+
+**PoB** (`Data/TimelessJewelData/LegionPassives.lua`; `ModCache.lua` 9192, 9555; `CalcPerform.lua` 494 to 522, 2050):
+- "Gain no inherent bonuses from Attributes" is `NoAttributeBonuses` FLAG. `CalcPerform` then adds none of strength's life and melee physical damage, dexterity's accuracy and evasion, or intelligence's mana and energy shield.
+- "Ignore Attribute Requirements" is `IgnoreAttributeRequirements` FLAG, read only by the attribute requirements, no slice field.
+- PoB parses neither "Supreme Ostentation" nor "Supreme Prodigy" as a custom line, so a fixture needs the jewel itself; the two community builds are the evidence.
+
+**The engine:**
+- `Poe1Quantity::NoAttributeBonuses`; `poe1::keystones::KEYSTONES`: `keystone_supreme_prodigy` gives the flag (the keystone text test lists it).
+- `phases::bonus` (life, mana, energy shield, evasion, strength's melee damage) gives nothing with the flag, and the hit's accuracy takes nothing from dexterity (`phases::no_attribute_bonuses`). Only the keystone maps to the flag, unconditionally.
+
+**Evidence** (`b-ct`, against P6-11hw's run; no new fixture):
+- **Public:** 0 unexpected; 37 values move, 10 toward PoB and now equal: lacerate-bleed-gladiator.xml's life (3,834), unreserved life, life regeneration, and leech caps; rf-chieftain-life-stack.xml's energy shield, its recharge, evasion, and energy shield leech caps. The 27 that move away are fields far from PoB for other reasons (both builds' damage over time and EHP, the life-stacking build's life), each losing the attribute bonus PoB drops too. Every field of both builds stays `Partial`.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
