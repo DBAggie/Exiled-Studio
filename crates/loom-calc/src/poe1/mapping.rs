@@ -6132,6 +6132,18 @@ pub const ROWS: &[Row] = &[
             (MAX_LIGHTNING, Op::Base, 1.0),
         ],
     ),
+    // P6-11ib: "+#% to all maximum Elemental Resistances if you have
+    // Reserved Life and Mana" (`ElementalResistMax` BASE, `StatThreshold`
+    // `LifeReserved` 1 and `ManaReserved` 1): `collect` reads the
+    // reservations.
+    (
+        "additional_maximum_all_elemental_resistances_%_with_reserved_life_and_mana",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MaxElementalResistIfReservedLifeAndMana),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "additional_maximum_all_resistances_%",
         &[

@@ -135,6 +135,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::stacks::golems(input, ingest);
     // Armour per warcry power (P6-11hz).
     warcry_power_armour(input, ingest);
+    // After the gems' reservations (P6-11ib).
+    reserved_max_resist(ingest);
     super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
@@ -1322,6 +1324,54 @@ fn warcry_power_armour(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         ),
         source,
     });
+}
+
+/// Maximum elemental resistances while life and mana are reserved (P6-11ib):
+/// PoB's `StatThreshold`s `LifeReserved` and `ManaReserved` at least 1
+/// (`CalcPerform.lua` 526 to 560: `reserved = flat + ceil(max x percent /
+/// 100)`), so a pool counts with a flat reservation of at least 1 or any
+/// percent reservation (a pool above 0 reserves at least 1 of it). Each
+/// line's sum becomes fire's, cold's, and lightning's maximum `Base`.
+fn reserved_max_resist(ingest: &mut Ingest<'_>) {
+    let q = Quantity::Poe1(Poe1Quantity::MaxElementalResistIfReservedLifeAndMana);
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.op == Op::Base && e.conditions == Conditions::none())
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let reserved = |pool| {
+        let sum = |kind| -> f64 {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| {
+                    e.quantity == Quantity::Poe1(Poe1Quantity::Reservation(pool, kind))
+                        && e.op == Op::Base
+                        && e.conditions == Conditions::none()
+                })
+                .map(|e| e.value)
+                .sum()
+        };
+        sum(super::ReservationKind::Flat) >= 1.0 || sum(super::ReservationKind::Percent) > 0.0
+    };
+    if !(reserved(super::Pool::Life) && reserved(super::Pool::Mana)) {
+        return;
+    }
+    for line in lines {
+        for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+            ingest.effect(Effect {
+                quantity: Quantity::MaximumResistance(t),
+                op: Op::Base,
+                value: line.value,
+                conditions: Conditions::none(),
+                source: line.source.clone(),
+            });
+        }
+    }
 }
 
 /// Damage as projectiles travel farther (P6-11ha): each

@@ -983,6 +983,10 @@ pub enum Poe1Quantity {
     /// INC; P6-11ia): `Increased`, read by [`buffs`] for Tailwind's action
     /// speed.
     TailwindEffect,
+    /// "+#% to all maximum Elemental Resistances if you have Reserved Life
+    /// and Mana" (P6-11ib): `Base`, which `collect` makes each elemental
+    /// maximum resistance's `Base` when both are reserved.
+    MaxElementalResistIfReservedLifeAndMana,
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1679,6 +1683,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
             Self::TailwindEffect => f.write_str("tailwind-effect"),
+            Self::MaxElementalResistIfReservedLifeAndMana => {
+                f.write_str("max-elemental-resist-if-reserved-life-and-mana")
+            }
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),

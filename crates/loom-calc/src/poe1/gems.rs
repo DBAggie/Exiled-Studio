@@ -6601,6 +6601,9 @@ mod tests {
             // P6-11hs: the totem's level (PoB's `totemLevel`, the totem's
             // life), not a gem's level.
             "totem_support_gem_level",
+            // P6-11ib: maximum resistances that read the reservations
+            // (`collect::reserved_max_resist`), not one.
+            "additional_maximum_all_elemental_resistances_%_with_reserved_life_and_mana",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

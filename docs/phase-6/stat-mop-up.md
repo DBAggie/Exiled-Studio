@@ -4807,3 +4807,21 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 32 values move toward PoB, none away. Mirage Archer Toxic Rain.xml's damage taken goes past PoB's: its tree is 3_13, where Wind Ward was 3% per Gale Force; the engine reads the game's current 4%.
 - **Corpus:** 0 unexpected; 11 values move toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ib: maximum elemental resistances with reserved life and mana
+
+**Found** (the unmapped stats left in single builds): "+#% to all maximum Elemental Resistances if you have Reserved Life and Mana" (two corpus builds).
+
+**PoB** (`ModCache.lua`; `CalcPerform.lua` 526 to 560): `ElementalResistMax` BASE with `StatThreshold`s `LifeReserved` and `ManaReserved` of 1; each reserved amount is `flat + ceil(max x percent / 100)`.
+
+**The engine:**
+- `Poe1Quantity::MaxElementalResistIfReservedLifeAndMana` (`ROWS`); `collect::reserved_max_resist`, after the gems' reservations, makes each line fire's, cold's, and lightning's maximum `Base` when life and mana each have a flat reservation of at least 1 or any percent reservation (a pool above 0 then reserves at least 1).
+- The gems test and the real-bundle reservation coverage test list the stat (it reads the reservations, it is not one).
+
+**Evidence** (`b-ct`, against P6-11ia's run):
+- **Two new mechanic fixtures**, each matching PoB on every computed field (Ice Nova with "+2% to all maximum Elemental Resistances if you have Reserved Life and Mana"):
+  - `ice-nova-reserved-life-and-mana-witch.xml`: Clarity, and Vitality with Arrogance: +2% to each maximum.
+  - `ice-nova-reserved-mana-only-witch.xml`: Clarity alone: no change.
+- **Public:** 0 unexpected; no value moved (no public build has the line).
+- **Corpus:** 0 unexpected; 21 values move toward PoB, none away; one build's fire resistance (90) now equal.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

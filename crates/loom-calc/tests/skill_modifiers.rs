@@ -273,6 +273,15 @@ fn real_reservation_and_aura_stats_should_be_covered() {
                             loom_calc::poe1::Poe1Quantity::MissingLifeBeforeHit,
                         )
                 }) => {}
+            // "+#% to all maximum Elemental Resistances if you have
+            // Reserved Life and Mana" (P6-11ib): reads the reservations.
+            loom_calc::StatMap::Effects(e)
+                if e.iter().all(|t| {
+                    t.quantity
+                        == loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::MaxElementalResistIfReservedLifeAndMana,
+                        )
+                }) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }
