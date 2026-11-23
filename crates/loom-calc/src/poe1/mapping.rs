@@ -6352,6 +6352,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11id: "#% chance to deal Triple Damage" (`TripleDamageChance`
+    // BASE), read by `hit::double_damage` (P6-11hi).
+    (
+        "base_chance_to_deal_triple_damage_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TripleDamageChance),
+            Op::Base,
+            1.0,
+        )],
+    ),
     ("base_chaos_damage_resistance_%", &[(CHAOS, Op::Base, 1.0)]),
     ("base_cold_damage_resistance_%", &[(COLD, Op::Base, 1.0)]),
     // P6-10b: "#% increased Cost of Skills" (`Cost` INC).
@@ -9237,6 +9247,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "damage_cannot_be_reflected_or_leech_if_used_by_other_object",
         "display",
     ),
+    // P6-11id: lines PoB leaves unapplied (`ModCache.lua`: unparsed, or text left over, which `PassiveTree.lua` 836 and `Item.lua` 2504 skip) that change no slice field: damage taken from other enemies near your marked enemy; strike skills' previous location; projectiles chaining from terrain.
+    (
+        "damage_taken_+%_final_from_enemies_near_marked_enemy",
+        "no-slice",
+    ),
     ("debuff_time_passed_+%", "ailment-on-self"),
     ("desecrate_maximum_number_of_corpses", "no-slice"),
     // P6-11cy: a support that cannot support melee attacks (which supports apply is the skill's types').
@@ -9447,6 +9462,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // "Gems Socketed always have the Quality bonus from Socket Colour":
     // its effect is the gems' quality, `poe1::sockets` (P3-12i).
     ("local_can_socket_gems_ignoring_colour", "sockets"),
+    // P6-11id: a local chance to blind on hit (PoB leaves text over; the enemy's blind is the config's).
+    ("local_chance_to_blind_on_hit_%", "on-hit-debuff"),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
     // P6-11bz: the radius of a flask's consecrated ground (PoB does not parse it).
@@ -9627,6 +9644,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // handed melee weapon, and per power charge (`AreaOfEffect` INC): no slice
     // field reads area.
     ("melee_skills_area_of_effect_+%", "area"),
+    ("melee_strike_skill_strike_previous_location", "no-slice"),
     ("mercenary_can_use_unique_amulet", "no-slice"),
     ("mercenary_can_use_unique_belt", "no-slice"),
     ("mercenary_can_use_unique_gloves", "no-slice"),
@@ -9720,6 +9738,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("power_charge_on_spell_block_%_chance", "charge-gain-chance"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
+    ("projectile_chain_from_terrain_chance_%", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
     (

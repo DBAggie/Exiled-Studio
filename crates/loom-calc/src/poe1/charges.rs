@@ -183,6 +183,9 @@ pub enum PerCharge {
     /// Additional elemental damage reduction (`ElementalDamageReduction`
     /// BASE; P6-11cn).
     ElementalDamageReduction,
+    /// Damage over time multiplier for bleeding (`DotMultiplier` BASE with
+    /// `KeywordFlag.Bleed`; P6-11id).
+    BleedDotMultiplier,
 }
 
 impl PerCharge {
@@ -211,6 +214,7 @@ impl PerCharge {
             Self::Armour => "per.armour",
             Self::PhysicalDamageReduction => "per.physical-damage-reduction",
             Self::ElementalDamageReduction => "per.elemental-damage-reduction",
+            Self::BleedDotMultiplier => "per.bleed-dot-multiplier",
         }
     }
 
@@ -268,6 +272,7 @@ impl PerCharge {
                 Flags::NONE,
             ),
             Self::Armour => (Quantity::Armour, Op::Increased, Flags::NONE),
+            Self::BleedDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::BLEED),
             Self::PhysicalDamageReduction => (
                 Quantity::Poe1(super::Poe1Quantity::DamageReduction(
                     crate::quantity::DamageType::Physical,
@@ -356,6 +361,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "base_minimum_power_charges",
         ChargeKind::Power,
         ChargeValue::Minimum,
+    ),
+    // P6-11id: "+#% to Damage over Time Multiplier for Bleeding per
+    // Endurance Charge" (`DotMultiplier` BASE, `KeywordFlag.Bleed`, per
+    // `EnduranceCharge`).
+    (
+        "bleeding_dot_multiplier_+_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::BleedDotMultiplier),
     ),
     (
         "count_as_having_max_endurance_charges",

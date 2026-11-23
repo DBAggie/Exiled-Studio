@@ -4844,3 +4844,26 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; no value moved: rf-chieftain-life-stack.xml's other ring has lines the engine cannot read (its fields were partial), essence-drain-contagion-occultist.xml's life is indeterminate.
 - **Corpus:** 0 unexpected; 43 values move toward PoB, 16 now equal, none away.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11id: triple damage, bleeding multiplier per endurance charge, lines PoB leaves unapplied
+
+**Found** (the unmapped stats left in single builds): the two hand mastery's "#% chance to deal Triple Damage", "+#% to Damage over Time Multiplier for Bleeding per Endurance Charge", and lines PoB does not apply.
+
+**PoB:**
+- "#% chance to deal Triple Damage" is `TripleDamageChance` BASE (`CalcOffence.lua` 3192 to 3209).
+- The bleeding line is `DotMultiplier` BASE with `KeywordFlag.Bleed` per `Multiplier:EnduranceCharge`.
+- A line PoB leaves unparsed, or parses with text left over, is not applied (`PassiveTree.lua` 836, `Item.lua` 2504): "#% less Damage taken from other Enemies near your Marked Enemy", "Strike Skills also target the previous location they were used", "Projectiles have #% chance to be able to Chain when colliding with terrain", a weapon's "#% chance to Blind Enemies on hit".
+
+**The engine:**
+- `ROWS`: `base_chance_to_deal_triple_damage_%` as `Poe1Quantity::TripleDamageChance` (read by `hit::double_damage` since P6-11hi).
+- `charges::PerCharge::BleedDotMultiplier` (`bleeding_dot_multiplier_+_per_endurance_charge`).
+- `NO_EFFECT`: the four unapplied lines (`no-slice`; the blind `on-hit-debuff`), each listed in `damage_taken`'s guard tests where it names damage taken or blind. Lines PoB leaves unapplied that would change a slice field stay reasons (the chance to take half area damage, aggravating bleeding, maximum resistances if all equipment grants armour, impale effect on non-impaled enemies).
+
+**Evidence** (`b-ct`, against P6-11ic's run):
+- **Three new mechanic fixtures** (Smite with a Rusted Hatchet bleeding, as `smite-bleed-templar.xml`), each matching PoB on every computed field but the weapon's attack rate (Q11, DIV-0583 to DIV-0601 `game-truth`):
+  - `smite-bleed-dot-multiplier-per-endurance-templar.xml`: three endurance charges, bleeding DPS times 1.09.
+  - `smite-bleed-dot-multiplier-no-charges-templar.xml`: no charges, no multiplier.
+  - `smite-triple-damage-templar.xml`: 5% triple damage, the hit's DPS times 1.1.
+- **Public:** 0 unexpected; 7 values move toward PoB (cyclone-shockwave-slayer.xml, boneshatter-juggernaut.xml), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

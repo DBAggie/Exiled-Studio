@@ -1183,6 +1183,9 @@ mod tests {
         // The pantheon's souls (P3-12g): damage taken by you, its
         // reduction, and shock on you, not the enemy's.
         "shocked_effect_on_self_+%",
+        // P6-11id: your damage taken from other enemies near your marked
+        // enemy, which PoB does not apply (text left over).
+        "damage_taken_+%_final_from_enemies_near_marked_enemy",
     ];
 
     /// The module's argument: no mapped stat reads or sets the enemy's
@@ -1317,6 +1320,8 @@ mod tests {
             "chance_to_intimidate_on_hit_%",
             "chance_to_unnerve_on_hit_%",
             "global_chance_to_blind_on_hit_%",
+            // P6-11id: a weapon's local chance, the same.
+            "local_chance_to_blind_on_hit_%",
             "minion_attacks_chance_to_blind_on_hit_%",
         ];
         let ids = HIT_ROWS
