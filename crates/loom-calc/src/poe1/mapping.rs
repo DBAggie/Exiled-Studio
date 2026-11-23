@@ -9510,6 +9510,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_jewel_variable_ring_radius_value", "tree-allocation"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
+    // P6-11ic: Kalandra's Touch's "Reflects your opposite Ring" (PoB: display only; `collect::items` copies the other ring).
+    ("local_ring_duplicate_other_ring", "display"),
     // P6-11gi: the parent's "#% increased Effect of Socketed Abyss Jewels":
     // `collect` scales its abyss jewels' modifiers by it.
     ("local_socketed_abyss_jewel_effect_+%", "abyss-jewel-effect"),

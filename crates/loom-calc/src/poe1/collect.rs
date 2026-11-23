@@ -1058,6 +1058,12 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 SlotKind::Lines => {}
             }
             match build.items.item(id) {
+                // Kalandra's Touch (P6-11ic): the other ring's lines.
+                Some(item) if reflects(item) => {
+                    if let Some(other) = other_ring(build, set, slot) {
+                        item_lines_with(&Reflected, other, ingest);
+                    }
+                }
                 Some(item) => item_lines_in(item, GemSlot::of(slot), ingest),
                 None => ingest.reason(unmodelled("missing")),
             }
@@ -1095,6 +1101,81 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 what: "missing",
             }),
         }
+    }
+}
+
+/// Kalandra's Touch's "Reflects your opposite Ring" (P6-11ic).
+pub const REFLECT_STAT: &str = "local_ring_duplicate_other_ring";
+
+/// Whether `item` reflects the opposite ring (a line of [`REFLECT_STAT`]).
+fn reflects(item: &Item) -> bool {
+    item.body.lines.iter().any(|line| {
+        let LineKind::Modifier(m) = &line.kind else {
+            return false;
+        };
+        let loom_domain::LineResolution::Resolved {
+            result: loom_domain::Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            return false;
+        };
+        stats.iter().any(|s| s.stat.as_str() == REFLECT_STAT)
+    })
+}
+
+/// The ring a reflecting ring in `slot` copies (P6-11ic; `CalcSetup.lua`
+/// 1087 to 1121): the item in the other ring slot of `set`, unless it
+/// reflects too (PoB's "Kalandra's Touch" name match). PoB then adds that
+/// ring's modifiers, but those with a `SocketedIn` tag, with the
+/// reflecting ring as their source, and of the reflecting ring's own only
+/// `ExtraSkill` (Kalandra's Touch has none); here the copies keep the
+/// other ring's line as their source. PoB's item count multipliers
+/// (corrupted, influenced) are read by nothing the engine maps.
+fn other_ring<'b>(build: &'b Build, set: &ItemSet, slot: &str) -> Option<&'b Item> {
+    let other = match slot {
+        "Ring 1" => "Ring 2",
+        "Ring 2" => "Ring 1",
+        _ => return None,
+    };
+    let id = set
+        .slots
+        .typed()
+        .find(|e| e.slot.as_str() == other)
+        .and_then(|e| e.item)
+        .filter(|id| id.0 != 0)?;
+    build.items.item(id).filter(|item| !reflects(item))
+}
+
+/// The mapping of a reflected ring's lines (P6-11ic): a socketed gem's
+/// stat has no effect (PoB drops `SocketedIn` modifiers), every other
+/// stat is [`Poe1Mapping`]'s.
+struct Reflected;
+
+impl StatMapping for Reflected {
+    fn map(&self, stat: &loom_domain::StatId) -> crate::ingest::StatMap {
+        let id = stat.as_str();
+        let probe = GemSlot::of("Ring 1");
+        let socketed = id == super::gem_levels::SOCKETED_ELEMENTAL_DAMAGE_STAT
+            || super::item_supports::row(id).is_some()
+            || probe.is_some_and(|slot| super::gem_levels::socketed_quantity(id, slot).is_some());
+        if socketed {
+            crate::ingest::StatMap::NoEffect
+        } else {
+            Poe1Mapping.map(stat)
+        }
+    }
+
+    fn typed(
+        &self,
+        resolution: &loom_domain::TypedResolution,
+        source: &Source,
+    ) -> crate::ingest::TypedMap {
+        Poe1Mapping.typed(resolution, source)
+    }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
     }
 }
 

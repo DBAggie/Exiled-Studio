@@ -411,6 +411,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11hz: armour per 5 warcry power (`collect::warcry_power_armour`, `conditions::USED_WARCRY_IN_PAST_8_SECONDS`, `gems::warcry_power`), warcries' charge chance `NoEffect`; three fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11hz")
 - [x] P6-11ia: Tailwind's effect (`poe1::buffs::tailwind`, `Poe1Quantity::TailwindEffect`), Gale Force (`stacks::StackKind::GaleForce`: Tailwind's effect and damage taken per Gale Force; Gathering Winds grants Tailwind as PoB's node text); four fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ia")
 - [x] P6-11ib: maximum elemental resistances with reserved life and mana (`collect::reserved_max_resist`); two fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ib")
+- [x] P6-11ic: Kalandra's Touch reflects the opposite ring (`collect::other_ring`, `collect::Reflected`); three fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ic")
 - [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

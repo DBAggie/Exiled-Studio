@@ -4825,3 +4825,22 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; no value moved (no public build has the line).
 - **Corpus:** 0 unexpected; 21 values move toward PoB, none away; one build's fire resistance (90) now equal.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ic: Kalandra's Touch
+
+**Found** (the unmapped stats left in several builds): Kalandra's Touch's "Reflects opposite Ring" (`local_ring_duplicate_other_ring`, two public builds and one corpus build).
+
+**PoB** (`CalcSetup.lua` 1087 to 1121; `ModParser.lua` 3094, display only): a ring named Kalandra's Touch adds the other ring slot's modifiers, but those with a `SocketedIn` tag, with itself as their source, unless that ring is a Kalandra's Touch too; of its own modifiers only `ExtraSkill` counts. It also counts the other ring toward the corrupted and influenced item multipliers.
+
+**The engine:**
+- `collect::items`: a ring with the reflect line (`collect::REFLECT_STAT`) adds the other ring slot's lines (`collect::other_ring`), unless that one reflects too, through `collect::Reflected`, which gives a socketed gem's stat no effect; its own lines are left out (Kalandra's Touch grants no skill). The copies keep the other ring's line as their source.
+- The item count multipliers are read by nothing the engine maps.
+- `NO_EFFECT`: `local_ring_duplicate_other_ring` (`display`).
+
+**Evidence** (`b-ct`, against P6-11ib's run):
+- **Three new mechanic fixtures**, each matching PoB on every computed field (Ice Nova, Kalandra's Touch, a rare Coral Ring with +25 and +40 life):
+  - `ice-nova-kalandras-touch-witch.xml` (Kalandra's Touch in the first slot) and `ice-nova-kalandras-touch-right-witch.xml` (in the second): life 1,255, the ring's lines twice.
+  - `ice-nova-kalandras-touch-alone-witch.xml`: no other ring: life 1,125.
+- **Public:** 0 unexpected; no value moved: rf-chieftain-life-stack.xml's other ring has lines the engine cannot read (its fields were partial), essence-drain-contagion-occultist.xml's life is indeterminate.
+- **Corpus:** 0 unexpected; 43 values move toward PoB, 16 now equal, none away.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
