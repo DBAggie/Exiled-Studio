@@ -4645,3 +4645,26 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 5 values of cyclone-shockwave-slayer.xml (Impact) move toward PoB.
 - **Corpus:** 0 unexpected; 16 values move toward PoB, 4 of them now equal.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11hu: Onslaught after summoning a totem; maim, intimidate, and crush chances
+
+**Found** (the unmapped stats left in single builds): "You have Onslaught if you've Summoned a Totem Recently" and "Skills that Summon a Totem have #% chance to Summon two Totems instead of one" (two Hierophant totem builds each), the chances to maim on hit and on crit with attacks, to intimidate on hit, and "Crush Enemies for # seconds when you Hit them while they are on Full Life" (two builds each).
+
+**PoB** (`ModParser.lua` 1872; `CalcPerform.lua` 265 to 267; `ConfigOptions.lua` 1109):
+- **Onslaught:** the line is `Condition:Onslaught` FLAG with the `SummonedTotemRecently` condition. That condition is set by its config check, and by `CalcPerform` whenever the main skill is a totem (`skillFlags.totem`).
+- **Not read:** no stat map or parse reads the maim, intimidate, or crush chances (PoB's enemy maim, intimidation, and crush are config checks), and PoB leaves the two-totems chance unparsed.
+
+**The engine:**
+- `conditions::SUMMONED_TOTEM_RECENTLY` from `conditionSummonedTotemRecently` (moved from `config::NAMED_ONLY` to `CHECKS`), else `conditions::summoned_totem`: the main skill's types with its supports' added types hold `SummonsTotem`; a main skill that is not certain leaves it unsettled.
+- `STATE_ROWS`: the Onslaught line on that condition (`poe1::buffs`).
+- `NO_EFFECT`: `maim_on_hit_%`, `maim_on_crit_%_with_attacks`, `chance_to_intimidate_on_hit_%`, `crush_on_hit_ms_vs_full_life_enemies` (`on-hit-debuff`); `chance_to_summon_two_totems_%` (`no-slice`). The damage-taken guard test lists the intimidate chance as checked.
+- **Left:** Ancestral Bond and Runebinder (each one keystone stat that is two effects, among them the totem limit), for a later step.
+
+**Evidence** (`b-ct`, against P6-11ht's run):
+- **Four new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-totem-onslaught-witch.xml`: Ice Nova supported by Spell Totem with the line: Onslaught from the totem main skill alone.
+  - `ice-nova-totem-onslaught-check-witch.xml` and `-off-`: Ice Nova (not a totem) with the line, with and without the config check.
+  - `smite-maim-crush-lines-templar.xml`: the maim-on-crit and crush lines change nothing.
+- **Public:** 0 unexpected; 15 values move toward PoB, 4 of them now equal (holy-flame-totem-hierophant.xml's and kinetic-fusillade-ballista-hierophant.xml's movement speed; their speed and DPS move toward).
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

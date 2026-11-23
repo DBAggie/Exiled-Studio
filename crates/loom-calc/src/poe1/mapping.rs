@@ -5051,6 +5051,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ENEMY_BURNING,
         )],
     ),
+    // P6-11hu: "You have Onslaught if you've Summoned a Totem Recently"
+    // (`Condition:Onslaught` FLAG, `Condition` `SummonedTotemRecently`):
+    // Onslaught while the config or a totem main skill says so
+    // (`poe1::buffs`).
+    (
+        "has_onslaught_if_totem_summoned_recently",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Onslaught),
+            Op::Flag,
+            NONE,
+            conditions::SUMMONED_TOTEM_RECENTLY,
+        )],
+    ),
     // P6-11gz: as the Flammability line.
     (
         "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
@@ -9126,6 +9139,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
+    // P6-11hu: maim and intimidate chances (the enemy's maim and intimidation
+    // are config checks in PoB; maim on crit PoB leaves unparsed).
+    ("chance_to_intimidate_on_hit_%", "on-hit-debuff"),
+    // P6-11hu: a chance to summon two totems (PoB leaves the line unparsed; the
+    // totem count is the limit or the config).
+    ("chance_to_summon_two_totems_%", "no-slice"),
     // P6-11at: "#% chance to Unnerve Enemies for 4 seconds on Hit": PoB
     // reads no modifier from it (no stat map row; Unnerve is the config's
     // `conditionEnemyUnnerved`, `poe1::damage_taken`).
@@ -9145,6 +9164,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "regeneration",
     ),
     ("console_skill_dont_chase", "display"),
+    ("crush_on_hit_ms_vs_full_life_enemies", "on-hit-debuff"),
     ("curse_effect_on_self_+%", "curse-on-self"),
     // P6-11fb: the timeless additions' lines no slice field reads: curse
     // skills' duration, Phasing on kill (`Condition:Phasing`, which no row
@@ -9528,6 +9548,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("magic_utility_flasks_cannot_be_removed", "flask"),
     ("maim_effect_+%", "no-slice"),
+    ("maim_on_crit_%_with_attacks", "on-hit-debuff"),
+    ("maim_on_hit_%", "on-hit-debuff"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks" (`ManaOnHit` BASE).
     ("mana_gain_per_target", "recovery"),
     // P6-11g: "Gain # Mana per Enemy Hit with Attacks if you've used a Mana Flask in the past 10 seconds" (`ManaOnHit` BASE).
@@ -13067,6 +13089,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::CONSUMED_CORPSE_RECENTLY,
+                )],
+            ),
+            // P6-11hu: Onslaught after summoning a totem.
+            (
+                "has_onslaught_if_totem_summoned_recently",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::Onslaught),
+                    Op::Flag,
+                    NONE,
+                    conditions::SUMMONED_TOTEM_RECENTLY,
                 )],
             ),
             // P6-11cm: the minion modifier with the character's condition.

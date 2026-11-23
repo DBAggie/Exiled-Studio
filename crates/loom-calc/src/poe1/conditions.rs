@@ -192,6 +192,10 @@ pub const NOT_CRIT_RECENTLY: &str = "NotCritRecently";
 /// "if you haven't Killed Recently": [`KILLED_RECENTLY`] negated,
 /// unsettled when it is (P6-11fb).
 pub const NOT_KILLED_RECENTLY: &str = "NotKilledRecently";
+/// "if you've Summoned a Totem Recently" (PoB's `SummonedTotemRecently`;
+/// P6-11hu): its check (`ConfigOptions.lua` 1109), or a main skill that
+/// is a totem (`CalcPerform.lua` 265 to 267, [`summoned_totem`]).
+pub const SUMMONED_TOTEM_RECENTLY: &str = "SummonedTotemRecently";
 /// "against Enemies that are on Full Life": the enemy's `FullLife`.
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
@@ -355,6 +359,8 @@ pub const CHECKS: &[(&str, &str)] = &[
         "conditionStoppedTakingDamageOverTimeRecently",
         STOPPED_TAKING_DOT_RECENTLY,
     ),
+    // P6-11hu: summoned a totem recently; a totem main skill too (`settle`).
+    ("conditionSummonedTotemRecently", SUMMONED_TOTEM_RECENTLY),
     (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
     // P6-11ev: used a warcry recently; a warcry count too (`settle`).
     ("conditionUsedWarcryRecently", USED_WARCRY_RECENTLY),
@@ -385,6 +391,22 @@ pub struct MainSkillRecently {
     pub cast_spell: bool,
     /// `UsedMinionSkillRecently`.
     pub minion: bool,
+}
+
+/// Whether the main skill is a totem (P6-11hu; PoB's `skillFlags.totem`,
+/// the skill's types with its supports' added types holding
+/// `SummonsTotem`), which sets `SummonedTotemRecently`
+/// (`CalcPerform.lua` 265 to 267). `None` when the main skill is not
+/// certain; `Some(false)` without one.
+#[must_use]
+pub fn summoned_totem(input: &CalcInput<'_>) -> Option<bool> {
+    use super::skill::{self, SkillProblem};
+    let levels = super::gem_levels::GemLevels::none();
+    match skill::main_skill(input.build, input.data, &levels) {
+        Ok(s) => Some(s.types.contains(skill::TOTEM_TYPE)),
+        Err(SkillProblem::NoActiveSkill) => Some(false),
+        Err(_) => None,
+    }
 }
 
 /// [`MainSkillRecently`] for the build's main skill.
@@ -547,6 +569,19 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 None => {
                     out.remove(&key);
                 }
+            }
+        }
+    }
+    // A totem summoned recently (P6-11hu): the check, or a totem main skill.
+    let key = ConditionKey::new(SUMMONED_TOTEM_RECENTLY);
+    if out.get(&key).copied() == Some(false) {
+        match summoned_totem(input) {
+            Some(false) => {}
+            Some(true) => {
+                out.insert(key, true);
+            }
+            None => {
+                out.remove(&key);
             }
         }
     }

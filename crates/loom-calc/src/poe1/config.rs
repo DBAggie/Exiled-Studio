@@ -300,10 +300,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:SpawnedCorpseRecently"],
     ),
     (
-        "conditionSummonedTotemRecently",
-        &["Condition:SummonedTotemRecently"],
-    ),
-    (
         "conditionTotemsHitSpellRecently",
         &[
             "Condition:TotemsHitSpellRecently",

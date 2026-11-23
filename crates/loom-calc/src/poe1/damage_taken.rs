@@ -1309,9 +1309,12 @@ mod tests {
         // modifier (the enemy's Unnerve is the config's).
         // P6-11ba: chances to blind on hit (yours and your minions'), which
         // PoB does not parse (the enemy's Blind is the config's).
+        // P6-11hu: a chance to intimidate on hit, which no PoB stat map
+        // reads (the enemy's Intimidate is the config's).
         let listed = [
             "attacks_chance_to_blind_on_hit_%",
             "cannot_be_blinded",
+            "chance_to_intimidate_on_hit_%",
             "chance_to_unnerve_on_hit_%",
             "global_chance_to_blind_on_hit_%",
             "minion_attacks_chance_to_blind_on_hit_%",
