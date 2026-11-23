@@ -4781,3 +4781,29 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 14 values move toward PoB, facebreaker-luminary.xml's armour (17,554) now equal.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ia: Tailwind's effect and Gale Force
+
+**Found** (the unmapped stats left in several builds): "#% increased Effect of Tailwind on you", Gathering Winds' "Gain 1 Gale Force when you use a Skill" with "#% increased Effect of Tailwind on you per Gale Force" (one stat of two lines), Wind Ward's "#% less Damage taken per Gale Force" and "Lose all Gale Force when Hit".
+
+**PoB** (`ModParser.lua` 683, 1340, 2636, 2639; `CalcPerform.lua` 733 to 736; `CalcSetup.lua` 518, 519; `ConfigOptions.lua` 925):
+- Tailwind is `ActionSpeed` INC `floor(8 x (1 + (TailwindEffectOnSelf + BuffEffectOnSelf) / 100))`.
+- `Multiplier:GaleForce` is the config's `multiplierGaleForce` in combat with `Condition:CanGainGaleForce`; `MaximumGaleForce` (10) is read by nothing, so no cap.
+- Gathering Winds' node text also has "You and nearby Allies have Tailwind" (an `ExtraAura` of `Condition:Tailwind`), so PoB grants Tailwind without the check; the game's data gives the node only the Gale Force stat.
+- Wind Ward's damage taken is `DamageTaken` MORE per Gale Force; "Lose all Gale Force when Hit" is left unparsed.
+
+**The engine:**
+- `Poe1Quantity::TailwindEffect` (`ROWS`: `tailwind_effect_on_self_+%`); `poe1::buffs::tailwind` gives `floor(8 x (1 + effect / 100))` with the check on or from Gathering Winds' stat (`stacks::grants_tailwind`).
+- `stacks::StackKind::GaleForce` with the config's `multiplierGaleForce` (out of `config::NAMED_ONLY`); `PerStack::TailwindEffect` and `PerStack::DamageTakenMore` (`SelfDamageTaken` MORE). Gathering Winds' stat is also the flag that Gale Force can be gained.
+- `NO_EFFECT`: `lose_all_gale_force_when_hit` (`no-slice`).
+- **Left:** "You have Tailwind if you have dealt a Critical Strike Recently" (`tailwind_if_have_crit_recently`; Tailwind from a conditional stat), and `buff_effect_on_self_+%` stays a reason.
+
+**Evidence** (`b-ct`, against P6-11hz's run):
+- **Four new mechanic fixtures**, each matching PoB on every computed field (Ice Nova):
+  - `ice-nova-tailwind-effect-witch.xml`: the check and "25% increased Effect of Tailwind on you": 10% increased action speed.
+  - `ice-nova-gathering-winds-deadeye.xml`: Gathering Winds, 10 Gale Force, no check: 16%.
+  - `ice-nova-gathering-winds-none-deadeye.xml`: no Gale Force: 8%.
+  - `ice-nova-wind-ward-deadeye.xml`: Wind Ward too, 5 Gale Force: 12%, 20% less damage taken.
+- **Public:** 0 unexpected; 32 values move toward PoB, none away. Mirage Archer Toxic Rain.xml's damage taken goes past PoB's: its tree is 3_13, where Wind Ward was 3% per Gale Force; the engine reads the game's current 4%.
+- **Corpus:** 0 unexpected; 11 values move toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

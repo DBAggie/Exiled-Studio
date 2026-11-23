@@ -57,6 +57,11 @@
 //!   reduction and movement speed, and "while there is only one nearby
 //!   Enemy" (1774: `limit = 1` with the condition) on physical damage
 //!   reduction.
+//! - **Gale Force** (P6-11ia; `ConfigOptions.lua` 925): the config's
+//!   `multiplierGaleForce` with `Condition:CanGainGaleForce`, which
+//!   Gathering Winds' two-line stat carries (`ModParser.lua` 2636); its
+//!   Tailwind effect per Gale Force and Wind Ward's "#% less Damage taken
+//!   per Gale Force". PoB caps nothing (`MaximumGaleForce` is unread).
 //!
 //! A config value PoB would read otherwise than a number is a reason under
 //! its input. Other modifiers that read or change these counts (rage
@@ -119,6 +124,9 @@ pub enum StackKind {
     /// Eaten souls (P6-11hf; PoB's `Multiplier:SoulEaterStack`, the config's
     /// `multiplierSoulEater`, with `Condition:CanHaveSoulEater`).
     SoulEater,
+    /// Gale Force (P6-11ia; PoB's `Multiplier:GaleForce`, the config's
+    /// `multiplierGaleForce`, with `Condition:CanGainGaleForce`).
+    GaleForce,
 }
 
 impl StackKind {
@@ -143,6 +151,7 @@ impl StackKind {
             Self::StationarySeconds => "stationary-seconds",
             Self::ManaSpentRecently => "mana-spent-recently",
             Self::SoulEater => "soul-eater",
+            Self::GaleForce => "gale-force",
         }
     }
 }
@@ -252,6 +261,11 @@ pub enum PerStack {
     /// Armour per second stationary, up to 100% (P6-11gr; `Armour` INC,
     /// `Stationary`, the multiplier's `limit` 100 / value).
     ArmourUpTo100,
+    /// Increased effect of Tailwind on you (`TailwindEffectOnSelf` INC;
+    /// P6-11ia).
+    TailwindEffect,
+    /// More damage taken (`DamageTaken` MORE; P6-11ia).
+    DamageTakenMore,
 }
 
 impl PerStack {
@@ -275,6 +289,8 @@ impl PerStack {
             Self::ArcaneSurgeEffect => "per.arcane-surge-effect",
             Self::AttackSpeedAtCloseRange => "per.attack-speed-at-close-range",
             Self::ArmourUpTo100 => "per.armour-up-to-100",
+            Self::TailwindEffect => "per.tailwind-effect",
+            Self::DamageTakenMore => "per.damage-taken-more",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
             Self::EnemyDamageTaken => "per.enemy-damage-taken",
             Self::ElementalPenetrationIfAll25 => "per.elemental-penetration-if-all-25",
@@ -324,6 +340,21 @@ impl PerStack {
                 (Quantity::Speed, Op::Increased, Flags::ATTACK, Flags::NONE)
             }
             Self::ArmourUpTo100 => (Quantity::Armour, Op::Increased, Flags::NONE, Flags::NONE),
+            Self::TailwindEffect => (
+                Quantity::Poe1(Poe1Quantity::TailwindEffect),
+                Op::Increased,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::DamageTakenMore => (
+                Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                    super::TakenWhen::Always,
+                    super::TakenOf::All,
+                )),
+                Op::More,
+                Flags::NONE,
+                Flags::NONE,
+            ),
             Self::ManaRegenPercentPerMinute => (
                 Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(super::Pool::Mana)),
                 Op::Base,
@@ -479,6 +510,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "damage_penetrates_%_elemental_resistances_while_all_resonance_is_25",
         StackKind::Resonance,
         StackValue::Per(PerStack::ElementalPenetrationIfAll25),
+    ),
+    // P6-11ia: "#% less Damage taken per Gale Force" (`DamageTaken` MORE per
+    // `Multiplier:GaleForce`).
+    (
+        "damage_taken_+%_final_per_gale_force",
+        StackKind::GaleForce,
+        StackValue::Per(PerStack::DamageTakenMore),
     ),
     // P6-11hf: "#% chance to gain Soul Eater for # seconds on Killing Blow ... with Double Strike or Dual Strike" (`ModParser.lua` 4306).
     (
@@ -666,6 +704,16 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
     // P6-11ep: "You and your Totems Regenerate #% of Life per second for each
     // Summoned Totem" (`LifeRegenPercent` BASE per `TotemsSummoned`; the
     // totems' share is theirs).
+    // P6-11ia: "Gain 1 Gale Force when you use a Skill" with "#% increased
+    // Effect of Tailwind on you per Gale Force", one stat of two lines
+    // (`ModParser.lua` 2636: `Condition:CanGainGaleForce`; `TailwindEffectOnSelf`
+    // INC per `Multiplier:GaleForce`): [`stacks`] reads its presence as the
+    // flag too.
+    (
+        "tailwind_effect_on_self_+%_per_gale_force",
+        StackKind::GaleForce,
+        StackValue::Per(PerStack::TailwindEffect),
+    ),
     (
         "you_and_totem_life_regeneration_rate_per_minute_%_per_active_totem",
         StackKind::Totems,
@@ -713,7 +761,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 13] = [
+pub const INPUTS: [&str; 14] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -727,7 +775,12 @@ pub const INPUTS: [&str; 13] = [
     super::buffs::STATIONARY_INPUT,
     MANA_SPENT_INPUT,
     SOUL_EATER_INPUT,
+    GALE_FORCE_INPUT,
 ];
+
+/// The config's Gale Force (`ConfigOptions.lua` 925: `Multiplier:GaleForce`
+/// BASE in combat with `Condition:CanGainGaleForce`; P6-11ia).
+pub const GALE_FORCE_INPUT: &str = "multiplierGaleForce";
 
 /// The config's eaten souls (`ConfigOptions.lua` 986:
 /// `Multiplier:SoulEaterStack` BASE in combat; P6-11hf).
@@ -834,6 +887,24 @@ pub fn intimidates(set: Option<&ConfigSet>, ingest: &Ingest<'_>) -> Option<Sourc
     (rage_stack(set, ingest).ok()? >= 1.0)
         .then_some(source)
         .flatten()
+}
+
+/// The source of Gathering Winds' Gale Force stat, if any (P6-11ia): its
+/// node also grants Tailwind in PoB, read by [`super::buffs`].
+#[must_use]
+pub fn grants_tailwind(ingest: &Ingest<'_>) -> Option<Source> {
+    ingest
+        .effects()
+        .iter()
+        .find(|e| {
+            e.quantity
+                == Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::GaleForce,
+                    StackValue::Per(PerStack::TailwindEffect),
+                ))
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.source.clone())
 }
 
 /// Adds the effects of the stacks (module docs): after every other source.
@@ -1038,6 +1109,20 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
                     }
                 }
             }
+        }
+    }
+
+    // Gale Force (P6-11ia): with `CanGainGaleForce` (the Tailwind line's
+    // stat, or the flag), each effect per Gale Force times the config's
+    // count (PoB applies no maximum: `MaximumGaleForce` is read by nothing).
+    let effects = per(ingest, StackKind::GaleForce);
+    let can = sum(ingest, StackKind::GaleForce, StackValue::CanGain).0 != 0.0
+        || grants_tailwind(ingest).is_some();
+    if can && !effects.is_empty() {
+        match count(set, GALE_FORCE_INPUT, false) {
+            Err(()) => ingest.reason(reason(GALE_FORCE_INPUT)),
+            Ok(None) => {}
+            Ok(Some(n)) => apply(ingest, &effects, multiplier(n), None),
         }
     }
 

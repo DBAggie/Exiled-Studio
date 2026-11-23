@@ -55,9 +55,12 @@
 //!   BuffEffectOnSelf / 100`; its movement speed (P6-10b) and its
 //!   `PhysicalDamageReduction` BASE `floor(10 x effect)` (P6-10b part 5).
 //!
-//! The effect stats are unmapped ([`TAILWIND_DEPENDS_ON`], [`DEPENDS_ON`]'s
-//! `buff_effect_on_self_+%`), so the constants. Other sources of either
-//! buff are unmapped stats, so reasons; the conditions themselves are read
+//! `buff_effect_on_self_+%` is unmapped ([`DEPENDS_ON`]), so a reason;
+//! Tailwind's own effect is read (P6-11ia, [`TAILWIND_EFFECT_STATS`]: "#%
+//! increased Effect of Tailwind on you", and per Gale Force through
+//! `super::stacks`), the others are the constants. Gathering Winds' stat
+//! also grants Tailwind (P6-11ia, as PoB's node text); other sources of
+//! either buff are unmapped stats, so reasons; the conditions themselves are read
 //! only by modifiers, which leave an unsettled condition a reason.
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
@@ -116,8 +119,11 @@ pub const TAILWIND_INPUT: &str = "buffTailwind";
 pub const TAILWIND_ACTION_SPEED: f64 = 8.0;
 
 /// The stats that change Tailwind's effect (PoB's `TailwindEffectOnSelf`,
-/// `ModParser.lua` 683), sorted: they must stay reasons.
-pub const TAILWIND_DEPENDS_ON: &[&str] = &["tailwind_effect_on_self_+%"];
+/// `ModParser.lua` 683; P6-11ia), mapped: [`buffs`] reads them.
+pub const TAILWIND_EFFECT_STATS: &[&str] = &[
+    "tailwind_effect_on_self_+%",
+    "tailwind_effect_on_self_+%_per_gale_force",
+];
 
 /// The check that grants Adrenaline.
 pub const ADRENALINE_INPUT: &str = "buffAdrenaline";
@@ -258,6 +264,47 @@ fn constant_buff(
             }
         }
     }
+}
+
+/// Tailwind (module docs; P6-11ia): with the check on, or from Gathering
+/// Winds' stat (PoB reads its node's "You and nearby Allies have Tailwind",
+/// `ModParser.lua` 2639, an `ExtraAura` of `Condition:Tailwind`; the game's
+/// data gives the node only the Gale Force stat), `ActionSpeed` INC
+/// `floor(8 x (1 + TailwindEffectOnSelf / 100))`, the increases summed so
+/// far (Gale Force's from `super::stacks`, which runs first).
+fn tailwind(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let source = match check(set, TAILWIND_INPUT) {
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: TAILWIND_INPUT.to_owned(),
+            });
+            return;
+        }
+        Ok(true) => Source::Config {
+            input: TAILWIND_INPUT.to_owned(),
+        },
+        Ok(false) => match super::stacks::grants_tailwind(ingest) {
+            Some(source) => source,
+            None => return,
+        },
+    };
+    let effect: f64 = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::TailwindEffect)
+                && e.op == Op::Increased
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .sum();
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::ActionSpeed),
+        op: Op::Increased,
+        value: (TAILWIND_ACTION_SPEED * (1.0 + effect / 100.0)).floor(),
+        conditions: Conditions::none(),
+        source,
+    });
 }
 
 /// A check's value: `Ok(false)` when unset or off, `Err(())` for a value
@@ -449,17 +496,7 @@ pub fn buffs(
     arcane_surge(set, settled, ingest);
     convergence(set, ingest);
     consecrated_ground(set, ingest);
-    constant_buff(
-        set,
-        ingest,
-        TAILWIND_INPUT,
-        &[(
-            Quantity::Poe1(Poe1Quantity::ActionSpeed),
-            Op::Increased,
-            TAILWIND_ACTION_SPEED,
-            Flags::NONE,
-        )],
-    );
+    tailwind(set, ingest);
     constant_buff(
         set,
         ingest,
@@ -579,7 +616,7 @@ mod tests {
                 // Silver Flask's buff flag: its flask effect is
                 // `poe1::flasks`' (P6-4b).
                 && id != crate::poe1::flasks::SILVER_STAT)
-                || id.contains("tailwind")
+                || (id.contains("tailwind") && !TAILWIND_EFFECT_STATS.contains(&id))
                 || id.contains("adrenaline")
         };
         let ids = HIT_ROWS
@@ -596,11 +633,7 @@ mod tests {
             slot: ArmourSlot::Helmet,
         };
         let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
-        for stat in DEPENDS_ON
-            .iter()
-            .chain(ARCANE_SURGE_DEPENDS_ON)
-            .chain(TAILWIND_DEPENDS_ON)
-        {
+        for stat in DEPENDS_ON.iter().chain(ARCANE_SURGE_DEPENDS_ON) {
             for m in mappings {
                 assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
             }

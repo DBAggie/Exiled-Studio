@@ -8713,6 +8713,16 @@ pub const ROWS: &[Row] = &[
         "support_inspiration_mana_cost_+%_final",
         &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::More, 1.0)],
     ),
+    // P6-11ia: "#% increased Effect of Tailwind on you" (`ModParser.lua` 683:
+    // `TailwindEffectOnSelf` INC), read by `poe1::buffs`.
+    (
+        "tailwind_effect_on_self_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::TailwindEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P6-11hz: "Gain #% increased Armour per 5 Power for 8 seconds when you
     // Warcry, up to a maximum of 100%" (`ModParser.lua` 2566: `Armour` INC
     // per `Multiplier:WarcryPower`, `div` 5, `globalLimit` 100, while
@@ -9570,6 +9580,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "lose_a_power_charge_when_you_gain_elusive_%_chance",
         "charge-gain-chance",
     ),
+    // P6-11ia: "Lose all Gale Force when Hit" (PoB leaves it unparsed; the config sets the count).
+    ("lose_all_gale_force_when_hit", "no-slice"),
     (
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",

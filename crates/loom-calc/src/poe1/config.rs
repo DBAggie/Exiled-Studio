@@ -344,7 +344,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierEnemyHallowingFlame",
         &["enemy Multiplier:HallowingFlame"],
     ),
-    ("multiplierGaleForce", &["Multiplier:GaleForce"]),
     (
         "multiplierHallowingFlameStacksRemovedByAlly",
         &["Multiplier:HallowingFlameStacksRemovedByAlly"],

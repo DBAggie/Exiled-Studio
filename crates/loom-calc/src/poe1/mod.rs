@@ -979,6 +979,10 @@ pub enum Poe1Quantity {
     /// `Armour` INC per 5 warcry power, at most 100 in all, while
     /// [`conditions::USED_WARCRY_IN_PAST_8_SECONDS`].
     ArmourPerWarcryPower,
+    /// Increased effect of Tailwind on you (PoB's `TailwindEffectOnSelf`
+    /// INC; P6-11ia): `Increased`, read by [`buffs`] for Tailwind's action
+    /// speed.
+    TailwindEffect,
     /// A skill's duration, cooldown, or a warcry's buff or power modifier
     /// (P6-11bs, [`skill_modifiers::SkillTiming`]): `Increased`, read by
     /// warcries alone.
@@ -1674,6 +1678,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
+            Self::TailwindEffect => f.write_str("tailwind-effect"),
             Self::SkillTiming(t) => write!(f, "skill-timing.{}", t.name()),
             Self::TypedCooldownRecovery => f.write_str("typed-cooldown-recovery"),
             Self::MineThrowCount => f.write_str("mine-throw-count"),
