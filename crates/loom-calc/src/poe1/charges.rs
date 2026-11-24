@@ -188,6 +188,11 @@ pub enum PerCharge {
     /// Damage over time multiplier for bleeding (`DotMultiplier` BASE with
     /// `KeywordFlag.Bleed`; P6-11id).
     BleedDotMultiplier,
+    /// Damage over time multiplier for poison (`DotMultiplier` BASE with
+    /// `KeywordFlag.Poison`; close-out M2).
+    PoisonDotMultiplier,
+    /// More accuracy rating (`Accuracy` MORE; close-out M2).
+    MoreAccuracy,
 }
 
 impl PerCharge {
@@ -218,6 +223,8 @@ impl PerCharge {
             Self::PhysicalDamageReduction => "per.physical-damage-reduction",
             Self::ElementalDamageReduction => "per.elemental-damage-reduction",
             Self::BleedDotMultiplier => "per.bleed-dot-multiplier",
+            Self::PoisonDotMultiplier => "per.poison-dot-multiplier",
+            Self::MoreAccuracy => "per.more-accuracy",
         }
     }
 
@@ -277,6 +284,8 @@ impl PerCharge {
             ),
             Self::Armour => (Quantity::Armour, Op::Increased, Flags::NONE),
             Self::BleedDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::BLEED),
+            Self::PoisonDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::POISON),
+            Self::MoreAccuracy => (Quantity::Accuracy, Op::More, Flags::NONE),
             Self::PhysicalDamageReduction => (
                 Quantity::Poe1(super::Poe1Quantity::DamageReduction(
                     crate::quantity::DamageType::Physical,
@@ -421,6 +430,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         ChargeKind::Power,
         ChargeValue::Per(PerCharge::Damage),
     ),
+    // Close-out M2: "#% more Accuracy Rating per Frenzy Charge" (`Accuracy`
+    // MORE per `FrenzyCharge`).
+    (
+        "deadeye_accuracy_rating_+%_final_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::MoreAccuracy),
+    ),
     // P6-11cn: "#% additional Elemental Damage Reduction per Endurance
     // Charge" (`ElementalDamageReduction` BASE per
     // `Multiplier:EnduranceCharge`).
@@ -534,6 +550,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "physical_damage_reduction_rating_+%_per_endurance_charge",
         ChargeKind::Endurance,
         ChargeValue::Per(PerCharge::Armour),
+    ),
+    // Close-out M2: "+#% to Damage over Time Multiplier for Poison per
+    // Frenzy Charge" (`DotMultiplier` BASE, `KeywordFlag.Poison`, per
+    // `FrenzyCharge`).
+    (
+        "poison_dot_multiplier_+_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::PoisonDotMultiplier),
     ),
     (
         "spell_damage_+%_per_power_charge",
@@ -941,6 +965,8 @@ mod tests {
     /// `NoEffect` rows that name a charge, each checked: none scales a
     /// slice field per charge or changes a count PoB's calc reads.
     const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
+        // Close-out M2: frenzy charge duration per frenzy charge.
+        "frenzy_charge_duration_+%_per_frenzy_charge",
         // Chances to gain a charge: PoB's calc never reads them.
         "add_frenzy_charge_on_kill_%_chance",
         // P6-11as: area and stun duration per endurance charge (no slice

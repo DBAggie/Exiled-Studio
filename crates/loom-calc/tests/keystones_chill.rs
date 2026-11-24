@@ -147,6 +147,9 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// `poe1::damage_taken`'s `enemy_states`): resistances of an ignited or
 /// chilled enemy, damage taken per second chilled.
 const ENEMY_ROWS: &[&str] = &[
+    // Close-out M2: cold as extra fire per 1% of the enemy's chill
+    // (`damage_taken`).
+    "cold_damage_%_to_add_as_fire_per_1%_chill_effect_on_enemy",
     // P6-11bf: hit damage while the enemy is chilled (`damage_taken`).
     "damage_+%_vs_chilled_enemies",
     // P6-11ii: critical strike chance against a chilled enemy, added cold

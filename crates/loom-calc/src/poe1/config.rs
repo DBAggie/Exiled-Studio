@@ -301,10 +301,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         ],
     ),
     (
-        "enemyMultiplierEnemyPresenceSeconds",
-        &["enemy Multiplier:EnemyPresenceSeconds"],
-    ),
-    (
         "heraldOfTheHivePressure",
         &["Multiplier:OtherworldlyPressure"],
     ),
@@ -762,7 +758,11 @@ mod tests {
         }
         // Rage's loss delay (PoB `InherentRageLossDelay`): rage's loss,
         // never its gain or effect.
-        let checked = ["rage_loss_delay_ms"];
+        // Close-out M2: life lost per rage, a degeneration no slice field reads.
+        let checked = [
+            "rage_loss_delay_ms",
+            "life_loss_%_per_minute_per_rage_while_not_losing_rage",
+        ];
         for (id, _) in NO_EFFECT {
             assert!(
                 !names(id) || checked.contains(id),

@@ -82,6 +82,14 @@ pub const READERS: &[(&str, &str, f64, Reading)] = &[
         -1.0,
         Reading::Per10,
     ),
+    // Close-out M2: "Regenerate # Mana per Second per 10 Devotion" (the
+    // stat per minute; `ManaRegen` BASE, `PerStat` `Devotion` div 10).
+    (
+        "mana_regeneration_rate_per_minute_per_10_devotion",
+        "base_mana_regeneration_rate_per_minute",
+        1.0,
+        Reading::Per10,
+    ),
     // P6-11fb.
     (
         "minimum_endurance_charges_at_devotion_threshold",

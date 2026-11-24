@@ -138,6 +138,18 @@ pub enum StackKind {
     /// Gale Force (P6-11ia; PoB's `Multiplier:GaleForce`, the config's
     /// `multiplierGaleForce`, with `Condition:CanGainGaleForce`).
     GaleForce,
+    /// Warcries used recently (close-out M2; PoB's
+    /// `Multiplier:WarcryUsedRecently`, the config's
+    /// `multiplierWarcryUsedRecently`).
+    WarcriesUsedRecently,
+    /// Corpses consumed recently (close-out M2; PoB's
+    /// `Multiplier:CorpseConsumedRecently`, the config's
+    /// `multiplierCorpseConsumedRecently`).
+    CorpsesConsumedRecently,
+    /// The seconds the enemy has been in your presence (close-out M2; the
+    /// enemy's `Multiplier:EnemyPresenceSeconds`, the config's
+    /// `enemyMultiplierEnemyPresenceSeconds`).
+    EnemyPresenceSeconds,
 }
 
 impl StackKind {
@@ -167,6 +179,9 @@ impl StackKind {
             Self::ManaSpentRecently => "mana-spent-recently",
             Self::SoulEater => "soul-eater",
             Self::GaleForce => "gale-force",
+            Self::WarcriesUsedRecently => "warcries-used-recently",
+            Self::CorpsesConsumedRecently => "corpses-consumed-recently",
+            Self::EnemyPresenceSeconds => "enemy-presence-seconds",
         }
     }
 }
@@ -289,6 +304,12 @@ pub enum PerStack {
     Speed,
     /// Increased movement speed (`MovementSpeed` INC; P6-11ie).
     MovementSpeed,
+    /// Increased armour (`Armour` INC; close-out M2).
+    Armour,
+    /// More damage with hits and ailments against a rare or unique enemy
+    /// (`Damage` MORE, `KeywordFlag.Hit` or `Ailment`, the enemy's
+    /// `RareOrUnique`; close-out M2).
+    DamageMoreVsRareOrUnique,
 }
 
 impl PerStack {
@@ -318,6 +339,8 @@ impl PerStack {
             Self::AttackDamage => "per.attack-damage",
             Self::Speed => "per.speed",
             Self::MovementSpeed => "per.movement-speed",
+            Self::Armour => "per.armour",
+            Self::DamageMoreVsRareOrUnique => "per.damage-more-vs-rare-or-unique",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
             Self::EnemyDamageTaken => "per.enemy-damage-taken",
             Self::ElementalPenetrationIfAll25 => "per.elemental-penetration-if-all-25",
@@ -325,6 +348,15 @@ impl PerStack {
             Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
                 "per.energy-shield-regen-percent-per-minute-up-to-2"
             }
+        }
+    }
+
+    /// The condition an effect per stack needs (close-out M2), if any.
+    #[must_use]
+    pub const fn state(self) -> Option<&'static str> {
+        match self {
+            Self::DamageMoreVsRareOrUnique => Some(super::conditions::ENEMY_RARE_OR_UNIQUE),
+            _ => None,
         }
     }
 
@@ -369,7 +401,15 @@ impl PerStack {
             Self::AttackSpeedAtCloseRange => {
                 (Quantity::Speed, Op::Increased, Flags::ATTACK, Flags::NONE)
             }
-            Self::ArmourUpTo100 => (Quantity::Armour, Op::Increased, Flags::NONE, Flags::NONE),
+            Self::ArmourUpTo100 | Self::Armour => {
+                (Quantity::Armour, Op::Increased, Flags::NONE, Flags::NONE)
+            }
+            Self::DamageMoreVsRareOrUnique => (
+                Quantity::Damage,
+                Op::More,
+                Flags::NONE,
+                Flags::HIT.union(Flags::AILMENT),
+            ),
             Self::TailwindEffect => (
                 Quantity::Poe1(Poe1Quantity::TailwindEffect),
                 Op::Increased,
@@ -452,12 +492,27 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Totems,
         StackValue::Per(PerStack::ArcaneSurgeEffect),
     ),
+    // Close-out M2: "Every Rage also grants #% increased Armour" (`Armour`
+    // INC per `Multiplier:RageEffect`).
+    (
+        "armour_+%_per_rage",
+        StackKind::Rage,
+        StackValue::Per(PerStack::Armour),
+    ),
     // P6-11gr: "#% increased Armour per second you've been stationary, up
     // to a maximum of 100%" (`Armour` INC per `StationarySeconds`).
     (
         "armour_+%_per_second_while_stationary_up_to_100",
         StackKind::StationarySeconds,
         StackValue::Per(PerStack::ArmourUpTo100),
+    ),
+    // Close-out M2: "#% increased Attack and Cast Speed for each corpse
+    // Consumed Recently, up to a maximum of 200%" (`Speed` INC per
+    // `CorpseConsumedRecently`, `limit` 50).
+    (
+        "attack_and_cast_speed_+%_per_corpse_consumed_recently",
+        StackKind::CorpsesConsumedRecently,
+        StackValue::Per(PerStack::Speed),
     ),
     // P6-11ie: "#% increased Attack and Cast Speed per Summoned Raging
     // Spirit" (`Speed` INC, `PerStat` `ActiveRagingSpiritLimit`).
@@ -570,6 +625,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Golems,
         StackValue::Per(PerStack::Damage),
     ),
+    // Close-out M2: "#% increased Damage for each time you've Warcried
+    // Recently" (`Damage` INC per `WarcryUsedRecently`).
+    (
+        "damage_+%_per_warcry_used_recently",
+        StackKind::WarcriesUsedRecently,
+        StackValue::Per(PerStack::Damage),
+    ),
     (
         "damage_+%_per_your_aura_or_herald_skill_affecting_you",
         StackKind::AuraOrHerald,
@@ -656,6 +718,15 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "gain_x_rage_when_you_use_a_life_flask",
         StackKind::Rage,
         StackValue::CanGain,
+    ),
+    // Close-out M2: "Deal #% more Damage with Hits and Ailments to Rare and
+    // Unique Enemies for each second they've ever been in your Presence, up
+    // to a maximum of 100%" (`Damage` MORE per the enemy's
+    // `EnemyPresenceSeconds`, `limit` 100, the enemy's `RareOrUnique`).
+    (
+        "gladiator_damage_vs_rare_unique_enemies_+%_final_per_second_in_your_presence_up_to_100%",
+        StackKind::EnemyPresenceSeconds,
+        StackValue::Per(PerStack::DamageMoreVsRareOrUnique),
     ),
     // P6-11ep: "#% more Damage per Summoned Totem" (`Damage` MORE per
     // `TotemsSummoned`).
@@ -847,7 +918,7 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
 /// The inputs this module reads.
-pub const INPUTS: [&str; 14] = [
+pub const INPUTS: [&str; 15] = [
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -862,7 +933,12 @@ pub const INPUTS: [&str; 14] = [
     MANA_SPENT_INPUT,
     SOUL_EATER_INPUT,
     GALE_FORCE_INPUT,
+    PRESENCE_INPUT,
 ];
+
+/// The seconds the enemy has been in your presence (`ConfigOptions.lua`
+/// 1768: the enemy's `Multiplier:EnemyPresenceSeconds` BASE; close-out M2).
+pub const PRESENCE_INPUT: &str = "enemyMultiplierEnemyPresenceSeconds";
 
 /// The config's Gale Force (`ConfigOptions.lua` 925: `Multiplier:GaleForce`
 /// BASE in combat with `Condition:CanGainGaleForce`; P6-11ia).
@@ -1209,6 +1285,38 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Err(()) => ingest.reason(reason(GALE_FORCE_INPUT)),
             Ok(None) => {}
             Ok(Some(n)) => apply(ingest, &effects, multiplier(n), None),
+        }
+    }
+
+    // Warcries used and corpses consumed recently, the enemy's presence
+    // (close-out M2): each count (read by `poe1::conditions` too, for the
+    // conditions they imply), at most the line's `limit` (50 corpses, 100
+    // seconds).
+    for (kind, input, limit) in [
+        (
+            StackKind::WarcriesUsedRecently,
+            super::conditions::WARCRY_RECENTLY_COUNT_INPUT,
+            None,
+        ),
+        (
+            StackKind::CorpsesConsumedRecently,
+            super::conditions::CORPSES_CONSUMED_INPUT,
+            Some(50.0),
+        ),
+        (StackKind::EnemyPresenceSeconds, PRESENCE_INPUT, Some(100.0)),
+    ] {
+        let effects = per(ingest, kind);
+        if effects.is_empty() {
+            continue;
+        }
+        match count(set, input, false) {
+            Err(()) => ingest.reason(reason(input)),
+            Ok(None) => {}
+            Ok(Some(n)) => {
+                let n = multiplier(n);
+                let n = limit.map_or(n, |l: f64| n.min(l));
+                apply(ingest, &effects, n, None);
+            }
         }
     }
 
@@ -1659,7 +1767,13 @@ fn apply(ingest: &mut Ingest<'_>, effects: &[Effect], count: f64, source: Option
             quantity,
             op,
             value: e.value * count,
-            conditions: Conditions::none().with_all(all).with_any(any),
+            conditions: match p.state() {
+                Some(state) => Conditions::none()
+                    .with_all(all)
+                    .with_any(any)
+                    .with_state(crate::condition::ConditionKey::new(state), true),
+                None => Conditions::none().with_all(all).with_any(any),
+            },
             source: source.cloned().unwrap_or_else(|| e.source.clone()),
         });
     }

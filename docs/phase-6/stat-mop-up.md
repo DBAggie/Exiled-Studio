@@ -5099,3 +5099,36 @@ The first close-out batch (`p6-close-out-plan.md`): the 38 stats of `M1-conditio
 - **Public:** 0 unexpected; 38 values moved, 36 toward PoB (lacerate-bleed-gladiator.xml: block and spell block now equal to PoB's; holy-flame-totem-hierophant.xml: speed equal), 2 away: Generals Perforate Zerker.xml's average damage and bleed DPS, which now carry the taunted crit and Lion's Roar (PoB applies both: its config sets the enemy taunted and the flask is active) and were already off for other reasons (its speed 1.64 against PoB's 2.20).
 - **Corpus:** 0 unexpected; 9 values moved, 8 toward PoB, 1 away: a build's average damage with the ignited enemy's damage (its config sets the enemy ignited; PoB applies it too), already above PoB's before.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M2: per-stat, per-multiplier, and threshold lines
+
+The second batch: the 21 stats of `M2-per-and-thresholds` and the Gladiator's line from M1.
+
+**Mapped:**
+- **`poe1::stacks`**, three new counts from the config: warcries used recently (`multiplierWarcryUsedRecently`; "#% increased Damage for each time you've Warcried Recently"), corpses consumed recently (`multiplierCorpseConsumedRecently`, the line's `limit` 50; "#% increased Attack and Cast Speed for each corpse Consumed Recently, up to a maximum of 200%"), and the enemy's seconds in your presence (`enemyMultiplierEnemyPresenceSeconds`, `limit` 100, out of `config::NAMED_ONLY`; the Gladiator's "#% more Damage with Hits and Ailments to Rare and Unique Enemies ..."). The first two counts are read by `poe1::conditions` too, for the conditions they imply. A per-stack effect can now need a condition (`PerStack::state`): the Gladiator's needs the enemy rare or unique. "Every Rage also grants #% increased Armour" is a per-rage effect (`Multiplier:RageEffect`).
+- **`poe1::charges`**: "#% more Accuracy Rating per Frenzy Charge" and "+#% to Damage over Time Multiplier for Poison per Frenzy Charge".
+- **`poe1::devotion`**: "Regenerate # Mana per Second per 10 Devotion", a reader of the flat mana regeneration stat.
+- **`collect`**: "Regenerate # Life per second per Level" (the stat per minute) becomes life regeneration times the level, as accuracy per level (P6-11ht). `REGEN_REASONS` is empty.
+- **`poe1::damage_taken`**: "Gain #% of Cold Damage as Extra Fire Damage per 1% Chill Effect on Enemy", cold gained as fire times the enemy's chill (PoB's enemy `Multiplier:ChillEffect`, floored).
+
+**`NoEffect`:** frenzy charge duration per frenzy charge (`charge-duration`); area of effect per 50 unreserved mana (`area`); life lost per second per rage (a degeneration, which no slice field reads).
+
+**Moved to closed reasons** (each stays `unmapped-stat`):
+- `C-engine-system` (new; a system the engine lacks):
+  - `additional_physical_damage_reduction_%_per_minion_up_to_10%`: PoB's `Multiplier:SummonedMinion`, counted from the minion skills' limits;
+  - `spell_damage_+%_per_100_max_life` and `gain_wand_accuracy_rating_equal_to_intelligence`: a pool or an attribute read into an ingested modifier (the engine computes them in later phases);
+  - `attacks_chance_to_poison_%_on_max_frenzy_charges`: a `StatThreshold` of the frenzy charges against their maximum;
+  - `additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour` and `spell_suppression_chance_%_if_all_equipment_grants_evasion`: each armour piece's own defence as a threshold, which only the defence phase computes.
+- `C-item-skill`: `spell_damage_%_suppressed_per_bark_below_max`, `spell_damage_taken_+_per_barkskin_stack` (Barkskin, a skill granted by an item).
+- Deferred out of Phase 6: `global_defences_+%_per_raised_spectre` (spectres); `missing_unreserved_life_%_gained_as_life_before_hit_per_defiance` (EHP's other pools).
+
+**Evidence** (`b-ct`, against M1's run):
+- **Four new mechanic fixtures**, each matching PoB on every computed field (the Smite one but for the weapon's rate, Q11 DIV-0665 to DIV-0671):
+  - `ice-nova-m2-warcry-corpse-witch.xml`: two warcries, 60 corpses counted as 50;
+  - `ice-nova-m2-presence-chill-witch.xml`: 150 seconds counted as 100 against a unique enemy, cold as fire with a 20% chill;
+  - `ice-nova-m2-presence-normal-witch.xml`: the enemy not rare or unique, no more damage;
+  - `smite-m2-frenzy-rage-templar.xml`: more accuracy and the poison DoT multiplier per frenzy charge, armour per rage.
+  - A custom line cannot settle a per-minute stat (its text rounds the roll), and "+# to Devotion" has no template, so the per-level and devotion rows have no fixture; the per-level row is in `zealots_oath_should_move_life_regeneration_and_its_reasons`.
+- **Public:** 0 unexpected; 17 values toward PoB, none away. 77 fields of two builds went from partial to indeterminate: their per-minute rolls (essence-drain-contagion-occultist.xml's devotion jewel, winter-orb-elementalist.xml's life per level) are unsettled values now that the stats are mapped. The reason changed, not the value.
+- **Corpus:** 0 unexpected; 8 values toward PoB (4 now equal), none away.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

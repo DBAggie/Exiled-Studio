@@ -1371,6 +1371,26 @@ fn accuracy_per_level(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             source: e.source,
         });
     }
+    // "Regenerate # Life per second per Level" (close-out M2): the stat per
+    // minute, as life regeneration per second times the level.
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::LifeRegenPerMinutePerLevel)
+                && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    for e in lines {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::Regen(super::Pool::Life)),
+            op: Op::Base,
+            value: e.value / 60.0 * f64::from(level),
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
 }
 
 /// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry, up

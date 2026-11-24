@@ -79,7 +79,7 @@ pub const ARCANE_SURGE_ON_KILL_STAT: &str = "gain_arcane_surge_on_kill_chance_%"
 
 /// The count of corpses consumed recently (P6-11gp), which sets
 /// [`CONSUMED_CORPSE_RECENTLY`] too.
-const CORPSES_CONSUMED_INPUT: &str = "multiplierCorpseConsumedRecently";
+pub const CORPSES_CONSUMED_INPUT: &str = "multiplierCorpseConsumedRecently";
 
 /// "while on Caustic Ground" (PoB's `OnCausticGround`; P6-11gp): its check
 /// (`ConfigOptions.lua` 1157).

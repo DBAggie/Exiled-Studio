@@ -575,6 +575,15 @@ pub enum Poe1Quantity {
     /// per `Multiplier:Level`): `Base`, which `collect` multiplies by the
     /// character's level.
     AccuracyPerLevel,
+    /// "Regenerate # Life per second per Level" (close-out M2; PoB's
+    /// `LifeRegen` BASE per `Multiplier:Level`, the stat per minute):
+    /// `collect` turns it into life regeneration times the level.
+    LifeRegenPerMinutePerLevel,
+    /// "Gain #% of Cold Damage as Extra Fire Damage per 1% Chill Effect on
+    /// Enemy" (close-out M2; `ColdDamageGainAsFire` BASE per the enemy's
+    /// `Multiplier:ChillEffect`): `Base`, which [`damage_taken`] turns into
+    /// cold gained as fire times the enemy's chill.
+    ColdAsFirePerChill,
     /// "Inflict <Type> Exposure on Hit if you've cast <curse> in the past
     /// 10 seconds" (P6-11gz; PoB's enemy `<Type>Exposure` BASE -10 with the
     /// `SelfCast<Curse>` condition): `Base`, a candidate of [`exposure`]'s
@@ -1625,6 +1634,8 @@ impl core::fmt::Display for Poe1Quantity {
             }),
             Self::MeleeProximityDamage => f.write_str("melee-proximity-damage"),
             Self::AccuracyPerLevel => f.write_str("accuracy-per-level"),
+            Self::LifeRegenPerMinutePerLevel => f.write_str("life-regen-per-minute-per-level"),
+            Self::ColdAsFirePerChill => f.write_str("cold-as-fire-per-chill"),
             Self::ExposureIfSelfCast(t) => write!(f, "exposure-if-self-cast.{}", t.name()),
             Self::CoveredInRing(ash) => f.write_str(if *ash {
                 "covered-in-ash"

@@ -7284,6 +7284,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-10b part 12: "#% of Cold Damage from Hits taken as Fire Damage" (`ColdDamageFromHitsTakenAsFire` BASE).
+    // Close-out M2: "Gain #% of Cold Damage as Extra Fire Damage per 1%
+    // Chill Effect on Enemy" (`poe1::damage_taken` reads it with the
+    // enemy's chill).
+    (
+        "cold_damage_%_to_add_as_fire_per_1%_chill_effect_on_enemy",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ColdAsFirePerChill),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "cold_damage_taken_%_as_fire",
         &[(
@@ -8132,6 +8143,16 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::Life)),
             Op::Base,
             1.0 / 60.0,
+        )],
+    ),
+    // Close-out M2: "Regenerate # Life per second per Level" (the stat per
+    // minute; `collect` multiplies it by the level).
+    (
+        "life_regeneration_rate_per_minute_per_level",
+        &[(
+            Quantity::Poe1(Poe1Quantity::LifeRegenPerMinutePerLevel),
+            Op::Base,
+            1.0,
         )],
     ),
     (
@@ -9867,6 +9888,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("forking_angle_+%", "projectile-count"),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
+    // Close-out M2: frenzy charge duration per frenzy charge
+    // (`FrenzyChargesDuration` INC per `FrenzyCharge`): no slice field.
+    (
+        "frenzy_charge_duration_+%_per_frenzy_charge",
+        "charge-duration",
+    ),
     // P6-11ad: "You count as on Full Life while at #% of maximum Life or
     // above" (`FullLifePercentage` BASE): PoB reads it only for the config
     // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).
@@ -9936,6 +9963,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "has_avoid_shock_as_avoid_all_elemental_ailments",
         "ailment-on-self",
     ),
+    // Close-out M2: area of effect per 50 unreserved mana (`AreaOfEffect`
+    // INC per `ManaUnreserved`): area, no slice field.
+    (
+        "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
+        "area",
+    ),
     ("ignite_art_variation", "display"),
     // P6-11be: "Your Hexes can affect Hexproof Enemies"
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
@@ -9978,6 +10011,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11cz: life flask charges on suppressing a spell (PoB leaves the text unparsed; flask charges reach no slice field).
     ("life_flasks_gain_X_charges_on_suppressing_spell", "flask"),
+    // Close-out M2: life lost per second per rage (`LifeDegen` BASE): PoB
+    // shows it apart from regeneration; no slice field reads a degeneration.
+    (
+        "life_loss_%_per_minute_per_rage_while_not_losing_rage",
+        "no-slice",
+    ),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
@@ -10751,8 +10790,7 @@ pub const MOVEMENT_REASONS: &[&str] = &["movement_velocity_+%_while_no_gems_in_b
 /// `poe1::exposure`'s since P6-11au.) Per
 /// endurance and power charge are [`super::charges`]'s, per uncapped fire
 /// resistance and per spell block chance [`super::regen`]'s (P6-11t).
-pub const REGEN_REASONS: &[(&str, Pool)] =
-    &[("life_regeneration_rate_per_minute_per_level", Pool::Life)];
+pub const REGEN_REASONS: &[(&str, Pool)] = &[];
 
 /// Stats that change the base damage reduction in a way the engine does not
 /// model, sorted (P6-10b part 5). Empty since P6-11cg: per hit taken

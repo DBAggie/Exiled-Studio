@@ -6635,6 +6635,8 @@ mod tests {
             // P6-11ib: maximum resistances that read the reservations
             // (`collect::reserved_max_resist`), not one.
             "additional_maximum_all_elemental_resistances_%_with_reserved_life_and_mana",
+            // Close-out M2: area of effect per unreserved mana, area only.
+            "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

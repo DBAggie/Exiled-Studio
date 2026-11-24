@@ -913,6 +913,32 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             Ok(false) => {}
         }
     }
+    // Close-out M2: cold damage gained as fire per 1% of the enemy's chill
+    // (PoB's `Multiplier:ChillEffect` on the enemy, `div` 1: floored).
+    let per_chill: Vec<Effect> = unconditional(ingest, Poe1Quantity::ColdAsFirePerChill, Op::Base)
+        .cloned()
+        .collect();
+    if !per_chill.is_empty() {
+        match chill(set, ingest) {
+            Err(input) => ingest.reason(reason(input)),
+            Ok(None) => {}
+            Ok(Some((effect, _))) => {
+                let steps = (effect + 0.0001).floor();
+                for e in &per_chill {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(Poe1Quantity::GainAs(
+                            crate::quantity::DamageType::Cold,
+                            crate::quantity::DamageType::Fire,
+                        )),
+                        op: Op::Base,
+                        value: e.value * steps,
+                        conditions: Conditions::none(),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+        }
+    }
     // P6-11ii: critical strike chance against a chilled enemy (`CritChance`
     // INC), and added cold damage against a chilled or frozen one (the
     // frozen enemy the config's check alone, [`FROZEN_INPUT`]).

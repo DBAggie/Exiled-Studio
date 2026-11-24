@@ -143,6 +143,8 @@ const TEXTS: [(&str, &str); 30] = [
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out M2: area of effect per unreserved mana, area only.
+    "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
     "base_aura_area_of_effect_+%",
     // P6-11ey: the mine supports' cost as reservation, read by the
     // support's ID (`gems::COST_AS_RESERVATION_SUPPORTS`).

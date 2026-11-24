@@ -2689,12 +2689,14 @@ fn zealots_oath_should_move_life_regeneration_and_its_reasons() {
     assert_eq!(value_of(&r, es_regen), 10.0);
     assert_eq!(state(&r, es_regen), StateKind::Complete);
 
-    // A life regeneration stat the engine does not model: life's reason,
-    // carried to energy shield; no other field's.
-    let per_level = ("life_regeneration_rate_per_minute_per_level", 1);
+    // Life regeneration per level (close-out M2; until then the example of
+    // a regeneration reason carried to energy shield): 60 per minute, 1 per
+    // second per level, moved to energy shield too.
+    let per_level = ("life_regeneration_rate_per_minute_per_level", 60);
     let r = witch_with(&[flat, es, oath, per_level]);
-    assert_eq!(state(&r, life_regen), StateKind::Partial);
-    assert_eq!(state(&r, es_regen), StateKind::Partial);
+    assert_eq!(value_of(&r, life_regen), 0.0);
+    assert_eq!(value_of(&r, es_regen), 100.0);
+    assert_eq!(state(&r, es_regen), StateKind::Complete);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     assert_eq!(
         state(&r, Field::Poe1(Poe1Field::ManaRegen)),
