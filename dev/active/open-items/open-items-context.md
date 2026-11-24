@@ -3,7 +3,7 @@ Last Updated: 2026-11-24
 # Open items (context)
 
 ## Where things are
-- **Branch:** `feat/open-items` from `dev` at `6deeb5da` (PR #167's squash). The PR is opened at the start of the session (`gh pr create --base dev`); right after, write its number into the handoff and this file.
+- **Branch:** `feat/open-items` from `dev` at `6deeb5da` (PR #167's squash). **PR #168** (base `dev`), opened 2026-11-24. PR body draft: `local/p6/tools/open-items-pr.md` (`gh pr edit 168 --body-file`).
 - **Evidence bundle:** `local/p6/packs/b-ct`. Oracle: `local/p6/oracle` (public) and `local/p3/p3-5/evidence-p4/oracle-corpus` (corpus). The latest run is `local/p6/n/`; it is the baseline for S0.
 - **Local tools:** `local/p6/tools/` (its `README.md` gives the per-step routine) and `local/p6/*.py`, `local/p6/evidence.sh`. New: `local/p6/tools/rank_reasons.py <run-dir>...` ranks reasons by fields blocked, builds, and fields where it is the only reason.
 - **Per step:** edit, `cargo fmt --all`, `cargo test -p loom-calc`; build `loom-parity-cli` to `local/p6/lpc-<step>.exe`; fixtures in `local/p6/<step>-fx`; `oracle-run tools/oracle/manifest.json local/oracle --out <x>-o <x>-fx`; `python local/p6/add_fixtures.py spec.json`; Q11 entries `python local/p6/add_q11.py`; `BUNDLE=local/p6/packs/b-ct sh local/p6/evidence.sh <step> <lpc>`; `python local/p6/move_cmp.py local/p6/<prev>/parity local/p6/<step>/parity --list` (and `parity-corpus`); fmt check, clippy, workspace tests, real-bundle tests; docs; commit; push.
