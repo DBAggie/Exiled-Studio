@@ -4130,6 +4130,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::ArcaneSurgeManaRegen
                     // Culling Strike (P6-12).
                     | Poe1Quantity::CullingStrike
+                    | Poe1Quantity::CullUnder20
                     // The skill's cost (P6-10b).
                     | Poe1Quantity::ManaCost
                     | Poe1Quantity::Cost
@@ -6295,6 +6296,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-11by: the body armour's armour and energy shield when the helmet,
+    // P6-11ig: "#% increased Armour per Red Socket on Main Hand Weapon":
+    // `collect` turns it into the armour's increase per red socket in the
+    // main hand.
+    (
+        "armour_+%_per_red_socket_on_main_hand_weapon",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(true)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // gloves, and boots all have both (`phases::primary_defence`).
     (
         "armour_and_energy_shield_+%_from_body_armour_if_gloves_helmet_boots_have_armour_and_energy_shield",
@@ -7302,6 +7314,16 @@ pub const ROWS: &[Row] = &[
         "evasion_rating_+%",
         &[(Quantity::Evasion, Op::Increased, 1.0)],
     ),
+    // P6-11ig: "#% increased Evasion Rating per Green Socket on Main Hand
+    // Weapon": the same, evasion per green socket.
+    (
+        "evasion_rating_+%_per_green_socket_on_main_hand_weapon",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(false)),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "fire_and_chaos_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (CHAOS, Op::Base, 1.0)],
@@ -7580,6 +7602,12 @@ pub const ROWS: &[Row] = &[
     (
         "kill_enemy_on_hit_if_under_10%_life",
         &[(Quantity::Poe1(Poe1Quantity::CullingStrike), Op::Flag, 1.0)],
+    ),
+    // P6-11ig: "Kill Enemies that have 20% or lower Life when Hit by your
+    // Skills" (`CullPercent` MAX 20): the same, at 20%.
+    (
+        "kill_enemy_on_hit_if_under_20%_life",
+        &[(Quantity::Poe1(Poe1Quantity::CullUnder20), Op::Flag, 1.0)],
     ),
     // P6-10b part 9: "#% of Leech is Instant" (`InstantEnergyShieldLeech` BASE,
     // `InstantManaLeech` BASE, `InstantLifeLeech` BASE).

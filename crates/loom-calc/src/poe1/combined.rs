@@ -67,6 +67,13 @@ pub const DOT_DPS_CAP: f64 = 35_791_394.0;
 /// Culling Strike's percent (PoB's `CullPercent` MAX 10).
 pub const CULL_PERCENT: f64 = 10.0;
 
+/// The culling flags and their percents (P6-12, P6-11ig), largest first:
+/// PoB's `CullPercent` is the largest (`Max`).
+const CULLS: [(Poe1Quantity, f64); 2] = [
+    (Poe1Quantity::CullUnder20, 20.0),
+    (Poe1Quantity::CullingStrike, CULL_PERCENT),
+];
+
 /// The source of a mirage's less damage and speed (P6-8b).
 pub const MIRAGE_RULE: &str = "mirage-archer";
 /// Mirage Archer's mark on the skill (PoB's `triggeredByMirageArcher`,
@@ -329,21 +336,24 @@ pub(super) fn combine(
         flags = flags | Flags::SPELL;
     }
     let cx = calc.context(flags);
-    let (store, graph) = calc.parts();
-    let cull = store.flag(graph, Quantity::Poe1(Poe1Quantity::CullingStrike), &cx)?;
-    reasons.extend(&cull.reasons);
-    if cull.value > 0.0 {
-        let value = 100.0 / (100.0 - CULL_PERCENT);
-        let multiplier = phases::constant(calc, "cull-multiplier", value)?;
-        let node = calc.graph_mut().push(
-            Node::Any {
-                term: Term::Step("culling-strike"),
-                of: vec![cull.node],
-            },
-            1.0,
-        )?;
-        let on = Valued { node, value: 1.0 };
-        combined = phases::product(calc, &[combined, multiplier, on], Term::Step("culled"))?;
+    for (quantity, percent) in CULLS {
+        let (store, graph) = calc.parts();
+        let cull = store.flag(graph, Quantity::Poe1(quantity), &cx)?;
+        reasons.extend(&cull.reasons);
+        if cull.value > 0.0 {
+            let value = 100.0 / (100.0 - percent);
+            let multiplier = phases::constant(calc, "cull-multiplier", value)?;
+            let node = calc.graph_mut().push(
+                Node::Any {
+                    term: Term::Step("culling-strike"),
+                    of: vec![cull.node],
+                },
+                1.0,
+            )?;
+            let on = Valued { node, value: 1.0 };
+            combined = phases::product(calc, &[combined, multiplier, on], Term::Step("culled"))?;
+            break;
+        }
     }
     let result = phases::total(calc, &[combined], Term::Result)?;
     calc.set_derived(field, phases::query(result, reasons), &deps);

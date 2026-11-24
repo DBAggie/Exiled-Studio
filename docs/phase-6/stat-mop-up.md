@@ -4917,3 +4917,25 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 6 values move toward PoB (cyclone-shockwave-slayer.xml), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ig: culling at 20%, defences per main hand socket
+
+**Found** (the unmapped stats left in single builds, all in `cyclone-shockwave-slayer.xml`): the Slayer's "Kill Enemies that have 20% or lower Life when Hit by your Skills", "#% increased Armour per Red Socket on Main Hand Weapon", and "#% increased Evasion Rating per Green Socket on Main Hand Weapon".
+
+**PoB:**
+- The culling line is `CullPercent` MAX 20 (Culling Strike's is MAX 10): `CullMultiplier = 100 / (100 - CullPercent)` of the largest (`CalcOffence.lua` 3218 to 3221), which scales `CombinedDPS` (6135 to 6138).
+- The socket lines are `Armour` and `Evasion` INC with the `Multiplier` `RedSocketInWeapon 1` and `GreenSocketInWeapon 1` (`ModParser.lua` 1432, 1434), the main hand's sockets of that colour.
+
+**The engine:**
+- `Poe1Quantity::CullUnder20`, a flag; `combined` reads the culling flags largest first (`CULLS`) and applies the first one set.
+- `Poe1Quantity::PerMainHandSocket`: `collect::staff_sockets` (P6-11go) counts the main hand's red or green sockets as for the staff lines, as the defence's increase without the staff condition.
+
+**Evidence** (`b-ct`, against P6-11if's run):
+- **Four new mechanic fixtures**, each matching PoB on every computed field (the Smite ones but the weapon's attack rate, Q11, DIV-0616 to DIV-0627 `game-truth`):
+  - `ice-nova-cull-under-20-witch.xml`: the combined DPS times 1.25.
+  - `ice-nova-cull-under-20-and-culling-strike-witch.xml`: with Culling Strike too, still 1.25.
+  - `smite-defences-per-main-hand-socket-templar.xml`: R-R-G, armour 100 to 120, evasion rating 15 to 17.
+  - `smite-defences-per-main-hand-socket-blue-templar.xml`: B-B, no change.
+- **Public:** 0 unexpected; 4 values move toward PoB (cyclone-shockwave-slayer.xml: armour and evasion rating now equal to PoB's, the combined and full DPS), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

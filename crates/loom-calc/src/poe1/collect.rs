@@ -102,7 +102,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     forbidden_pairs(input, spec, ingest);
     config(build, ingest);
     // After every passive, item, and config line: life and mana per staff
-    // socket (P6-11go).
+    // socket (P6-11go), armour and evasion per main hand socket (P6-11ig).
     staff_sockets(input, ingest);
     // Physical damage as a random element (P6-11gz).
     random_gains(build, ingest);
@@ -1186,14 +1186,22 @@ impl StatMapping for Reflected {
 /// colour (PoB's `RedSocketInWeapon 1`, counted from the item in the main
 /// hand of the weapon set in use, as PoB names a swap slot by its set's
 /// slot), as the pool's `Increased` with the `UsingStaff` state (PoB's
-/// `Condition` tag). Sockets the engine cannot count are a reason.
+/// `Condition` tag). "#% increased Armour per Red Socket on Main Hand
+/// Weapon" and its Evasion Rating per Green Socket (P6-11ig,
+/// [`Poe1Quantity::PerMainHandSocket`]) the same, as the defence's
+/// `Increased` with no state. Sockets the engine cannot count are a
+/// reason.
 fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let per: Vec<Effect> = ingest
         .effects()
         .iter()
         .filter(|e| {
-            matches!(e.quantity, Quantity::Poe1(Poe1Quantity::PerStaffSocket(_)))
-                && e.op == Op::Base
+            matches!(
+                e.quantity,
+                Quantity::Poe1(
+                    Poe1Quantity::PerStaffSocket(_) | Poe1Quantity::PerMainHandSocket(_)
+                )
+            ) && e.op == Op::Base
         })
         .cloned()
         .collect();
@@ -1205,19 +1213,24 @@ fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         .is_some_and(|set| attribute(&set.attributes, "useSecondWeaponSet") == Some("true"));
     let slot = if second { "Weapon 1 Swap" } else { "Weapon 1" };
     for e in per {
-        let Quantity::Poe1(Poe1Quantity::PerStaffSocket(life)) = e.quantity else {
-            continue;
-        };
-        let (colour, pool) = if life {
-            ('R', Quantity::Life)
-        } else {
-            ('B', Quantity::Mana)
+        let (colour, pool, staff) = match e.quantity {
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(true)) => ('R', Quantity::Life, true),
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(false)) => ('B', Quantity::Mana, true),
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(true)) => ('R', Quantity::Armour, false),
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(false)) => {
+                ('G', Quantity::Evasion, false)
+            }
+            _ => continue,
         };
         let Some(count) = super::sockets::colour_count(build, slot, colour) else {
             ingest.reason(UnsupportedReason::UnmodelledItem {
                 item: ItemId(0),
                 slot: slot.to_owned(),
-                what: "staff-sockets",
+                what: if staff {
+                    "staff-sockets"
+                } else {
+                    "main-hand-sockets"
+                },
             });
             continue;
         };
@@ -1228,10 +1241,14 @@ fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             quantity: pool,
             op: Op::Increased,
             value: e.value * f64::from(count),
-            conditions: e.conditions.with_state(
-                crate::condition::ConditionKey::new(super::states::USING_STAFF),
-                true,
-            ),
+            conditions: if staff {
+                e.conditions.with_state(
+                    crate::condition::ConditionKey::new(super::states::USING_STAFF),
+                    true,
+                )
+            } else {
+                e.conditions
+            },
             source: e.source,
         });
     }

@@ -158,6 +158,13 @@ pub enum Poe1Quantity {
     /// `BlueSocketInWeapon 1` and `UsingStaff`): `Base`, the value per
     /// socket, which `collect` turns into the pool's increase.
     PerStaffSocket(bool),
+    /// "#% increased Armour per Red Socket on Main Hand Weapon" (`true`) and
+    /// "#% increased Evasion Rating per Green Socket on Main Hand Weapon"
+    /// (`false`) (P6-11ig; PoB's `Armour` or `Evasion` INC with the
+    /// `Multiplier` `RedSocketInWeapon 1` or `GreenSocketInWeapon 1`,
+    /// `ModParser.lua` 1432, 1434): `Base`, the value per socket, which
+    /// `collect` turns into the defence's increase.
+    PerMainHandSocket(bool),
     /// Maximum life gained as extra maximum energy shield, percent (PoB's
     /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
     /// phase as one more row.
@@ -665,6 +672,10 @@ pub enum Poe1Quantity {
     /// Culling Strike (PoB's `CullPercent` MAX 10; P6-12): a `Flag`, read
     /// by [`combined`].
     CullingStrike,
+    /// "Kill Enemies that have 20% or lower Life when Hit by your Skills"
+    /// (PoB's `CullPercent` MAX 20; P6-11ig): a `Flag`, read by
+    /// [`combined`] with [`Self::CullingStrike`], the larger percent.
+    CullUnder20,
     /// A defence's increase from one equipped piece only (PoB's
     /// `<Defence>` or `Defences` INC tagged `SlotName`, P6-11k: "#%
     /// increased Energy Shield from Equipped Shield"): `Increased`, added to
@@ -1397,6 +1408,11 @@ impl core::fmt::Display for Poe1Quantity {
             } else {
                 "mana-per-blue-staff-socket"
             }),
+            Self::PerMainHandSocket(armour) => f.write_str(if *armour {
+                "armour-per-red-main-hand-socket"
+            } else {
+                "evasion-per-green-main-hand-socket"
+            }),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),
@@ -1607,6 +1623,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
             Self::SkillAuraEffectOnSelf => f.write_str("skill-aura-effect-on-self"),
             Self::CullingStrike => f.write_str("culling-strike"),
+            Self::CullUnder20 => f.write_str("cull-under-20"),
             Self::SlotIncreased(s, d) => write!(f, "slot-increased.{}.{}", s.row(), d.name()),
             Self::CannotBeEvaded => f.write_str("cannot-be-evaded"),
             Self::NeverCrit => f.write_str("never-crit"),
