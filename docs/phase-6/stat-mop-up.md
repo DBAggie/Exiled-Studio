@@ -4999,3 +4999,31 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 6 values move toward PoB (Dual Wield Cospris CoC.xml: critical strike chance, speed, damage, DPS, mana per second), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ij: accuracy per frenzy charge, no non-elemental damage, bow culling
+
+**Found** (the unmapped stats left in single builds; `elemental-hit-of-the-spectrum-deadeye.xml` has the first two):
+- "+# to Accuracy Rating per Frenzy Charge";
+- "Deal no Non-Elemental Damage";
+- "Bow Attacks have Culling Strike".
+
+**PoB:**
+- The accuracy line is `Accuracy` BASE per `Multiplier:FrenzyCharge`.
+- "Deal no Non-Elemental Damage" is the flags `DealNoPhysical` and `DealNoChaos`.
+- The culling line is `CullPercent` MAX 10 with `ModFlag.Attack` and `ModFlag.Bow`. `CalcOffence.lua` 3218 reads it in the skill's config, whose flags hold the main hand's weapon flags (`CalcActiveSkill.lua` 455).
+
+**The engine:**
+- `charges::PerCharge::FlatAccuracy` (`Accuracy` BASE), a frenzy charge modifier.
+- A hit row with `DealNo(Physical)` and `DealNo(Chaos)`, as `deal_no_elemental_damage`.
+- A hit row: `CullingStrike` with `BOW | ATTACK`. `combined` now queries the culling flags with an attack's main-hand flags (`dot::attack_weapon_flags`, P6-11b). A hand the engine cannot read gives no flags there; the hit and the DoT already carry that reason.
+
+**Evidence** (`b-ct`, against P6-11ii's run):
+- **Five new mechanic fixtures**, each matching PoB on every computed field (Burning Arrow's and Smite's attack rate apart, Q11, DIV-0641 to DIV-0652 `game-truth`):
+  - `ice-nova-deal-no-non-elemental-none-witch.xml`: added physical and chaos damage to spells.
+  - `ice-nova-deal-no-non-elemental-witch.xml`: with the line, neither is dealt (average damage 751.1 to 727.5).
+  - `ice-nova-bow-culling-strike-witch.xml`: a spell, no culling.
+  - `burning-arrow-bow-culling-strike-templar.xml`: a Short Bow, the combined DPS times 100 / 90.
+  - `smite-accuracy-per-frenzy-templar.xml`: three frenzy charges, accuracy 206 to 506.
+- **Public:** 0 unexpected; 6 values move toward PoB (elemental-hit-of-the-spectrum-deadeye.xml: hit chance, crit chance, damage, DPS), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

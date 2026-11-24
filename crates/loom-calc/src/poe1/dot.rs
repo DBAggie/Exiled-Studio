@@ -306,7 +306,7 @@ fn dot_flags(skill: &MainSkill<'_>, pob: Option<&PobSkill>, stats: &[(String, i6
 /// that is a hit, which the engine's one `HIT` flag (`ModFlag.Hit`) does
 /// not tell apart: a "Hits and Ailments" line would reach such a DoT (no
 /// vetted skill has one).
-fn attack_weapon_flags(
+pub(super) fn attack_weapon_flags(
     input: &crate::input::CalcInput<'_>,
     skill: &MainSkill<'_>,
     source: &Source,

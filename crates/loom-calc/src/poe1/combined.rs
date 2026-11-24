@@ -327,10 +327,22 @@ pub(super) fn combine(
         )?);
     }
     let mut combined = phases::total(calc, &terms, Term::Step("combined"))?;
-    // Culling Strike in the skill's context.
+    // Culling Strike in the skill's context: an attack's with its main
+    // hand's flags (P6-11ij: "Bow Attacks have Culling Strike", PoB's
+    // `skillCfg` with `weapon1Flags`, `CalcActiveSkill.lua` 455). A hand the
+    // engine cannot read gives no flags; the hit and the DoT carry its
+    // reason, so the one here is dropped.
     let mut flags = skill.keyword_flags();
     if skill.types.contains("Attack") {
-        flags = flags | Flags::ATTACK;
+        let mut dropped = Reasons::default();
+        flags = flags
+            | Flags::ATTACK
+            | super::dot::attack_weapon_flags(
+                calc.input(),
+                skill,
+                &crate::source::Source::Rule("culling-strike"),
+                &mut dropped,
+            );
     }
     if skill.types.contains("Spell") {
         flags = flags | Flags::SPELL;

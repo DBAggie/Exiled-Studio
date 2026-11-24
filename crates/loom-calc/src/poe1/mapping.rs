@@ -1668,6 +1668,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P6-11ij: "Bow Attacks have Culling Strike" (`CullPercent` MAX 10 with
+    // `ModFlag.Attack` and `ModFlag.Bow`): Culling Strike for a bow attack,
+    // `poe1::combined` querying with the main hand's flags.
+    (
+        "bow_attacks_have_culling_strike",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CullingStrike),
+            Op::Flag,
+            1.0,
+            Flags::BOW.union(Flags::ATTACK),
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Critical Strike Chance with Bows": `CritChance` INC, `ModFlag.Bow` and `Hit`.
     (
         "bow_critical_strike_chance_+%",
@@ -2068,6 +2081,27 @@ pub const HIT_ROWS: &[HitRow] = &[
             ),
             (
                 Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Lightning)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
+    // P6-11ij: "Deal no Non-Elemental Damage" (`DealNoPhysical`,
+    // `DealNoChaos`).
+    (
+        "deal_no_non_elemental_damage",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Physical)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Chaos)),
                 Op::Flag,
                 1.0,
                 NONE,

@@ -137,6 +137,8 @@ pub enum PerCharge {
     AttackSpeed,
     /// Increased accuracy rating (`Accuracy` INC; P6-11ec).
     Accuracy,
+    /// Added accuracy rating (`Accuracy` BASE; P6-11ij).
+    FlatAccuracy,
     /// Increased damage (`Damage` INC).
     Damage,
     /// More damage (`Damage` MORE; P6-11do: Power Charge On Critical's,
@@ -195,6 +197,7 @@ impl PerCharge {
         match self {
             Self::AttackSpeed => "per.attack-speed",
             Self::Accuracy => "per.accuracy",
+            Self::FlatAccuracy => "per.flat-accuracy",
             Self::Damage => "per.damage",
             Self::MoreDamage => "per.more-damage",
             Self::SpellDamage => "per.spell-damage",
@@ -225,6 +228,7 @@ impl PerCharge {
         match self {
             Self::AttackSpeed => (Quantity::Speed, Op::Increased, Flags::ATTACK),
             Self::Accuracy => (Quantity::Accuracy, Op::Increased, Flags::NONE),
+            Self::FlatAccuracy => (Quantity::Accuracy, Op::Base, Flags::NONE),
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE),
             Self::MoreDamage => (Quantity::Damage, Op::More, Flags::NONE),
             Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL),
@@ -339,6 +343,13 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "accuracy_rating_+%_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::Accuracy),
+    ),
+    // P6-11ij: "+# to Accuracy Rating per Frenzy Charge" (`Accuracy` BASE
+    // per `Multiplier:FrenzyCharge`).
+    (
+        "accuracy_rating_+_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::FlatAccuracy),
     ),
     // P6-11db: "#% increased Attack Speed per Frenzy Charge" (`Speed` INC
     // with `ModFlag.Attack` per `Multiplier:FrenzyCharge`).
