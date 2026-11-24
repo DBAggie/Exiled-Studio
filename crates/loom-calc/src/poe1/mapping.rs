@@ -9733,6 +9733,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "explosion",
     ),
     ("blight_scout_tower_range_+%", "no-slice"),
+    // Close-out M7: the cooldown recovery of Blink and Mirror Arrow, Convocation,
+    // and travel skills per frenzy charge (`CooldownRecovery` INC with their
+    // names or type): skills whose rate no slice field reads.
+    ("blink_and_mirror_arrow_cooldown_speed_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
     ("can_have_active_mercenary_follower", "no-slice"),
@@ -9869,6 +9873,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "regeneration",
     ),
     ("console_skill_dont_chase", "display"),
+    ("convocation_cooldown_speed_+%", "no-slice"),
     ("crush_on_hit_ms_vs_full_life_enemies", "on-hit-debuff"),
     ("curse_effect_on_self_+%", "curse-on-self"),
     // P6-11fb: the timeless additions' lines no slice field reads: curse
@@ -10708,6 +10713,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
+    (
+        "travel_skills_cooldown_speed_+%_per_frenzy_charge",
+        "no-slice",
+    ),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
@@ -10728,6 +10737,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
         "ailment-on-self",
+    ),
+    // Close-out M7: unaffected by Vulnerability while affected by Determination
+    // (`CurseEffectOnSelf` MORE -100 on Vulnerability): a curse on you, which
+    // only the config gives (`playerCursedWithVulnerability` guards
+    // `curse_effect_on_self_+%`, so stays a reason).
+    (
+        "unaffected_by_vulnerability_while_affected_by_determination",
+        "curse-on-self",
     ),
     // Close-out M3: Vaal souls: no slice field.
     ("vaal_skill_soul_gain_preventation_duration_+%", "no-slice"),

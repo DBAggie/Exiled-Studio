@@ -5227,3 +5227,13 @@ The sixth batch: the 19 stats of `M6-buffs`.
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected; 6 values moved, 3 toward PoB, 3 away, each on a build already past PoB's: one build's average damage and ignite DPS with Anger's effect (110,264 to 114,486 against PoB's 82,711), and one build's unreserved mana with Malevolence's efficiency (24 to 87 against PoB's 2: PoB applies the efficiency too; the build reserves less than PoB from modifiers the engine does not read, as P6-9e recorded).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M7: lines scoped to a skill
+
+The seventh batch: the 9 stats of `M7-skill-scoped`.
+
+**`NoEffect`:** the cooldown recovery of Blink and Mirror Arrow, of Convocation, and of travel skills per frenzy charge (skills whose rate no slice field reads); unaffected by Vulnerability while affected by Determination (a curse on you, which only the config gives; `playerCursedWithVulnerability` already guards `curse_effect_on_self_+%`, so stays a reason).
+
+**Moved to closed reasons** (each stays `unmapped-stat`), `C-engine-system`: `base_mana_cost_efficiency_+%_of_link_skills` (a cost efficiency by skill type); `local_display_socketed_gems_have_mana_reservation_+%` (the reservation efficiency of the gems socketed in the item); `local_double_damage_with_attacks` (a weapon's own double damage chance, a `WeaponValue` the hand's attack would read); `projectile_damage_+%_per_chain` (PoB's `PerStat` `Chain`; it guards `number_of_chains`' `NoEffect`); `your_auras_except_malevolence_are_disabled` (disabled skills).
+
+**Evidence** (`b-ct`, against M6's run): no fixture (no row maps a value). **Public** and **corpus:** 0 unexpected, no value moved. **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
