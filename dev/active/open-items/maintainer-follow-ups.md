@@ -28,6 +28,7 @@ The evidence bundles on the workstation (`local/p6/packs/b-ct` and kin) are from
 - Vaal Summon Skeletons' minion level, DIV-0111 to DIV-0113 and DIV-0174: the game's data says 68 at gem level 20; PoB uses 70 (`docs/phase-6/phase-6-report.md`, "The register").
 - Q12 (`docs/phase-3/attack-hits.md`): where global and skill attack speed enter. Open, not blocking.
 - Any new difference from PoB the session finds without Q11 or `pob-bug` evidence (added by the session).
+- **Vaal Summon Skeletons' full DPS (S1, cause not found):** PoB's `FullDPS` for `minion-vaal-summon-skeletons-witch.xml` is 416.996, while its minion's `TotalDPS` is 115.298 and the count 1 (`calcFullDPS`, `Calcs.lua` 204 to 240, adds `TotalDPS x count`). The engine gives 103.72 (the minion's DPS at the game's minion level, DIV-0124). The factor 3.617 has no source found yet; the full DPS pass may use another of the skill's minions. The field keeps `full-dps-vaal` for a Vaal skill that summons minions. Not game truth: an agent can trace it with an instrumented PoB copy later.
 
 ## Decisions
 - **PoE2:** calculations and `.build` import are the rest of "Phase 6+". Not planned yet; a plan needs your go-ahead.
@@ -44,6 +45,9 @@ The largest steps, deferred by you on 2026-11-24, are stretch work for the open-
 - triggers and Spellslinger (plan S3);
 - Blood and Sand, and PoB's full DPS pass (S4);
 - the defences: ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments and leech (S7).
+
+- **Totems' `totem-data` (S1, not reached):** 7 public builds keep only this reason (5 Ice Nova spell totems equal PoB; the 2 Ballista builds differ by the Q11 attack time). Removing it needs every totem path of PoB checked: the player's auras copied as `Totem` mods (`CalcPerform.lua` 3371), buffs on totems (2267, 2299), leech (`CalcOffence.lua` 3528, 3670, 3684), the conditions PoB leaves unset for a totem main skill (`CalcPerform.lua` 240, 259, 265), the totem's level and life (`CalcActiveSkill.lua` 433, 607), and Siege Ballista's `totemFireOnce`.
+- **Static Strike part 1 (S1, not reached):** its function and beam damage act only in part 2, but its zap frequency stats (`static_strike_base_zap_frequency_ms`, `static_strike_zap_speed_+%`) are unmapped; vetting part 1 needs them `NoEffect` outside part 2. Three Smite builds' `FullDPS` wait on it.
 
 ## Housekeeping
 - PR #167's oracle jobs were still running when it merged (2026-11-24 22:15 UTC). Check that the oracle jobs of `dev`'s run at `6deeb5da` passed.

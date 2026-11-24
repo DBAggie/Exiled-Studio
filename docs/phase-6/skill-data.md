@@ -120,3 +120,26 @@ Also:
 - **Tests:** the weapon rule is a pure function (`hit::weapon_flags`) with its own test. The vetted example with both flags is the default attack (`Melee`); Frenzy has tagged stat map entries, so it is not vetted.
 - **Melee over projectile** (`CalcActiveSkill.lua` 361 to 366) for spells and for the DoT's flags too. No vetted spell has both flags.
 - **Limits stated:** a skill's own untagged stat map entries are taken as the plain reading. Their `div` or `mult` against the engine's mapping is not compared, and the sweep checks only its own builds.
+
+## Open items S1 (2026-11-24): what the engine already reads
+
+The open items survey (S0, `dev/active/open-items/open-items-inventory.md`) found builds whose only reason was `pob-skill-data` (or `reservation-becomes-cost`, `full-dps-vaal`) with every field equal to PoB. The vetting rule rejected PoB data the engine reads; three lists in `poe1::hit` now name that data, each entry cited and checked against the generated table by a test (`read_lists_should_vet_only_what_the_engine_reads`):
+
+- **`READ_OWN_STATS`:** tagged stat map entries the engine reads with their tag. Shield Crush's added damage per 15 of the shield's armour and evasion (`SkillStatMap.lua` 1675 to 1697, `hit::shield_added`, P6-11hd) and its damage by distance (`MeleeProximity` ramp `{1, 0}`, `collect::melee_proximity`, P6-11ht).
+- **`READ_PART_BASE_MODS`:** a base mod tagged with one part, which the engine does not read: that part keeps the reason, the others are vetted. Shield Crush's `dpsMultiplier` 2 in part 2 (`act_str.lua` 9887); the engine's `dpsMultiplier` is 1.
+- **`READ_FUNCTIONS`:** a skill function that changes nothing while the level has no cooldown (`pob_vetted_with`, called by the spell path with the level's cooldown). Vortex's `preDamageFunc` sets `hitTimeOverride = output.Cooldown` (`act_int.lua` 20542), read only when set (`CalcOffence.lua` 2403). The engine maps no added cooldown, so without the level's cooldown PoB's is nil.
+- **The DoT's flags** (`dotIsArea` and kin, `dot::DOT_SKILL_DATA_KEYS`) no longer unvet a hit: PoB reads them only in the DoT's config (`CalcOffence.lua` 5657 to 5669), and the DoT vets itself.
+
+Two other reasons, narrowed the same way:
+
+- **`reservation-becomes-cost`** (`poe1::costs`) only when a reservation reaches the cost: PoB adds the active level's flat or percent mana reservation, or a support level's `manaReservationPercent` (`CalcOffence.lua` 1693 to 1700, `CalcActiveSkill.lua` 516). Trap and totem supports add the type to skills that reserve nothing.
+- **`full-dps-vaal`** (`poe1::full_dps`): PoB's `getActiveSkillCount` (`Calcs.lua` 150 to 174) counts a Vaal gem's first effect when `enableGlobal1` is on (the default) and its second when `enableGlobal2` is (`skill::vaal_full_dps_enabled`; the game's `IsVaalGem`, the bundle's `gems.json` `vaal`). A Vaal skill that summons minions keeps the reason: PoB's full DPS of Vaal Summon Skeletons (417) is not its minion's `TotalDPS` (115) times the count, for a cause not found (open items follow-ups).
+
+**Evidence** (`local/p6/s1c`, bundle `b-ct`, against `local/p6/n` at `dev` `6deeb5da`):
+
+- public `Complete` 38,757 to 38,869 (+112: 7 Shield Crush and 3 Vortex fixtures, the trap and Vaal Righteous Fire builds); no value moved;
+- public `calc-parity`: 682 expected differences, 0 unexpected; corpus: 0 unexpected, no state changed;
+- both runs byte-identical;
+- `reservation-becomes-cost` is in no build any more.
+
+**Not reached in S1** (open items follow-ups, "Planned for the session, may not be reached"): totems' `totem-data`, Static Strike's part 1, the trigger builds (S3).

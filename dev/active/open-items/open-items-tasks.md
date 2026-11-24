@@ -15,6 +15,8 @@ Last Updated: 2026-11-24
 ## Steps (S0 first; then by fields cleared per unit of effort; S3, S4, S7 stretch)
 - [x] S0: survey and classify; `open-items-inventory.json` and `.md`; `local/p6/tools/inventory_check.py`; the fixture budget; class B and C items copied into `maintainer-follow-ups.md`. Found (2026-11-24): 344 distinct reasons, 275 A, 69 C (the 68 game-truth stats and the older item wordings of `no-template`), B only as gem parts (Skitterbots); fixture budget 75 for the session (about 14.8 s each on the Windows oracle job). **Order from S0** (`local/p6/tools/build_blockers.py`: builds blocked by one or two reasons): S1 first, since its existing fixtures clear without new ones (Shield Crush 7 builds and Vortex 3, `pob-skill-data` alone; 7 totem builds, `totem-data` and `reservation-becomes-cost` alone; the CwC builds; `full-dps-vaal`), then S8, S10, S9, S2
 - [ ] S1: main skills without PoB skill data, and the related `unmodelled-skill` kinds
+  - [x] S1 part 1 (`local/p6/s1c`): the vetting rule's read lists (Shield Crush, Vortex, the DoT's flags), `reservation-becomes-cost` only when a reservation reaches the cost, a Vaal gem's `enableGlobal` flags in the full DPS; public `Complete` 38,757 to 38,869, 0 unexpected (`docs/phase-6/skill-data.md`, "Open items S1")
+  - [ ] the rest of S1: other `pob-skill-data` skills by builds (Cyclone, Static Strike part 1, Fire Trap, Thrown Shield, ...), `socket-colour-quality`, `sigil-of-power-stages`, `skill-chill-effect`, `minion-buffs`; totems and Static Strike are in the follow-ups as "may not be reached"
 - [ ] S2: unmodelled support and active gems
 - [ ] S3: triggers and Spellslinger
 - [ ] S4: Blood and Sand, and PoB's full DPS pass
