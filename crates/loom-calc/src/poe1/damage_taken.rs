@@ -550,6 +550,19 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
     // "Nearby Enemies are Intimidated while you have Rage" (P3-8n,
     // `poe1::stacks`): the same flag as the config's, so once.
     let rage = super::stacks::intimidates(Some(set), ingest);
+    // "Nearby Enemies are Intimidated" (close-out M5): the same flag.
+    let rage = rage.or_else(|| {
+        ingest
+            .effects()
+            .iter()
+            .find(|e| {
+                e.quantity == Quantity::Poe1(Poe1Quantity::EnemyIntimidated)
+                    && e.op == Op::Flag
+                    && e.value != 0.0
+                    && e.conditions == Conditions::none()
+            })
+            .map(|e| e.source.clone())
+    });
     for (input, flag) in checks {
         match check(set, input) {
             Ok(false) if input == INTIMIDATED_INPUT && rage.is_some() => {
@@ -1421,8 +1434,11 @@ mod tests {
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
         for id in ids {
             // P6-11gq: Blind's effect, which this module reads.
+            // Close-out M5: "Nearby Enemies are Intimidated", read here.
             assert!(
-                !names(id, &words) || id == BLIND_EFFECT_STAT,
+                !names(id, &words)
+                    || id == BLIND_EFFECT_STAT
+                    || id == "local_display_nearby_enemies_are_intimidated",
                 "{id}: revisit poe1::damage_taken"
             );
         }

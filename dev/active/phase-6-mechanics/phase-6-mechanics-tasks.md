@@ -426,7 +426,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Close-out `M3-plain`, first part (42): two rows, 17 `NoEffect`, 20 to closed reasons, 3 on the game-truth list (`docs/phase-6/stat-mop-up.md`, "Close-out M3, first part"); two fixtures, Q11 DIV-0672 to DIV-0677
 - [x] Close-out `M3-plain`, second part (41): three rows, 16 `NoEffect`, 21 to closed reasons, 1 on the game-truth list (`docs/phase-6/stat-mop-up.md`, "Close-out M3, second part"); one fixture
 - [x] Close-out `M4-minion` (12): minions' crit chance (`MinionValue::CritChance`), their freeze, shock, and ignite chance; 2 `NoEffect`; 8 to closed reasons (`docs/phase-6/stat-mop-up.md`, "Close-out M4"); one fixture
-- [ ] Close-out `M5-enemy` (13)
+- [x] Close-out `M5-enemy` (13): warcry-taunted damage taken, nearby enemies intimidated; 1 guarded `NoEffect`; 9 to closed reasons, 1 on the game-truth list (`docs/phase-6/stat-mop-up.md`, "Close-out M5"); three fixtures, Q11 DIV-0678 to DIV-0683
 - [ ] Close-out `M6-buffs` (19)
 - [ ] Close-out `M7-skill-scoped` (9)
 - [ ] Close-out `H-hidden` (13)

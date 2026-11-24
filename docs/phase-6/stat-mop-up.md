@@ -5189,3 +5189,23 @@ The fourth batch: the 12 stats of `M4-minion`.
 - **One new mechanic fixture**, matching PoB on every computed field: `minion-m4-flame-golem-crit-ignite-witch.xml` (the golem's crit chance 5 to 7.5, its ignite).
 - **Public:** 0 unexpected, no value moved. **Corpus:** 0 unexpected, 1 value toward PoB.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M5: enemy modifiers
+
+The fifth batch: the 13 stats of `M5-enemy` (PoB's `EnemyModifier` lines).
+
+**Mapped:**
+- "Enemies Taunted by your Warcries take #% increased Damage": the enemy's damage taken under `conditions::ENEMY_TAUNTED_BY_WARCRY` (new: the enemy taunted and a warcry used recently, false when either is false).
+- "Nearby Enemies are Intimidated": `Poe1Quantity::EnemyIntimidated` (new), which `poe1::damage_taken` reads as the config's Intimidate, once, as rage's.
+
+**`NoEffect`:** "Monsters cannot Block your Attacks": the enemy blocks only with the config's `enemyBlockChance`, which now guards the row.
+
+**Moved:**
+- **Game-truth list:** `totems_nearby_enemies_damage_taken_+%`. PoB adds the line as an `EnemyModifier` whose `Multiplier:TotemsSummoned` it reads on the enemy, where it is 0, so it never applies (checked: with 3 totems PoB's average damage is the warcry line's alone). In the game each totem applies it.
+- `C-engine-system`: `ailment_types_apply_damage_taken_+%` (each ailment on the enemy, chill from guaranteed sources too); `enemies_in_presence_and_you_count_as_moving_when_affected_by_elemental_ailments` (moving actors); `enemies_near_corpses_created_recently_are_shocked_and_chilled`; `enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning` and `local_nearby_enemies_base_physical_damage_%_to_convert_to_fire` (the enemy's conversions in its hit); `enemies_taunted_by_your_warcies_are_intimidated`; `gain_debilitating_presence_ms_on_kill_vs_rare_or_unique_enemy` (Maddening Presence); `hinder_enemy_chaos_damage_taken_+%` (the enemy's damage taken of one type); `sabotuer_mines_apply_damage_taken_+%_to_nearby_enemies_up_to_10%` (the active mines).
+
+**Evidence** (`b-ct`, against M4's run):
+- **Three new mechanic fixtures**, each matching PoB on every computed field: `ice-nova-m5-warcry-taunted-witch.xml` (average damage 727.5 to 785.8), `ice-nova-m5-warcry-taunted-none-witch.xml` (no warcry, no change), `smite-m5-nearby-intimidated-templar.xml` (but for the weapon's rate, Q11 DIV-0678 to DIV-0683).
+- **Public:** 0 unexpected; 5 values moved, 3 toward PoB, 2 away: Generals Perforate Zerker.xml's average damage and bleed DPS with the warcry-taunted line, which PoB applies too (the build's config sets the enemy taunted and a warcry used); the build was already past PoB's from M1 on, with its other gaps (speed 1.64 against 2.20).
+- **Corpus:** 0 unexpected; 4 values toward PoB, none away.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

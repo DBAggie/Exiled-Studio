@@ -6312,6 +6312,18 @@ pub const STATE_ROWS: &[StateRow] = &[
         "support_lifetap_damage_+%_final_while_buffed",
         &[(Quantity::Damage, Op::More, NONE, conditions::LIFETAP)],
     ),
+    // Close-out M5: "Enemies Taunted by your Warcries take #% increased
+    // Damage" (the enemy's `DamageTaken` INC, `Taunted` and
+    // `UsedWarcryRecently`).
+    (
+        "taunted_enemies_by_warcry_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_TAUNTED_BY_WARCRY,
+        )],
+    ),
     // P6-11fa: "Throw # additional Traps while Dual Wielding"
     // (`TrapThrowCount` BASE, `DualWielding`).
     (
@@ -8318,6 +8330,16 @@ pub const ROWS: &[Row] = &[
                 1.0,
             ),
         ],
+    ),
+    // Close-out M5: "Nearby Enemies are Intimidated" (the enemy's
+    // `Condition:Intimidated`; `poe1::damage_taken` reads it as the config's).
+    (
+        "local_display_nearby_enemies_are_intimidated",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyIntimidated),
+            Op::Flag,
+            1.0,
+        )],
     ),
     (
         "local_display_nearby_enemy_chaos_damage_resistance_%",
@@ -10733,6 +10755,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "your_aegis_skills_except_primal_are_disabled",
         "aegis-skills",
     ),
+    // Close-out M5: "Monsters cannot Block your Attacks" (the enemy's
+    // `CannotBlockAttacks`): the enemy blocks only with the config's
+    // `enemyBlockChance` (guarded).
+    ("your_attacks_cannot_be_blocked", "no-slice"),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
@@ -10836,6 +10862,7 @@ pub const NO_EFFECT_DEPENDS_ON_INPUTS: &[(&str, &str)] = &[
         "conditionShocked",
         "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
     ),
+    ("enemyBlockChance", "your_attacks_cannot_be_blocked"),
     ("playerCursedWithAssassinsMark", "curse_effect_on_self_+%"),
     ("playerCursedWithConductivity", "curse_effect_on_self_+%"),
     ("playerCursedWithDespair", "curse_effect_on_self_+%"),
@@ -12623,6 +12650,8 @@ mod tests {
                         conditions::ENEMY_NOT_LOW_LIFE,
                         conditions::AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY,
                         conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
+                        // Close-out M5: the enemy taunted by your warcries.
+                        conditions::ENEMY_TAUNTED_BY_WARCRY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -14141,6 +14170,16 @@ mod tests {
                     Op::More,
                     NONE,
                     conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
+                )],
+            ),
+            // Close-out M5.
+            (
+                "taunted_enemies_by_warcry_damage_taken_+%",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_TAUNTED_BY_WARCRY,
                 )],
             ),
             // Close-out M1.

@@ -167,6 +167,10 @@ pub const ENEMY_POISONED: &str = "Enemy:Poisoned";
 pub const POISON_ON_ENEMY_INPUT: &str = "multiplierPoisonOnEnemy";
 /// See [`ENEMY_POISONED`].
 pub const ENEMY_TAUNTED: &str = "Enemy:Taunted";
+/// "Enemies Taunted by your Warcries" (close-out M5; PoB's enemy
+/// `Taunted` with `UsedWarcryRecently`): both settled true, else false
+/// when either is false.
+pub const ENEMY_TAUNTED_BY_WARCRY: &str = "Enemy:Taunted+UsedWarcryRecently";
 /// See [`ENEMY_POISONED`].
 pub const ENEMY_FROZEN: &str = "Enemy:Frozen";
 /// See [`ENEMY_POISONED`].
@@ -899,6 +903,18 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         None => {
             out.remove(&key);
         }
+    }
+    // Taunted by your warcries (close-out M5): the enemy taunted and a
+    // warcry used recently.
+    let taunted = out.get(&ConditionKey::new(ENEMY_TAUNTED)).copied();
+    let warcried = out.get(&ConditionKey::new(USED_WARCRY_RECENTLY)).copied();
+    let both = match (taunted, warcried) {
+        (Some(true), Some(true)) => Some(true),
+        (Some(false), _) | (_, Some(false)) => Some(false),
+        _ => None,
+    };
+    if let Some(v) = both {
+        out.insert(ConditionKey::new(ENEMY_TAUNTED_BY_WARCRY), v);
     }
     // Not blocked recently (P6-11eg): the negation of the three blocked
     // checks, settled when they are.

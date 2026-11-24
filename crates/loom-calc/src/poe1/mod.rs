@@ -117,6 +117,10 @@ pub enum Poe1Quantity {
     /// the enemy): its `Increased` and `More` effects scale each hit
     /// ([`damage_taken`]).
     EnemyDamageTaken,
+    /// "Nearby Enemies are Intimidated" (close-out M5; PoB's
+    /// `EnemyModifier` of `Condition:Intimidated`): a `Flag`, which
+    /// [`damage_taken`] reads as the config's Intimidate.
+    EnemyIntimidated,
     /// The enemy's evasion modifiers (PoB's `Evasion` INC and MORE on the
     /// enemy, `calcLib.val`): they scale its base evasion before an
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
@@ -1440,6 +1444,7 @@ impl core::fmt::Display for Poe1Quantity {
                 f.write_str("maximum-physical-damage-reduction")
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
+            Self::EnemyIntimidated => f.write_str("enemy-intimidated"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
