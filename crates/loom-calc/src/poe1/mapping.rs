@@ -4021,6 +4021,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
+    // Close-out M3: Facebreaker's "#% more Physical Damage with Unarmed Melee
+    // Attacks" (`PhysicalDamage` MORE, `ModFlag.Unarmed` and `Melee`).
+    (
+        "unique_facebreaker_unarmed_melee_physical_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::UNARMED.union(Flags::MELEE).union(Flags::PHYSICAL),
+            NONE,
+        )],
+    ),
     (
         "unique_ryuslathas_clutches_maximum_physical_attack_damage_+%_final",
         &[(
@@ -8903,6 +8915,19 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Close-out M3: "#% more Skill Effect Duration" (`Duration` MORE): the
+    // only skill duration a slice field reads is a warcry's, its uptime
+    // (`poe1::gems`), so the warcries' more duration.
+    (
+        "passive_mastery_more_skill_effect_duration_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillTiming(
+                super::skill_modifiers::SkillTiming::WarcryDuration,
+            )),
+            Op::More,
+            1.0,
+        )],
+    ),
     // P3-8n: "Enemies permanently take #% increased Damage for each second
     // they've ever been Chilled by you, up to a maximum of 10%" (3812;
     // `poe1::damage_taken`).
@@ -9142,6 +9167,16 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::OffHandSpeedMore),
             Op::More,
             1.0,
+        )],
+    ),
+    // Close-out M3: "Take no Extra Damage from Critical Strikes"
+    // (`ReduceCritExtraDamage` BASE 100).
+    (
+        "self_take_no_extra_damage_from_critical_strikes",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritExtraDamageReduction),
+            Op::Base,
+            100.0,
         )],
     ),
     // P6-11k: "#% increased Defences from Equipped Shield" (`Defences` INC,
@@ -10280,6 +10315,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_gained_on_attack_hit_if_used_mana_flask_in_past_10_seconds",
         "recovery",
     ),
+    // Close-out M3: mana gained on block (`ManaOnBlock`): no recovery field
+    // reads a block.
+    ("mana_gained_on_block", "recovery"),
     ("maximum_life_+%_for_corpses_you_create", "no-slice"),
     // P6-11be: "Reflects # to # Lightning Damage to Melee Attackers" (PoB
     // parses none of it): damage dealt back, no slice field.
@@ -10336,6 +10374,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("minion_skill_area_of_effect_+%", "area"),
     ("minion_spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
     ("minions_are_defensive", "no-slice"),
+    // Close-out M3: Mirage Archer's duration: no slice field.
+    ("mirage_archer_duration_+%", "mirage"),
     // P6-7c3: a monster skill's penalty against the player's minions (the
     // Flame Golem's Immolate): PoB's stat map has no row for it.
     (
@@ -10375,6 +10415,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "pantheon_shakari_self_poison_duration_+%_final",
         "ailment-on-self",
     ),
+    // Close-out M3: life recovered from flasks (`FlaskLifeRecovery` MORE): no
+    // slice field.
+    ("pathfinder_flask_life_to_recover_+%_final", "flask"),
     // Quartz Flask's "Phasing" (PoB's `Condition:Phasing`, `ModParser.lua`
     // 3972): only modifiers read it (unmapped, or an unsettled condition)
     // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
@@ -10383,6 +10426,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("phasing_for_4_seconds_on_kill_%", "no-slice"),
     // P6-11m: reflected physical damage (unparsed).
     ("physical_damage_to_return_to_melee_attacker", "reflect"),
+    // Close-out M3: Plague Bearer's maximum plague value (PoB leaves the line
+    // unparsed): no slice field.
+    ("plague_bearer_maximum_stored_poison_damage_+%", "no-slice"),
     // P6-11n: "#% increased Power Charge Duration"
     // (`PowerChargesDuration` INC): the charges come from the config.
     ("power_charge_duration_+%", "charge-duration"),
@@ -10392,11 +10438,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
     ("projectile_chain_from_terrain_chance_%", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
+    // Close-out M3: "Projectiles Fork" (`ForkOnce`, `ForkCountMax`): no slice
+    // field.
+    ("projectiles_fork", "projectile-count"),
+    // Close-out M3: projectiles return (PoB leaves the line unparsed): no slice
+    // field counts a second hit.
+    ("projectiles_return", "no-slice"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
     (
         "quality_display_active_skill_area_damage_quality_negated_from_gem",
         "display",
     ),
+    // Close-out M3: rage lost faster (`InherentRageLoss` INC): rage's loss,
+    // never its gain or effect.
+    ("rage_decay_speed_+%", "no-slice"),
     ("rage_loss_delay_ms", "rage-duration"),
     // P6-11br: projectile directions (PoB does not parse it).
     ("random_projectile_direction", "targeting"),
@@ -10426,6 +10481,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`ManaOnKill`, `EnergyShieldOnKill` BASE): no recovery field reads a kill.
     ("recover_%_maximum_mana_on_kill", "recovery"),
     ("recover_energy_shield_%_on_kill", "recovery"),
+    // Close-out M3: energy shield on suppressing a spell: no recovery field
+    // reads it.
+    ("recover_x_energy_shield_on_suppressing_spell", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
     ("remote_mined_by_support", "no-slice"),
     // P6-11aj: Multistrike's repeats choose nearby targets.
@@ -10470,6 +10528,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
+    // Close-out M3: suppression applied to avoiding elemental ailments: no
+    // slice field (a chill on you is the config's, guarded).
+    (
+        "spell_suppression_chance_modifiers_apply_to_avoid_all_elemental_ailments_at_%_value",
+        "ailment-on-self",
+    ),
     // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
     ("spell_uncastable_if_triggerable", "trigger"),
     ("spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
@@ -10519,6 +10583,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_momentum_stack_while_channelling_base_ms",
         "channelling",
+    ),
+    // Close-out M3: More and Less Duration's more duration: a warcry's uptime
+    // reads it from the skill (`gems::DURATION_MORE_STATS`); no other slice
+    // field.
+    (
+        "support_more_duration_skill_effect_duration_+%_final",
+        "skill-duration",
+    ),
+    (
+        "support_reduced_duration_skill_effect_duration_+%_final",
+        "skill-duration",
     ),
     (
         "support_remote_mine_2_base_mine_detonation_time_ms",
@@ -10589,6 +10664,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("totem_duration_+%", "totem-duration"),
     ("totem_elemental_resistance_%", "no-slice"),
     ("totem_life_+%", "no-slice"),
+    // Close-out M3: totems' additional projectiles (`ProjectileCount` BASE,
+    // `KeywordFlag.Totem`): as the plain stat's, guarded.
+    ("totem_number_of_additional_projectiles", "projectile-count"),
     ("totem_placement_range_+%", "no-slice"),
     ("totem_support_gem_level", "no-slice"),
     (
@@ -10619,6 +10697,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
         "ailment-on-self",
     ),
+    // Close-out M3: Vaal souls: no slice field.
+    ("vaal_skill_soul_gain_preventation_duration_+%", "no-slice"),
+    ("vaal_skill_soul_refund_chance_%", "no-slice"),
+    ("vaal_souls_gained_per_minute", "no-slice"),
     ("visual_hit_effect_elemental_is_holy", "display"),
     (
         "wand_attacks_fire_an_additional_projectile",
@@ -10631,6 +10713,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "charge-gain-chance",
     ),
     ("warcry_skill_area_of_effect_+%", "area"),
+    // Close-out M3: "You cannot be Hindered" (`HinderImmune`): PoB has no
+    // hinder on you to configure.
+    ("you_cannot_be_hindered", "ailment-on-self"),
     // P6-11hl: "Other Aegis Skills are Disabled" (`DisableSkill` for
     // `SkillType.Aegis` but Primal Aegis): no other aegis skill is modelled
     // (each keeps its own reason).
@@ -10693,6 +10778,10 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "number_of_additional_projectiles",
     ),
+    (
+        "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
+        "totem_number_of_additional_projectiles",
+    ),
     // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
     ("projectile_damage_+%_per_chain", "number_of_chains"),
     (
@@ -10713,6 +10802,11 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     ("projectiles_barrage", "number_of_additional_arrows"),
     // P6-11u: Barrage's `SequentialProjectiles`.
     ("projectiles_barrage", "number_of_additional_projectiles"),
+    // Close-out M3: totems' additional projectiles, the same.
+    (
+        "projectiles_barrage",
+        "totem_number_of_additional_projectiles",
+    ),
 ];
 
 /// Config inputs that would make a [`NO_EFFECT`] row reach a slice field:

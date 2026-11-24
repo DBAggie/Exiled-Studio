@@ -762,6 +762,8 @@ mod tests {
         let checked = [
             "rage_loss_delay_ms",
             "life_loss_%_per_minute_per_rage_while_not_losing_rage",
+            // Close-out M3: rage lost faster, rage's loss.
+            "rage_decay_speed_+%",
         ];
         for (id, _) in NO_EFFECT {
             assert!(

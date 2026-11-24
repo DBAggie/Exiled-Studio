@@ -424,7 +424,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Close-out `M1-conditions` (38): new settled enemy and player conditions, `STATE_DIVIDED_ROWS`, flask aliases, Arcane Surge under a condition, the shield block override; 4 stats moved (`docs/phase-6/stat-mop-up.md`, "Close-out M1"); ten fixtures, Q11 DIV-0653 to DIV-0664
 - [x] Close-out `M2-per-and-thresholds` (21 and the Gladiator's line): three config counts in `poe1::stacks`, two per frenzy charge, a devotion reader, life per level, cold as fire per chill; 10 stats to closed reasons, `C-engine-system` new (`docs/phase-6/stat-mop-up.md`, "Close-out M2"); four fixtures, Q11 DIV-0665 to DIV-0671
 - [x] Close-out `M3-plain`, first part (42): two rows, 17 `NoEffect`, 20 to closed reasons, 3 on the game-truth list (`docs/phase-6/stat-mop-up.md`, "Close-out M3, first part"); two fixtures, Q11 DIV-0672 to DIV-0677
-- [ ] Close-out `M3-plain`, second part (41)
+- [x] Close-out `M3-plain`, second part (41): three rows, 16 `NoEffect`, 21 to closed reasons, 1 on the game-truth list (`docs/phase-6/stat-mop-up.md`, "Close-out M3, second part"); one fixture
 - [ ] Close-out `M4-minion` (12)
 - [ ] Close-out `M5-enemy` (13)
 - [ ] Close-out `M6-buffs` (19)

@@ -5150,3 +5150,25 @@ The third batch's first 42 stats (alphabetical in `p6-close-out-list.md`, up to 
 - **Two new mechanic fixtures**, each matching PoB on every computed field: `smite-m3-poison-with-attacks-templar.xml` (but for the weapon's rate, Q11 DIV-0672 to DIV-0677), `ice-nova-m3-block-lucky-witch.xml`.
 - **Public:** 0 unexpected; 4 values toward PoB, none away. **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M3, second part: plain rows
+
+The third batch's other 41 stats (from `mana_%_to_add_as_energy_shield` on).
+
+**Mapped:**
+- "Take no Extra Damage from Critical Strikes" (`ReduceCritExtraDamage` BASE 100, the crit reduction row's quantity).
+- Facebreaker's "#% more Physical Damage with Unarmed Melee Attacks" (a hit row, `ModFlag.Unarmed` and `Melee`).
+- "#% more Skill Effect Duration" (a mastery's `Duration` MORE): the only skill duration a slice field reads is a warcry's uptime (`poe1::gems`), so the warcries' more duration. More and Less Duration's more duration join `gems::DURATION_MORE_STATS`, read from a warcry's own supports, and are `NoEffect` elsewhere.
+
+**`NoEffect`:** mana gained on block and energy shield on suppressing a spell (`recovery`); Mirage Archer's duration; life recovered from flasks; Plague Bearer's maximum plague value and projectiles returning (PoB leaves both lines unparsed; no slice field reads either); "Projectiles Fork"; rage lost faster (rage's loss); suppression applied to avoiding elemental ailments; totems' additional projectiles (guarded as the plain stat's); Vaal souls (three stats); "You cannot be Hindered" (PoB has no hinder on you to configure).
+
+**Moved to closed reasons** (each stays `unmapped-stat`):
+- `C-engine-system`: `mana_%_to_add_as_energy_shield` (mana gained as energy shield, as life's P6-11dd row but read from mana); `maximum_affliction_charges_is_equal_to_maximum_frenzy_charges`, `modifiers_to_minimum_frenzy_charges_instead_apply_to_affliction_charges` (affliction charges); `non_damaging_ailment_effect_+%`, `raider_shock_maximum_effect_override_%`, `raider_shocks_you_apply_can_stack_up_to_50_times`, `shock_effect_+%`, `shock_maximum_magnitude_+` (the shock's effect, maximum, and stacks, `damage_taken::SHOCK_DEPENDS_ON`); `num_magic_utility_flasks_always_apply` (Mageblood); `player_far_shot` (PoB's distance ramp); `quiver_mod_effect_+%` (the slot's mods scaled); `unique_helmet_cast_speed_+%_applies_to_attack_speed_at_%_of_original_value`; `warcries_have_minimum_10_power`; `warcry_grant_X_rage_per_5_power` (`config::DEPENDS_ON` names it: rage from warcries meets the config's rage); `support_additional_trap_mine_%_chance_for_1_additional_trap_mine` (already a hit row since P6-11fa; its build's line is read in another context).
+- `C-unmodelled-skill`: `reduce_enemy_chaos_resistance_%`, `reduce_enemy_elemental_resistance_%`, `self_bleed_duration_+%` (gems' own stats of skills the engine does not model); `summon_fire_skitterbot`, `summoned_skitterbots_auras_also_affect_you`, `summoned_skitterbots_non_damaging_ailment_effect_+%` (Skitterbots).
+- **Game-truth list:** `trap_%_chance_to_trigger_twice` (PoB leaves it unparsed; in the game a trap triggering twice hits twice).
+
+**Evidence** (`b-ct`, against M3's first part):
+- **One new mechanic fixture**, matching PoB on every computed field: `ice-nova-m3-no-extra-crit-damage-taken-witch.xml`. No fixture for Facebreaker (no unarmed attack the engine models) or the more duration (its text is ambiguous as a custom line, and More Duration is an unmodelled support).
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected; 4 values moved, 3 toward PoB (a build's total EHP with the crit line), 1 away: the same build's number of damaging hits, 2.290 to 2.328 against PoB's 2.279, with its pools still short of PoB's (EHP 56,193 against 64,759).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
