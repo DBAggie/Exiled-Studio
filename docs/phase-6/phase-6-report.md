@@ -209,3 +209,49 @@ Each step's record is in the tasks file (`dev/active/phase-6-mechanics/phase-6-m
 - **The bench baseline** after this PR's `calculate` rise.
 - **Shipping** `poe1/minions.json` and `poe1/flasks.json` in the signed bundle.
 - **The gate run itself**, as the maintainer asked: "We can do gate testing after."
+
+## Open items (2026-11-24)
+
+The maintainer asked (2026-11-24) for every open item an agent can finish, with whatever needs the maintainer stored as a follow-up. Plan, inventory, and tasks: `dev/active/open-items/`; the maintainer's list: `dev/active/open-items/maintainer-follow-ups.md`. One PR, #168, a commit per step.
+
+**Counts** (bundle `local/p6/packs/b-ct`; baseline `dev` `6deeb5da`, `local/p6/n`; final run `local/p6/s2`):
+
+| | Baseline | After the open items |
+|---|---|---|
+| Public builds | 531 | 535 (4 new mechanic fixtures) |
+| Public fields `Complete` | 38,757 | 39,232 (+475: 171 on existing builds, 304 the new fixtures) |
+| Public calc-parity | 682 expected, 0 unexpected | 698 expected, 0 unexpected |
+| Corpus fields `Complete` | 0 | 0 (every corpus build keeps a class C or data reason) |
+| Corpus field-reason pairs | 10,537 | 9,644 (-893) |
+| Public field-reason pairs | 24,890 | 23,874 |
+| Distinct reasons (public and corpus) | 344 | 328 (16 cleared) |
+| Distinct `unmapped-stat` | 278 | 275 |
+
+Every step's public and corpus runs: 0 unexpected, both runs byte-identical; every value that moved, moved toward PoB.
+
+**The steps:**
+
+- **S0:** every distinct reason classed once (`open-items-inventory.json`, `.md`; `local/p6/tools/inventory_check.py` fails on a reason missing from it): 275 agent (A), 69 maintainer (C: the 68 game-truth stats and the older item wordings under `no-template`), data run (B) only as gem parts (Skitterbots). Fixture budget: 75 for the session (about 14.8 s each on the Windows oracle job); 4 used.
+- **S1** (`docs/phase-6/skill-data.md`, `totems.md`, "Open items S1"): the vetting rule's read lists (Shield Crush, Vortex, the DoT's flags); `reservation-becomes-cost` only when a reservation reaches the cost; a Vaal gem's `enableGlobal` flags in the full DPS; `totem-data` narrowed to Siege Ballista of Trarthus, a totem's bleed, and its DoT; no leech field for a placed skill's hit.
+- **S8** (`docs/phase-6/config-inputs.md`, "Open items S8"): Storm Rain's and Toxic Rain's overlap inputs as skill data only; `ActiveBrands`, Alchemist's Genius, and the three grounds in `NAMED_ONLY`; Unholy Might, a moving enemy's bleed, scorch, sap, and crush modelled; two stats `NoEffect` (their lines PoB applies no mod of).
+- **S10** (`docs/phase-6/stat-mop-up.md`, "Open items S10"): the close-out's open item explained: PoB's `PercentStat` ceils each line (`ModStore.lua` 532), and the stat is mapped as PoB does.
+- **S2** (`docs/phase-6/gems.md`, "Open items S2"): every candidate gem checked against PoB's export, calc modules, and `data-parity`; two supports added, nine refused with their blockers recorded.
+
+**Register:** DIV-0684 to DIV-0699, all Q11 under the confirmed rule (the Ballista fixtures' Short Bow and the S8 Smite fixture's Rusted Hatchet, 667 ms); no `game-truth` or `pob-bug` entry; `divergence-check` passes (698 accepted).
+
+**New fixtures:** `ice-nova-s8-unholy-might-withered-witch.xml`, `smite-s8-bleed-moving-enemy-templar.xml`, `ice-nova-s8-scorch-sap-crushed-witch.xml`, `ice-nova-s10-mana-regen-on-corpse-witch.xml`, each matching PoB on every computed field but for the Smite fixture's Q11 rate.
+
+**Every reason left, by class** (the final run's 328, each in the inventory; `inventory_check.py` passes):
+
+| Class | Step | Reasons | What |
+|---|---|---|---|
+| A | S1 | 114 | `pob-skill-data` skills and the skill kinds, and the close-out's `C-unmodelled-skill` stats owned by them |
+| A | S8 | 112 | the close-out's closed reasons (`C-engine-system`, `C-item-skill`, `C-keystone`, `C-gem-property`, `C-no-slice`), the remaining config inputs (brittle, the minion inputs, Feeding Frenzy, Elemental Equilibrium, ...), `NoLifeModifiersOnBodyArmour` |
+| A | S9 | 20 | resolver and item gaps: `ambiguous`, `no-variant-fits`, `only-shadowed`, scaled and excluded lines, item kinds, tree lines, cluster and timeless nodes |
+| A | S6 | 7 | spectres, the minion inputs |
+| A | S7 | 3 | ward and EHP lines, a dual wielder's block |
+| A | S2, S3, S5 | 1 each | `unmodelled-gem` (its parts in the gem table), Spellslinger and item triggers, warcry power |
+| C | none | 68 | the game-truth list (each needs a check in the game) |
+| C | S9 | 1 | `unresolved-line` `no-template`: older item wordings (an ADR-015 amendment and an additive `Adapted` kind) and note text |
+
+**Not reached** (planned as stretch, or the rest of a step; `maintainer-follow-ups.md`, "Planned for the session, may not be reached"): S3 (triggers and Spellslinger), S4 (Blood and Sand, PoB's full DPS pass), S5 (costs per second, warcry power, mirages, wisps), S6 (minion damage over time, spectres), S7 (ward, EHP's other pools, maximum hit, degeneration, a dual wielder's leech), S9 (the resolver and item gaps), and the rest of S1, S2, and S8 as their task lines say.

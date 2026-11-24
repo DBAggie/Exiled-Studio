@@ -32,4 +32,4 @@ Last Updated: 2026-11-24
   - [ ] the rest of S8: the close-out's closed reasons (104 stats; by fields: Herald of the Breach's item skill, Empowered attacks, the alternate ascendancy heralds, ...)
 - [ ] S9: resolver and item gaps
 - [x] S10: PoB's mana `PercentStat` (`local/p6/s10`): the cause is `PercentStat`'s per-line ceiling (`ModStore.lua` 532), so the stat is mapped as PoB does (`RegenPercentStat`), no register entry; 1 fixture (4 of 75); public `Complete` 39,232, 0 unexpected (`docs/phase-6/stat-mop-up.md`, "Open items S10")
-- [ ] S11: report section, handoff, CLAUDE.md, follow-ups file
+- [x] S11: report section (`docs/phase-6/phase-6-report.md`, "Open items (2026-11-24)"), handoff, CLAUDE.md, follow-ups file (the steps not reached listed); written after S2 part 1 and to be refreshed if later steps land

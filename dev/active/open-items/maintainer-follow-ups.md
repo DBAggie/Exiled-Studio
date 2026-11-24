@@ -46,7 +46,16 @@ The largest steps, deferred by you on 2026-11-24, are stretch work for the open-
 - Blood and Sand, and PoB's full DPS pass (S4);
 - the defences: ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments and leech (S7).
 
+Not reached in the session of 2026-11-24 either (agent work, no decision needed; the next session can continue them from `open-items-tasks.md`):
+- **S5:** mine, trap, and totem costs per second; warcry power and the cries that scale with it; General's Cry's mirage warriors; Sacred Wisps.
+- **S6:** the minion's own damage over time; spectres (S0 did not check `b-ct`'s monster data for them yet).
+- **S9:** the resolver and item gaps of class A (`ambiguous`, `no-variant-fits`, `only-shadowed`, scaled and excluded lines, the item kinds, tree lines, cluster and timeless nodes).
+- **The rest of S1:** the other `pob-skill-data` skills (Cyclone, Fire Trap, Thrown Shield, the trigger builds), `socket-colour-quality`, `sigil-of-power-stages`, `skill-chill-effect`, `minion-buffs`.
+- **The rest of S2:** the buffs and auras with global rows (`docs/phase-6/gems.md`, "Open items S2"), Cold Snap and Unbound Ailments with their chill effect.
+- **The rest of S8:** the close-out's closed reasons (104 stats at S0; `open-items-inventory.md` lists each with its step), brittle (its enemy-side crit reaches minions), the minion inputs, Feeding Frenzy, Elemental Equilibrium's exposure.
+
 - **Static Strike part 1 (S1, not reached):** its function and beam damage act only in part 2, but its zap frequency stats (`static_strike_base_zap_frequency_ms`, `static_strike_zap_speed_+%`) are unmapped; vetting part 1 needs them `NoEffect` outside part 2. Three Smite builds' `FullDPS` wait on it.
 
 ## Housekeeping
-- PR #167's oracle jobs were still running when it merged (2026-11-24 22:15 UTC). Check that the oracle jobs of `dev`'s run at `6deeb5da` passed.
+- PR #167's oracle jobs were still running when it merged (2026-11-24 22:15 UTC). Check that the oracle jobs of `dev`'s run at `6deeb5da` passed (still running at 23:40 UTC, 85 minutes in; about 131 expected at 531 fixtures).
+- **The oracle jobs' time:** this PR adds 4 fixtures (535 in all); at about 14.8 s each the Windows job should take about 132 minutes of its 150.
