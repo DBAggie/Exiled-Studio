@@ -5132,3 +5132,21 @@ The second batch: the 21 stats of `M2-per-and-thresholds` and the Gladiator's li
 - **Public:** 0 unexpected; 17 values toward PoB, none away. 77 fields of two builds went from partial to indeterminate: their per-minute rolls (essence-drain-contagion-occultist.xml's devotion jewel, winter-orb-elementalist.xml's life per level) are unsettled values now that the stats are mapped. The reason changed, not the value.
 - **Corpus:** 0 unexpected; 8 values toward PoB (4 now equal), none away.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M3, first part: plain rows
+
+The third batch's first 42 stats (alphabetical in `p6-close-out-list.md`, up to `local_unique_jewel_passive_jewel_socket_mod_effect_+%_with_corrupted_magic_jewel_socketed`).
+
+**Mapped:** "#% chance to Poison on Hit with Attacks" (a hit row, `KeywordFlag.Attack`); "Chance to Block is Lucky" (`BlockLucky`, as P6-11gt's row without its condition).
+
+**`NoEffect`** (PoB reads each into no slice field): energy shield added to the stun threshold (`stun`); Vaal skills' soul requirement; "Always Freezes Enemies on Hit" (`freeze`); attacks' chance to Intimidate on hit, a cooldown not consumed, and a support's Elusive on crit (PoB leaves each line unparsed; the debuff's or buff's effect is the config's); energy shield per enemy killed (`recovery`); "Cannot be Poisoned"; the chance to throw 4 additional traps (PoB shows the count); "Your Elemental Damage can Shock" (as `all_damage_can_shock`); Hoarfrost (no calc module reads its flag); impale duration (shown, not read by impale's damage per second); a life flask's charges; white sockets, no sockets, and the socketed curse on hit (PoB parses no mod).
+
+**Moved to closed reasons** (each stays `unmapped-stat`):
+- `C-engine-system`: `additional_max_mirage_archers` (the mirage count is read from the skill's stats, not the character's); `additional_poison_chance_%_when_inflicting_poison` (PoB's additional poison stacks); `additive_mana_modifiers_apply_to_shock_effect_at_30%_value`; `all_damage_can_ignite` and `critical_strikes_do_not_always_ignite` (the damage types and crits that ignite); `boots_mod_effect_+%`, `gloves_mod_effect_+%` (PoB scales the slot's item mods, `CalcSetup.lua` 1142 to 1155); `cannot_use_flask_in_fifth_slot`; `chaos_weakness_ignores_hexproof`; `crits_have_culling_strike` (`CriticalCullPercent`, from the crit chance and the hit rate, `CalcOffence.lua` 3214); `dual_wield_inherent_bonuses_are_doubled`; `exposure_you_inflict_has_minimum_resistance_%`; `extra_damage_rolls_with_lightning_damage_on_non_critical_hits` (lucky lightning damage); `gain_affliction_charges_instead_of_frenzy_charges`; `gain_alchemists_genius_on_flask_use_%`; `life_leech_does_not_stop_at_full_life` (a stat `config::DEPENDS_ON` names); `local_energy_shield` on an item that is no armour piece (PoB reads it as global there); `local_flask_recovery_amount_%_to_recover_instantly` (it guards `UsingLifeFlask`, `poe1::flasks`); `local_item_quality_+`; `local_unique_jewel_passive_jewel_socket_mod_effect_+%_with_corrupted_magic_jewel_socketed`.
+- `C-unmodelled-skill`: `base_fire_damage_resistance_%`, a gem's own stat in rf-chieftain-life-stack.xml (its aura is not modelled).
+- **Game-truth list** (PoB leaves the line unparsed; in the game it changes a slice field): `base_aggravate_bleeding_on_attack_hit_chance_%`, `aggravate_bleeding_on_exerted_attack_hit_chance_%` (an aggravated bleed deals the moving enemy's damage), `apply_maximum_wither_stacks_%_chance_when_you_apply_withered` (withered stacks raise the enemy's chaos damage taken).
+
+**Evidence** (`b-ct`, against M2's run):
+- **Two new mechanic fixtures**, each matching PoB on every computed field: `smite-m3-poison-with-attacks-templar.xml` (but for the weapon's rate, Q11 DIV-0672 to DIV-0677), `ice-nova-m3-block-lucky-witch.xml`.
+- **Public:** 0 unexpected; 4 values toward PoB, none away. **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

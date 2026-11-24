@@ -85,6 +85,8 @@ const TEXTS: [(&str, &str); 16] = [
 /// lightning or non-damaging ailments, each checked to reach no slice
 /// field (`poe1::mapping::NO_EFFECT`'s comments).
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out M3: elemental damage can shock, as all damage.
+    "elemental_damage_can_shock",
     // Close-out M1: a shock on you, guarded by the config's checks.
     "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
     "all_damage_can_shock",

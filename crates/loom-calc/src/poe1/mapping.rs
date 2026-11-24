@@ -1863,6 +1863,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // Close-out M3: "#% chance to Poison on Hit with Attacks" (`PoisonChance`
+    // BASE, `KeywordFlag.Attack`).
+    (
+        "chance_to_poison_on_hit_with_attacks_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Poison)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     // P3-8h: "#% increased Critical Strike Chance with Chaos Skills",
     // "+#% to Critical Strike Multiplier with Chaos Skills": `CritChance`
     // INC, `CritMultiplier` BASE with `KeywordFlag.Chaos` (745, 748); the
@@ -6750,6 +6762,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Close-out M3: "Chance to Block is Lucky" (the `<Type>BlockChanceIsLucky`
+    // FLAGs, as P6-11gt's row without its condition).
+    (
+        "base_block_luck",
+        &[(Quantity::Poe1(Poe1Quantity::BlockLucky), Op::Flag, 1.0)],
+    ),
     // P6-10b part 9: "Cannot Leech Life" (`CannotLeechLife` FLAG).
     (
         "base_cannot_leech_life",
@@ -9473,12 +9491,27 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11hq: Hypothermia's "#% chance to Freeze Chilled Enemies"
     // (`EnemyFreezeChance` BASE against a chilled enemy): no slice field.
     ("additional_chance_to_freeze_chilled_enemies_%", "freeze"),
+    // Close-out M3: energy shield added to the stun threshold
+    // (`AddESToStunThreshold`): stun, no slice field.
+    (
+        "additional_stun_threshold_based_on_%_of_energy_shield",
+        "stun",
+    ),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
     // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
     // on), never for the enemy's shock in the hit, which only the config
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
+    // Close-out M3: Vaal skills' soul requirement (`SoulCost` MORE): no slice
+    // field.
+    (
+        "alternate_ascendancy_vaal_skill_soul_requirement_+%_final",
+        "no-slice",
+    ),
+    // Close-out M3: "Always Freezes Enemies on Hit" (`EnemyFreezeChance`):
+    // freeze, no slice field.
+    ("always_freeze", "freeze"),
     // P6-7c3: PoB `SkillStatMap.lua` 1362, `PierceAllTargets`, read only
     // into `PierceCount` (`CalcOffence.lua` 1106): no slice field, as
     // `base_projectile_speed_+%`.
@@ -9521,6 +9554,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and the enemy is Blinded only by the config's condition.
     ("attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
+    // Close-out M3: a chance to Intimidate on hit with attacks (PoB leaves the
+    // line unparsed): the config's check gives the debuff's effect.
+    ("attacks_intimidate_on_hit_%", "on-hit-debuff"),
     (
         "attacks_number_of_additional_projectiles",
         "projectile-count",
@@ -9571,6 +9607,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // ailments), never from a chance (P3-10, Smite).
     ("base_chance_to_shock_%_from_skill", "ailment-chance"),
     ("base_charge_duration_+%", "charge-duration"),
+    // Close-out M3: a chance not to consume a cooldown (PoB leaves the line
+    // unparsed): no slice field reads a cooldown's use.
+    ("base_cooldown_refresh_chance_%", "no-slice"),
+    // Close-out M3: energy shield per enemy killed (`EnergyShieldOnKill`):
+    // no recovery field reads a kill.
+    ("base_energy_shield_gained_on_enemy_death", "recovery"),
     ("base_frenzy_charge_duration_+%", "no-slice"),
     ("base_global_chance_to_knockback_%", "no-slice"),
     // A skill marked a projectile skill (`base_is_projectile`): the skill's
@@ -9640,6 +9682,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("cannot_be_blinded", "blind-on-self"),
     // P6-11f: "Corrupted Blood cannot be inflicted on you" (`CorruptedBloodImmune`): no slice field.
     ("cannot_be_inflicted_by_corrupted_blood", "ailment-on-self"),
+    // Close-out M3: "Cannot be Poisoned" (`PoisonImmune`): no slice field.
+    ("cannot_be_poisoned", "ailment-on-self"),
     ("cannot_be_poisoned_if_x_poisons_on_you", "ailment-on-self"),
     (
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -9737,6 +9781,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11hu: a chance to summon two totems (PoB leaves the line unparsed; the
     // totem count is the limit or the config).
     ("chance_to_summon_two_totems_%", "no-slice"),
+    // Close-out M3: a chance to throw 4 additional traps (`TrapThrowCount`):
+    // PoB shows the count; no slice field reads it.
+    ("chance_to_throw_4_additional_traps_%", "no-slice"),
     // P6-11at: "#% chance to Unnerve Enemies for 4 seconds on Hit": PoB
     // reads no modifier from it (no stat map row; Unnerve is the config's
     // `conditionEnemyUnnerved`, `poe1::damage_taken`).
@@ -9809,6 +9856,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
     ),
+    // Close-out M3: "Your Elemental Damage can Shock" (`ColdCanShock`,
+    // `FireCanShock`): as `all_damage_can_shock`, the enemy's shock is the
+    // config's or a guaranteed one's.
+    ("elemental_damage_can_shock", "ailment-chance"),
     // P3-8n: "Your Elemental Resistances cannot be lowered by Curses": only
     // curses on you lower them, from the `playerCursedWith*` inputs, which
     // stay reasons for `curse_effect_on_self_+%`
@@ -9901,6 +9952,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11as: "Gain # Life when you Stun an Enemy": PoB leaves the line
     // unparsed (`ModCache.lua`), and a gain on stun reaches no slice field.
     ("gain_X_life_on_stun", "recovery"),
+    // Close-out M3: a support's chance to grant Elusive on crit (PoB leaves the
+    // line unparsed): Elusive's effect is the config's buff.
+    ("gain_elusive_on_crit_%_chance", "no-slice"),
     // P6-11m: endurance charges per second if hit recently (unparsed).
     (
         "gain_endurance_charge_per_second_if_have_been_hit_recently",
@@ -9969,6 +10023,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
         "area",
     ),
+    // Close-out M3: Hoarfrost (`HitsCanInflictHoarfrost`): no calc module of
+    // PoB reads the flag.
+    ("hoarfrost_on_non_freezing_freezing_hit", "no-slice"),
     ("ignite_art_variation", "display"),
     // P6-11be: "Your Hexes can affect Hexproof Enemies"
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
@@ -9988,6 +10045,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "immune_to_poison_if_helmet_grants_higher_evasion_than_armour",
         "ailment-on-self",
     ),
+    // Close-out M3: impale duration (`ImpaleDuration` INC): PoB shows the
+    // duration (`CalcOffence.lua` 1605 to 1608); impale's damage per second
+    // reads the stacks, not it.
+    ("impaled_debuff_duration_+%", "ailment-duration"),
     ("is_ranged_attack_totem", "skill type marker"),
     ("is_remote_mine", "no-slice"),
     ("is_totem", "skill type marker"),
@@ -10003,6 +10064,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "kinetic_wand_implicit_cannot_roll_caster_modifiers",
         "display",
     ),
+    // Close-out M3: life flask charges every 3 seconds: no slice field.
+    ("life_flask_charges_recovered_per_3_seconds", "flask"),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
     (
@@ -10021,6 +10084,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
     ("lightning_arrow_radius_+%", "area"),
+    // Close-out M3: all sockets white (PoB parses no mod): the gems' sockets
+    // are the build's.
+    ("local_all_sockets_are_white", "sockets"),
     // P6-11ee: lines no slice field reads: an item's attribute requirements,
     // flask automation and on-use effects, maim's effect, a mercenary's
     // unique slots, a corpse's life, minions' taunt and defensive stance.
@@ -10033,6 +10099,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // P6-11id: a local chance to blind on hit (PoB leaves text over; the enemy's blind is the config's).
     ("local_chance_to_blind_on_hit_%", "on-hit-debuff"),
+    // Close-out M3: curse with the socketed hex on hit (PoB parses no mod):
+    // the socketed curse is a skill of its own.
+    (
+        "local_display_curse_enemies_with_socketed_curse_on_hit_%_chance",
+        "curse",
+    ),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
     // P6-11bz: the radius of a flask's consecrated ground (PoB does not parse it).
@@ -10081,6 +10153,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_abyss_sockets", "sockets"),
     // P6-11g: "Has # Sockets" (`SocketCount` BASE): the item's sockets come from its text.
     ("local_has_X_sockets", "sockets"),
+    // Close-out M3: "Has no Sockets" (`NoSockets`): no slice field.
+    ("local_has_no_sockets", "sockets"),
     ("local_intelligence_requirement_+", "no-slice"),
     ("local_item_allow_modification_while_corrupted", "display"),
     ("local_item_implicit_modifier_limit", "display"),

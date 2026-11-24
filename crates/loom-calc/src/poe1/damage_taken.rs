@@ -1246,6 +1246,8 @@ mod tests {
     /// `NoEffect` rows that name shock or damage taken, each checked: none
     /// sets the enemy's shock or damage taken.
     const NO_EFFECT_ROWS: &[&str] = &[
+        // Close-out M3: elemental damage can shock, as all damage.
+        "elemental_damage_can_shock",
         // Close-out M1: a shock on you, guarded by the config's checks.
         "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
         // A chance to shock: PoB shocks the enemy only from its config or
@@ -1400,6 +1402,8 @@ mod tests {
         // P6-11hu: a chance to intimidate on hit, which no PoB stat map
         // reads (the enemy's Intimidate is the config's).
         let listed = [
+            // Close-out M3: attacks' chance to intimidate, the same.
+            "attacks_intimidate_on_hit_%",
             "attacks_chance_to_blind_on_hit_%",
             "cannot_be_blinded",
             "chance_to_intimidate_on_hit_%",

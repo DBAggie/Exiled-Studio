@@ -965,6 +965,8 @@ mod tests {
     /// `NoEffect` rows that name a charge, each checked: none scales a
     /// slice field per charge or changes a count PoB's calc reads.
     const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
+        // Close-out M3: a life flask's charges.
+        "life_flask_charges_recovered_per_3_seconds",
         // Close-out M2: frenzy charge duration per frenzy charge.
         "frenzy_charge_duration_+%_per_frenzy_charge",
         // Chances to gain a charge: PoB's calc never reads them.
