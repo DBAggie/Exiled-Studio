@@ -5237,3 +5237,15 @@ The seventh batch: the 9 stats of `M7-skill-scoped`.
 **Moved to closed reasons** (each stays `unmapped-stat`), `C-engine-system`: `base_mana_cost_efficiency_+%_of_link_skills` (a cost efficiency by skill type); `local_display_socketed_gems_have_mana_reservation_+%` (the reservation efficiency of the gems socketed in the item); `local_double_damage_with_attacks` (a weapon's own double damage chance, a `WeaponValue` the hand's attack would read); `projectile_damage_+%_per_chain` (PoB's `PerStat` `Chain`; it guards `number_of_chains`' `NoEffect`); `your_auras_except_malevolence_are_disabled` (disabled skills).
 
 **Evidence** (`b-ct`, against M6's run): no fixture (no row maps a value). **Public** and **corpus:** 0 unexpected, no value moved. **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out H: hidden stats
+
+The eighth batch: the 13 stats of `H-hidden`, which have no description text. Each was read in PoB's skill data (`Data/Skills/*.lua`, `SkillStatMap.lua`) and calc modules.
+
+**`NoEffect`** (PoB reads each into no slice field): no skill stat map reads `additional_projectiles_fired_with_distance_offset`, `greater_volley_additional_projectiles_fire_parallel_x_dist`, `multi_trap_and_mine_support_flags`, `projectile_remove_default_spread`, `projectile_spread_radius`, `skill_can_own_support_ghosts`, `support_guardians_blessing_summoned_minions_are_guardians_blessing_minions`, `thrown_shield_projectile_fire_random_directions`, or `permanenet_mercenary_damage_+%_final_and_minion_damage_+%_final_from_luminary` (absent from PoB's data); `projectile_behaviour_only_explode` is `CannotSplit` (`SkillStatMap.lua` 1374).
+
+**Moved to closed reasons** (each stays a reason):
+- `C-engine-system`: `base_skill_show_average_damage_instead_of_dps` (each skill's own stat map gives it a different meaning; it stays a `HIT_REASONS` reason).
+- `C-unmodelled-skill`: `elemental_hit_no_physical_chaos_damage` (Elemental Hit's per-part flags), `kinetic_fusillade_base_delay_between_projectiles_ms` (Kinetic Fusillade's `delayPerProjectile`).
+
+**Evidence** (`b-ct`, against M7's run): no fixture (no row maps a value). **Public** and **corpus:** 0 unexpected, no value moved. **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

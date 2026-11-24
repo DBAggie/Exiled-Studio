@@ -9548,6 +9548,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11hq: Hypothermia's "#% chance to Freeze Chilled Enemies"
     // (`EnemyFreezeChance` BASE against a chilled enemy): no slice field.
     ("additional_chance_to_freeze_chilled_enemies_%", "freeze"),
+    // Close-out H: hidden skill stats (no description) that no PoB skill stat
+    // map reads: projectile placement and spread, the trap and mine
+    // supports' flags, support ghosts, Guardian's Blessing's minions, and a
+    // Luminary stat PoB lacks.
+    (
+        "additional_projectiles_fired_with_distance_offset",
+        "no-slice",
+    ),
     // Close-out M3: energy shield added to the stun threshold
     // (`AddESToStunThreshold`): stun, no slice field.
     (
@@ -10067,6 +10075,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // not read the line (no mod), so it reaches none of PoB's outputs; no
     // minion field reads damage taken.
     ("golem_immunity_to_elemental_damage", "minion-defence"),
+    (
+        "greater_volley_additional_projectiles_fire_parallel_x_dist",
+        "no-slice",
+    ),
     // P6-11gq: guard skills' cooldown and duration (`CooldownRecovery` and
     // `Duration` INC, `SkillType.Guard`): PoB applies a guard's buff
     // without its uptime (`CalcPerform.lua` 2298 to 2310): no slice field.
@@ -10419,6 +10431,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "monster_penalty_against_minions_damage_+%_final_vs_player_minions",
         "monster",
     ),
+    ("multi_trap_and_mine_support_flags", "no-slice"),
     // P6-11dl: "Projectile Barrages have no spread" (unparsed in PoB): the
     // projectiles' geometry, no slice field.
     ("no_barrage_projectile_spread", "projectile-spread"),
@@ -10455,6 +10468,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: life recovered from flasks (`FlaskLifeRecovery` MORE): no
     // slice field.
     ("pathfinder_flask_life_to_recover_+%_final", "flask"),
+    (
+        "permanenet_mercenary_damage_+%_final_and_minion_damage_+%_final_from_luminary",
+        "no-slice",
+    ),
     // Quartz Flask's "Phasing" (PoB's `Condition:Phasing`, `ModParser.lua`
     // 3972): only modifiers read it (unmapped, or an unsettled condition)
     // and The Hidden Blade's trigger (`CalcTriggers.lua` 927; triggers are
@@ -10473,7 +10490,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("power_charge_on_spell_block_%_chance", "charge-gain-chance"),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
+    // Close-out H: projectiles that only explode (`SkillStatMap.lua` 1374:
+    // `CannotSplit`): no slice field.
+    ("projectile_behaviour_only_explode", "no-slice"),
     ("projectile_chain_from_terrain_chance_%", "no-slice"),
+    ("projectile_remove_default_spread", "no-slice"),
+    ("projectile_spread_radius", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
     // Close-out M3: "Projectiles Fork" (`ForkOnce`, `ForkCountMax`): no slice
     // field.
@@ -10543,6 +10565,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("skill_can_add_multiple_charges_per_action", "display"),
     // P6-8b: read by `poe1::combined` (PoB's `triggeredByMirageArcher`).
     ("skill_can_own_mirage_archers", "mirage"),
+    ("skill_can_own_support_ghosts", "no-slice"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -10601,6 +10624,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_greater_spell_echo_area_of_effect_+%_per_repeat",
         "area",
+    ),
+    (
+        "support_guardians_blessing_summoned_minions_are_guardians_blessing_minions",
+        "no-slice",
     ),
     ("support_makes_skill_mine_pvp_damage_+%_final", "pvp"),
     ("support_makes_skill_trap_pvp_damage_+%_final", "pvp"),
@@ -10697,6 +10724,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("supported_skill_can_only_use_wand", "weapon-restriction"),
     ("supported_strike_skill_gem_level_+", "gem-level"),
     ("taunt_duration_+%", "no-slice"),
+    (
+        "thrown_shield_projectile_fire_random_directions",
+        "no-slice",
+    ),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
     ("totem_elemental_resistance_%", "no-slice"),
