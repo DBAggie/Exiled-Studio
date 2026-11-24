@@ -135,7 +135,7 @@ impl FileOps for StdFiles {
     }
 
     fn rename(&self, from: &Path, to: &Path) -> io::Result<()> {
-        std::fs::rename(from, to)?;
+        rename_retrying(from, to)?;
         sync_dir(to);
         Ok(())
     }
@@ -159,6 +159,47 @@ impl FileOps for StdFiles {
     fn remove(&self, path: &Path) -> io::Result<()> {
         std::fs::remove_file(path)
     }
+}
+
+/// How many times a rename that Windows refuses for a moment is tried.
+#[cfg(windows)]
+const RENAME_ATTEMPTS: u32 = 20;
+
+/// Windows' `ERROR_SHARING_VIOLATION`: another process has the file open
+/// without delete sharing.
+#[cfg(windows)]
+const ERROR_SHARING_VIOLATION: i32 = 32;
+
+/// `std::fs::rename`, tried again on Windows while it fails with
+/// `PermissionDenied` or a sharing violation. Replacing a file another
+/// process holds for a moment (a virus scanner or the search indexer
+/// reading the file just written) fails with "Access is denied"
+/// (`ERROR_ACCESS_DENIED`), or with `ERROR_SHARING_VIOLATION` while it
+/// is open without delete sharing; measured 2026-11-20: about one save in
+/// 300 over an existing target in the round-trip test failed with the
+/// first. The waits grow by 10 ms, about two seconds in all; the last
+/// error is returned. Elsewhere the error is returned at once: on Unix it
+/// means the permissions refuse it.
+fn rename_retrying(from: &Path, to: &Path) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        let mut attempt = 1;
+        loop {
+            match std::fs::rename(from, to) {
+                Err(e)
+                    if (e.kind() == io::ErrorKind::PermissionDenied
+                        || e.raw_os_error() == Some(ERROR_SHARING_VIOLATION))
+                        && attempt < RENAME_ATTEMPTS =>
+                {
+                    std::thread::sleep(std::time::Duration::from_millis(10 * u64::from(attempt)));
+                    attempt += 1;
+                }
+                result => return result,
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    std::fs::rename(from, to)
 }
 
 /// Makes a new name in `path`'s folder durable where the folder can be

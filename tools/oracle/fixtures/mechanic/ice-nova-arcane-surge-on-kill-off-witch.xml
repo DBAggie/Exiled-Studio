@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11gs): a level 90 Witch casting Ice Nova (level 20) from a magic body armour, with the custom line "10% chance to gain Arcane Surge when you Kill an Enemy" and the killed recently check off: no Arcane Surge.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Body Armour">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Controlled Destruction" skillId="SupportControlledDestruction" variantId="SupportControlledDestruction" gemId="Metadata/Items/Gems/SupportGemControlledDestruction" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false" slot="Body Armour">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: MAGIC
+Plate Vest
+Quality: 0
+Sockets: B-B-G
+Implicits: 0
+Socketed Skill Gems get a 80% Cost &amp; Reservation Multiplier
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionKilledRecently" boolean="false"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				10% chance to gain Arcane Surge when you Kill an Enemy
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

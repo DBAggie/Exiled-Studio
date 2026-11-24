@@ -65,7 +65,7 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 Evidence, sources, and key lists are in `data-parity-rules-poe1.json`.
 
 ## P3-12h: table `gem_effects`
-Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB").
+Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB"). Since P6-11hr one rule, `gem-effects-combustion-calc-perform` (`representation`, 2 differences): Combustion's stat map gives `CombustionFireResist` on the supported skill, which `CalcPerform.lua` (2709 to 2714) turns into the ignited enemy's fire resistance; the engine's table holds that result (`docs/phase-6/stat-mop-up.md`, "P6-11hr").
 
 ## P3-12i: the skills' `color`
 The bundle carries each granted effect's colour (`attribute`, the game's `GrantedEffects.Attribute` as stored); PoB's export (format 5) writes each skill's `color`, which its exporter copies from the same column (`src/Export/Scripts/skills.lua` 157). Table `skills`, field `color`: 1,508 values compared (every skill both sides hold), 0 differences; the other counts are unchanged (534 differences, `uncategorized` 0). Two PoB skills without a colour (`HarvestNessaCrabScreechDebuff`, `HarvestRhexScreechDebuff`) are among the 13 PoB-only rows.
@@ -127,8 +127,40 @@ On the `.ot` evidence bundle: 332 lists, 700 lines. Every `.ot` stat matches. Th
 
 Export format 13 also writes `minion_templates`, PoB's template directives. They are not compared: PoB's own data, which `pob-minions` copies into the engine's table.
 
+## Data schema 5: gem level requirements and Vaal souls (export format 14)
+
+Data schema 5 carries, per gem level (`GrantedEffectsPerLevel`):
+- the character level requirement (`PlayerLevelReq`);
+- the Vaal soul cost (`VaalSouls`);
+- the stored Vaal uses (`VaalStoredUses`);
+- the soul gain prevention (`SoulGainPreventionDuration`, milliseconds).
+
+PoB export format 14 writes `levelRequirement`, `vaalStoredUses`, `soulPreventionDuration`, and the `Soul` cost, all compared.
+
+**Result on the evidence bundle** (`b-gl`, build 26530219):
+- The soul costs, stored uses, and soul prevention durations equal PoB's.
+- 16 level requirements differ. All are monster or minion skills with a single level, whose requirement PoB's exporter takes from the stat set's level row instead (`Export/Scripts/skills.lua` 267). Rule `skills-level-requirement-single-level`, `pob-derivation`; each PoB value was checked against `GrantedEffectStatSetsPerLevel.PlayerLevelReq`.
+- `uncategorized` stays 353.
+
+## The cluster tables on build 26530219
+
+With `poe1/cluster_jewels.json` in the bundle (evidence bundle `b-cl`, `docs/tree/cluster-jewels.md`), the 353 cluster rows of PoB's are compared, and `uncategorized` is 0. The one difference left is PoB's notable order for the duplicated name Evil Eye: rule `cluster-notable-order-duplicate-name`.
+
+## Timeless jewels (export format 15, P6-10a)
+
+Table `timeless` compares:
+- the bundle's extracted timeless tables against PoB's `LegionPassives.lua`;
+- the results' mapping against PoB's `NodeIndexMapping.lua`;
+- each shipped results file's Adler-32 against PoB's zip trailer.
+
+Its 80 differences on `b-tl` are PoB's ID rewrites (`timeless-pob-dat-errors`) and PoB's display units (`timeless-display-units`); `docs/phase-6/timeless.md`, "Part 2".
+
+## Tattoos (export format 16, P6-11av)
+
+Table `tattoos` compares the bundle's `poe1/tattoos.json` against PoB's `Data/TattooPassives.lua` by name: the ID, override type, keystone flag, and stats. Its 22 differences on `b-tt` are PoB's display units (`tattoo-display-units`); `docs/phase-6/tattoos.md`.
+
 ## Not compared
-Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
+Listed in the summary's `not_compared`: interpolation kinds (level requirements and Vaal soul costs since data schema 5, above), PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 
 ## Open for the maintainer
 - The 8 Vaal transfigured gem tag differences stay `patch-delta` without a patch-note line: **confirmed by the maintainer 2026-11-13** (PoB copies `GemEffects.Tags` verbatim, so only the game changed them; the tags do not enter the calc slice). Recorded in P3-12h.

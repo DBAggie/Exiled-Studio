@@ -34,9 +34,18 @@
 //! scale, [`LOCAL_EFFECT_STAT`]), its charges and a utility flask's
 //! duration (read into the item's flask data alone, which no calc output
 //! reads: `NoEffect`), and every other local stat unmapped, so a reason,
-//! until a row maps it. Not modelled: the `UsingFlask` conditions (left
-//! unsettled, so a modifier that reads them is a reason), recovery (P6-10b),
-//! flasks applied to minions.
+//! until a row maps it. Not modelled: the `UsingFlask` conditions but
+//! `UsingLifeFlask` (left unsettled, so a modifier that reads them is a
+//! reason), recovery (P6-10b), flasks applied to minions.
+//!
+//! **Using a life flask** (P6-11cq; `CalcPerform.lua` 1729 to 1748, 1783):
+//! PoB's `UsingLifeFlask` holds when an active flask's base recovers life,
+//! its recovery is not all instant, and the character can recover life
+//! outside leech. [`using_life_flask`] settles it from the bases alone: the
+//! lines that make recovery instant (the flask's own, and PoB's
+//! `LifeFlaskInstantRecovery`), Vaal Pact's `CannotRecoverLifeOutsideLeech`,
+//! and "Flasks do not apply to you" are unmapped stats, each a reason on
+//! every field wherever it appears.
 
 use loom_data::bundle::poe1::Flask;
 use loom_domain::{ItemId, LineResolution, Rarity, Resolved, StatId, StatLine, StatValue};
@@ -70,10 +79,53 @@ pub const CHARGE_STATS: [&str; 3] = [
 ];
 
 /// A flask's duration stats: read into the item's flask data, which only a
-/// recovery flask's recovery reads (`CalcPerform.lua` 1627). `NoEffect`
-/// on a utility flask; unmapped (a reason) on a recovery flask until
-/// recovery is computed (P6-10b).
+/// recovery flask's recovery reads (`CalcPerform.lua` 1627, the
+/// `LifeRecovery` and `ManaRecovery` rates, which no slice field reads;
+/// P6-11gw): `NoEffect`.
 pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_duration_+%_final"];
+
+/// A flask's own lines that reach no slice field (P6-11i), sorted, each as
+/// PoB parses its text (`local/p6/parse2`): Bleeding and Corrupted Blood
+/// immunity on use, consecrated ground on use, charges when hit, and use
+/// on full charges PoB does not parse at all; the effect of curses on you
+/// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
+/// field reads. Movement speed during the effect is an alias since P6-10b.
+pub const NO_EFFECT_LOCAL: [&str; 14] = [
+    // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
+    // `UsingFlask`): no slice field.
+    "local_avoid_shock_%_during_flask_effect",
+    "local_consecrate_ground_on_flask_use_radius",
+    // P6-11dp: area of effect during the effect (`AreaOfEffect` INC,
+    // `UsingFlask`): area, no slice field.
+    "local_flask_area_of_effect_+%_during_flask_effect",
+    // P6-11gp: avoid stun during the effect (`AvoidStun` BASE,
+    // `UsingFlask`): no slice field.
+    "local_flask_avoid_stun_chance_%_during_flask_effect",
+    "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
+    "local_flask_gain_X_charges_when_hit",
+    // P6-11gp: life leeched from damage taken during the effect
+    // (`DamageTakenWhenHitLifeLeech` BASE, `UsingFlask`): no module of PoB
+    // reads the mod.
+    "local_flask_life_leech_on_damage_taken_%_permyriad_during_flask_effect",
+    // P6-11dr: energy shield recovered on kill during the effect
+    // (`EnergyShieldOnKill` BASE, `UsingFlask`): no slice field.
+    "local_flask_recover_%_maximum_energy_shield_on_kill_during_flask_effect",
+    // Close-out M1: mana recovered on kill during the effect (`ManaOnKill`
+    // BASE, `UsingFlask`): no slice field.
+    "local_flask_recover_%_maximum_mana_on_kill_during_flask_effect",
+    // P6-11dz: "Removes Curses on use": no slice field.
+    "local_flask_remove_curses_on_use",
+    "local_flask_use_on_full_charges",
+    "local_self_curse_effect_+%_during_flask_effect",
+    // P6-11gp: the effect of shock on you during the effect
+    // (`SelfShockEffect` INC, `UsingFlask`): PoB reads it only for a shock
+    // on you, which only its `conditionShocked` and `conditionOnShockedGround`
+    // checks give (`CalcPerform.lua` 849), each a reason (no engine module
+    // reads them).
+    "local_self_shock_effect_+%_during_flask_effect",
+    // P6-11ea: smoke ground on use: no slice field.
+    "local_smoke_ground_on_flask_use_radius",
+];
 
 /// A flask's own lines PoB reads as the global stat's mod: the line's
 /// "during Effect" is PoB's `Condition:UsingFlask` tag (`ModParser.lua`
@@ -102,6 +154,17 @@ pub const ALIASES: &[(&str, &str)] = &[
     ),
     // "#% increased Evasion Rating during Effect".
     ("local_flask_evasion_+%_while_healing", "evasion_rating_+%"),
+    // "Regenerate #% of Life per second during Effect" (P6-11gp;
+    // `LifeRegenPercent` BASE, `UsingFlask`).
+    (
+        "local_flask_life_regeneration_per_minute_%_during_flask_effect",
+        "life_regeneration_rate_per_minute_%",
+    ),
+    // "#% increased Movement Speed during Effect" (P6-10b).
+    (
+        "local_flask_movement_speed_+%_while_healing",
+        "base_movement_velocity_+%",
+    ),
     // "#% additional Elemental Resistances during Effect" (PoB: "additional"
     // is BASE).
     (
@@ -114,11 +177,53 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_unique_flask_additional_maximum_all_elemental_resistances_%_while_healing",
         "additional_maximum_all_elemental_resistances_%",
     ),
+    // "+#% Chance to Block Attack Damage during Effect" (close-out M1;
+    // `BlockChance` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_block_%_while_healing",
+        "additional_block_%",
+    ),
+    // "Gain #% of Elemental Damage as Extra Chaos Damage during effect"
+    // (close-out M1).
+    (
+        "local_unique_flask_elemental_damage_%_to_add_as_chaos_while_healing",
+        "elemental_damage_%_to_add_as_chaos",
+    ),
+    // "Gain #% of Physical Damage as Extra Chaos Damage during effect"
+    // (close-out M1).
+    (
+        "local_unique_flask_physical_damage_%_to_add_as_chaos_while_healing",
+        "physical_damage_%_to_add_as_chaos",
+    ),
     // "+#% to Elemental Resistances during Effect" (a unique's).
     (
         "local_unique_flask_resist_all_elements_%_during_flask_effect",
         "base_resist_all_elements_%",
     ),
+    // "+#% Chance to Block Spell Damage during Effect" (close-out M1;
+    // `SpellBlockChance` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_spell_block_%_while_healing",
+        "additional_spell_block_%",
+    ),
+];
+
+/// Flask lines with a row of their own in the character's mapping
+/// (P6-11bz), sorted.
+pub const FLASK_ROWS: &[&str] = &[
+    // P6-11ca.
+    "local_flask_critical_strike_chance_against_enemies_on_consecrated_ground_%_during_effect",
+    "local_flask_during_effect_enemy_damage_taken_+%_on_consecrated_ground",
+    "local_flask_enemies_ignited_during_flask_effect_damage_taken_+%",
+    // P6-11gp: "#% increased Mana Cost of Skills during Effect".
+    "local_flask_skill_mana_cost_+%_during_flask_effect",
+    // P6-11ce.
+    "local_life_loss_%_to_prevent_during_flask_effect_to_lose_over_time",
+    // Close-out M1: "#% increased Critical Strike Chance against Enemies on
+    // Consecrated Ground during Effect" and Lion's Roar's "#% more Melee
+    // Physical Damage during effect".
+    "local_unique_flask_critical_strike_chance_+%_vs_enemies_on_consecrated_ground_during_flask_effect",
+    "local_unique_lions_roar_melee_physical_damage_+%_final_during_flask_effect",
 ];
 
 /// The mapping of a flask's own lines (module docs). Not modelled: a
@@ -146,13 +251,35 @@ impl StatMapping for FlaskMapping {
         if let Ok(i) = ALIASES.binary_search_by(|(local, _)| (*local).cmp(id)) {
             return Poe1Mapping.map(&StatId::new(ALIASES[i].1));
         }
-        if CHARGE_STATS.contains(&id) || (!self.recovery && DURATION_STATS.contains(&id)) {
+        if CHARGE_STATS.contains(&id)
+            || NO_EFFECT_LOCAL.contains(&id)
+            || DURATION_STATS.contains(&id)
+            || id == INSTANT_STAT
+        {
             return StatMap::NoEffect;
         }
+        // A flask line with a row of its own (P6-11bz): the enemy's damage
+        // taken while ignited or on consecrated ground.
+        if FLASK_ROWS.contains(&id) {
+            return Poe1Mapping.map(stat);
+        }
         if id.starts_with("local_") || id.starts_with("old_do_not_use_local_") {
-            return StatMap::Unmapped;
+            // A flask line the game's mapping reads as `NoEffect` (P6-11m:
+            // the amount and rate recovered, charges on crit, taunt, the
+            // ignited enemies' lines) is `NoEffect` here too; any other
+            // local line is a reason.
+            return match Poe1Mapping.map(stat) {
+                StatMap::NoEffect => StatMap::NoEffect,
+                _ => StatMap::Unmapped,
+            };
         }
         Poe1Mapping.map(stat)
+    }
+
+    // An item line's unsettled value of a stat another actor or field
+    // alone reads (P6-10b: regeneration) is that one's reason.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
     }
 }
 
@@ -254,12 +381,10 @@ struct Active<'d> {
     scale: f64,
 }
 
-/// Adds the active flasks' buffs and lines (module docs). Runs after every
-/// source of flask effect is in (passives, items, config).
-pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
-    let build = input.build;
-    let Some(set) = collect::active_item_set(build) else {
-        return;
+/// The active flasks' items and slots (module docs, "Which flasks").
+fn active_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
+    let Some(set) = collect::active_item_set(input.build) else {
+        return Vec::new();
     };
     let second = set
         .attributes
@@ -281,6 +406,92 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         }
         slots.push((id, slot.to_owned()));
     }
+    slots
+}
+
+/// The flask base of item `id`: the base name the import adapter found
+/// (`CalcOptions::item_bases`, as an armour piece's), else the one the item
+/// writes.
+fn base_of<'d>(
+    input: &CalcInput<'_>,
+    bases: &'d [Flask],
+    id: ItemId,
+    written: Option<&str>,
+) -> Option<&'d Flask> {
+    let named = |name: &str| bases.iter().find(|f| f.name == name);
+    match input.options.item_bases.get(&id) {
+        Some(b) => named(&b.name).or_else(|| b.fallback.as_deref().and_then(named)),
+        None => written.and_then(named),
+    }
+}
+
+/// "Instant Recovery" (P6-11gw; PoB's `FlaskInstantRecovery` BASE 100, the
+/// flask's `instantPerc`): a flask with it recovers all at once, so it
+/// sets no `Using` condition (`CalcPerform.lua` 1733 to 1748). The line
+/// itself reaches no slice field (its recovery is the `LifeRecovery` rate).
+pub const INSTANT_STAT: &str = "local_flask_recovers_instantly";
+
+/// Whether the item `id` recovers all at once ([`INSTANT_STAT`] on one of
+/// its selected lines).
+fn all_instant(input: &CalcInput<'_>, id: ItemId) -> bool {
+    input.build.items.item(id).is_some_and(|item| {
+        item.body.lines.iter().any(|l| match &l.kind {
+            loom_domain::LineKind::Modifier(m) if m.selected => match &m.resolution {
+                LineResolution::Resolved {
+                    result: Resolved::Stats(stats),
+                    ..
+                } => stats.iter().any(|s| s.stat.as_str() == INSTANT_STAT),
+                _ => false,
+            },
+            _ => false,
+        })
+    })
+}
+
+/// The active flasks that do not recover all at once (P6-11gw): the ones
+/// that set PoB's `Using` conditions.
+fn using_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
+    active_slots(input)
+        .into_iter()
+        .filter(|(id, _)| !all_instant(input, *id))
+        .collect()
+}
+
+/// Whether the character is using a flask (PoB's `UsingFlask`; P6-11dz,
+/// `CalcPerform.lua` 1735): an active flask whose recovery is not all
+/// instant ([`INSTANT_STAT`], P6-11gw). PoB's global
+/// `LifeFlaskInstantRecovery` lines are unmapped stats, a reason wherever
+/// they appear.
+#[must_use]
+pub fn using_flask(input: &CalcInput<'_>) -> bool {
+    !using_slots(input).is_empty()
+}
+
+/// Whether the character is using a life flask (PoB's `UsingLifeFlask`;
+/// P6-11cq, module docs): `Some(false)` with no active flask, `Some(true)`
+/// when an active flask's base recovers life, `None` when a flask's base
+/// is not known.
+#[must_use]
+pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
+    let slots = using_slots(input);
+    if slots.is_empty() {
+        return Some(false);
+    }
+    let bases = input.data.poe1().and_then(super::Poe1Data::flasks)?;
+    let mut life = false;
+    for (id, _) in slots {
+        let item = input.build.items.item(id)?;
+        let base = base_of(input, bases, id, item.body.base.as_deref())?;
+        life |= base.life > 0;
+    }
+    Some(life)
+}
+
+/// Adds the active flasks' buffs and lines (module docs). Runs after every
+/// source of flask effect is in (passives, items, config).
+pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let build = input.build;
+    let slots = active_slots(input);
     if slots.is_empty() {
         return;
     }
@@ -314,14 +525,7 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let Some(item) = build.items.item(id) else {
             continue;
         };
-        // The base name the import adapter found (`CalcOptions::item_bases`,
-        // as an armour piece's), else the one the item writes.
-        let named = |name: &str| bases.iter().find(|f| f.name == name);
-        let found = match input.options.item_bases.get(&id) {
-            Some(b) => named(&b.name).or_else(|| b.fallback.as_deref().and_then(named)),
-            None => item.body.base.as_deref().and_then(named),
-        };
-        let Some(base) = found else {
+        let Some(base) = base_of(input, bases, id, item.body.base.as_deref()) else {
             ingest.reason(unmodelled("flask-base"));
             continue;
         };
@@ -406,8 +610,8 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // constant [`super::buffs`] adds. PoB floors one sum, `20 x (1 + flask
     // inc + Onslaught effect inc)`, and gives it to movement speed too; the
     // split equals it while the Onslaught effect stats stay unmapped
-    // (`buffs::DEPENDS_ON`, a test), and movement speed is no field. Mapping
-    // either must compute the extra as one floor here.
+    // (`buffs::DEPENDS_ON`, a test). Mapping them must compute the extra as
+    // one floor here.
     let silver = active
         .iter()
         .filter(|a| a.base.stats.iter().any(|(s, _)| s == SILVER_STAT))
@@ -424,6 +628,14 @@ pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                     source: Source::ItemBase { item: s.item },
                 });
             }
+            // Its movement speed too (P6-10b).
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                op: Op::Increased,
+                value: extra,
+                conditions: Conditions::none(),
+                source: Source::ItemBase { item: s.item },
+            });
         }
     }
 }
@@ -445,13 +657,29 @@ mod tests {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
             assert_eq!(map(&life, s), StatMap::NoEffect);
         }
-        for s in DURATION_STATS {
+        // P6-11gw: a recovery flask's duration and instant recovery reach
+        // no slice field either.
+        for s in DURATION_STATS.into_iter().chain([INSTANT_STAT]) {
             assert_eq!(map(&utility, s), StatMap::NoEffect);
-            assert_eq!(map(&life, s), StatMap::Unmapped);
+            assert_eq!(map(&life, s), StatMap::NoEffect);
+        }
+        // A local line no row reads stays a reason; one the game's
+        // mapping reads as `NoEffect` (P6-11m) is `NoEffect` (P6-11n).
+        assert_eq!(
+            map(
+                &life,
+                "local_unique_flask_nearby_enemies_cursed_with_level_x_vulnerability_during_flask_effect"
+            ),
+            StatMap::Unmapped
+        );
+        // Its own rows (P6-11bz).
+        assert!(FLASK_ROWS.windows(2).all(|w| w[0] < w[1]));
+        for s in FLASK_ROWS {
+            assert!(matches!(map(&life, s), StatMap::Effects(_)), "{s}");
         }
         assert_eq!(
-            map(&utility, "local_flask_movement_speed_+%_while_healing"),
-            StatMap::Unmapped
+            map(&life, "local_flask_amount_to_recover_+%"),
+            StatMap::NoEffect
         );
         // Each alias reads as its global stat, and that stat is mapped.
         assert!(ALIASES.windows(2).all(|w| w[0].0 < w[1].0));
@@ -459,6 +687,21 @@ mod tests {
             let theirs = Poe1Mapping.map(&StatId::new(*global));
             assert!(matches!(theirs, StatMap::Effects(_)), "{global}");
             assert_eq!(map(&utility, local), theirs, "{local}");
+        }
+    }
+
+    /// P6-11i: the no-effect local lines are sorted and read as no effect.
+    #[test]
+    fn no_effect_local_lines_should_have_no_effect() {
+        assert!(NO_EFFECT_LOCAL.windows(2).all(|w| w[0] < w[1]));
+        for id in NO_EFFECT_LOCAL {
+            for recovery in [false, true] {
+                assert_eq!(
+                    FlaskMapping { recovery }.map(&StatId::new(id)),
+                    StatMap::NoEffect,
+                    "{id}"
+                );
+            }
         }
     }
 }

@@ -72,6 +72,109 @@ use crate::ingest::Ingest;
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::store::Conditions;
 
+/// A modifier of a skill's duration or cooldown, or of a warcry's buff
+/// or power (P6-11bs), each PoB's INC: warcries read them for their
+/// uptime and power ([`super::gems`]); nothing else does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SkillTiming {
+    /// `Duration` INC, untagged ("Skill Effect Duration").
+    Duration,
+    /// `Duration` INC of warcries (`KeywordFlag.Warcry`).
+    WarcryDuration,
+    /// `CooldownRecovery` INC, untagged ("Cooldown Recovery Rate").
+    CooldownRecovery,
+    /// `CooldownRecovery` INC of warcries.
+    WarcryCooldownRecovery,
+    /// `BuffEffect` INC of warcries ("Warcry Buff Effect").
+    WarcryBuffEffect,
+    /// `WarcryPower` INC ("increased total Power counted by Warcries").
+    WarcryPower,
+    /// `WarcrySpeed` INC of warcries ("Warcry Speed"; P6-11ci).
+    WarcrySpeed,
+}
+
+impl SkillTiming {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Duration => "duration",
+            Self::WarcryDuration => "warcry-duration",
+            Self::CooldownRecovery => "cooldown-recovery",
+            Self::WarcryCooldownRecovery => "warcry-cooldown-recovery",
+            Self::WarcryBuffEffect => "warcry-buff-effect",
+            Self::WarcryPower => "warcry-power",
+            Self::WarcrySpeed => "warcry-speed",
+        }
+    }
+}
+
+/// A golem skill a buff effect names (P6-11gc; PoB's `ModParser.lua` 479
+/// to 484, "effect of the buff granted by your <kind> golems", a
+/// `SkillName` tag with `includeTransfigured`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Golem {
+    /// Summon Chaos Golem.
+    Chaos,
+    /// Summon Flame Golem.
+    Flame,
+    /// Summon Ice Golem.
+    Ice,
+    /// Summon Lightning Golem.
+    Lightning,
+    /// Summon Stone Golem.
+    Stone,
+}
+
+impl Golem {
+    /// Every golem, in [`Golem`]'s order (its index in
+    /// [`Totals::named_golem_buff_effect`]).
+    pub const ALL: [Self; 5] = [
+        Self::Chaos,
+        Self::Flame,
+        Self::Ice,
+        Self::Lightning,
+        Self::Stone,
+    ];
+
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Chaos => "chaos",
+            Self::Flame => "flame",
+            Self::Ice => "ice",
+            Self::Lightning => "lightning",
+            Self::Stone => "stone",
+        }
+    }
+
+    /// The base skill's active skill ID; a transfigured one adds `_alt_x`
+    /// or `_alt_y` (the game's `ActiveSkills`).
+    #[must_use]
+    pub const fn active_skill(self) -> &'static str {
+        match self {
+            Self::Chaos => "summon_chaos_golem",
+            Self::Flame => "summon_flame_golem",
+            Self::Ice => "summon_ice_golem",
+            Self::Lightning => "summon_lightning_golem",
+            Self::Stone => "summon_stone_golem",
+        }
+    }
+
+    /// Whether `active` (an active skill ID) is this golem's skill or a
+    /// transfigured one (PoB's `includeTransfigured`: the gem's game ID,
+    /// which a transfigured gem shares).
+    #[must_use]
+    pub fn is(self, active: &str) -> bool {
+        let base = active
+            .strip_suffix("_alt_x")
+            .or_else(|| active.strip_suffix("_alt_y"))
+            .unwrap_or(active);
+        base == self.active_skill()
+    }
+}
+
 /// One stat's quantity (`Increased`) and scale.
 type ModifierRow = (&'static str, Poe1Quantity, f64);
 
@@ -89,11 +192,60 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   INC, `ModParser.lua` "effect of your curses");
 /// - "#% increased Effect of Buffs granted by your Golems" (P3-close;
 ///   PoB's `BuffEffect` INC tagged `SkillType.Golem`, `ModParser.lua`
-///   "effect of buffs granted by your golems").
-pub const STATS: [ModifierRow; 9] = [
+///   "effect of buffs granted by your golems");
+/// - "#% increased Mana Reservation Efficiency of Herald Skills" (P6-11ag;
+///   PoB's `ManaReservationEfficiency` INC tagged `SkillType.Herald`,
+///   `ModParser.lua` 1027 "of herald skills").
+/// - P6-11bs: "#% increased Cooldown Recovery Rate", "#% increased Skill
+///   Effect Duration", and the warcries' duration, cooldown recovery, buff
+///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
+///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
+pub const STATS: [ModifierRow; 34] = [
+    // Close-out M6: "Anger has #% increased Aura Effect".
+    (
+        "anger_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(2),
+        1.0,
+    ),
+    // P6-11k: "Auras from your Skills have #% increased Effect on you"
+    // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
+    (
+        "aura_effect_on_self_from_your_skills_+%",
+        Poe1Quantity::SkillAuraEffectOnSelf,
+        1.0,
+    ),
+    // P6-11gc: "#% increased Effect of the Buff granted by your Chaos
+    // Golems" (`BuffEffect` INC, the golem skill's name).
+    (
+        "base_chaos_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Chaos),
+        1.0,
+    ),
+    (
+        "base_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::CooldownRecovery),
+        1.0,
+    ),
+    // P6-11gc: the Flame and Ice Golems' (the game's stat says fire).
+    (
+        "base_fire_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Flame),
+        1.0,
+    ),
+    (
+        "base_ice_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Ice),
+        1.0,
+    ),
     (
         "base_life_reservation_efficiency_+%",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Life)),
+        1.0,
+    ),
+    // P6-11gc: the Lightning Golems'.
+    (
+        "base_lightning_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Lightning),
         1.0,
     ),
     (
@@ -107,16 +259,76 @@ pub const STATS: [ModifierRow; 9] = [
         Poe1Quantity::ReservationEfficiency(None),
         1.0,
     ),
+    // P6-11gc: "#% increased Effect of the Buff granted by your Stone
+    // Golems" (`BuffEffect` INC, the golem skill's name).
+    (
+        "base_stone_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Stone),
+        1.0,
+    ),
     ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
+    // Close-out M6: "Malevolence has #% increased Aura Effect".
+    (
+        "delirium_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(3),
+        1.0,
+    ),
     ("golem_buff_effect_+%", Poe1Quantity::GolemBuffEffect, 1.0),
+    // P6-11at: "#% increased Effect of Herald Buffs on you" (`BuffEffect`
+    // INC, `SkillType.Herald`, `ModParser.lua`).
+    (
+        "herald_effect_on_self_+%",
+        Poe1Quantity::HeraldBuffEffect,
+        1.0,
+    ),
+    (
+        "herald_skills_mana_reservation_efficiency_+%",
+        Poe1Quantity::HeraldManaReservationEfficiency,
+        1.0,
+    ),
+    // Close-out M6: Malevolence's mana reservation efficiency.
+    (
+        "malevolence_mana_reservation_efficiency_+%",
+        Poe1Quantity::NamedSkillEffect(4),
+        1.0,
+    ),
+    // P6-11ey: "#% increased Mana Reservation Efficiency of Skills that
+    // throw Mines" (`ManaReservationEfficiency` INC, `KeywordFlag.Mine`).
+    (
+        "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
+        Poe1Quantity::MineManaReservationEfficiency,
+        1.0,
+    ),
     (
         "mana_reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)),
         -2.0,
     ),
+    // P6-11df: "#% increased Effect of your Marks" (`CurseEffect` INC with
+    // `SkillType.Mark`).
+    (
+        "mark_skills_curse_effect_+%",
+        Poe1Quantity::MarkCurseEffect,
+        1.0,
+    ),
     (
         "non_curse_aura_effect_+%",
         Poe1Quantity::NonCurseAuraEffect,
+        1.0,
+    ),
+    // P6-11gg: "Your Offerings have #% increased Effect" (PoB's tree text
+    // "increased effect of Offerings": `BuffEffect` INC with the offerings'
+    // `SkillName` tag, `ModParser.lua` 486).
+    (
+        "offering_spells_effect_+%",
+        Poe1Quantity::OfferingBuffEffect,
+        1.0,
+    ),
+    // P6-11gn: "Pride has #% increased Aura Effect" (`AuraEffect` INC with
+    // the `SkillName` Pride).
+    (
+        "pride_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(0),
         1.0,
     ),
     (
@@ -124,15 +336,203 @@ pub const STATS: [ModifierRow; 9] = [
         Poe1Quantity::ReservationEfficiency(None),
         -2.0,
     ),
+    // P6-11gg: "Your Offerings have #% reduced Effect on you" (Mistress of
+    // Sacrifice; `BuffEffectOnPlayer` INC on the offerings, `ModParser.lua`
+    // 2924).
+    (
+        "self_offering_effect_+%",
+        Poe1Quantity::OfferingEffectOnYou,
+        1.0,
+    ),
+    (
+        "skill_effect_duration_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::Duration),
+        1.0,
+    ),
+    // P6-11gn: "#% increased Vulnerability Curse Effect" (`CurseEffect` INC
+    // with the `SkillName` Vulnerability).
+    (
+        "vulnerability_curse_effect_+%",
+        Poe1Quantity::NamedSkillEffect(1),
+        1.0,
+    ),
+    (
+        "warcry_buff_effect_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryBuffEffect),
+        1.0,
+    ),
+    (
+        "warcry_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryCooldownRecovery),
+        1.0,
+    ),
+    (
+        "warcry_duration_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryDuration),
+        1.0,
+    ),
+    (
+        "warcry_monster_power_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcryPower),
+        1.0,
+    ),
+    // P6-11ci: "#% increased Warcry Speed" (`WarcrySpeed` INC,
+    // `KeywordFlag.Warcry`).
+    (
+        "warcry_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::WarcrySpeed),
+        1.0,
+    ),
+    // Close-out M6: Zealotry's mana reservation efficiency.
+    (
+        "zealotry_mana_reservation_efficiency_+%",
+        Poe1Quantity::NamedSkillEffect(5),
+        1.0,
+    ),
 ];
 
-/// The effects of a stat of [`STATS`]: `(quantity, op, scale)`.
+/// What a named skill effect modifies (P6-11gn).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NamedEffect {
+    /// The skill's aura effect (`AuraEffect` INC): its aura scale alone.
+    Aura,
+    /// The skill's curse effect (`CurseEffect` INC): its curse scale.
+    Curse,
+    /// The skill's mana reservation efficiency (`ManaReservationEfficiency`
+    /// INC; close-out M6): added to its mana efficiency.
+    ManaReservationEfficiency,
+}
+
+/// The named skill effect modifiers (P6-11gn; PoB's `AuraEffect` or
+/// `CurseEffect` INC with a `SkillName` tag, `ModParser.lua`'s "<skill> has
+/// #% increased aura effect" and "#% increased <skill> curse effect"):
+/// the stat, the skill's granted effect ID, and what it modifies, by
+/// [`Poe1Quantity::NamedSkillEffect`]'s index.
+pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
+    ("pride_aura_effect_+%", "Pride", NamedEffect::Aura),
+    (
+        "vulnerability_curse_effect_+%",
+        "Vulnerability",
+        NamedEffect::Curse,
+    ),
+    // Close-out M6: "Anger has #% increased Aura Effect", "Malevolence has
+    // #% increased Aura Effect" (PoB's `includeTransfigured` names: no
+    // transfigured Anger or Malevolence exists).
+    ("anger_aura_effect_+%", "Anger", NamedEffect::Aura),
+    ("delirium_aura_effect_+%", "Malevolence", NamedEffect::Aura),
+    // Close-out M6: "Malevolence has #% increased Mana Reservation
+    // Efficiency", "Zealotry has ..." (`ManaReservationEfficiency` INC with
+    // the `SkillName` tag).
+    (
+        "malevolence_mana_reservation_efficiency_+%",
+        "Malevolence",
+        NamedEffect::ManaReservationEfficiency,
+    ),
+    (
+        "zealotry_mana_reservation_efficiency_+%",
+        "Zealotry",
+        NamedEffect::ManaReservationEfficiency,
+    ),
+];
+
+/// "Your Offering Skills also affect you" (P6-11gg; Mistress of
+/// Sacrifice): PoB's `ExtraSkillMod` setting `buffNotPlayer` to false on
+/// the four offerings (`ModParser.lua` 2923), so their buff reaches you as
+/// a `Buff` does (`CalcPerform.lua` 2270 to 2280).
+pub const OFFERINGS_AFFECT_YOU_STAT: &str = "offerings_also_buff_you";
+
+/// The offering skills PoB's `SkillName` tags name ("Bone Offering", "Flesh
+/// Offering", "Spirit Offering", "Blood Offering", `ModParser.lua` 486 and
+/// 2923 to 2925), by granted effect ID.
+pub const OFFERING_SKILLS: [&str; 4] = [
+    "BloodOffering",
+    "BoneOffering",
+    "FleshOffering",
+    "SpiritOffering",
+];
+
+/// The effects of a stat of [`STATS`] (or [`OFFERINGS_AFFECT_YOU_STAT`],
+/// a `Flag`): `(quantity, op, scale)`.
 #[must_use]
 pub fn effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
+    if stat == OFFERINGS_AFFECT_YOU_STAT {
+        return Some(vec![(
+            Quantity::Poe1(Poe1Quantity::OfferingsAffectYou),
+            Op::Flag,
+            1.0,
+        )]);
+    }
+    if let Ok(i) = NO_RESERVATION_STATS.binary_search_by(|(id, ..)| (*id).cmp(stat)) {
+        let i = u8::try_from(i).ok()?;
+        return Some(vec![(
+            Quantity::Poe1(Poe1Quantity::SkillNoReservation(i)),
+            Op::Flag,
+            1.0,
+        )]);
+    }
     let i = STATS.binary_search_by(|(id, ..)| (*id).cmp(stat)).ok()?;
     let (_, q, scale) = STATS[i];
     Some(vec![(Quantity::Poe1(q), Op::Increased, scale)])
 }
+
+/// "<Skill> has no Reservation" and "<Curse> has no Reservation if Cast
+/// as an Aura" (P6-11fq; `ModParser.lua` 5317 to 5328): PoB sets the
+/// named skill's reservation keys to 0 (a `SkillId` tag from its name,
+/// not a Blessing), the second only while the skill is an `Aura`. Each
+/// stat with the skill's name as the game shows it and whether it needs
+/// the aura type, sorted by stat (a test; another test checks each
+/// against the bundle's text).
+pub const NO_RESERVATION_STATS: [(&str, &str, bool); 33] = [
+    ("anger_reserves_no_mana", "Anger", false),
+    ("arctic_armour_no_reservation", "Arctic Armour", false),
+    ("bird_aspect_reserves_no_mana", "Aspect of the Avian", false),
+    ("cat_aspect_reserves_no_mana", "Aspect of the Cat", false),
+    ("chronomancer_reserves_no_mana", "Temporal Rift", false),
+    ("clarity_reserves_no_mana", "Clarity", false),
+    ("conductivity_no_reservation", "Conductivity", true),
+    ("delirium_reserves_no_mana", "Malevolence", false),
+    ("despair_no_reservation", "Despair", true),
+    ("determination_reserves_no_mana", "Determination", false),
+    ("discipline_reserves_no_mana", "Discipline", false),
+    (
+        "elemental_weakness_no_reservation",
+        "Elemental Weakness",
+        true,
+    ),
+    ("enfeeble_no_reservation", "Enfeeble", true),
+    ("envy_reserves_no_mana", "Envy", false),
+    ("flammability_no_reservation", "Flammability", true),
+    ("flesh_stone_no_reservation", "Flesh and Stone", false),
+    ("frostbite_no_reservation", "Frostbite", true),
+    ("grace_reserves_no_mana", "Grace", false),
+    ("haste_reserves_no_mana", "Haste", false),
+    ("hatred_reserves_no_mana", "Hatred", false),
+    ("precision_reserves_no_mana", "Precision", false),
+    ("pride_reserves_no_mana", "Pride", false),
+    ("punishment_no_reservation", "Punishment", true),
+    (
+        "purity_of_elements_reserves_no_mana",
+        "Purity of Elements",
+        false,
+    ),
+    ("purity_of_fire_reserves_no_mana", "Purity of Fire", false),
+    ("purity_of_ice_reserves_no_mana", "Purity of Ice", false),
+    (
+        "purity_of_lightning_reserves_no_mana",
+        "Purity of Lightning",
+        false,
+    ),
+    (
+        "spider_aspect_reserves_no_mana",
+        "Aspect of the Spider",
+        false,
+    ),
+    ("temporal_chains_no_reservation", "Temporal Chains", true),
+    ("vitality_reserves_no_mana", "Vitality", false),
+    ("vulnerability_no_reservation", "Vulnerability", true),
+    ("wrath_reserves_no_mana", "Wrath", false),
+    ("zealotry_reserves_no_mana", "Zealotry", false),
+];
 
 /// The sums of [`STATS`]' quantities.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -143,14 +543,63 @@ pub struct Totals {
     pub life_efficiency: f64,
     /// `ManaReservationEfficiency` INC.
     pub mana_efficiency: f64,
+    /// `ManaReservationEfficiency` INC of herald skills (P6-11ag).
+    pub herald_mana_efficiency: f64,
+    /// `ManaReservationEfficiency` INC of skills that throw mines (P6-11ey).
+    pub mine_mana_efficiency: f64,
+    /// Skills reserve life instead of mana (`BloodMagicReserved`, an
+    /// unconditional flag; P6-11an).
+    pub reserve_life: bool,
+    /// The offerings' buff reaches you too (P6-11gg,
+    /// [`OFFERINGS_AFFECT_YOU_STAT`], an unconditional flag).
+    pub offerings_affect_you: bool,
+    /// Your warcries grant you no buff (P6-11hw; PoB's
+    /// `CannotGainWarcryBuffs`, an unconditional flag).
+    pub cannot_gain_warcry_buffs: bool,
+    /// `Duration` MORE of warcries, each as its percent (P6-11hw: Call to
+    /// Arms' 100% more); [`Self::warcry_duration_more`] multiplies them.
+    pub warcry_duration_more_pct: [f64; 2],
+    /// The skills with no reservation, a bit per
+    /// [`NO_RESERVATION_STATS`] row (P6-11fq).
+    pub no_reservation: u64,
     /// `Reserved` INC (no pool).
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
     pub aura_effect: f64,
+    /// `SkillAuraEffectOnSelf` INC: every aura buff on you (P6-11k).
+    pub aura_on_self: f64,
     /// `BuffEffect` INC of golem skills (P3-close).
     pub golem_buff_effect: f64,
+    /// `BuffEffect` INC of each named golem skill, by [`Golem::ALL`]
+    /// (P6-11gc).
+    pub named_golem_buff_effect: [f64; 5],
+    /// `BuffEffect` INC of herald skills (P6-11at).
+    pub herald_buff_effect: f64,
+    /// `BuffEffect` INC of the offering skills (P6-11gg).
+    pub offering_buff_effect: f64,
+    /// Each named skill effect, by [`NAMED_SKILL_EFFECTS`]' index
+    /// (P6-11gn).
+    pub named_skill_effect: [f64; 6],
+    /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
+    pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
     pub curse_effect: f64,
+    /// `CurseEffect` INC of mark skills (P6-11df).
+    pub mark_curse_effect: f64,
+    /// `Duration` INC, untagged (P6-11bs).
+    pub duration: f64,
+    /// `Duration` INC of warcries.
+    pub warcry_duration: f64,
+    /// `CooldownRecovery` INC, untagged.
+    pub cooldown_recovery: f64,
+    /// `CooldownRecovery` INC of warcries.
+    pub warcry_cooldown_recovery: f64,
+    /// `BuffEffect` INC of warcries.
+    pub warcry_buff_effect: f64,
+    /// `WarcryPower` INC.
+    pub warcry_power: f64,
+    /// `WarcrySpeed` INC of warcries (P6-11ci).
+    pub warcry_speed: f64,
     /// An effect of these quantities that [`Self::read`] cannot sum (a
     /// condition, another op, a pool's `Reserved`): no row makes one (a
     /// test), so a later row that does is a reason, not a silent drop.
@@ -180,19 +629,84 @@ impl Totals {
     /// quantities sets [`Self::unread`].
     #[must_use]
     pub fn read(ingest: &Ingest<'_>) -> Self {
+        Self::from_effects(ingest.effects())
+    }
+
+    /// [`Self::read`] from a finished store's effects (the minion step's
+    /// view of the character, P6-7b4).
+    #[must_use]
+    pub fn from_effects(effects: &[crate::store::Effect]) -> Self {
         let mut t = Self::default();
-        for e in ingest.effects() {
+        for e in effects {
             let Quantity::Poe1(q) = e.quantity else {
                 continue;
             };
+            if let Poe1Quantity::SkillNoReservation(i) = q {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.no_reservation |= 1 << i;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            if q == Poe1Quantity::OfferingsAffectYou {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.offerings_affect_you = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            if q == Poe1Quantity::CannotGainWarcryBuffs {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.cannot_gain_warcry_buffs = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            // P6-11hw: warcries' more duration (Call to Arms), two at most.
+            if q == Poe1Quantity::SkillTiming(SkillTiming::WarcryDuration) && e.op == Op::More {
+                match t.warcry_duration_more_pct.iter_mut().find(|v| **v == 0.0) {
+                    Some(slot) if e.conditions == Conditions::none() => *slot = e.value,
+                    _ => t.unread = true,
+                }
+                continue;
+            }
+            if q == Poe1Quantity::ReserveLifeInsteadOfMana {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.reserve_life = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
             let sum = match q {
                 Poe1Quantity::ReservationEfficiency(None) => &mut t.efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Life)) => &mut t.life_efficiency,
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
+                Poe1Quantity::HeraldManaReservationEfficiency => &mut t.herald_mana_efficiency,
+                Poe1Quantity::MineManaReservationEfficiency => &mut t.mine_mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
+                Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
                 Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
+                Poe1Quantity::NamedGolemBuffEffect(g) => &mut t.named_golem_buff_effect[g as usize],
+                Poe1Quantity::HeraldBuffEffect => &mut t.herald_buff_effect,
+                Poe1Quantity::OfferingBuffEffect => &mut t.offering_buff_effect,
+                Poe1Quantity::NamedSkillEffect(i) => &mut t.named_skill_effect[usize::from(i)],
+                Poe1Quantity::OfferingEffectOnYou => &mut t.offering_effect_on_you,
                 Poe1Quantity::CurseEffect => &mut t.curse_effect,
+                Poe1Quantity::MarkCurseEffect => &mut t.mark_curse_effect,
+                Poe1Quantity::SkillTiming(timing) => match timing {
+                    SkillTiming::Duration => &mut t.duration,
+                    SkillTiming::WarcryDuration => &mut t.warcry_duration,
+                    SkillTiming::CooldownRecovery => &mut t.cooldown_recovery,
+                    SkillTiming::WarcryCooldownRecovery => &mut t.warcry_cooldown_recovery,
+                    SkillTiming::WarcryBuffEffect => &mut t.warcry_buff_effect,
+                    SkillTiming::WarcryPower => &mut t.warcry_power,
+                    SkillTiming::WarcrySpeed => &mut t.warcry_speed,
+                },
                 Poe1Quantity::Reserved(Some(_)) => {
                     t.unread = true;
                     continue;
@@ -208,6 +722,14 @@ impl Totals {
         t
     }
 
+    /// Warcries' `Duration` MORE as a factor (P6-11hw).
+    #[must_use]
+    pub fn warcry_duration_more(&self) -> f64 {
+        self.warcry_duration_more_pct
+            .iter()
+            .fold(1.0, |m, v| m * (1.0 + v / 100.0))
+    }
+
     /// The reservation terms of `pool` (module docs): the pool's and the
     /// generic efficiency summed, at least -100.
     #[must_use]
@@ -215,11 +737,93 @@ impl Totals {
         let own = match pool {
             Pool::Life => self.life_efficiency,
             Pool::Mana => self.mana_efficiency,
+            // No skill reserves energy shield.
+            Pool::EnergyShield => 0.0,
         };
         ReservationTerms {
             inc: self.reserved,
             efficiency: crate::math::max(own + self.efficiency, -100.0),
         }
+    }
+
+    /// [`Self::reservation`] for a skill of `types` and granted effect `id`:
+    /// a herald's mana efficiency adds its own (P6-11ag), a mine skill's its
+    /// own (P6-11ey, the `RemoteMined` type: PoB's mine keyword), and a
+    /// named skill's its own (close-out M6).
+    #[must_use]
+    pub fn reservation_for(
+        &self,
+        pool: Pool,
+        types: &BTreeSet<String>,
+        id: &str,
+    ) -> ReservationTerms {
+        let mut terms = self.reservation(pool);
+        if pool != Pool::Mana {
+            return terms;
+        }
+        let mut own = self.mana_efficiency;
+        // Close-out M6: the skill's named mana reservation efficiency.
+        own += self.named_skill(id, NamedEffect::ManaReservationEfficiency);
+        if types.contains("Herald") {
+            own += self.herald_mana_efficiency;
+        }
+        if types.contains("RemoteMined") {
+            own += self.mine_mana_efficiency;
+        }
+        if own != self.mana_efficiency {
+            terms.efficiency = crate::math::max(own + self.efficiency, -100.0);
+        }
+        terms
+    }
+
+    /// The `BuffEffect` INC the named golem modifiers give the skill whose
+    /// active skill is `active` (P6-11gc): its golem's sum, else 0. Added
+    /// to a buff's own effect ([`Self::buff_scale`]'s `own`).
+    #[must_use]
+    pub fn named_golem(&self, active: Option<&str>) -> f64 {
+        let Some(active) = active else { return 0.0 };
+        Golem::ALL
+            .iter()
+            .find(|g| g.is(active))
+            .map_or(0.0, |&g| self.named_golem_buff_effect[g as usize])
+    }
+
+    /// The `BuffEffect` INC the offering modifiers give the skill of the
+    /// granted effect `id` (P6-11gg): [`Self::offering_buff_effect`] for
+    /// an offering ([`OFFERING_SKILLS`]), else 0; with `on_you`, the effect
+    /// on you ([`Self::offering_effect_on_you`], PoB's `BuffEffectOnPlayer`,
+    /// which the minion's scale leaves out) too. Added to a buff's own
+    /// effect.
+    #[must_use]
+    pub fn offering(&self, id: &str, on_you: bool) -> f64 {
+        if !OFFERING_SKILLS.contains(&id) {
+            return 0.0;
+        }
+        if on_you {
+            self.offering_buff_effect + self.offering_effect_on_you
+        } else {
+            self.offering_buff_effect
+        }
+    }
+
+    /// The named skill effect of `kind` for the skill of the granted
+    /// effect `id` (P6-11gn, [`NAMED_SKILL_EFFECTS`]): its sum, else 0.
+    #[must_use]
+    pub fn named_skill(&self, id: &str, kind: NamedEffect) -> f64 {
+        NAMED_SKILL_EFFECTS
+            .iter()
+            .enumerate()
+            .filter(|(_, (_, skill, k))| *skill == id && *k == kind)
+            .map(|(i, _)| self.named_skill_effect[i])
+            .sum()
+    }
+
+    /// Whether the buff of the skill of the granted effect `id` reaches you
+    /// although PoB's `buffNotPlayer` keeps it from you (P6-11gg): an
+    /// offering while [`Self::offerings_affect_you`].
+    #[must_use]
+    pub fn offering_on_you(&self, id: &str) -> bool {
+        self.offerings_affect_you && OFFERING_SKILLS.contains(&id)
     }
 
     /// The scale of a buff of `effect` from a skill of `types` (module
@@ -233,8 +837,16 @@ impl Totals {
         if types.contains("Golem") {
             inc += self.golem_buff_effect;
         }
+        // A herald's (P6-11at).
+        if types.contains("Herald") {
+            inc += self.herald_buff_effect;
+        }
         if aura && types.contains("Aura") && !types.contains("AppliesCurse") {
             inc += self.aura_effect;
+        }
+        // Every aura buff on you, untagged (`CalcPerform.lua` 2413; P6-11k).
+        if aura {
+            inc += self.aura_on_self;
         }
         1.0 + inc / 100.0
     }
@@ -245,7 +857,14 @@ impl Totals {
     /// (every MORE stat is a reason).
     #[must_use]
     pub fn curse_scale(&self) -> f64 {
-        1.0 + self.curse_effect / 100.0
+        self.curse_scale_with(0.0)
+    }
+
+    /// [`Self::curse_scale`] with the curse gem's own `CurseEffect` INC
+    /// (`own`, P6-9b).
+    #[must_use]
+    pub fn curse_scale_with(&self, own: f64) -> f64 {
+        1.0 + (self.curse_effect + own) / 100.0
     }
 }
 
@@ -254,6 +873,10 @@ impl Totals {
 fn high_precision(quantity: Quantity, op: Op) -> Option<u8> {
     match (quantity, op) {
         (Quantity::CritChance, Op::Base) => Some(2),
+        // P6-11bs: `<Pool>RegenPercent` BASE at 2, `<Pool>Regen` BASE at 1
+        // (`Modules/Data.lua` 437 to 454).
+        (Quantity::Poe1(Poe1Quantity::RegenPercent(_)), Op::Base) => Some(2),
+        (Quantity::Poe1(Poe1Quantity::Regen(_)), Op::Base) => Some(1),
         _ => None,
     }
 }
@@ -372,6 +995,21 @@ pub fn reserved(
 
 #[cfg(test)]
 mod tests {
+    /// P6-11fq: sorted, one flag per row, at most 64 rows (the bit set).
+    #[test]
+    fn no_reservation_stats_should_be_sorted_flags() {
+        assert!(NO_RESERVATION_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(NO_RESERVATION_STATS.len() <= 64);
+        assert_eq!(
+            effects("despair_no_reservation"),
+            Some(vec![(
+                Quantity::Poe1(Poe1Quantity::SkillNoReservation(8)),
+                Op::Flag,
+                1.0
+            )])
+        );
+    }
+
     /// A flag is not scaled (P6-4b review; `ScaleAddMod` scales numbers).
     #[test]
     fn a_flag_should_not_be_scaled() {
@@ -417,12 +1055,15 @@ mod tests {
     /// groups' gems never reach a mapping.
     #[test]
     fn a_gems_modifiers_should_be_reasons() {
-        for (stat, ..) in STATS {
-            assert_eq!(
-                SkillMapping.map(&StatId::new(stat)),
-                StatMap::Unmapped,
-                "{stat}"
-            );
+        for (stat, q, _) in STATS {
+            // A skill's own duration reaches no slice field through its
+            // hit (P6-11bs; it was a `NoEffect` row before).
+            let want = if q == Poe1Quantity::SkillTiming(SkillTiming::Duration) {
+                StatMap::NoEffect
+            } else {
+                StatMap::Unmapped
+            };
+            assert_eq!(SkillMapping.map(&StatId::new(stat)), want, "{stat}");
         }
     }
 
@@ -514,6 +1155,48 @@ mod tests {
         assert_eq!(low.reservation(Pool::Mana).efficiency, -100.0);
     }
 
+    /// A herald's own mana reservation efficiency adds to the mana and
+    /// generic ones for a skill typed `Herald` alone (P6-11ag).
+    #[test]
+    fn a_heralds_efficiency_should_apply_to_heralds_only() {
+        let t = Totals {
+            efficiency: 5.0,
+            mana_efficiency: 10.0,
+            herald_mana_efficiency: 20.0,
+            ..Totals::default()
+        };
+        let herald: BTreeSet<String> = ["Herald".to_owned()].into();
+        let aura: BTreeSet<String> = ["Aura".to_owned()].into();
+        assert_eq!(
+            t.reservation_for(Pool::Mana, &herald, "HeraldOfIce")
+                .efficiency,
+            35.0
+        );
+        assert_eq!(
+            t.reservation_for(Pool::Mana, &aura, "Hatred").efficiency,
+            15.0
+        );
+        assert_eq!(
+            t.reservation_for(Pool::Life, &herald, "HeraldOfIce")
+                .efficiency,
+            5.0
+        );
+        // Close-out M6: a named skill's own efficiency.
+        let z = Totals {
+            mana_efficiency: 10.0,
+            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0],
+            ..Totals::default()
+        };
+        assert_eq!(
+            z.reservation_for(Pool::Mana, &aura, "Zealotry").efficiency,
+            60.0
+        );
+        assert_eq!(
+            z.reservation_for(Pool::Mana, &aura, "Hatred").efficiency,
+            10.0
+        );
+    }
+
     #[test]
     fn aura_effect_should_scale_non_curse_auras_only() {
         let t = Totals {
@@ -535,6 +1218,15 @@ mod tests {
         // type.
         assert_eq!(t.buff_scale(false, &types(&["Aura"]), 0.0), 1.0);
         assert_eq!(t.buff_scale(true, &types(&["Buff"]), 0.0), 1.0);
+        // P6-11k: the effect of your skills' auras on you, every aura buff,
+        // untagged; never a buff.
+        let s = Totals {
+            aura_on_self: 10.0,
+            ..t
+        };
+        assert_eq!(s.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.35);
+        assert_eq!(s.buff_scale(true, &types(&["Buff"]), 0.0), 1.1);
+        assert_eq!(s.buff_scale(false, &types(&["Aura"]), 0.0), 1.0);
         // P3-close: the golems' buff effect for a golem skill's buff, the
         // skill's own on top; neither for another skill.
         let g = Totals {
@@ -544,6 +1236,47 @@ mod tests {
         assert_eq!(g.buff_scale(false, &types(&["Buff", "Golem"]), 20.0), 1.7);
         assert_eq!(g.buff_scale(false, &types(&["Buff"]), 20.0), 1.2);
         assert_eq!(g.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.25);
+        // P6-11at: a herald's buff effect, for a herald skill alone.
+        let h = Totals {
+            herald_buff_effect: 40.0,
+            ..t
+        };
+        assert_eq!(h.buff_scale(false, &types(&["Buff", "Herald"]), 0.0), 1.4);
+        assert_eq!(h.buff_scale(false, &types(&["Buff", "Golem"]), 0.0), 1.0);
+        // P6-11gc: a named golem's buff effect, its transfigured skills'
+        // too; no other golem's.
+        let mut n = Totals::default();
+        n.named_golem_buff_effect[Golem::Lightning as usize] = 31.0;
+        assert_eq!(n.named_golem(Some("summon_lightning_golem")), 31.0);
+        assert_eq!(n.named_golem(Some("summon_lightning_golem_alt_x")), 31.0);
+        assert_eq!(n.named_golem(Some("summon_flame_golem")), 0.0);
+        assert_eq!(n.named_golem(Some("lightning_golem_wrath")), 0.0);
+        assert_eq!(n.named_golem(None), 0.0);
+        // P6-11gn: a named skill's effect, for that skill and kind alone.
+        let p = Totals {
+            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0],
+            ..Totals::default()
+        };
+        assert_eq!(p.named_skill("Pride", NamedEffect::Aura), 20.0);
+        assert_eq!(p.named_skill("Pride", NamedEffect::Curse), 0.0);
+        assert_eq!(p.named_skill("Vulnerability", NamedEffect::Curse), 15.0);
+        assert_eq!(p.named_skill("Hatred", NamedEffect::Aura), 0.0);
+        // P6-11gg: the offerings' effect, on you with the effect on you.
+        let o = Totals {
+            offering_buff_effect: 20.0,
+            offering_effect_on_you: -50.0,
+            ..Totals::default()
+        };
+        assert_eq!(o.offering("BoneOffering", false), 20.0);
+        assert_eq!(o.offering("FleshOffering", true), -30.0);
+        assert_eq!(o.offering("Clarity", true), 0.0);
+        assert!(!o.offering_on_you("BoneOffering"));
+        let o = Totals {
+            offerings_affect_you: true,
+            ..o
+        };
+        assert!(o.offering_on_you("SpiritOffering"));
+        assert!(!o.offering_on_you("Clarity"));
         let c = Totals {
             curse_effect: 30.0,
             ..Totals::default()

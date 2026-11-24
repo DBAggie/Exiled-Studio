@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11bo): Smite (level 20) supported by Volatility (level 20) with a rare Siege Axe and the custom lines "20% less Minimum Physical Attack Damage" and "10% more Maximum Physical Attack Damage": Volatility's MinDamage and MaxDamage MORE on each type's damage, the physical lines' MinPhysicalDamage and MaxPhysicalDamage MORE after the converted damage (PoB's calcDamage).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+				<Gem nameSpec="Volatility" skillId="SupportVolatility" variantId="SupportVolatility" gemId="Metadata/Items/Gems/SupportGemVolatility" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Cleaver
+Siege Axe
+Quality: 20
+Implicits: 0
+Adds 10 to 20 Physical Damage
+80% increased Physical Damage
+15% increased Attack Speed
+25% increased Critical Strike Chance
+Adds 5 to 50 Lightning Damage
++200 to Accuracy Rating
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				20% less Minimum Physical Attack Damage
+				10% more Maximum Physical Attack Damage
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

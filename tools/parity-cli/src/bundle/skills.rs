@@ -66,6 +66,8 @@ pub struct SkillSummary {
     pub dropped_stats: usize,
     /// Gems dropped because their base item is missing.
     pub dropped_gems: usize,
+    /// Level requirements with a fraction, rounded (data schema 5).
+    pub level_requirements_rounded: usize,
 }
 
 fn bump(cell: &mut usize) {
@@ -111,6 +113,24 @@ fn flag(row: &[Value], col: Option<usize>) -> bool {
 
 fn int_or_0(row: &[Value], col: Option<usize>) -> i64 {
     col.and_then(|c| Table::int(row, c)).unwrap_or(0)
+}
+
+/// A float column read as a whole number (`PlayerLevelReq`), 0 when absent;
+/// a value with a fraction is rounded and counted in the summary.
+fn whole(row: &[Value], col: Option<usize>, summary: &mut SkillSummary) -> i64 {
+    let Some(v) = col.and_then(|c| row.get(c)).and_then(Value::as_f64) else {
+        return 0;
+    };
+    let rounded = v.round();
+    if (rounded - v).abs() > f64::EPSILON {
+        bump(&mut summary.level_requirements_rounded);
+    }
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "a character level, within i64"
+    )]
+    let out = rounded as i64;
+    out
 }
 
 /// Each column of one of `alternatives` (a game's set), the first set the
@@ -290,6 +310,15 @@ fn effect_levels(
         c("AttackSpeedMultiplier")?,
         c("AttackTime")?,
     );
+    // Data schema 5: the level requirement and Vaal soul costs, when the
+    // game's table has them (PoE1's does).
+    let optional = |n: &str| t.column(n).ok();
+    let (level_requirement, vaal_souls, vaal_stored_uses, soul_prevention) = (
+        optional("PlayerLevelReq"),
+        optional("VaalSouls"),
+        optional("VaalStoredUses"),
+        optional("SoulGainPreventionDuration"),
+    );
     let reservation_columns: Vec<(usize, Resource, bool)> = match one_of(
         &t,
         &[[
@@ -342,6 +371,10 @@ fn effect_levels(
                 attack_speed_multiplier: int_or_0(r, attack_speed),
                 attack_time: int_or_0(r, attack_time),
                 reservations,
+                level_requirement: whole(r, level_requirement, summary),
+                vaal_souls: int_or_0(r, vaal_souls),
+                vaal_stored_uses: int_or_0(r, vaal_stored_uses),
+                soul_gain_prevention: int_or_0(r, soul_prevention),
             });
         }
         if sort_levels(&mut levels, |x| x.level) {

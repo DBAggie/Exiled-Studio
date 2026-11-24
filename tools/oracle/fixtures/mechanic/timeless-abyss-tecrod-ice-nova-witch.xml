@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-10a): a level 90 Witch casting Ice Nova (level 20) with Festering Vengeance (Murderous Eye Jewel, seed 597) in the jewel socket 41263 and the passives of the Large radius around it allocated that connect to the path: the Abyss jewel changes the nodes its results list for that socket and seed.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes="127,4105,5875,6109,8948,9650,9788,10511,11784,12189,21301,21678,25222,27415,27659,27929,32210,37671,40126,40637,41263,48778,49047,51517,51923,52095,53652,54447,55247,57044,57226,57746,61320,62490,63799">
+			<Sockets>
+				<Socket nodeId="41263" itemId="1"/>
+			</Sockets>
+		</Spec>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: UNIQUE
+Festering Vengeance
+Murderous Eye Jewel
+Limited to: 1 Historic
+Implicits: 0
+Subjugating 597 souls in the thrall of Tecrod
+Passives affected are Conquered by the Abyssal
+Historic
+		</Item>
+		<ItemSet id="1">
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

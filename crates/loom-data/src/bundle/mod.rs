@@ -38,6 +38,8 @@ pub mod poe1;
 pub mod properties;
 pub mod skills;
 mod source;
+pub mod tattoos;
+pub mod timeless;
 pub mod tree_layout;
 pub mod tree_packs;
 pub mod tree_sprites;
@@ -109,6 +111,11 @@ pub const TAGS: &str = "data/tags.json";
 /// has [`TAGS`] (B-2's tooltip). Readers gate on the manifest's
 /// `data_schema`, not on empty fields: an empty name is a mod without one.
 pub const AFFIX_SCHEMA: u32 = 4;
+/// The first data schema whose gem levels carry their character level
+/// requirement and Vaal soul costs (`skills::EffectLevel`; Phase 6, gem
+/// level data). Readers gate on the manifest's `data_schema`: 0 is also an
+/// older bundle's value.
+pub const GEM_LEVEL_SCHEMA: u32 = 5;
 /// The folder of stat-description files.
 pub const STAT_DESCRIPTIONS_DIR: &str = "stat_descriptions/";
 
@@ -191,6 +198,10 @@ pub struct Stat {
     /// Changes the item's weapon properties.
     #[serde(default)]
     pub weapon_local: bool,
+    /// Whether the game scales it (`IsScalable`: catalysts and other
+    /// modifier magnitudes; P6-11ax). `None` in a bundle written before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scalable: Option<bool>,
 }
 
 /// One stat of a mod row and its range.

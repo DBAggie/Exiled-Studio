@@ -17,16 +17,20 @@
 //!   `minionUseBowAndQuiver`, `minionUseMainHandWeapon`: its defences come
 //!   from items, not modelled): `minion-items`;
 //! - a hostile minion (`#hostile`): `hostile-minion`;
-//! - a level PoB takes from the enemy, the character, or a support's level
-//!   requirement: `minion-level`.
+//! - a level PoB takes from a support's level requirement, or from the
+//!   enemy when the enemy model has a problem: `minion-level`.
 //!
-//! **Level** (`CalcActiveSkill.lua` 706 to 710): `skillData.minionLevel`,
-//! else the gem level's level requirement, clamped to 1 to 100. The bundle
-//! does not carry level requirements; the game's
-//! `base_display_minion_actor_level` stat is read instead (stat-ID first).
-//! It equals PoB's level requirement at 1,822 of PoB's 1,861 minion gem
-//! levels; the 39 others are Vaal Summon Skeletons', where the game's stat
-//! is lower (a divergence when a fixture reaches it).
+//! **Level** (`CalcActiveSkill.lua` 706 to 711), clamped to 1 to 100: the
+//! enemy's level when the skill has `display_skill_minions_level_is_corpse_level`;
+//! the character's, at most the stat's value, with
+//! `minion_actor_level_is_user_level_up_to_maximum`; else
+//! `skillData.minionLevel`, else the gem level's level requirement. For the
+//! last the game's `base_display_minion_actor_level` stat is read first
+//! (stat-ID first) and the requirement, carried since data schema 5
+//! (`EffectLevel::level_requirement`), after. The stat equals PoB's level
+//! requirement at 1,822 of PoB's 1,861 minion gem levels; the 39 others are
+//! Vaal Summon Skeletons', where the game's stat is lower (DIV-0111 to
+//! DIV-0113, DIV-0174; the maintainer's in-game check is open).
 //!
 //! **Base values** (`Modules/CalcPerform.lua` `initMinionModDB`, 1119 to
 //! 1145; `calcs.initModDB`, `CalcSetup.lua` 18 to 27), source
@@ -60,26 +64,54 @@
 //! formulas ([`super::phases`]); the minion has no item. Its reasons are its
 //! own and the character's (an unmapped "Minions have ..." line).
 //!
-//! Not yet: the character's `MinionModifier` lines, keystones granted to
-//! the minion, `StrengthAddedToMinions` and `ResistanceAddedToMinions`
-//! (P6-7b3b); buffs and auras on the minion (P6-7b4). Each such source is a
-//! reason on the minion fields ([`deferred_reasons`]).
+//! **The character's minion modifiers** (P6-7b3b; `CalcPerform.lua`
+//! `addMinionModifiers`, 1213 to 1219, called at 1918 with the main skill's
+//! `skillModList`): every unconditional [`Poe1Quantity::Minion`] effect of
+//! the character whose kind a minion field reads
+//! ([`super::minions::MinionValue::on_minion`]), and every [`Poe1Quantity::GolemMinion`]
+//! one when the main skill is a golem skill, is added to the minion with
+//! its op, value, and source ([`minion_modifiers`]). The main skill's own
+//! gems (the active one and the supports that apply) are read here from
+//! their stats through the gem mapping ([`gem_modifiers`]: "Minions have
+//! #% more Life" of Minion Life, Stone Golem of Safeguarding's "50% less
+//! Life"), since the character's store holds them only when the skill is
+//! also a hit or damage over time the engine computes; their effects in
+//! the character's store are skipped, so none counts twice.
+//!
+//! **Auras and buffs** (P6-7b4): the character's auras, and buffs PoB
+//! applies to minions, with their rows scaled and merged as PoB's
+//! `minionBuffs` ([`super::gems::minion_buffs`]); one the engine does not
+//! model is a `minion-buffs` reason.
+//!
+//! **`extraSkillModList`:** PoB adds the skill's to the minion
+//! (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines,
+//! which the engine maps to nothing, so each is already the character's
+//! `unmapped-stat` reason, which every minion field carries.
+//!
+//! Not yet, each a reason: a conditional minion modifier.
+//! Keystones granted to the minion (`Keystone` mods on it, 1920 to 1924),
+//! `StrengthAddedToMinions` (1207), and `ResistanceAddedToMinions`
+//! (`CalcDefence.lua` 648) come from stats the engine does not map: each is
+//! already an `unmapped-stat` reason of the character.
 
 use loom_data::bundle::poe1::{LifeScaling, MinionType, MinionVariety};
 use loom_domain::{StatId, StatLine, StatValue};
 
-use super::mapping::Poe1Mapping;
+use super::mapping::{Poe1Mapping, SkillMapping};
+
+#[cfg(test)]
+use super::minions::MinionValue;
 use super::phases::{self, Valued};
 use super::pob_minion::{self, PobMinion};
 use super::pob_skill::{self, PobSkill};
-use super::{Defence, gem_levels::GemLevels, skill, states};
-use crate::condition::{ConditionKey, Conditions};
+use super::{Defence, Poe1Quantity, gem_levels::GemLevels, skill, states};
+use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::engine::{Actor, ActorState, Calc};
 use crate::error::CalcError;
 use crate::ingest::{EffectTemplate, Ingest, StatMap, StatMapping};
 use crate::input::CalcInput;
 use crate::math;
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::result::{Field, MinionField};
 use crate::source::Source;
 use crate::state::{Reasons, UnsupportedReason};
@@ -120,12 +152,26 @@ const ITEM_SKILL_DATA: [&str; 2] = ["minionUseBowAndQuiver", "minionUseMainHandW
 /// The game's minion level stat ([`level`]).
 pub const LEVEL_STAT: &str = "base_display_minion_actor_level";
 
-/// The stats that set the minion's level from the enemy or the character
-/// (`SkillStatMap.lua` 307 to 312): not modelled.
-const LEVEL_FROM_OTHERS: [&str; 2] = [
-    "display_skill_minions_level_is_corpse_level",
-    "minion_actor_level_is_user_level_up_to_maximum",
-];
+/// The stat that sets the minion's level to the enemy's (`SkillStatMap.lua`
+/// 307, `minionLevelIsEnemyLevel`).
+const LEVEL_IS_ENEMY_LEVEL: &str = "display_skill_minions_level_is_corpse_level";
+/// The stat that sets the minion's level to the character's, at most its
+/// value (`SkillStatMap.lua` 310, `minionLevelIsPlayerLevel`: PoB's
+/// `mergeLevelMod` puts the stat's value in the skill data).
+const LEVEL_IS_PLAYER_LEVEL: &str = "minion_actor_level_is_user_level_up_to_maximum";
+
+/// What the minion's level reads besides the gem's stats (P6, gem level
+/// data).
+#[derive(Debug, Clone, Copy)]
+struct LevelSources {
+    /// The character's level (PoB's `build.characterLevel`, 1 to 100).
+    character: i64,
+    /// The enemy's level, `None` when the enemy model has a problem.
+    enemy: Option<i64>,
+    /// The gem level's character level requirement (data schema 5; 0 when
+    /// the bundle is older or the level has none).
+    requirement: i64,
+}
 
 /// Why the minion is not computed.
 fn not_computed(source: &Source, what: &'static str) -> UnsupportedReason {
@@ -258,19 +304,68 @@ fn collect(
         .ok_or_else(|| not_computed(source, "minion-data"))?;
     let gem = skill.active_gem;
     let instance = skill::instance(gem.effect, gem.level, gem.quality, data);
-    let level =
-        level(&instance.stats, pob, own).ok_or_else(|| not_computed(source, "minion-level"))?;
+    let enemy = super::enemy::enemy(input.build, data);
+    let sources = LevelSources {
+        character: input
+            .build
+            .character
+            .level
+            .as_ref()
+            .map_or(1, |l| i64::from(*l.value()))
+            .clamp(1, 100),
+        enemy: enemy.problems.is_empty().then_some(enemy.level),
+        requirement: skill::effect_level(gem.effect, gem.level).map_or(0, |l| l.level_requirement),
+    };
+    let level = level(&instance.stats, pob, own, sources)
+        .ok_or_else(|| not_computed(source, "minion-level"))?;
 
     let mapping = MinionMapping;
     let mut ingest = Ingest::new(&mapping);
-    for reason in deferred_reasons(input, player, skill) {
-        ingest.reason(reason);
+    minion_modifiers(input, player, skill, &mut ingest);
+    let totals = super::skill_modifiers::Totals::from_effects(player.effects());
+    // A buff or aura effect modifier the totals do not read scales the
+    // minion's buffs as the character's (P6-7b3b review).
+    if totals.unread {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: Source::Rule("skill-modifiers"),
+            what: "unread-skill-modifier",
+        });
     }
+    super::gems::minion_buffs(input, &levels_of(player), &totals, &mut ingest);
+    gem_modifiers(input, skill, &mut ingest);
     base_values(input, variety, ty, level, &mut ingest)
         .ok_or_else(|| not_computed(source, "minion-data"))?;
     mod_list(input, minions, variety, &mut ingest);
     let mut states = std::collections::BTreeMap::new();
     template_mods(template, &mut ingest, &mut states);
+    // The minion's own hit (P6-7c, [`super::minion_hit`]): its main skill,
+    // its monster weapon, and PoB's offence mods of `initMinionModDB`.
+    let own_skill = minion_skill(input, skill, variety, template);
+    if own_skill.is_some() {
+        weapon(input, variety, ty, level, &mut ingest);
+        support_modifiers(input, skill, &mut ingest);
+    }
+    // A computed minion skill's own stats (P6-7c3).
+    if let Some(id) = own_skill.as_deref().filter(|id| {
+        super::minion_hit::VETTED_SPELLS.contains(id) || super::minion_hit::VETTED.contains(id)
+    }) {
+        own_skill_stats(input, id, level, &mut ingest);
+    }
+    ingest.effect(base(
+        Quantity::Poe1(Poe1Quantity::CannotBeEvaded),
+        Op::Flag,
+        1.0,
+    ));
+    // The enemy is shared (PoB's one `enemyDB`): its modifiers and the
+    // configured enemy conditions reach the minion's hits too.
+    enemy_effects(input, player, &mut ingest);
+    // Every enemy state the rules settle (P6-7c review), not only the
+    // config's checks.
+    for (key, value) in states::states(input) {
+        if key.as_str().starts_with(ENEMY_STATE) {
+            states.insert(key, value);
+        }
+    }
     // The minion holds no weapon (PoB's `weaponData2` is empty without
     // items): it never dual wields.
     states.insert(ConditionKey::new(states::DUAL_WIELDING), false);
@@ -280,15 +375,622 @@ fn collect(
         global,
         states,
         skill_sources: std::collections::BTreeSet::new(),
+        skill: own_skill,
+        weapon: variety
+            .main_hand
+            .as_deref()
+            .and_then(weapon_class)
+            .map(str::to_owned),
     })
 }
 
-/// The minion's level (module docs), clamped to 1 to 100; `None` when PoB
-/// takes it from elsewhere.
-fn level(stats: &[(String, i64)], pob: Option<&PobSkill>, own: bool) -> Option<i64> {
+/// The weapon class of a minion's main hand as PoB's exporter keeps it
+/// (`itemClassMap`, `Export/Scripts/minions.lua` 76 to 93, then
+/// `weaponTypeInfo`): the item class whose flags
+/// [`super::hit::weapon_type_flags`] gives; `None` (unarmed) for a class
+/// the map leaves out or maps to `None`.
+fn weapon_class(game_class: &str) -> Option<&'static str> {
+    Some(match game_class {
+        "Claw" => "Claw",
+        "Dagger" => "Dagger",
+        "Wand" => "Wand",
+        "One Hand Sword" | "Thrusting One Hand Sword" => "One Hand Sword",
+        "One Hand Axe" => "One Hand Axe",
+        "One Hand Mace" | "Sceptre" => "One Hand Mace",
+        "Bow" => "Bow",
+        "Fishing Rod" => "FishingRod",
+        "Staff" => "Staff",
+        "Two Hand Sword" => "Two Hand Sword",
+        "Two Hand Axe" => "Two Hand Axe",
+        "Two Hand Mace" => "Two Hand Mace",
+        "Shield" => "Shield",
+        _ => return None,
+    })
+}
+
+/// PoB's supports that never reach a minion's skill (`calcLib.canGrantedEffectSupportActiveSkill`, `CalcTools.lua` 113 to 130): a trigger support (`isTrigger`: the minion is not the player), or one that names weapon types (the minion skills have none). From `Data/Skills/sup_*.lua` (P6-7c2), sorted.
+pub const NO_MINION_SUPPORTS: &[&str] = &[
+    "SupportArrowNova",
+    "SupportAwakenedArrowNova",
+    "SupportBallistaTotem",
+    "SupportBarrage",
+    "SupportCastOnCritTriggered",
+    "SupportCastOnCritTriggeredPlus",
+    "SupportCastOnDeath",
+    "SupportCastOnMeleeKillTriggered",
+    "SupportCastOnWardBreak",
+    "SupportCastWhenDamageTaken",
+    "SupportCastWhenStunned",
+    "SupportCastWhileChannellingTriggered",
+    "SupportCastWhileChannellingTriggeredPlus",
+    "SupportCloseCombat",
+    "SupportCrystalfall",
+    "SupportCurseOnHitCurse",
+    "SupportCurseOnHitCursePlus",
+    "SupportGreaterKineticInstability",
+    "SupportKineticInstability",
+    "SupportManaforgedArrows",
+    "SupportMarkOnHit",
+    "SupportNightblade",
+    "SupportSacredWisps",
+    "SupportShockwave",
+    "SupportTrauma",
+    "SupportVoidShockwave",
+    "SupportVoidstorm",
+];
+
+/// PoB's `notMinionStat` lists of supports (`Modules/Data.lua` 81 to 90: a minion's skill does not read them), from `Data/Skills/sup_*.lua` (P6-7c2), sorted by support.
+pub const NOT_MINION_STATS: &[(&str, &[&str])] = &[
+    (
+        "SupportAwakenedCastWhileChannelling",
+        &["cast_while_channelling_time_ms"],
+    ),
+    (
+        "SupportAwakenedSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportAwakenedUnleash",
+        &[
+            "support_anticipation_rapid_fire_count",
+            "support_anticipation_charge_gain_interval_ms",
+        ],
+    ),
+    ("SupportBallistaTotem", &["totem_support_gem_level"]),
+    (
+        "SupportBloodsoakedBanner",
+        &[
+            "support_bloodstained_banner_corrupted_blood_base_physical_damage_to_deal_per_minute_per_valour",
+        ],
+    ),
+    (
+        "SupportCastWhenDamageTaken",
+        &["cast_on_damage_taken_threshold"],
+    ),
+    ("SupportCastWhenStunned", &["cast_on_stunned_%"]),
+    (
+        "SupportCastWhileChannelling",
+        &["cast_while_channelling_time_ms"],
+    ),
+    ("SupportCooldownRecovery", &["base_cooldown_speed_+%"]),
+    ("SupportCursedGround", &["base_hex_zone_skill_duration_ms"]),
+    (
+        "SupportFocusedBallista",
+        &[
+            "support_focused_ballista_totem_attack_speed_+%_final",
+            "support_focused_ballista_totem_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportFocusedChannelling",
+        &["support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%"],
+    ),
+    (
+        "SupportFrostmage",
+        &["frostmage_gain_cold_damage_%_of_max_reserved_mana"],
+    ),
+    (
+        "SupportGluttony",
+        &["support_gluttony_fire_x_additional_projectiles_in_nova_while_affected_by_disgorge"],
+    ),
+    (
+        "SupportGreaterAncestralCall",
+        &["extra_target_targeting_distance_+%"],
+    ),
+    (
+        "SupportGreaterSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    (
+        "SupportGreaterUnleash",
+        &["support_anticipation_charge_gain_interval_ms"],
+    ),
+    (
+        "SupportHextoad",
+        &[
+            "base_hex_zone_skill_duration_ms",
+            "hex_zone_trigger_hextoad_every_x_ms",
+        ],
+    ),
+    (
+        "SupportInfusedChannelling",
+        &["support_storm_barrier_damage_+%_final"],
+    ),
+    (
+        "SupportInspiration",
+        &[
+            "support_inspiration_mana_cost_+%_final",
+            "lose_all_righteous_charges_on_mana_use_threshold",
+            "elemental_damage_+%_final_per_righteous_charge",
+            "critical_strike_chance_+%_per_righteous_charge",
+        ],
+    ),
+    (
+        "SupportIntensify",
+        &["support_spell_boost_area_damage_+%_final_per_charge"],
+    ),
+    (
+        "SupportLifetap",
+        &[
+            "support_lifetap_damage_+%_final_while_buffed",
+            "support_lifetap_spent_life_threshold",
+        ],
+    ),
+    (
+        "SupportMachinations",
+        &["physical_damage_%_to_add_as_chaos_per_keystone"],
+    ),
+    (
+        "SupportOverheat",
+        &["support_overheat_ailment_damage_+%_final_per_3_fortification_consumed"],
+    ),
+    (
+        "SupportOverloadedIntensity",
+        &[
+            "additional_critical_strike_chance_per_overloaded_intensity",
+            "critical_strike_multiplier_+_per_overloaded_intensity",
+        ],
+    ),
+    (
+        "SupportPinpoint",
+        &["support_greater_projectile_intensity_projectile_damage_+%_final"],
+    ),
+    (
+        "SupportSacrifice",
+        &[
+            "support_sacrifice_sacrifice_%_of_current_life",
+            "support_sacrifice_gain_%_of_sacrificed_life_as_added_chaos_damage",
+        ],
+    ),
+    ("SupportSecondWind", &["base_cooldown_speed_+%"]),
+    (
+        "SupportSpellCascade",
+        &[
+            "support_spell_cascade_area_of_effect_+%_final",
+            "support_spell_cascade_damage_+%_final",
+        ],
+    ),
+    ("SupportSpellTotem", &["totem_support_gem_level"]),
+    (
+        "SupportSpellblade",
+        &[
+            "support_spell_weapon_damage_gain_%_of_one_hand_melee_weapon_damage_as_added_spell_damage",
+        ],
+    ),
+    (
+        "SupportTransfusion",
+        &["random_nearby_minion_gain_a_soul_eater_soul_on_X_life_spent"],
+    ),
+    (
+        "SupportTrauma",
+        &[
+            "trauma_strike_self_damage_per_trauma",
+            "attack_minimum_added_physical_damage_with_weapons_per_trauma",
+            "attack_maximum_added_physical_damage_with_weapons_per_trauma",
+            "support_trauma_stun_duration_+%_per_trauma",
+            "support_trauma_base_duration_ms",
+        ],
+    ),
+    (
+        "SupportTrinity",
+        &["damage_penetrates_%_elemental_resistances_while_all_resonance_is_25"],
+    ),
+    (
+        "SupportUnholyTrinity",
+        &[
+            "damage_+%_final_per_10_lowest_unholy_resonance",
+            "hits_ignore_enemy_monster_physical_damage_reduction_%_chance_while_all_unholy_resonance_is_25",
+            "hits_ignore_enemy_monster_lightning_and_chaos_resistance_%_chance_while_all_unholy_resonance_is_25",
+        ],
+    ),
+    (
+        "SupportUnleash",
+        &["support_anticipation_charge_gain_interval_ms"],
+    ),
+];
+
+/// The summoning skill's supports on the minion's skills (P6-7c2;
+/// `CalcActiveSkill.lua` 903: `createActiveSkill(activeEffect,
+/// activeSkill.supportList, minion, ...)`): PoB checks a support against
+/// the summoning skill's types and its minion types (`CalcTools.lua` 104 to
+/// 105), as the summoning skill's own supports already are, so each of
+/// them reaches the minion's skill but those of [`NO_MINION_SUPPORTS`].
+/// Its stats go into the minion skill's list through the gem mapping
+/// ([`SupportOnMinion`]): its minion modifiers there apply to the minion's
+/// own minions (none), so they are left to [`gem_modifiers`], and its
+/// `notMinionStat` stats ([`NOT_MINION_STATS`]) are not read.
+fn support_modifiers(
+    input: &CalcInput<'_>,
+    summon: &skill::MainSkill<'_>,
+    ingest: &mut Ingest<'_>,
+) {
+    let group = summon.group.saturating_sub(1);
+    for r in &summon.supports {
+        let id = r.effect.id.as_str();
+        if NO_MINION_SUPPORTS.binary_search(&id).is_ok() {
+            continue;
+        }
+        let instance = skill::instance(r.effect, r.level, r.quality, input.data);
+        let source = Source::Gem { group, gem: r.gem };
+        for p in &instance.problems {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what: p.name(),
+            });
+        }
+        let lines: Vec<StatLine> = instance
+            .stats
+            .iter()
+            .map(|(stat, value)| StatLine {
+                stat: StatId::new(stat.as_str()),
+                value: StatValue::Exact {
+                    min: *value,
+                    max: *value,
+                },
+            })
+            .collect();
+        ingest.stats_with(&SupportOnMinion { support: id }, &source, &lines);
+    }
+}
+
+/// The minion skill's own stats (P6-7c3): PoB builds the skill at level 1
+/// with the minion as its actor, so an effectiveness-scaled stat (its base
+/// damage) is PoB's value at the minion's level
+/// ([`skill::instance_for_actor`]). They join the skill's list
+/// ([`super::minion_hit::SKILL_RULE`]) through the mapping a support's
+/// stats take on a minion's skill ([`SupportOnMinion`]; a skill has no
+/// `notMinionStat` list PoB reads, `Modules/Data.lua` 82).
+fn own_skill_stats(input: &CalcInput<'_>, id: &str, level: i64, ingest: &mut Ingest<'_>) {
+    let source = Source::Rule(super::minion_hit::SKILL_RULE);
+    let Some(effect) = input.data.granted_effect(id) else {
+        ingest.reason(not_computed(&source, "minion-skill"));
+        return;
+    };
+    let instance = skill::instance_for_actor(effect, 1, level, input.data);
+    for p in &instance.problems {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: p.name(),
+        });
+    }
+    let lines: Vec<StatLine> = instance
+        .stats
+        .iter()
+        .map(|(stat, value)| StatLine {
+            stat: StatId::new(stat.as_str()),
+            value: StatValue::Exact {
+                min: *value,
+                max: *value,
+            },
+        })
+        .collect();
+    ingest.stats_with(&OwnSkillMapping { skill: id }, &source, &lines);
+}
+
+/// The mapping of a minion skill's own stats ([`own_skill_stats`]): PoB's
+/// own stat map of the skill ([`super::minion_hit::OWN_STATS`], P6-7c3c),
+/// then the mapping a support's stats take on a minion's skill.
+struct OwnSkillMapping<'a> {
+    skill: &'a str,
+}
+
+impl StatMapping for OwnSkillMapping<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        match super::minion_hit::own_stat(self.skill, stat.as_str()) {
+            Some(template) => StatMap::Effects(vec![template]),
+            None => SupportOnMinion {
+                support: self.skill,
+            }
+            .map(stat),
+        }
+    }
+}
+
+/// The gem mapping of a support's stats on a minion's skill
+/// ([`support_modifiers`]), and of the minion skill's own
+/// ([`own_skill_stats`]).
+struct SupportOnMinion<'a> {
+    support: &'a str,
+}
+
+impl StatMapping for SupportOnMinion<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        let not_minion = NOT_MINION_STATS
+            .binary_search_by(|(id, _)| (*id).cmp(self.support))
+            .ok()
+            .and_then(|i| NOT_MINION_STATS.get(i))
+            .is_some_and(|(_, stats)| stats.contains(&stat.as_str()));
+        if not_minion {
+            return StatMap::NoEffect;
+        }
+        match SkillMapping.map(stat) {
+            StatMap::Effects(templates) => {
+                let kept: Vec<EffectTemplate> = templates
+                    .into_iter()
+                    .filter(|t| {
+                        // The enemy's quantities come with the enemy's
+                        // effects ([`enemy_effects`]): never twice.
+                        !is_enemy_quantity(t.quantity)
+                            && !matches!(
+                                t.quantity,
+                                Quantity::Poe1(
+                                    Poe1Quantity::Minion(_)
+                                        | Poe1Quantity::GolemMinion(_)
+                                        | Poe1Quantity::MinionToYou(..)
+                                )
+                            )
+                    })
+                    .collect();
+                if kept.is_empty() {
+                    StatMap::NoEffect
+                } else {
+                    StatMap::Effects(kept)
+                }
+            }
+            other => other,
+        }
+    }
+}
+
+/// The prefix of the enemy's conditions ([`super::conditions`]).
+const ENEMY_STATE: &str = "Enemy:";
+
+/// The source of the minion's monster weapon (P6-7c).
+pub const WEAPON_RULE: &str = "minion-weapon";
+
+/// The minion's main skill (`CalcActiveSkill.lua` 873 to 922): its skill
+/// list (the variety's skills, then the template's, each PoB's data has),
+/// the gem's `skillMinionSkill` (1-based, clamped) or the first; PoB's
+/// default attack when the list is empty.
+fn minion_skill(
+    input: &CalcInput<'_>,
+    summon: &skill::MainSkill<'_>,
+    variety: &MinionVariety,
+    template: &PobMinion,
+) -> Option<String> {
+    let mut list: Vec<&str> = variety
+        .skills
+        .iter()
+        .map(String::as_str)
+        .chain(template.skills.iter().copied())
+        .filter(|id| pob_skill::skill(id).is_some())
+        .collect();
+    // PoB's `ExtraMinionSkill` from the summoning skill's gems' stat maps,
+    // appended in order (`CalcActiveSkill.lua` 880 to 884; P6-7c review).
+    // From the character's lines it comes through stats the engine does
+    // not map: the character's reasons, which the minion's fields carry.
+    for r in std::iter::once(&summon.active_gem).chain(&summon.supports) {
+        let instance = skill::instance(r.effect, r.level, r.quality, input.data);
+        for (stat, value) in &instance.stats {
+            if *value == 0 {
+                continue;
+            }
+            if let Some(&(_, extra)) = EXTRA_MINION_SKILLS.iter().find(|(s, _)| s == stat) {
+                list.push(extra);
+            }
+        }
+    }
+    if list.is_empty() {
+        return Some("Melee".to_owned());
+    }
+    let wanted = skill::active_groups(input.build)
+        .ok()
+        .and_then(|groups| groups.get(summon.group.checked_sub(1)?).copied())
+        .and_then(|g| g.gems.typed().nth(summon.active_gem.gem))
+        .and_then(|g| skill::attribute(&g.attributes, "skillMinionSkill"))
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(1);
+    let index = wanted.clamp(1, list.len()) - 1;
+    list.get(index).map(|s| (*s).to_owned())
+}
+
+/// The gem stats whose PoB stat map adds an `ExtraMinionSkill`, and the
+/// skill (`Data/Skills/sup_int.lua` 3822 to 3825, Infernal Legion;
+/// `Data/Skills/other.lua` 4697 to 4700, the Radiant Sentinel).
+const EXTRA_MINION_SKILLS: [(&str, &str); 2] = [
+    (
+        "radiant_sentinel_minion_fire_%_of_life_to_deal_nearby_per_minute",
+        "GuardianSentinelFireAura",
+    ),
+    (
+        "support_minion_instability_minion_base_fire_area_damage_per_minute",
+        "InfernalLegion",
+    ),
+];
+
+/// PoB's `damageFixup` of the exporter (`minions.lua` 185 to 191): a
+/// variety mod's ID and its fixup.
+const DAMAGE_FIXUPS: [(&str, f64); 3] = [
+    ("MonsterSpeedAndDamageFixupSmall", 0.11),
+    ("MonsterSpeedAndDamageFixupLarge", 0.22),
+    ("MonsterSpeedAndDamageFixupComplete", 0.33),
+];
+
+/// The minion's monster weapon (`CalcActiveSkill.lua` 719 to 752, module
+/// docs of [`super::minion_hit`]), as the weapon quantities an item gives
+/// the character, and PoB's `damageFixup` (488 to 490: `Damage` MORE
+/// `-100 x fixup` and `Speed` MORE `100 x fixup` for attacks). The
+/// multipliers are the numbers PoB's exporter wrote ([`lua_number`]); the
+/// table's value is the game's single-precision number, as PoB's.
+fn weapon(
+    input: &CalcInput<'_>,
+    variety: &MinionVariety,
+    ty: &MinionType,
+    level: i64,
+    ingest: &mut Ingest<'_>,
+) {
+    use super::{Hand, WeaponValue};
+    let source = Source::Rule(WEAPON_RULE);
+    let effect = |quantity, op, value, all| Effect {
+        quantity,
+        op,
+        value,
+        conditions: Conditions::none().with_all(all),
+        source: source.clone(),
+    };
+    let Some(table) = input.data.monster_ally_damage(level) else {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "minion-weapon",
+        });
+        return;
+    };
+    #[expect(clippy::cast_precision_loss, reason = "game integers, exact as f64")]
+    let f = |v: i64| v as f64;
+    let damage_multiplier = lua_number(f(variety.damage) / 100.0);
+    let attack_time = lua_number(f(variety.attack_time) / 1000.0);
+    let spread = lua_number(f(ty.damage_spread) / 100.0);
+    let mut damage = table * damage_multiplier;
+    if !ty.damage_ignores_attack_speed {
+        damage *= attack_time;
+    }
+    let weapon = |v| Hand::Main.weapon(v);
+    let none = crate::condition::Flags::NONE;
+    for (bound, value) in [
+        (
+            crate::quantity::Bound::Min,
+            math::round_half_up(damage * (1.0 - spread)),
+        ),
+        (
+            crate::quantity::Bound::Max,
+            math::round_half_up(damage * (1.0 + spread)),
+        ),
+    ] {
+        if value != 0.0 {
+            ingest.effect(effect(
+                weapon(WeaponValue::Damage(DamageType::Physical, bound)),
+                Op::Base,
+                value,
+                none,
+            ));
+        }
+    }
+    if attack_time > 0.0 {
+        ingest.effect(effect(
+            weapon(WeaponValue::AttackRate),
+            Op::Base,
+            1.0 / attack_time,
+            none,
+        ));
+    }
+    ingest.effect(effect(weapon(WeaponValue::CritChance), Op::Base, 5.0, none));
+    for (id, fixup) in DAMAGE_FIXUPS {
+        if variety.mods.iter().any(|m| m == id) {
+            let attack = crate::condition::Flags::ATTACK;
+            ingest.effect(effect(Quantity::Damage, Op::More, -100.0 * fixup, attack));
+            ingest.effect(effect(Quantity::Speed, Op::More, 100.0 * fixup, attack));
+        }
+    }
+}
+
+/// The enemy's modifiers the character's skills and the config gave (the
+/// enemy is shared: PoB's curses, debuffs, exposure, and configured enemy
+/// conditions reach the minion's hits; P6-7c): every effect on an enemy
+/// quantity, and every effect of a curse or debuff skill (a curse's rows
+/// on the character's added damage and crit are the enemy's `Self...` mods
+/// in PoB, [`super::gems`]), copied with their sources.
+fn enemy_effects(input: &CalcInput<'_>, player: &ModStore, ingest: &mut Ingest<'_>) {
+    let groups = skill::active_groups(input.build).ok();
+    let enemy_skill = |source: &Source| -> bool {
+        let Source::Gem { group, gem } = source else {
+            return false;
+        };
+        let Some(g) = groups.as_ref().and_then(|gs| gs.get(*group)) else {
+            return false;
+        };
+        let Some(gem) = g.gems.typed().nth(*gem) else {
+            return false;
+        };
+        skill::gem_effects(gem, input.data)
+            .unwrap_or_default()
+            .iter()
+            .any(|e| {
+                matches!(
+                    super::gems::kind(&e.id),
+                    Some(super::gems::Kind::Curse { .. } | super::gems::Kind::Debuff { .. })
+                )
+            })
+    };
+    for e in player.effects() {
+        if is_enemy_quantity(e.quantity) || enemy_skill(&e.source) {
+            ingest.effect(e.clone());
+        }
+    }
+}
+
+/// A quantity of the enemy's (the shared enemy, P6-7c).
+const fn is_enemy_quantity(q: Quantity) -> bool {
+    matches!(
+        q,
+        Quantity::Poe1(
+            Poe1Quantity::EnemyDamageTaken
+                | Poe1Quantity::EnemyTypeDamageTaken(_)
+                | Poe1Quantity::EnemyResistance(_)
+                | Poe1Quantity::SkillExposure(_)
+                | Poe1Quantity::EnemyEvasion
+                | Poe1Quantity::EnemyAilmentDuration
+                | Poe1Quantity::EnemyBuffExpireFaster
+                | Poe1Quantity::EnemyPhysicalDamageReduction
+                | Poe1Quantity::EnemyProjectileDamageTaken
+                | Poe1Quantity::EnemyTrapMineDamageTaken
+                | Poe1Quantity::EnemyProjectileAttackDamageTaken
+                | Poe1Quantity::ChillDamageTaken(_)
+                | Poe1Quantity::ConsecratedGroundDamageTaken
+                | Poe1Quantity::ChillSecondsDamageTaken
+        )
+    )
+}
+
+/// The minion's level (module docs; `CalcActiveSkill.lua` 707 to 711),
+/// clamped to 1 to 100, in PoB's order: the enemy's level with
+/// [`LEVEL_IS_ENEMY_LEVEL`]; the character's, at most the stat's value,
+/// with [`LEVEL_IS_PLAYER_LEVEL`]; PoB's `minionLevel`; else the gem
+/// level's. For the last the game's [`LEVEL_STAT`] comes first and the
+/// level requirement (data schema 5) after: they differ only at Vaal
+/// Summon Skeletons, where the game's stat is lower (DIV-0111 to
+/// DIV-0113, DIV-0174: the in-game check is open). `None` when the level
+/// comes from elsewhere (a support's minion) or is not known.
+fn level(
+    stats: &[(String, i64)],
+    pob: Option<&PobSkill>,
+    own: bool,
+    sources: LevelSources,
+) -> Option<i64> {
     let get = |id: &str| stats.iter().find(|(s, _)| s == id).map(|(_, v)| *v);
-    if !own || LEVEL_FROM_OTHERS.iter().any(|s| get(s).is_some()) {
+    if !own {
         return None;
+    }
+    if get(LEVEL_IS_ENEMY_LEVEL).is_some_and(|v| v != 0) {
+        return sources.enemy.map(|l| l.clamp(1, 100));
+    }
+    if let Some(cap) = get(LEVEL_IS_PLAYER_LEVEL).filter(|v| *v != 0) {
+        return Some(sources.character.min(cap).clamp(1, 100));
     }
     #[expect(
         clippy::cast_possible_truncation,
@@ -298,7 +1000,8 @@ fn level(stats: &[(String, i64)], pob: Option<&PobSkill>, own: bool) -> Option<i
         .and_then(|p| p.skill_data("minionLevel"))
         .and_then(pob_skill::Value::num)
         .map(|n| n as i64);
-    let level = from_data.or_else(|| get(LEVEL_STAT))?;
+    let requirement = (sources.requirement > 0).then_some(sources.requirement);
+    let level = from_data.or_else(|| get(LEVEL_STAT)).or(requirement)?;
     Some(level.clamp(1, 100))
 }
 
@@ -526,13 +1229,17 @@ fn template_mods(
     }
 }
 
+/// No flag on a minion stat's effect.
+const NO_FLAGS: Flags = Flags::NONE;
+
 /// How a monster stat reads on a minion ([`MinionMapping`]).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MinionStat {
-    /// An effect a minion field reads.
-    Effect(Quantity, Op, Option<&'static str>),
-    /// PoB maps it to a mod no minion field reads (damage, speed, damage
-    /// taken, immunities, charges): P6-7c's.
+    /// An effect a minion field reads: its quantity, op, the flags of PoB's
+    /// mod (P6-7c: the minion's hit reads them), and the state it needs.
+    Effect(Quantity, Op, Flags, Option<&'static str>),
+    /// PoB maps it to a mod no minion field reads (damage taken by the
+    /// minion, immunities, stun, leech, regeneration, charges).
     Later,
 }
 
@@ -540,58 +1247,134 @@ pub enum MinionStat {
 /// skill stat map; `Data/Minions.lua`'s `mod(...)` lines), sorted, and how
 /// they read; every other stat is a comment in PoB, with no effect.
 pub const MINION_STATS: [(&str, MinionStat); 29] = [
-    ("active_skill_attack_speed_+%_final", MinionStat::Later),
-    ("attack_maximum_added_physical_damage", MinionStat::Later),
-    ("attack_minimum_added_physical_damage", MinionStat::Later),
+    // P6-7c, the minion's hit (PoB `SkillStatMap.lua`): `Speed` MORE with
+    // `ModFlag.Attack` (1567).
+    (
+        "active_skill_attack_speed_+%_final",
+        MinionStat::Effect(Quantity::Speed, Op::More, Flags::ATTACK, None),
+    ),
+    // `PhysicalMax` BASE with `KeywordFlag.Attack` (1600), as the
+    // character's row.
+    (
+        "attack_maximum_added_physical_damage",
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Max),
+            Op::Base,
+            Flags::ATTACK,
+            None,
+        ),
+    ),
+    (
+        "attack_minimum_added_physical_damage",
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Min),
+            Op::Base,
+            Flags::ATTACK,
+            None,
+        ),
+    ),
     ("base_block_%_damage_taken", MinionStat::Later),
     ("base_cannot_be_damaged", MinionStat::Later),
     ("base_cannot_be_stunned", MinionStat::Later),
     (
         "base_maximum_energy_shield",
-        MinionStat::Effect(Quantity::EnergyShield, Op::Base, None),
+        MinionStat::Effect(Quantity::EnergyShield, Op::Base, NO_FLAGS, None),
     ),
+    // `PhysicalDamageConvertToChaos` BASE.
     (
         "base_physical_damage_%_to_convert_to_chaos",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Chaos,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
+    // `PhysicalDamageConvertToCold` BASE.
     (
         "base_physical_damage_%_to_convert_to_cold",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Cold,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
+    // `PhysicalDamageConvertToFire` BASE.
     (
         "base_physical_damage_%_to_convert_to_fire",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Poe1(Poe1Quantity::Conversion(
+                DamageType::Physical,
+                DamageType::Fire,
+            )),
+            Op::Base,
+            NO_FLAGS,
+            None,
+        ),
     ),
     (
         "block_while_dual_wielding_%",
-        MinionStat::Effect(Quantity::BlockChance, Op::Base, Some(states::DUAL_WIELDING)),
+        MinionStat::Effect(
+            Quantity::BlockChance,
+            Op::Base,
+            NO_FLAGS,
+            Some(states::DUAL_WIELDING),
+        ),
     ),
     ("cannot_be_knocked_back", MinionStat::Later),
+    // `Speed` MORE with `ModFlag.Attack` while dual wielding (1570): the
+    // minion never dual wields.
     (
         "dual_wield_inherent_attack_speed_+%_final",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::Speed,
+            Op::More,
+            Flags::ATTACK,
+            Some(states::DUAL_WIELDING),
+        ),
     ),
     (
         "life_leech_from_physical_attack_damage_permyriad",
         MinionStat::Later,
     ),
     ("life_regeneration_rate_per_minute_%", MinionStat::Later),
+    // `PhysicalMax` BASE with `ModFlag.Weapon` and `KeywordFlag.Attack`
+    // (1609): a minion with a weapon type.
     (
         "main_hand_local_maximum_added_physical_damage",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Max),
+            Op::Base,
+            Flags::WEAPON.union(Flags::ATTACK),
+            None,
+        ),
     ),
+    // `PhysicalMin` BASE with `ModFlag.Weapon` and `KeywordFlag.Attack`
+    // (1609): a minion with a weapon type.
     (
         "main_hand_local_minimum_added_physical_damage",
-        MinionStat::Later,
+        MinionStat::Effect(
+            Quantity::AddedDamage(DamageType::Physical, Bound::Min),
+            Op::Base,
+            Flags::WEAPON.union(Flags::ATTACK),
+            None,
+        ),
     ),
     (
         "monster_base_block_%",
-        MinionStat::Effect(Quantity::BlockChance, Op::Base, None),
+        MinionStat::Effect(Quantity::BlockChance, Op::Base, NO_FLAGS, None),
     ),
     ("monster_inherent_damage_taken_+%_final", MinionStat::Later),
     (
         "physical_damage_reduction_rating_+%",
-        MinionStat::Effect(Quantity::Armour, Op::Increased, None),
+        MinionStat::Effect(Quantity::Armour, Op::Increased, NO_FLAGS, None),
     ),
     ("set_base_avoid_projectiles_%_chance", MinionStat::Later),
     ("set_base_cannot_be_damaged", MinionStat::Later),
@@ -605,7 +1388,7 @@ pub const MINION_STATS: [(&str, MinionStat); 29] = [
     ("set_max_power_charges", MinionStat::Later),
     (
         "set_maximum_life_is_one",
-        MinionStat::Effect(Quantity::Life, Op::Override, None),
+        MinionStat::Effect(Quantity::Life, Op::Override, NO_FLAGS, None),
     ),
     ("stun_threshold_+%", MinionStat::Later),
 ];
@@ -620,10 +1403,11 @@ impl StatMapping for MinionMapping {
     fn map(&self, stat: &StatId) -> StatMap {
         match MINION_STATS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
             Ok(i) => match MINION_STATS.get(i).map(|(_, s)| *s) {
-                Some(MinionStat::Effect(quantity, op, state)) => {
+                Some(MinionStat::Effect(quantity, op, flags, state)) => {
                     let conditions = state.map_or_else(Conditions::none, |key| {
                         Conditions::none().with_state(ConditionKey::new(key), true)
                     });
+                    let conditions = conditions.with_all(flags);
                     StatMap::Effects(vec![EffectTemplate {
                         quantity,
                         op,
@@ -670,96 +1454,194 @@ pub const FIELDS: [MinionField; 9] = [
     MinionField::BlockChance,
 ];
 
-/// What the character gives the minion that P6-7b3b and P6-7b4 model, a
-/// reason on every minion field until then (module docs):
-/// - each [`super::Poe1Quantity::MinionPending`] effect of the character
-///   (a `MinionModifier` on the minion's life or defences), with its
-///   source: `minion-modifier`;
-/// - each stat of the main skill's gems (the active one and its supports)
-///   that PoB's stat map sends to the minion
-///   ([`PobSkill::minion_stats`]: the gem's "Minions have #% more Life"):
-///   `minion-modifier`, with the gem as source;
-/// - each other enabled gem (in any group, the main one included) whose
-///   active skill is an aura, or a buff PoB applies to minions
-///   (`skillData.buffMinions`, `buffAllies`; `CalcPerform.lua` 2282 and
-///   2427): `minion-buffs`.
-///
-/// PoB also adds the skill's `extraSkillModList` to the minion
-/// (`initMinionModDB` 1149 to 1151): "Socketed Gems have ..." item lines.
-/// The engine maps none of them, so each is already an `unmapped-stat`
-/// reason of the character, which every minion field carries.
-fn deferred_reasons(
+/// The character's minion modifiers on the minion (module docs): each
+/// unconditional effect of a kind a minion field reads is added; a
+/// conditional one is a `minion-modifier` reason (its condition would be
+/// the character's, or the minion's, as PoB's tags say: not modelled).
+fn minion_modifiers(
     input: &CalcInput<'_>,
     player: &ModStore,
     skill: &skill::MainSkill<'_>,
-) -> Vec<UnsupportedReason> {
-    let mut out = Vec::new();
-    for e in player.effects() {
-        if e.quantity == Quantity::Poe1(super::Poe1Quantity::MinionPending) {
-            out.push(UnsupportedReason::UnmodelledSkill {
-                source: e.source.clone(),
-                what: "minion-modifier",
-            });
+    ingest: &mut Ingest<'_>,
+) {
+    let golem = skill.types.contains("Golem");
+    // The character's settled conditions a minion modifier's own condition
+    // reads (P6-11cm). PoB's minion modifiers see the main skill's
+    // conditions too: Summon Raging Spirit without the check gets "if
+    // you've used a Minion Skill Recently" (fixture
+    // `minion-summon-raging-spirit-used-minion-skill-witch.xml`).
+    let settled = states::states(input);
+    // An unsettled minion modifier of the character is the minion's reason
+    // when the minion reads it.
+    // Every one reaches the minion's reasons, those of kinds no minion field
+    // reads yet too (regeneration, movement, cooldown: kept visible, ADR-015;
+    // P6-7b3b review), but a golem one for a skill that is not a golem.
+    for (quantities, reason) in player.elsewhere() {
+        if quantities.iter().any(|q| applies_to(golem, *q)) {
+            ingest.indeterminate(reason.clone());
         }
     }
     let main_group = skill.group.saturating_sub(1);
-    for gem in std::iter::once(&skill.active_gem).chain(&skill.supports) {
-        let Some(pob) = pob_skill::skill(&gem.effect.id) else {
+    for e in player.effects() {
+        // The main skill's own gems: [`gem_modifiers`].
+        if matches!(e.source, Source::Gem { group, .. } if group == main_group) {
+            continue;
+        }
+        let Some((quantity, flags)) = on_minion(golem, e.quantity) else {
             continue;
         };
-        let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
-        if instance
-            .stats
-            .iter()
-            .any(|(s, v)| *v != 0 && pob.minion_stats.binary_search(&s.as_str()).is_ok())
-        {
-            out.push(UnsupportedReason::UnmodelledSkill {
-                source: Source::Gem {
-                    group: main_group,
-                    gem: gem.gem,
-                },
-                what: "minion-modifier",
-            });
-        }
-    }
-    let Ok(groups) = skill::active_groups(input.build) else {
-        return out;
-    };
-    for (index, group) in groups.iter().enumerate() {
-        if !group.enabled {
-            continue;
-        }
-        let main = index + 1 == skill.group;
-        for (gem_index, gem) in group.gems.typed().enumerate() {
-            // The main group's other active skills (an aura linked beside
-            // the summon gem) reach the minion too (P6-7b3a review).
-            if !gem.enabled || (main && gem_index == skill.active_gem.gem) {
+        // A condition of the character only (P6-11cm): settled, it applies
+        // or not; any other condition, or an unsettled one, is a reason.
+        let own_only = e.conditions.all.is_empty() && e.conditions.any.is_empty();
+        let applies = if own_only {
+            e.conditions
+                .states
+                .iter()
+                .map(|(key, want)| settled.get(key).map(|v| v == want))
+                .try_fold(true, |all, v| v.map(|v| all && v))
+        } else {
+            None
+        };
+        match applies {
+            Some(true) => {}
+            Some(false) => continue,
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledSkill {
+                    source: e.source.clone(),
+                    what: "minion-modifier",
+                });
                 continue;
             }
-            for effect in skill::gem_effects(gem, input.data).unwrap_or_default() {
-                let active = effect
-                    .active_skill
-                    .as_deref()
-                    .and_then(|id| input.data.active_skill(id));
-                let aura = active.is_some_and(|a| a.types.iter().any(|t| t == "Aura"));
-                let buff = pob_skill::skill(&effect.id).is_some_and(|p| {
-                    ["buffMinions", "buffAllies"]
-                        .iter()
-                        .any(|k| p.skill_data(k).is_some_and(pob_skill::Value::truthy))
-                });
-                if aura || buff {
-                    out.push(UnsupportedReason::UnmodelledSkill {
-                        source: Source::Gem {
-                            group: index,
-                            gem: gem_index,
-                        },
-                        what: "minion-buffs",
+        }
+        ingest.effect(Effect {
+            quantity,
+            op: e.op,
+            value: e.value,
+            conditions: Conditions::none().with_all(flags),
+            source: e.source.clone(),
+        });
+    }
+}
+
+/// Whether a minion modifier of the character applies to this minion at
+/// all (a golem one only for a golem skill), whether or not a minion field
+/// reads its kind.
+fn applies_to(golem: bool, quantity: Quantity) -> bool {
+    match quantity {
+        Quantity::Poe1(Poe1Quantity::Minion(_)) => true,
+        Quantity::Poe1(Poe1Quantity::GolemMinion(_)) => golem,
+        _ => false,
+    }
+}
+
+/// The minion's quantity of a minion modifier of the character, with the
+/// flags its effects take on, when the minion reads it: a
+/// [`Poe1Quantity::GolemMinion`] one only for a golem skill (`golem`: the
+/// main skill has the `Golem` type).
+fn on_minion(golem: bool, quantity: Quantity) -> Option<(Quantity, crate::condition::Flags)> {
+    match quantity {
+        Quantity::Poe1(Poe1Quantity::Minion(v)) => v.on_minion(),
+        Quantity::Poe1(Poe1Quantity::GolemMinion(v)) if golem => v.on_minion(),
+        _ => None,
+    }
+}
+
+/// How the gem mapping reads a stat PoB's stat map sends to the minion
+/// ([`gem_modifiers`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GemMinionStat {
+    /// As minion modifiers, applied.
+    Applied,
+    /// Not at all: an `unmapped-stat` reason on the minion.
+    Unmapped,
+    /// As no effect, or as the character's: lost on the minion, a
+    /// `minion-modifier` reason.
+    Lost,
+}
+
+/// How the gem mapping reads `stat` ([`GemMinionStat`]).
+fn gem_minion_stat(stat: &str) -> GemMinionStat {
+    match SkillMapping.map(&StatId::new(stat)) {
+        StatMap::Effects(e)
+            if e.iter()
+                .all(|t| super::minions::is_minion_quantity(t.quantity)) =>
+        {
+            GemMinionStat::Applied
+        }
+        StatMap::Unmapped => GemMinionStat::Unmapped,
+        _ => GemMinionStat::Lost,
+    }
+}
+
+/// The main skill's own gems' minion modifiers (module docs): each stat
+/// of the active gem and of the supports that apply that the gem mapping
+/// reads as minion modifiers ([`on_minion`]), with the gem as source. A
+/// stat PoB's stat map sends to the minion ([`PobSkill::minion_stats`])
+/// that the gem mapping does not read is a reason ([`GemMinionStat`]).
+fn gem_modifiers(input: &CalcInput<'_>, skill: &skill::MainSkill<'_>, ingest: &mut Ingest<'_>) {
+    let golem = skill.types.contains("Golem");
+    let group = skill.group.saturating_sub(1);
+    for gem in std::iter::once(&skill.active_gem).chain(&skill.supports) {
+        let source = Source::Gem {
+            group,
+            gem: gem.gem,
+        };
+        let pob = pob_skill::skill(&gem.effect.id);
+        let instance = skill::instance(gem.effect, gem.level, gem.quality, input.data);
+        for (stat, value) in &instance.stats {
+            let to_minion = *value != 0
+                && pob.is_some_and(|p| p.minion_stats.binary_search(&stat.as_str()).is_ok());
+            match (to_minion, gem_minion_stat(stat)) {
+                (true, GemMinionStat::Unmapped) => {
+                    ingest.reason(UnsupportedReason::UnmappedStat {
+                        stat: StatId::new(stat.as_str()),
+                        source: source.clone(),
                     });
+                    continue;
                 }
+                (true, GemMinionStat::Lost) => {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what: "minion-modifier",
+                    });
+                    continue;
+                }
+                _ => {}
+            }
+            let StatMap::Effects(templates) = SkillMapping.map(&StatId::new(stat.as_str())) else {
+                continue;
+            };
+            for t in templates {
+                let Some((quantity, flags)) = on_minion(golem, t.quantity) else {
+                    continue;
+                };
+                // As for the character's (`minion_modifiers`): a
+                // conditional minion modifier is a reason, not evaluated
+                // against the minion's states (P6-7b3b review).
+                if t.conditions != Conditions::none() {
+                    ingest.reason(UnsupportedReason::UnmodelledSkill {
+                        source: source.clone(),
+                        what: "minion-modifier",
+                    });
+                    continue;
+                }
+                #[expect(clippy::cast_precision_loss, reason = "gem stat values are small")]
+                let value = *value as f64 * t.scale / t.divisor;
+                ingest.effect(Effect {
+                    quantity,
+                    op: t.op,
+                    value,
+                    conditions: Conditions::none().with_all(flags),
+                    source: source.clone(),
+                });
             }
         }
     }
-    out
+}
+
+/// The gem levels the character's effects give (as [`minion`] reads them).
+fn levels_of(player: &ModStore) -> GemLevels {
+    GemLevels::from_effects(player.effects())
 }
 
 fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
@@ -781,7 +1663,7 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (Defence::Armour, MinionField::Armour, Quantity::Armour),
         (Defence::Evasion, MinionField::Evasion, Quantity::Evasion),
     ] {
-        let (value, reasons) = phases::primary_defence(calc, defence, quantity, None)?;
+        let (value, reasons) = phases::primary_defence(calc, defence, quantity, None, None)?;
         set(calc, field, value, reasons);
     }
     let block = phases::attack_block(calc, None, Reasons::new())?;
@@ -792,6 +1674,78 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// P6-7b3b: a minion modifier reaches the minion's quantity; a golem
+    /// one only for a golem skill; a kind no minion field reads, and any
+    /// other quantity, reach nothing.
+    /// P6-7b3b review: an unsettled value of a kind no minion field reads
+    /// still reaches the minion; a golem one only a golem.
+    #[test]
+    fn applies_to_should_keep_every_kind_but_golem_for_others() {
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        let golem = |v| Quantity::Poe1(Poe1Quantity::GolemMinion(v));
+        assert!(applies_to(false, minion(MinionValue::LifeRegen)));
+        assert!(applies_to(false, minion(MinionValue::Life)));
+        assert!(!applies_to(false, golem(MinionValue::Life)));
+        assert!(applies_to(true, golem(MinionValue::Life)));
+        assert!(!applies_to(true, Quantity::Life));
+    }
+
+    #[test]
+    fn on_minion_should_filter_golem_modifiers() {
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        let golem = |v| Quantity::Poe1(Poe1Quantity::GolemMinion(v));
+        let none = crate::condition::Flags::NONE;
+        assert_eq!(
+            on_minion(false, minion(MinionValue::Life)),
+            Some((Quantity::Life, none))
+        );
+        assert_eq!(on_minion(false, golem(MinionValue::Life)), None);
+        assert_eq!(
+            on_minion(true, golem(MinionValue::Life)),
+            Some((Quantity::Life, none))
+        );
+        assert_eq!(
+            on_minion(true, golem(MinionValue::Resistance(DamageType::Cold))),
+            Some((Quantity::Resistance(DamageType::Cold), none))
+        );
+        // P6-7c: damage and speeds reach the minion's hit.
+        assert_eq!(
+            on_minion(true, minion(MinionValue::Damage)),
+            Some((Quantity::Damage, none))
+        );
+        assert_eq!(
+            on_minion(false, minion(MinionValue::AttackSpeed)),
+            Some((Quantity::Speed, crate::condition::Flags::ATTACK))
+        );
+        assert_eq!(on_minion(true, minion(MinionValue::LifeRegen)), None);
+        assert_eq!(on_minion(true, Quantity::Life), None);
+    }
+
+    /// P6-7b3b: a gem's minion stat the gem mapping reads as a minion
+    /// modifier is applied; one it leaves unmapped, or reads as no effect,
+    /// is a reason.
+    #[test]
+    fn gem_minion_stats_should_follow_the_gem_mapping() {
+        assert_eq!(
+            gem_minion_stat("active_skill_minion_life_+%_final"),
+            GemMinionStat::Applied
+        );
+        assert_eq!(gem_minion_stat("minion_damage_+%"), GemMinionStat::Applied);
+        // P6-11cs: a row since.
+        assert_eq!(
+            gem_minion_stat("minion_critical_strike_multiplier_+"),
+            GemMinionStat::Applied
+        );
+        assert_eq!(
+            gem_minion_stat("minion_grant_puppet_master_buff_to_parent_on_hit_%"),
+            GemMinionStat::Unmapped
+        );
+        assert_eq!(
+            gem_minion_stat("active_skill_area_of_effect_+%_final"),
+            GemMinionStat::Lost
+        );
+    }
 
     /// PoB's exporter writes multipliers with Lua's `tostring`.
     #[test]
@@ -928,27 +1882,112 @@ mod tests {
         }
     }
 
-    /// The level: `minionLevel` skill data, else the game's level stat,
-    /// clamped; a support's minion or a level from others is not known.
+    /// The level (`CalcActiveSkill.lua` 707 to 711): the enemy's with the
+    /// corpse stat (unknown with an enemy problem), the character's at most
+    /// the cap with the player-level stat, else `minionLevel` skill data,
+    /// the game's level stat, then the level requirement (data schema 5);
+    /// clamped; a support's minion is not known.
     #[test]
-    fn the_level_should_be_the_games_stat_clamped() {
+    fn the_level_should_follow_pobs_order() {
         let stats = |v: &[(&str, i64)]| -> Vec<(String, i64)> {
             v.iter().map(|(s, n)| ((*s).to_owned(), *n)).collect()
         };
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, true), Some(66));
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 120)]), None, true), Some(100));
-        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, false), None);
-        assert_eq!(level(&stats(&[]), None, true), None);
+        let src = LevelSources {
+            character: 90,
+            enemy: Some(83),
+            requirement: 70,
+        };
+        let none = LevelSources {
+            requirement: 0,
+            ..src
+        };
         assert_eq!(
-            level(
-                &stats(&[
-                    (LEVEL_STAT, 66),
-                    ("display_skill_minions_level_is_corpse_level", 1)
-                ]),
-                None,
-                true
-            ),
-            None
+            level(&stats(&[(LEVEL_STAT, 66)]), None, true, src),
+            Some(66)
+        );
+        assert_eq!(
+            level(&stats(&[(LEVEL_STAT, 120)]), None, true, src),
+            Some(100)
+        );
+        assert_eq!(level(&stats(&[(LEVEL_STAT, 66)]), None, false, src), None);
+        // The requirement when the game's stat is absent.
+        assert_eq!(level(&stats(&[]), None, true, src), Some(70));
+        assert_eq!(level(&stats(&[]), None, true, none), None);
+        // The enemy's level with the corpse stat.
+        let corpse = stats(&[(LEVEL_STAT, 66), (LEVEL_IS_ENEMY_LEVEL, 1)]);
+        assert_eq!(level(&corpse, None, true, src), Some(83));
+        let no_enemy = LevelSources { enemy: None, ..src };
+        assert_eq!(level(&corpse, None, true, no_enemy), None);
+        // The character's, at most the stat's value.
+        let player = stats(&[(LEVEL_STAT, 66), (LEVEL_IS_PLAYER_LEVEL, 85)]);
+        assert_eq!(level(&player, None, true, src), Some(85));
+        let low = LevelSources {
+            character: 40,
+            ..src
+        };
+        assert_eq!(level(&player, None, true, low), Some(40));
+    }
+
+    /// PoB's exporter's class map (`minions.lua` 76 to 93): a class it
+    /// leaves out is an empty hand.
+    #[test]
+    fn weapon_class_should_follow_pobs_class_map() {
+        assert_eq!(
+            weapon_class("Thrusting One Hand Sword"),
+            Some("One Hand Sword")
+        );
+        assert_eq!(weapon_class("Sceptre"), Some("One Hand Mace"));
+        assert_eq!(weapon_class("Staff"), Some("Staff"));
+        assert_eq!(weapon_class("Unarmed"), None);
+        assert_eq!(weapon_class("Warstaff"), None);
+        for class in [
+            "Claw",
+            "Dagger",
+            "Wand",
+            "One Hand Sword",
+            "Bow",
+            "Two Hand Axe",
+        ] {
+            let ours = weapon_class(class).expect(class);
+            assert!(
+                super::super::hit::weapon_type_flags(ours).is_some(),
+                "{class}"
+            );
+        }
+    }
+
+    /// P6-7c2: the support tables are sorted for their searches.
+    #[test]
+    fn support_tables_should_be_sorted() {
+        assert!(NO_MINION_SUPPORTS.windows(2).all(|w| w[0] < w[1]));
+        assert!(NOT_MINION_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+    }
+
+    /// P6-7c2: a support's stats on the minion's skill keep its hit rows,
+    /// leave its minion modifiers to the minion step, and skip its
+    /// `notMinionStat` stats.
+    #[test]
+    fn a_support_on_the_minion_should_keep_its_hit_rows_only() {
+        let melee = SupportOnMinion {
+            support: "SupportMeleePhysicalDamage",
+        };
+        assert!(matches!(
+            melee.map(&StatId::new("support_melee_physical_damage_+%_final")),
+            StatMap::Effects(e) if e.iter().all(|t| t.quantity == Quantity::Damage)
+        ));
+        let minion_damage = SupportOnMinion {
+            support: "SupportMinionDamage",
+        };
+        assert_eq!(
+            minion_damage.map(&StatId::new("support_minion_damage_+%_final")),
+            StatMap::NoEffect
+        );
+        let second_wind = SupportOnMinion {
+            support: "SupportSecondWind",
+        };
+        assert_eq!(
+            second_wind.map(&StatId::new("base_cooldown_speed_+%")),
+            StatMap::NoEffect
         );
     }
 }

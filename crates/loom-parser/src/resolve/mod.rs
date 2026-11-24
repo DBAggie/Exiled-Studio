@@ -918,7 +918,7 @@ fn verify(entry: &Entry<'_>, tokens: &[Token]) -> Result<Vec<ResolvedStat>, Reje
                 ranged: false,
                 ..
             }) => RawValue::Exact(narrow(condition, value).ok_or_else(fails)?),
-            None => hidden(condition).ok_or_else(fails)?,
+            None => hidden(condition, ids.len() == 1).ok_or_else(fails)?,
         };
         out.push(ResolvedStat {
             stat: stat.clone(),
@@ -1015,9 +1015,14 @@ fn meets(condition: Condition, value: StatValue) -> bool {
 }
 
 /// The value of a stat without a placeholder; `None` if no value meets the
-/// condition.
-fn hidden(condition: Condition) -> Option<RawValue> {
+/// condition. `alone`: the description's only stat. The game prints a
+/// description only when one of its stats is not 0, so a lone stat shown
+/// without a number is not 0: its value is then assumed 1, the game's
+/// value of such a flag or keystone stat (P6-11g: "Glancing Blows" read
+/// 0 had no effect), when the condition allows it.
+fn hidden(condition: Condition, alone: bool) -> Option<RawValue> {
     let assumed = match condition {
+        _ if alone && condition.holds(0) && condition.holds(1) => Some(1),
         _ if condition.holds(0) => Some(0),
         Condition::Range {
             min: Some(min),

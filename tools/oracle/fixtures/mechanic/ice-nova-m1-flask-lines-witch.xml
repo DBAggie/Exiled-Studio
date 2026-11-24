@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 close-out M1): Ice Nova (level 20) with an active
+     Granite Flask with attack and spell block, elemental and physical
+     damage as extra chaos, and critical strike chance against enemies on
+     consecrated ground during the effect, the enemy on consecrated ground.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+M1 Test
+Granite Flask
+Quality: 0
+Implicits: 0
++10% Chance to Block Attack Damage during Effect
++10% Chance to Block Spell Damage during Effect
+Gain 15% of Elemental Damage as Extra Chaos Damage during effect
+Gain 20% of Physical Damage as Extra Chaos Damage during effect
+125% increased Critical Strike Chance against Enemies on Consecrated Ground during Effect
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Flask 1" itemId="1" active="true"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input boolean="true" name="conditionEnemyOnConsecratedGround"/>
+			<CustomModifierBlock enabled="true" title="Default">
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

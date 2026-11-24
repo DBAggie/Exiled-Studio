@@ -10,12 +10,13 @@ mod common;
 use loom_calc::StatMapping;
 use loom_calc::poe1::damage_taken::{SHOCK_DEPENDS_ON, SHOCK_STATS};
 use loom_calc::poe1::exposure::{DEPENDS_ON, STATS};
+use loom_calc::poe1::mapping::no_effect_by_rule;
 use loom_calc::poe1::mapping::{NO_EFFECT, Poe1Mapping};
 use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 15] = [
+const TEXTS: [(&str, &str); 16] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -60,6 +61,11 @@ const TEXTS: [(&str, &str); 15] = [
         "lightning_skill_chance_to_inflict_lightning_exposure_%",
         "Lightning Skills have a {0}% chance to apply Lightning Exposure on Hit",
     ),
+    // P6-11au: mana regeneration while you have applied an exposure.
+    (
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        "Regenerate {}% of Mana per second if you've inflicted Exposure Recently",
+    ),
     (
         "lightning_ailment_effect_+%",
         "{0}% increased Effect of Lightning Ailments",
@@ -79,20 +85,59 @@ const TEXTS: [(&str, &str); 15] = [
 /// lightning or non-damaging ailments, each checked to reach no slice
 /// field (`poe1::mapping::NO_EFFECT`'s comments).
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out N: unparsed lines, no slice field.
+    "cannot_have_more_than_1_non_damaging_ailment",
+    "refresh_duration_of_shock_chill_ignite_on_enemy_when_cursing_enemy",
+    "shock_nova_ring_chance_to_shock_+%",
+    "shocked_enemies_explode_for_%_life_as_lightning_damage",
+    // Close-out M3: elemental damage can shock, as all damage.
+    "elemental_damage_can_shock",
+    // Close-out M1: a shock on you, guarded by the config's checks.
+    "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
     "all_damage_can_shock",
     "always_shock",
+    // P6-11ay: shock on you, not the enemy's.
+    "base_avoid_shock_%",
+    "has_avoid_shock_as_avoid_all_elemental_ailments",
     "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
+    // P6-11em: the chance to be frozen, shocked, and ignited: yours.
+    "chance_to_be_frozen_shocked_ignited_%",
     "lightning_ailment_duration_+%",
-    "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
     "shocked_effect_on_self_+%",
 ];
 
 /// Rows whose text names shock but which read a condition the config
 /// settles (`poe1::conditions`, P3-8n): "if you have Shocked an Enemy
 /// Recently".
-const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
+const CONDITION_ROWS: &[&str] = &[
+    // Close-out M1: the enemy's shock from its check
+    // (`conditions::ENEMY_SHOCKED`).
+    "critical_strike_chance_+%_vs_shocked_enemies",
+    "damage_+%_if_you_have_shocked_recently",
+    // P6-11gz: exposure while a curse you cast holds (`poe1::exposure`
+    // reads them with the settled states).
+    "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
+    "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
+    "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
+    // P6-11gp: the config's checks of being ignited, frozen, or shocked.
+    "physical_damage_reduction_rating_+%_while_not_ignited_frozen_shocked",
+];
+
+/// Rows whose text names shock but which map only another part (P3-8c):
+/// "#% chance to Freeze, Shock and Ignite" is the ignite chance; the
+/// engine computes no shock from a hit (only the config's and the
+/// guaranteed one), so its shock part reaches no field.
+const OTHER_PART_ROWS: &[&str] = &[
+    "chance_to_freeze_shock_ignite_%",
+    // Close-out M4: the minions' chance, its ignite part only.
+    "minion_chance_to_freeze_shock_ignite_%",
+];
+
+/// Regeneration rows whose text names exposure (P6-10b): the regeneration
+/// field's reason alone (`mapping::REGEN_REASONS`), never the enemy's.
+const REGEN_ROWS: &[&str] = &["mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently"];
 
 #[test]
 fn the_texts_should_name_the_rows() {
@@ -174,9 +219,14 @@ fn real_exposure_and_shock_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // No effect by a rule of its own (Phase 6): a skill's own stat
+            // with no output, a cluster jewel's or a gem display's prefix.
+            loom_calc::StatMap::NoEffect if no_effect_by_rule(stat) => {}
             // A row that reads the config's condition (P3-8n), never the
             // enemy's shock.
             loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if OTHER_PART_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if REGEN_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

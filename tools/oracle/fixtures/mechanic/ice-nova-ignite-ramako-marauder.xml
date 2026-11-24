@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11hc): the Ice Nova ignite fixture as a Chieftain with Ramako, Sun's Light (path 24704, 10238, 61355; tree 3_28, since the game data of 3_29 gives the node no stats), stationary for 2 seconds: the ignite meets -20% fire resistance (PoB's enemy FireResist OVERRIDE with ModFlag.Dot).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Marauder" ascendClassName="Chieftain" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_28" classId="1" ascendClassId="3" nodes="24704,10238,61355"/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionStationary" number="2"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Adds 40 to 80 Fire Damage to Spells
+30% chance to Ignite
+20% increased Fire Damage
+30% increased Spell Damage
+25% increased Burning Damage
++10% to Fire Damage over Time Multiplier
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

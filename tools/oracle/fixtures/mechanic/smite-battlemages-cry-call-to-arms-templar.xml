@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11hw): smite-battlemages-cry-templar.xml (Smite with a Siege
+     Axe and Battlemage's Cry) with "Call to Arms" (a custom line): the
+     warcry grants you no critical strike chance.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Battlemage's Cry" skillId="BattlemagesCry" variantId="BattlemagesCry" gemId="Metadata/Items/Gems/SkillGemBattlemagesCry" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="usePowerCharges" boolean="true"/>
+			<Input name="useFrenzyCharges" boolean="true"/>
+			<Input name="overrideFrenzyCharges" number="2"/>
+			<Input name="useEnduranceCharges" boolean="true"/>
+			<Input name="overrideEnduranceCharges" number="1"/>
+			<Input name="buffFortification" boolean="true"/>
+			<Input name="overrideFortification" number="10"/>
+			<Placeholder name="overridePowerCharges" number="1"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Call to Arms
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

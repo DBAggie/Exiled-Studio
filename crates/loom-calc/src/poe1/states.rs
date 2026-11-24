@@ -16,9 +16,12 @@
 //! base is not known leaves its condition unsettled, so an effect that
 //! needs it is `unmodelled-condition` (a reason), never a guess. Any other
 //! condition stays unsettled, as before P3-8f: `OffHandIsEmpty`,
-//! `Unarmed`, `UsingMeleeWeapon`, `UsingOneHandedWeapon`,
-//! `UsingTwoHandedWeapon`, the other weapon types, and Necromantic
-//! Aegis's shield; an effect that needs one is a reason.
+//! `Unarmed`, the other weapon types, and Necromantic Aegis's shield; an
+//! effect that needs one is a reason. Since P6-11en the engine also
+//! settles [`USING_MELEE_WEAPON`], [`USING_ONE_HANDED_WEAPON`], and
+//! [`USING_TWO_HANDED_WEAPON`] from both hands, as PoB's
+//! `data.weaponTypeInfo` types them (an empty main hand is PoB's unarmed
+//! `None`: melee, one-handed).
 //!
 //! Differences on purpose: PoB also sets `Using<flag>` from the off hand's
 //! weapon type (`CalcPerform.lua` 187 to 190), but a staff cannot be held
@@ -34,6 +37,20 @@ use loom_domain::{LineKind, LineResolution, Resolved};
 use super::collect::{self, Held};
 use crate::condition::ConditionKey;
 use crate::input::CalcInput;
+
+/// A hand holds a melee weapon, an empty main hand counting as unarmed
+/// (PoB's `UsingMeleeWeapon`; P6-11en).
+pub const USING_MELEE_WEAPON: &str = "UsingMeleeWeapon";
+/// A hand holds a one-handed weapon, an empty main hand counting as
+/// unarmed (PoB's `UsingOneHandedWeapon`; P6-11en).
+pub const USING_ONE_HANDED_WEAPON: &str = "UsingOneHandedWeapon";
+/// A hand holds a two-handed weapon (PoB's `UsingTwoHandedWeapon`;
+/// P6-11en).
+pub const USING_TWO_HANDED_WEAPON: &str = "UsingTwoHandedWeapon";
+/// Both [`USING_TWO_HANDED_WEAPON`] and [`USING_MELEE_WEAPON`] (P6-11en):
+/// the engine's key for PoB's two conditions on one modifier ("while
+/// wielding a Two Handed Melee Weapon"), as a state row reads one.
+pub const USING_TWO_HANDED_MELEE_WEAPON: &str = "UsingTwoHandedWeapon+UsingMeleeWeapon";
 
 /// The main hand holds a staff or a warstaff (PoB's `UsingStaff`).
 pub const USING_STAFF: &str = "UsingStaff";
@@ -62,6 +79,13 @@ pub const DUAL_WIELDING: &str = "DualWielding";
 /// in parity and needs its divergence entry then.
 pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour";
 
+/// At least 6 Life Masteries allocated (P6-11l; PoB's
+/// `Multiplier:AllocatedLifeMastery` at least 6, `ModParser.lua`'s "if you
+/// have at least 6 Life Masteries allocated"): settled from the active
+/// spec's connected nodes and their kind; a node whose kind the data does
+/// not give leaves it unsettled unless 6 are already counted.
+pub const SIX_LIFE_MASTERIES: &str = "SixLifeMasteries";
+
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].
 pub const NO_LIFE_MODIFIERS_STAT: &str = "maximum_life_+%_if_no_life_tags_on_body_armour";
 
@@ -88,18 +112,47 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     };
     let dual = hands.dual_wielding();
     let wand = using_wand(&hands);
+    let kinds = hand_kinds(&hands);
+    let any = |f: fn(WeaponKind) -> bool| -> Option<bool> {
+        kinds.map(|k| k.iter().flatten().any(|w| f(*w)))
+    };
+    let melee = any(|w| w.melee);
+    let one_hand = any(|w| w.one_hand);
+    let two_hand = any(|w| !w.one_hand);
+    let two_hand_melee = match (two_hand, melee) {
+        (Some(a), Some(b)) => Some(a && b),
+        _ => None,
+    };
     for (key, value) in [
         (USING_STAFF, staff),
         (USING_SHIELD, shield),
         (DUAL_WIELDING, dual),
         (USING_WAND, wand),
+        (USING_MELEE_WEAPON, melee),
+        (USING_ONE_HANDED_WEAPON, one_hand),
+        (USING_TWO_HANDED_WEAPON, two_hand),
+        (USING_TWO_HANDED_MELEE_WEAPON, two_hand_melee),
     ] {
         if let Some(v) = value {
             out.insert(ConditionKey::new(key), v);
         }
     }
+    // The main skill's socket slot (P6-11gl): each slot's state, true for
+    // the main group's slot alone; unsettled when the skills are not known.
+    if let Some(slot) = main_skill_slot(input) {
+        for s in super::gem_levels::GemSlot::ALL {
+            out.insert(ConditionKey::new(s.main_skill_state()), Some(s) == slot);
+        }
+    }
     // The config's condition checks (P3-8n).
     super::conditions::settle(input, &mut out);
+    if let Some(v) = six_life_masteries(input) {
+        out.insert(ConditionKey::new(SIX_LIFE_MASTERIES), v);
+    }
+    // Chaos Inoculation sets full life (`CalcPerform.lua` 82; P6-11ej).
+    if chaos_inoculation_allocated(input) {
+        out.insert(ConditionKey::new(super::conditions::FULL_LIFE), true);
+    }
     if reads_life_modifiers(input)
         && let Some(v) = no_life_modifiers_on_body_armour(input)
     {
@@ -107,6 +160,115 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     }
     out
 }
+
+/// The slot the main skill's group is socketed in (P6-11gl): PoB's main
+/// socket group (`mainSocketGroup`, clamped as [`super::skill::main_skill`]
+/// clamps it), its slot as [`super::gem_levels::GemSlot::of`] reads it
+/// (`Some(None)`: no slot, or no group). `None` when the skill groups are
+/// not certain.
+fn main_skill_slot(input: &CalcInput<'_>) -> Option<Option<super::gem_levels::GemSlot>> {
+    let build = input.build;
+    let groups = super::skill::active_groups(build).ok()?;
+    if groups.is_empty() {
+        return Some(None);
+    }
+    let wanted = build
+        .character
+        .main_socket_group
+        .as_ref()
+        .map_or(1, |s| *s.value() as usize);
+    let group = groups[wanted.clamp(1, groups.len()) - 1];
+    Some(
+        group
+            .slot
+            .as_ref()
+            .and_then(|s| super::gem_levels::GemSlot::of(s.as_str())),
+    )
+}
+
+/// A hand's weapon as PoB's `data.weaponTypeInfo` (`Modules/Data.lua`
+/// 550 to 566) types it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WeaponKind {
+    melee: bool,
+    one_hand: bool,
+}
+
+/// Each hand's [`WeaponKind`] (`CalcPerform.lua` 150 to 214): the main
+/// hand's weapon, or PoB's unarmed `None` type when it is empty (a melee,
+/// one-handed type); the off hand's weapon, or nothing for an empty hand,
+/// a shield, or a quiver. `None` when a hand's item is not known, or a
+/// weapon class PoB does not type.
+fn hand_kinds(hands: &collect::Hands) -> Option<[Option<WeaponKind>; 2]> {
+    let kind = |class: &str| -> Option<WeaponKind> {
+        let (melee, one_hand) = match super::skill::pob_weapon_type(class)? {
+            "Bow" => (false, false),
+            "Wand" => (false, true),
+            "Staff" | "Fishing Rod" | "Two Handed Axe" | "Two Handed Mace" | "Two Handed Sword" => {
+                (true, false)
+            }
+            _ => (true, true),
+        };
+        Some(WeaponKind { melee, one_hand })
+    };
+    let main = match &hands.main_hand {
+        Held::Weapon(class) => Some(kind(class)?),
+        Held::Empty => Some(WeaponKind {
+            melee: true,
+            one_hand: true,
+        }),
+        Held::Shield | Held::Other => None,
+        Held::Unknown => return None,
+    };
+    let off = match &hands.off_hand {
+        Held::Weapon(class) => Some(kind(class)?),
+        Held::Empty | Held::Shield | Held::Other => None,
+        Held::Unknown => return None,
+    };
+    Some([main, off])
+}
+
+/// [`SIX_LIFE_MASTERIES`]: 6 or more allocated Life Masteries settle it
+/// true; fewer settle it false when every node's kind is known.
+fn six_life_masteries(input: &CalcInput<'_>) -> Option<bool> {
+    let spec = collect::active_spec(input.build)?;
+    let mut count = 0;
+    let mut unknown = false;
+    for n in spec.nodes.value() {
+        if !input.options.passives.connected(*n) {
+            continue;
+        }
+        match collect::node_kind(input, n.0) {
+            Some(k) if k.life_mastery => count += 1,
+            Some(_) => {}
+            None => unknown = true,
+        }
+    }
+    if count >= 6 {
+        Some(true)
+    } else if unknown {
+        None
+    } else {
+        Some(false)
+    }
+}
+
+/// Whether an allocated, connected node carries Chaos Inoculation's
+/// keystone stat (P6-11ej): PoB then sets `FullLife` (`CalcPerform.lua`
+/// 82). The game grants the keystone from the tree alone; from another
+/// source `FullLife` stays the config's.
+fn chaos_inoculation_allocated(input: &CalcInput<'_>) -> bool {
+    collect::active_spec(input.build).is_some_and(|spec| {
+        spec.nodes.value().iter().any(|n| {
+            input.options.passives.connected(*n)
+                && collect::node_stats(input, n.0)
+                    .is_some_and(|stats| stats.iter().any(|s| s.stat == CHAOS_INOCULATION_STAT))
+        })
+    })
+}
+
+/// Chaos Inoculation's keystone stat.
+pub const CHAOS_INOCULATION_STAT: &str = "keystone_chaos_inoculation";
 
 /// PoB's `UsingWand` (`CalcPerform.lua` 187 to 190, either hand's weapon
 /// type): a wand in a hand settles it true; else an unknown hand leaves it
@@ -128,6 +290,53 @@ fn using_wand(hands: &collect::Hands) -> Option<bool> {
 /// [`NO_LIFE_MODIFIERS_STAT`] (it is a Life Mastery's): only then is the
 /// condition settled (it reads every mod of the data). From another source
 /// the stat meets it unsettled, a reason.
+/// Whether an allocated passive, an allocated mastery effect, a line of an
+/// item in use, or a line of an enabled custom modifier block has `stat`
+/// with a value other than 0 (P6-11gs): a
+/// condition a modifier sets, settled before the modifiers are ingested.
+#[must_use]
+pub fn build_has_stat(input: &CalcInput<'_>, stat: &str) -> bool {
+    let has = |stats: Option<&[crate::input::StatAmount]>| {
+        stats.is_some_and(|stats| stats.iter().any(|s| s.stat == stat && s.value != 0))
+    };
+    let tree = collect::active_spec(input.build).is_some_and(|spec| {
+        spec.nodes
+            .value()
+            .iter()
+            .any(|n| has(collect::node_stats(input, n.0)))
+            || spec
+                .mastery_effects
+                .value()
+                .iter()
+                .any(|m| has(collect::effect_stats(input, m.effect)))
+    });
+    let resolved = |r: &LineResolution| match r {
+        LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } => stats
+            .iter()
+            .any(|s| s.stat.as_str() == stat && crate::ingest::settle(&s.value) != Some(0.0)),
+        _ => false,
+    };
+    let items = collect::items_in_use(input.build).iter().any(|(id, _)| {
+        input.build.items.item(*id).is_some_and(|item| {
+            item.body.lines.iter().any(|l| match &l.kind {
+                LineKind::Modifier(m) => resolved(&m.resolution),
+                _ => false,
+            })
+        })
+    });
+    // The config's enabled custom modifier blocks (P3-12c).
+    let custom = collect::active_config(input.build).is_some_and(|set| {
+        set.custom_modifiers
+            .iter()
+            .filter(|b| b.enabled)
+            .any(|b| b.lines.iter().any(|l| resolved(&l.resolution)))
+    });
+    tree || items || custom
+}
+
 fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
     let has = |stats: Option<&[crate::input::StatAmount]>| {
         stats.is_some_and(|stats| stats.iter().any(|s| s.stat == NO_LIFE_MODIFIERS_STAT))
@@ -316,6 +525,41 @@ mod tests {
         assert_eq!(dual(weapon(), Held::Unknown), None);
         assert_eq!(dual(Held::Unknown, Held::Shield), None);
         assert_eq!(dual(Held::Empty, weapon()), None);
+    }
+
+    /// The hands' weapon types (P6-11en), as PoB's `weaponTypeInfo`: an
+    /// empty main hand is unarmed (melee, one-handed); a shield or an
+    /// empty off hand adds nothing; an unknown hand settles nothing.
+    #[test]
+    fn hand_kinds_should_follow_pobs_weapon_types() {
+        let w = |c: &str| Held::Weapon(c.to_owned());
+        let kinds = |main_hand, off_hand| {
+            hand_kinds(&collect::Hands {
+                main_hand,
+                off_hand,
+                ..collect::Hands::default()
+            })
+        };
+        let k = |melee, one_hand| Some(WeaponKind { melee, one_hand });
+        assert_eq!(
+            kinds(w("Two Hand Axe"), Held::Empty),
+            Some([k(true, false), None])
+        );
+        assert_eq!(kinds(w("Bow"), Held::Other), Some([k(false, false), None]));
+        assert_eq!(
+            kinds(w("Warstaff"), Held::Empty),
+            Some([k(true, false), None])
+        );
+        assert_eq!(
+            kinds(w("Wand"), w("Claw")),
+            Some([k(false, true), k(true, true)])
+        );
+        assert_eq!(
+            kinds(Held::Empty, Held::Shield),
+            Some([k(true, true), None])
+        );
+        assert_eq!(kinds(w("Sceptre"), Held::Unknown), None);
+        assert_eq!(kinds(w("Something New"), Held::Empty), None);
     }
 
     /// `UsingWand` (P6-11b): a wand in either hand settles it; otherwise

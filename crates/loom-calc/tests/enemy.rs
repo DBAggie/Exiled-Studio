@@ -318,17 +318,41 @@ fn the_real_pantheons_stats_should_be_no_effect_rows() {
         .and_then(|p| p.pantheons.as_ref())
         .expect("the bundle's pantheon");
     assert_eq!(gods.len(), 12);
-    // 41 soul stats, each on one soul only (41 rows of `NO_EFFECT`).
+    // 41 soul stats, each on one soul only. Those a computed field reads
+    // are rows, state rows, or a field's reasons (P6-10b; parts 5 and 10 to
+    // 15: damage reduction, damage taken over time, the enemy's hit, the
+    // pools); every other one is a `NO_EFFECT` row.
+    const READ: &[&str] = &[
+        "additional_chaos_resistance_against_damage_over_time_%",
+        "base_avoid_projectiles_%_chance",
+        "chaos_damage_taken_+%",
+        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
+        "degen_effect_+%",
+        "elemental_damage_taken_+%_if_been_hit_recently",
+        "elemental_damage_taken_+%_if_not_hit_recently",
+        "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
+        "life_regeneration_rate_per_minute_%_while_stationary",
+        "movement_speed_+%_per_nearby_enemy",
+        "movement_speed_+%_while_on_burning_ground",
+        "physical_damage_over_time_taken_+%_while_moving",
+        "physical_damage_reduction_%_if_only_one_enemy_nearby",
+        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
+        "physical_damage_reduction_%_per_nearby_enemy",
+        "self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently",
+        "take_half_area_damage_from_hit_%_chance",
+        "while_stationary_gain_additional_physical_damage_reduction_%",
+    ];
     let mut stats = 0;
     let mut unique = std::collections::BTreeSet::new();
     for (stat, _) in gods.iter().flat_map(|g| &g.souls).flat_map(|s| &s.stats) {
         stats += 1;
         unique.insert(stat.as_str());
-        assert_eq!(
-            loom_calc::poe1::Poe1Mapping.map(&loom_domain::StatId::new(stat.as_str())),
-            StatMap::NoEffect,
-            "{stat}"
-        );
+        let map = loom_calc::poe1::Poe1Mapping.map(&loom_domain::StatId::new(stat.as_str()));
+        if READ.contains(&stat.as_str()) {
+            assert!(matches!(map, StatMap::Effects(_)), "{stat}");
+        } else {
+            assert_eq!(map, StatMap::NoEffect, "{stat}");
+        }
     }
     assert_eq!(stats, 41);
     assert_eq!(unique.len(), 41);

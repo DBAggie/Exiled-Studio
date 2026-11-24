@@ -111,6 +111,14 @@ pub struct ActorState {
     /// The sources of its computed skill's own list
     /// ([`Calc::set_skill_sources`]; per actor, P6-7b2 review).
     pub skill_sources: std::collections::BTreeSet<Source>,
+    /// The granted effect of the actor's own main skill, when the ruleset
+    /// picks one at collection (a minion's, P6-7c); `None` for the
+    /// character, whose main skill is the build's.
+    pub skill: Option<String>,
+    /// The item class of the actor's own weapon when the ruleset gives it
+    /// one at collection (a minion's monster weapon type, P6-7c); `None`
+    /// for an empty hand or the character, whose weapons are items.
+    pub weapon: Option<String>,
 }
 
 /// The state phases work on. Store, reasons, and states are the current
@@ -207,6 +215,14 @@ impl<'a> Calc<'a> {
         &self.current().store
     }
 
+    /// Adds an effect a phase derives to the current actor's store, as
+    /// PoB's calc modules add mods to a skill's list mid-calculation
+    /// (`NewMod`; P6-11aj: the repeats' damage). Queries made after see
+    /// it.
+    pub fn add_effect(&mut self, effect: crate::store::Effect) {
+        self.current_mut().store.add(effect);
+    }
+
     /// The graph, to combine query results.
     pub const fn graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
@@ -245,10 +261,33 @@ impl<'a> Calc<'a> {
         r
     }
 
-    /// A field written by an earlier phase.
+    /// A field written by an earlier phase: while the current actor is the
+    /// minion, its copy of `field` ([`Field::for_minion`]).
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {
-        self.fields.get(&field)
+        self.fields.get(&self.actor_field(field))
+    }
+
+    /// The current actor's main skill picked at collection
+    /// ([`ActorState::skill`]).
+    #[must_use]
+    pub fn actor_skill(&self) -> Option<&str> {
+        self.current().skill.as_deref()
+    }
+
+    /// The current actor's own weapon class ([`ActorState::weapon`]).
+    #[must_use]
+    pub fn actor_weapon(&self) -> Option<&str> {
+        self.current().weapon.as_deref()
+    }
+
+    /// `field` as the current actor writes it: itself for the character,
+    /// its minion copy for the minion ([`Field::for_minion`]; P6-7c).
+    const fn actor_field(&self, field: Field) -> Field {
+        match self.actor {
+            Actor::Player => field,
+            Actor::Minion => field.for_minion(),
+        }
     }
 
     /// Names the sources whose effects form the computed skill's own list
@@ -285,6 +324,7 @@ impl<'a> Calc<'a> {
     /// the query's reasons and the reasons that apply to every field. A
     /// later phase may replace the field.
     pub fn set(&mut self, field: Field, query: Query) {
+        let field = self.actor_field(field);
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         self.fields.insert(
@@ -301,6 +341,7 @@ impl<'a> Calc<'a> {
     /// `reason` (Phase 6: a field that applies but whose kind is not
     /// modelled).
     pub fn set_unsupported(&mut self, field: Field, reason: UnsupportedReason) {
+        let field = self.actor_field(field);
         self.fields.insert(field, FieldResult::unsupported(reason));
     }
 
@@ -310,9 +351,11 @@ impl<'a> Calc<'a> {
     /// computed (absent or `Unsupported`) makes the field `Unsupported`
     /// with `DependsOnNotComputed`, without a value.
     pub fn set_derived(&mut self, field: Field, query: Query, deps: &[Field]) {
+        let field = self.actor_field(field);
         let mut reasons = query.reasons;
         reasons.extend(&self.field_reasons());
         for dep in deps {
+            let dep = &self.actor_field(*dep);
             match self.fields.get(dep).map(|f| &f.state) {
                 None | Some(FieldState::Unsupported(_)) => {
                     self.fields.insert(
@@ -380,6 +423,8 @@ pub(crate) fn collected<'a>(
             global,
             states,
             skill_sources: std::collections::BTreeSet::new(),
+            skill: None,
+            weapon: None,
         },
         minion,
         minion_problem,
@@ -535,6 +580,8 @@ mod tests {
             global,
             states: BTreeMap::new(),
             skill_sources: std::collections::BTreeSet::new(),
+            skill: None,
+            weapon: None,
         }
     }
 
@@ -582,6 +629,64 @@ mod tests {
         assert!(!c.is_skill_source(&Source::Character));
         assert_eq!(c.field_reasons().partial.len(), 1);
         assert!(c.with_actor(Actor::Minion, |c| c.context(Flags::NONE).states[&key]) == Some(true));
+    }
+
+    /// P6-7c review: under the minion actor a phase writes and reads the
+    /// minion's copies only; a dependency the minion has not computed makes
+    /// a derived field not computed, never the character's.
+    #[test]
+    fn the_minion_actor_should_write_and_read_its_own_fields() {
+        use crate::result::MinionField;
+        let build: &'static loom_domain::Build =
+            Box::leak(Box::new(loom_domain::Build::new(Game::Poe1)));
+        let options: &'static crate::input::CalcOptions = Box::leak(Box::default());
+        let input: &'static CalcInput<'static> = Box::leak(Box::new(CalcInput {
+            build,
+            data: &NoData,
+            options,
+        }));
+        let mut c = calc(input);
+        c.add_minion(state(None));
+        let query = |c: &mut Calc<'_>, v: f64| {
+            let node = c
+                .graph_mut()
+                .push(
+                    crate::graph::Node::Constant {
+                        label: "x",
+                        value: v,
+                    },
+                    v,
+                )
+                .unwrap();
+            Query {
+                value: v,
+                node,
+                reasons: Reasons::new(),
+            }
+        };
+        let q = query(&mut c, 7.0);
+        c.set(Field::Strength, q);
+        c.with_actor(Actor::Minion, |c| {
+            let q = query(c, 3.0);
+            c.set(Field::Strength, q);
+            assert_eq!(c.field(Field::Strength).and_then(|f| f.value), Some(3.0));
+            let q = query(c, 1.0);
+            c.set_derived(Field::HitDps, q, &[Field::Speed]);
+        });
+        assert_eq!(c.field(Field::Strength).and_then(|f| f.value), Some(7.0));
+        assert_eq!(
+            c.field(Field::Minion(MinionField::Strength))
+                .and_then(|f| f.value),
+            Some(3.0)
+        );
+        assert!(c.field(Field::HitDps).is_none());
+        assert!(matches!(
+            c.field(Field::Minion(MinionField::HitDps))
+                .map(|f| &f.state),
+            Some(FieldState::Unsupported(
+                UnsupportedReason::DependsOnNotComputed { .. }
+            ))
+        ));
     }
 
     #[test]

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11hn): the default boss; a level 90 Witch casting Ice Nova (level 20) with ward: a Runic Crown (quality 20, local ward and its
+     increase) and Runic Gauntlets (half their range, local Defences), and custom ward from armour items and global defences,
+     against the default Pinnacle boss: ward takes part of the one hit (PoB's output.Ward in the EHP and the maximum hit).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Crown
+Runic Crown
+Quality: 20
+Implicits: 0
++40 to Ward
+30% increased Ward
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Grip
+Runic Gauntlets
+WardBasePercentile: 0.5
+Implicits: 0
+15% increased Armour, Evasion and Energy Shield
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Helmet" itemId="1"/>
+			<Slot name="Gloves" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				25% increased Ward from Equipped Armour Items
+				10% increased Global Defences
+				+1000 to maximum Life
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -357,15 +357,27 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         options: &options,
     };
     let r = calculate(&input).unwrap();
-    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len());
-    assert_eq!(r.fields.len(), 24, "docs/phase-3/slice-fields.json");
+    // The slice's 24, the regeneration and recharge fields (P6-10b: life,
+    // mana, energy shield, its recharge and delay), present whenever their
+    // pool is, and the two movement speed fields and the mana cost
+    // (P6-10b), always, the five base damage reductions (P6-10b part
+    // 5), always, and the seven leech caps (P6-10b part 7), with their
+    // pools and the percent always, and the life and energy shield costs
+    // (P6-10b part 8), always, and the five damage taken over time
+    // multipliers (P6-10b part 10), always. The evade chances (P6-10b part
+    // 11) need the monster levels, which this data has not.
+    assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len() + 27);
+    assert_eq!(r.fields.len(), 51, "docs/phase-3/slice-fields.json");
     let computed: Vec<_> = r
         .fields
         .iter()
         .filter(|(_, f)| f.value.is_some())
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
-    assert_eq!(computed.len(), 17, "{computed:?}");
+    // The five base damage reductions (P6-10b part 5) and the seven leech
+    // caps (P6-10b part 7) and the five damage taken over time multipliers
+    // (P6-10b part 10) are computed too.
+    assert_eq!(computed.len(), 41, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons
@@ -380,7 +392,9 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 7);
+    // The main skill's 7 and the mana, life, and energy shield costs
+    // (P6-10b): the build has no skill.
+    assert_eq!(not_computed, 10);
     assert_eq!(r.state, StateKind::Indeterminate);
     assert!(format!("{input:?}").contains("Poe1"));
 }

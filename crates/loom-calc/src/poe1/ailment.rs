@@ -126,6 +126,16 @@ const KEYWORDS: Flags = Flags::SKILL_PHYSICAL
     .union(Flags::KEYWORD_ATTACK)
     .union(Flags::KEYWORD_BOW)
     .union(Flags::KEYWORD_ARROW)
+    // Totem, trap, and mine (P6-11bk; PoB's ailment config keeps every
+    // keyword but `Hit`).
+    .union(Flags::KEYWORD_TOTEM)
+    .union(Flags::KEYWORD_TRAP)
+    .union(Flags::KEYWORD_MINE)
+    // The skill's types (P6-11co; PoB's ailment config keeps `skillTypes`).
+    .union(Flags::SKILL_RANGED_ATTACK)
+    .union(Flags::SKILL_BRAND)
+    .union(Flags::SKILL_MARK)
+    .union(Flags::SKILL_MELEE)
     // `band(cfg.flags, ModFlag.WeaponMask)` (P6-11b).
     .union(Flags::AILMENT_WEAPON_MASK)
     .union(Flags::KEYWORD_SPELL)
@@ -175,6 +185,10 @@ fn modifier(
     let (inc, more) = hit::modifiers_of(calc, quantity, cx, reasons)?;
     phases::product(calc, &[inc, more], Term::Step("modifier"))
 }
+
+/// The slowest the enemy's debuffs can expire (PoB's
+/// `data.misc.BuffExpirationSlowCap`, `Data.lua` 235; P6-11cv).
+const BUFF_EXPIRATION_SLOW_CAP: f64 = 0.25;
 
 /// How an ailment's source damage meets the roll (PoB's three forms).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -339,7 +353,7 @@ pub(super) fn damaging(
     enemy: &Enemy,
     data: &dyn CalcData,
     ailment: Ailment,
-) -> Result<Option<(Valued, Reasons)>, CalcError> {
+) -> Result<Option<(Valued, Reasons, Option<Valued>)>, CalcError> {
     let spec = spec(ailment);
     let mut reasons = Reasons::new();
     if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
@@ -471,6 +485,24 @@ pub(super) fn damaging(
         Term::Step("ailment-duration-scaled"),
     )?;
     let duration = hit::ratio(calc, scaled, rate_mod, Term::Step("ailment-duration"))?;
+    // The enemy's debuffs expiring slower or faster (P6-11cv; PoB's
+    // `debuffDurationMult = 1 / max(BuffExpirationSlowCap,
+    // mod(enemy, BuffExpireFaster))`, `CalcOffence.lua` 1457 to 1459, on
+    // ignite, bleed, and poison, 4317, 4588, 4904).
+    let expire = Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster);
+    let duration = if phases::has(calc, expire) {
+        let faster = modifier(calc, expire, &cx, &mut reasons)?;
+        let cap = phases::constant(calc, "buff-expiration-slow-cap", BUFF_EXPIRATION_SLOW_CAP)?;
+        let faster = phases::pair(calc, faster, cap, Term::Step("debuff-expiry"), false)?;
+        hit::ratio(
+            calc,
+            duration,
+            faster,
+            Term::Step("ailment-duration-debuff"),
+        )?
+    } else {
+        duration
+    };
 
     // Step 4: the chance per hit, the stacks, and the roll.
     let one = phases::constant(calc, "one", 1.0)?;
@@ -523,8 +555,19 @@ pub(super) fn damaging(
     )?;
     // From crits, the character template's `critical_ailment_dot_multiplier_+`
     // too (PoB's `DotMultiplier` BASE with `Condition:CriticalStrike`,
-    // `CalcSetup.lua` 502; the crit sub-pass).
-    let crit_bonus = match data.character_constant(CRIT_AILMENT_DOT_MULTIPLIER) {
+    // `CalcSetup.lua` 502; the crit sub-pass); a minion's is the monster
+    // template's (`initMinionModDB`, `CalcPerform.lua` 1147; P6-7c3d).
+    let (constant, table) = match calc.actor() {
+        crate::engine::Actor::Player => (
+            data.character_constant(CRIT_AILMENT_DOT_MULTIPLIER),
+            "character_constants",
+        ),
+        crate::engine::Actor::Minion => (
+            data.monster_constant(CRIT_AILMENT_DOT_MULTIPLIER),
+            "monster_constants",
+        ),
+    };
+    let crit_bonus = match constant {
         Some(_) if never_from_crit.is_some() => 0.0,
         Some(v) => {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -535,7 +578,7 @@ pub(super) fn damaging(
             reasons
                 .indeterminate
                 .insert(crate::state::IndeterminateReason::MissingData {
-                    table: "character_constants",
+                    table,
                     key: CRIT_AILMENT_DOT_MULTIPLIER.to_owned(),
                 });
             0.0
@@ -678,6 +721,18 @@ pub(super) fn damaging(
             hit::percent_of(calc, scaled, Term::Base)?
         }
     };
+    // Ruthless's ailment effect on bleed and poison (`CalcOffence.lua`
+    // 4451, 4721; P6-11bt), summed with the hit's context as PoB's `cfg`.
+    let base = match ailment {
+        Ailment::Bleed | Ailment::Poison => {
+            match hit::ruthless_effect(calc, &hit_cx, super::RuthlessValue::Ailment, &mut reasons)?
+            {
+                Some(r) => phases::product(calc, &[base, r], Term::Step("ruthless-ailment"))?,
+                None => base,
+            }
+        }
+        Ailment::Ignite => base,
+    };
 
     // Step 7: effect, rate, the active ailments, the enemy.
     let effect = modifier(
@@ -707,7 +762,37 @@ pub(super) fn damaging(
         )?;
         phases::pair(calc, dps, cap, Term::Result, true)?
     };
-    Ok((dps.value > 0.0).then_some((dps, reasons)))
+    if dps.value <= 0.0 {
+        return Ok(None);
+    }
+    // The ignite's share as burning ground (P6-11ga; `CalcOffence.lua`
+    // 5098 to 5108): `baseVal x effectMod x rateMod x fireEffMult x
+    // groundMult / 100`, capped, without the active ignites; the ignite's
+    // enemy effect is fire's (`dot_type`).
+    let ground_quantity = Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround);
+    let ground = if ailment == Ailment::Ignite && phases::has(calc, ground_quantity) {
+        let share = phases::sum(
+            calc,
+            ground_quantity,
+            crate::Op::Base,
+            Term::Step("burning-ground-share"),
+            &mut reasons,
+        )?;
+        if share.value > 0.0 {
+            let scaled = phases::product(
+                calc,
+                &[base, effect, rate_mod, enemy_effect, share],
+                Term::Step("burning-ground-scaled"),
+            )?;
+            let ground = hit::percent_of(calc, scaled, Term::Step("burning-ground"))?;
+            Some(phases::pair(calc, ground, cap, Term::Result, true)?)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    Ok(Some((dps, reasons, ground)))
 }
 
 /// PoB's `data.misc.ImpaleStoredDamageBase` (`Modules/Data.lua` 262): an
@@ -778,7 +863,8 @@ pub(super) fn impale(
         Term::Step("impale-chance-per-hit"),
     )?;
     // The stacks: the maximum (`ImpaleStacksMax` BASE x (1 + additional
-    // duration chance / 100), the latter unmapped).
+    // duration chance / 100); the chance since P6-11dp, `CalcOffence.lua`
+    // 5477).
     let base_stacks = match data.character_constant(IMPALE_STACKS_STAT) {
         Some(v) => {
             #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -809,6 +895,21 @@ pub(super) fn impale(
         &[base_stacks, more_stacks],
         Term::Step("impale-stacks"),
     )?;
+    let chance_q = Quantity::Poe1(Poe1Quantity::ImpaleAdditionalDurationChance);
+    let stacks = if phases::has(calc, chance_q) {
+        let chance = hit::sum_of(
+            calc,
+            chance_q,
+            Op::Base,
+            &hit_cx,
+            Term::Step("impale-additional-duration-chance"),
+            &mut reasons,
+        )?;
+        let factor = phases::factor(calc, chance, Term::Step("impale-additional-duration"))?;
+        phases::product(calc, &[stacks, factor], Term::Step("impale-stacks-lasting"))?
+    } else {
+        stacks
+    };
     // The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
     // (PoB adds the crit pass first, 3415 to 3420).
     let from_crit_pass = phases::product(

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11ce): a level 90 Witch casting Ice Nova (level 20) with life, energy shield, armour, and block against a non-boss enemy, and an active magic Basalt Flask with "When Hit during effect, 25% of Life loss from Damage taken occurs over 4 seconds instead": the life hit pool and each hit's life loss with the prevented share (PoB's LifeLossPrevented).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: MAGIC
+Basalt Flask
+Quality: 0
+Implicits: 0
+When Hit during effect, 25% of Life loss from Damage taken occurs over 4 seconds instead
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Flask 1" itemId="1" active="true"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyIsBoss" string="None"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+3000 to maximum Life
+				+1000 to maximum Energy Shield
+				+5000 to Armour
+				+40% Chance to Block Attack Damage
+				+40% Chance to Block Spell Damage
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

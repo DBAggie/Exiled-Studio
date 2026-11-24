@@ -785,6 +785,181 @@
         "v2.67.2:src/Export/Scripts/minions.lua:228"
       ],
       "count": 16
+    },
+    {
+      "id": "skills-level-requirement-single-level",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "level.1.level_requirement"
+      ],
+      "keys": [
+        "AbyssalFiendTemporalChainsAura",
+        "AzmeriAdmiralPrecision",
+        "AzmeriBirdGrace",
+        "AzmeriFirefuryCremation",
+        "AzmeriGeofriSlam",
+        "AzmeriGeofriSmite",
+        "AzmeriKudukuWrath",
+        "AzmeriOakVitality",
+        "AzmeriPhantasmClarity",
+        "AzmeriTurtleDetermination",
+        "FireElementalMeteorSummoned",
+        "GAZombieCorpseGroundImpact",
+        "IceElementalSpearSummonedDeathNova",
+        "MMSPyromaniacIceMortar",
+        "MeleeComboCold",
+        "SumonRagingSpiritMelee"
+      ],
+      "count": 16,
+      "evidence": "Data schema 5: for a granted effect with a single level, PoB's exporter takes the level requirement from the stat set's level row (GrantedEffectStatSetsPerLevel.PlayerLevelReq) instead of the effect's own (GrantedEffectsPerLevel.PlayerLevelReq), which the bundle carries. All 16 are monster or minion skills with one level; each PoB value equals the stat set row's (checked on the 26530219 extract; 0 is PoB's absent value).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/skills.lua:267",
+        "game:GrantedEffectsPerLevel.PlayerLevelReq",
+        "game:GrantedEffectStatSetsPerLevel.PlayerLevelReq"
+      ]
+    },
+    {
+      "id": "cluster-notable-order-duplicate-name",
+      "category": "pob-derivation",
+      "table": "cluster_jewels",
+      "fields": [
+        "order"
+      ],
+      "keys": [
+        "notable|Evil Eye"
+      ],
+      "count": 1,
+      "evidence": "Two cluster notables are named Evil Eye (PassiveTreeExpansionSpecialSkills rows whose stats are rows 11454 and 11455). PoB's exporter writes notableSortOrder keyed by the notable's name, so its Lua table keeps the last one written (11455); the bundle keeps each special's own stat row, and data-parity compares by name with the first (11454).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/cluster.lua:63",
+        "v2.67.2:src/Data/ClusterJewels.lua:758",
+        "game:PassiveTreeExpansionSpecialSkills.Stat"
+      ]
+    },
+    {
+      "id": "timeless-pob-dat-errors",
+      "category": "pob-derivation",
+      "table": "timeless",
+      "fields": [
+        "id"
+      ],
+      "keys": [
+        "addition|59",
+        "addition|62",
+        "addition|77",
+        "addition|89",
+        "node|97",
+        "node|98"
+      ],
+      "count": 6,
+      "evidence": "PoB's legion exporter rewrites six game IDs it treats as mislabelled (its datErrors table): the two Militant Faith charge notables swap power and frenzy by their names, and four additions are renamed (faster_burn to faster_ignite, physical_taken_as_fire to rage_on_melee_hit, ailment_avoid to stun_avoid, flask_effect to alchemists_genius). The bundle keeps the game's IDs; the engine reads the rows' stats, which agree.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:7",
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:59",
+        "game:AlternatePassiveSkills.Id",
+        "game:AlternatePassiveAdditions.Id"
+      ]
+    },
+    {
+      "id": "timeless-display-units",
+      "category": "representation",
+      "table": "timeless",
+      "fields": [
+        "stat.*"
+      ],
+      "keys": [
+        "addition|43",
+        "addition|47",
+        "addition|91",
+        "addition|102",
+        "addition|109",
+        "addition|173",
+        "addition|199",
+        "addition|207",
+        "addition|208",
+        "addition|246",
+        "addition|247",
+        "addition|285",
+        "addition|287",
+        "addition|301",
+        "addition|308",
+        "addition|309",
+        "addition|316",
+        "addition|327",
+        "addition|328",
+        "node|43",
+        "node|46",
+        "node|49",
+        "node|52",
+        "node|55",
+        "node|59",
+        "node|60",
+        "node|65",
+        "node|193",
+        "node|194",
+        "node|232",
+        "node|233",
+        "node|270",
+        "node|271",
+        "node|306",
+        "node|307",
+        "node|341",
+        "node|342"
+      ],
+      "count": 74,
+      "evidence": "PoB's legion exporter stores each stat range in the unit its description shows: per-myriad leech as a percent (divided by 100), per-minute regeneration per second (divided by 60, base_mana_regeneration_rate_per_minute's 33 shown rounded to 0.6), milliseconds as seconds, and a stat worded \"reduced\" as its positive magnitude with min and max swapped. The bundle keeps the game's raw values; every difference is one of these conversions (checked on the 26530219 extract).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/legionPassives.lua:113",
+        "game:AlternatePassiveSkills.Stat1Min",
+        "game:AlternatePassiveAdditions.Stat1Min"
+      ]
+    },
+    {
+      "id": "tattoo-display-units",
+      "category": "representation",
+      "table": "tattoos",
+      "fields": [
+        "stat.*"
+      ],
+      "keys": [
+        "override|Honoured Tattoo of the Berserker",
+        "override|Runegraft of Quaffing",
+        "override|Runegraft of the Agile",
+        "override|Runegraft of the Bound",
+        "override|Runegraft of the Fortress",
+        "override|Runegraft of the Soulwick",
+        "override|Runegraft of the Warp",
+        "override|Tattoo of the Hinekora Deathwarden",
+        "override|Tattoo of the Kitava Blood Drinker",
+        "override|Tattoo of the Tukohama Shaman",
+        "override|Tattoo of the Valako Scout"
+      ],
+      "count": 22,
+      "evidence": "PoB's tattoo exporter stores each stat in the unit its description shows, as its legion exporter does: milliseconds as seconds (gain_onslaught_on_hit_duration_ms 4000 as 4, elusive_ticks_up_instead_for_x_ms 2000 as 2), per minute as per second (vaal_souls_gained_per_minute 60 as 1, life_regeneration_rate_per_minute_% 18 as 0.3), per-myriad as a percent (base_life_leech_from_attack_damage_permyriad 50 as 0.5), and a negative stat worded \"reduced\" as its positive magnitude (six stats). The bundle keeps the game's raw StatValues; every difference is one of these conversions (checked on the 26530219 extract).",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/tattooPassives.lua:76",
+        "game:PassiveSkillOverrides.StatValues"
+      ]
+    },
+    {
+      "id": "gem-effects-combustion-calc-perform",
+      "category": "representation",
+      "table": "gem_effects",
+      "fields": [
+        "global_stats",
+        "row.ignites_apply_fire_resistance_+"
+      ],
+      "keys": [
+        "SupportCombustion"
+      ],
+      "count": 2,
+      "evidence": "P6-11hr: Combustion's stat map gives CombustionFireResist BASE, a mod on the supported skill, not a GlobalEffect; CalcPerform turns it into the ignited enemy's FireResist BASE (a Debuff named Combustion, the first supported skill that can ignite). The engine's support table holds that result: the same effect in the form PoB applies it, so PoB's global stats lack the stat and its row is the skill mod.",
+      "sources": [
+        "v2.67.2:src/Data/Skills/sup_int.lua:931",
+        "v2.67.2:src/Modules/CalcPerform.lua:2709",
+        "v2.67.2:src/Modules/CalcPerform.lua:2714"
+      ]
     }
   ]
 }

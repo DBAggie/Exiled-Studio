@@ -576,29 +576,9 @@ fn compare_raw(oracle: &Value, ours: &calc_dto::Document, slice: &SliceFile) -> 
         }
     }
     for f in &slice.fields {
-        // A minion field (`applies: minion`, slice revision 4) counts when
-        // the oracle has a minion or ours has the field: a value of 0 is
-        // compared (P6-7b2).
-        if f.applies == "minion" {
-            let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
-            let oracle_has = main
-                .and_then(|m| m.get("Minion"))
-                .is_some_and(Value::is_object);
-            if !ours_has && !oracle_has {
-                continue;
-            }
-        }
-        // A Phase 6 field (`applies: present`) counts only where either side
-        // has the mechanic: our field, or the oracle's value other than 0.
-        if f.applies == "present" {
-            let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
-            let oracle_has = main
-                .and_then(|m| m.get(&f.pob_key))
-                .and_then(Value::as_f64)
-                .is_some_and(|v| v != 0.0);
-            if !ours_has && !oracle_has {
-                continue;
-            }
+        let ours_has = SliceFile::our_name(&f.id).is_some_and(|n| ours.field(n).is_some());
+        if !applies(f, main, ours_has) {
+            continue;
         }
         raw.fields.push(compare_field(f, main, &ours));
         let Some(spec) = &f.breakdown else { continue };
@@ -647,6 +627,28 @@ fn oracle_pointer(f: &SliceField) -> String {
         }
         None => format!("/main_output/{}", divergence::pointer_escape(&f.pob_key)),
     }
+}
+
+/// Whether slice field `f` is compared for a build whose oracle output is
+/// `main` and whose result has the field when `ours_has`:
+/// - `minion` (slice revision 4): when the oracle has a minion or ours has
+///   the field, so a value of 0 is compared (P6-7b2);
+/// - `minion-present` (revision 11): only where either side has the
+///   minion's mechanic: our field, or the oracle's minion value other than
+///   0 (P6-7c3d);
+/// - `present` (Phase 6): only where either side has the mechanic: our
+///   field, or the oracle's value other than 0;
+/// - otherwise always.
+fn applies(f: &SliceField, main: Option<&Value>, ours_has: bool) -> bool {
+    let nonzero = |v: Option<&Value>| v.and_then(Value::as_f64).is_some_and(|v| v != 0.0);
+    let minion = main.and_then(|m| m.get("Minion"));
+    ours_has
+        || match f.applies.as_str() {
+            "minion" => minion.is_some_and(Value::is_object),
+            "minion-present" => nonzero(minion.and_then(|m| m.get(&f.pob_key))),
+            "present" => nonzero(main.and_then(|m| m.get(&f.pob_key))),
+            _ => true,
+        }
 }
 
 fn compare_field(f: &SliceField, main: Option<&Value>, ours: &Ours<'_>) -> FieldComparison {

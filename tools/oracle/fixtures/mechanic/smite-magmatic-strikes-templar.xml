@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11gx): P3-12h's Smite fixture with an amulet that allocates Magmatic Strikes ("Every 10 seconds, gain 30% of Physical Damage as Extra Fire Damage for 4 seconds") and its check on (P6-11gp's row).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Blood Rage" skillId="BloodRage" variantId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" level="10" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="12" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Arctic Armour" skillId="ArcticArmour" variantId="ArcticArmour" gemId="Metadata/Items/Gems/SkillGemNewArcticArmour" level="15" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="20" quality="0" enabled="true" enableGlobal1="false" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Karui Maul
+Quality: 0
+Implicits: 0
+		</Item>
+		<Item id="9">
+Rarity: RARE
+Loom Anoint
+Jade Amulet
+Implicits: 1
+{crafted}Allocates Magmatic Strikes
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Amulet" itemId="9"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="buffNgamahuFlamesAdvance" boolean="true"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -197,12 +197,16 @@ jobs:
           done
       # Phase 3 step 5: the synthetic builds through calc-run (import,
       # resolution, the engine, the calc result document v1); dto-compare
-      # compares the documents' SHA-256, Windows with Linux.
+      # compares the documents' SHA-256, Windows with Linux. The PoE1
+      # build's field counts follow the slice: each revision that adds
+      # fields (docs/phase-3/slice-fields.json) updates them (10 and 41 at
+      # slice revision 22, Phase 6; the synthetic bundle has no data for
+      # the new fields, so they are reasons).
       - name: Calc result documents of the synthetic builds (calc-run)
         run: |
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/calc-poe1
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/calc-poe2
-          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 7 and .field_states.indeterminate == 17' out/round-trip/calc-poe1/summary.json
+          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 10 and .field_states.indeterminate == 41' out/round-trip/calc-poe1/summary.json
           jq -e '.builds == 1 and .ok == 1 and .build_states.unsupported == 1' out/round-trip/calc-poe2/summary.json
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'
@@ -233,7 +237,11 @@ jobs:
     name: oracle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # A cache miss fetches PoB and builds LuaJIT; a hang must not run for hours.
-    timeout-minutes: 45
+    # 90 since Phase 6 (PR #167): over 250 fixtures, 3 runs each, took 44 to
+    # 46 minutes on the runners, past the former 45. 150 since P6-11hm: with
+    # the fixtures each step adds, successful runs took 49 to 84 minutes, and
+    # the Linux run of 698abc68 was cut at 90.
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
@@ -458,22 +466,22 @@ jobs:
       - run: pnpm licenses:check
 
   # Phase 4 gate 1b (decision 14 d): the real application under WebDriver
-  # (tauri-driver): WebView2 on Windows, WebKitGTK under Xvfb on Linux. The
-  # app is built with the e2e feature (a fixed-file picker instead of the
-  # native dialogs) and the frontend embedded.
+  # (tauri-driver), WebKitGTK under Xvfb on Linux. The app is built with the
+  # e2e feature (a fixed-file picker instead of the native dialogs) and the
+  # frontend embedded. Windows (WebView2) is not run here: on the hosted
+  # runner WebView2 starts but never opens its DevTools port (no crash, no
+  # policy; with or without the GPU and sandbox), so msedgedriver cannot
+  # create a session, though the workflow passes on a Windows desktop
+  # (`ui/e2e/run.ps1`, by hand; the job removed at the maintainer's word,
+  # 2026-11-20, Phase 6 tasks file).
   e2e:
     name: e2e (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # Windows: msedgedriver cannot create a session on the hosted runner
-    # ("DevToolsActivePort file doesn't exist") though the same workflow
-    # passes on a Windows desktop (Phase 4 report, gate 1b, recorded there).
-    # It still runs, for diagnosis, but does not gate ci-ok; Linux does.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     strategy:
       fail-fast: false
       matrix:
         # Ubuntu 24.04, not latest: 26.04 has no webkit2gtk-driver (WebKitWebDriver).
-        os: [ubuntu-24.04, windows-latest]
+        os: [ubuntu-24.04]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Tauri system dependencies and the WebKit driver (Linux)
@@ -514,30 +522,6 @@ jobs:
       - name: Workflow (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a bash ui/e2e/run.sh target/debug/loom-tauri
-      # msedgedriver must match the WebView2 runtime the app runs in: its
-      # version from the registry, the driver from Microsoft's download host.
-      - name: Install msedgedriver for the WebView2 runtime (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
-          $version = (Get-ItemProperty $key).pv
-          Write-Output "WebView2 runtime $version"
-          $zip = Join-Path $env:RUNNER_TEMP 'edgedriver.zip'
-          $dir = Join-Path $env:RUNNER_TEMP 'edgedriver'
-          try {
-            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip
-          } catch {
-            Invoke-WebRequest "https://msedgedriver.azureedge.net/$version/edgedriver_win64.zip" -OutFile $zip
-          }
-          Expand-Archive $zip -DestinationPath $dir -Force
-          "EDGE_DRIVER=$((Join-Path $dir 'msedgedriver.exe') -replace '\\', '/')" >> $env:GITHUB_ENV
-      # PowerShell, not Git Bash (ui/e2e/run.ps1 says why).
-      - name: Workflow (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        # tauri-driver by its Windows path (the PATH entry above is Git Bash's form).
-        run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER (Join-Path $HOME '.cargo-tools/bin/tauri-driver.exe')
 
   # Phase 5, P1 (docs/phase-5/packaging.md): the two packages a PR builds,
   # each started once (--smoke: the first screen comes up, then the app

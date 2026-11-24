@@ -55,6 +55,11 @@ The oracle adapter already writes PoB's whole `mainOutput` (with `Minion` for mi
 9. **Stat mop-up runs alongside and at the end.** Each area maps the stats it needs. P6-11 then takes the remaining distinct unmapped stats of the public fixtures and the corpus, in batches by kind, each row with a test; a stat becomes `NoEffect` only when PoB reads it into no output at all; a stat PoB reads into an output the engine does not compute yet (regen, leech, ward, EHP, movement speed, costs) stays `unmapped-stat` until P6-10b computes that output.
 10. **Core crates stay wasm32-compatible, no I/O** (ADR-016). Timeless jewel lookups are data in the bundle, not files read by the engine.
 11. **Timeless jewels from our own extraction** (ADR-005): the tables are derived from the extracted `AlternatePassiveSkills` and `AlternatePassiveAdditions` and the seed algorithm ported as code, tested against PoB's lookup tables; PoB's third-party tables are not shipped. Any decompression is pure Rust in `loom-data`.
+    - **Amended 2026-11-19 (maintainer, Q-P6-1):**
+      - **Why:** no implementation of the seed generator can ship under the project's MIT licence. The known ones are GPL-3.0 or unlicensed, and the generator's details exist only in their code.
+      - **What changes:** the results come from PoB's precomputed lookup tables (PoB's MIT repository), carried in the bundle in a compact form, with a `data-parity` table against PoB's own.
+      - **What stays:** the tables they index (`AlternatePassiveSkills`, `AlternatePassiveAdditions`, `AlternateTreeVersions`) still come from our own extraction.
+      - **The check:** a local consistency check found PoB's tables and Vilsol's implementation in agreement on all 149,920 sampled lookups PoB holds (`docs/phase-6/timeless.md`, "The consistency check").
 12. **Performance (ADR-013).** Each engine PR stays within the instruction-count limits or re-baselines with a stated reason (as #135); P6-12 re-checks the item-edit preview (300 ms) and allocation hover (150 ms) budgets.
 13. **PRs as a cascade.** Each step is one PR from the previous step's branch (`docs/plan` workflow: the maintainer merges newest to oldest). Each PR carries its own evidence (ADR-012): tests, the before-and-after calc-run and calc-parity summaries, and the divergence-register entries.
 

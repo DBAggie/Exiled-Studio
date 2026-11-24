@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 13
+local FORMAT = 16
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -114,13 +114,15 @@ end
 -- GrantedEffects, GrantedEffectsPerLevel, GrantedEffectStatSets(PerLevel),
 -- GrantedEffectQualityStats (src/Export/Scripts/skills.lua).
 ---------------------------------------------------------------------------
--- Not copied: levelRequirement and Vaal soul costs (the bundle does not
--- carry them, P3-1a) and statInterpolation (kept raw until P3-9a).
+-- Not copied: statInterpolation (kept raw until P3-9a). Format 14 (data
+-- schema 5): levelRequirement, vaalStoredUses, soulPreventionDuration, and
+-- the Vaal soul cost (`cost.Soul`).
 local LEVEL_FIELDS = {
 	"critChance", "damageEffectiveness", "baseMultiplier",
 	"manaMultiplier", "attackSpeedMultiplier", "attackTime", "cooldown",
 	"storedUses", "manaReservationFlat", "manaReservationPercent",
 	"lifeReservationFlat", "lifeReservationPercent",
+	"levelRequirement", "vaalStoredUses", "soulPreventionDuration",
 }
 
 local function statPairs(rows)
@@ -213,9 +215,7 @@ for id, effect in pairs(data.skills) do
 		out.values = list(row)
 		local cost = {}
 		for resource, amount in pairs(row.cost or {}) do
-			if resource ~= "Soul" then
-				cost[resource] = amount
-			end
+			cost[resource] = amount
 		end
 		out.cost = cost
 		levels[tostring(level)] = out
@@ -682,6 +682,103 @@ for proxy, offsets in pairs(clusterData.orbitOffsets or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- Timeless jewels (format 15, Phase 6 P6-10a): the legion tables
+-- (`Data/TimelessJewelData/LegionPassives.lua`: each node's and addition's
+-- id and stat ranges, in PoB's order), the node index mapping
+-- (`NodeIndexMapping.lua`), the jewel types and seed ranges
+-- (`Modules/Data.lua`), and each type's lookup table checksum: the
+-- zlib stream's Adler-32 trailer (the inflated bytes' checksum), read
+-- from the zip or its parts without inflating.
+---------------------------------------------------------------------------
+local function legionRows(rows)
+	local out = {}
+	for i, row in ipairs(rows) do
+		local stats = {}
+		for stat, range in pairs(row.stats or {}) do
+			stats[stat] = { min = range.min, max = range.max }
+		end
+		out[i] = { id = row.id, stats = stats }
+	end
+	return out
+end
+local legion = LoadModule("Data/TimelessJewelData/LegionPassives")
+local function zipBytes(name)
+	local f = io.open("Data/TimelessJewelData/" .. name .. ".zip", "rb")
+	if f then
+		local bytes = f:read("*a")
+		f:close()
+		return bytes
+	end
+	local parts = {}
+	local part = 0
+	while true do
+		local p = io.open("Data/TimelessJewelData/" .. name .. ".zip.part" .. part, "rb")
+		if not p then
+			break
+		end
+		parts[#parts + 1] = p:read("*a")
+		p:close()
+		part = part + 1
+	end
+	return table.concat(parts)
+end
+local timelessJewels = {}
+for jewel, name in pairs(data.timelessJewelTypes) do
+	local bytes = zipBytes((name:gsub("%s+", "")))
+	local n = #bytes
+	local adler = n >= 4 and (((bytes:byte(n - 3) * 256 + bytes:byte(n - 2)) * 256 + bytes:byte(n - 1)) * 256 + bytes:byte(n)) or nil
+	timelessJewels[tostring(jewel)] = {
+		name = name,
+		seed_min = data.timelessJewelSeedMin[jewel],
+		seed_max = data.timelessJewelSeedMax[jewel],
+		adler32 = adler,
+	}
+end
+local nodeIndex = {}
+for node, entry in pairs(data.nodeIDList) do
+	if type(node) == "number" and type(entry) == "table" then
+		nodeIndex[tostring(node)] = { index = entry.index, size = entry.size }
+	end
+end
+local localToGlobal = {}
+for jewel, ids in pairs(data.nodeIDList.localIdToGlobalId or {}) do
+	local pairsOut = {}
+	for l, g in pairs(ids) do
+		if type(l) == "number" then
+			pairsOut[tostring(l)] = g
+		end
+	end
+	localToGlobal[tostring(jewel)] = pairsOut
+end
+local timeless = {
+	additions = legionRows(legion.additions),
+	nodes = legionRows(legion.nodes),
+	additions_count = data.timelessJewelAdditions,
+	node_count = data.nodeIDList.size,
+	notable_count = data.nodeIDList.sizeNotable,
+	node_index = nodeIndex,
+	local_to_global = localToGlobal,
+	jewels = timelessJewels,
+}
+
+-- Tattoos and the other passive skill overrides (format 16, P6-11av):
+-- Data/TattooPassives.lua's nodes by name, each with its ID, override type,
+-- keystone flag, and stats' ranges as PoB's exporter wrote them.
+local tattoos = {}
+for name, node in pairs(LoadModule("Data/TattooPassives").nodes) do
+	local stats = {}
+	for stat, range in pairs(node.stats or {}) do
+		stats[stat] = { min = range.min, max = range.max }
+	end
+	tattoos[name] = {
+		id = node.id,
+		override_type = node.overrideType,
+		keystone = node.ks and true or false,
+		stats = stats,
+	}
+end
+
+---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
 local document = {
@@ -707,6 +804,8 @@ local document = {
 	jewel_radii = list(jewelRadii),
 	flavour_text = list(flavourText),
 	cluster_jewels = clusterJewels,
+	timeless = timeless,
+	tattoos = tattoos,
 	tree = { classes = classes, nodes = nodes },
 }
 

@@ -13,7 +13,7 @@ A stat that cannot change any of the 24 slice fields (attributes, life, mana, en
 | `regeneration` | life, mana, and energy shield regeneration (rate, per level, per charge, per fortification, per spell block, after exposure, near rare enemies), Zealot's Oath's swap, consecrated ground's ES recovery |
 | `leech` | energy shield leech from spell damage; cannot have life leeched from |
 | `movement-speed` | `base_movement_velocity_+%` |
-| `minion-defence` | golem revival (P6-7b3a moved minion and golem life, regeneration, and golem immunity to `Poe1Quantity::MinionPending`, a reason on the minion fields until P6-7b3b) |
+| `minion-defence` | golem revival; golem immunity to elemental damage (PoB does not read its line). Minion and golem life and defences are minion modifiers since P6-7b3b (`poe1::minions::STATS`, `docs/phase-6/minions.md`) |
 | `freeze`, `ailment-duration` | chance to freeze, freeze proliferation, freeze, cold and lightning ailment durations |
 | `stun`, `interruption` | stun duration, avoid interruption while casting |
 | `damage-taken`, `ailment-on-self` | physical damage taken as fire or lightning, ailment duration on you, cannot be shocked |

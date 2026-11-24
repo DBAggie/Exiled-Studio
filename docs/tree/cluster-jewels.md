@@ -69,3 +69,21 @@ Maintainer-run, on the main workstation:
 ## In the editor (T5b)
 
 Done on the same branch: `socket-jewel` takes a cluster jewel in a socket of its size, and the editor works on the tree with the spec's cluster jewels expanded. The screen draws the added nodes, and the jewel picker lists the jewels that fit ([editor.md](editor.md), "Cluster sockets").
+
+## The cluster tables on build 26530219 (2026-11-19)
+
+**The data:** extract `local/extract/poe1/26530219-ot2` roots `PassiveTreeExpansionSpecialSkills`. Its index SHA-256 is the evidence bundles' (`d23c7899…`), so it is build 26530219. Its `bundle` writes `poe1/cluster_jewels.json`.
+
+**Evidence bundle** `local/p6/packs/b-cl`: `b-gl` (data schema 5) with only that file added. `bundle-check` reports no findings; the bundle is local and unsigned.
+
+**Data parity:**
+- Table `cluster_jewels` compares 479 rows with 1 difference (before, 353 rows of PoB's with none in the bundle).
+- The one: two notables are named Evil Eye. PoB's exporter keys `notableSortOrder` by name, so Lua keeps the last row (11455); the bundle keeps each notable's own (11454). Rule `cluster-notable-order-duplicate-name`, `pob-derivation`.
+- `uncategorized` falls from 353 to 0: the 353 were the cluster rows the bundle lacked.
+
+**Calculation** (`local/p6/cl/`, against `local/p6/d5/` on `b-gl`):
+- **Public `calc-parity`:** 237 builds, 292 expected, 0 unexpected. 286 values moved, 255 toward PoB and 31 away; 13 are now equal to PoB.
+- **Corpus:** 0 unexpected; 170 moved, 153 toward and 17 away.
+- **Every "away" move checked** shows an earlier gap the cluster nodes now uncover. In Generals Perforate Zerker, intelligence and mana now equal PoB's (96, 672). Its unreserved mana moved from 139 to 141 against PoB's 138, because its reserved mana was already 4 below PoB's. The other away moves are a few points of attributes or life in builds already above PoB's.
+
+**Maintainer:** the next signed bundle ships `poe1/cluster_jewels.json` from this extract (the full data run, `docs/phase-6/timeless.md`).

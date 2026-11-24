@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11hp): a level 90 Witch throwing Bear Trap (level 20) with increased spell damage (which does not reach it: PoB's
+     base flags have no spell), increased trap damage and throwing speed, faster cooldown recovery, and an additional trap per throw (one with a cooldown).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Bear Trap" skillId="BearTrap" variantId="BearTrap" gemId="Metadata/Items/Gems/SkillGemBearTrap" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				80% increased Spell Damage
+				30% increased Trap Damage
+				25% increased Trap Throwing Speed
+				20% increased Cooldown Recovery Rate
+				Skills which Throw Traps throw up to 1 additional Trap
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

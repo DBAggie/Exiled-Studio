@@ -55,6 +55,10 @@ fn canonical(a: &Effect, b: &Effect) -> Ordering {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModStore {
     effects: Vec<Effect>,
+    /// Unsettled values of stats whose every effect acts on another actor
+    /// (a minion modifier, P6-7b3b), with those effects' quantities: not
+    /// this actor's reasons, but the other's when it reads them.
+    elsewhere: Vec<(Vec<Quantity>, IndeterminateReason)>,
 }
 
 impl ModStore {
@@ -73,6 +77,19 @@ impl ModStore {
     #[must_use]
     pub fn effects(&self) -> &[Effect] {
         &self.effects
+    }
+
+    /// Records an unsettled value of a stat whose every effect, of
+    /// `quantities`, acts on another actor (P6-7b3b).
+    pub fn add_elsewhere(&mut self, quantities: Vec<Quantity>, reason: IndeterminateReason) {
+        self.elsewhere.push((quantities, reason));
+    }
+
+    /// The unsettled values for other actors, with their effects'
+    /// quantities, in the order they were added.
+    #[must_use]
+    pub fn elsewhere(&self) -> &[(Vec<Quantity>, IndeterminateReason)] {
+        &self.elsewhere
     }
 
     /// Replaces the value of each effect from the `start`-th on with
@@ -247,6 +264,62 @@ impl ModStore {
             node,
             reasons,
         })
+    }
+
+    /// [`Self::more`] rounded as PoB's `ModDB:MoreInternal` rounds a
+    /// list's product (`round(modResult, 2)`, for a mod name not in
+    /// `data.highPrecisionMods`; P6-7b3b and its review): with any effect,
+    /// `round(product x 100) / 100`, as nodes; with none, 1. The product is
+    /// rounded per quantity: PoB rounds per mod name, which differs only
+    /// where several names feed one quantity (a reason to read per name
+    /// where the engine has such a case, as `poe1::hit` does).
+    ///
+    /// # Errors
+    /// A graph error (the graph is full).
+    pub fn more_rounded(
+        &self,
+        graph: &mut Graph,
+        quantity: Quantity,
+        cx: &QueryContext,
+    ) -> Result<Query, GraphError> {
+        let mut more = self.more(graph, quantity, cx)?;
+        let mut reasons = Reasons::new();
+        if self.select(quantity, Op::More, cx, &mut reasons).is_empty() {
+            return Ok(more);
+        }
+        let hundred = graph.push(
+            Node::Constant {
+                label: "hundred",
+                value: 100.0,
+            },
+            100.0,
+        )?;
+        let scaled_value = more.value * 100.0;
+        let scaled = graph.push(
+            Node::Product {
+                term: Term::Step("more-scaled"),
+                factors: vec![more.node, hundred],
+            },
+            scaled_value,
+        )?;
+        let whole_value = math::round_half_up(scaled_value);
+        let whole = graph.push(
+            Node::RoundHalfUp {
+                term: Term::Step("more-whole"),
+                of: scaled,
+            },
+            whole_value,
+        )?;
+        more.value = whole_value / 100.0;
+        more.node = graph.push(
+            Node::Quotient {
+                term: Term::Step("more-rounded"),
+                a: whole,
+                b: hundred,
+            },
+            more.value,
+        )?;
+        Ok(more)
     }
 
     /// Whether a `Flag` effect on `quantity` applies: `1` if one does,
@@ -455,6 +528,39 @@ mod tests {
             .more(&mut g, Quantity::Life, &QueryContext::default())
             .unwrap();
         assert_eq!(q.value, 0.8 * 1.5);
+        g.check().unwrap();
+    }
+
+    /// PoB's `round(modResult, 2)` (P6-7b3b review): two mores round
+    /// together; one already two-decimal stays; none is 1.
+    #[test]
+    fn more_rounded_should_round_to_two_decimals() {
+        let cx = QueryContext::default();
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 15.0, rule("a")));
+        s.add(effect(Op::More, 15.0, rule("b")));
+        let mut g = Graph::new();
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.32
+        );
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 33.3, rule("a")));
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.33
+        );
+        let mut s = ModStore::new();
+        s.add(effect(Op::More, 49.0, rule("a")));
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.49
+        );
+        let s = ModStore::new();
+        assert_eq!(
+            s.more_rounded(&mut g, Quantity::Life, &cx).unwrap().value,
+            1.0
+        );
         g.check().unwrap();
     }
 

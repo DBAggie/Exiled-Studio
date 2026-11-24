@@ -46,7 +46,7 @@ use loom_domain::{
     ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
-use super::gem_levels::GemLevels;
+use super::gem_levels::{GemLevels, GemSlot, InSlot};
 use super::mapping::{
     OffHandWeaponMapping, PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping,
 };
@@ -97,24 +97,75 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     dual_wielding(input, ingest);
     // After the items: "Allocates <notable>" (P3-8n).
     granted_passives(input, spec, ingest);
+    // Forbidden Flame and Forbidden Flesh (P6-11es): after the granted
+    // passives, as PoB's `CalcSetup.lua` 1299.
+    forbidden_pairs(input, spec, ingest);
     config(build, ingest);
+    // After every passive, item, and config line: life and mana per staff
+    // socket (P6-11go), armour and evasion per main hand socket (P6-11ig).
+    staff_sockets(input, ingest);
+    // Physical damage as a random element (P6-11gz).
+    random_gains(build, ingest);
+    // Damage as projectiles travel farther (P6-11ha).
+    distance_ramps(input, ingest);
+    // Primal Aegis per allocated notable (P6-11hl).
+    primal_aegis(input, ingest);
     // After every source of flask effect (P6-4b), before Onslaught.
     super::flasks::flasks(input, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
+    // After the gems (Shield Crush's and Close Combat's stats; P6-11ht).
+    melee_proximity(input, ingest);
+    accuracy_per_level(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
     // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
     // after every source of their modifiers, before the enemy's damage
     // taken (rage's Intimidate).
+    super::devotion::devotion(ingest);
     super::stacks::stacks(active_config(build), input.data, ingest);
-    super::buffs::buffs(active_config(build), ingest);
+    super::stacks::aura_or_herald(input, ingest);
+    // Totems summoned (P6-11ep): before the buffs (Arcane Surge's effect).
+    super::stacks::totems(input, active_config(build), ingest);
+    // Nearby corpses (P6-11ev).
+    super::stacks::nearby_corpses(active_config(build), ingest);
+    // Brands attached to the enemy (P6-11ew).
+    super::stacks::brands(input, active_config(build), ingest);
+    // Golems (P6-11gc), skeletons, zombies, raging spirits, and phantasms
+    // (P6-11ie) summoned.
+    super::stacks::minions(input, ingest);
+    // Armour per warcry power (P6-11hz).
+    warcry_power_armour(input, ingest);
+    // After the gems' reservations (P6-11ib).
+    reserved_max_resist(ingest);
+    super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
     // effect and minimum (P3-8k).
-    super::exposure::exposure(active_config(build), ingest);
-    super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
+    super::exposure::exposure(active_config(build), &super::states::states(input), ingest);
+    super::damage_taken::damage_taken(input, active_config(build), ingest);
+    // After every source of resistance modifiers, buffs included (P6-11ah).
+    super::resist_conversion::resist_conversion(ingest);
+    // A mirage's copy of the main skill (P6-8b): its less damage and speed.
+    if let Some(m) = input.options.mirage {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "small stat values, exact as f64"
+        )]
+        for (quantity, value) in [
+            (Quantity::Damage, m.damage_more as f64),
+            (Quantity::Speed, m.speed_more as f64),
+        ] {
+            ingest.effect(Effect {
+                quantity,
+                op: Op::More,
+                value,
+                conditions: Conditions::none(),
+                source: Source::Rule(super::combined::MIRAGE_RULE),
+            });
+        }
+    }
 }
 
 /// The character's base values: class attributes, life and mana with
@@ -375,7 +426,7 @@ pub(crate) fn node_stats<'a>(input: &'a CalcInput<'_>, node: u32) -> Option<&'a 
 }
 
 /// A node's kind, as [`node_stats`].
-fn node_kind(input: &CalcInput<'_>, node: u32) -> Option<crate::input::PassiveKind> {
+pub(crate) fn node_kind(input: &CalcInput<'_>, node: u32) -> Option<crate::input::PassiveKind> {
     match &input.options.passives.pack {
         Some(pack) => pack.passives.get(&NodeId(node)).map(|p| p.kind),
         None => input.data.passive_kind(node),
@@ -497,6 +548,21 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
                 continue;
             }
         }
+        // A node a tattoo replaces (P6-11av) or a Timeless jewel conquers
+        // (P6-10a): those stats, with or instead of its own; a change not
+        // known is its reason.
+        if let Some(c) = resolved.changed.get(node) {
+            let source = Source::Passive { node: *node };
+            if let Some(what) = c.reason {
+                ingest.reason(UnsupportedReason::UnmodelledPassive { source, what });
+                continue;
+            }
+            if !c.replaced {
+                ingest.stats(&source, &lines(stats));
+            }
+            ingest.stats(&source, &lines(&c.stats));
+            continue;
+        }
         ingest.stats(&Source::Passive { node: *node }, &lines(stats));
         unread_lines(
             resolved.pack.as_ref().and_then(|p| p.passives.get(node)),
@@ -511,6 +577,11 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         // allocated notable of its group (the unconnected node itself is
         // reported above).
         if !nodes.contains(&m.node) || !resolved.connected(m.node) {
+            continue;
+        }
+        // A runegraft on the mastery takes the place of its effect (PoB's
+        // `PassiveSpec.lua` 1393 to 1398).
+        if resolved.changed.contains_key(&m.node) {
             continue;
         }
         unread_lines(
@@ -536,6 +607,26 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
 /// the hashes the description's lookup gives the name (several nodes can
 /// share a name). `None` for any other line, which the mapping reads.
 fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Vec<i64>> {
+    hashes_of(resolution, GRANTED_PASSIVE_STAT)
+}
+
+/// The Forbidden jewels' stats (P6-11es): part 1 names Forbidden Flesh (it
+/// is on Forbidden Flame), part 2 Forbidden Flame.
+const FORBIDDEN_STATS: [(&str, bool); 2] = [
+    ("unique_jewel_grants_notable_hash_part_1", true),
+    ("unique_jewel_grants_notable_hash_part_2", false),
+];
+
+/// A Forbidden jewel line's side and its node hashes (P6-11es).
+fn forbidden_hashes(resolution: &loom_domain::LineResolution) -> Option<(bool, Vec<i64>)> {
+    FORBIDDEN_STATS
+        .iter()
+        .find_map(|&(stat, flesh)| hashes_of(resolution, stat).map(|h| (flesh, h)))
+}
+
+/// The node hashes of a line that is `stat` alone (a `passive_hash`
+/// handler's lookup, or one value).
+fn hashes_of(resolution: &loom_domain::LineResolution, stat: &str) -> Option<Vec<i64>> {
     let loom_domain::LineResolution::Resolved {
         result: loom_domain::Resolved::Stats(lines),
         ..
@@ -546,7 +637,7 @@ fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Ve
     let [line] = lines.as_slice() else {
         return None;
     };
-    if line.stat.as_str() != GRANTED_PASSIVE_STAT {
+    if line.stat.as_str() != stat {
         return None;
     }
     match &line.value {
@@ -635,6 +726,101 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
     }
 }
 
+/// Forbidden Flame and Forbidden Flesh (P6-11es; PoB's
+/// `GrantedAscendancyNode`, `CalcSetup.lua` 1299 to 1315): a line of each
+/// side naming the same ascendancy notable allocates it, when both
+/// jewels' "Requires Class" is the character's class (PoB's
+/// `ForbiddenFlesh` and `ForbiddenFlame` conditions, the class restriction
+/// of the item of each title, 1170). Lines pair in order, a line once.
+/// The node counts once, as [`granted_passives`]' do; an ambiguous name is
+/// indeterminate.
+fn forbidden_pairs(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+    let mut sides: [Vec<(Source, BTreeSet<u32>)>; 2] = [Vec::new(), Vec::new()];
+    for e in ingest.effects() {
+        let Quantity::Poe1(Poe1Quantity::ForbiddenNode(flesh)) = e.quantity else {
+            continue;
+        };
+        if e.op != Op::Base || e.conditions != Conditions::none() {
+            continue;
+        }
+        #[expect(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "a node hash below 2^16, checked"
+        )]
+        let Some(node) =
+            (e.value.fract() == 0.0 && (0.0..65536.0).contains(&e.value)).then_some(e.value as u32)
+        else {
+            continue;
+        };
+        let list = &mut sides[usize::from(flesh)];
+        match list.iter_mut().find(|(s, _)| *s == e.source) {
+            Some((_, nodes)) => {
+                nodes.insert(node);
+            }
+            None => list.push((e.source.clone(), BTreeSet::from([node]))),
+        }
+    }
+    let [flame_side, mut flesh_side] = sides;
+    if flame_side.is_empty() || flesh_side.is_empty() {
+        return;
+    }
+    let build = input.build;
+    let class = build.character.class.as_ref().map_or("", |c| c.as_str());
+    let restricted_to_class = |source: &Source| -> bool {
+        let Source::Item { item, .. } = source else {
+            return false;
+        };
+        build.items.item(*item).is_some_and(|item| {
+            item.body.modifiers().any(|(_, m)| {
+                m.selected
+                    && m.section == loom_domain::ModSection::Other("class-requirement".to_owned())
+                    && m.text.strip_prefix("Requires Class ") == Some(class)
+            })
+        })
+    };
+    let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
+        spec.nodes
+            .value()
+            .iter()
+            .filter(|n| input.options.passives.connected(**n))
+            .map(|n| n.0)
+            .collect()
+    });
+    let mut granted = BTreeSet::new();
+    for (flame_source, flame_nodes) in flame_side {
+        let Some(i) = flesh_side
+            .iter()
+            .position(|(_, nodes)| !nodes.is_disjoint(&flame_nodes))
+        else {
+            continue;
+        };
+        let (flesh_source, flesh_nodes) = flesh_side.remove(i);
+        if !(restricted_to_class(&flame_source) && restricted_to_class(&flesh_source)) {
+            continue;
+        }
+        let ascendancy: Vec<u32> = flame_nodes
+            .intersection(&flesh_nodes)
+            .copied()
+            .filter(|&n| node_kind(input, n).is_some_and(|k| k.notable && k.ascendancy))
+            .collect();
+        let [node] = ascendancy.as_slice() else {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "passives",
+                key: format!("forbidden-node:{flame_source:?}"),
+            });
+            continue;
+        };
+        let node = *node;
+        if allocated.contains(&node) || !granted.insert(node) {
+            continue;
+        }
+        if let Some(stats) = node_stats(input, node) {
+            ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats));
+        }
+    }
+}
+
 /// How an item in a slot acts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SlotKind {
@@ -670,18 +856,22 @@ fn slot_kind(slot: &str) -> SlotKind {
 /// The parent item's stat that gives it abyssal sockets ("Has # Abyssal
 /// Sockets", PoB's `AbyssalSocketCount`, `Item.lua` 2589).
 const ABYSS_SOCKETS: &str = "local_has_X_abyss_sockets";
-/// A parent item's stat that scales its socketed abyss jewels: not
-/// modelled, a reason.
+/// A parent item's stat that scales its socketed abyss jewels (P6-11gi;
+/// PoB's local `SocketedJewelEffect` INC, `ModParser.lua` 846:
+/// `socketedJewelEffectModifier`, `Item.lua` 2639).
 const ABYSS_JEWEL_EFFECT: &str = "local_socketed_abyss_jewel_effect_+%";
 
 /// Whether the abyssal slot `slot` ("<parent> Abyssal Socket <n>") holds
 /// an active socket (close-out): PoB's `ItemSlotControl` makes socket `n`
 /// inactive, and empties it, when the parent slot's item has fewer than
 /// `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111), so its jewel
-/// counts only when `n` is at most the parent's count. `None` when that
-/// is not known: a parent line that does not resolve or settle, or one
-/// that scales its socketed abyss jewels.
-fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
+/// counts only when `n` is at most the parent's count. With it, the scale
+/// of the jewel's modifiers: `1 + inc / 100`, `inc` the parent's
+/// [`ABYSS_JEWEL_EFFECT`] lines summed (P6-11gi; PoB's
+/// `socketedJewelEffectModifier`, the jewel's mods added by `ScaleAddList`,
+/// `CalcSetup.lua` 956 and 1167). `None` when that is not known: a parent
+/// line that does not resolve or settle.
+fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<(bool, f64)> {
     let (parent, n) = slot.split_once(" Abyssal Socket ")?;
     let n: i64 = n.trim().parse().ok()?;
     let Some(parent_id) = set
@@ -691,10 +881,11 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
         .and_then(|e| e.item)
         .filter(|id| id.0 != 0)
     else {
-        return Some(false);
+        return Some((false, 1.0));
     };
     let item = build.items.item(parent_id)?;
     let mut count = 0;
+    let mut inc = 0.0;
     for line in &item.body.lines {
         let LineKind::Modifier(m) = &line.kind else {
             continue;
@@ -706,7 +897,7 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
             } => {
                 for s in stats {
                     if s.stat.as_str() == ABYSS_JEWEL_EFFECT {
-                        return None;
+                        inc += crate::ingest::settle(&s.value)?;
                     }
                     if s.stat.as_str() == ABYSS_SOCKETS {
                         #[expect(clippy::cast_possible_truncation, reason = "a socket count")]
@@ -721,7 +912,7 @@ fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
             _ => return None,
         }
     }
-    Some(n <= count)
+    Some((n <= count, 1.0 + inc / 100.0))
 }
 
 /// Whether `slot` is a flask slot (PoB's `Flask 1` to `Flask 5`).
@@ -778,7 +969,7 @@ pub fn items_in_use(build: &Build) -> Vec<(ItemId, ItemPlace)> {
                 continue;
             }
             if matches!(slot_kind(slot), SlotKind::Abyssal)
-                && abyssal_active(build, set, slot) != Some(true)
+                && !abyssal_active(build, set, slot).is_some_and(|(active, _)| active)
             {
                 continue;
             }
@@ -828,11 +1019,25 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 // An active flask acts through `poe1::flasks` (P6-4b).
                 SlotKind::Flask => continue,
                 SlotKind::Abyssal => match abyssal_active(build, set, slot) {
-                    // Its lines act as any jewel's (close-out).
-                    Some(true) => {}
+                    // Its lines act as any jewel's (close-out), scaled by
+                    // the parent's effect of socketed abyss jewels
+                    // (P6-11gi; `skill_modifiers::scale`, PoB's
+                    // `ScaleAddMod`).
+                    Some((true, scale)) => {
+                        if let Some(item) = build.items.item(id) {
+                            let start = ingest.effects().len();
+                            item_lines_in(item, GemSlot::of(slot), ingest);
+                            ingest.rescale_from(start, &|q, op, v| {
+                                super::skill_modifiers::scale(q, op, v, scale)
+                            });
+                        } else {
+                            ingest.reason(unmodelled("missing"));
+                        }
+                        continue;
+                    }
                     // PoB empties an abyssal slot its parent lacks
                     // (`ItemSlotControl.lua` 98 to 111).
-                    Some(false) => continue,
+                    Some((false, _)) => continue,
                     None => {
                         ingest.reason(unmodelled("abyssal-socket"));
                         continue;
@@ -854,7 +1059,13 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 SlotKind::Lines => {}
             }
             match build.items.item(id) {
-                Some(item) => item_lines(item, ingest),
+                // Kalandra's Touch (P6-11ic): the other ring's lines.
+                Some(item) if reflects(item) => {
+                    if let Some(other) = other_ring(build, set, slot) {
+                        item_lines_with(&Reflected, other, ingest);
+                    }
+                }
+                Some(item) => item_lines_in(item, GemSlot::of(slot), ingest),
                 None => ingest.reason(unmodelled("missing")),
             }
         }
@@ -890,6 +1101,558 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                 slot: format!("socket {}", socket.node),
                 what: "missing",
             }),
+        }
+    }
+}
+
+/// Kalandra's Touch's "Reflects your opposite Ring" (P6-11ic).
+pub const REFLECT_STAT: &str = "local_ring_duplicate_other_ring";
+
+/// Whether `item` reflects the opposite ring (a line of [`REFLECT_STAT`]).
+fn reflects(item: &Item) -> bool {
+    item.body.lines.iter().any(|line| {
+        let LineKind::Modifier(m) = &line.kind else {
+            return false;
+        };
+        let loom_domain::LineResolution::Resolved {
+            result: loom_domain::Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            return false;
+        };
+        stats.iter().any(|s| s.stat.as_str() == REFLECT_STAT)
+    })
+}
+
+/// The ring a reflecting ring in `slot` copies (P6-11ic; `CalcSetup.lua`
+/// 1087 to 1121): the item in the other ring slot of `set`, unless it
+/// reflects too (PoB's "Kalandra's Touch" name match). PoB then adds that
+/// ring's modifiers, but those with a `SocketedIn` tag, with the
+/// reflecting ring as their source, and of the reflecting ring's own only
+/// `ExtraSkill` (Kalandra's Touch has none); here the copies keep the
+/// other ring's line as their source. PoB's item count multipliers
+/// (corrupted, influenced) are read by nothing the engine maps.
+fn other_ring<'b>(build: &'b Build, set: &ItemSet, slot: &str) -> Option<&'b Item> {
+    let other = match slot {
+        "Ring 1" => "Ring 2",
+        "Ring 2" => "Ring 1",
+        _ => return None,
+    };
+    let id = set
+        .slots
+        .typed()
+        .find(|e| e.slot.as_str() == other)
+        .and_then(|e| e.item)
+        .filter(|id| id.0 != 0)?;
+    build.items.item(id).filter(|item| !reflects(item))
+}
+
+/// The mapping of a reflected ring's lines (P6-11ic): a socketed gem's
+/// stat has no effect (PoB drops `SocketedIn` modifiers), every other
+/// stat is [`Poe1Mapping`]'s.
+struct Reflected;
+
+impl StatMapping for Reflected {
+    fn map(&self, stat: &loom_domain::StatId) -> crate::ingest::StatMap {
+        let id = stat.as_str();
+        let probe = GemSlot::of("Ring 1");
+        let socketed = id == super::gem_levels::SOCKETED_ELEMENTAL_DAMAGE_STAT
+            || super::item_supports::row(id).is_some()
+            || probe.is_some_and(|slot| super::gem_levels::socketed_quantity(id, slot).is_some());
+        if socketed {
+            crate::ingest::StatMap::NoEffect
+        } else {
+            Poe1Mapping.map(stat)
+        }
+    }
+
+    fn typed(
+        &self,
+        resolution: &loom_domain::TypedResolution,
+        source: &Source,
+    ) -> crate::ingest::TypedMap {
+        Poe1Mapping.typed(resolution, source)
+    }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        Poe1Mapping.elsewhere(quantity)
+    }
+}
+
+/// "#% increased maximum Life per Red Socket on equipped Staff" and its
+/// Mana per Blue Socket (P6-11go): each `Base` value of
+/// [`Poe1Quantity::PerStaffSocket`] times the main hand's sockets of that
+/// colour (PoB's `RedSocketInWeapon 1`, counted from the item in the main
+/// hand of the weapon set in use, as PoB names a swap slot by its set's
+/// slot), as the pool's `Increased` with the `UsingStaff` state (PoB's
+/// `Condition` tag). "#% increased Armour per Red Socket on Main Hand
+/// Weapon" and its Evasion Rating per Green Socket (P6-11ig,
+/// [`Poe1Quantity::PerMainHandSocket`]) the same, as the defence's
+/// `Increased` with no state. Sockets the engine cannot count are a
+/// reason.
+fn staff_sockets(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let per: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(
+                    Poe1Quantity::PerStaffSocket(_) | Poe1Quantity::PerMainHandSocket(_)
+                )
+            ) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if per.is_empty() {
+        return;
+    }
+    let build = input.build;
+    let second = active_item_set(build)
+        .is_some_and(|set| attribute(&set.attributes, "useSecondWeaponSet") == Some("true"));
+    let slot = if second { "Weapon 1 Swap" } else { "Weapon 1" };
+    for e in per {
+        let (colour, pool, staff) = match e.quantity {
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(true)) => ('R', Quantity::Life, true),
+            Quantity::Poe1(Poe1Quantity::PerStaffSocket(false)) => ('B', Quantity::Mana, true),
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(true)) => ('R', Quantity::Armour, false),
+            Quantity::Poe1(Poe1Quantity::PerMainHandSocket(false)) => {
+                ('G', Quantity::Evasion, false)
+            }
+            _ => continue,
+        };
+        let Some(count) = super::sockets::colour_count(build, slot, colour) else {
+            ingest.reason(UnsupportedReason::UnmodelledItem {
+                item: ItemId(0),
+                slot: slot.to_owned(),
+                what: if staff {
+                    "staff-sockets"
+                } else {
+                    "main-hand-sockets"
+                },
+            });
+            continue;
+        };
+        if count == 0 || e.value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: pool,
+            op: Op::Increased,
+            value: e.value * f64::from(count),
+            conditions: if staff {
+                e.conditions.with_state(
+                    crate::condition::ConditionKey::new(super::states::USING_STAFF),
+                    true,
+                )
+            } else {
+                e.conditions
+            },
+            source: e.source,
+        });
+    }
+}
+
+/// The distance inputs (`ConfigOptions.lua` 1763, 1764): a melee skill
+/// reads `meleeDistance`, any other `projectileDistance`, the input or its
+/// placeholder (`CalcActiveSkill.lua` 446 to 451); PoB's placeholders
+/// default to these (P6-11ha).
+const DISTANCES: [(&str, f64); 2] = [("meleeDistance", 15.0), ("projectileDistance", 40.0)];
+
+/// PoB's `DistanceRamp` `{35, 0}, {70, 1}` of the projectile damage lines
+/// (`ModParser.lua` 2499, 2644; `Classes/ModStore.lua` 555 to 570): 0 up to
+/// 35, 1 from 70, linear between.
+fn ramp(distance: f64) -> f64 {
+    ((distance - 35.0) / 35.0).clamp(0.0, 1.0)
+}
+
+/// The main skill's distance (PoB's `skillDist`, [`DISTANCES`]): `None`
+/// without a main skill, or with a distance of another type (a reason).
+fn skill_distance(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) -> Option<f64> {
+    let build = input.build;
+    let main = skill::main_skill(build, input.data, &GemLevels::none()).ok()?;
+    let (name, default) = if main.types.contains("Melee") {
+        DISTANCES[0]
+    } else {
+        DISTANCES[1]
+    };
+    let read =
+        |kind| active_config(build).and_then(|set| super::config::last_input(set, name, kind));
+    match read(ConfigInputKind::Input).or_else(|| read(ConfigInputKind::Placeholder)) {
+        None => Some(default),
+        Some(loom_domain::ConfigValue::Number(n)) => Some(n.value().0),
+        Some(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: name.to_owned(),
+            });
+            None
+        }
+    }
+}
+
+/// PoB's `MeleeProximity` tag with `ramp = {1, 0}` (`Classes/ModStore.lua`
+/// 575 to 587): the full value up to 15, falling by a 25th per unit from
+/// 16 to 39, 0 from 40. Between 15 and 16, and between 39 and 40, no
+/// branch of PoB's applies and the value stays whole.
+fn proximity(distance: f64) -> f64 {
+    if distance <= 15.0 {
+        1.0
+    } else if (16.0..=39.0).contains(&distance) {
+        1.0 - (distance - 15.0) / 25.0
+    } else if distance >= 40.0 {
+        0.0
+    } else {
+        1.0
+    }
+}
+
+/// Damage by melee proximity (P6-11ht): each
+/// [`Poe1Quantity::MeleeProximityDamage`] effect becomes `Damage` MORE at
+/// [`proximity`] of the main skill's distance, with its row's flags. After
+/// the gems, whose stats carry Shield Crush's and Close Combat's.
+fn melee_proximity(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::MeleeProximityDamage) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let Some(distance) = skill_distance(input, ingest) else {
+        return;
+    };
+    let factor = proximity(distance);
+    for e in lines {
+        let value = e.value * factor;
+        if value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value,
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
+}
+
+/// "+# to Accuracy Rating per Level" (P6-11ht): each
+/// [`Poe1Quantity::AccuracyPerLevel`] effect becomes `Accuracy` BASE times
+/// the character's level (PoB's `Multiplier:Level`, the level clamped to
+/// 1..100 as [`character`]'s).
+fn accuracy_per_level(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::AccuracyPerLevel) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    let level = input
+        .build
+        .character
+        .level
+        .as_ref()
+        .map_or(1, |l| *l.value())
+        .clamp(1, 100);
+    for e in lines {
+        ingest.effect(Effect {
+            quantity: Quantity::Accuracy,
+            op: Op::Base,
+            value: e.value * f64::from(level),
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
+    // "Regenerate # Life per second per Level" (close-out M2): the stat per
+    // minute, as life regeneration per second times the level.
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::LifeRegenPerMinutePerLevel)
+                && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    for e in lines {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::Regen(super::Pool::Life)),
+            op: Op::Base,
+            value: e.value / 60.0 * f64::from(level),
+            conditions: e.conditions,
+            source: e.source,
+        });
+    }
+}
+
+/// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry, up
+/// to a maximum of 100%" (P6-11hz; `ModParser.lua` 2566): the lines'
+/// sum times `floor(power / 5)` (PoB's `Multiplier` tag, `div` 5), at most
+/// 100 (`globalLimit`, one key for every such line), as `Armour` INC while
+/// [`super::conditions::USED_WARCRY_IN_PAST_8_SECONDS`]. The power is
+/// PoB's `Multiplier:WarcryPower` ([`super::gems::warcry_power`] without
+/// increases); a config power that is not a number is a reason.
+fn warcry_power_armour(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArmourPerWarcryPower) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    let Some(first) = lines.first() else {
+        return;
+    };
+    if lines.iter().any(|e| e.conditions != Conditions::none()) {
+        ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+        });
+        return;
+    }
+    let power = match super::gems::warcry_power(input, active_config(input.build), 0.0) {
+        Ok(p) => p,
+        Err(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    let per: f64 = lines.iter().map(|e| e.value).sum();
+    let value = (per * crate::math::floor(power / 5.0 + 0.0001)).min(100.0);
+    if value == 0.0 {
+        return;
+    }
+    let source = first.source.clone();
+    ingest.effect(Effect {
+        quantity: Quantity::Armour,
+        op: Op::Increased,
+        value,
+        conditions: Conditions::none().with_state(
+            crate::condition::ConditionKey::new(super::conditions::USED_WARCRY_IN_PAST_8_SECONDS),
+            true,
+        ),
+        source,
+    });
+}
+
+/// Maximum elemental resistances while life and mana are reserved (P6-11ib):
+/// PoB's `StatThreshold`s `LifeReserved` and `ManaReserved` at least 1
+/// (`CalcPerform.lua` 526 to 560: `reserved = flat + ceil(max x percent /
+/// 100)`), so a pool counts with a flat reservation of at least 1 or any
+/// percent reservation (a pool above 0 reserves at least 1 of it). Each
+/// line's sum becomes fire's, cold's, and lightning's maximum `Base`.
+fn reserved_max_resist(ingest: &mut Ingest<'_>) {
+    let q = Quantity::Poe1(Poe1Quantity::MaxElementalResistIfReservedLifeAndMana);
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.op == Op::Base && e.conditions == Conditions::none())
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let reserved = |pool| {
+        let sum = |kind| -> f64 {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| {
+                    e.quantity == Quantity::Poe1(Poe1Quantity::Reservation(pool, kind))
+                        && e.op == Op::Base
+                        && e.conditions == Conditions::none()
+                })
+                .map(|e| e.value)
+                .sum()
+        };
+        sum(super::ReservationKind::Flat) >= 1.0 || sum(super::ReservationKind::Percent) > 0.0
+    };
+    if !(reserved(super::Pool::Life) && reserved(super::Pool::Mana)) {
+        return;
+    }
+    for line in lines {
+        for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+            ingest.effect(Effect {
+                quantity: Quantity::MaximumResistance(t),
+                op: Op::Base,
+                value: line.value,
+                conditions: Conditions::none(),
+                source: line.source.clone(),
+            });
+        }
+    }
+}
+
+/// Damage as projectiles travel farther (P6-11ha): each
+/// [`Poe1Quantity::DistanceRampDamage`] effect becomes `Damage` at
+/// [`ramp`] of the main skill's distance (PoB's `skillDist`): the
+/// increased line's with `ModFlag.Hit` and `ModFlag.Projectile`, the more
+/// line's on hits and ailments (`KeywordFlag.Hit`, `KeywordFlag.Ailment`).
+/// A distance of another type is a reason; without a main skill, nothing.
+fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::DistanceRampDamage(_))
+            ) && e.op == Op::Base
+        })
+        .cloned()
+        .collect();
+    if lines.is_empty() {
+        return;
+    }
+    let Some(distance) = skill_distance(input, ingest) else {
+        return;
+    };
+    let factor = ramp(distance);
+    for e in lines {
+        let Quantity::Poe1(Poe1Quantity::DistanceRampDamage(more)) = e.quantity else {
+            continue;
+        };
+        let value = e.value * factor;
+        if value == 0.0 {
+            continue;
+        }
+        let (op, conditions) = if more {
+            (
+                Op::More,
+                e.conditions
+                    .clone()
+                    .with_any(crate::condition::Flags::HIT | crate::condition::Flags::AILMENT),
+            )
+        } else {
+            (
+                Op::Increased,
+                e.conditions
+                    .clone()
+                    .with_all(crate::condition::Flags::HIT | crate::condition::Flags::PROJECTILE),
+            )
+        };
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op,
+            value,
+            conditions,
+            source: e.source,
+        });
+    }
+}
+
+/// Primal Aegis's elemental damage per allocated notable (P6-11hl; the
+/// game's description of `local_display_cast_primal_aegis_on_gain_skill`).
+const PRIMAL_AEGIS_PER_NOTABLE: f64 = 75.0;
+
+/// Primal Aegis (P6-11hl; `ModParser.lua` 2828, `CalcSetup.lua` 677):
+/// `ElementalAegisValue` 75 per allocated notable (PoB's
+/// `Multiplier:AllocatedNotable`, the active spec's allocated, connected
+/// nodes of type `Notable`, ascendancy and cluster notables among them).
+/// A node whose kind is not known is a reason.
+fn primal_aegis(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let Some(source) = ingest
+        .effects()
+        .iter()
+        .find(|e| e.quantity == Quantity::Poe1(Poe1Quantity::PrimalAegis) && e.value != 0.0)
+        .map(|e| e.source.clone())
+    else {
+        return;
+    };
+    let Some(spec) = active_spec(input.build) else {
+        return;
+    };
+    let mut notables = 0.0;
+    for n in spec.nodes.value() {
+        if !input.options.passives.connected(*n) {
+            continue;
+        }
+        match node_kind(input, n.0) {
+            Some(k) if k.notable => notables += 1.0,
+            Some(_) => {}
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *n },
+                    what: "unknown-node-kind",
+                });
+                return;
+            }
+        }
+    }
+    if notables > 0.0 {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::ElementalAegis),
+            op: Op::Base,
+            value: PRIMAL_AEGIS_PER_NOTABLE * notables,
+            conditions: Conditions::none(),
+            source,
+        });
+    }
+}
+
+/// PoB's `physMode` config list ("Random element mode", `ConfigOptions.lua`):
+/// how a random element gain splits (P6-11gz).
+pub const PHYS_MODE_INPUT: &str = "physMode";
+
+/// Physical damage gained as a random element (P6-11gz; `CalcOffence.lua`
+/// 944 to 965): each [`Poe1Quantity::GainAsRandom`] effect becomes, with its
+/// conditions, a third each of `GainAs(Physical, Fire)`, `Cold`, and
+/// `Lightning` in PoB's default `AVERAGE` mode, or the whole of one type in
+/// `FIRE`, `COLD`, or `LIGHTNING`. Another value is a reason.
+fn random_gains(build: &Build, ingest: &mut Ingest<'_>) {
+    let gains: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::GainAsRandom) && e.op == Op::Base)
+        .cloned()
+        .collect();
+    if gains.is_empty() {
+        return;
+    }
+    let mode = active_config(build)
+        .and_then(|set| super::config::last_input(set, PHYS_MODE_INPUT, ConfigInputKind::Input));
+    let types: &[DamageType] = match mode {
+        None => &[DamageType::Fire, DamageType::Cold, DamageType::Lightning],
+        Some(loom_domain::ConfigValue::String(s)) => match s.as_str() {
+            "AVERAGE" => &[DamageType::Fire, DamageType::Cold, DamageType::Lightning],
+            "FIRE" => &[DamageType::Fire],
+            "COLD" => &[DamageType::Cold],
+            "LIGHTNING" => &[DamageType::Lightning],
+            _ => {
+                ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: PHYS_MODE_INPUT.to_owned(),
+                });
+                return;
+            }
+        },
+        Some(_) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: PHYS_MODE_INPUT.to_owned(),
+            });
+            return;
+        }
+    };
+    #[expect(clippy::cast_precision_loss, reason = "one to three types")]
+    let share = types.len() as f64;
+    for e in gains {
+        for t in types {
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Physical, *t)),
+                op: Op::Base,
+                value: e.value / share,
+                conditions: e.conditions.clone(),
+                source: e.source.clone(),
+            });
         }
     }
 }
@@ -1006,6 +1769,30 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
     hands
 }
 
+/// The shield in the weapon set in use's off hand (P6-11he: the item a
+/// shield attack hits with), when its base is known to be one.
+#[must_use]
+pub fn shield(input: &CalcInput<'_>) -> Option<ItemId> {
+    let set = active_item_set(input.build)?;
+    let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
+    set.slots.typed().find_map(|entry| {
+        let slot = entry.slot.as_str();
+        let id = entry.item?;
+        if id.0 == 0
+            || !slot_in_use(slot, second)
+            || slot.strip_suffix(" Swap").unwrap_or(slot) != "Weapon 2"
+        {
+            return None;
+        }
+        let base = input
+            .options
+            .item_bases
+            .get(&id)
+            .and_then(|name| name.find(input.data));
+        (Held::of(base) == Held::Shield).then_some(id)
+    })
+}
+
 /// The item in the main hand: a weapon's base properties and local lines
 /// act on the weapon ([`weapon`]); another item's lines are global, and
 /// its being in the main hand is a reason.
@@ -1015,6 +1802,8 @@ fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut
         slot: slot_name.to_owned(),
         what,
     };
+    let item_lines =
+        |item, ingest: &mut Ingest<'_>| item_lines_in(item, GemSlot::of(slot_name), ingest);
     let Some(name) = input.options.item_bases.get(&item.id) else {
         ingest.reason(unmodelled("no-base-name"));
         item_lines(item, ingest);
@@ -1105,8 +1894,22 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         }
     }
     match hand {
-        Hand::Main => item_lines_with(&WeaponMapping, item, ingest),
-        Hand::Off => item_lines_with(&OffHandWeaponMapping, item, ingest),
+        Hand::Main => item_lines_with(
+            &InSlot {
+                inner: &WeaponMapping,
+                slot: GemSlot::Weapon1,
+            },
+            item,
+            ingest,
+        ),
+        Hand::Off => item_lines_with(
+            &InSlot {
+                inner: &OffHandWeaponMapping,
+                slot: GemSlot::Weapon2,
+            },
+            item,
+            ingest,
+        ),
     }
     // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
     // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
@@ -1129,6 +1932,33 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         })
         .cloned()
         .collect();
+    // P6-11gh: "#% increased Attack Speed per 8% Quality": the weapon's
+    // local attack speed, `floor(quality / 8 x sum)` (PoB's `Item.lua`
+    // 2246: the sum of the weapon's lines, the product floored once).
+    let per8: Vec<&Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::AttackSpeedPer8Quality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .collect();
+    if let Some(first) = per8.first() {
+        let source = first.source.clone();
+        let sum: f64 = per8.iter().map(|e| e.value).sum();
+        let inc = (quality / 8.0 * sum).floor();
+        if inc != 0.0 {
+            ingest.effect(Effect {
+                quantity: value(WeaponValue::AttackSpeed),
+                op: Op::Increased,
+                value: inc,
+                conditions: Conditions::none(),
+                source,
+            });
+        }
+    }
     let steps = (quality / 2.0 + 0.0001).floor();
     for e in per {
         if steps * e.value != 0.0 {
@@ -1159,6 +1989,8 @@ fn armour_slot(
         slot: slot_name.to_owned(),
         what,
     };
+    let item_lines =
+        |item, ingest: &mut Ingest<'_>| item_lines_in(item, GemSlot::of(slot_name), ingest);
     let Some(name) = input.options.item_bases.get(&item.id) else {
         ingest.reason(unmodelled("no-base-name"));
         item_lines(item, ingest);
@@ -1276,6 +2108,7 @@ fn shown_defence(key: &str) -> Option<Defence> {
         "Armour" => Some(Defence::Armour),
         "Evasion" | "Evasion Rating" => Some(Defence::Evasion),
         "Energy Shield" => Some(Defence::EnergyShield),
+        "Ward" => Some(Defence::Ward),
         _ => None,
     }
 }
@@ -1286,6 +2119,7 @@ fn percentile_defence(key: &str) -> Option<Defence> {
         "ArmourBasePercentile" => Some(Defence::Armour),
         "EvasionBasePercentile" => Some(Defence::Evasion),
         "EnergyShieldBasePercentile" => Some(Defence::EnergyShield),
+        "WardBasePercentile" => Some(Defence::Ward),
         _ => None,
     }
 }
@@ -1320,6 +2154,7 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
         (Defence::Armour, base.armour),
         (Defence::Evasion, base.evasion),
         (Defence::EnergyShield, base.energy_shield),
+        (Defence::Ward, base.ward),
     ] {
         #[expect(
             clippy::cast_precision_loss,
@@ -1357,6 +2192,28 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
             &from_base,
         ));
     }
+    // The base's movement penalty (P6-10b; `Item.lua` 2361: `MovementSpeed`
+    // INC, unless `IgnoreMovementPenalties`, which `poe1::movement` settles
+    // from its flag; P6-11cp).
+    if base.movement_speed != 0 {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "movement penalties are small integers"
+        )]
+        let value = base.movement_speed as f64;
+        ingest.effect(Effect {
+            conditions: Conditions::none().with_state(
+                crate::condition::ConditionKey::new(super::movement::IGNORE_MOVEMENT_PENALTIES),
+                false,
+            ),
+            ..effect(
+                Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                Op::Increased,
+                value,
+                &from_base,
+            )
+        });
+    }
     let mut percentiles = Vec::new();
     // The last line of each key counts, as PoB's `self.quality` and
     // `armourData[key]` are overwritten line by line.
@@ -1390,7 +2247,14 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
-    item_lines_with(&PieceMapping { slot }, item, ingest);
+    item_lines_with(
+        &InSlot {
+            inner: &PieceMapping { slot },
+            slot: GemSlot::of_armour(slot),
+        },
+        item,
+        ingest,
+    );
 }
 
 /// An item's lines: modifier lines by their resolution; lines the import
@@ -1399,11 +2263,47 @@ fn item_lines(item: &Item, ingest: &mut Ingest<'_>) {
     item_lines_with(&Poe1Mapping, item, ingest);
 }
 
+/// [`item_lines`] for an item in `slot`: its socketed gem levels act on
+/// the groups in an equipment slot (P6-11q, [`InSlot`]).
+fn item_lines_in(item: &Item, slot: Option<GemSlot>, ingest: &mut Ingest<'_>) {
+    match slot {
+        Some(slot) => item_lines_with(
+            &InSlot {
+                inner: &Poe1Mapping,
+                slot,
+            },
+            item,
+            ingest,
+        ),
+        None => item_lines(item, ingest),
+    }
+}
+
 /// [`item_lines`] through `mapping`.
 fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'_>) {
     for (index, line) in item.body.lines.iter().enumerate() {
         match &line.kind {
             LineKind::Modifier(m) => {
+                // A Forbidden jewel's line (P6-11es): its side and hashes;
+                // [`forbidden_pairs`] pairs the two jewels.
+                if let Some((flesh, hashes)) = forbidden_hashes(&m.resolution) {
+                    let source = Source::Item {
+                        item: item.id,
+                        line: index,
+                        adapted: None,
+                    };
+                    for hash in hashes {
+                        #[expect(clippy::cast_precision_loss, reason = "a node hash, below 2^53")]
+                        ingest.effect(Effect {
+                            quantity: Quantity::Poe1(Poe1Quantity::ForbiddenNode(flesh)),
+                            op: Op::Base,
+                            value: hash as f64,
+                            conditions: Conditions::none(),
+                            source: source.clone(),
+                        });
+                    }
+                    continue;
+                }
                 // "Allocates <notable>" (P3-8n): its value is the name's
                 // node hashes; [`granted_passives`] picks the node.
                 if let Some(hashes) = granted_passive_hashes(&m.resolution) {
@@ -1672,6 +2572,14 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)
         || super::gems::is_input(&input.name)
+        || input.name == super::hit::PDR_MODE_INPUT
+        || input.name == super::hit::RUTHLESS_MODE_INPUT
+        // The throw counts (P6-11fa).
+        || input.name == super::hit::MINES_PER_THROW_INPUT
+        || input.name == super::hit::TRAPS_PER_THROW_INPUT
+        // The Stone Golem's life override (P6-11ar).
+        || (input.name == super::enemy_hit::STONE_GOLEM_LIFE_INPUT
+            && matches!(input.value, ConfigValue::Number(_)))
     {
         return InputUse::Applied;
     }
@@ -1802,7 +2710,6 @@ mod tests {
             "enemyDamageType",
             "DisableEHPGainOnBlock",
             "conditionHitRecently",
-            "multiplierWitheredStackCount",
             "buffElusive",
         ] {
             for kind in [ConfigInputKind::Input, ConfigInputKind::Placeholder] {

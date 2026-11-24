@@ -115,6 +115,9 @@ pub struct GemEffectRef<'d> {
     pub quality: i64,
     /// Whether the gem gains the socket colour bonus.
     pub socket: SocketMatch,
+    /// A support an item grants (P6-11r, [`super::item_supports`]): its
+    /// `gem` is past the group's gems.
+    pub from_item: bool,
 }
 
 /// The main skill.
@@ -134,19 +137,208 @@ pub struct MainSkill<'d> {
     pub unapplied: Vec<GemEffectRef<'d>>,
     /// The skill's types after the supports added theirs.
     pub types: BTreeSet<String>,
+    /// The cost and reservation multipliers, in percent, the item in the
+    /// group's slot gives its socketed skills (P6-11bi, PoB's
+    /// `ExtraSkillMod` `SupportManaMultiplier`).
+    pub cost_mores: Vec<f64>,
+    /// The weapon types each applied support allows, as the game states
+    /// them ([`support_weapons`], P6-11fi).
+    pub support_weapons: Vec<&'static [&'static str]>,
 }
 
-/// [`MainSkill::can_use`] for an active skill row (none: not restricted).
-fn can_use(active: Option<&ActiveSkill>, class: &str) -> bool {
-    active
-        .is_none_or(|a| a.weapon_classes.is_empty() || a.weapon_classes.iter().any(|c| c == class))
+/// Supports' weapon restrictions as the game states them (P6-11fi;
+/// maintainer decision 2026-11-20: the game's data first): a support's
+/// stat set carries one of these flag stats ("Supported Skills can only
+/// be used with Maces and Staves"), each with the weapon types it allows,
+/// as PoB's types ([`pob_weapon_type`]; Maces include Sceptres, Staves
+/// Warstaves). PoB keeps its own `weaponTypes` lists on the gems
+/// (`CalcActiveSkill.lua` 287 to 291): for each support with one of these
+/// stats they list the same types, but Fissure Support carries the stat
+/// and has no list in PoB, and PoB lists types for supports with no stat
+/// (Arrow Nova, Barrage, Kinetic Instability, Voidstorm, Ballista Totem),
+/// which the engine does not follow. Sorted (a test).
+pub const SUPPORT_WEAPON_STATS: [(&str, &[&str]); 5] = [
+    (
+        "supported_skill_can_only_use_axe_and_sword",
+        &[
+            "One Handed Axe",
+            "One Handed Sword",
+            "Thrusting One Handed Sword",
+            "Two Handed Axe",
+            "Two Handed Sword",
+        ],
+    ),
+    (
+        "supported_skill_can_only_use_axe_mace_and_staff",
+        &[
+            "One Handed Axe",
+            "One Handed Mace",
+            "Sceptre",
+            "Staff",
+            "Two Handed Axe",
+            "Two Handed Mace",
+        ],
+    ),
+    (
+        "supported_skill_can_only_use_dagger_and_claw",
+        &["Claw", "Dagger"],
+    ),
+    (
+        "supported_skill_can_only_use_mace_and_staff",
+        &["One Handed Mace", "Sceptre", "Staff", "Two Handed Mace"],
+    ),
+    ("supported_skill_can_only_use_wand", &["Wand"]),
+];
+
+/// The weapon types each of `supports` allows ([`SUPPORT_WEAPON_STATS`]),
+/// from its main stat set's implicit and constant stats.
+#[must_use]
+pub fn support_weapons(
+    supports: &[GemEffectRef<'_>],
+    data: &dyn CalcData,
+) -> Vec<&'static [&'static str]> {
+    let mut out = Vec::new();
+    for s in supports {
+        let Some(set) = s.effect.stat_sets.first().and_then(|id| data.stat_set(id)) else {
+            continue;
+        };
+        let stats = set.implicit_stats.iter().map(String::as_str).chain(
+            set.constant_stats
+                .iter()
+                .filter(|c| c.value != 0)
+                .map(|c| c.stat.as_str()),
+        );
+        for stat in stats {
+            if let Some((_, types)) = SUPPORT_WEAPON_STATS.iter().find(|(s, _)| *s == stat) {
+                out.push(*types);
+            }
+        }
+    }
+    out
+}
+
+/// PoB's weapon type for a game item class: its exporter's
+/// `weaponClassMap` (`Export/Scripts/skills.lua` 15 to 31) for a skill's
+/// list, and the item bases' `type` for a held weapon (a Warstaff is a
+/// `Staff`, a Rune Dagger a `Dagger`). None: a class PoB has no weapon type
+/// for (a shield, a quiver).
+pub(super) fn pob_weapon_type(class: &str) -> Option<&'static str> {
+    Some(match class {
+        "Claw" => "Claw",
+        "Dagger" | "Rune Dagger" => "Dagger",
+        "Wand" => "Wand",
+        "One Hand Sword" => "One Handed Sword",
+        "Thrusting One Hand Sword" => "Thrusting One Handed Sword",
+        "One Hand Axe" => "One Handed Axe",
+        "One Hand Mace" => "One Handed Mace",
+        "Bow" => "Bow",
+        "Fishing Rod" => "Fishing Rod",
+        "Staff" | "Warstaff" => "Staff",
+        "Two Hand Sword" => "Two Handed Sword",
+        "Two Hand Axe" => "Two Handed Axe",
+        "Two Hand Mace" => "Two Handed Mace",
+        "Sceptre" => "Sceptre",
+        "Unarmed" => "None",
+        _ => return None,
+    })
+}
+
+/// [`MainSkill::can_use`] for an active skill row (none: not restricted)
+/// and the supports' weapon types ([`support_weapons`]): the held type
+/// must be in each support's list, as in PoB's `getWeaponFlags`. PoB's
+/// list keeps only the classes its exporter maps, so a list of other
+/// classes (Shield Crush's `Shield`) restricts nothing; a held class
+/// without a PoB type is not checked (`getWeaponFlags` finds no info).
+fn can_use(active: Option<&ActiveSkill>, supports: &[&[&str]], class: &str) -> bool {
+    let Some(held) = pob_weapon_type(class) else {
+        return true;
+    };
+    if supports.iter().any(|types| !types.contains(&held)) {
+        return false;
+    }
+    let Some(active) = active else { return true };
+    let mut listed = active
+        .weapon_classes
+        .iter()
+        .filter_map(|c| pob_weapon_type(c))
+        .peekable();
+    listed.peek().is_none() || listed.any(|t| t == held)
+}
+
+/// [`MainSkill::disabled_by_hands`] for an active skill row and its types.
+fn disabled_by_hands(
+    active: Option<&ActiveSkill>,
+    supports: &[&[&str]],
+    types: &BTreeSet<String>,
+    hands: &super::collect::Hands,
+) -> Result<bool, &'static str> {
+    use super::collect::Held;
+    let has = |t: &str| types.contains(t);
+    let can_use = |class: &str| can_use(active, supports, class);
+    let restricted = !supports.is_empty()
+        || active.is_some_and(|a| {
+            a.weapon_classes
+                .iter()
+                .any(|c| pob_weapon_type(c).is_some())
+        });
+    if has("RequiresShield") {
+        match hands.off_hand {
+            Held::Shield => {}
+            Held::Unknown => return Err("requires-shield"),
+            Held::Empty | Held::Weapon(_) | Held::Other => return Ok(true),
+        }
+    }
+    let dual_only = has("DualWieldOnly");
+    // The main hand: PoB's `weaponData1` is the weapon, or the class's
+    // unarmed data (type `None`, the game's `Unarmed`) for an empty hand.
+    let main = match &hands.main_hand {
+        Held::Empty => Some("Unarmed"),
+        Held::Weapon(class) => Some(class.as_str()),
+        Held::Unknown if restricted || dual_only => return Err("weapon-flags"),
+        Held::Unknown | Held::Shield | Held::Other => None,
+    };
+    match main {
+        Some(class) if !can_use(class) => return Ok(true),
+        None if dual_only => return Ok(true),
+        _ => {}
+    }
+    // The off hand: PoB's `weaponData2` is `{}` (no weapon info) for an
+    // empty hand or an item that is not a weapon, which never disables.
+    match &hands.off_hand {
+        Held::Weapon(class) if !can_use(class) => Ok(true),
+        Held::Weapon(class) => Ok(has("DualWieldRequiresDifferentTypes") && main == Some(class)),
+        Held::Unknown if restricted || dual_only => Err("weapon-flags"),
+        Held::Unknown => Ok(false),
+        Held::Empty | Held::Shield | Held::Other => Ok(dual_only),
+    }
 }
 
 impl<'d> MainSkill<'d> {
+    /// Whether PoB disables the skill for what the hands hold
+    /// (`CalcActiveSkill.lua` 269 to 334): it requires a shield and the off
+    /// hand holds none; the main hand's weapon, or `Unarmed` for an empty
+    /// hand, is not one it can use; the off hand holds a weapon it cannot
+    /// use; it is `DualWieldOnly` without a weapon in each hand, or
+    /// `DualWieldRequiresDifferentTypes` with one class in both. PoB then
+    /// computes no offence for it (`CalcOffence.lua` 339). `Err`: a hand's
+    /// base is not known, so the answer is not either.
+    ///
+    /// Not modelled, as in [`Self::can_use`]: supports' weapon types,
+    /// `countsAsAll1H`, Hollow Palm Technique's unarmed off hand, and
+    /// item-granted skills tied to their weapon (`forceSourceWeapon`).
+    ///
+    /// # Errors
+    /// `"requires-shield"` or `"weapon-flags"`: a hand's base is not known.
+    pub fn disabled_by_hands(&self, hands: &super::collect::Hands) -> Result<bool, &'static str> {
+        disabled_by_hands(self.active, &self.support_weapons, &self.types, hands)
+    }
+
     /// Whether the skill can use a weapon of `class` (PoB's `weaponTypes`,
     /// `CalcActiveSkill.lua` 192 to 223; P6-11e review): the game lists the
     /// classes per active skill (none: any weapon; `Unarmed` for an empty
-    /// hand). A skill without an active skill row is not restricted.
+    /// hand), compared as PoB's weapon types (`pob_weapon_type`: a list
+    /// of classes PoB does not map restricts nothing). A skill without an
+    /// active skill row is not restricted.
     ///
     /// Not modelled: a support's own `weaponTypes` (PoB adds each applied
     /// support's list, 287 to 291, and the weapon must be in every list),
@@ -156,7 +348,7 @@ impl<'d> MainSkill<'d> {
     /// and the hand's own class decide.
     #[must_use]
     pub fn can_use(&self, class: &str) -> bool {
-        can_use(self.active, class)
+        can_use(self.active, &self.support_weapons, class)
     }
 
     /// The active granted effect.
@@ -184,13 +376,65 @@ impl<'d> MainSkill<'d> {
 /// The skill keywords of a skill with `types` ([`MainSkill::keyword_flags`]).
 #[must_use]
 pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
-    KEYWORD_TYPES
+    let flags = KEYWORD_TYPES
         .iter()
         .filter(|(name, _)| types.contains(*name))
         .fold(Flags::NONE, |flags, (_, t)| {
             flags | Flags::skill_keyword(*t)
-        })
+        });
+    // Totem, else trap, else mine (`CalcActiveSkill.lua` 415 to 420; P6-11bk):
+    // PoB's skill flags from the granted effect's base flags and its
+    // supports' added flags, here the skill types with the supports' added
+    // types.
+    // PoB's `SkillType` tags the mapping reads (P6-11co, P6-11cx).
+    let flags = SKILL_TYPE_FLAGS
+        .iter()
+        .filter(|(name, _)| types.contains(*name))
+        .fold(flags, |flags, (_, f)| flags | *f);
+    // PoB's negated `SummonsTotem` tag (P6-11fo).
+    let flags = if types.contains(TOTEM_TYPE) {
+        flags
+    } else {
+        flags | Flags::SKILL_NOT_TOTEM
+    };
+    if types.contains(TOTEM_TYPE) {
+        flags | Flags::KEYWORD_TOTEM
+    } else if types.contains(TRAP_TYPE) {
+        flags | Flags::KEYWORD_TRAP
+    } else if types.contains(MINE_TYPE) {
+        flags | Flags::KEYWORD_MINE
+    } else {
+        flags
+    }
 }
+
+/// The skill type of a projectile attack skill (P6-11co).
+pub const RANGED_ATTACK_TYPE: &str = "RangedAttack";
+
+/// The skill types whose PoB `SkillType` tag a mapped row reads, each with
+/// its flag (P6-11co: "Projectile Attack Skills"; P6-11cx: "with Brand
+/// Skills", "Mark Skills"; P6-11dw: Blood and Sand's melee skills; P6-11eo:
+/// "Curse Skills", PoB's curse keyword). A test checks the names against
+/// the real bundle.
+pub const SKILL_TYPE_FLAGS: [(&str, Flags); 8] = [
+    ("AppliesCurse", Flags::KEYWORD_CURSE),
+    // P6-11ex: "Travel Skills".
+    ("Travel", Flags::SKILL_TRAVEL),
+    (RANGED_ATTACK_TYPE, Flags::SKILL_RANGED_ATTACK),
+    ("Brand", Flags::SKILL_BRAND),
+    ("Mark", Flags::SKILL_MARK),
+    ("Melee", Flags::SKILL_MELEE),
+    // P6-11gq: "Herald Skills deal #% increased Damage".
+    ("Herald", Flags::SKILL_HERALD),
+    // P6-11he: Multistrike's more attack speed for shield skills.
+    ("RequiresShield", Flags::SKILL_REQUIRES_SHIELD),
+];
+/// The skill type of a totem skill (the game's `ActiveSkillType`).
+pub const TOTEM_TYPE: &str = "SummonsTotem";
+/// The skill type of a trap skill.
+pub const TRAP_TYPE: &str = "Trapped";
+/// The skill type of a mine skill.
+pub const MINE_TYPE: &str = "RemoteMined";
 
 /// The game's skill type names that give a skill keyword (the game's
 /// `ActiveSkillType` IDs, which PoB's `SkillType` names match; a test
@@ -272,17 +516,22 @@ pub fn gem_variant<'d>(
         .or_else(|| {
             let name = gem.name.as_deref()?.trim();
             // A variant's name; the default variant has none in the game
-            // data, and its name is its active skill's (the gem's base).
+            // data, and its name is its active skill's (the gem's base). A
+            // support has no active skill: its name is its base item's
+            // without " Support", as PoB names its gems (P6-11dm: Enlighten,
+            // Second Wind, Faster Attacks under old `skillId`s).
             let shown = |e: &GemEffect| -> Option<String> {
                 if !e.name.is_empty() {
                     return Some(e.name.clone());
                 }
                 let granted = data.granted_effect(e.granted_effect.as_deref()?)?;
-                Some(
-                    data.active_skill(granted.active_skill.as_deref()?)?
-                        .name
-                        .clone(),
-                )
+                match granted.active_skill.as_deref() {
+                    Some(active) => Some(data.active_skill(active)?.name.clone()),
+                    None => {
+                        let base = data.item_base_name(gem_id.as_str())?;
+                        Some(base.strip_suffix(" Support").unwrap_or(base).to_owned())
+                    }
+                }
             };
             effects().find(|e| {
                 !name.is_empty() && shown(e).is_some_and(|n| n.eq_ignore_ascii_case(name))
@@ -336,6 +585,21 @@ pub fn type_expression(expr: &[String], types: &BTreeSet<String>, minion: &[Stri
         }
     }
     stack.into_iter().any(|v| v)
+}
+
+/// PoB's `addBestSupport` (`CalcSetup.lua` 338 to 367, P6-11r): a support
+/// whose granted effect is already in `list` replaces that one only with a
+/// higher level, or the same level and a higher quality; otherwise it
+/// joins the list. (`plusVersionOf` is not in the bundle.)
+fn add_best<'d>(list: &mut Vec<GemEffectRef<'d>>, support: GemEffectRef<'d>) {
+    match list.iter_mut().find(|o| o.effect.id == support.effect.id) {
+        Some(other) => {
+            if (support.level, support.quality) > (other.level, other.quality) {
+                *other = support;
+            }
+        }
+        None => list.push(support),
+    }
 }
 
 /// Whether `support` applies to an active effect with these types (module
@@ -484,6 +748,33 @@ fn group_effects<'d>(
 ) -> (Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>) {
     let mut actives: Vec<Candidate<'d>> = Vec::new();
     let mut supports: Vec<GemEffectRef<'d>> = Vec::new();
+    // The group's slot, whose item's socketed levels reach its gems
+    // (P6-11q).
+    let slot = group
+        .slot
+        .as_ref()
+        .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
+    // The supports the slot's item grants come first, unless the group is
+    // an item's (P6-11r; PoB's `ExtraSupport`, `CalcSetup.lua` 1550 to
+    // 1555). Each has a gem index past the group's gems.
+    if let Some(slot) = slot
+        && attribute(&group.attributes, "source").is_none()
+    {
+        let count = group.gems.typed().count();
+        for (k, (id, level)) in levels.item_supports(slot).enumerate() {
+            if let Some(effect) = data.granted_effect(id).filter(|e| e.support) {
+                supports.push(GemEffectRef {
+                    gem: count + k,
+                    effect,
+                    level,
+                    bonus: 0,
+                    quality: 0,
+                    socket: SocketMatch::No,
+                    from_item: true,
+                });
+            }
+        }
+    }
     for (g, gem) in group.gems.typed().enumerate() {
         if !gem.enabled {
             continue;
@@ -494,7 +785,7 @@ fn group_effects<'d>(
         let Some((variant, effects)) = gem_variant(gem, data) else {
             continue;
         };
-        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()));
+        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot);
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {
@@ -504,9 +795,10 @@ fn group_effects<'d>(
                 bonus,
                 quality: i64::from(*gem.quality.value()) + socket.bonus(),
                 socket,
+                from_item: false,
             };
             if effect.support {
-                supports.push(r);
+                add_best(&mut supports, r);
             } else {
                 actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
             }
@@ -527,6 +819,75 @@ pub fn unknown_gems(group: &SocketGroup, data: &dyn CalcData) -> Vec<usize> {
         .filter(|(_, gem)| gem.enabled && gem_variant(gem, data).is_none())
         .map(|(i, _)| i)
         .collect()
+}
+
+/// The support stat that raises the supported skill's level ("Supported
+/// Skills have +# to Level", Empower's; P6-11cj).
+pub const SUPPORTED_LEVEL_STAT: &str = "supported_active_skill_gem_level_+";
+
+/// The support stats that raise the supported skill's level only for some
+/// skill types (P6-11cl; PoB's `SupportedGemProperty` `level` with a
+/// `SkillType` tag, `SkillStatMap.lua` 2284 to 2330): the stat and the
+/// types of which the skill needs one. Curse is PoB's `KeywordFlag.Curse`
+/// (the `AppliesCurse` type), elemental its fire, cold, or lightning
+/// keyword.
+pub const SUPPORTED_TYPED_LEVEL_STATS: &[(&str, &[&str])] = &[
+    ("supported_aura_skill_gem_level_+", &["Aura"]),
+    ("supported_chaos_skill_gem_level_+", &["Chaos"]),
+    ("supported_cold_skill_gem_level_+", &["Cold"]),
+    ("supported_curse_skill_gem_level_+", &["AppliesCurse"]),
+    (
+        "supported_elemental_skill_gem_level_+",
+        &["Cold", "Fire", "Lightning"],
+    ),
+    ("supported_fire_skill_gem_level_+", &["Fire"]),
+    ("supported_lightning_skill_gem_level_+", &["Lightning"]),
+    ("supported_minion_skill_gem_level_+", &["Minion"]),
+    ("supported_physical_skill_gem_level_+", &["Physical"]),
+    ("supported_strike_skill_gem_level_+", &["MeleeSingleTarget"]),
+];
+
+/// The support stat that raises the supported skill's quality ("Supported
+/// Skills have +#% to Quality", Enhance's; P6-11ck).
+pub const SUPPORTED_QUALITY_STAT: &str = "supported_active_skill_gem_quality_%";
+
+/// `active` with its applied supports' [`SUPPORTED_LEVEL_STAT`] added to its
+/// level and [`SUPPORTED_QUALITY_STAT`] to its quality (P6-11cj, P6-11ck;
+/// PoB's `SupportedGemProperty` `level` and `quality`,
+/// `CalcActiveSkill.lua` 549 to 557: a skill from a gem, not a support).
+fn supported_level<'d>(
+    active: GemEffectRef<'d>,
+    supports: &[GemEffectRef<'_>],
+    from_gem: bool,
+    types: &BTreeSet<String>,
+    data: &dyn CalcData,
+) -> GemEffectRef<'d> {
+    if !from_gem || active.effect.support {
+        return active;
+    }
+    let mut level = 0;
+    let mut quality = 0;
+    for (stat, v) in supports
+        .iter()
+        .flat_map(|s| instance(s.effect, s.level, s.quality, data).stats)
+    {
+        if stat == SUPPORTED_LEVEL_STAT {
+            level += v;
+        } else if stat == SUPPORTED_QUALITY_STAT {
+            quality += v;
+        } else if let Some((_, needs)) = SUPPORTED_TYPED_LEVEL_STATS
+            .iter()
+            .find(|(id, _)| *id == stat)
+            && needs.iter().any(|t| types.contains(*t))
+        {
+            level += v;
+        }
+    }
+    GemEffectRef {
+        level: active.level + level,
+        quality: active.quality + quality,
+        ..active
+    }
 }
 
 /// The build's main skill (module docs), its gems at the levels `levels`
@@ -574,13 +935,19 @@ pub fn main_skill<'d>(
         .unwrap_or_default();
     let (mut applied, mut unapplied) = (Vec::new(), Vec::new());
     for s in group_supports {
-        if supports(s.effect, effect, from_gem, &types, minion) {
+        if (!s.from_item || from_gem) && supports(s.effect, effect, from_gem, &types, minion) {
             types.extend(s.effect.added_types.iter().cloned());
             applied.push(s);
         } else {
             unapplied.push(s);
         }
     }
+    let slot = group
+        .slot
+        .as_ref()
+        .and_then(|s| super::gem_levels::GemSlot::of(s.as_str()));
+    let active_gem = supported_level(active_gem, &applied, from_gem, &types, data);
+    let support_weapons = support_weapons(&applied, data);
     Ok(MainSkill {
         group: index,
         active_gem,
@@ -589,7 +956,60 @@ pub fn main_skill<'d>(
         supports: applied,
         unapplied,
         types,
+        cost_mores: levels.cost_multipliers(slot),
+        support_weapons,
     })
+}
+
+/// A copy of `build` whose main skill is the active skill `active` of the
+/// group `group` (both 1-based, as PoB's `mainSocketGroup` and
+/// `mainActiveSkill`), in the active skill set (P6-8a: a trigger's source
+/// skill, which PoB computes as its own skill, `calcs.buildActiveSkill`).
+#[must_use]
+pub fn with_main_skill(build: &Build, group: usize, active: usize) -> Build {
+    let mut b = build.clone();
+    b.character.main_socket_group = u32::try_from(group).ok().map(loom_domain::Sourced::new);
+    let active_id = b.skills.active;
+    let set = match active_id.filter(|id| b.skills.sets.typed().any(|s| s.id == *id)) {
+        Some(id) => b.skills.sets.typed_mut().find(|s| s.id == id),
+        None => b.skills.sets.typed_mut().next(),
+    };
+    if let Some(g) = set.and_then(|s| s.groups.typed_mut().nth(group.wrapping_sub(1))) {
+        g.main_active_skill = u32::try_from(active).ok().map(loom_domain::Sourced::new);
+    }
+    b
+}
+
+/// Every active skill of the active skill set's enabled groups, in PoB's
+/// `activeSkillList` order (group by group, each group's active skills in
+/// order): the group and the active skill's index (both 1-based) and the
+/// skill as [`main_skill`] picks it (P6-8a: trigger sources and the skills
+/// a trigger triggers). A group whose pick is uncertain is left out.
+#[must_use]
+pub fn active_skills<'d>(
+    build: &Build,
+    data: &'d dyn CalcData,
+    levels: &GemLevels,
+) -> Vec<(usize, usize, MainSkill<'d>)> {
+    let Ok(groups) = active_groups(build) else {
+        return Vec::new();
+    };
+    let all = socket_matches(build, &groups, data);
+    let mut out = Vec::new();
+    for (i, group) in groups.iter().enumerate() {
+        if !group.enabled {
+            continue;
+        }
+        let matches: &[SocketMatch] = all.get(i).map_or(&[], Vec::as_slice);
+        let (actives, _) = group_effects(group, matches, data, levels);
+        for a in 1..=actives.len() {
+            let b = with_main_skill(build, i + 1, a);
+            if let Ok(skill) = main_skill(&b, data, levels) {
+                out.push((i + 1, a, skill));
+            }
+        }
+    }
+    out
 }
 
 /// One active effect of a socket group with the supports that apply to it
@@ -609,6 +1029,10 @@ pub struct GroupSkill<'d> {
     pub supports: Vec<GemEffectRef<'d>>,
     /// The skill's types after the supports added theirs.
     pub types: BTreeSet<String>,
+    /// The cost and reservation multipliers, in percent, the item in the
+    /// group's slot gives its socketed skills (P6-11bi, PoB's
+    /// `ExtraSkillMod` `SupportManaMultiplier`).
+    pub cost_mores: Vec<f64>,
 }
 
 /// The active effects of a group's enabled gems, each with the group's
@@ -642,17 +1066,23 @@ pub fn group_skills<'d>(
             .unwrap_or_default();
         let mut applied = Vec::new();
         for s in &group_supports {
-            if supports(s.effect, effect, from_gem, &types, minion) {
+            if (!s.from_item || from_gem) && supports(s.effect, effect, from_gem, &types, minion) {
                 types.extend(s.effect.added_types.iter().cloned());
                 applied.push(*s);
             }
         }
         out.push(GroupSkill {
-            active_gem: *active_gem,
+            active_gem: supported_level(*active_gem, &applied, from_gem, &types, data),
             active,
             global_off: *global_off,
             supports: applied,
             types,
+            cost_mores: levels.cost_multipliers(
+                group
+                    .slot
+                    .as_ref()
+                    .and_then(|s| super::gem_levels::GemSlot::of(s.as_str())),
+            ),
         });
     }
     out
@@ -762,6 +1192,50 @@ pub fn instance<'d>(
     quality: i64,
     data: &'d dyn CalcData,
 ) -> Instance<'d> {
+    instance_at(effect, level, quality, None, data)
+}
+
+/// [`instance`] of a skill an actor of `actor_level` uses (P6-7c3: a
+/// minion's skill, PoB's `skillInstance.actorLevel`, `CalcActiveSkill.lua`
+/// 567). An effectiveness-scaled stat is then PoB's value at that level
+/// ([`effectiveness`]), not the game's resolved one, which is the value at
+/// the level requirement.
+#[must_use]
+pub fn instance_for_actor<'d>(
+    effect: &'d GrantedEffect,
+    level: i64,
+    actor_level: i64,
+    data: &'d dyn CalcData,
+) -> Instance<'d> {
+    instance_at(effect, level, 0, Some(actor_level), data)
+}
+
+/// PoB's `SkillDamageBaseEffectiveness` and
+/// `SkillDamageIncrementalEffectiveness` (`Data/Misc.lua` 29 and 30).
+const SKILL_DAMAGE_EFFECTIVENESS: (f64, f64) = (3.885_209, 0.360_246);
+
+/// PoB's effectiveness of a stat set at `actor_level`
+/// (`calcLib.buildSkillInstanceStats`, `CalcTools.lua` 198 to 204):
+/// `(base + incremental x (level - 1)) x baseEffectiveness x (1 +
+/// incrementalEffectiveness) ^ (level - 1)`, the set's two values as PoB's
+/// exporter reads them (single precision, widened).
+#[must_use]
+pub fn effectiveness(set: &StatSet, actor_level: i64) -> f64 {
+    let (base, incremental) = SKILL_DAMAGE_EFFECTIVENESS;
+    #[expect(clippy::cast_precision_loss, reason = "a level, exact as f64")]
+    let steps = (actor_level - 1) as f64;
+    (base + incremental * steps)
+        * f64::from(set.base_effectiveness)
+        * crate::math::pow(1.0 + f64::from(set.incremental_effectiveness), steps)
+}
+
+fn instance_at<'d>(
+    effect: &'d GrantedEffect,
+    level: i64,
+    quality: i64,
+    actor_level: Option<i64>,
+    data: &'d dyn CalcData,
+) -> Instance<'d> {
     let mut stats: BTreeMap<String, i64> = BTreeMap::new();
     let mut problems = Vec::new();
     if quality > 0 {
@@ -794,7 +1268,7 @@ pub fn instance<'d>(
     if let Some(id) = effect.stat_sets.first() {
         match data.stat_set(id) {
             None => problems.push(InstanceProblem::MissingStatSet { id: id.clone() }),
-            Some(set) => set_stats(set, level, &mut stats, &mut problems),
+            Some(set) => set_stats(set, level, actor_level, &mut stats, &mut problems),
         }
     }
     problems.sort();
@@ -812,6 +1286,7 @@ pub fn instance<'d>(
 fn set_stats(
     set: &StatSet,
     level: Option<i64>,
+    actor_level: Option<i64>,
     stats: &mut BTreeMap<String, i64>,
     problems: &mut Vec<InstanceProblem>,
 ) {
@@ -821,10 +1296,22 @@ fn set_stats(
     if let Some(row) = level.and_then(|l| set.levels.iter().find(|r| r.level == l)) {
         for f in &row.float_stats {
             // Effectiveness interpolation: the game's resolved value (module
-            // docs). Every float stat of the 3.29 data has it; another kind
-            // is not modelled.
+            // docs), or PoB's at an actor's level. Every float stat of the
+            // 3.29 data has it; another kind is not modelled.
             if f.interpolation == 3 {
-                *stats.entry(f.stat.clone()).or_default() += f.resolved;
+                let value = match actor_level {
+                    // PoB's `round(availableEffectiveness x level[index])`.
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "a skill's base damage, far inside i64"
+                    )]
+                    Some(l) => {
+                        crate::math::round_half_up(effectiveness(set, l) * f64::from(f.value))
+                            as i64
+                    }
+                    None => f.resolved,
+                };
+                *stats.entry(f.stat.clone()).or_default() += value;
             } else {
                 problems.push(InstanceProblem::Interpolated {
                     stat: f.stat.clone(),
@@ -881,10 +1368,203 @@ mod tests {
     fn can_use_should_follow_the_active_skills_weapon_classes() {
         let any = active(&[]);
         let axes = active(&["One Hand Axe", "Unarmed"]);
-        assert!(can_use(None, "Bow"));
-        assert!(can_use(Some(&any), "Bow"));
-        assert!(can_use(Some(&axes), "One Hand Axe"));
-        assert!(can_use(Some(&axes), "Unarmed"));
-        assert!(!can_use(Some(&axes), "Bow"));
+        assert!(can_use(None, &[], "Bow"));
+        assert!(can_use(Some(&any), &[], "Bow"));
+        assert!(can_use(Some(&axes), &[], "One Hand Axe"));
+        assert!(can_use(Some(&axes), &[], "Unarmed"));
+        assert!(!can_use(Some(&axes), &[], "Bow"));
+        // Classes PoB's exporter does not map restrict nothing.
+        let shields = active(&["Shield"]);
+        assert!(can_use(Some(&shields), &[], "One Hand Sword"));
+        assert!(can_use(Some(&shields), &[], "Unarmed"));
+        // A Warstaff is PoB's Staff.
+        let staves = active(&["Staff"]);
+        assert!(can_use(Some(&staves), &[], "Warstaff"));
+        assert!(can_use(Some(&active(&["Warstaff"])), &[], "Staff"));
+        assert!(!can_use(Some(&staves), &[], "Bow"));
+    }
+
+    /// Supports' weapon restrictions (P6-11fi): the held type must be in
+    /// each support's list as well as the active skill's; Shockwave's
+    /// maces and staves take a Sceptre and a Warstaff, not an axe or an
+    /// empty hand; a class PoB has no type for is not checked.
+    #[test]
+    fn can_use_should_need_every_supports_weapon_types() {
+        let types = |stat: &str| {
+            SUPPORT_WEAPON_STATS
+                .iter()
+                .find(|(s, _)| *s == stat)
+                .map(|(_, t)| *t)
+                .unwrap()
+        };
+        let shockwave = types("supported_skill_can_only_use_mace_and_staff");
+        let trauma = types("supported_skill_can_only_use_axe_mace_and_staff");
+        for class in ["One Hand Mace", "Sceptre", "Warstaff", "Two Hand Mace"] {
+            assert!(can_use(None, &[shockwave], class), "{class}");
+        }
+        assert!(!can_use(None, &[shockwave], "One Hand Axe"));
+        assert!(!can_use(None, &[shockwave], "Unarmed"));
+        assert!(can_use(None, &[trauma], "One Hand Axe"));
+        // Every list must hold the type.
+        assert!(!can_use(None, &[trauma, shockwave], "Two Hand Axe"));
+        assert!(can_use(None, &[trauma, shockwave], "Staff"));
+        // And the active skill's own list.
+        assert!(!can_use(Some(&active(&["Bow"])), &[shockwave], "Staff"));
+        assert!(can_use(None, &[shockwave], "Shield"));
+        assert!(
+            SUPPORT_WEAPON_STATS.windows(2).all(|w| w[0].0 < w[1].0),
+            "sorted"
+        );
+        for (_, list) in SUPPORT_WEAPON_STATS {
+            for t in list {
+                assert!(
+                    [
+                        "Claw",
+                        "Dagger",
+                        "Wand",
+                        "One Hand Sword",
+                        "Thrusting One Hand Sword",
+                        "One Hand Axe",
+                        "One Hand Mace",
+                        "Staff",
+                        "Two Hand Sword",
+                        "Two Hand Axe",
+                        "Two Hand Mace",
+                        "Sceptre"
+                    ]
+                    .iter()
+                    .any(|c| pob_weapon_type(c) == Some(t)),
+                    "{t} is a PoB weapon type"
+                );
+            }
+        }
+    }
+
+    /// PoB's effectiveness at an actor's level (`CalcTools.lua` 198 to
+    /// 204), the Flame Golem's Immolate (base 1.2547, incremental 0.0446):
+    /// its fire damage `round(effectiveness x 0.8)` to `round(... x 1.2)`,
+    /// the values PoB's formula gives in doubles from the single-precision
+    /// data (P6-7c3; the public fixture `minion-summon-flame-golem-witch.xml`
+    /// equals PoB's hit).
+    #[test]
+    fn effectiveness_should_follow_pobs_formula_at_the_actors_level() {
+        let set = StatSet {
+            id: "FireElementalFlameRedSummoned".to_owned(),
+            implicit_stats: Vec::new(),
+            constant_stats: Vec::new(),
+            base_effectiveness: 1.2547,
+            incremental_effectiveness: 0.0446,
+            damage_incremental_effectiveness: None,
+            levels: Vec::new(),
+        };
+        #[expect(clippy::cast_possible_truncation, reason = "small damage values")]
+        let damage = |level: i64| {
+            let e = effectiveness(&set, level);
+            (
+                crate::math::round_half_up(e * f64::from(0.8_f32)) as i64,
+                crate::math::round_half_up(e * f64::from(1.2_f32)) as i64,
+            )
+        };
+        assert_eq!(damage(1), (4, 6));
+        assert_eq!(damage(68), (523, 785));
+        assert_eq!(damage(90), (1753, 2630));
+    }
+
+    /// PoB's disabled skill (`CalcActiveSkill.lua` 269 to 334): an empty
+    /// main hand is `Unarmed`, an empty off hand never disables, and a
+    /// hand whose base is not known leaves the answer open for a skill
+    /// that lists weapon classes.
+    #[test]
+    fn disabled_by_hands_should_follow_pobs_weapon_checks() {
+        use super::super::collect::{Hands, Held};
+        let types = |t: &[&str]| t.iter().map(|s| (*s).to_owned()).collect::<BTreeSet<_>>();
+        let hands = |main: Held, off: Held| Hands {
+            main_hand: main,
+            off_hand: off,
+            ..Hands::default()
+        };
+        let weapon = |c: &str| Held::Weapon(c.to_owned());
+        let swords = active(&["One Hand Sword"]);
+        let attack = types(&["Attack"]);
+        let check = |a: Option<&ActiveSkill>, t: &BTreeSet<String>, h: &Hands| {
+            disabled_by_hands(a, &[], t, h)
+        };
+        // Unarmed is not among its classes: disabled (Holy Strike).
+        assert_eq!(
+            check(Some(&swords), &attack, &hands(Held::Empty, Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), Held::Empty)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), weapon("Bow"))
+            ),
+            Ok(true)
+        );
+        assert_eq!(
+            check(
+                Some(&swords),
+                &attack,
+                &hands(weapon("One Hand Sword"), Held::Shield)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(Some(&swords), &attack, &hands(Held::Unknown, Held::Empty)),
+            Err("weapon-flags")
+        );
+        // No classes: any hand, an unknown one too.
+        assert_eq!(
+            check(
+                Some(&active(&[])),
+                &attack,
+                &hands(Held::Unknown, Held::Empty)
+            ),
+            Ok(false)
+        );
+        assert_eq!(
+            check(None, &types(&["Spell"]), &hands(Held::Empty, Held::Empty)),
+            Ok(false)
+        );
+        let shield = types(&["Attack", "RequiresShield"]);
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Shield)),
+            Ok(false)
+        );
+        assert_eq!(
+            check(None, &shield, &hands(Held::Empty, Held::Unknown)),
+            Err("requires-shield")
+        );
+        let dual = types(&["Attack", "DualWieldOnly"]);
+        assert_eq!(
+            check(None, &dual, &hands(weapon("Claw"), Held::Empty)),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &dual, &hands(weapon("Claw"), weapon("Claw"))),
+            Ok(false)
+        );
+        let different = types(&["Attack", "DualWieldRequiresDifferentTypes"]);
+        assert_eq!(
+            check(None, &different, &hands(weapon("Claw"), weapon("Claw"))),
+            Ok(true)
+        );
+        assert_eq!(
+            check(None, &different, &hands(weapon("Claw"), weapon("Dagger"))),
+            Ok(false)
+        );
     }
 }

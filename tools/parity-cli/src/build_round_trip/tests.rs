@@ -154,8 +154,9 @@ fn synthetic_poe1_should_have_every_outcome() {
         lines,
         [
             ("continues", 2),
-            ("excluded", 1),
-            ("resolved", 9),
+            // The synthetic ring's `{custom}` line resolves as any line
+            // since P6-11fh (PoB applies it); none is excluded.
+            ("resolved", 10),
             ("resolved-adapted", 2),
             ("unresolved", 6)
         ]

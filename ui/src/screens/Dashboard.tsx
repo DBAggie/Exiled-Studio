@@ -87,6 +87,7 @@ const FIRST = [
   'hit-dps',
   'dot-dps',
   'ignite-dps',
+  'poe1.burning-ground-dps',
   'bleed-dps',
   'poison-dps',
   'poe1.impale-dps',

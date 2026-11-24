@@ -44,6 +44,10 @@ fn level(n: i64, cooldown: i64) -> EffectLevel {
         attack_speed_multiplier: 0,
         attack_time: 0,
         reservations: Vec::new(),
+        level_requirement: 0,
+        vaal_souls: 0,
+        vaal_stored_uses: 0,
+        soul_gain_prevention: 0,
     }
 }
 
@@ -435,7 +439,10 @@ impl CalcData for Data {
             "critical_strike_chance_+%_per_power_charge" => Some(50),
             "base_attack_speed_+%_per_frenzy_charge"
             | "base_cast_speed_+%_per_frenzy_charge"
-            | "object_inherent_damage_+%_final_per_frenzy_charge" => Some(4),
+            | "object_inherent_damage_+%_final_per_frenzy_charge"
+            | "physical_damage_reduction_%_per_endurance_charge"
+            | "elemental_damage_reduction_%_per_endurance_charge" => Some(4),
+            "maximum_physical_damage_reduction_%" => Some(90),
             _ => None,
         }
     }
@@ -671,9 +678,29 @@ fn a_configured_resistance_above_the_maximum_should_raise_it() {
     );
 }
 
+/// A spell's cooldown caps its rate (P6-7c3b): PoB's `calcSkillCooldown`
+/// rounds 3 s up to a server tick (no stored uses), `ceil(3 x (1 /
+/// 0.033)) / (1 / 0.033)`, and `Speed = min(cast rate, 1 / cooldown)`.
+/// Its hit is `IceNova`'s.
 #[test]
-fn only_a_self_cast_spell_without_cooldown_should_be_computed() {
-    for main in ["TestStrike", "TestCooldownNova"] {
+fn a_spells_cooldown_should_cap_its_rate() {
+    let r = run(&build(vec![group(&["TestCooldownNova"])]));
+    let tick_rate = 1.0 / 0.033;
+    let cooldown = (3.0_f64 * tick_rate).ceil() / tick_rate;
+    assert_eq!(
+        value(&r, Field::Speed).to_bits(),
+        (1.0 / cooldown).to_bits()
+    );
+    let nova = run(&build(vec![group(&["IceNova"])]));
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        value(&nova, Field::AverageDamage).to_bits()
+    );
+}
+
+#[test]
+fn only_a_self_cast_spell_should_be_computed() {
+    for main in ["TestStrike"] {
         let b = build(vec![group(&[main])]);
         assert!(
             spell_skill(&b, &Data::new(), &GemLevels::none()).is_none(),
@@ -1948,19 +1975,43 @@ fn groups_pob_does_not_create_should_change_nothing() {
     }
 }
 
+/// A group an item grants (P6-11fe) is PoB's rebuilt group when no support
+/// in its slot would join it: modelled, no reason. With a support socketed
+/// in its slot, or from another source (the tree, PoB's own), it stays a
+/// reason.
 #[test]
-fn a_group_with_a_source_should_be_a_reason() {
-    let mut granted = group(&["Precision"]);
-    granted.attributes.push(loom_domain::Attribute {
-        name: "source".to_owned(),
-        value: "Item:3".to_owned(),
-    });
-    let r = run(&build(vec![group(&["IceNova"]), granted]));
-    assert_eq!(gem_reasons(&r), ["gem Gem { group: 1, gem: 0 }"]);
+fn a_group_with_a_source_should_be_modelled_or_a_reason() {
+    let granted = |source: &str, slot: Option<&str>| {
+        let mut g = group(&["Precision"]);
+        g.attributes.push(loom_domain::Attribute {
+            name: "source".to_owned(),
+            value: source.to_owned(),
+        });
+        g.slot = slot.map(SlotId::new);
+        g
+    };
+    let alone = run(&build(vec![
+        group(&["IceNova"]),
+        granted("Item:3", Some("Helmet")),
+    ]));
+    assert!(gem_reasons(&alone).is_empty(), "{:?}", gem_reasons(&alone));
+    let mut supports = group(&["SupportTestAdded"]);
+    supports.slot = Some(SlotId::new("Helmet"));
+    let supported = run(&build(vec![
+        group(&["IceNova"]),
+        granted("Item:3", Some("Helmet")),
+        supports,
+    ]));
+    assert_eq!(gem_reasons(&supported), ["gem Gem { group: 1, gem: 0 }"]);
+    let tree = run(&build(vec![group(&["IceNova"]), granted("Tree:5", None)]));
+    assert_eq!(gem_reasons(&tree), ["gem Gem { group: 1, gem: 0 }"]);
 }
 
 #[test]
-fn a_main_skill_that_reserves_should_be_a_reason() {
+/// A main skill that reserves reserves as any skill (P6-11et; PoB's
+/// reservation loop over `activeSkillList`, the main skill included):
+/// no reason, its flat amount off the unreserved mana.
+fn a_main_skill_that_reserves_should_reserve() {
     let mut data = Data::new();
     for e in &mut data.effects {
         if e.id == "IceNova" {
@@ -1984,9 +2035,59 @@ fn a_main_skill_that_reserves_should_be_a_reason() {
         options: &options,
     };
     let r = calculate(&input).unwrap_or_else(|e| panic!("{e}"));
-    assert_eq!(
-        gem_reasons(&r),
-        ["skill reservation Gem { group: 0, gem: 0 }"]
+    assert!(gem_reasons(&r).is_empty(), "{:?}", gem_reasons(&r));
+    assert_eq!(value(&r, Field::ManaUnreserved), mana(&r) - 5.0);
+}
+
+/// A cooldown divides by the cooldown recovery before it caps the rate
+/// (P6-11ex; PoB's `calcSkillCooldown`): Ice Nova casts twice a second; a
+/// 2 s cooldown caps it near 0.5, and 100% increased Cooldown Recovery
+/// Rate halves the cooldown, so the cap is near 1.
+#[test]
+fn cooldown_recovery_should_shorten_the_cooldown_cap() {
+    let mut data = Data::new();
+    for e in &mut data.effects {
+        if e.id == "IceNova" {
+            e.levels[0].cooldown = 2000;
+        }
+    }
+    let speed = |b: &Build| {
+        let options = CalcOptions::default();
+        let input = CalcInput {
+            build: b,
+            data: &data,
+            options: &options,
+        };
+        let r = calculate(&input).unwrap_or_else(|e| panic!("{e}"));
+        value(&r, Field::Speed)
+    };
+    let plain = build(vec![group(&["IceNova"])]);
+    // The cooldown rounds up to server ticks (`ceil(cooldown x tick rate) /
+    // tick rate`, the tick 0.033 s).
+    let capped = |cooldown: f64| {
+        let tick = 1.0 / 0.033;
+        tick / (cooldown * tick).ceil()
+    };
+    assert!(
+        (speed(&plain) - capped(2.0)).abs() < 1e-9,
+        "{}",
+        speed(&plain)
+    );
+    let mut line = stat_line("base_cooldown_speed_+%");
+    if let LineKind::Modifier(m) = &mut line.kind {
+        m.resolution = LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_cooldown_speed_+%"),
+                value: StatValue::Exact { min: 100, max: 100 },
+            }]),
+            adapted: None,
+        };
+    }
+    let recovered = with_item(build(vec![group(&["IceNova"])]), "Helmet", vec![line]);
+    assert!(
+        (speed(&recovered) - capped(1.0)).abs() < 1e-9,
+        "{}",
+        speed(&recovered)
     );
 }
 

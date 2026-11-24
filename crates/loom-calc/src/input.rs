@@ -67,6 +67,14 @@ pub trait CalcData {
     /// base has the name.
     fn item_base(&self, name: &str) -> Option<ItemBase>;
 
+    /// The name of the item base with this ID (P6-11dm: a gem's base item
+    /// names a support, "<name> Support", where its gem effect has no name
+    /// of its own); `None` (the default) when the data has no such base.
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        let _ = id;
+        None
+    }
+
     /// A skill gem by its base item ID. Data without skill tables gives
     /// `None` for every skill read: a calculation then reports the gem as
     /// unknown, never a value.
@@ -103,6 +111,15 @@ pub trait CalcData {
         None
     }
 
+    /// The game's minion damage at a level (`DefaultMonsterStats`'s
+    /// `MinionDamage`, PoB's `monsterAllyDamageTable`; P6-7c), the stored
+    /// single-precision number widened as PoB's table holds it; `None` (the
+    /// default) when the data has no such row.
+    fn monster_ally_damage(&self, level: i64) -> Option<f64> {
+        let _ = level;
+        None
+    }
+
     /// A monster type's armour and evasion multipliers, percent.
     fn monster_type(&self, id: &str) -> Option<MonsterDefences>;
 
@@ -113,6 +130,14 @@ pub trait CalcData {
     /// `None` (the default) when the data has none: a build that needs
     /// them is `Indeterminate` (`missing-data`), never a silent zero.
     fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
+        None
+    }
+
+    /// The game's monster damage at a level (`DefaultMonsterStats`, PoB's
+    /// `monsterDamageTable`; P6-10b part 12): `None` (the default) when the
+    /// data has none.
+    fn monster_damage(&self, level: i64) -> Option<f64> {
+        let _ = level;
         None
     }
 
@@ -132,6 +157,9 @@ pub trait CalcData {
     }
 }
 
+/// The name PoB counts Life Masteries by (`CalcSetup.lua` 689; P6-11l).
+pub const LIFE_MASTERY: &str = "Life Mastery";
+
 /// A passive node's kind ([`CalcData::passive_kind`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct PassiveKind {
@@ -139,6 +167,9 @@ pub struct PassiveKind {
     pub notable: bool,
     /// An ascendancy's node.
     pub ascendancy: bool,
+    /// A Life Mastery (P6-11l: PoB counts allocated nodes named "Life
+    /// Mastery", `CalcSetup.lua` 689).
+    pub life_mastery: bool,
 }
 
 /// The mods by an implicit tag ([`CalcData::mods_by_tag`]).
@@ -227,8 +258,13 @@ pub struct ArmourBase {
     pub evasion: Range,
     /// Energy shield.
     pub energy_shield: Range,
+    /// Ward (P6-11hn).
+    pub ward: Range,
     /// A shield's chance to block, percent.
     pub block: Option<i64>,
+    /// The base's movement speed change, percent (the armour types table;
+    /// P6-10b: PoB's `MovementPenalty`, `Item.lua` 2361).
+    pub movement_speed: i64,
 }
 
 /// A weapon base's properties (the weapon types table) and its item class.
@@ -346,7 +382,9 @@ impl CalcData for Bundle {
                         armour: range(&a.armour),
                         evasion: range(&a.evasion),
                         energy_shield: range(&a.energy_shield),
+                        ward: range(&a.ward),
                         block,
+                        movement_speed: a.movement_speed,
                     })
                 } else if let Some(w) = weapon {
                     ItemBase::Weapon(WeaponBase {
@@ -369,6 +407,13 @@ impl CalcData for Bundle {
         } else {
             ItemBase::Ambiguous
         })
+    }
+
+    fn item_base_name(&self, id: &str) -> Option<&str> {
+        self.base_items
+            .iter()
+            .find(|b| b.id == id)
+            .map(|b| b.name.as_str())
     }
 
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
@@ -421,6 +466,15 @@ impl CalcData for Bundle {
         })
     }
 
+    fn monster_damage(&self, level: i64) -> Option<f64> {
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(f64::from(row.damage))
+    }
+
     fn mod_stats(&self, id: &str) -> Option<Vec<(String, i64)>> {
         self.mods
             .iter()
@@ -448,6 +502,15 @@ impl CalcData for Bundle {
             alt1: row.alt_life_1,
             alt2: row.alt_life_2,
         })
+    }
+
+    fn monster_ally_damage(&self, level: i64) -> Option<f64> {
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(f64::from(row.ally_damage))
     }
 
     fn monster_type(&self, id: &str) -> Option<MonsterDefences> {
@@ -485,6 +548,7 @@ impl CalcData for Bundle {
         Some(PassiveKind {
             notable: p.notable,
             ascendancy: p.ascendancy.is_some(),
+            life_mastery: p.name == LIFE_MASTERY,
         })
     }
 
@@ -567,6 +631,26 @@ pub struct CalcOptions {
     /// tree (`loom-pipeline` with `loom-tree`); the engine does not walk
     /// the tree's links.
     pub passives: ResolvedPassives,
+    /// The main skill as a mirage uses it (Phase 6 P6-8b): the engine sets
+    /// it when it computes a mirage's copy of the skill (PoB's
+    /// `calcs.copyActiveSkill`, `CalcMirages.lua` 37 to 52). A host leaves
+    /// it `None`.
+    pub mirage: Option<MirageUse>,
+    /// A sub-calculation of the engine's own (P6-12: a trigger's source, a
+    /// mirage's copy, a skill of the full damage per second): it computes
+    /// no full damage per second itself. A host leaves it `false`.
+    pub nested: bool,
+}
+
+/// What a mirage changes in its copy of the main skill (P6-8b): Mirage
+/// Archer's `Damage` and `Speed` MORE, percent (`CalcMirages.lua` 69 to
+/// 84).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MirageUse {
+    /// `Damage` MORE, percent.
+    pub damage_more: i64,
+    /// `Speed` MORE, percent.
+    pub speed_more: i64,
 }
 
 /// The active spec's allocated nodes, each with what the tree makes of it
@@ -585,6 +669,29 @@ pub struct ResolvedPassives {
     /// plan, T4): the passives table and mastery effects are then not
     /// read.
     pub pack: Option<PackStats>,
+    /// The nodes a tattoo, a runegraft, or another override replaces
+    /// (P6-11av), or a socketed Timeless jewel conquers (P6-10a,
+    /// `loom_pipeline::timeless`), with what they become: a node listed
+    /// here takes these stats (instead of its own when replaced), and a
+    /// mastery listed here takes no chosen effect.
+    pub changed: BTreeMap<NodeId, Conquest>,
+}
+
+/// What a tattoo or a Timeless jewel makes of a node
+/// ([`ResolvedPassives::changed`]; PoB's `PassiveSpec.lua` 1185 to 1376).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Conquest {
+    /// The node's own stats are replaced (else the stats are added).
+    pub replaced: bool,
+    /// The stats it gains, raw game values (a Glorious Vanity roll, else
+    /// the row's fixed value).
+    pub stats: Vec<StatAmount>,
+    /// Why the change is not known (`timeless-results` without the jewel
+    /// type's results, `timeless-jewel` for lines that do not read,
+    /// `tattoo-data` without the bundle's overrides, `tattoo` for a name
+    /// they do not hold, `tattoo-skill` for an override that grants a
+    /// skill): the node then counts nothing and is this reason.
+    pub reason: Option<&'static str>,
 }
 
 /// The stats of a tree version the host resolved the spec against
@@ -670,6 +777,13 @@ pub enum LineValues {
     /// order (`None`: the resolution's own value). The engine takes them
     /// only when the line resolved to that many stats.
     Rolled(Vec<Option<i64>>),
+    /// The line's values after a scaling the adapter settled (a catalyst's
+    /// quality, P6-11ax): each stat's raw value, in order (`None`: the
+    /// resolution's own value). Unlike [`Self::Rolled`], a value may lie
+    /// outside the resolution's range, and an exact stat's value is
+    /// replaced too. The engine takes them only when the line resolved to
+    /// that many stats.
+    Catalysed(Vec<Option<i64>>),
     /// The format scales the line's values in a way the engine does not
     /// model: the line gives no effect and the fields are `Partial`
     /// (`scaled-line` with the scaling's name).

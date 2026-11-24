@@ -82,6 +82,15 @@ pub trait StatMapping {
         let _ = (resolution, source);
         TypedMap::Unhandled
     }
+
+    /// Whether `quantity` acts on another actor only (a minion modifier,
+    /// P6-7b3b): an unsettled value of a stat whose every effect does is
+    /// that actor's reason ([`ModStore::elsewhere`]), not this one's. The
+    /// default: none does.
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        let _ = quantity;
+        false
+    }
 }
 
 /// A stat value as one number: an exact value shown as itself, or the
@@ -137,6 +146,24 @@ fn rolled(stats: &[StatLine], values: &[Option<i64>]) -> Option<Vec<StatLine>> {
             _ => None,
         })
         .collect()
+}
+
+/// A line's stats with the adapter's scaled values ([`LineValues::Catalysed`]);
+/// `None` when the counts differ.
+fn catalysed(stats: &[StatLine], values: &[Option<i64>]) -> Option<Vec<StatLine>> {
+    (stats.len() == values.len()).then(|| {
+        stats
+            .iter()
+            .zip(values)
+            .map(|(s, v)| match v {
+                None => s.clone(),
+                Some(v) => StatLine {
+                    stat: s.stat.clone(),
+                    value: StatValue::Exact { min: *v, max: *v },
+                },
+            })
+            .collect()
+    })
 }
 
 /// Builds the modifier store from a build's content.
@@ -262,15 +289,26 @@ impl<'m> Ingest<'m> {
         // whose every effect is a flag still sets it.
         let flags_only = !templates.is_empty() && templates.iter().all(|t| t.op == Op::Flag);
         let Some(value) = settle(&line.value).or(flags_only.then_some(1.0)) else {
-            self.reasons
-                .indeterminate
-                .insert(IndeterminateReason::UnsettledValue {
-                    stat: line.stat.clone(),
-                    source: source.clone(),
-                });
+            let reason = IndeterminateReason::UnsettledValue {
+                stat: line.stat.clone(),
+                source: source.clone(),
+            };
+            if !templates.is_empty() && templates.iter().all(|t| mapping.elsewhere(t.quantity)) {
+                let quantities = templates.iter().map(|t| t.quantity).collect();
+                self.store.add_elsewhere(quantities, reason);
+            } else {
+                self.reasons.indeterminate.insert(reason);
+            }
             return;
         };
         for t in templates {
+            // A flag stat at 0 is off (P6-12): a description of several
+            // stats resolves its line with the others at 0 ("Attacks have
+            // #% chance to cause Bleeding" is the variant whose
+            // `cannot_cause_bleeding` is 0), and that 0 sets no flag.
+            if t.op == Op::Flag && value == 0.0 {
+                continue;
+            }
             self.store.add(Effect {
                 quantity: t.quantity,
                 op: t.op,
@@ -339,6 +377,7 @@ impl<'m> Ingest<'m> {
                     Resolved::Stats(stats) => {
                         let rolled = match host {
                             Some(LineValues::Rolled(values)) => rolled(stats, values),
+                            Some(LineValues::Catalysed(values)) => catalysed(stats, values),
                             _ => None,
                         };
                         for s in rolled.as_deref().unwrap_or(stats) {
@@ -450,8 +489,24 @@ mod tests {
                     StatMap::Effects(vec![t(Op::Flag, 1.0, 1.0), t(Op::Base, 1.0, 1.0)])
                 }
                 "empty" => StatMap::Effects(Vec::new()),
+                "mana_elsewhere" => StatMap::Effects(vec![EffectTemplate {
+                    quantity: Quantity::Mana,
+                    ..t(Op::Base, 1.0, 1.0)
+                }]),
+                "life_and_mana" => StatMap::Effects(vec![
+                    t(Op::Base, 1.0, 1.0),
+                    EffectTemplate {
+                        quantity: Quantity::Mana,
+                        ..t(Op::Base, 1.0, 1.0)
+                    },
+                ]),
                 _ => StatMap::Unmapped,
             }
+        }
+
+        /// Mana stands for another actor's quantity here.
+        fn elsewhere(&self, quantity: Quantity) -> bool {
+            quantity == Quantity::Mana
         }
     }
 
@@ -547,6 +602,51 @@ mod tests {
         }
     }
 
+    /// A flag stat at 0 is off (P6-12): no flag effect; a stat's other
+    /// effects still come in.
+    #[test]
+    fn a_flag_stat_at_zero_should_set_no_flag() {
+        let zero = StatValue::Exact { min: 0, max: 0 };
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("flag", zero.clone()));
+        let (store, reasons) = i.finish();
+        assert!(store.is_empty());
+        assert!(reasons.indeterminate.is_empty());
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("flag_and_base", zero));
+        let (store, _) = i.finish();
+        assert_eq!(store.len(), 1);
+        assert_eq!(store.effects()[0].op, Op::Base);
+        // At 1 the flag is on.
+        let mut i = Ingest::new(&Map);
+        i.stat(
+            &Source::Character,
+            &line("flag", StatValue::Exact { min: 1, max: 1 }),
+        );
+        assert_eq!(i.finish().0.len(), 1);
+    }
+
+    /// P6-7b3b: an unsettled value of a stat whose every effect acts on
+    /// another actor is kept for that actor, not this one's reason; with an
+    /// effect of this actor too, it stays this one's.
+    #[test]
+    fn an_unsettled_stat_of_another_actor_should_be_kept_for_it() {
+        let ranged = StatValue::Ranged { min: 1, max: 9 };
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("mana_elsewhere", ranged.clone()));
+        let (store, reasons) = i.finish();
+        assert!(store.is_empty());
+        assert!(reasons.indeterminate.is_empty());
+        assert_eq!(store.elsewhere().len(), 1);
+        assert_eq!(store.elsewhere()[0].0, [Quantity::Mana]);
+
+        let mut i = Ingest::new(&Map);
+        i.stat(&Source::Character, &line("life_and_mana", ranged));
+        let (store, reasons) = i.finish();
+        assert!(store.elsewhere().is_empty());
+        assert_eq!(reasons.indeterminate.len(), 1);
+    }
+
     #[test]
     fn item_lines_should_give_effects_or_reasons_by_resolution() {
         let item = ItemId(3);
@@ -615,6 +715,34 @@ mod tests {
             result: Resolved::Stats(stats),
             adapted: None,
         }
+    }
+
+    /// A catalysed line (P6-11ax): the host's values replace the stats'
+    /// own, beyond the range and on an exact stat too; another number of
+    /// stats is ignored.
+    #[test]
+    fn the_hosts_catalysed_values_should_replace_the_stats_values() {
+        let item = ItemId(6);
+        let lines: ItemLines = BTreeMap::from([(
+            item,
+            BTreeMap::from([
+                (0, LineValues::Catalysed(vec![Some(4), Some(28)])),
+                (1, LineValues::Catalysed(vec![Some(28)])),
+            ]),
+        )]);
+        let pair = || {
+            vec![
+                line("life", exact(3)),
+                line("life", StatValue::Ranged { min: 16, max: 24 }),
+            ]
+        };
+        let mut i = Ingest::new(&Map).with_item_lines(&lines);
+        i.item_line(item, 0, &ranged_line(pair()));
+        i.item_line(item, 1, &ranged_line(pair()));
+        let (store, reasons) = i.finish();
+        let values: Vec<f64> = store.effects().iter().map(|e| e.value).collect();
+        assert_eq!(values, [4.0, 28.0, 3.0]);
+        assert_eq!(reasons.indeterminate.len(), 1, "line 1 unsettled");
     }
 
     #[test]

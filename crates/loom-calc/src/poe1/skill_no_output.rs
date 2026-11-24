@@ -12,7 +12,7 @@
 //! not is a difference shared with the oracle: none is known.
 
 /// The stats, sorted (a test).
-pub const STATS: [&str; 148] = [
+pub const STATS: [&str; 153] = [
     "action_ignores_crit_tracking",
     "active_skill_additional_projectiles_fire_parallel_x_dist",
     "active_skill_area_of_effect_description_mode",
@@ -34,6 +34,7 @@ pub const STATS: [&str; 148] = [
     "base_skill_is_trapped",
     "base_skill_number_of_additional_hits",
     "base_sunder_wave_delay_ms",
+    "bear_trap_movement_speed_+%_final",
     "black_hole_hinder_description_mode",
     "blackhole_hinder_%",
     "bladefall_blade_left_in_ground_for_every_X_volleys",
@@ -60,6 +61,7 @@ pub const STATS: [&str; 148] = [
     "display_fixed_area",
     "display_manabond_length",
     "display_projectiles_chain_when_impacting_ground",
+    "display_skill_deals_secondary_damage",
     "doubles_have_movement_speed_+%",
     "essence_drain_lose_life_from_damage_permyriad",
     "extra_gore_chance_override_%",
@@ -98,6 +100,7 @@ pub const STATS: [&str; 148] = [
     "monster_projectile_variation",
     "monster_stormcall_individually_trigger",
     "newshocknova_first_ring_damage_+%_final",
+    "no_movement_speed",
     "no_spirit_strikes",
     "projectile_firing_forward_distance_override",
     "projectile_random_angle_based_on_distance_to_target_location_%",
@@ -150,6 +153,8 @@ pub const STATS: [&str; 148] = [
     "tornado_hinder",
     "tornado_maximum_number_of_hits",
     "total_projectile_spread_angle_override",
+    "trap_override_pvp_scaling_time_ms",
+    "traps_do_not_explode_on_timeout",
     "trauma_strike_shockwave_area_of_effect_+%_per_100ms_stun_duration_up_to_400%",
     "upheaval_number_of_spikes",
     "vaal_cleave_steal_mods_on_kill",

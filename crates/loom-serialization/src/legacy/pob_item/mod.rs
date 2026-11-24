@@ -70,7 +70,7 @@ mod tests;
 mod values;
 
 pub use domain::{rarity as domain_rarity, section as domain_section, to_domain};
-pub use values::{LineEnds, line_values, ranged_text, shown_text};
+pub use values::{LineEnds, line_values, line_values_with, ranged_text, shown_text};
 
 /// Item rarity, as `Rarity:` names it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

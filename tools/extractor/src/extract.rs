@@ -190,11 +190,31 @@ pub const FLAVOUR_TABLES_POE1: [&str; 2] = ["UniqueStashLayout", "Words"];
 /// is checked for the file.
 pub const FLASK_TABLES_POE1: [&str; 1] = ["Flasks"];
 
+/// PoE1 timeless jewel tables (Phase 6, P6-10a; plan decision 11): the
+/// alternate passives and additions a timeless jewel puts on the tree and
+/// the alternate tree versions they belong to (PoB v2.67.2 exports
+/// `Data/TimelessJewelData/LegionPassives.lua` from them,
+/// `src/Export/Scripts/legionPassives.lua`). Nothing the extract already
+/// holds references them, so they are roots. PoE1 only.
+pub const TIMELESS_TABLES_POE1: [&str; 3] = [
+    "AlternatePassiveAdditions",
+    "AlternatePassiveSkills",
+    "AlternateTreeVersions",
+];
+
+/// PoE1 tattoo and runegraft tables (Phase 6, P6-11av): the passive skill
+/// overrides a spec's `<Override>` names (PoB v2.67.2 exports
+/// `Data/TattooPassives.lua` from them, `src/Export/Scripts/tattooPassives.lua`)
+/// and the tattoos that place them. Nothing the extract already holds
+/// references them, so they are roots. PoE1 only.
+pub const TATTOO_TABLES_POE1: [&str; 2] = ["PassiveSkillOverrides", "PassiveSkillTattoos"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`],
 /// [`CHOICE_TABLES_POE1`], [`TREE_TABLES_POE1`], [`FLAVOUR_TABLES_POE1`],
+/// [`TIMELESS_TABLES_POE1`], [`TATTOO_TABLES_POE1`],
 /// and [`FLASK_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
@@ -212,6 +232,8 @@ pub fn roots(game: Game) -> Vec<&'static str> {
         roots.extend(TREE_TABLES_POE1);
         roots.extend(FLAVOUR_TABLES_POE1);
         roots.extend(FLASK_TABLES_POE1);
+        roots.extend(TIMELESS_TABLES_POE1);
+        roots.extend(TATTOO_TABLES_POE1);
     }
     roots
 }
@@ -2123,6 +2145,7 @@ mod tests {
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .chain(&TREE_TABLES_POE1)
+                .chain(&TATTOO_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
         assert!(
@@ -2132,6 +2155,7 @@ mod tests {
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .chain(&TREE_TABLES_POE1)
+                .chain(&TATTOO_TABLES_POE1)
                 .all(|t| !poe2.contains(t))
         );
     }

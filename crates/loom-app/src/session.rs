@@ -1665,7 +1665,25 @@ pub fn calculate(
         data.tree_version.clone(),
         &data.trees,
     );
-    let options = loom_pipeline::options(&state.build, data.data, &state.ends, version, tree);
+    // The Timeless jewels' results the build needs, read on demand (P6-10a).
+    let results = tree.map_or_else(Default::default, |t| {
+        data.timeless_results(&loom_pipeline::timeless::needed(&state.build, t))
+    });
+    let timeless = data.bundle.poe1.as_ref().and_then(|p| {
+        Some(loom_pipeline::timeless::TimelessData {
+            timeless: p.timeless.as_ref()?,
+            luts: p.timeless_luts.as_ref()?,
+            results: results.iter().map(|(t, b)| (*t, b.as_slice())).collect(),
+        })
+    });
+    let options = loom_pipeline::options_with(
+        &state.build,
+        data.data,
+        &state.ends,
+        version,
+        tree,
+        timeless.as_ref(),
+    );
     Ok(loom_pipeline::calculate(
         &state.build,
         data.bundle,

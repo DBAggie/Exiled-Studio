@@ -214,10 +214,11 @@ fn unique_ids<'a>(table: &str, ids: impl Iterator<Item = &'a str>) -> Result<(),
 
 fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
     let t = Table::require(read, "Stats")?;
-    let (id, local, weapon) = (
+    let (id, local, weapon, scalable) = (
         t.column("Id")?,
         t.column("IsLocal")?,
         t.column("IsWeaponLocal")?,
+        t.column("IsScalable")?,
     );
     let flag = |r: &[Value], c: usize| r.get(c).and_then(Value::as_bool).unwrap_or(false);
     Ok(t.rows
@@ -227,6 +228,7 @@ fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
                 id: Table::text(r, id)?.to_owned(),
                 local: flag(r, local),
                 weapon_local: flag(r, weapon),
+                scalable: Some(flag(r, scalable)),
             })
         })
         .collect())
@@ -883,6 +885,29 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(radii.len()),
             );
         }
+        // Timeless jewels' extracted tables (P6-10a); PoB's results are
+        // added by `timeless-pack`.
+        if let Some(t) = crate::timeless::rows(read)? {
+            let n = t.passives.len() + t.additions.len() + t.tree_versions.len();
+            put(
+                &mut files,
+                &mut rows,
+                loom_data::bundle::timeless::TIMELESS,
+                to_json(&t)?,
+                Some(n),
+            );
+        }
+        // Tattoos and the other passive skill overrides (P6-11av).
+        if let Some(t) = crate::tattoos::rows(read)? {
+            let n = t.overrides.len();
+            put(
+                &mut files,
+                &mut rows,
+                loom_data::bundle::tattoos::TATTOOS,
+                to_json(&t)?,
+                Some(n),
+            );
+        }
         if let Some(c) = cluster_jewels::rows(read, extract.set.files().map(|(_, f)| f))? {
             let n = c.jewels.len() + c.skills.len() + c.specials.len() + c.slots.len();
             put(
@@ -937,7 +962,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         // 3 since P3-8n: mods carry their implicit tags. 4 since B-2: mods
         // their affix name and level, bases their drop level and attribute
         // requirements, and `data/tags.json` (`bundle::AFFIX_SCHEMA`).
-        data_schema: bundle::AFFIX_SCHEMA,
+        data_schema: bundle::GEM_LEVEL_SCHEMA,
         game: game.clone(),
         source: provenance(&raw),
         files: entries,

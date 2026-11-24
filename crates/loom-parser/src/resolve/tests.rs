@@ -336,6 +336,43 @@ fn resolve_should_fill_stats_without_a_placeholder() {
         values(&resolve(&not_zero, "Cannot be Frozen")),
         vec![("a".to_owned(), hidden(Condition::Not(0), None))]
     );
+    // A lone stat shown without a number is not 0 (the game prints a
+    // description only when a stat of it is not 0): a keystone's line, any
+    // value, is assumed 1 (P6-11g).
+    let keystone = one_file(vec![desc(
+        &["keystone_glancing_blows"],
+        vec![variant(&[ANY], "Glancing Blows", &[])],
+    )]);
+    assert_eq!(
+        values(&resolve(&keystone, "Glancing Blows")),
+        vec![("keystone_glancing_blows".to_owned(), hidden(ANY, Some(1)))]
+    );
+    // A lone stat whose condition excludes 1 keeps the old rule: 0 when it
+    // allows 0, its bound otherwise.
+    let at_most_zero = Condition::Range {
+        min: None,
+        max: Some(0),
+    };
+    let not_positive = one_file(vec![desc(
+        &["a"],
+        vec![variant(&[at_most_zero], "Never Positive", &[])],
+    )]);
+    assert_eq!(
+        values(&resolve(&not_positive, "Never Positive")),
+        vec![("a".to_owned(), hidden(at_most_zero, Some(0)))]
+    );
+    let two_or_more = Condition::Range {
+        min: Some(2),
+        max: None,
+    };
+    let at_least_two = one_file(vec![desc(
+        &["a"],
+        vec![variant(&[two_or_more], "Many", &[])],
+    )]);
+    assert_eq!(
+        values(&resolve(&at_least_two, "Many")),
+        vec![("a".to_owned(), hidden(two_or_more, Some(2)))]
+    );
     let impossible = Condition::Range {
         min: Some(3),
         max: Some(1),

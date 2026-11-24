@@ -33,8 +33,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use loom_calc::poe1::Poe1Quantity;
 use loom_calc::poe1::gems::{self, BuffStat, Kind};
+use loom_calc::poe1::{LeechSource, Poe1Quantity, Pool, TakenOf, TakenWhen};
 use loom_calc::{Flags, Op, Quantity};
 use serde_json::{Value, json};
 
@@ -117,6 +117,26 @@ const DISPLAY_KEYS: &[&str] = &[
     // Herald of Ash's burn (close-out).
     "hoaMoreBurn",
     "hoaOverkillPercent",
+    // P6-9d: a skill's own base damage, damage over time, hit frequency,
+    // and corpse explosion data; PoB reads them only from the skill's own
+    // `skillData` (`CalcOffence.lua`), never from another skill's.
+    "ChaosDot",
+    "ChaosMax",
+    "ChaosMin",
+    "ColdDot",
+    "FireMax",
+    "FireMin",
+    "LightningMax",
+    "LightningMin",
+    "PhysicalDot",
+    "corpseExplosionLifeMultiplier",
+    "damageInterval",
+    "dotIsProjectile",
+    "dpsMultiplier",
+    "explodeCorpse",
+    "fixedCastTime",
+    "hitChanceIsExplodeChance",
+    "hitFrequency",
 ];
 
 /// Types an inert skill may not have; a buff skill may reserve
@@ -167,14 +187,14 @@ const DEBUFF_FORBIDDEN: &[&str] = &[
     "Trigger",
     "Warcry",
 ];
-/// Types a curse skill may not have (close-out): a mark, an aura curse, a
-/// curse a totem, trap, or minion casts.
+/// Types a curse skill may not have (close-out): an aura curse, a curse a
+/// totem, trap, or minion casts. A mark is modelled with PoB's mark rule
+/// (`gems::curse_slots`, P6-9e).
 const CURSE_FORBIDDEN: &[&str] = &[
     "Aura",
     "Brand",
     "CreatesMinion",
     "HasReservation",
-    "Mark",
     "Minion",
     "SummonsTotem",
     "Totem",
@@ -203,9 +223,34 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // P6-11fs: a brand beside the main skill has no global effect (the
+    // brands attached are the config's, P6-11ed); Combust and the Frost
+    // enchantment are triggered by their own rule.
+    ("ArmageddonBrand", "Brand"),
+    ("Combust", "Triggered"),
+    ("EnchantmentOfFrostOnKill4", "Triggered"),
+    ("PenanceBrand", "Brand"),
+    // P6-11fr: Primal Aegis is triggered by its own rule.
+    ("PrimalAegis", "Triggered"),
+    // P6-11fr: Bloodrend, an item's triggered spell.
+    ("TriggeredBloodrend", "Triggered"),
+    // P6-11fg: Pyroclast Mine of Sabotage's aura is a debuff on the enemy
+    // (`AuraDebuff`), its reservation the mine's (`gems::reservation`, for
+    // every kind); the non-curse aura effect makes it a reason.
+    ("PyroclastMineAltX", "Aura"),
+    ("PyroclastMineAltX", "HasReservation"),
+    // The offerings buff minions alone (P6-9e).
+    ("BoneOffering", "Minion"),
     ("Convocation", "Minion"),
+    ("FleshOffering", "Minion"),
     ("HeraldOfPurity", "CreatesMinion"),
     ("HeraldOfPurity", "Minion"),
+    // P6-9e: their minions' skills have no `GlobalEffect` mod
+    // (`tools/oracle/data/minion_skill_globals.py`).
+    ("SummonCarrionGolem", "CreatesMinion"),
+    ("SummonCarrionGolem", "Minion"),
+    ("SummonChaosGolem", "CreatesMinion"),
+    ("SummonChaosGolem", "Minion"),
     ("SummonFlameGolem", "CreatesMinion"),
     ("SummonFlameGolem", "Minion"),
     ("SummonIceGolem", "CreatesMinion"),
@@ -220,14 +265,41 @@ const ALLOWED_TYPES: &[(&str, &str)] = &[
 ];
 
 /// Active skills whose minions the engine knows (their skills give the
-/// character nothing, or Wrath, which `gems::wrath` models).
+/// character nothing, or Wrath, which `gems::wrath` models). P6-9c: the
+/// summoning skills modelled as inert, each checked against PoB's export:
+/// no minion of theirs has a skill with a `GlobalEffect` mod
+/// (`docs/phase-6/gems.md`, "P6-9c").
 const ALLOWED_MINIONS: &[&str] = &[
+    "Absolution",
+    "AbsolutionAltX",
+    "AnimateGuardian",
+    "AnimateGuardianAltX",
+    "AnimateWeapon",
+    "AnimateWeaponAltY",
+    "DominatingBlow",
+    "DominatingBlowAltX",
     "HeraldOfPurity",
+    "HolyStrike",
+    "RaiseZombie",
+    "RaiseZombieAltX",
+    "RaiseZombieAltY",
+    "SummonCarrionGolem",
+    "SummonChaosGolem",
     "SummonFlameGolem",
+    "SummonHolyRelicAltX",
     "SummonIceGolem",
     "SummonLightningGolem",
+    "SummonRagingSpirit",
+    "SummonRagingSpiritAltX",
+    // P6-9f: its minion's template has no skill (PoB's `GuardianSentinel`).
+    "SummonSentinelOfRadiance",
+    "SummonSkeletons",
+    "SummonSkeletonsAltX",
+    "SummonSkeletonsAltY",
     "SummonStoneGolem",
     "SummonStoneGolemAltY",
+    "SummonVoidSpawn",
+    "VaalSummonSkeletons",
 ];
 
 /// A skill's buff identities besides its kind's, with why: Flesh and
@@ -235,31 +307,212 @@ const ALLOWED_MINIONS: &[&str] = &[
 /// Stance mod a `Buff` on the character (the engine scales the Blood
 /// Stance row as an aura's, which PoB's `AuraDebuff` scale also reads).
 const EXTRA_BUFFS: &[(&str, &str)] = &[
+    // P6-11fx: Sigil of Power's enemy less damage is a `Debuff` of its
+    // name; Wave of Conviction's three exposures are each a `Debuff` of the
+    // exposure's name (each a reason when chosen).
+    ("SigilOfPower", "Buff Sigil of Power"),
+    ("SigilOfPower", "Debuff Sigil of Power"),
+    ("WaveOfConviction", "Debuff Cold Exposure"),
+    ("WaveOfConviction", "Debuff Fire Exposure"),
+    ("WaveOfConviction", "Debuff Lightning Exposure"),
+    // P6-11fw: a banner's planted flag (`AffectedByPlacedBanner`) is a
+    // `Buff` of its name beside its aura; both act only when planted.
+    ("DefianceBanner", "Aura Defiance Banner"),
+    ("DefianceBanner", "Buff Defiance Banner"),
+    ("WarBanner", "Aura War Banner"),
+    ("WarBanner", "Buff War Banner"),
+    // Blood and Sand's two stances are two buffs in PoB (`effectName`
+    // "Blood" and "Sand"; P6-11dw), one skill buff here.
+    ("BloodAndSand", "Buff Blood"),
+    ("BloodAndSand", "Buff Sand"),
     ("FleshAndStone", "AuraDebuff Flesh and Stone"),
     ("FleshAndStone", "Buff Flesh and Stone"),
-    // A warcry's `UsesWarcryPower` flag is a `Buff` of its name.
+    // Pride's mods are an `AuraDebuff` on the enemy (P6-9e), scaled as an
+    // aura's, as Flesh and Stone's Blood Stance row.
+    ("Pride", "AuraDebuff Pride"),
+    // A warcry's `UsesWarcryPower` flag is a `Buff` of its name; General's
+    // Cry has no other global mod (P6-9e).
+    ("GeneralsCry", "Buff General's Cry"),
+    ("BattlemagesCry", "Buff Battlemage's Cry"),
+    ("BattlemagesCry", "Warcry Battlemage's Cry"),
+    ("EnduringCry", "Buff Enduring Cry"),
+    ("EnduringCry", "Warcry Enduring Cry"),
     ("IntimidatingCry", "Buff Intimidating Cry"),
     ("IntimidatingCry", "Warcry Intimidating Cry"),
     ("RallyingCry", "Buff Rallying Cry"),
     ("RallyingCry", "Warcry Rallying Cry"),
+    // P6-11fd.
+    // P6-11fg: Pyroclast Mine of Sabotage's exposure, an `AuraDebuff`.
+    (
+        "PyroclastMineAltX",
+        "AuraDebuff Pyroclast Mine Fire Exposure",
+    ),
+    ("AncestralCry", "Buff Ancestral Cry"),
+    ("AncestralCry", "Warcry Ancestral Cry"),
+    ("InfernalCry", "Buff Infernal Cry"),
+    ("InfernalCry", "Warcry Infernal Cry"),
+    ("SeismicCry", "Buff Seismic Cry"),
+    ("SeismicCry", "Warcry Seismic Cry"),
 ];
 
 /// Support mods outside the buff the engine models, with why: Guardian's
 /// Blessing's reservation of 0 for an aura (`gems::NO_RESERVATION_SUPPORTS`).
+/// PoB mods that come with a row's flag and act only through it, by stat
+/// and mod name: left out of the row comparison.
+const POB_ROW_COMPANIONS: &[(&str, &str)] = &[
+    // P6-11fl: Hexpass sets the enemy's `NeverCrit` and the condition of
+    // the same name; the condition is read only by mods conditioned on the
+    // enemy never critting, which none of the engine's rows are.
+    (
+        "hexed_enemies_cannot_deal_critical_strikes",
+        "Condition:NeverCrit",
+    ),
+];
+
 const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // P6-11fw: a banner's `AuraEffect` MORE, -100 unless planted and per
+    // Valour when planted: its rows are reasons when planted
+    // (`gems::BANNER_PLANTED_INPUT`), nothing otherwise.
+    ("DefianceBanner", "AuraEffect"),
+    ("WarBanner", "AuraEffect"),
+    // P6-11fv: Bonechill's flag is `gems::BONECHILL_SUPPORT` (the chill as
+    // cold damage taken); its chill effect on a chilling area is a
+    // `skill-chill-effect` reason (`gems::guaranteed_chill`).
+    ("SupportBonechill", "EnemyChillEffect"),
+    ("SupportBonechill", "supportBonechill"),
+    // P6-11ft: Generosity's aura does not affect you
+    // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
+    // (`gems::OWN_EFFECT_STATS`).
+    ("SupportGenerosity", "auraCannotAffectSelf"),
+    // P6-11ft: Manaforged Arrows triggers the skill it supports, and Mirage
+    // Archer's mirage uses it; the skill's own kind says what it does.
+    (
+        "SupportManaforgedArrows",
+        "ManaForgedArrowsPercentThreshold",
+    ),
+    ("SupportManaforgedArrows", "triggeredByManaforged"),
+    ("SupportMirageArcher", "triggeredByMirageArcher"),
+    // P6-11fs: the skill's own data, beside the main skill no global effect
+    // (Cremation's fire rate, Dark Pact's life as damage, Vaal Righteous
+    // Fire's burning and sacrifice and its soul key); the Frost enchantment
+    // triggers itself.
+    ("Cremation", "cremationFireRate"),
+    ("Cremation", "cremationFireRateIncrease"),
+    ("DarkPact", "lifeDealtAsChaos"),
+    ("EnchantmentOfFrostOnKill4", "triggered"),
+    ("VaalRighteousFire", "RFMultiplier"),
+    ("VaalRighteousFire", "percentSacrificed"),
+    (
+        "VaalRighteousFire",
+        "skillEffectAppliesToSoulGainPrevention",
+    ),
+    // P6-11fr: Primal Aegis triggers itself (an item's skill), with no
+    // stat map.
+    ("PrimalAegis", "triggered"),
+    // P6-11fn: Ensnaring Arrow's quality (`BuffEffect`): PoB scales a
+    // `Debuff` by `DebuffEffect` alone (`CalcPerform.lua` 2589 to 2593).
+    ("EnsnaringArrow", "BuffEffect"),
+    // P6-11fm: Battlemage's Cry's support triggers the spell it supports
+    // (as Automation's); the spell's own kind says what it does.
+    ("BattlemagesCrySupport", "triggeredByBattleMageCry"),
+    // P6-11fk: Frost Shield's quality, its own chill effect: the engine's
+    // guaranteed chill makes it a `skill-chill-effect` reason
+    // (`gems::guaranteed_chill`).
+    ("FrostShield", "EnemyChillEffect"),
     // Automation's trigger of the skill it supports, whose own kind says
     // what it does.
     ("SupportAutomation", "triggered"),
+    // P6-11dy: Autoexertion uses its warcry automatically; the warcry's own
+    // kind and Autoexertion's buff rule (`gems::AUTOEXERTION_SUPPORT`) say
+    // what it does.
+    ("SupportAutoexertion", "triggeredByAutoexertion"),
     ("SupportAutomation", "triggeredByAutomation"),
+    // P6-9f: Arrogance's reservation of life instead of mana, which
+    // `gems::LIFE_RESERVATION_SUPPORTS` reads (a mod name, not a key).
+    ("SupportArrogance", "BloodMagicReserved"),
     ("SupportGuardiansBlessing", "lifeReservationFlat"),
     ("SupportGuardiansBlessing", "lifeReservationPercent"),
     ("SupportGuardiansBlessing", "manaReservationFlat"),
     ("SupportGuardiansBlessing", "manaReservationPercent"),
+    // P6-9g: Eternal Blessing's aura reserves nothing, as Guardian's
+    // Blessing's (`gems::NO_RESERVATION_SUPPORTS`).
+    ("SupportEternalBlessing", "lifeReservationFlat"),
+    ("SupportEternalBlessing", "lifeReservationPercent"),
+    ("SupportEternalBlessing", "manaReservationFlat"),
+    ("SupportEternalBlessing", "manaReservationPercent"),
+    // P6-9g: Mark On Hit triggers the mark it supports on hitting a rare or
+    // unique enemy; the mark's curse applies as PoB applies it, in a curse
+    // slot, whatever triggers it.
+    ("SupportMarkOnHit", "triggerMarkOnRareOrUnique"),
+    // P6-11ds: Hextouch triggers the hex it supports on hit; the hex's curse
+    // applies as PoB applies it, in a curse slot, whatever triggers it, at
+    // Hextouch's less curse effect (`gems::HEXTOUCH_CURSE_EFFECT_STAT`).
+    ("SupportCurseOnHitCurse", "triggeredByCurseOnHit"),
     // Righteous Fire's own burn (P6-2b): its `SkillData` multipliers make
     // its damage over time when it is the main skill (`poe1::dot`); as
     // another skill only its buff acts.
     ("RighteousFire", "RFESMultiplier"),
     ("RighteousFire", "RFLifeMultiplier"),
+    // Molten Shell's reflected fire damage (P6-9e): its own hit's data.
+    ("MoltenShell", "moltenShellReflect"),
+    // P6-11du: the Vaal auras' soul gain prevention duration, no slice field.
+    // P6-11fr: Vaal Blight and Vaal Earthquake, the same soul key.
+    ("VaalBlight", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalDiscipline", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalEarthquake", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalHaste", "skillEffectAppliesToSoulGainPrevention"),
+    ("VaalMoltenShell", "moltenShellReflect"),
+    // P6-9f: inert skills' own data, read only when each is the main skill:
+    // Forbidden Rite's damage from life and energy shield and its cost to
+    // the caster, the Sentinel's minion level, the Mirage Warriors'
+    // trigger, Whirling Blades' double hit when dual wielding.
+    ("ForbiddenRite", "SelfDamageTakenES"),
+    ("ForbiddenRite", "SelfDamageTakenLife"),
+    ("ForbiddenRite", "energyShieldDealtAsChaos"),
+    ("ForbiddenRite", "lifeDealtAsChaos"),
+    ("ForbiddenRiteAltX", "SelfDamageTakenES"),
+    ("ForbiddenRiteAltX", "energyShieldDealtAsChaos"),
+    ("SummonSentinelOfRadiance", "minionLevelIsPlayerLevel"),
+    ("UniqueMirageWarriors", "triggered"),
+    ("UniqueMirageWarriors", "triggeredBySaviour"),
+    ("WhirlingBlades", "doubleHitsWhenDualWielding"),
+    // A Vaal skill's soul gain prevention duration (P6-9e): no slice field.
+    ("VaalMoltenShell", "skillEffectAppliesToSoulGainPrevention"),
+    // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
+    // their stats (the chance on crit, the threshold, the triggered marks).
+    (
+        "SupportAwakenedCastOnCriticalStrike",
+        "chanceToTriggerOnCrit",
+    ),
+    ("SupportCastOnCritTriggered", "triggerOnCrit"),
+    ("SupportCastOnCritTriggered", "triggered"),
+    ("SupportCastOnCritTriggered", "triggeredByCoc"),
+    ("SupportCastOnCritTriggeredPlus", "triggerOnCrit"),
+    ("SupportCastOnCritTriggeredPlus", "triggered"),
+    ("SupportCastOnCritTriggeredPlus", "triggeredByCoc"),
+    ("SupportCastOnCriticalStrike", "chanceToTriggerOnCrit"),
+    ("SupportCastWhenDamageTaken", "triggered"),
+    ("SupportCastWhenDamageTaken", "triggeredByDamageTaken"),
+    ("SupportAwakenedCastWhileChannelling", "triggerTime"),
+    ("SupportCastOnMeleeKill", "chanceToTriggerOnMeleeKill"),
+    ("SupportCastOnMeleeKillTriggered", "triggered"),
+    ("SupportCastOnMeleeKillTriggered", "triggeredByMeleeKill"),
+    ("SupportCastOnWardBreak", "chanceToTriggerOnWardBreak"),
+    ("SupportCastOnWardBreak", "triggered"),
+    ("SupportCastWhileChannelling", "triggerTime"),
+    ("SupportCastWhileChannellingTriggered", "triggered"),
+    (
+        "SupportCastWhileChannellingTriggered",
+        "triggeredWhileChannelling",
+    ),
+    ("SupportCastWhileChannellingTriggeredPlus", "triggered"),
+    (
+        "SupportCastWhileChannellingTriggeredPlus",
+        "triggeredWhileChannelling",
+    ),
+    // Tempest Shield's counterattack trigger on block (P6-9e): a `SkillData`
+    // for attack skills (`SkillType` 2) it triggers, none of its own.
+    ("TempestShield", "chanceToTriggerCounterattackOnBlock"),
 ];
 
 /// Types a modelled support may not add.
@@ -286,19 +539,54 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 /// field (regeneration, recharge, movement, degeneration, leech, freeze,
 /// damage taken by you).
 const NO_SLICE_NAMES: &[&str] = &[
+    // P6-11fx: Sigil of Power's stage limit, read only with its stages.
+    "Multiplier:SigilOfPowerMaxStages",
+    // P6-11fk: Frost Shield's stage limit, read only with its stages.
+    "Multiplier:FrostShieldMaxStages",
+    // P6-11ho: Frost Shield's energy shield drain, read only by the net
+    // regeneration (`CalcDefence.lua` 1288 to 1292, 3397).
+    "EnergyShieldDegen",
     "AreaOfEffect",
+    // P6-11fd: Seismic Cry's stun threshold.
+    "StunThreshold",
     "ArcaneSurgeManaRegen",
+    // Summon Carrion Golem's and Summon Chaos Golem's (P6-9e).
+    "Condition:HaveCarrionGolem",
+    "Condition:HaveChaosGolem",
     "Condition:HaveColdGolem",
     "Condition:HaveFireGolem",
     "Condition:HaveLightningGolem",
     "Condition:HavePhysicalGolem",
+    // Withering Step's Elusive (P6-11aq): Elusive is the `buffElusive`
+    // input, a named condition; its effect acts only with it.
+    "Condition:CanBeElusive",
+    "ElusiveEffect",
     "DamageTakenWhenHit",
     "Dummy",
+    // P6-11du: Vaal Discipline's, a `DUMMY` mod PoB's calculation never
+    // reads.
+    "EnergyShieldRechargeNotDelayedByDamage",
+    // Smite's aura's shock chance (P6-8a): the engine applies shock only
+    // from a guaranteed source, never a chance (`base_chance_to_shock_%`).
+    "EnemyShockChance",
+    // Steelskin's bleed avoidance and the guards' absorption (P6-9e).
+    "AvoidBleed",
+    "GuardAbsorbLimit",
+    "GuardAbsorbRate",
+    "Multiplier:GuardAbsorbMax",
+    // Summon Carrion Golem's added damage for your other minions (P6-9e).
+    "MinionModifier",
+    // A skill effect duration (Malevolence's, P6-9d).
+    "Duration",
+    // Purity of Elements' immunity (P6-9): no slice field reads it.
+    "ElementalAilmentImmune",
     "FireDegen",
     "EnergyShieldRecharge",
     "FireDamageTakenWhenHit",
     "FreezeImmune",
     "LifeRegen",
+    // Enduring Cry's regeneration per warcry power (P6-9d).
+    "LifeRegenPercent",
     "ManaRegen",
     "MovementSpeed",
     "PhysicalDamageLifeLeech",
@@ -308,8 +596,32 @@ const NO_SLICE_NAMES: &[&str] = &[
     "SelfElementalAilmentDuration",
     "SelfFreezeChance",
     "SelfFreezeDuration",
+    // Tempest Shield's shock immunity (P6-9e).
+    "ShockImmune",
     "UsesWarcryPower",
-    "takenFromStoneGolemBeforeYou",
+];
+
+/// PoB mod names a curse's `NoSlice` stat may give besides
+/// [`NO_SLICE_NAMES`] (P6-9b): on the enemy they reach no slice field (its
+/// accuracy, damage, action speed, buff duration, shock and freeze).
+const ENEMY_NO_SLICE_NAMES: &[&str] = &[
+    "Accuracy",
+    "BuffExpireFaster",
+    // The enemy's own damage (Enfeeble): no field computes the enemy's
+    // offence. If one ever does, this name must leave this list.
+    "Damage",
+    "SelfFreezeChance",
+    "SelfFreezeDuration",
+    "SelfShockChance",
+    "SelfShockDuration",
+    "TemporalChainsActionSpeed",
+    // The marks' on-kill and on-hit gains and Sniper's Mark's split
+    // (P6-9e): no slice field.
+    "SelfLifeOnHit",
+    "SelfLifeOnKill",
+    "SelfManaOnHit",
+    "SelfManaOnKill",
+    "SelfSplitCount",
 ];
 
 /// The `GlobalEffect` tag's fields a slice row may have: any other
@@ -322,11 +634,50 @@ const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 /// create its phantasm (`ALLOWED_ADD_MINIONS`; a minion type only counts
 /// into named conditions, as an inert skill's may).
 const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
+    // P6-11ft: Manaforged Arrows triggers the bow skill it supports.
+    ("SupportManaforgedArrows", "Triggered"),
+    // P6-11fm: Battlemage's Cry's support triggers the spell it supports;
+    // the spell's own kind says what it does.
+    ("BattlemagesCrySupport", "Triggered"),
     // Automation triggers the skill it supports (close-out): the skill's
     // own kind says what it does.
     ("SupportAutomation", "Triggered"),
+    // P6-11dy: Autoexertion triggers its warcry, which reserves its share
+    // (`RESERVING_SUPPORTS`).
+    ("SupportAutoexertion", "Triggered"),
+    ("SupportAutoexertion", "HasReservation"),
+    // Blasphemy makes the hex it supports an aura that reserves (P6-11r,
+    // `poe1::gems`): the curse takes the aura priority, and its reservation
+    // is Blasphemy's share (`RESERVING_SUPPORTS`).
+    ("SupportBlasphemy", "Aura"),
+    ("SupportBlasphemy", "HasReservation"),
+    // P6-11fq: Eldritch Blasphemy, as Blasphemy.
+    ("SupportEldritchBlasphemy", "Aura"),
+    ("SupportEldritchBlasphemy", "HasReservation"),
+    // The trigger supports the engine ports (P6-8a, `poe1::triggers`): the
+    // trigger sets the supported spell's rate.
+    ("SupportCastOnCritTriggered", "Triggered"),
+    ("SupportCastOnCritTriggeredPlus", "Triggered"),
+    ("SupportCastWhenDamageTaken", "Triggered"),
+    ("SupportCastOnMeleeKillTriggered", "Triggered"),
+    ("SupportCastOnWardBreak", "Triggered"),
+    ("SupportCastWhileChannellingTriggered", "Triggered"),
+    ("SupportCastWhileChannellingTriggeredPlus", "Triggered"),
+    // P6-11ds: Hextouch triggers its hex (see `ALLOWED_BLOCKED`).
+    ("SupportCurseOnHitCurse", "Triggered"),
+    // P6-9g: Mark On Hit triggers its mark (see `ALLOWED_BLOCKED`).
+    ("SupportMarkOnHit", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
+];
+
+/// Supports whose level rows carry a mana reservation share, which the
+/// engine takes in place of the supported skill's (P6-11r, `poe1::gems`'s
+/// reservation, as PoB's `CalcActiveSkill.lua` 516 and 517).
+const RESERVING_SUPPORTS: &[&str] = &[
+    "SupportAutoexertion",
+    "SupportBlasphemy",
+    "SupportEldritchBlasphemy",
 ];
 
 /// Supports that add a minion to the skill they support, and the minion:
@@ -346,6 +697,31 @@ fn ailment_max(name: &str) -> bool {
         ]
         .iter()
         .any(|a| name == format!("{a}Max"))
+}
+
+/// PoB's negated `AffectedByVaalSmite` condition (Smite's aura).
+fn is_not_vaal_smite(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("Condition")
+        && t.get("var").and_then(Value::as_str) == Some("AffectedByVaalSmite")
+        && t.get("neg") == Some(&Value::Bool(true))
+        && t.len() == 3
+}
+
+/// PoB's `SkillType.Melee` tag (`SkillType.Melee = 20`, `Data/Global.lua`
+/// 237; P6-11dw).
+/// PoB's negated `SkillType.SummonsTotem` tag (26), `Flags::SKILL_NOT_TOTEM`
+/// (P6-11fo).
+fn is_not_totem_skill_type(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("SkillType")
+        && t.get("skillType").and_then(Value::as_i64) == Some(26)
+        && t.get("neg").and_then(Value::as_bool) == Some(true)
+        && t.len() == 3
+}
+
+fn is_melee_skill_type(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("SkillType")
+        && t.get("skillType").and_then(Value::as_i64) == Some(20)
+        && t.len() == 2
 }
 
 /// PoB's tag for a `notMinionStat` mod: the actor has no parent.
@@ -376,8 +752,32 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     if flags & 1024 != 0 {
         f.push("projectile");
     }
-    let rest = flags & !(1 | 2 | 4 | 16 | 1024);
-    let rest_kw = kw & !(0x1_0000 | 0x2_0000);
+    // `ModFlag.Dot` (P6-9d: Malevolence).
+    if flags & 8 != 0 {
+        f.push("dot");
+    }
+    // `ModFlag.Area` (P6-11dw: Blood and Sand).
+    if flags & 512 != 0 {
+        f.push("area");
+    }
+    // The `Melee` skill type tag (P6-11dw), `Flags::SKILL_MELEE`.
+    if m.tags.iter().any(is_melee_skill_type) {
+        f.push("skill-melee");
+    }
+    // `ModFlag.Melee` (P6-11fo: Phase Run).
+    if flags & 256 != 0 {
+        f.push("melee");
+    }
+    // `KeywordFlag.Poison` (P6-11fy: Plague Bearer), `Flags::POISON`.
+    if kw & 0x20_0000 != 0 {
+        f.push("poison");
+    }
+    // The negated `SummonsTotem` tag (P6-11fo), `Flags::SKILL_NOT_TOTEM`.
+    if m.tags.iter().any(is_not_totem_skill_type) {
+        f.push("skill-not-totem");
+    }
+    let rest = flags & !(1 | 2 | 4 | 8 | 16 | 256 | 512 | 1024);
+    let rest_kw = kw & !(0x1_0000 | 0x2_0000 | 0x20_0000);
     let mut tags: Vec<String> = m
         .tags
         .iter()
@@ -385,6 +785,12 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         // `notMinionStat`'s tag (`ActorCondition` `parent`, negated): the
         // mod is not a minion's; every row here is the character's.
         .filter(|t| !is_not_minion(t))
+        .filter(|t| !is_melee_skill_type(t))
+        .filter(|t| !is_not_totem_skill_type(t))
+        // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
+        // Vaal Smite has no entry in the engine's tables, so a build with it
+        // carries an `unmodelled-gem` reason and the condition is off.
+        .filter(|t| !is_not_vaal_smite(t))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
     if let Some(g) = m.global_effect() {
@@ -399,7 +805,12 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
             ));
         }
     }
-    if let Some(v) = &m.value {
+    // A flag's `true` is the flag itself (P6-11fl: Hexpass's `NeverCrit`).
+    if let Some(v) = m
+        .value
+        .as_ref()
+        .filter(|v| !(m.kind == "FLAG" && **v == Value::Bool(true)))
+    {
         tags.push(format!("value {v}"));
     }
     format!(
@@ -427,10 +838,33 @@ fn pob_name(q: Quantity) -> String {
     match q {
         Quantity::Accuracy => "Accuracy".into(),
         Quantity::CritChance => "CritChance".into(),
+        Quantity::CritMultiplier => "CritMultiplier".into(),
+        Quantity::BlockChance => "BlockChance".into(),
+        Quantity::DotMultiplier => "DotMultiplier".into(),
+        // Punishment's (P6-9e).
+        Quantity::Poe1(Poe1Quantity::EnemyDamageTaken) => "DamageTaken".into(),
+        // The marks' rows on the enemy (P6-9e).
+        Quantity::Poe1(Poe1Quantity::EnemyProjectileDamageTaken) => "ProjectileDamageTaken".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyTrapMineDamageTaken) => "TrapMineDamageTaken".into(),
+        // P6-11fn: Ensnaring Arrow's.
+        Quantity::Poe1(Poe1Quantity::EnemyProjectileAttackDamageTaken) => {
+            "ProjectileAttackDamageTaken".into()
+        }
+        // P6-11fl: Hexpass's, on the enemy.
+        Quantity::Poe1(Poe1Quantity::EnemyNeverCrit) => "NeverCrit".into(),
+        // P6-11ga: Flame Surge's burning ground.
+        Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround) => "IgniteDpsAsBurningGround".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction) => {
+            "PhysicalDamageReduction".into()
+        }
         Quantity::Speed => "Speed".into(),
         Quantity::EnergyShield => "EnergyShield".into(),
         Quantity::Armour => "Armour".into(),
         Quantity::Evasion => "Evasion".into(),
+        // The character's resistances and their maximums (P6-9: the
+        // purities).
+        Quantity::Resistance(t) => format!("{}Resist", title(t.name())),
+        Quantity::MaximumResistance(t) => format!("{}ResistMax", title(t.name())),
         Quantity::Poe1(Poe1Quantity::EnemyResistance(t)) => format!("{}Resist", title(t.name())),
         Quantity::Poe1(Poe1Quantity::SkillExposure(t)) => format!("{}Exposure", title(t.name())),
         Quantity::Poe1(Poe1Quantity::GainAs(a, b)) => {
@@ -440,6 +874,62 @@ fn pob_name(q: Quantity) -> String {
             format!("{}DamageTaken", title(t.name()))
         }
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) => "ArcaneSurgeCastSpeed".into(),
+        // Flesh and Stone's Sand Stance (P6-11x).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::All)) => {
+            "DamageTakenWhenHit".into()
+        }
+        // A guard's (P6-11ae).
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbRate) => "GuardAbsorbRate".into(),
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbLimit | Poe1Quantity::GuardAbsorbPerArmour) => {
+            "GuardAbsorbLimit".into()
+        }
+        Quantity::Poe1(Poe1Quantity::GuardAbsorbMax) => "Multiplier:GuardAbsorbMax".into(),
+        // Summon Stone Golem of Safeguarding's (P6-11ar).
+        Quantity::Poe1(Poe1Quantity::TakenFromStoneGolem) => "takenFromStoneGolemBeforeYou".into(),
+        // P6-11ho: Frost Shield.
+        Quantity::Poe1(Poe1Quantity::FrostShieldLife) => "FrostGlobeHealth".into(),
+        Quantity::Poe1(Poe1Quantity::FrostShieldShare) => "FrostGlobeDamageMitigation".into(),
+        // Arctic Armour's (P6-11z).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Hit, TakenOf::Type(t))) => {
+            format!("{}DamageTakenWhenHit", title(t.name()))
+        }
+        // Immortal Call's (P6-11dv).
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Always, TakenOf::Type(t))) => {
+            format!("{}DamageTaken", title(t.name()))
+        }
+        Quantity::Poe1(Poe1Quantity::SelfDamageTaken(TakenWhen::Always, TakenOf::Elemental)) => {
+            "ElementalDamageTaken".into()
+        }
+        Quantity::Poe1(Poe1Quantity::SpellBlockChance) => "SpellBlockChance".into(),
+        // P6-10b: regeneration.
+        Quantity::Poe1(Poe1Quantity::Regen(p)) => format!("{}Regen", title(p.name())),
+        Quantity::Poe1(Poe1Quantity::RegenPercent(p)) => format!("{}RegenPercent", title(p.name())),
+        Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
+        Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
+        Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
+        // P6-10b parts 11 and 12: a curse's on the enemy.
+        Quantity::Poe1(Poe1Quantity::EnemyAccuracy) => "Accuracy".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),
+        // P6-11cv: Temporal Chains' on the enemy.
+        Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster) => "BuffExpireFaster".into(),
+        // P6-11dt: Berserk's rage effect.
+        Quantity::Poe1(Poe1Quantity::Stack(
+            loom_calc::poe1::stacks::StackKind::Rage,
+            loom_calc::poe1::stacks::StackValue::Effect,
+        )) => "RageEffect".into(),
+        // P6-10b part 9: leech.
+        Quantity::Poe1(Poe1Quantity::DamageLeech(p, source)) => {
+            let pool = match p {
+                Pool::Life => "Life",
+                Pool::Mana => "Mana",
+                Pool::EnergyShield => "EnergyShield",
+            };
+            match source {
+                LeechSource::Any => format!("Damage{pool}Leech"),
+                LeechSource::Type(t) => format!("{}Damage{pool}Leech", title(t.name())),
+                LeechSource::Elemental => format!("ElementalDamage{pool}Leech"),
+            }
+        }
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();
@@ -466,6 +956,11 @@ fn title(word: &str) -> String {
 /// increased as `Defences`.
 fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
     use loom_calc::DamageType as D;
+    // The engine's marker of an increase shared by armour and evasion
+    // (P6-11ek: Iron Reflexes counts it once) is no PoB mod of its own.
+    let shared = Quantity::Poe1(Poe1Quantity::ArmourAndEvasionShared);
+    let kept: Vec<Row> = effects.iter().copied().filter(|e| e.0 != shared).collect();
+    let effects = kept.as_slice();
     let res = |t| Quantity::Poe1(Poe1Quantity::EnemyResistance(t));
     let same = |qs: [Quantity; 3]| {
         effects.len() == 3
@@ -477,6 +972,14 @@ fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
     let kind = effects.first().map(|e| op_name(e.1))?;
     if same([res(D::Fire), res(D::Cold), res(D::Lightning)]) {
         return Some(format!("ElementalResist {kind} []"));
+    }
+    let own = Quantity::Resistance;
+    if same([own(D::Fire), own(D::Cold), own(D::Lightning)]) {
+        return Some(format!("ElementalResist {kind} []"));
+    }
+    let max = Quantity::MaximumResistance;
+    if same([max(D::Fire), max(D::Cold), max(D::Lightning)]) {
+        return Some(format!("ElementalResistMax {kind} []"));
     }
     if same([Quantity::EnergyShield, Quantity::Armour, Quantity::Evasion]) {
         return Some(format!("Defences {kind} []"));
@@ -498,7 +1001,7 @@ fn op_name(op: Op) -> &'static str {
 type Row = (Quantity, Op, f64, Flags, Flags);
 
 /// Our rows of a stat as PoB's mods, with the tags its variant stands for.
-fn variant_form(b: &BuffStat) -> Vec<String> {
+fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
     let (rows, suffix): (&[Row], String) = match b {
         BuffStat::Rows(r) => (r, String::new()),
         BuffStat::WhenInput {
@@ -510,6 +1013,48 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
         BuffStat::BloodStance(rows) => (
             rows,
             format!(" tags global {}", json!({ "effectCond": "BloodStance" })),
+        ),
+        BuffStat::SandStance(rows) => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": "SandStance" })),
+        ),
+        // A guard's rows (P6-11ae): `unscalable`, Molten Shell's limit per
+        // armour with its `PerStat` tag (PoB's export keeps its stat alone).
+        BuffStat::Unscalable(rows) => (
+            rows,
+            if rows
+                .iter()
+                .any(|r| r.0 == Quantity::Poe1(Poe1Quantity::GuardAbsorbPerArmour))
+            {
+                format!(
+                    " tags {};global {}",
+                    json!({ "stat": "Armour", "type": "PerStat" }),
+                    json!({ "unscalable": true })
+                )
+            } else {
+                format!(" tags global {}", json!({ "unscalable": true }))
+            },
+        ),
+        BuffStat::PerCount { var, rows, .. } => (
+            rows,
+            format!(" tags {}", json!({ "type": "Multiplier", "var": var })),
+        ),
+        // PoB's stack variable and limit on the `GlobalEffect` tag (P6-11fn).
+        BuffStat::PerStack {
+            var, limit, rows, ..
+        } => (
+            rows,
+            format!(
+                " tags global {}",
+                json!({ "effectStackLimit": limit, "effectStackVar": var })
+            ),
+        ),
+        // The skill's condition at its maximum stages (P6-11gb).
+        BuffStat::AtMaxStages {
+            condition, rows, ..
+        } => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": condition })),
         ),
         BuffStat::Threshold(rows) => (
             rows,
@@ -526,18 +1071,87 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
                 json!({ "stat": "LifeUnreserved", "threshold": 2, "type": "StatThreshold" })
             ),
         ),
-        BuffStat::NoSlice(_) | BuffStat::Gated(_) => return Vec::new(),
+        BuffStat::MinionOnly(rows) => (rows, String::new()),
+        // The enemy's condition (P6-11ho), negated with `neg`.
+        BuffStat::EnemyCheck { var, neg, rows, .. } => (
+            rows,
+            format!(
+                " tags {}",
+                if *neg {
+                    json!({ "actor": "enemy", "neg": true, "type": "ActorCondition", "var": var })
+                } else {
+                    json!({ "actor": "enemy", "type": "ActorCondition", "var": var })
+                }
+            ),
+        ),
+        // A warcry's rows per power (P6-11bs): PoB's `GlobalEffect` tag
+        // carries the step and the cap.
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "the step and the cap are small whole numbers"
+        )]
+        BuffStat::PerPower { div, limit, rows } => (
+            rows,
+            format!(
+                " tags global {}",
+                json!({ "div": *div as i64, "limit": *limit as i64 })
+            ),
+        ),
+        BuffStat::WhenState { var, rows, .. } => (
+            rows,
+            format!(
+                " tags {}{}",
+                json!({ "type": "Condition", "var": var }),
+                // Cyclone's buff is `unscalable` (P6-8a,
+                // `poe1::gems::UNSCALABLE`).
+                if *var == "ChannellingCyclone" {
+                    format!(";global {}", json!({ "unscalable": true }))
+                } else {
+                    String::new()
+                }
+            ),
+        ),
+        BuffStat::ConfigIs {
+            condition, rows, ..
+        }
+        | BuffStat::CheckModCond {
+            condition, rows, ..
+        } => (
+            rows,
+            format!(" tags global {}", json!({ "modCond": condition })),
+        ),
+        BuffStat::NoSlice(_)
+        | BuffStat::Defence(_)
+        | BuffStat::Gated(_)
+        | BuffStat::Reason(_)
+        | BuffStat::ReasonWhenInput { .. } => {
+            return Vec::new();
+        }
     };
+    // A field's reason marker (P6-10b: warcry power): PoB's mod is not
+    // modelled, so there is nothing to compare.
+    if rows.iter().all(|r| {
+        matches!(
+            r.0,
+            Quantity::Poe1(Poe1Quantity::RegenReason(..) | Poe1Quantity::MovementReason(_))
+        )
+    }) {
+        return Vec::new();
+    }
     if let Some(one) = collapse(rows) {
         return vec![one + &suffix];
     }
-    our_form(rows)
+    our_form(rows, enemy)
         .into_iter()
         .zip(rows)
         .map(|(f, row)| {
             // Arcane Surge's cast speed: PoB's MAX mod, `unscalable`; the
             // engine keeps the largest (`poe1::buffs`).
-            if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) {
+            if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed)
+                || row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen)
+                // P6-11ga: Flame Surge's burning ground, MAX as well.
+                || row.0 == Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround)
+            {
                 return f.replacen(" BASE ", " MAX ", 1)
                     + &format!(" tags global {}", json!({ "unscalable": true }));
             }
@@ -546,10 +1160,33 @@ fn variant_form(b: &BuffStat) -> Vec<String> {
         .collect()
 }
 
-fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
+/// `enemy`: the rows are a curse's or a debuff's on the enemy, whose added
+/// damage, ailment chances, and ailment durations PoB names `Self...`
+/// (P6-9b).
+fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<String> {
     effects
         .iter()
         .map(|&(q, op, divisor, all, any)| {
+            // An effect per herald affecting you (P6-11fz: Herald of the
+            // Breach): PoB's `Multiplier` tag `Herald` on the target's mod.
+            if let (
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    loom_calc::poe1::stacks::StackKind::Herald,
+                    loom_calc::poe1::stacks::StackValue::Per(p),
+                )),
+                Op::Base,
+            ) = (q, op)
+            {
+                let (tq, top, tall, tany) = p.target();
+                let mut f = our_form(&[(tq, top, divisor, tall | all, tany | any)], enemy);
+                for s in &mut f {
+                    s.push_str(&format!(
+                        " tags {}",
+                        json!({ "type": "Multiplier", "var": "Herald" })
+                    ));
+                }
+                return f.remove(0);
+            }
             // The enemy's elemental ailment duration (Elemental Weakness,
             // P6-2b): our condition names the ailments PoB's name does.
             let elemental_duration =
@@ -567,12 +1204,29 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
             .into_iter()
             .find(|(f, _)| q == Quantity::Damage && all.contains(*f));
             let (name, all) = match typed {
-                Some((f, t)) => (
-                    format!("{t}Damage"),
-                    if all == f { Flags::NONE } else { all },
-                ),
+                Some((f, t)) => (format!("{t}Damage"), all.without(f)),
                 None if elemental_duration => ("SelfElementalAilmentDuration".to_owned(), all),
-                None => (pob_name(q), all),
+                None => match (q, enemy) {
+                    (Quantity::AddedDamage(..), true) => (format!("Self{}", pob_name(q)), all),
+                    // Assassin's Mark (P6-9e).
+                    (Quantity::CritChance | Quantity::CritMultiplier, true) => {
+                        (format!("Self{}", pob_name(q)), all)
+                    }
+                    (Quantity::Poe1(Poe1Quantity::AilmentChance(a)), true) => {
+                        (format!("Self{}Chance", title(a.name())), all)
+                    }
+                    (Quantity::Poe1(Poe1Quantity::EnemyAilmentDuration), true)
+                        if all == Flags::IGNITE || all == Flags::BLEED =>
+                    {
+                        let a = if all == Flags::IGNITE {
+                            "Ignite"
+                        } else {
+                            "Bleed"
+                        };
+                        (format!("Self{a}Duration"), Flags::NONE)
+                    }
+                    _ => (pob_name(q), all),
+                },
             };
             let kind = match op {
                 Op::Base => "BASE",
@@ -597,8 +1251,36 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
             if all.contains(Flags::PROJECTILE) {
                 f.push("projectile");
             }
+            if all.contains(Flags::DOT) {
+                f.push("dot");
+            }
+            if all.contains(Flags::AREA) {
+                f.push("area");
+            }
+            if all.contains(Flags::SKILL_MELEE) {
+                f.push("skill-melee");
+            }
+            if all.contains(Flags::MELEE) {
+                f.push("melee");
+            }
+            if all.contains(Flags::SKILL_NOT_TOTEM) {
+                f.push("skill-not-totem");
+            }
+            if all.contains(Flags::POISON) {
+                f.push("poison");
+            }
             let other = !any.is_empty()
-                || !(Flags::ATTACK | Flags::SPELL | Flags::HIT | Flags::CAST | Flags::PROJECTILE)
+                || !(Flags::ATTACK
+                    | Flags::SPELL
+                    | Flags::HIT
+                    | Flags::CAST
+                    | Flags::PROJECTILE
+                    | Flags::DOT
+                    | Flags::AREA
+                    | Flags::SKILL_MELEE
+                    | Flags::MELEE
+                    | Flags::SKILL_NOT_TOTEM
+                    | Flags::POISON)
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",
@@ -622,6 +1304,16 @@ fn strings(items: impl IntoIterator<Item = String>) -> Value {
     Value::Array(items.into_iter().map(Value::String).collect())
 }
 
+/// What a checked table entry is (P6-9b): a support, an active skill on
+/// the character, or a curse or debuff on the enemy (whose rows PoB names
+/// `Self...`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Role {
+    Support,
+    OnCharacter,
+    OnEnemy,
+}
+
 fn check_one(
     out: &mut Comparison,
     id: &str,
@@ -629,8 +1321,10 @@ fn check_one(
     stats: &[(&str, BuffStat)],
     buff: Option<(&str, &str)>,
     forbidden: &[&str],
-    support: bool,
+    role: Role,
 ) {
+    let support = role == Role::Support;
+    let enemy = role == Role::OnEnemy;
     let own_effect: Vec<&str> = gems::OWN_EFFECT_STATS.iter().map(|(s, _)| *s).collect();
     // Global stats.
     let pob_global: BTreeSet<String> = skill
@@ -692,12 +1386,15 @@ fn check_one(
                 .flat_map(|s| s.mods.iter())
         };
         match b {
-            BuffStat::NoSlice(_) => {
+            BuffStat::NoSlice(_) | BuffStat::Defence(_) => {
                 // Only the global mods form the buff; a skill's other mods
                 // act on itself (close-out: base mods share the stat "").
                 let bad: Vec<String> = mods()
                     .filter(|m| global(m).is_some())
-                    .filter(|m| !NO_SLICE_NAMES.contains(&m.name.as_str()))
+                    .filter(|m| {
+                        !NO_SLICE_NAMES.contains(&m.name.as_str())
+                            && !(enemy && ENEMY_NO_SLICE_NAMES.contains(&m.name.as_str()))
+                    })
                     .map(|m| m.name.clone())
                     .collect();
                 out.check(
@@ -729,15 +1426,28 @@ fn check_one(
                     strings(conds),
                 );
             }
-            BuffStat::Rows(_)
+            BuffStat::Reason(_)
+            | BuffStat::ReasonWhenInput { .. }
+            | BuffStat::Rows(_)
             | BuffStat::BloodStance(_)
+            | BuffStat::SandStance(_)
+            | BuffStat::Unscalable(_)
+            | BuffStat::PerCount { .. }
+            | BuffStat::PerStack { .. }
+            | BuffStat::AtMaxStages { .. }
+            | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
-            | BuffStat::LifeThreshold(_) => {}
+            | BuffStat::LifeThreshold(_)
+            | BuffStat::WhenState { .. }
+            | BuffStat::MinionOnly(_)
+            | BuffStat::PerPower { .. }
+            | BuffStat::EnemyCheck { .. }
+            | BuffStat::ConfigIs { .. } => {}
         }
     }
     // Rows.
     for (stat, b) in stats {
-        let ours = variant_form(b);
+        let ours = variant_form(b, enemy);
         if ours.is_empty() {
             continue;
         }
@@ -745,7 +1455,12 @@ fn check_one(
             .mods
             .iter()
             .filter(|s| s.stat == *stat)
-            .flat_map(|s| s.mods.iter().map(move |m| pob_form(m, s.div, s.mult)))
+            .flat_map(|s| {
+                s.mods
+                    .iter()
+                    .filter(|m| !POB_ROW_COMPANIONS.contains(&(*stat, m.name.as_str())))
+                    .map(move |m| pob_form(m, s.div, s.mult))
+            })
             .collect();
         out.check(
             TABLE,
@@ -771,7 +1486,9 @@ fn check_one(
             if own_effect.contains(&s.stat.as_str()) {
                 continue;
             }
-            if key.is_some_and(|k| ALLOWED_BLOCKED.contains(&(id, k))) {
+            if key.is_some_and(|k| ALLOWED_BLOCKED.contains(&(id, k)))
+                || ALLOWED_BLOCKED.contains(&(id, m.name.as_str()))
+            {
                 continue;
             }
             let bad = BLOCKED_NAMES.contains(&m.name.as_str())
@@ -838,6 +1555,11 @@ fn check_one(
             })
             .map(|(k, _)| k.clone())
             .collect();
+        let percent = if RESERVING_SUPPORTS.contains(&id) {
+            Vec::new()
+        } else {
+            percent
+        };
         out.check(
             TABLE,
             id,
@@ -868,17 +1590,36 @@ pub fn compare_gem_effects(out: &mut Comparison, export: &Export, effects: &BTre
             Kind::Warcry { .. } => WARCRY_FORBIDDEN,
         };
         let buff = kind.buff().map(|(effect, name)| (name, effect));
-        check_one(out, id, skill, kind.stats(), buff, forbidden, false);
+        let role = if matches!(kind, Kind::Curse { .. } | Kind::Debuff { .. }) {
+            Role::OnEnemy
+        } else {
+            Role::OnCharacter
+        };
+        check_one(out, id, skill, kind.stats(), buff, forbidden, role);
     }
     for (id, stats) in gems::SUPPORTS {
         if !effects.contains(id) {
             continue;
         }
+        // A support acting through the hex it supports checks its curse
+        // rows (P6-11fl, `gems::CURSE_SUPPORTS`).
+        let stats = gems::CURSE_SUPPORTS
+            .iter()
+            .find(|(s, _)| s == id)
+            .map_or(*stats, |(_, s)| *s);
         let Some(skill) = export.skills.get(*id) else {
             out.check(TABLE, id, "row", json!("present"), Value::Null);
             continue;
         };
-        check_one(out, id, skill, stats, None, SUPPORT_FORBIDDEN, true);
+        check_one(
+            out,
+            id,
+            skill,
+            stats,
+            None,
+            SUPPORT_FORBIDDEN,
+            Role::Support,
+        );
     }
 }
 
@@ -1008,13 +1749,16 @@ mod tests {
             "ColdMin"
         );
         assert_eq!(
-            our_form(&[(
-                Quantity::Speed,
-                Op::Increased,
-                1.0,
-                Flags::CAST,
-                Flags::NONE
-            )]),
+            our_form(
+                &[(
+                    Quantity::Speed,
+                    Op::Increased,
+                    1.0,
+                    Flags::CAST,
+                    Flags::NONE
+                )],
+                false
+            ),
             ["Speed INC [cast]"]
         );
         assert!(ailment_max("ShockMax"));

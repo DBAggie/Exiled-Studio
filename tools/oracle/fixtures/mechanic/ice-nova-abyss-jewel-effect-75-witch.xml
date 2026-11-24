@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 P6-11gi): a level 90 Witch casting Ice Nova (level 20) from a magic body armour, with a rare belt of one abyssal socket and "75% increased Effect of Socketed Abyss Jewels" holding a rare abyss jewel, scaled by 75%: the jewel's +16 Intelligence to 28, its 10 to 20 added cold damage to spells to 17 to 35, its +30 life to 52 (PoB's `socketedJewelEffectModifier` and `ScaleAddMod`). Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Body Armour">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Controlled Destruction" skillId="SupportControlledDestruction" variantId="SupportControlledDestruction" gemId="Metadata/Items/Gems/SupportGemControlledDestruction" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false" slot="Body Armour">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: MAGIC
+Plate Vest
+Quality: 0
+Sockets: B-B-G
+Implicits: 0
+Socketed Skill Gems get a 80% Cost &amp; Reservation Multiplier
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Cinch
+Leather Belt
+Implicits: 0
+Has 1 Abyssal Socket
+75% increased Effect of Socketed Abyss Jewels
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Eye
+Searching Eye Jewel
+Implicits: 0
++16 to Intelligence
+Adds 10 to 20 Cold Damage to Spells
++30 to maximum Life
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+			<Slot name="Belt" itemId="2"/>
+			<Slot name="Belt Abyssal Socket 1" itemId="3"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

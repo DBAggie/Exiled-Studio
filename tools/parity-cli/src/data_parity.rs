@@ -28,6 +28,8 @@ pub mod flavour;
 pub mod gem_effects;
 pub mod pob;
 pub mod rules;
+pub mod tattoos;
+pub mod timeless;
 
 #[cfg(test)]
 mod tests;
@@ -44,7 +46,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 20] = [
+pub const TABLES: [&str; 22] = [
     "skills",
     "gems",
     "bases",
@@ -65,6 +67,8 @@ pub const TABLES: [&str; 20] = [
     "flasks",
     "minions",
     "minion_mods",
+    "timeless",
+    "tattoos",
 ];
 
 /// Summary and overlay format.
@@ -313,6 +317,9 @@ pub struct Request<'a> {
     pub passive_scope: &'a str,
     /// The bosses to compare (`loom_calc::poe1::enemy::BOSSES` in a run).
     pub bosses: &'a [loom_calc::poe1::enemy::Boss],
+    /// Each timeless jewel results file's Adler-32, by path (computed from
+    /// the bundle's files; P6-10a).
+    pub timeless_adlers: &'a std::collections::BTreeMap<String, u32>,
     /// The tool record.
     pub tool: Tool,
 }
@@ -356,7 +363,13 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
                 .unwrap_or("an unknown version")
         ));
     }
-    let comparison = compare::compare(bundle, &export, request.passive_scope, request.bosses)?;
+    let comparison = compare::compare(
+        bundle,
+        &export,
+        request.passive_scope,
+        request.bosses,
+        request.timeless_adlers,
+    )?;
     let inputs = Inputs {
         game,
         steam_build: bundle.manifest.source.steam_build,

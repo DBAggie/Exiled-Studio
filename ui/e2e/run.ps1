@@ -1,6 +1,7 @@
 # Runs the real-app workflow (ui/e2e/workflow.mjs) on Windows: starts
 # tauri-driver with msedgedriver, then the script. From the repository
-# root, in CI's e2e job (Windows) or by hand:
+# root, by hand (CI runs only the Linux job: on GitHub's Windows runner
+# WebView2 never opens its DevTools port, see .github/workflows/ci.yml):
 #
 #   pwsh ui/e2e/run.ps1 <app binary> <msedgedriver.exe> [<tauri-driver.exe>]
 #

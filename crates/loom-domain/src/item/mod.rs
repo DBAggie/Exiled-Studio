@@ -391,8 +391,11 @@ impl ItemBody {
     /// Checks the continuation links of multi-line resolutions:
     /// - each [`LineResolution::Continues`] points to a resolved modifier
     ///   line, and follows it, or another continuation of it, directly
-    ///   among the modifier lines (a description over several lines, or a
-    ///   split-section pair);
+    ///   among the modifier lines of its own selection (a description over
+    ///   several lines, or a split-section pair): the selected lines and
+    ///   the lines of variants not selected each run on past the other's
+    ///   (a Timeless jewel's description, with the other conquerors' lines
+    ///   between its two lines);
     /// - a line resolved with [`Adapted::SplitSection`] is continued by
     ///   exactly one line.
     ///
@@ -400,10 +403,16 @@ impl ItemBody {
     /// [`DomainError::BrokenContinuation`] for the first bad link.
     pub fn check_links(&self) -> Result<(), DomainError> {
         let mut continued = vec![0_usize; self.lines.len()];
-        // The resolved line the previous modifier line belongs to.
-        let mut previous: Option<usize> = None;
+        // The resolved line the previous modifier line of each selection
+        // (not selected, selected) belongs to.
+        let (mut previous_other, mut previous_selected) = (None, None);
         for (index, m) in self.modifiers() {
-            previous = match m.resolution {
+            let previous: &mut Option<usize> = if m.selected {
+                &mut previous_selected
+            } else {
+                &mut previous_other
+            };
+            *previous = match m.resolution {
                 LineResolution::Continues { line } => {
                     let first_resolved = matches!(
                         self.lines.get(line).map(|l| &l.kind),
@@ -414,7 +423,7 @@ impl ItemBody {
                     );
                     let count = continued
                         .get_mut(line)
-                        .filter(|_| first_resolved && previous == Some(line));
+                        .filter(|_| first_resolved && *previous == Some(line));
                     match count {
                         Some(c) => *c += 1,
                         None => return Err(DomainError::BrokenContinuation { line: index }),
