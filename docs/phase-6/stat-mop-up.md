@@ -5027,3 +5027,34 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 6 values move toward PoB (elemental-hit-of-the-spectrum-deadeye.xml: hit chance, crit chance, damage, DPS), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ik: crits against low life, rare or unique enemies nearby
+
+**Found** (the unmapped stats left in single builds; `ethereal-knives-mines-assassin.xml` has the two Assassin lines):
+- "+#% to Critical Strike Multiplier against Enemies that are on Low Life";
+- "#% more Critical Strike Chance against Enemies that are not on Low Life";
+- "#% more Damage while there is at most one Rare or Unique Enemy nearby";
+- "#% less Damage taken while there are at least two Rare or Unique Enemies nearby".
+
+**PoB:**
+- The Assassin lines are `CritMultiplier` BASE with the enemy's `LowLife` and `CritChance` MORE with it negated. The enemy's `LowLife` comes from `conditionEnemyLowLife`.
+- The count `multiplierNearbyRareOrUniqueEnemies` sets `Condition:AtMostOneNearbyRareOrUniqueEnemy` when at most 1 (`ConfigOptions.lua` 1230). Without the count the condition is not set.
+- The damage taken line is `DamageTaken` MORE with `MultiplierThreshold` `NearbyRareOrUniqueEnemies` 2.
+
+**The engine:**
+- `conditions::ENEMY_NOT_LOW_LIFE`, the negation of the enemy's low life check (as P6-11fb's).
+- `AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY` and `AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY`, settled from the count. Both are false without it; a value of another type leaves them unsettled.
+- Four `STATE_ROWS` rows read them.
+- The count's entry in `config::NAMED_ONLY` no longer names the at-most-one condition.
+
+**Evidence** (`b-ct`, against P6-11ij's run):
+- **Six new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-crit-multiplier-vs-low-life-witch.xml`: the critical strike multiplier 1.5 to 2.5.
+  - `ice-nova-more-crit-vs-not-low-life-witch.xml`: critical strike chance 7.5 to 15.
+  - `ice-nova-more-crit-vs-not-low-life-low-witch.xml`: the enemy on low life, no change.
+  - `ice-nova-more-damage-at-most-one-rare-witch.xml`: one nearby, average damage 727.5 to 909.6.
+  - `ice-nova-more-damage-at-most-one-rare-none-witch.xml`: no count, no change.
+  - `ice-nova-less-damage-taken-two-rares-witch.xml`: two nearby, the total EHP 745 to 1148, no more damage.
+- **Public:** 0 unexpected; 6 values move toward PoB (ethereal-knives-mines-assassin.xml: critical strike chance now equal to PoB's, damage, DPS), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

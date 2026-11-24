@@ -4460,6 +4460,28 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
         ],
     ),
+    // P6-11ik: "#% more Critical Strike Chance against Enemies that are
+    // not on Low Life" (`CritChance` MORE, the enemy's negated `LowLife`).
+    (
+        "assassin_critical_strike_chance_+%_final_vs_enemies_not_on_low_life",
+        &[(
+            Quantity::CritChance,
+            Op::More,
+            NONE,
+            conditions::ENEMY_NOT_LOW_LIFE,
+        )],
+    ),
+    // P6-11ik: "+#% to Critical Strike Multiplier against Enemies that are
+    // on Low Life" (`CritMultiplier` BASE, the enemy's `LowLife`).
+    (
+        "assassin_critical_strike_multiplier_+_vs_enemies_on_low_life",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::ENEMY_LOW_LIFE,
+        )],
+    ),
     // P6-11a: "Attack Skills deal #% increased Damage with Ailments while
     // holding a Shield": `Damage` INC with `ModFlag.Ailment` and the attack
     // keyword, `UsingShield` (as the staff row).
@@ -4826,6 +4848,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
         ],
     ),
+    // P6-11ik: "#% more Damage while there is at most one Rare or Unique
+    // Enemy nearby" (`Damage` MORE, `AtMostOneNearbyRareOrUniqueEnemy`).
+    (
+        "damage_+%_final_if_there_is_at_most_1_rare_or_unique_enemy_nearby",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            conditions::AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY,
+        )],
+    ),
     // P6-11fb: "#% increased Damage if you've Killed Recently" (`Damage` INC,
     // `KilledRecently`).
     (
@@ -4962,6 +4995,21 @@ pub const STATE_ROWS: &[StateRow] = &[
                 conditions::NOT_KILLED_RECENTLY,
             ),
         ],
+    ),
+    // P6-11ik: "#% less Damage taken while there are at least two Rare or
+    // Unique Enemies nearby" (`DamageTaken` MORE, `MultiplierThreshold`
+    // `NearbyRareOrUniqueEnemies` 2).
+    (
+        "damage_taken_+%_if_there_are_at_least_2_rare_or_unique_enemies_nearby",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::All,
+            )),
+            Op::More,
+            NONE,
+            conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
+        )],
     ),
     // P6-11if: "#% reduced Damage taken while Leeching" (`DamageTaken` INC,
     // `Leeching`).
@@ -11998,6 +12046,11 @@ mod tests {
                         conditions::SELF_CAST_FLAMMABILITY,
                         conditions::SELF_CAST_FROSTBITE,
                         conditions::SELF_CAST_CONDUCTIVITY,
+                        // P6-11ik: the negation of the enemy's low life
+                        // check, and the nearby count's.
+                        conditions::ENEMY_NOT_LOW_LIFE,
+                        conditions::AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY,
+                        conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state)
@@ -13476,6 +13529,46 @@ mod tests {
                     Op::Increased,
                     Flags::SPELL,
                     conditions::USING_FLASK,
+                )],
+            ),
+            // P6-11ik.
+            (
+                "assassin_critical_strike_chance_+%_final_vs_enemies_not_on_low_life",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::More,
+                    NONE,
+                    conditions::ENEMY_NOT_LOW_LIFE,
+                )],
+            ),
+            (
+                "assassin_critical_strike_multiplier_+_vs_enemies_on_low_life",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_LOW_LIFE,
+                )],
+            ),
+            (
+                "damage_+%_final_if_there_is_at_most_1_rare_or_unique_enemy_nearby",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    conditions::AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY,
+                )],
+            ),
+            (
+                "damage_taken_+%_if_there_are_at_least_2_rare_or_unique_enemies_nearby",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::Always,
+                        TakenOf::All,
+                    )),
+                    Op::More,
+                    NONE,
+                    conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
                 )],
             ),
         ]);

@@ -212,6 +212,17 @@ pub const SKILL_USED_BY_YOU: &str = "SkillUsedByYou";
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// The enemy is on low life: the enemy's `LowLife` (P6-9e).
 pub const ENEMY_LOW_LIFE: &str = "Enemy:LowLife";
+/// "against Enemies that are not on Low Life": [`ENEMY_LOW_LIFE`] negated,
+/// unsettled when it is (P6-11ik; PoB's negated `ActorCondition`).
+pub const ENEMY_NOT_LOW_LIFE: &str = "Enemy:NotLowLife";
+/// "while there is at most one Rare or Unique Enemy nearby" (P6-11ik;
+/// PoB's `AtMostOneNearbyRareOrUniqueEnemy`, which the config's count sets
+/// when at most 1, `ConfigOptions.lua` 1230): false without the count.
+pub const AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY: &str = "AtMostOneNearbyRareOrUniqueEnemy";
+/// "while there are at least two Rare or Unique Enemies nearby" (P6-11ik;
+/// PoB's `MultiplierThreshold` `NearbyRareOrUniqueEnemies` 2): the
+/// config's count at least 2, false without it.
+pub const AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY: &str = "AtLeastTwoNearbyRareOrUniqueEnemies";
 /// "against Unique Enemies": the enemy's `RareOrUnique`.
 pub const ENEMY_RARE_OR_UNIQUE: &str = "Enemy:RareOrUnique";
 /// "while a Rare or Unique Enemy is Nearby" (P6-10b; PoB's enemy
@@ -681,6 +692,24 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     if let Some(v) = either {
         out.insert(ConditionKey::new(ENEMY_RARE_OR_UNIQUE_NEARBY), v);
     }
+    // At most one, at least two (P6-11ik): the count's alone; a value of
+    // another type leaves them unsettled.
+    let count = match set.and_then(|s| last(s, NEARBY_RARE_OR_UNIQUE_INPUT, ConfigInputKind::Input))
+    {
+        None => Some(None),
+        Some(ConfigValue::Number(n)) => Some(Some(n.value().0)),
+        Some(_) => None,
+    };
+    if let Some(count) = count {
+        out.insert(
+            ConditionKey::new(AT_MOST_ONE_RARE_OR_UNIQUE_NEARBY),
+            count.is_some_and(|n| n <= 1.0),
+        );
+        out.insert(
+            ConditionKey::new(AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY),
+            count.is_some_and(|n| n >= 2.0),
+        );
+    }
     // The auras affecting the character (P6-11o).
     let levels = super::gem_levels::GemLevels::none();
     let auras = super::gems::affected_by(input, &levels);
@@ -768,6 +797,8 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         (KILLED_RECENTLY, NOT_KILLED_RECENTLY),
         // P6-11hy: Emperor's Vigilance's bypass.
         (EV_BYPASS, NOT_EV_BYPASS),
+        // P6-11ik: the enemy not on low life.
+        (ENEMY_LOW_LIFE, ENEMY_NOT_LOW_LIFE),
     ] {
         if let Some(v) = out.get(&ConditionKey::new(key)).copied() {
             out.insert(ConditionKey::new(not), !v);

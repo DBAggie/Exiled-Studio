@@ -357,10 +357,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierNearbyRareOrUniqueEnemies",
         // Its share of `Multiplier:NearbyEnemies` is `poe1::stacks`'s
-        // (P6-11v).
+        // (P6-11v); `Condition:AtMostOneNearbyRareOrUniqueEnemy` is
+        // `poe1::conditions`' (P6-11ik).
         &[
             "Multiplier:NearbyRareOrUniqueEnemies",
-            "Condition:AtMostOneNearbyRareOrUniqueEnemy",
             "enemy Condition:NearbyRareOrUniqueEnemy",
         ],
     ),
