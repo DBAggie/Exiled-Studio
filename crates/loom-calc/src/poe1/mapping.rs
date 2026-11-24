@@ -4161,6 +4161,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Damage against a chilled enemy (P6-11hq:
                     // Hypothermia's).
                     | Poe1Quantity::DamageVsChilled
+                    // P6-11ii.
+                    | Poe1Quantity::CritVsChilled
+                    | Poe1Quantity::AddedColdVsChilledOrFrozen(_)
                     // Projectile speed (P6-11hr), read only by the hit's
                     // bow damage flag (P6-11hb).
                     | Poe1Quantity::ProjectileSpeed
@@ -5659,6 +5662,17 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "spell_block_with_staff_%",
         &[(SPELL_BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+    // P6-11ii: "#% increased Spell Damage during any Flask Effect"
+    // (`Damage` INC, `ModFlag.Spell`, `UsingFlask`).
+    (
+        "spell_damage_+%_during_flask_effect",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::SPELL,
+            conditions::USING_FLASK,
+        )],
     ),
     // P6-11ba: "#% increased Spell Damage while Dual Wielding": `Damage`
     // INC, `ModFlag.Spell`, `DualWielding`.
@@ -7477,6 +7491,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ii: "#% increased Critical Strike Chance against Chilled
+    // Enemies" (`CritChance` INC, the enemy's `Chilled`): `poe1::damage_taken`
+    // applies it while the enemy is chilled.
+    (
+        "global_critical_strike_chance_+%_vs_chilled_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CritVsChilled),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     (
         "global_defences_+%",
         &[
@@ -7492,6 +7517,25 @@ pub const ROWS: &[Row] = &[
                 1.0,
             ),
         ],
+    ),
+    // P6-11ii: "Adds # to # Cold Damage against Chilled or Frozen Enemies"
+    // (`ColdMin`, `ColdMax` BASE, the enemy's `Chilled` or `Frozen`):
+    // `poe1::damage_taken` adds it while the enemy is either.
+    (
+        "global_maximum_added_cold_damage_vs_chilled_or_frozen_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AddedColdVsChilledOrFrozen(MAX)),
+            Op::Base,
+            1.0,
+        )],
+    ),
+    (
+        "global_minimum_added_cold_damage_vs_chilled_or_frozen_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AddedColdVsChilledOrFrozen(MIN)),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11gr: "Your Curse Limit is equal to your maximum Power Charges"
     // (`CurseLimitIsMaximumPowerCharges` FLAG).
@@ -13388,6 +13432,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::KILLED_RECENTLY,
+                )],
+            ),
+            // P6-11ii.
+            (
+                "spell_damage_+%_during_flask_effect",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::SPELL,
+                    conditions::USING_FLASK,
                 )],
             ),
         ]);

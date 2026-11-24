@@ -146,6 +146,11 @@ const NO_EFFECT_NAMING: &[&str] = &[
 const ENEMY_ROWS: &[&str] = &[
     // P6-11bf: hit damage while the enemy is chilled (`damage_taken`).
     "damage_+%_vs_chilled_enemies",
+    // P6-11ii: critical strike chance against a chilled enemy, added cold
+    // damage against a chilled or frozen one (`damage_taken`).
+    "global_critical_strike_chance_+%_vs_chilled_enemies",
+    "global_maximum_added_cold_damage_vs_chilled_or_frozen_enemies",
+    "global_minimum_added_cold_damage_vs_chilled_or_frozen_enemies",
     "ignites_and_chill_apply_elemental_resistance_+",
     "permanent_damage_+%_per_second_of_chill",
     // P6-11hq: Hypothermia's more damage while the enemy is chilled.

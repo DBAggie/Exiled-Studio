@@ -157,8 +157,8 @@ pub const COVERED_IN_FROST_INPUT: &str = "conditionEnemyCoveredInFrost";
 /// cap (`CalcPerform.lua` 916 to 923: `m_min(effect, 20)`).
 const COVERED_EFFECT: f64 = 20.0;
 /// "Is the enemy Frozen?" (`ConfigOptions.lua` 1898): the enemy's `Frozen`
-/// alone, which only the covering in frost reads (P6-11gy; no mapped row
-/// reads the condition).
+/// alone, which the covering in frost (P6-11gy) and the added cold damage
+/// against chilled or frozen enemies (P6-11ii) read.
 pub const FROZEN_INPUT: &str = "conditionEnemyFrozen";
 
 /// Covered in Ash and Covered in Frost (P6-11gy; `CalcPerform.lua` 916 to
@@ -911,6 +911,63 @@ fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
                 }
             }
             Ok(false) => {}
+        }
+    }
+    // P6-11ii: critical strike chance against a chilled enemy (`CritChance`
+    // INC), and added cold damage against a chilled or frozen one (the
+    // frozen enemy the config's check alone, [`FROZEN_INPUT`]).
+    let crit_vs_chilled: Vec<Effect> =
+        unconditional(ingest, Poe1Quantity::CritVsChilled, Op::Increased)
+            .cloned()
+            .collect();
+    let added_vs: Vec<(crate::quantity::Bound, Effect)> =
+        [crate::quantity::Bound::Min, crate::quantity::Bound::Max]
+            .into_iter()
+            .flat_map(|b| {
+                unconditional(
+                    ingest,
+                    Poe1Quantity::AddedColdVsChilledOrFrozen(b),
+                    Op::Base,
+                )
+                .map(move |e| (b, e.clone()))
+            })
+            .collect();
+    if !crit_vs_chilled.is_empty() || !added_vs.is_empty() {
+        match chilled(set, ingest) {
+            Err(input) => ingest.reason(reason(input)),
+            Ok(is_chilled) => {
+                if is_chilled {
+                    for e in &crit_vs_chilled {
+                        ingest.effect(Effect {
+                            quantity: Quantity::CritChance,
+                            op: Op::Increased,
+                            value: e.value,
+                            conditions: Conditions::none(),
+                            source: e.source.clone(),
+                        });
+                    }
+                }
+                if !added_vs.is_empty() {
+                    let frozen = match set.map_or(Ok(false), |s| check(s, FROZEN_INPUT)) {
+                        Err(()) => {
+                            ingest.reason(reason(FROZEN_INPUT));
+                            None
+                        }
+                        Ok(frozen) => Some(frozen),
+                    };
+                    if is_chilled || frozen == Some(true) {
+                        for (b, e) in &added_vs {
+                            ingest.effect(Effect {
+                                quantity: Quantity::AddedDamage(DamageType::Cold, *b),
+                                op: Op::Base,
+                                value: e.value,
+                                conditions: Conditions::none(),
+                                source: e.source.clone(),
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
     let per: Vec<Effect> = unconditional(ingest, Poe1Quantity::ChillSecondsDamageTaken, Op::Base)

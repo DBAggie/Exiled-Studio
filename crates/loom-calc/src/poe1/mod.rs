@@ -939,6 +939,17 @@ pub enum Poe1Quantity {
     /// while the enemy is chilled (PoB's `ActorCondition` `Chilled` on the
     /// enemy).
     DamageVsChilled,
+    /// "#% increased Critical Strike Chance against Chilled Enemies"
+    /// (P6-11ii): `Increased`, which [`damage_taken`] turns into
+    /// `CritChance` INC while the enemy is chilled (PoB's `ActorCondition`
+    /// `Chilled` on the enemy).
+    CritVsChilled,
+    /// "Adds # to # Cold Damage against Chilled or Frozen Enemies"
+    /// (P6-11ii; the bound): `Base`, which [`damage_taken`] turns into the
+    /// added cold damage while the enemy is chilled or frozen (PoB's
+    /// `ActorCondition` `varList` `Chilled`, `Frozen`, `ModParser.lua`
+    /// 1990).
+    AddedColdVsChilledOrFrozen(crate::quantity::Bound),
     /// "Enemies permanently take #% increased Damage for each second
     /// they've ever been Chilled by you" (P3-8n): `Base`, read by
     /// [`damage_taken`].
@@ -1693,6 +1704,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedGroundDamageTaken => f.write_str("consecrated-ground-damage-taken"),
             Self::AilmentElementalResistance => f.write_str("ailment-elemental-resistance"),
             Self::DamageVsChilled => f.write_str("damage-vs-chilled"),
+            Self::CritVsChilled => f.write_str("crit-vs-chilled"),
+            Self::AddedColdVsChilledOrFrozen(b) => {
+                write!(f, "added-cold-vs-chilled-or-frozen.{}", b.name())
+            }
             Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
             Self::RegenIfExposureApplied(p) => {

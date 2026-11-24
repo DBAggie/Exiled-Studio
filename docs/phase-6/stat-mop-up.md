@@ -4970,3 +4970,32 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 13 values move toward PoB (cyclone-shockwave-slayer.xml: physical damage reduction now equal to PoB's, its speed, damage, DPS, movement speed, leech, and life cost). One moves away: its `ManaPerSecondCost` (`Partial`), 95.7 to 105.6 against PoB's 0. It is the mana cost (10, PoB 0, already a difference with its reasons) times the attack rate, which moves toward PoB.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ii: spell damage during a flask effect, against chilled or frozen enemies
+
+**Found** (the unmapped stats left in single builds; `Dual Wield Cospris CoC.xml` has the critical strike line):
+- "#% increased Spell Damage during any Flask Effect";
+- "#% increased Critical Strike Chance against Chilled Enemies";
+- "Adds # to # Cold Damage against Chilled or Frozen Enemies".
+
+**PoB:**
+- The flask line is `Damage` INC with `ModFlag.Spell` and `UsingFlask`.
+- The critical strike line is `CritChance` INC with the enemy's `Chilled` (`ActorCondition`).
+- The added damage is `ColdMin` and `ColdMax` BASE with the enemy's `varList` `Chilled`, `Frozen` (`ModParser.lua` 1990): either holds.
+
+**The engine:**
+- The flask line is a `STATE_ROWS` row with `USING_FLASK` (P6-11dz's condition).
+- `Poe1Quantity::CritVsChilled` and `Poe1Quantity::AddedColdVsChilledOrFrozen`: `damage_taken` turns them into `CritChance` INC and the added cold damage while the enemy is chilled (`chilled`: the config's check or a skill's guaranteed chill, as P6-11bf's damage), the added damage also while the enemy is frozen (the config's check, `FROZEN_INPUT`).
+- loom-calc's real-bundle chill coverage test lists the three stats among the enemy rows.
+
+**Evidence** (`b-ct`, against P6-11ih's run):
+- **Six new mechanic fixtures**, each matching PoB on every computed field (the Smite ones but the weapon's attack rate, Q11, DIV-0628 to DIV-0640 `game-truth`):
+  - `ice-nova-spell-damage-during-flask-witch.xml`: always using a flask, average damage 727.5 to 1018.6.
+  - `ice-nova-crit-vs-chilled-witch.xml`: the enemy chilled, critical strike chance 7.5 to 12.
+  - `ice-nova-crit-vs-chilled-none-witch.xml`: not chilled, no change.
+  - `ice-nova-added-cold-vs-chilled-witch.xml`: the enemy chilled, the added cold damage.
+  - `smite-added-cold-vs-frozen-templar.xml`: the enemy frozen, the added cold damage.
+  - `smite-added-cold-vs-chilled-or-frozen-none-templar.xml`: neither, no added damage.
+- **Public:** 0 unexpected; 6 values move toward PoB (Dual Wield Cospris CoC.xml: critical strike chance, speed, damage, DPS, mana per second), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
