@@ -19,6 +19,8 @@ Last Updated: 2026-11-24
   - [x] S1 part 2 (`local/p6/s1d`): `totem-data` narrowed (Siege Ballista of Trarthus, a totem's bleed and DoT), no leech field for a placed skill's hit; public `Complete` 38,869 to 38,922; Q11 DIV-0684 to DIV-0693 (`docs/phase-6/totems.md`, "Open items S1")
   - [ ] the rest of S1: other `pob-skill-data` skills by builds (Cyclone, Static Strike part 1, Fire Trap, Thrown Shield, ...), `socket-colour-quality`, `sigil-of-power-stages`, `skill-chill-effect`, `minion-buffs`; totems and Static Strike are in the follow-ups as "may not be reached"
 - [ ] S2: unmodelled support and active gems
+  - [x] S2 part 1 (`local/p6/s2`): every candidate checked against PoB's export and calc modules, then `data-parity`; added `SupportAddedChaosDamage`, `SupportEclipse` (`uncategorized` 0); nine candidates refused by `data-parity` with their blockers recorded (`docs/phase-6/gems.md`, "Open items S2"); 0 unexpected, 3 values toward PoB
+  - [ ] the rest: the buffs and auras with global rows (Arcane Cloak, Energy Blade, Petrified Blood, Mana Infused Staff, Aspect of the Cat, Raise Spiders, Convocation, Vaal Grace, Vaal Smite, Close Combat) as `Kind::Buff` with fixtures; Cold Snap and Unbound Ailments with their chill effect
 - [ ] S3: triggers and Spellslinger
 - [ ] S4: Blood and Sand, and PoB's full DPS pass
 - [ ] S5: costs per second, warcry power, mirage warriors, Sacred Wisps

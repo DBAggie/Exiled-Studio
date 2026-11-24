@@ -389,3 +389,22 @@ The awakened supports' "+# to Level of Supported <Type> Skill Gems" are PoB's `S
 **data-parity:** `uncategorized` 0.
 
 **Evidence** (`b-ct`, against P6-11ck's run): public and corpus 0 unexpected; no value moved (no other build has a typed level).
+
+## Open items S2 (2026-11-24): gems checked against PoB's data
+
+The survey (S0) listed the unmodelled gems by skill ID (`local/p6/tools/gems_unmodelled.py`, public and corpus by content hash). Each candidate was checked against PoB v2.67.2's export (`local/p6/tools/gem_globals.py`: `GlobalEffect` mods, types, functions) and its calc modules (references by name), then entered and checked by `data-parity` (`gem_effects`, which refuses an entry whose PoB data names a minion, a trigger, a totem, a buff type, or what scales buffs, reservation, or an ailment).
+
+**Added** (`data-parity` `uncategorized` 0): `SupportAddedChaosDamage` (its added chaos damage is the supported skill's own) and `SupportEclipse`, each with no global stat.
+
+**Refused by `data-parity`, so still `unmodelled-gem`** (each needs its own model):
+
+- Blink Arrow: its minion (`ArrowClone`, `minionUseBowAndQuiver`);
+- Cold Snap: `active_skill_chill_effect_+%_final` (`EnemyChillEffect` MORE), which a chilling area's guaranteed chill reads (`poe1::damage_taken`);
+- Corrupting Fever: a `Buff` type;
+- Vaal Absolution: its soul gain prevention data;
+- Arcanist Brand (`SupportBrandSupport`) and Sacred Wisps: triggers;
+- Living Lightning: a `CreatesMinion` type;
+- Spell Totem: `SummonsTotem`, `ReservationBecomesCost`, and the totem's level;
+- Unbound Ailments: `non_damaging_ailment_effect_+%` (`EnemyChillEffect` INC).
+
+**Not inert by PoB's calc modules:** Summon Sentinel of Radiance (its life takes damage before yours, `CalcDefence.lua` 34, `CalcPerform.lua` 1223), Pact of Ghorr (the pacts' uptime, `CalcOffence.lua` 2804), Summon Elemental Relic (its minion's auras), and the buffs and auras with global rows (Arcane Cloak, Energy Blade, Petrified Blood, Mana Infused Staff, Aspect of the Cat, Raise Spiders, Convocation, Vaal Grace, Vaal Smite, Close Combat): each needs its rows as a `Kind::Buff` with fixtures, left for a later step. Skitterbots need a data run (follow-ups).

@@ -3046,6 +3046,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // less damage, a local stat; no global stat, and a triggered curse
     // applies as any.
     ("BattlemagesCrySupport", &[]),
+    // Open items S2: added chaos damage, the supported skill's own; no `GlobalEffect` mod in PoB's export.
+    ("SupportAddedChaosDamage", &[]),
     ("SupportAddedColdDamage", &[]),
     // Arcane Surge Support's buff (`effectName = "Arcane Surge"`): its cast
     // speed is the largest any source gives (`ArcaneSurgeCastSpeed` MAX,
@@ -3157,6 +3159,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCurseOnHitCurse", &[]),
     ("SupportDamageOnFullLife", &[]),
     ("SupportDeadlyAilments", &[]),
+    // Open items S2: Eclipse; no `GlobalEffect` mod in PoB's export.
+    ("SupportEclipse", &[]),
     ("SupportEfficacy", &[]),
     // P6-11fq: Eldritch Blasphemy, Blasphemy's plus version: the same
     // aura, reservation, and `CurseEffect` MORE. Its Malignant Madness
