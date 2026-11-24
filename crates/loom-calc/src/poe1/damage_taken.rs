@@ -474,12 +474,45 @@ pub const DELIRIUM: [(&str, f64); 5] = [
     ("100Percent", -80.0),
 ];
 
+/// The check that the enemy is moving (open items, S8).
+pub const MOVING_INPUT: &str = "conditionEnemyMoving";
+
+/// Bleeding's more damage against a moving enemy: PoB's base modifier
+/// `Damage` MORE 200 with `KeywordFlag.Bleed` while the enemy is `Moving`
+/// (`CalcSetup.lua` 537), unless `NoExtraBleedDamageToMovingEnemy` (only
+/// modifiers: Crimson Dance and "Your Bleeding does not deal extra Damage
+/// while the Enemy is moving", unmapped stats, reasons).
+pub const MOVING_BLEED_MORE: f64 = 200.0;
+
+/// The moving enemy's bleed ([`MOVING_BLEED_MORE`]): the check
+/// (`ConfigOptions.lua` 1771 to 1773) sets the enemy's `Condition:Moving`.
+fn moving(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+    match last(set, MOVING_INPUT, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => {}
+        Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value: MOVING_BLEED_MORE,
+            conditions: Conditions::none().with_all(Flags::BLEED),
+            source: Source::Config {
+                input: MOVING_INPUT.to_owned(),
+            },
+        }),
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: MOVING_INPUT.to_owned(),
+            });
+        }
+    }
+}
+
 /// Whether this module handles `input` (the boss kind only as a string:
 /// the enemy model reports another type, [`super::enemy`]).
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
     match input {
-        SHOCKED_INPUT
+        MOVING_INPUT
+        | SHOCKED_INPUT
         | SHOCK_EFFECT_INPUT
         | CHILLED_INPUT
         | CHILL_EFFECT_INPUT
@@ -1181,6 +1214,7 @@ pub fn damage_taken(
     let Some(set) = set else { return };
     conditions(set, ingest);
     covered(input, set, ingest);
+    moving(set, ingest);
     match shock(set, ingest) {
         Ok(Some((shock, source))) => ingest.effect(Effect {
             source,

@@ -55,6 +55,16 @@
 //!   BuffEffectOnSelf / 100`; its movement speed (P6-10b) and its
 //!   `PhysicalDamageReduction` BASE `floor(10 x effect)` (P6-10b part 5).
 //!
+//! **Unholy Might** (open items, S8). `buffUnholyMight`
+//! (`ConfigOptions.lua` 1008 to 1011) sets `Condition:UnholyMight` and
+//! `Condition:CanWither` in combat; `CalcSetup.lua` (82) makes the first
+//! the `UnholyMight` flag, and `CalcPerform.lua` (720 to 724) gives
+//! `PhysicalDamageConvertToChaos` BASE `floor(100 x (1 + BuffEffectOnSelf
+//! / 100))` (here 100) and `CanWither`, which enables Withered's chaos
+//! damage taken (2704 to 2707, 811 to 814; [`super::damage_taken`]). Other
+//! sources of Unholy Might ("Unholy Might during Flask effect", on block)
+//! are unmapped stats, reasons.
+//!
 //! "Gain Adrenaline for # seconds on Kill" grants Adrenaline while killed
 //! recently is settled true (P6-11ih).
 //!
@@ -144,6 +154,13 @@ pub const ADRENALINE_SPEED: f64 = 25.0;
 /// Adrenaline's additional physical damage reduction (746; P6-10b part 5).
 pub const ADRENALINE_REDUCTION: f64 = 10.0;
 
+/// The check that grants Unholy Might (open items, S8).
+pub const UNHOLY_MIGHT_INPUT: &str = "buffUnholyMight";
+
+/// Unholy Might's physical damage converted to chaos, before its effect
+/// (`CalcPerform.lua` 720 to 724).
+pub const UNHOLY_MIGHT_CONVERSION: f64 = 100.0;
+
 /// Whether this module handles `input` (Arcane Surge's check is
 /// [`super::conditions`]').
 #[must_use]
@@ -155,6 +172,7 @@ pub fn is_buff_input(input: &str) -> bool {
         ADRENALINE_INPUT,
         CONSECRATED_INPUT,
         STATIONARY_INPUT,
+        UNHOLY_MIGHT_INPUT,
     ]
     .contains(&input)
 }
@@ -595,6 +613,31 @@ pub fn buffs(
             ),
         ],
     );
+    // Unholy Might (module docs): the conversion and `CanWither`, which
+    // `super::damage_taken`'s Withered (run after the buffs) reads.
+    constant_buff(
+        set,
+        ingest,
+        UNHOLY_MIGHT_INPUT,
+        None,
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::Conversion(
+                    crate::quantity::DamageType::Physical,
+                    crate::quantity::DamageType::Chaos,
+                )),
+                Op::Base,
+                UNHOLY_MIGHT_CONVERSION,
+                Flags::NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanWither),
+                Op::Flag,
+                1.0,
+                Flags::NONE,
+            ),
+        ],
+    );
     // The last input counts; a check's placeholder is not applied.
     let mut source = match set
         .and_then(|set| super::config::last_input(set, ONSLAUGHT_INPUT, ConfigInputKind::Input))
@@ -706,6 +749,8 @@ mod tests {
         assert!(!super::super::config::named_only(ONSLAUGHT_INPUT));
         assert!(!super::super::config::named_only(TAILWIND_INPUT));
         assert!(!super::super::config::named_only(ADRENALINE_INPUT));
+        assert!(!super::super::config::named_only(UNHOLY_MIGHT_INPUT));
+        assert!(is_buff_input(UNHOLY_MIGHT_INPUT));
         assert!(!super::super::charges::is_charge_input(ONSLAUGHT_INPUT));
     }
 
@@ -796,6 +841,33 @@ mod tests {
         buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
         assert!(none.effects().is_empty());
         assert!(is_buff_input(TAILWIND_INPUT) && is_buff_input(ADRENALINE_INPUT));
+    }
+
+    /// Unholy Might (open items, S8): the conversion and `CanWither` with
+    /// the check on, nothing with it off.
+    #[test]
+    fn unholy_might_should_convert_and_wither() {
+        let conversion = Quantity::Poe1(Poe1Quantity::Conversion(
+            crate::quantity::DamageType::Physical,
+            crate::quantity::DamageType::Chaos,
+        ));
+        let on = set(&[(UNHOLY_MIGHT_INPUT, ConfigValue::Boolean(true))]);
+        let mut ingest = Ingest::new(&Poe1Mapping);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut ingest);
+        let of = |q: Quantity, op: Op| {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| e.quantity == q && e.op == op)
+                .map(|e| e.value)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(of(conversion, Op::Base), [UNHOLY_MIGHT_CONVERSION]);
+        assert_eq!(of(Quantity::Poe1(Poe1Quantity::CanWither), Op::Flag), [1.0]);
+        let off = set(&[(UNHOLY_MIGHT_INPUT, ConfigValue::Boolean(false))]);
+        let mut none = Ingest::new(&Poe1Mapping);
+        buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
+        assert!(none.effects().is_empty());
     }
 
     /// The stat's one row: an unconditional flag (`buffs` reads only

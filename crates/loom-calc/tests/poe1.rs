@@ -1882,10 +1882,10 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
         // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
         // `poe1::config`).
         "conditionEnemyCrushed",
-        // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
-        "buffAlchemistsGenius",
-        // Wrath's check has effects since the close-out (`poe1::gems`).
-        "buffUnholyMight",
+        // Alchemist's Genius and Unholy Might left this list in open items
+        // S8 (`poe1::config`, `poe1::buffs`; checked below).
+        "conditionEnemyScorched",
+        "feedingFrenzyFeedingFrenzyActive",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
@@ -1896,6 +1896,13 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
         };
         assert_eq!(p.len(), 1, "{input}");
         assert!(p.contains(&config(input)), "{input}");
+    }
+    // Open items S8: Alchemist's Genius changes nothing without its
+    // condition's stat, and Unholy Might is applied, not a reason.
+    for input in ["buffAlchemistsGenius", "buffUnholyMight"] {
+        let r = with(vec![(input, yes())]);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete, "{input}");
+        assert_eq!(value_of(&r, Field::Life), value_of(&bare, Field::Life));
     }
 }
 

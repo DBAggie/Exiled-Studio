@@ -92,6 +92,27 @@ pub const DOT_FLAGS: [&str; 5] = [
     "dotIsHeraldOfAsh",
 ];
 
+/// Whether the DoT reads all of PoB's hand-written data of the skill
+/// (P6-6b, the skill sweep): PoB has data for it (a variant PoB v2.67.2
+/// lacks has no DoT in PoB), every base mod is the display data or the
+/// DoT's own keys and flags (not Exsanguinate's stages, not a tagged mod),
+/// and no stat of its stat map is read under a tag (P6-6b review:
+/// Conflagration's DoT in part 2 only, Animosity's per stack).
+#[must_use]
+pub fn pob_dot_vetted(pob: Option<&PobSkill>) -> bool {
+    let read = |m: &pob_skill::PobBaseMod| {
+        !m.tagged
+            && match (m.name, m.key) {
+                ("SkillData", Some(k)) => {
+                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || DOT_SKILL_DATA_KEYS.contains(&k)
+                }
+                (name, None) => m.kind == "FLAG" && DOT_FLAGS.contains(&name),
+                _ => false,
+            }
+    };
+    pob.is_some_and(|p| p.base_mods.iter().all(read) && p.own_stats.is_empty())
+}
+
 /// Vaal Righteous Fire's stats: the share of life and energy shield it
 /// sacrifices and the burn per second, percent of that (PoB's
 /// `percentSacrificed`, `RFMultiplier`, `div = 100`).
@@ -409,19 +430,7 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     // DoT PoB does not compute), or a base mod other than the display data
     // and the DoT's own keys and flags (Exsanguinate's stages, a tagged
     // mod): a reason.
-    let read = |m: &pob_skill::PobBaseMod| {
-        !m.tagged
-            && match (m.name, m.key) {
-                ("SkillData", Some(k)) => {
-                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || DOT_SKILL_DATA_KEYS.contains(&k)
-                }
-                (name, None) => m.kind == "FLAG" && DOT_FLAGS.contains(&name),
-                _ => false,
-            }
-    };
-    // A stat of its stat map read under a tag (P6-6b review: Conflagration's
-    // DoT in part 2 only, Animosity's per stack): a reason too.
-    if !pob.is_some_and(|p| p.base_mods.iter().all(read) && p.own_stats.is_empty()) {
+    if !pob_dot_vetted(pob) {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "pob-skill-data",

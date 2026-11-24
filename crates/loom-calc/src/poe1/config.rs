@@ -229,12 +229,33 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   `Withered` stacks (`multiplierWitheredStackCount`) are
 ///   [`super::damage_taken`]'s since P6-11aq (no longer in this list).
 ///
+/// Added in open items S8:
+///
+/// - `ActiveBrands`: `Multiplier:ConfigActiveBrands` (line 321), which
+///   `CalcPerform.lua` (1327 to 1330) reads only for an active brand skill
+///   to set `Multiplier:ActiveBrand`, capped by its brand limit; only
+///   modifiers read that ("per brand", `ModParser.lua` 1342, 1343: the
+///   stats in [`DEPENDS_ON`]). A brand's own attached count is
+///   `BrandsAttachedToEnemy`, another input.
+/// - `buffAlchemistsGenius`: `Condition:AlchemistsGenius`, only while
+///   `Condition:CanHaveAlchemistGenius` (line 1044). `CalcSetup.lua` (106)
+///   makes it a flag and `CalcPerform.lua` (1290 to 1294) gives flask
+///   effect and flask charges gained; but only a modifier sets
+///   `CanHaveAlchemistGenius` ("Gain Alchemist's Genius when you use a
+///   Flask", `ModParser.lua` 5102 to 5107: the stat
+///   `gain_alchemists_genius_on_flask_use_%`, in [`DEPENDS_ON`]). Without
+///   it the input does nothing.
+///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
 /// differs from the default (`ConfigTab.lua` 895, 919), so an absent one
 /// is on. Nothing settles their names; settling one must read absent as
 /// true ([`DEFAULT_ON`]).
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
+    (
+        "ActiveBrands",
+        &["Multiplier:ConfigActiveBrands", "Multiplier:ActiveBrand"],
+    ),
     (
         "DetonatedMinesRecently",
         &["Condition:DetonatedMinesRecently"],
@@ -257,6 +278,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "aspectOfSolarisSunscaldStacks",
         &["Multiplier:SunscaldStack"],
+    ),
+    (
+        "buffAlchemistsGenius",
+        &["Condition:AlchemistsGenius if Condition:CanHaveAlchemistGenius"],
     ),
     ("buffElusive", &["Condition:Elusive", "Elusive"]),
     (
@@ -483,6 +508,14 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// - exposure: moved in P3-8k to [`super::exposure`] (its rows and its
 ///   `DEPENDS_ON`), which gives the exposure checks their effect.
 ///
+/// Added in open items S8: the "per Brand" stats (`ActiveBrand`, read by
+/// `ModParser.lua` 1342 and 1343), found by the text "per Brand" in the
+/// bundle's stat descriptions: `cooldown_speed_+%_per_brand_up_to_40%`,
+/// `critical_strike_chance_+%_per_brand`,
+/// `sigil_recall_cooldown_speed_+%_per_brand_up_to_40%`; and
+/// `gain_alchemists_genius_on_flask_use_%`, the only source of
+/// `CanHaveAlchemistGenius`.
+///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
 pub const DEPENDS_ON: &[&str] = &[
@@ -496,11 +529,14 @@ pub const DEPENDS_ON: &[&str] = &[
     "chain_hook_attachment_rage_to_gain_per_hit",
     "chain_strike_gain_x_rage_if_attack_hits",
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
+    "cooldown_speed_+%_per_brand_up_to_40%",
+    "critical_strike_chance_+%_per_brand",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
     "energy_shield_leech_does_not_stop_on_full_energy_shield",
     "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
     "gain_1_rage_on_use_%_chance",
+    "gain_alchemists_genius_on_flask_use_%",
     "gain_player_far_shot_while_do_not_have_iron_reflexes",
     "gain_rage_on_hit",
     "gain_rage_on_hit_%_chance",
@@ -532,6 +568,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "regenerate_1_rage_per_x_mana_regeneration",
     "retaliation_skills_gain_X_rage_per_enemy_hit",
     "shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed",
+    "sigil_recall_cooldown_speed_+%_per_brand_up_to_40%",
     "spell_block_is_maximum_if_not_blocked_recently",
     "support_rage_gain_rage_on_melee_hit_cooldown_ms",
     "virtual_life_leech_does_not_stop_at_full_life",
@@ -588,6 +625,38 @@ pub fn inert(input: &str) -> bool {
     INERT.binary_search(&input).is_ok()
 }
 
+/// Config inputs whose only effect is a `SkillData` value of named skills
+/// (a `SkillName` tag) that only those skills' own skill functions read,
+/// with those skills' IDs, sorted by input (open items, S8). Every such
+/// skill is unvetted for its hit (its function, [`super::hit::pob_vetted`])
+/// and its DoT ([`super::dot::pob_dot_vetted`]), and its ailments, leech,
+/// and full DPS carry the hit's reason: so the value reaches no `Complete`
+/// field (a test checks). PoB v2.67.2:
+/// - `stormRainActiveArrows`: `activeArrowMultiplier` for Storm Rain of
+///   the Conduit (`ConfigOptions.lua` 663 to 665), read by its
+///   `preDamageFunc` as the `dpsMultiplier` (`act_dex.lua` 11851);
+/// - `stormRainBeamOverlap`: `beamOverlapMultiplier` for Storm Rain (659 to
+///   661; `act_dex.lua` 11747);
+/// - `toxicRainPodOverlap`: `podOverlapMultiplier` for Toxic Rain and its
+///   variants (700 to 702; `act_dex.lua` 14933, 15025, 15114).
+pub const SKILL_DATA_ONLY: &[(&str, &[&str])] = &[
+    ("stormRainActiveArrows", &["StormRainAltX"]),
+    ("stormRainBeamOverlap", &["StormRain"]),
+    (
+        "toxicRainPodOverlap",
+        &["ToxicRain", "ToxicRainAltX", "ToxicRainAltY"],
+    ),
+];
+
+/// Whether `input` only sets skill data its unvetted skills read
+/// ([`SKILL_DATA_ONLY`]).
+#[must_use]
+pub fn skill_data_only(input: &str) -> bool {
+    SKILL_DATA_ONLY
+        .binary_search_by(|(name, _)| (*name).cmp(input))
+        .is_ok()
+}
+
 /// Whether `input` is the enemy's damage ([`ENEMY_DAMAGE`]).
 #[must_use]
 pub fn enemy_damage(input: &str) -> bool {
@@ -607,6 +676,33 @@ mod tests {
             assert!(inert(input) && !named_only(input) && !enemy_damage(input));
         }
         assert!(NAMED_ONLY.iter().all(|(_, names)| !names.is_empty()));
+    }
+
+    /// [`SKILL_DATA_ONLY`] (open items, S8): sorted, apart from the other
+    /// lists, and each skill is in PoB's data with a function the hit does
+    /// not read, so neither its hit (every part) nor its DoT is vetted.
+    #[test]
+    fn skill_data_only_skills_should_stay_unvetted() {
+        assert!(SKILL_DATA_ONLY.windows(2).all(|w| w[0].0 < w[1].0));
+        for (input, skills) in SKILL_DATA_ONLY {
+            assert!(skill_data_only(input) && !named_only(input) && !inert(input));
+            for id in *skills {
+                let pob = super::super::pob_skill::skill(id).unwrap_or_else(|| panic!("{id}"));
+                assert!(!pob.functions.is_empty(), "{id}");
+                for part in 0..=pob.parts.len() {
+                    assert!(
+                        !super::super::hit::pob_vetted_with(id, part, true),
+                        "{id} {part}"
+                    );
+                }
+                // Toxic Rain's pods are its DoT, which PoB multiplies by
+                // the `dpsMultiplier` too (`CalcOffence.lua` 5747); Storm
+                // Rain deals no DoT.
+                if id.starts_with("ToxicRain") {
+                    assert!(!super::super::dot::pob_dot_vetted(Some(pob)), "{id}");
+                }
+            }
+        }
     }
 
     #[test]

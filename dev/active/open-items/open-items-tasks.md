@@ -25,6 +25,8 @@ Last Updated: 2026-11-24
 - [ ] S6: minion damage over time (spectres if their data is in the bundle)
 - [ ] S7: ward, EHP's other pools, maximum hit, degeneration, a dual wielder's leech
 - [ ] S8: config inputs; the close-out's closed reasons; repeats' `FINAL` and `FINAL_DPS`; the two guard-kept stats
+  - [x] S8 part 1 (`local/p6/s8b`): `SKILL_DATA_ONLY` (Storm Rain, Toxic Rain overlaps), `ActiveBrands` and `buffAlchemistsGenius` in `NAMED_ONLY` with their stats in `DEPENDS_ON`, Unholy Might and the moving enemy's bleed modelled; 2 fixtures, Q11 DIV-0694 to DIV-0699; public `Complete` 39,078, 0 unexpected, 8 values toward PoB (`docs/phase-6/config-inputs.md`, "Open items S8")
+  - [ ] the rest of S8: the ailment inputs (scorch, brittle, sap, crushed and their grounds) through PoB's ailment table; the closed reasons; repeats' `FINAL` and `FINAL_DPS`; the two guard-kept stats
 - [ ] S9: resolver and item gaps
 - [ ] S10: PoB's mana `PercentStat`
 - [ ] S11: report section, handoff, CLAUDE.md, follow-ups file

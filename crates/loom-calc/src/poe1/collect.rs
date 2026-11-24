@@ -2589,6 +2589,7 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
     if super::config::named_only(&input.name)
         || super::config::enemy_damage(&input.name)
         || super::config::inert(&input.name)
+        || super::config::skill_data_only(&input.name)
     {
         return InputUse::NoEffect;
     }

@@ -64,3 +64,25 @@ After this step, 36 distinct inputs remain reasons, in 26 builds.
 **Corpus:** no unexpected difference.
 
 Both runs were byte-identical.
+
+## Open items S8 (2026-11-24): config inputs
+
+The open items survey (S0) listed 28 `unmodelled-config` inputs. This step settles those whose PoB effect is fully known; each change is in `poe1::config`, `poe1::buffs`, or `poe1::damage_taken`, with PoB's lines in the code.
+
+**No effect in a computed field** (each a `NoEffect` input now):
+
+- `stormRainBeamOverlap`, `stormRainActiveArrows`, `toxicRainPodOverlap` (`config::SKILL_DATA_ONLY`): a `SkillData` value for the named skill (`SkillName` tag), read only by that skill's `preDamageFunc` as its `dpsMultiplier` (`act_dex.lua` 11747, 11851, 14933, 15025, 15114). Every such skill is unvetted for its hit, and Toxic Rain's for its DoT too (a test: `skill_data_only_skills_should_stay_unvetted`), so the value reaches no `Complete` field. The DoT vetting is now a function, `dot::pob_dot_vetted`.
+- `ActiveBrands` (`NAMED_ONLY`): `Multiplier:ConfigActiveBrands`, which `CalcPerform.lua` 1327 to 1330 turns into `Multiplier:ActiveBrand` for an active brand skill; only "per Brand" modifiers read it (`ModParser.lua` 1342, 1343). Their stats, found by the text in the bundle's descriptions, join `DEPENDS_ON`: `cooldown_speed_+%_per_brand_up_to_40%`, `critical_strike_chance_+%_per_brand`, `sigil_recall_cooldown_speed_+%_per_brand_up_to_40%`.
+- `buffAlchemistsGenius` (`NAMED_ONLY`): its condition holds only with `Condition:CanHaveAlchemistGenius` (`ConfigOptions.lua` 1044), which only "Gain Alchemist's Genius when you use a Flask" sets (`ModParser.lua` 5102 to 5107); its stat, `gain_alchemists_genius_on_flask_use_%`, joins `DEPENDS_ON`.
+
+**Modelled:**
+
+- **Unholy Might** (`buffUnholyMight`, `poe1::buffs`): `PhysicalDamageConvertToChaos` BASE `floor(100 x (1 + BuffEffectOnSelf / 100))` and `Condition:CanWither` (`CalcPerform.lua` 720 to 724), which enables Withered's chaos damage taken (2704 to 2707, 811 to 814; `poe1::damage_taken`, run after the buffs). `BuffEffectOnSelf` is unmapped, so 100.
+- **A moving enemy's bleed** (`conditionEnemyMoving`, `poe1::damage_taken`): PoB's base modifier `Damage` MORE 200 with `KeywordFlag.Bleed` while the enemy is `Moving` (`CalcSetup.lua` 537). Its exception, `NoExtraBleedDamageToMovingEnemy`, comes only from unmapped stats (Crimson Dance, a unique's line).
+
+**Fixtures** (2 of the session's 75):
+
+- `ice-nova-s8-unholy-might-withered-witch.xml`: added physical spell damage converted to chaos, the enemy at 10 Withered stacks: every computed field equals PoB.
+- `smite-s8-bleed-moving-enemy-templar.xml`: the bleed against a moving enemy equals PoB per hit; the rate differs only by the Rusted Hatchet's 667 ms (Q11), carried into the hit DPS, the bleed, the mana per second, and the full DPS: DIV-0694 to DIV-0699.
+
+**Still reasons** (follow-ups or later steps): the minion inputs (`minionsConditionFullLife`, `minionBuffOnslaught`, the minion charge inputs; the minion actor's conditions), Feeding Frenzy (its minion damage and speed), `enemyConditionHitByLightningDamage` (Elemental Equilibrium's exposure, `CalcPerform.lua` 3562 to 3572, and the hit sets it, `CalcOffence.lua` 3609), `multiplierNearbyAlly` (Rallying Cry's allies), the ground and ailment inputs (brittle, sapped, scorched, crushed: PoB's ailment table, `CalcPerform.lua` 3469 to 3500), `bandit` as a value the engine does not read, `presetBossSkills`, `TotalSpectreLife`, `detonateDeadCorpseLife`, `multiplierManaBurnStacks`, `EEIgnoreHitDamage`.
