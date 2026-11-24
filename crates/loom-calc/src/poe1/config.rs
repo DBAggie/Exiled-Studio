@@ -245,6 +245,16 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   Flask", `ModParser.lua` 5102 to 5107: the stat
 ///   `gain_alchemists_genius_on_flask_use_%`, in [`DEPENDS_ON`]). Without
 ///   it the input does nothing.
+/// - `conditionEnemyOnBrittleGround`, `conditionEnemyOnSappedGround`,
+///   `conditionEnemyOnScorchedGround`: the enemy's `Condition:<ailment>` and
+///   `Condition:On<ailment>Ground` (lines 1869 to 1872, 1913 to 1916, 1940
+///   to 1943). The ailment table (`CalcPerform.lua` 3534 to 3546) adds the
+///   ailment's effect only from `<ailment>Val`, which the effect input sets
+///   only with the check's `<ailment>Config` condition, or from
+///   `<ailment>Base`, `Override`, `Minimum` modifiers (unmapped stats): so a
+///   ground alone gives an effect of 0, and its conditions are read only by
+///   modifiers. The checks themselves have effects
+///   (`super::damage_taken`: scorch and sap; brittle stays a reason).
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -306,6 +316,21 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:ChilledEnemyRecently"],
     ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
+    (
+        "conditionEnemyOnBrittleGround",
+        &["enemy Condition:Brittle", "enemy Condition:OnBrittleGround"],
+    ),
+    (
+        "conditionEnemyOnSappedGround",
+        &["enemy Condition:Sapped", "enemy Condition:OnSappedGround"],
+    ),
+    (
+        "conditionEnemyOnScorchedGround",
+        &[
+            "enemy Condition:Scorched",
+            "enemy Condition:OnScorchedGround",
+        ],
+    ),
     ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
     ("conditionHitRecently", &["Condition:HitRecently"]),
     ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),

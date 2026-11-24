@@ -506,12 +506,124 @@ fn moving(set: &ConfigSet, ingest: &mut Ingest<'_>) {
     }
 }
 
+/// The checks that scorch, sap, and crush the enemy, and the scorch's and
+/// sap's effects (open items, S8).
+pub const SCORCHED_INPUT: &str = "conditionEnemyScorched";
+/// See [`SCORCHED_INPUT`].
+pub const SCORCH_EFFECT_INPUT: &str = "conditionScorchedEffect";
+/// See [`SCORCHED_INPUT`].
+pub const SAPPED_INPUT: &str = "conditionEnemySapped";
+/// See [`SCORCHED_INPUT`].
+pub const SAP_EFFECT_INPUT: &str = "conditionSapEffect";
+/// See [`SCORCHED_INPUT`].
+pub const CRUSHED_INPUT: &str = "conditionEnemyCrushed";
+
+/// PoB's `ailmentData` maxima (`Modules/Data.lua` 422, 424; precision 0).
+const SCORCH_MAX: f64 = 30.0;
+/// See [`SCORCH_MAX`].
+const SAP_MAX: f64 = 20.0;
+/// A crushed actor's `PhysicalDamageReduction` BASE (`CalcSetup.lua` 109).
+const CRUSHED_REDUCTION: f64 = -15.0;
+
+/// A non-damaging ailment of PoB's ailment table (`CalcPerform.lua` 3469 to
+/// 3546) with a check and an effect input: the check sets the enemy's
+/// `Condition:<ailment>` and `<ailment>Config`, the effect input its
+/// `<ailment>Val` BASE while that holds (`ConfigOptions.lua` 1858 to 1865,
+/// 1932 to 1939). The ailment is then `floor(min(max(override, Val),
+/// max))`: `override` comes from `<ailment>Base`, `Override`, and
+/// `Minimum` modifiers (unmapped stats, reasons), and `max` from `ailmentData`
+/// plus skills' `<ailment>Max` (unmapped stats too). `None` when the check
+/// is off or the effect is 0 (PoB then adds a 0 effect).
+fn alt_ailment(
+    set: &ConfigSet,
+    check: &'static str,
+    effect: &'static str,
+    max: f64,
+) -> Result<Option<(f64, Source)>, &'static str> {
+    match last(set, check, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => return Ok(None),
+        Some(ConfigValue::Boolean(true)) => {}
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => return Err(check),
+    }
+    let value = count(set, effect).map_err(|()| effect)?.unwrap_or(0.0);
+    let value = crate::math::floor(crate::math::min(crate::math::max(0.0, value), max));
+    Ok((value > 0.0).then(|| {
+        (
+            value,
+            Source::Config {
+                input: effect.to_owned(),
+            },
+        )
+    }))
+}
+
+/// Scorch, sap, and crush (module docs): scorch lowers the enemy's
+/// elemental resistances (`ElementalResist` BASE `-num`, 3472 to 3481), sap
+/// its damage (`Damage` MORE `-num`, 3491 to 3495), and a crushed enemy has
+/// 15% less physical damage reduction (`CalcSetup.lua` 109). The ground
+/// checks (`conditionEnemyOn<ailment>Ground`) set only named conditions:
+/// [`super::config::NAMED_ONLY`].
+fn alt_ailments(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+    match alt_ailment(set, SCORCHED_INPUT, SCORCH_EFFECT_INPUT, SCORCH_MAX) {
+        Ok(Some((scorch, source))) => {
+            for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+                ingest.effect(Effect {
+                    quantity: Quantity::Poe1(Poe1Quantity::EnemyResistance(t)),
+                    op: Op::Base,
+                    value: -scorch,
+                    conditions: Conditions::none(),
+                    source: source.clone(),
+                });
+            }
+        }
+        Ok(None) => {}
+        Err(input) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: input.to_owned(),
+        }),
+    }
+    match alt_ailment(set, SAPPED_INPUT, SAP_EFFECT_INPUT, SAP_MAX) {
+        Ok(Some((sap, source))) => ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::EnemyDamage),
+            op: Op::More,
+            value: -sap,
+            conditions: Conditions::none(),
+            source,
+        }),
+        Ok(None) => {}
+        Err(input) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: input.to_owned(),
+        }),
+    }
+    match last(set, CRUSHED_INPUT, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => {}
+        Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::EnemyPhysicalDamageReduction),
+            op: Op::Base,
+            value: CRUSHED_REDUCTION,
+            conditions: Conditions::none(),
+            source: Source::Config {
+                input: CRUSHED_INPUT.to_owned(),
+            },
+        }),
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: CRUSHED_INPUT.to_owned(),
+            });
+        }
+    }
+}
+
 /// Whether this module handles `input` (the boss kind only as a string:
 /// the enemy model reports another type, [`super::enemy`]).
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
     match input {
         MOVING_INPUT
+        | SCORCHED_INPUT
+        | SCORCH_EFFECT_INPUT
+        | SAPPED_INPUT
+        | SAP_EFFECT_INPUT
+        | CRUSHED_INPUT
         | SHOCKED_INPUT
         | SHOCK_EFFECT_INPUT
         | CHILLED_INPUT
@@ -1215,6 +1327,7 @@ pub fn damage_taken(
     conditions(set, ingest);
     covered(input, set, ingest);
     moving(set, ingest);
+    alt_ailments(set, ingest);
     match shock(set, ingest) {
         Ok(Some((shock, source))) => ingest.effect(Effect {
             source,

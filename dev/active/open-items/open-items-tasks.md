@@ -26,7 +26,8 @@ Last Updated: 2026-11-24
 - [ ] S7: ward, EHP's other pools, maximum hit, degeneration, a dual wielder's leech
 - [ ] S8: config inputs; the close-out's closed reasons; repeats' `FINAL` and `FINAL_DPS`; the two guard-kept stats
   - [x] S8 part 1 (`local/p6/s8b`): `SKILL_DATA_ONLY` (Storm Rain, Toxic Rain overlaps), `ActiveBrands` and `buffAlchemistsGenius` in `NAMED_ONLY` with their stats in `DEPENDS_ON`, Unholy Might and the moving enemy's bleed modelled; 2 fixtures, Q11 DIV-0694 to DIV-0699; public `Complete` 39,078, 0 unexpected, 8 values toward PoB (`docs/phase-6/config-inputs.md`, "Open items S8")
-  - [ ] the rest of S8: the ailment inputs (scorch, brittle, sap, crushed and their grounds) through PoB's ailment table; the closed reasons; repeats' `FINAL` and `FINAL_DPS`; the two guard-kept stats
+  - [x] S8 part 2 (`local/p6/s8c`, `s8d`): scorch, sap, and crush from PoB's ailment table, the three grounds in `NAMED_ONLY`, the two guard-kept stats `NoEffect`; 1 fixture (3 of 75); public `Complete` 39,155, 0 unexpected (`docs/phase-6/config-inputs.md`, "Open items S8, part 2"). Brittle stays a reason (its enemy-side crit reaches minions too). Repeats' `FINAL` and `FINAL_DPS`: no build in either set uses them (`repeatMode` is in no run's reasons), so nothing to clear; left as the reason it is
+  - [ ] the rest of S8: the close-out's closed reasons (104 stats; by fields: Herald of the Breach's item skill, Empowered attacks, the alternate ascendancy heralds, ...)
 - [ ] S9: resolver and item gaps
 - [ ] S10: PoB's mana `PercentStat`
 - [ ] S11: report section, handoff, CLAUDE.md, follow-ups file

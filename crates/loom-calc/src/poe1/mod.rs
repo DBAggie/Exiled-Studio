@@ -126,9 +126,10 @@ pub enum Poe1Quantity {
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
     EnemyEvasion,
     /// The enemy's resistance to an elemental damage type from exposure
-    /// (PoB's `<Type>Resist` BASE on the enemy, P3-8k): `Base`, only
-    /// [`exposure`] adds them; a hit adds their sum to the enemy's base
-    /// resistance before its maximum ([`hit`]).
+    /// (PoB's `<Type>Resist` BASE on the enemy, P3-8k): `Base`, added by
+    /// [`exposure`] and by scorch ([`damage_taken`], open items S8); a hit
+    /// adds their sum to the enemy's base resistance before its maximum
+    /// ([`hit`]).
     EnemyResistance(DamageType),
     /// A modifier of one end of a hit's damage range (P6-11bo; PoB's
     /// `calcDamage`, `CalcOffence.lua` 113 to 138): with no type, PoB's
@@ -394,7 +395,8 @@ pub enum Poe1Quantity {
     /// by a hit's armour ([`hit`]).
     IgnorePdrChance,
     /// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
-    /// BASE on the enemy; Poacher's Mark, P6-9e): `Base`, added to the
+    /// BASE on the enemy; Poacher's Mark, P6-9e; a crushed enemy, open
+    /// items S8): `Base`, added to the
     /// armour reduction of a physical hit, and alone for physical damage
     /// over time ([`hit`]).
     EnemyPhysicalDamageReduction,
@@ -871,7 +873,7 @@ pub enum Poe1Quantity {
     /// BASE; P6-10b part 12).
     CritExtraDamageReduction,
     /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
-    /// `Increased` (delirium's) and `More`.
+    /// `Increased` (delirium's) and `More` (sap's too, open items S8).
     EnemyDamage,
     /// A share of a type's damage taken as another (PoB's
     /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and

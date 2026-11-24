@@ -6640,6 +6640,12 @@ mod tests {
             "additional_maximum_all_elemental_resistances_%_with_reserved_life_and_mana",
             // Close-out M2: area of effect per unreserved mana, area only.
             "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
+            // Open items S8: "Warcries cannot Exert Travel Skills", which
+            // PoB leaves unparsed; no exerted attack of this module.
+            "travel_skills_cannot_be_exerted",
+            // Open items S8: Adrenaline when leech is removed by filling
+            // unreserved life (`NoEffect`), not a reservation.
+            "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

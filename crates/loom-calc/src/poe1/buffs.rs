@@ -717,8 +717,13 @@ mod tests {
                 // `poe1::flasks`' (P6-4b).
                 && id != crate::poe1::flasks::SILVER_STAT)
                 || (id.contains("tailwind") && !TAILWIND_EFFECT_STATS.contains(&id))
-                // Adrenaline on kill is read here (P6-11ih).
-                || (id.contains("adrenaline") && id != ADRENALINE_ON_KILL_STAT)
+                // Adrenaline on kill is read here (P6-11ih); Adrenaline when
+                // leech is removed is `NoEffect` (PoB applies no mod of its
+                // line; open items S8).
+                || (id.contains("adrenaline")
+                    && id != ADRENALINE_ON_KILL_STAT
+                    && id
+                        != "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%")
         };
         let ids = HIT_ROWS
             .iter()

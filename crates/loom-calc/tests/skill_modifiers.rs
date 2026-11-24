@@ -172,6 +172,9 @@ const NO_EFFECT_NAMING: &[&str] = &[
     // P6-11ey: the mine supports' cost as reservation, read by the
     // support's ID (`gems::COST_AS_RESERVATION_SUPPORTS`).
     "remote_mined_by_support",
+    // Open items S8: Adrenaline when leech is removed by filling unreserved
+    // life, a line PoB applies no mod of.
+    "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
 ];
 
 #[test]

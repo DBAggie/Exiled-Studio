@@ -1165,7 +1165,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "conditionEnemyCrushed".to_owned(),
+        name: "conditionEnemyBrittle".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1881,10 +1881,10 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     for input in [
         // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
         // `poe1::config`).
-        "conditionEnemyCrushed",
+        "conditionEnemyBrittle",
         // Alchemist's Genius and Unholy Might left this list in open items
         // S8 (`poe1::config`, `poe1::buffs`; checked below).
-        "conditionEnemyScorched",
+        "minionsConditionFullLife",
         "feedingFrenzyFeedingFrenzyActive",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
@@ -1958,7 +1958,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["conditionEnemyCrushed", "resistancePenalty"] {
+    for name in ["conditionBrittleEffect", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");

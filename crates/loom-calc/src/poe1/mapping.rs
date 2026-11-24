@@ -9853,6 +9853,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // only with `SequentialProjectiles` (Barrage's, a guard).
     ("chance_to_fork_extra_projectile_%", "projectile-count"),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    // Open items S8: Adrenaline when leech is removed by filling unreserved
+    // life: PoB parses the first of its two lines with text left over and
+    // applies no mod of a line with leftover text (`Item.lua` 2504, 2531);
+    // the joined line does not parse either. Adrenaline is the config's
+    // (`poe1::buffs`; the guard there names it).
+    (
+        "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+        "buff-chance",
+    ),
     // P6-11eg: chances to gain a charge on block and on a non-critical strike
     // (PoB does not parse them; the counts are the config's).
     (
@@ -10990,6 +10999,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
+    // Open items S8: "Warcries cannot Exert Travel Skills": PoB leaves the
+    // line unparsed (ModCache: no mods), and exerted travel skills reach no
+    // slice field (the guard in `poe1::gems` names it).
+    ("travel_skills_cannot_be_exerted", "exert"),
     (
         "travel_skills_cooldown_speed_+%_per_frenzy_charge",
         "no-slice",
