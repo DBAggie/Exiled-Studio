@@ -1,0 +1,5364 @@
+{
+ "baseline": "dev 6deeb5da, run local/p6/n (bundle local/p6/packs/b-ct)",
+ "fixture_budget": {
+  "measured_on": "PR #167 CI run 45112521852 at 4dd449a4 (461 fixtures): oracle windows 113.5 min, ubuntu 81.3 min",
+  "seconds_per_fixture_windows": 14.8,
+  "fixtures_now": 531,
+  "expected_windows_minutes_now": 131,
+  "limit_minutes": 150,
+  "fixtures_budget_this_session": 75,
+  "rule": "stop adding fixtures at 75 in total; S1 and S9 work on existing fixtures first"
+ },
+ "reasons": [
+  {
+   "key": "unmodelled-gem | {}",
+   "runs": {
+    "public": {
+     "fields": 1419,
+     "builds": 19,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 1114,
+     "builds": 15,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S2",
+   "effort": "L",
+   "note": "per gem, see parts",
+   "parts": [
+    {
+     "gem": "ArcaneCloak",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "AspectOfTheCat",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "Bane",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "BlinkArrow",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "BrandSupport",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "ColdSnap",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "ConduitSigil",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "Convocation",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "CorruptingFever",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "EnergyBlade",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "GeneralsCry",
+     "class": "A",
+     "step": "S5",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "ManaInfusedStaff",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "PactOfGhorr",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "PetrifiedBlood",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "PrimalAegis",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "PuresteelBanner",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "RainOfSpores",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "RaiseSpectre",
+     "class": "A",
+     "step": "S6",
+     "note": "S6 checks the monster data in b-ct",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "RaiseSpiders",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "Skitterbots",
+     "class": "B",
+     "step": "S2",
+     "note": "Skitterbots: minion data run",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "Spellslinger",
+     "class": "A",
+     "step": "S3",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SummonElementalRelic",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SummonSentinelOfRadiance",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SummonSkitterbots",
+     "class": "B",
+     "step": "S2",
+     "note": "Skitterbots: minion data run (report, deferred)",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportAddedChaosDamage",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportAuraDuration",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportBarrage",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportBloodMagic",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SupportCloseCombat",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SupportEclipse",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SupportIncreasedDuration",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public",
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportLivingLightning",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SupportOnslaught",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportRangedAttackTotem",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportSacredWisps",
+     "class": "A",
+     "step": "S5",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "SupportSpellTotem",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "SupportUnboundAilments",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "VaalAbsolution",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "corpus"
+     ]
+    },
+    {
+     "gem": "VaalAncestralWarchief",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "VaalGrace",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    },
+    {
+     "gem": "VaalSmite",
+     "class": "A",
+     "step": "S2",
+     "note": "",
+     "in": [
+      "public"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "unresolved-line | {\"reason\": \"no-template\"}",
+   "runs": {
+    "public": {
+     "fields": 1259,
+     "builds": 17,
+     "sole": 67
+    },
+    "corpus": {
+     "fields": 757,
+     "builds": 10,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": "S9",
+   "effort": "M",
+   "note": "mostly older wordings (needs a new Adapted kind: ADR-015, build and calc result v1) and note text; the A share in S9"
+  },
+  {
+   "key": "unresolved-line | {\"reason\": \"ambiguous\"}",
+   "runs": {
+    "public": {
+     "fields": 655,
+     "builds": 9,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 470,
+     "builds": 6,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": "templates found; several readings"
+  },
+  {
+   "key": "unmodelled-passive | unresolved-tree-line",
+   "runs": {
+    "public": {
+     "fields": 284,
+     "builds": 4,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 600,
+     "builds": 8,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": "checked in S9: resolver gap (A) or older tree wording (C)"
+  },
+  {
+   "key": "unmodelled-passive | unconnected-node",
+   "runs": {
+    "public": {
+     "fields": 454,
+     "builds": 6,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 304,
+     "builds": 4,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": "PoB's handling of allocated nodes off the tree"
+  },
+  {
+   "key": "unresolved-line | {\"reason\": \"no-variant-fits\"}",
+   "runs": {
+    "public": {
+     "fields": 457,
+     "builds": 6,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 159,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": "templates found; no variant fits the value"
+  },
+  {
+   "key": "scaled-line | {\"scaling\": \"modifier-magnitude\"}",
+   "runs": {
+    "public": {
+     "fields": 365,
+     "builds": 5,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 160,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "scaled-line | {\"scaling\": \"catalyst\"}",
+   "runs": {
+    "public": {
+     "fields": 501,
+     "builds": 7,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-passive | cluster-jewel-node",
+   "runs": {
+    "public": {
+     "fields": 462,
+     "builds": 6,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "L",
+   "note": "b-ct carries the cluster tables; calc side"
+  },
+  {
+   "key": "unmodelled-item | ambiguous-base",
+   "runs": {
+    "public": {
+     "fields": 157,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 224,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-skill | socket-colour-quality",
+   "runs": {
+    "public": {
+     "fields": 275,
+     "builds": 4,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-skill | pob-skill-data",
+   "runs": {
+    "public": {
+     "fields": 219,
+     "builds": 31,
+     "sole": 89
+    },
+    "corpus": {
+     "fields": 108,
+     "builds": 13,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-passive | timeless-jewel",
+   "runs": {
+    "public": {
+     "fields": 136,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 151,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "L",
+   "note": "b-ct carries the timeless tables; calc side"
+  },
+  {
+   "key": "unmapped-stat | local_display_grants_skill_herald_of_the_breach_level",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 210,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"stormRainBeamOverlap\"}",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 163,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-skill | sigil-of-power-stages",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 161,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "excluded-line | {\"exclusion\": \"section\"}",
+   "runs": {
+    "public": {
+     "fields": 231,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-item | flask-base",
+   "runs": {
+    "public": {
+     "fields": 227,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"minionsConditionFullLife\"}",
+   "runs": {
+    "public": {
+     "fields": 147,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | magic_utility_flasks_cannot_be_used",
+   "runs": {
+    "public": {
+     "fields": 218,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | trigger_socketed_spell_on_skill_use_%",
+   "runs": {
+    "public": {
+     "fields": 138,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"feedingFrenzyFeedingFrenzyActive\"}",
+   "runs": {
+    "public": {
+     "fields": 138,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"ActiveBrands\"}",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 140,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"toxicRainPodOverlap\"}",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 130,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | active_skill_shock_as_though_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 163,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyOnBrittleGround\"}",
+   "runs": {
+    "corpus": {
+     "fields": 159,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | spellslinger_mana_reservation_efficiency_+%",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S3",
+   "effort": "L",
+   "note": "deferred out of Phase 6; stretch step"
+  },
+  {
+   "key": "unmapped-stat | base_aggravate_bleeding_on_attack_hit_chance_%",
+   "runs": {
+    "public": {
+     "fields": 157,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-skill | skill-chill-effect",
+   "runs": {
+    "public": {
+     "fields": 155,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unhandled-kind | {\"kind\": \"item-property\"}",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | empowered_attack_damage_+%",
+   "runs": {
+    "public": {
+     "fields": 148,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_unique_jewel_spectres_gain_soul_eater_on_kill_%_chance_with_50_int_in_radius",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | alternate_ascendancy_herald_buff_effect_+%_final_per_1%_mana_reserved",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | alternate_ascendancy_herald_minion_and_herald_damage_+%_final_per_1%_life_reserved",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"buffAlchemistsGenius\"}",
+   "runs": {
+    "corpus": {
+     "fields": 130,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-condition | {\"condition\": \"NoLifeModifiersOnBodyArmour\", \"quantity\": \"life\"}",
+   "runs": {
+    "public": {
+     "fields": 37,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 52,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | support_blunt_chance_to_trigger_shockwave_on_hit_%",
+   "runs": {
+    "public": {
+     "fields": 83,
+     "builds": 4,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | intimidating_cry_cooldown_speed_+%",
+   "runs": {
+    "corpus": {
+     "fields": 83,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | quiver_mod_effect_+%",
+   "runs": {
+    "corpus": {
+     "fields": 83,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | keystone_precise_technique",
+   "runs": {
+    "corpus": {
+     "fields": 82,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmapped-stat | armour_from_helmet_and_gloves_+%",
+   "runs": {
+    "corpus": {
+     "fields": 82,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | body_armour_implicit_damage_taken_-1%_final_per_X_strength",
+   "runs": {
+    "corpus": {
+     "fields": 82,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | support_spiritual_cry_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | number_of_warcries_exerting_this_action",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | triggered_by_spiritual_cry",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | attack_minimum_added_cold_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | spell_suppression_chance_%_if_all_equipment_grants_evasion",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionBrittleEffect\"}",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | elemental_hit_no_physical_chaos_damage",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemySapped\"}",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | attack_maximum_added_fire_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | attack_maximum_added_cold_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | elemental_hit_damage_+%_final_per_enemy_elemental_ailment",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyBrittle\"}",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | attack_maximum_added_lightning_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyScorched\"}",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_display_grants_skill_accuracy_crits_aura_level",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | player_far_shot",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | attack_minimum_added_lightning_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | attack_minimum_added_fire_damage_for_elemental_hit",
+   "runs": {
+    "public": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_accuracy_rating_+%_per_2%_quality",
+   "runs": {
+    "corpus": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | attack_and_cast_speed_+%_with_physical_skills",
+   "runs": {
+    "corpus": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-item | slot",
+   "runs": {
+    "corpus": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | keystone_natures_presence",
+   "runs": {
+    "corpus": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyCrushed\"}",
+   "runs": {
+    "corpus": {
+     "fields": 81,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_item_quality_+",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | warcries_have_infinite_power",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | skill_area_of_effect_+%_final_in_sand_stance",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | enemy_phys_reduction_%_penalty_vs_hit",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | blood_spears_damage_+%_final_in_blood_stance",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_maximum_life_per_2%_quality",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | enemies_taunted_by_your_warcies_are_intimidated",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | generals_cry_maximum_warriors_+",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_quality_does_not_increase_defences",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | warcries_exert_twice_as_many_attacks",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_double_damage_with_attacks",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | missing_unreserved_life_%_gained_as_life_before_hit_per_defiance",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S7",
+   "effort": "L",
+   "note": "deferred out of Phase 6; stretch step"
+  },
+  {
+   "key": "unmapped-stat | blood_spears_base_number_of_spears",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_display_grants_skill_enduring_cry_level",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | boneshatter_trauma_base_duration_ms",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | trauma_strike_damage_+%_final_per_trauma_capped",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | aggravate_bleeding_on_exerted_attack_hit_chance_%",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | trauma_strike_self_damage_per_trauma",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyMoving\"}",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | self_critical_strike_multiplier_-%_per_endurance_charge",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | lose_all_trauma_at_X_trauma",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | curse_on_hit_level_vulnerability",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | impale_effect_+%_for_impales_inflicted_by_two_handed_weapons_on_non_impaled_enemies",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | life_leech_does_not_stop_at_full_life",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | kinetic_fusillade_maximum_floating_projectiles",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | unique_helmet_cast_speed_+%_applies_to_attack_speed_at_%_of_original_value",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | kinetic_fusillade_base_delay_between_projectiles_ms",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_greater_volley_projectile_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | determination_aura_effect_+%_while_at_minimum_endurance_charges",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | totems_nearby_enemies_damage_taken_+%",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_critical_strike_chance_+%_per_4%_quality",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | support_reduced_duration_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | ailment_types_apply_damage_taken_+%",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | kinetic_fusillade_damage_+%_final_per_projectile_fired",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | gain_wand_accuracy_rating_equal_to_intelligence",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | support_parallel_projectile_number_of_points_per_side",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | anger_aura_effect_+%_while_at_maximum_endurance_charges",
+   "runs": {
+    "public": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | skill_can_only_use_non_melee_weapons",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frenzy_skill_attack_damage_+%_final_per_frenzy_charge",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frenzy_skill_attack_speed_+%_final_per_frenzy_charge",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_barrage_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | critical_strikes_do_not_always_ignite",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | support_barrage_trap_and_mine_throwing_time_+%_final_per_projectile_fired",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | projectiles_barrage",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_barrage_attack_time_+%_per_projectile_fired",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | thrown_shield_secondary_projectile_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | support_maim_chance_physical_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | keystone_crimson_dance",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmapped-stat | primary_projectile_chains_+",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_unbound_ailments_ailment_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | non_damaging_ailment_effect_+%",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | body_armour_defences_doubled_while_no_gems_in_body_armour",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | maximum_life_+%_while_no_gems_in_gloves",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | elemental_resistance_%_while_no_gems_in_helmet",
+   "runs": {
+    "corpus": {
+     "fields": 80,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_flask_recovery_amount_%_to_recover_instantly",
+   "runs": {
+    "public": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"enemyConditionHitByLightningDamage\"}",
+   "runs": {
+    "public": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"EEIgnoreHitDamage\"}",
+   "runs": {
+    "public": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": "close-out C-no-slice: PoB reads it into no slice field; NoEffect candidate"
+  },
+  {
+   "key": "unmapped-stat | base_bone_golem_granted_buff_effect_+%",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | minion_base_physical_damage_%_to_convert_to_fire_per_red_socket_on_item",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | minion_base_physical_damage_%_to_convert_to_chaos_per_white_socket_on_item",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | minion_base_physical_damage_%_to_convert_to_cold_per_green_socket_on_item",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | minion_base_physical_damage_%_to_convert_to_lightning_per_blue_socket_on_item",
+   "runs": {
+    "corpus": {
+     "fields": 79,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | minion_damage_over_time_multiplier_+_per_minion_abyss_jewel_up_to_+30",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_socketed_support_gem_quality_+",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | keystone_corrupted_defences",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmapped-stat | support_gems_socketed_in_off_hand_also_support_main_hand_skills",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | gain_debilitating_presence_ms_on_kill_vs_rare_or_unique_enemy",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_display_raise_spider_on_kill_%_chance",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | apply_maximum_wither_stacks_%_chance_when_you_apply_withered",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | projectiles_cannot_split",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_fork_projectile_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | skill_used_by_sacred_wisp_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | summon_sacred_wisps_on_hit",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | enemies_near_corpses_created_recently_are_shocked_and_chilled",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | added_physical_damage_to_attacks_equal_to_%_maximum_mana",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | reduce_enemy_chaos_resistance_%",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"buffUnholyMight\"}",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | regenerate_%_maximum_mana_over_2_seconds_on_consuming_corpse",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S10",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | necromancer_mana_regeneration_rate_per_minute_for_you_and_allies_per_nearby_corpse",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | kinetic_blast_modifiers_to_number_of_projectiles_instead_apply_to_number_of_clusters",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-item | jewel-limit",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | shock_maximum_magnitude_+",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | archmage_gain_lightning_damage_%_of_max_unreserved_mana",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | mana_%_to_add_as_energy_shield",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | additive_mana_modifiers_apply_to_shock_effect_at_30%_value",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | exposure_you_inflict_has_minimum_resistance_%",
+   "runs": {
+    "public": {
+     "fields": 78,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | raider_shock_maximum_effect_override_%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | spell_damage_taken_+_per_barkskin_stack",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | elusive_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | spell_damage_%_suppressed_per_bark_below_max",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | tailwind_if_have_crit_recently",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_unique_jewel_life_increases_applies_to_energy_shield",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | support_multiple_projectile_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | raider_shocks_you_apply_can_stack_up_to_50_times",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | elusive_effect_on_self_+%_per_power_charge",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_energy_shield",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | base_spell_cooldown_speed_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | ice_spear_second_form_critical_strike_multiplier_+",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | ice_spear_second_form_critical_strike_chance_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | ice_spear_second_form_projectile_speed_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | reduce_enemy_elemental_resistance_%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_display_grants_skill_barkskin",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | critical_strike_chance_+%_per_mine_detonated_recently_up_to_100%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | critical_strike_multiplier_+_per_mine_detonated_recently_up_to_40",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | curse_on_hit_level_frostbite",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | local_flask_recover_instantly_when_on_low_life",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | summoned_skitterbots_non_damaging_ailment_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-item | flask-merge",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | sabotuer_mines_apply_damage_taken_+%_to_nearby_enemies_up_to_10%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | summon_fire_skitterbot",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | summoned_skitterbots_auras_also_affect_you",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | mine_detonation_speed_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | mine_%_chance_to_detonate_twice",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | spell_critical_strikes_bifurcate",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | mine_aura_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | elemental_damage_+%_per_different_enemy_elemental_ailment",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | crits_have_culling_strike",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | active_skill_bleeding_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | keystone_tinctures_drain_life",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmapped-stat | support_better_ailments_ailment_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | all_skill_gem_quality_+",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | support_better_ailments_hit_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | enemies_in_presence_and_you_count_as_moving_when_affected_by_elemental_ailments",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_flask_chance_to_freeze_shock_ignite_%_while_healing",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"bandit\"}",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_unique_flask_nearby_enemies_cursed_with_level_x_vulnerability_during_flask_effect",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | non_chilled_enemies_you_bleed_are_chilled",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | dual_wield_inherent_bonuses_are_doubled",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | random_skill_gem_level_+_index",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | throw_traps_in_circle_radius",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | critical_strike_chance_+%_vs_enemies_with_lightning_exposure",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-passive | unknown-node-kind",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | random_skill_gem_level_+_level",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | trap_%_chance_to_trigger_twice",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | curse_on_hit_level_conductivity",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | shock_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | support_additional_trap_mine_%_chance_for_3_additional_trap_mine",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_additional_trap_mine_%_chance_for_1_additional_trap_mine",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | support_additional_trap_mine_%_chance_for_2_additional_trap_mine",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frost_fury_duration_+%_per_stage",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frost_fury_fire_speed_+%_per_stage",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_lesser_multiple_projectile_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frost_fury_max_number_of_stages",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frost_fury_fire_speed_+%_final_while_channelling",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | display_frost_fury_additive_cast_speed_modifiers_apply_to_fire_speed",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | frost_fury_base_fire_interval_ms",
+   "runs": {
+    "public": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_unique_jewel_freezing_pulse_damage_+%_if_enemy_shattered_recently_with_50_int_in_radius",
+   "runs": {
+    "corpus": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-skill | requires-shield",
+   "runs": {
+    "corpus": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_unique_jewel_freezing_pulse_number_of_additional_projectiles_with_50_int_in_radius",
+   "runs": {
+    "corpus": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | display_what_freezing_pulse_does",
+   "runs": {
+    "corpus": {
+     "fields": 77,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-skill | wave-of-conviction-exposure",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyOnScorchedGround\"}",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | support_cruelty_hit_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"detonateDeadCorpseLife\"}",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | detonate_dead_%_chance_to_detonate_additional_corpse",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | corpse_explosion_monster_life_permillage_fire",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | all_damage_can_ignite",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | support_ignite_prolif_ignite_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | hits_grant_cruelty",
+   "runs": {
+    "corpus": {
+     "fields": 76,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | gain_alchemists_genius_on_flask_use_%",
+   "runs": {
+    "corpus": {
+     "fields": 75,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | base_number_of_arrows",
+   "runs": {
+    "corpus": {
+     "fields": 75,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_damage_while_on_full_life_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 75,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_display_socketed_gems_have_mana_reservation_+%",
+   "runs": {
+    "corpus": {
+     "fields": 74,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-skill | totem-data",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 9,
+     "sole": 53
+    },
+    "corpus": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_display_trigger_level_x_reflection_skill_on_equip",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 71
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | self_bleed_duration_+%",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | damage_over_time_+%_per_100_max_life",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | num_magic_utility_flasks_always_apply",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | consecrated_ground_while_stationary_radius_if_highest_attribute_is_strength",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | your_auras_except_malevolence_are_disabled",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_unique_jewel_passive_jewel_socket_mod_effect_+%_with_corrupted_magic_jewel_socketed",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | spell_damage_+%_per_100_max_life",
+   "runs": {
+    "public": {
+     "fields": 71,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | hinder_enemy_chaos_damage_taken_+%",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | base_movement_velocity_+%",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | non_curse_aura_effect_+%_per_10_devotion",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | keystone_quiet_might",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmapped-stat | keystone_soul_tether",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | extra_damage_rolls_with_lightning_damage_on_non_critical_hits",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | curse_on_hit_level_despair",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | modifiers_to_minimum_frenzy_charges_instead_apply_to_affliction_charges",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | projectile_damage_+%_per_chain",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_shield_trigger_socketed_elemental_spell_on_block_display_cooldown",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | attacks_chance_to_poison_%_on_max_frenzy_charges",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | additional_poison_chance_%_when_inflicting_poison",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | maximum_affliction_charges_is_equal_to_maximum_frenzy_charges",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | projectile_damage_+%_per_remaining_chain",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | gain_affliction_charges_instead_of_frenzy_charges",
+   "runs": {
+    "public": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_unique_flask_explode_enemies_for_10%_life_as_random_element_on_kill_chance_%_during_flask_effect",
+   "runs": {
+    "corpus": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": "close-out C-no-slice: PoB reads it into no slice field; NoEffect candidate"
+  },
+  {
+   "key": "unmapped-stat | local_nearby_enemies_base_physical_damage_%_to_convert_to_fire",
+   "runs": {
+    "corpus": {
+     "fields": 70,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | local_left_ring_socketed_curse_replaces_skitterbots_chilling_aura",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | keystone_wicked_ward",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-keystone: keystone rule not ported"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"minionsUseEnduranceCharges\"}",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_socketed_curse_gem_level_+",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | local_right_ring_socketed_curse_replaces_skitterbots_shocking_aura",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"minionBuffOnslaught\"}",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | global_defences_+%_per_raised_spectre",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "L",
+   "note": "deferred out of Phase 6; stretch step"
+  },
+  {
+   "key": "unmapped-stat | damage_removed_from_radiant_sentinel_before_life_or_es_%",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"minionsOverrideFrenzyCharges\"}",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"minionsUseFrenzyCharges\"}",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | local_display_grants_skill_summon_radiant_sentinel",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "L",
+   "note": "close-out C-item-skill: item-granted skills (PoB's ExtraSkill)"
+  },
+  {
+   "key": "unmapped-stat | minion_chance_to_gain_onslaught_on_kill_for_4_seconds_%",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"TotalSpectreLife\"}",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S6",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | minion_maximum_life_%_to_add_as_maximum_energy_shield",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | raise_spectre_gem_level_+",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmapped-stat | life_leech_from_minion_damage_%",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | additional_physical_damage_reduction_%_per_minion_up_to_10%",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-item | abyssal-socket",
+   "runs": {
+    "public": {
+     "fields": 69,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | gloves_mod_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"multiplierNearbyAlly\"}",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-skill | rallying-cry-allies",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | travel_skills_cannot_be_exerted",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | warcry_empowers_next_x_melee_attacks",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | damage_removed_from_your_nearest_permanent_mercenary_before_life_or_es_%_if_their_current_life_is_higher_than_yours",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | warcries_have_minimum_10_power",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | base_mana_cost_efficiency_+%_of_link_skills",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | boots_mod_effect_+%",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | warcry_grant_X_rage_per_5_power",
+   "runs": {
+    "public": {
+     "fields": 68,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S5",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | chaos_weakness_ignores_hexproof",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | additional_max_mirage_archers",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | cannot_use_flask_in_fifth_slot",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmapped-stat | toxic_rain_damage_+%",
+   "runs": {
+    "public": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | spellslinger_mana_reservation_+%",
+   "runs": {
+    "corpus": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unresolved-line | {\"reason\": \"only-shadowed\"}",
+   "runs": {
+    "corpus": {
+     "fields": 67,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently",
+   "runs": {
+    "public": {
+     "fields": 44,
+     "builds": 2,
+     "sole": 10
+    },
+    "corpus": {
+     "fields": 22,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unread-line | {}",
+   "runs": {
+    "public": {
+     "fields": 66,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "S",
+   "note": "checked in S9"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"multiplierManaBurnStacks\"}",
+   "runs": {
+    "corpus": {
+     "fields": 65,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | support_pierce_projectile_damage_+%_final",
+   "runs": {
+    "corpus": {
+     "fields": 55,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-skill | aura-debuff-effect",
+   "runs": {
+    "public": {
+     "fields": 54,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"presetBossSkills\"}",
+   "runs": {
+    "public": {
+     "fields": 54,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S7",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | trigger_socketed_spells_when_you_focus_%",
+   "runs": {
+    "public": {
+     "fields": 54,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-gem-property: PoB's GemProperty, ExtraSupport, LinkedSupport"
+  },
+  {
+   "key": "unmodelled-config | {\"input\": \"conditionEnemyOnSappedGround\"}",
+   "runs": {
+    "public": {
+     "fields": 54,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "S",
+   "note": ""
+  },
+  {
+   "key": "unmodelled-skill | minion-buffs",
+   "runs": {
+    "public": {
+     "fields": 23,
+     "builds": 4,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 22,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | take_half_area_damage_from_hit_%_chance",
+   "runs": {
+    "public": {
+     "fields": 24,
+     "builds": 2,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 12,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-skill | reservation-becomes-cost",
+   "runs": {
+    "public": {
+     "fields": 27,
+     "builds": 9,
+     "sole": 24
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | active_skill_minion_physical_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 20,
+     "builds": 1,
+     "sole": 20
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-skill | full-dps-skill",
+   "runs": {
+    "public": {
+     "fields": 9,
+     "builds": 9,
+     "sole": 0
+    },
+    "corpus": {
+     "fields": 3,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | support_minion_defensive_stance_minion_damage_taken_+%_final",
+   "runs": {
+    "public": {
+     "fields": 10,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_minion_defensive_stance_minion_damage_+%_final_against_enemies_near_you",
+   "runs": {
+    "public": {
+     "fields": 10,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_guardians_blessing_minion_physical_damage_%_of_maximum_life_and_ES_taken_per_minute",
+   "runs": {
+    "public": {
+     "fields": 10,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmodelled-skill | minion-modifier",
+   "runs": {
+    "corpus": {
+     "fields": 9,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | restore_ward_on_block_%",
+   "runs": {
+    "public": {
+     "fields": 6,
+     "builds": 1,
+     "sole": 6
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | local_display_socketed_attacks_mana_cost_+",
+   "runs": {
+    "public": {
+     "fields": 5,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-skill | full-dps-vaal",
+   "runs": {
+    "public": {
+     "fields": 4,
+     "builds": 4,
+     "sole": 2
+    },
+    "corpus": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | base_skill_show_average_damage_instead_of_dps",
+   "runs": {
+    "public": {
+     "fields": 5,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S8",
+   "effort": "M",
+   "note": "close-out C-engine-system: a system the engine lacks; revisited in S8"
+  },
+  {
+   "key": "unmodelled-item | no-physical-damage",
+   "runs": {
+    "public": {
+     "fields": 4,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S9",
+   "effort": "M",
+   "note": ""
+  },
+  {
+   "key": "unmapped-stat | mana_cost_+%_while_on_full_energy_shield",
+   "runs": {
+    "public": {
+     "fields": 4,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | manaweave_cost_equals_%_unreserved_mana",
+   "runs": {
+    "public": {
+     "fields": 4,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
+   "runs": {
+    "public": {
+     "fields": 4,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
+   "runs": {
+    "public": {
+     "fields": 3,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | static_strike_beam_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 3,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | static_strike_base_zap_frequency_ms",
+   "runs": {
+    "public": {
+     "fields": 3,
+     "builds": 3,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | minion_grant_puppet_master_buff_to_parent_on_hit_%",
+   "runs": {
+    "public": {
+     "fields": 2,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_minion_totem_resistance_elemental_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 2,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | minions_inflict_exposure_on_hit_%_chance",
+   "runs": {
+    "public": {
+     "fields": 2,
+     "builds": 2,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | movement_velocity_+%_while_no_gems_in_boots",
+   "runs": {
+    "corpus": {
+     "fields": 2,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmapped-stat | bone_golem_grants_minion_maximum_added_physical_damage",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | bone_golem_damage_per_non_golem_minion_nearby_maximum_%",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | bone_golem_damage_+%_final_per_non_golem_minion_nearby",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | bone_golem_grants_minion_minimum_added_physical_damage",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_spell_rapid_fire_repeat_use_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_anticipation_rapid_fire_count",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | number_of_tornados_allowed",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | tornado_base_damage_interval_ms",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | chance_to_summon_support_ghost_on_killing_blow_%",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | chance_to_summon_support_ghost_on_hitting_rare_or_unique_%",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_ghost_base_duration",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | display_max_fire_beam_stacks",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | fire_beam_additional_stack_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | base_fire_damage_resistance_%",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | groundslam_damage_to_close_targets_+%_final",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | support_chance_to_bleed_bleeding_damage_+%_final",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S1",
+   "effort": "L",
+   "note": "close-out C-unmodelled-skill: owned by a skill S1 or S2 models"
+  },
+  {
+   "key": "unmapped-stat | arc_damage_+%_final_for_each_remaining_chain",
+   "runs": {
+    "public": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "C",
+   "step": null,
+   "effort": null,
+   "note": "game-truth list: PoB applies nothing; needs the maintainer's check in game"
+  },
+  {
+   "key": "unmodelled-condition | {\"condition\": \"DualWielding\", \"quantity\": \"block-chance\"}",
+   "runs": {
+    "corpus": {
+     "fields": 1,
+     "builds": 1,
+     "sole": 0
+    }
+   },
+   "class": "A",
+   "step": "S7",
+   "effort": "M",
+   "note": "a dual wielder's block"
+  }
+ ]
+}
