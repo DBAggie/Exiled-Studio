@@ -4804,10 +4804,25 @@ fn apply(
     // Curses: PoB's slots (module docs). The limit is 1 and the character's
     // unconditional `CurseLimit` effects; a conditional one is a reason.
     let mut limit = 1.0;
+    // Close-out M1: "while affected by Malevolence", settled from the
+    // auras affecting the character.
+    let malevolence = Conditions::none().with_state(
+        crate::condition::ConditionKey::new(super::conditions::AFFECTED_BY_MALEVOLENCE),
+        true,
+    );
+    let mut affected: Option<bool> = None;
     for e in ingest.effects() {
         if e.quantity == Quantity::Poe1(Poe1Quantity::CurseLimit) {
             if e.conditions == Conditions::none() {
                 limit += e.value;
+            } else if e.conditions == malevolence {
+                let on = *affected.get_or_insert_with(|| {
+                    affected_by(input, &super::gem_levels::GemLevels::none())
+                        .contains("Malevolence")
+                });
+                if on {
+                    limit += e.value;
+                }
             } else {
                 limit = f64::NAN;
             }

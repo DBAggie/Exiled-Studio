@@ -1220,6 +1220,8 @@ mod tests {
     /// `NoEffect` rows that name shock or damage taken, each checked: none
     /// sets the enemy's shock or damage taken.
     const NO_EFFECT_ROWS: &[&str] = &[
+        // Close-out M1: a shock on you, guarded by the config's checks.
+        "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
         // A chance to shock: PoB shocks the enemy only from its config or
         // a guaranteed source (P3-10, P3-8c; "All Damage can Shock" and
         // "Hits always Shock", P3-8k).

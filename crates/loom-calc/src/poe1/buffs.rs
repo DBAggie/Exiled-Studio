@@ -391,6 +391,22 @@ fn arcane_surge(
     } else {
         None
     };
+    // Under a condition (close-out M1): the stat's flag while its condition
+    // is settled true.
+    let on_kill = on_kill.or_else(|| {
+        ingest
+            .effects()
+            .iter()
+            .find(|e| {
+                matches!(
+                    e.quantity,
+                    Quantity::Poe1(Poe1Quantity::ArcaneSurgeWhen(c))
+                        if settled.get(&crate::condition::ConditionKey::new(c)) == Some(&true)
+                ) && e.op == Op::Flag
+                    && e.value != 0.0
+            })
+            .map(|e| e.source.clone())
+    });
     if !checked && support.is_none() && on_kill.is_none() {
         return;
     }

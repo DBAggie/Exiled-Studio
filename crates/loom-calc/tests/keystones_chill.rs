@@ -125,6 +125,9 @@ const TEXTS: [(&str, &str); 22] = [
 /// skill file words it as its chilled ground's radius; P3-8e), durations,
 /// and chill on you.
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out M1: a chill on you, guarded by the config's checks.
+    "chill_effect_is_reversed",
+    "chilled_while_bleeding",
     "active_skill_base_secondary_area_of_effect_radius",
     "active_skill_secondary_area_of_effect_description_mode",
     // P6-11hq: Hypothermia's chance to freeze a chilled enemy (no slice

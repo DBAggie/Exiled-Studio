@@ -893,7 +893,24 @@ pub(super) fn attack_block(
 ) -> Result<AttackBlock, CalcError> {
     let cx = calc.context(Flags::NONE);
     let mut base_terms = Vec::new();
-    base_terms.extend(shield);
+    // "Gain #% Chance to Block from Equipped Shield instead of the Shield's
+    // value" (close-out M1; `CalcDefence.lua` 678): the override replaces
+    // the shield's chance in the base; the "per 5%" lines still read the
+    // shield's own (`output.ShieldBlockChance`).
+    let replace = Quantity::Poe1(Poe1Quantity::ReplaceShieldBlock);
+    let replaced = if shield.is_some() && has(calc, replace) {
+        let (store, graph) = calc.parts();
+        store.override_value(graph, replace, &cx)?.map(|q| {
+            reasons.extend(&q.reasons);
+            Valued {
+                node: q.node,
+                value: q.value,
+            }
+        })
+    } else {
+        None
+    };
+    base_terms.extend(replaced.or(shield));
     // "per 5% Chance to Block on Equipped Shield" (P6-11f).
     if let Some(shield) = shield
         && let Some(term) = per_5(calc, shield, false, &mut reasons)?

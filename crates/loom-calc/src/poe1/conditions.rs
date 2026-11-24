@@ -157,6 +157,50 @@ pub const ENEMY_BURNING: &str = "Enemy:Burning";
 /// check `conditionEnemyBleeding`, `ConfigOptions.lua`; P6-11dp).
 pub const ENEMY_BLEEDING: &str = "Enemy:Bleeding";
 
+/// The enemy's conditions set only by their config checks (close-out M1;
+/// `ConfigOptions.lua`): poisoned (1798), taunted (1840), frozen (1898),
+/// shocked (1917; PoB also shocks it with Skitterbots, an unmodelled
+/// skill), ignited (1852), and on consecrated ground (1986).
+pub const ENEMY_POISONED: &str = "Enemy:Poisoned";
+/// The count of poisons on the enemy (`ConfigOptions.lua` 1801), which
+/// also poisons it at 1 or more ([`ENEMY_POISONED`]).
+pub const POISON_ON_ENEMY_INPUT: &str = "multiplierPoisonOnEnemy";
+/// See [`ENEMY_POISONED`].
+pub const ENEMY_TAUNTED: &str = "Enemy:Taunted";
+/// See [`ENEMY_POISONED`].
+pub const ENEMY_FROZEN: &str = "Enemy:Frozen";
+/// See [`ENEMY_POISONED`].
+pub const ENEMY_SHOCKED: &str = "Enemy:Shocked";
+/// See [`ENEMY_POISONED`].
+pub const ENEMY_IGNITED: &str = "Enemy:Ignited";
+/// See [`ENEMY_POISONED`].
+pub const ENEMY_ON_CONSECRATED_GROUND: &str = "Enemy:OnConsecratedGround";
+
+/// "while on Full Energy Shield" (close-out M1; PoB's `FullEnergyShield`,
+/// set only by its check, `ConfigOptions.lua` 186).
+pub const FULL_ENERGY_SHIELD: &str = "FullEnergyShield";
+
+/// "if you've Consumed a corpse in the past 2 seconds" (PoB's
+/// `ConsumedCorpseInPast2Sec`; P6-11gp, a const since close-out M1).
+pub const CONSUMED_CORPSE_IN_PAST_2_SEC: &str = "ConsumedCorpseInPast2Sec";
+
+/// "if you've Hit with a Spell Recently" (close-out M1; PoB's
+/// `HitSpellRecently`): its check (`ConfigOptions.lua` 1236), or a main
+/// skill that hits as a spell and is no trap, mine, or totem
+/// (`CalcPerform.lua` 259 to 263; [`main_skill_recently`]).
+pub const HIT_SPELL_RECENTLY: &str = "HitSpellRecently";
+/// "if your Totems have Hit with a Spell Recently" (close-out M1; its
+/// check, `ConfigOptions.lua` 1295).
+pub const TOTEMS_HIT_SPELL_RECENTLY: &str = "TotemsHitSpellRecently";
+/// PoB's `varList` of [`HIT_SPELL_RECENTLY`] and
+/// [`TOTEMS_HIT_SPELL_RECENTLY`] (close-out M1): either holds.
+pub const HIT_SPELL_BY_YOU_OR_TOTEMS: &str = "HitSpellRecently|TotemsHitSpellRecently";
+
+/// "while affected by Malevolence" (close-out M1): one of
+/// [`AFFECTED_BY`]'s, named for the curse limit's reader
+/// (`poe1::gems`).
+pub const AFFECTED_BY_MALEVOLENCE: &str = "AffectedByMalevolence";
+
 /// The enemy is blinded (PoB's enemy `Blinded`, from its config check
 /// `conditionEnemyBlinded`, `ConfigOptions.lua` 1835; P6-11hr). PoB's
 /// other sources are modifiers giving the enemy the condition, unmapped
@@ -301,11 +345,12 @@ pub const WARCRY_RECENTLY_COUNT_INPUT: &str = "multiplierWarcryUsedRecently";
 /// character (`CalcPerform.lua` 2417 to 2419; a Vaal aura's too, its name
 /// without "Vaal "). Settled from the gem table's auras
 /// ([`super::gems::affected_by`]).
-pub const AFFECTED_BY: [(&str, &str); 7] = [
+pub const AFFECTED_BY: [(&str, &str); 8] = [
     ("Anger", "AffectedByAnger"),
     ("Determination", "AffectedByDetermination"),
     ("Grace", "AffectedByGrace"),
     ("Hatred", "AffectedByHatred"),
+    ("Malevolence", AFFECTED_BY_MALEVOLENCE),
     ("Precision", "AffectedByPrecision"),
     ("Pride", "AffectedByPride"),
     ("Wrath", "AffectedByWrath"),
@@ -346,7 +391,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     // P6-11gp: a corpse consumed recently (the past 2 seconds implies it).
     (
         "conditionConsumedCorpseInPast2Sec",
-        "ConsumedCorpseInPast2Sec",
+        CONSUMED_CORPSE_IN_PAST_2_SEC,
     ),
     (
         "conditionConsumedCorpseInPast2Sec",
@@ -360,15 +405,33 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionEnemyBlinded", ENEMY_BLINDED),
     ("conditionEnemyBurning", ENEMY_BURNING),
     ("conditionEnemyCursed", ENEMY_CURSED),
+    // Close-out M1: the enemy frozen.
+    ("conditionEnemyFrozen", ENEMY_FROZEN),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     // P6-11dk: an ignited enemy is burning (`implyCond`).
     ("conditionEnemyIgnited", ENEMY_BURNING),
+    // Close-out M1: and ignited.
+    ("conditionEnemyIgnited", ENEMY_IGNITED),
     ("conditionEnemyLowLife", ENEMY_LOW_LIFE),
     ("conditionEnemyMaimed", ENEMY_MAIMED),
+    // Close-out M1: the enemy on consecrated ground, poisoned, shocked,
+    // taunted.
+    (
+        "conditionEnemyOnConsecratedGround",
+        ENEMY_ON_CONSECRATED_GROUND,
+    ),
+    ("conditionEnemyPoisoned", ENEMY_POISONED),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
+    ("conditionEnemyShocked", ENEMY_SHOCKED),
+    ("conditionEnemyTaunted", ENEMY_TAUNTED),
     // P6-11gk: focused.
     ("conditionFocused", FOCUSED),
+    // Close-out M1: on full energy shield.
+    ("conditionFullEnergyShield", FULL_ENERGY_SHIELD),
     ("conditionFullLife", FULL_LIFE),
+    // Close-out M1: hit with a spell recently; the main skill too
+    // (`settle`).
+    ("conditionHitSpellRecently", HIT_SPELL_RECENTLY),
     // P6-11ei: being ignited.
     ("conditionIgnited", IGNITED),
     ("conditionKilledRecently", KILLED_RECENTLY),
@@ -396,6 +459,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     ),
     // P6-11hu: summoned a totem recently; a totem main skill too (`settle`).
     ("conditionSummonedTotemRecently", SUMMONED_TOTEM_RECENTLY),
+    // Close-out M1: your totems hit with a spell recently.
+    ("conditionTotemsHitSpellRecently", TOTEMS_HIT_SPELL_RECENTLY),
     (USED_MINION_SKILL_INPUT, USED_MINION_SKILL_RECENTLY),
     // P6-11hz: warcried in the past 8 seconds; implied too (`settle`).
     (
@@ -431,6 +496,9 @@ pub struct MainSkillRecently {
     pub cast_spell: bool,
     /// `UsedMinionSkillRecently`.
     pub minion: bool,
+    /// `HitSpellRecently` (close-out M1): a hit that is a spell, for a
+    /// skill not placed (PoB does not exclude a triggered one here).
+    pub hit_spell: bool,
 }
 
 /// Whether the main skill is a totem (P6-11hu; PoB's `skillFlags.totem`,
@@ -492,14 +560,28 @@ pub fn main_skill_recently(input: &CalcInput<'_>) -> Option<MainSkillRecently> {
         super::triggers::kind(&skill),
         super::triggers::Kind::NotTriggered
     );
-    if placed || triggered {
+    if placed {
         return Some(MainSkillRecently::default());
+    }
+    // PoB's `skillFlags.hit` (`CalcActiveSkill.lua` 104): the flag, or an
+    // attack, damage, or projectile skill type.
+    let hit = pob.flag("hit")
+        || ["Attack", "Damage", "Projectile"]
+            .iter()
+            .any(|t| skill.types.contains(*t));
+    let hit_spell = hit && pob.flag("spell");
+    if triggered {
+        return Some(MainSkillRecently {
+            hit_spell,
+            ..MainSkillRecently::default()
+        });
     }
     let attacked = pob.flag("attack");
     Some(MainSkillRecently {
         attacked,
         cast_spell: !attacked && pob.flag("spell"),
         minion: pob.flag("minion") && !pob.flag("permanentMinion"),
+        hit_spell,
     })
 }
 
@@ -620,6 +702,8 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         (USED_MINION_SKILL_RECENTLY, recently.map(|r| r.minion)),
         (ATTACKED_RECENTLY, recently.map(|r| r.attacked)),
         (CAST_SPELL_RECENTLY, recently.map(|r| r.cast_spell)),
+        // Close-out M1: hit with a spell recently.
+        (HIT_SPELL_RECENTLY, recently.map(|r| r.hit_spell)),
     ] {
         let key = ConditionKey::new(name);
         if out.get(&key).copied() == Some(false) {
@@ -631,6 +715,36 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
                 None => {
                     out.remove(&key);
                 }
+            }
+        }
+    }
+    // You or your totems hit with a spell recently (close-out M1): either.
+    let you = out.get(&ConditionKey::new(HIT_SPELL_RECENTLY)).copied();
+    let totems = out
+        .get(&ConditionKey::new(TOTEMS_HIT_SPELL_RECENTLY))
+        .copied();
+    let either = match (you, totems) {
+        (Some(true), _) | (_, Some(true)) => Some(true),
+        (Some(false), Some(false)) => Some(false),
+        _ => None,
+    };
+    if let Some(v) = either {
+        out.insert(ConditionKey::new(HIT_SPELL_BY_YOU_OR_TOTEMS), v);
+    }
+    // The enemy poisoned (close-out M1): its check, or a poison count of at
+    // least 1 (`CalcSetup.lua` 73, the enemy's `PoisonStack`); a count of
+    // another type leaves it unsettled.
+    let key = ConditionKey::new(ENEMY_POISONED);
+    if out.get(&key).copied() == Some(false) {
+        match set.and_then(|s| last(s, POISON_ON_ENEMY_INPUT, ConfigInputKind::Input)) {
+            None => {}
+            Some(ConfigValue::Number(n)) => {
+                if n.value().0 >= 1.0 {
+                    out.insert(key, true);
+                }
+            }
+            Some(_) => {
+                out.remove(&key);
             }
         }
     }

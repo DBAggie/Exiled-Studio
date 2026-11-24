@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 close-out M1): Ice Nova (level 20) with damage on full
+     energy shield, critical strike chance after summoning a totem, and
+     energy shield and mana regenerated over 2 seconds on consuming a
+     corpse, each condition on.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1">
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input boolean="true" name="conditionFullEnergyShield"/>
+			<Input boolean="true" name="conditionSummonedTotemRecently"/>
+			<Input boolean="true" name="conditionConsumedCorpseInPast2Sec"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+200 to maximum Energy Shield
+				24% increased Damage while on Full Energy Shield
+				40% increased Critical Strike Chance if you've Summoned a Totem Recently
+				Regenerate 5% of Energy Shield over 2 seconds when you Consume a corpse
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -2351,6 +2351,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "lightning_damage_with_spell_skills_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, SPELL_LIGHTNING, NONE)],
     ),
+    // Close-out M1: Lion's Roar's "#% more Melee Physical Damage during
+    // effect" (`PhysicalDamage` MORE, `ModFlag.Melee`, `UsingFlask`; a
+    // flask's lines act only while it is active, `poe1::flasks`).
+    (
+        "local_unique_lions_roar_melee_physical_damage_+%_final_during_flask_effect",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE.union(Flags::PHYSICAL),
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Attack Speed with Maces or Sceptres": `Speed` INC, `ModFlag.Mace`, `Hit`, `Attack`.
     (
         "mace_attack_speed_+%",
@@ -4641,6 +4654,29 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::DUAL_WIELDING,
         )],
     ),
+    // Close-out M1: "+#% to Damage over Time Multiplier for Bleeding you
+    // inflict on Poisoned Enemies" (`DotMultiplier` BASE, `KeywordFlag.Bleed`,
+    // the enemy's `Poisoned`).
+    (
+        "bleeding_dot_multiplier_+_vs_poisoned_enemies",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            Flags::BLEED,
+            conditions::ENEMY_POISONED,
+        )],
+    ),
+    // Close-out M1: "Gain #% Chance to Block from Equipped Shield instead of
+    // the Shield's value" (`ReplaceShieldBlock` OVERRIDE, `UsingShield`).
+    (
+        "block_chance_from_equipped_shield_is_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ReplaceShieldBlock),
+            Op::Override,
+            NONE,
+            states::USING_SHIELD,
+        )],
+    ),
     // P6-11cc: "+#% Chance to Block Attack Damage if you were Damaged by a
     // Hit Recently" (`BlockChance` BASE, `BeenHitRecently`).
     (
@@ -4696,6 +4732,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ON_CAUSTIC_GROUND,
         )],
     ),
+    // Close-out M1: "Gain #% of Cold Damage as Extra Fire Damage against
+    // Frozen Enemies" (`ColdDamageGainAsFire` BASE, the enemy's `Frozen`).
+    (
+        "cold_damage_%_to_add_as_fire_vs_frozen_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Cold, DamageType::Fire)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_FROZEN,
+        )],
+    ),
     // P6-11fb: "#% increased Critical Strike Chance if you haven't dealt a Critical
     // Strike Recently" (`CritChance` INC, `CritRecently` negated).
     (
@@ -4738,6 +4785,28 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::ENEMY_BLINDED,
+        )],
+    ),
+    // Close-out M1: "#% increased Critical Strike Chance against Shocked
+    // Enemies" (`CritChance` INC, the enemy's `Shocked`).
+    (
+        "critical_strike_chance_+%_vs_shocked_enemies",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_SHOCKED,
+        )],
+    ),
+    // Close-out M1: "#% increased Critical Strike Chance against Taunted
+    // Enemies" (`CritChance` INC, the enemy's `Taunted`).
+    (
+        "critical_strike_chance_+%_vs_taunted_enemies",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_TAUNTED,
         )],
     ),
     // P6-11o: "#% increased Critical Strike Chance while affected by Wrath".
@@ -4799,6 +4868,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::ENEMY_BLEEDING,
+        )],
+    ),
+    // Close-out M1: "+#% to Critical Strike Multiplier against Taunted
+    // Enemies" (`CritMultiplier` BASE, the enemy's `Taunted`).
+    (
+        "critical_strike_multiplier_+_vs_taunted_enemies",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::ENEMY_TAUNTED,
         )],
     ),
     // P3-8n: "against Unique Enemies" (enemy `RareOrUnique`, 1943).
@@ -4912,6 +4992,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::SHOCKED_ENEMY_RECENTLY,
         )],
     ),
+    // Close-out M1: "#% increased Damage while on Full Energy Shield"
+    // (`Damage` INC, `FullEnergyShield`).
+    (
+        "damage_+%_on_full_energy_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            conditions::FULL_ENERGY_SHIELD,
+        )],
+    ),
     (
         "damage_+%_while_leeching",
         &[(Quantity::Damage, Op::Increased, NONE, conditions::LEECHING)],
@@ -4969,6 +5060,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::DOT,
             states::USING_TWO_HANDED_WEAPON,
+        )],
+    ),
+    // Close-out M1: "+#% to Damage over Time Multiplier if you've Killed
+    // Recently" (`DotMultiplier` BASE, `KilledRecently`).
+    (
+        "damage_over_time_multiplier_+_if_enemy_killed_recently",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            NONE,
+            conditions::KILLED_RECENTLY,
         )],
     ),
     // P6-11fb: "Damage Penetrates #% Elemental Resistances if you haven't
@@ -5238,6 +5340,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::SUMMONED_TOTEM_RECENTLY,
         )],
     ),
+    // Close-out M1: "#% increased Damage with Hits against Ignited Enemies"
+    // (`Damage` INC, `KeywordFlag.Hit`, the enemy's `Ignited`).
+    (
+        "hit_damage_+%_vs_ignited_enemies",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::HIT,
+            conditions::ENEMY_IGNITED,
+        )],
+    ),
     // P6-11gz: as the Flammability line.
     (
         "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
@@ -5341,6 +5454,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::STATIONARY,
+        )],
+    ),
+    // Close-out M1: a flask's "#% increased Critical Strike Chance against
+    // Enemies on Consecrated Ground during Effect" (`CritChance` INC, the
+    // enemy's `OnConsecratedGround`; `poe1::flasks::FLASK_ROWS`).
+    (
+        "local_unique_flask_critical_strike_chance_+%_vs_enemies_on_consecrated_ground_during_flask_effect",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_ON_CONSECRATED_GROUND,
         )],
     ),
     // P6-11fb: "#% increased Mana Regeneration Rate while moving" (`ManaRegen` INC,
@@ -5560,6 +5685,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             ),
         ],
     ),
+    // Close-out M1: "You can apply an additional Curse while affected by
+    // Malevolence" (`EnemyCurseLimit` BASE, `AffectedByMalevolence`;
+    // `poe1::gems` reads it).
+    (
+        "number_of_additional_curses_allowed_while_affected_by_malevolence",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CurseLimit),
+            Op::Base,
+            NONE,
+            conditions::AFFECTED_BY_MALEVOLENCE,
+        )],
+    ),
     // P6-11fb: "You gain Onslaught for # seconds on Kill" (`Condition:Onslaught`
     // FLAG, `KilledRecently`; `poe1::buffs`).
     (
@@ -5581,6 +5718,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Flag,
             NONE,
             conditions::KILLED_RECENTLY,
+        )],
+    ),
+    // Close-out M1: "Poisons you inflict during any Flask Effect have #%
+    // chance to deal 100% more Damage" (`Damage` MORE by the chance,
+    // `KeywordFlag.Poison`, `UsingFlask`).
+    (
+        "pathfinder_poison_damage_+100%_final_chance_during_flask_effect",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::POISON,
+            conditions::USING_FLASK,
         )],
     ),
     // P6-11a: "#% increased Physical Attack Damage while holding a Shield":
@@ -5617,6 +5766,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::NOT_IGNITED_FROZEN_SHOCKED,
+        )],
+    ),
+    // Close-out M1: "+#% to Damage over Time Multiplier for Poison you
+    // inflict on Bleeding Enemies" (`DotMultiplier` BASE,
+    // `KeywordFlag.Poison`, the enemy's `Bleeding`).
+    (
+        "poison_dot_multiplier_+_vs_bleeding_enemies",
+        &[(
+            Quantity::DotMultiplier,
+            Op::Base,
+            Flags::POISON,
+            conditions::ENEMY_BLEEDING,
         )],
     ),
     // P6-11dp: "#% chance to Impale Enemies on Hit with Attacks while using
@@ -6150,6 +6311,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_TWO_HANDED_MELEE_WEAPON,
         )],
     ),
+    // Close-out M1: "#% increased Damage with Wands if you've dealt a
+    // Critical Strike Recently" (`Damage` INC, `ModFlag.Wand` and `Hit`,
+    // `CritRecently`).
+    (
+        "wand_damage_+%_if_crit_recently",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::WAND.union(Flags::HIT),
+            conditions::CRIT_RECENTLY,
+        )],
+    ),
     // P6-10b part 5: "#% additional Physical Damage Reduction while
     // stationary" (`PhysicalDamageReduction` BASE, `Stationary`).
     (
@@ -6185,6 +6358,59 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Flag,
             NONE,
             conditions::USED_WARCRY_RECENTLY,
+        )],
+    ),
+];
+
+/// A state row whose values are divided (close-out M1): `(stat,
+/// [(quantity, op, divisor, all, condition)])`.
+type StateDividedRow = (
+    &'static str,
+    &'static [(Quantity, Op, f64, Flags, &'static str)],
+);
+
+/// The state stats whose values are divided (close-out M1), sorted by stat
+/// ID, as [`STATE_ROWS`] otherwise.
+pub const STATE_DIVIDED_ROWS: &[StateDividedRow] = &[
+    // Close-out M1: "+#% to Critical Strike Chance while affected by
+    // Hatred" (`CritChance` BASE, the stat in hundredths,
+    // `AffectedByHatred`).
+    (
+        "additional_critical_strike_chance_permyriad_while_affected_by_hatred",
+        &[(
+            Quantity::CritChance,
+            Op::Base,
+            100.0,
+            NONE,
+            "AffectedByHatred",
+        )],
+    ),
+    // Close-out M1: "40% increased Critical Strike Chance if you've
+    // Summoned a Totem Recently" (`CritChance` INC 40, `SummonedTotemRecently`):
+    // the stat is the buff's duration, 4000 milliseconds in the game's only
+    // line (its "Recently" form, the one PoB parses), so the 40 is the
+    // stat divided by 100.
+    (
+        "increased_critical_strike_chance_buff_for_x_milliseconds_on_placing_a_totem",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            100.0,
+            NONE,
+            conditions::SUMMONED_TOTEM_RECENTLY,
+        )],
+    ),
+    // Close-out M1: "Regenerate #% of Energy Shield over 2 seconds when you
+    // Consume a corpse" (`EnergyShieldRegenPercent` BASE, half the stat,
+    // `ConsumedCorpseInPast2Sec`).
+    (
+        "regenerate_%_maximum_energy_shield_over_2_seconds_on_consuming_corpse",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercent(Pool::EnergyShield)),
+            Op::Base,
+            2.0,
+            NONE,
+            conditions::CONSUMED_CORPSE_IN_PAST_2_SEC,
         )],
     ),
 ];
@@ -7543,12 +7769,37 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Close-out M1: "#% chance to gain Arcane Surge when you Hit a Unique
+    // enemy" (`Condition:ArcaneSurge` FLAG, the enemy's `RareOrUnique`).
+    (
+        "gain_arcane_surge_on_hit_vs_unique_enemy_%_chance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeWhen(
+                conditions::ENEMY_RARE_OR_UNIQUE,
+            )),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-11gs: "#% chance to gain Arcane Surge when you Kill an Enemy"
     // (`Condition:ArcaneSurge` FLAG with `KilledRecently`).
     (
         "gain_arcane_surge_on_kill_chance_%",
         &[(
             Quantity::Poe1(Poe1Quantity::ArcaneSurgeOnKill),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // Close-out M1: "Gain Arcane Surge when you or your Totems Hit an Enemy
+    // with a Spell" (`Condition:ArcaneSurge` FLAG, `HitSpellRecently` or
+    // `TotemsHitSpellRecently`).
+    (
+        "gain_arcane_surge_on_spell_hit_by_you_or_your_totems",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeWhen(
+                conditions::HIT_SPELL_BY_YOU_OR_TOTEMS,
+            )),
             Op::Flag,
             1.0,
         )],
@@ -9452,6 +9703,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
+    // Close-out M1: Unholy Might on critical strike (`Condition:UnholyMight`
+    // FLAG under `CriticalStrike`, a skill condition of the crit pass):
+    // PoB reads the buff with no skill (`CalcPerform.lua` 720), so never.
+    (
+        "chance_to_gain_unholy_might_on_crit_for_4_seconds_%",
+        "no-slice",
+    ),
     // P6-11hu: maim and intimidate chances (the enemy's maim and intimidation
     // are config checks in PoB; maim on crit PoB leaves unparsed).
     ("chance_to_intimidate_on_hit_%", "on-hit-debuff"),
@@ -9469,7 +9727,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // reads a flask's charges.
     ("charges_gained_+%", "flask"),
     ("chill_duration_+%", "no-slice"),
+    // Close-out M1: "The Effect of Chill on you is reversed"
+    // (`SelfChillEffectIsReversed` FLAG): a chill on you, which only the
+    // config's checks give (`conditionChilled` guards
+    // `chill_effectiveness_on_self_+%`, so stays a reason).
+    ("chill_effect_is_reversed", "ailment-on-self"),
     ("chill_effectiveness_on_self_+%", "ailment-on-self"),
+    // Close-out M1: "You are Chilled while you are Bleeding"
+    // (`Condition:Chilled`, `Bleeding`): bleeding only from its check
+    // (guarded).
+    ("chilled_while_bleeding", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     ("cold_damage_to_return_to_melee_attacker", "no-slice"),
     (
@@ -9674,9 +9941,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
     // hexproof, so curses already apply.
     ("ignore_hexproof", "curse"),
+    // Close-out M1: the helmet's immunities (`BleedImmune`, `PoisonImmune`
+    // FLAG): no slice field, and PoB never sets their conditions.
+    (
+        "immune_to_bleeding_if_helmet_grants_higher_armour_than_evasion",
+        "ailment-on-self",
+    ),
     (
         "immune_to_elemental_ailments_while_on_consecrated_ground_at_devotion_threshold",
         "no-slice",
+    ),
+    (
+        "immune_to_poison_if_helmet_grants_higher_evasion_than_armour",
+        "ailment-on-self",
     ),
     ("is_ranged_attack_totem", "skill type marker"),
     ("is_remote_mine", "no-slice"),
@@ -9739,6 +10016,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "local_flask_ignited_enemies_during_effect_have_malediction",
         "enemy-debuff",
     ),
+    // Close-out M1: a flask's additional projectiles during the effect
+    // (`ProjectileCount` BASE, `UsingFlask`): as the plain stat's, guarded.
+    (
+        "local_flask_number_of_additional_projectiles_during_flask_effect",
+        "projectile-count",
+    ),
     // P6-11m: a flask's recovery rate (`FlaskRecoveryRate`).
     ("local_flask_recovery_speed_+%", "flask"),
     // P6-11em: a flask's stun recovery while healing (PoB does not parse it).
@@ -9778,6 +10061,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // passives (`loom_pipeline`, `RING_STAT`, `LEAP_STAT`, `ESCAPE_STAT`); they
     // act through the allocated nodes, not as modifiers.
     ("local_jewel_variable_ring_radius_value", "tree-allocation"),
+    // Close-out M1: "Grants # Life per Enemy Hit" (`LifeOnHit` BASE): as
+    // `base_life_gain_per_target`.
+    ("local_life_gain_per_target", "recovery"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
     // P6-11ic: Kalandra's Touch's "Reflects your opposite Ring" (PoB: display only; `collect::items` copies the other ring).
@@ -10015,6 +10301,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "recover_%_energy_shield_over_1_second_when_you_take_physical_damage_from_enemy_hits",
         "recovery",
     ),
+    // Close-out M1: energy shield on killing a cursed enemy
+    // (`EnergyShieldOnKill`): no recovery field reads a kill.
+    (
+        "recover_%_maximum_energy_shield_on_killing_cursed_enemy",
+        "recovery",
+    ),
     // P6-11g: "Recover #% of Life on Kill" (`LifeOnKill` BASE per life).
     ("recover_%_maximum_life_on_kill", "recovery"),
     // P6-11eg: "Recover #% of Mana on Kill" and "... of Energy Shield on Kill"
@@ -10207,6 +10499,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11n: "Unaffected by Ignite" (`SelfIgniteEffect` MORE -100): ignite on
     // you, no field.
     ("unaffected_by_ignite", "ailment-on-self"),
+    // Close-out M1: "You are Unaffected by Shock if you've cast Conductivity
+    // in the past 10 seconds" (`SelfShockEffect` MORE -100): a shock on you,
+    // which only the config's checks give (guarded).
+    (
+        "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
+        "ailment-on-self",
+    ),
     ("visual_hit_effect_elemental_is_holy", "display"),
     (
         "wand_attacks_fire_an_additional_projectile",
@@ -10275,6 +10574,10 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     // P6-11u: projectiles counted as chains.
     (
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
+        "local_flask_number_of_additional_projectiles_during_flask_effect",
+    ),
+    (
+        "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "number_of_additional_projectiles",
     ),
     // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
@@ -10289,6 +10592,11 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     ),
     // P6-11dg: Barrage's, for the bows' additional arrows.
     ("projectiles_barrage", "chance_to_fork_extra_projectile_%"),
+    // Close-out M1: a flask's additional projectiles, as the plain stat's.
+    (
+        "projectiles_barrage",
+        "local_flask_number_of_additional_projectiles_during_flask_effect",
+    ),
     ("projectiles_barrage", "number_of_additional_arrows"),
     // P6-11u: Barrage's `SequentialProjectiles`.
     ("projectiles_barrage", "number_of_additional_projectiles"),
@@ -10299,9 +10607,18 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
 /// while these stay config reasons, so a build that sets one is `Partial`;
 /// modelling one must revisit the row (a test checks no step handles them).
 pub const NO_EFFECT_DEPENDS_ON_INPUTS: &[(&str, &str)] = &[
+    ("conditionBleeding", "chilled_while_bleeding"),
     ("conditionBlinded", "cannot_be_blinded"),
     ("conditionChilled", "chill_effectiveness_on_self_+%"),
     ("conditionChilledEffect", "chill_effectiveness_on_self_+%"),
+    (
+        "conditionOnShockedGround",
+        "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
+    ),
+    (
+        "conditionShocked",
+        "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
+    ),
     ("playerCursedWithAssassinsMark", "curse_effect_on_self_+%"),
     ("playerCursedWithConductivity", "curse_effect_on_self_+%"),
     ("playerCursedWithDespair", "curse_effect_on_self_+%"),
@@ -10533,6 +10850,23 @@ impl StatMapping for Poe1Mapping {
                         conditions: Conditions::none()
                             .with_all(all)
                             .with_any(any)
+                            .with_state(ConditionKey::new(state), true),
+                    })
+                    .collect(),
+            );
+        }
+        if let Ok(i) = STATE_DIVIDED_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                STATE_DIVIDED_ROWS[i]
+                    .1
+                    .iter()
+                    .map(|&(quantity, op, divisor, all, state)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale: 1.0,
+                        divisor,
+                        conditions: Conditions::none()
+                            .with_all(all)
                             .with_state(ConditionKey::new(state), true),
                     })
                     .collect(),
@@ -11992,6 +12326,28 @@ mod tests {
             Poe1Mapping.map(&StatId::new("local_attack_speed_+%")),
             StatMap::Unmapped
         );
+    }
+
+    /// The divided condition rows (close-out M1) are sorted, disjoint from
+    /// the other tables, and read conditions the checks, the auras, or a
+    /// condition row read.
+    #[test]
+    fn state_divided_rows_should_read_settled_conditions_only() {
+        assert!(STATE_DIVIDED_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, rows) in STATE_DIVIDED_ROWS {
+            assert!(!STATE_ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!HIT_ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!NO_EFFECT.iter().any(|r| r.0 == *id), "{id}");
+            for (_, _, divisor, _, state) in *rows {
+                assert!(*divisor > 0.0, "{id}");
+                assert!(
+                    conditions::CHECKS.iter().any(|(_, c)| c == state)
+                        || conditions::AFFECTED_BY.iter().any(|(_, c)| c == state),
+                    "{id}: {state}"
+                );
+            }
+        }
     }
 
     /// The condition rows (P3-8f) are sorted, disjoint from the other
@@ -13570,6 +13926,91 @@ mod tests {
                     NONE,
                     conditions::AT_LEAST_TWO_RARE_OR_UNIQUE_NEARBY,
                 )],
+            ),
+            // Close-out M1.
+            (
+                "bleeding_dot_multiplier_+_vs_poisoned_enemies",
+                vec![
+                    config(Quantity::DotMultiplier, Op::Base, Flags::BLEED, conditions::ENEMY_POISONED),
+                ],
+            ),
+            (
+                "block_chance_from_equipped_shield_is_%",
+                vec![
+                    config(Quantity::Poe1(Poe1Quantity::ReplaceShieldBlock), Op::Override, NONE, states::USING_SHIELD),
+                ],
+            ),
+            (
+                "cold_damage_%_to_add_as_fire_vs_frozen_enemies",
+                vec![
+                    config(Quantity::Poe1(Poe1Quantity::GainAs(DamageType::Cold, DamageType::Fire)), Op::Base, NONE, conditions::ENEMY_FROZEN),
+                ],
+            ),
+            (
+                "critical_strike_chance_+%_vs_shocked_enemies",
+                vec![
+                    config(Quantity::CritChance, Op::Increased, NONE, conditions::ENEMY_SHOCKED),
+                ],
+            ),
+            (
+                "critical_strike_chance_+%_vs_taunted_enemies",
+                vec![
+                    config(Quantity::CritChance, Op::Increased, NONE, conditions::ENEMY_TAUNTED),
+                ],
+            ),
+            (
+                "critical_strike_multiplier_+_vs_taunted_enemies",
+                vec![
+                    config(Quantity::CritMultiplier, Op::Base, NONE, conditions::ENEMY_TAUNTED),
+                ],
+            ),
+            (
+                "damage_+%_on_full_energy_shield",
+                vec![
+                    config(Quantity::Damage, Op::Increased, NONE, conditions::FULL_ENERGY_SHIELD),
+                ],
+            ),
+            (
+                "damage_over_time_multiplier_+_if_enemy_killed_recently",
+                vec![
+                    config(Quantity::DotMultiplier, Op::Base, NONE, conditions::KILLED_RECENTLY),
+                ],
+            ),
+            (
+                "hit_damage_+%_vs_ignited_enemies",
+                vec![
+                    config(Quantity::Damage, Op::Increased, Flags::HIT, conditions::ENEMY_IGNITED),
+                ],
+            ),
+            (
+                "local_unique_flask_critical_strike_chance_+%_vs_enemies_on_consecrated_ground_during_flask_effect",
+                vec![
+                    config(Quantity::CritChance, Op::Increased, NONE, conditions::ENEMY_ON_CONSECRATED_GROUND),
+                ],
+            ),
+            (
+                "number_of_additional_curses_allowed_while_affected_by_malevolence",
+                vec![
+                    config(Quantity::Poe1(Poe1Quantity::CurseLimit), Op::Base, NONE, conditions::AFFECTED_BY_MALEVOLENCE),
+                ],
+            ),
+            (
+                "pathfinder_poison_damage_+100%_final_chance_during_flask_effect",
+                vec![
+                    config(Quantity::Damage, Op::More, Flags::POISON, conditions::USING_FLASK),
+                ],
+            ),
+            (
+                "poison_dot_multiplier_+_vs_bleeding_enemies",
+                vec![
+                    config(Quantity::DotMultiplier, Op::Base, Flags::POISON, conditions::ENEMY_BLEEDING),
+                ],
+            ),
+            (
+                "wand_damage_+%_if_crit_recently",
+                vec![
+                    config(Quantity::Damage, Op::Increased, Flags::WAND.union(Flags::HIT), conditions::CRIT_RECENTLY),
+                ],
             ),
         ]);
         // P6-11if: the rows with "one of" flags.

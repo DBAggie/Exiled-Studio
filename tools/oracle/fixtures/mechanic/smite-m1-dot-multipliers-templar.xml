@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 6 close-out M1): Smite (level 20) with a Rusted Hatchet,
+     chances to poison and bleed, the damage over time multipliers for
+     bleeding on poisoned and poison on bleeding enemies and after a kill,
+     and the Pathfinder's poison chance during a flask effect, each
+     condition on.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Rusted Hatchet
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input boolean="true" name="conditionEnemyPoisoned"/>
+			<Input boolean="true" name="conditionEnemyBleeding"/>
+			<Input boolean="true" name="conditionKilledRecently"/>
+			<Input boolean="true" name="conditionUsingFlask"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				60% chance to Poison on Hit
+				Attacks have 40% chance to cause Bleeding
+				+6% to Damage over Time Multiplier for Bleeding you inflict on Poisoned Enemies
+				+12% to Damage over Time Multiplier for Poison you inflict on Bleeding Enemies
+				+10% to Damage over Time Multiplier if you've Killed Recently
+				Poisons you inflict during any Flask Effect have 20% chance to deal 100% more Damage
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

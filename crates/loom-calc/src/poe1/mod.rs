@@ -406,6 +406,17 @@ pub enum Poe1Quantity {
     /// read by [`buffs`]' Arcane Surge; [`conditions`] settles the condition
     /// from the passive tree's and items' stats.
     ArcaneSurgeOnKill,
+    /// "#% chance to gain Arcane Surge when you Hit a Unique enemy" and
+    /// "Gain Arcane Surge when you or your Totems Hit an Enemy with a
+    /// Spell" (close-out M1; PoB's `Condition:ArcaneSurge` FLAG under the
+    /// named condition): a `Flag`, read by [`buffs`]' Arcane Surge while
+    /// [`conditions`] settles the condition true.
+    ArcaneSurgeWhen(&'static str),
+    /// "Gain #% Chance to Block from Equipped Shield instead of the
+    /// Shield's value" (close-out M1; PoB's `ReplaceShieldBlock` OVERRIDE,
+    /// `CalcDefence.lua` 678): an `Override` of the shield's chance in
+    /// attack block's base.
+    ReplaceShieldBlock,
     /// "Gain Adrenaline for # seconds on Kill" (P6-11ih; PoB's
     /// `Condition:Adrenaline` FLAG with `KilledRecently`): a `Flag`, read by
     /// [`buffs`]' Adrenaline while killed recently is settled true.
@@ -1483,6 +1494,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::ArcaneSurgeOnKill => f.write_str("arcane-surge-on-kill"),
+            Self::ArcaneSurgeWhen(c) => write!(f, "arcane-surge-when.{c}"),
+            Self::ReplaceShieldBlock => f.write_str("replace-shield-block"),
             Self::AdrenalineOnKill => f.write_str("adrenaline-on-kill"),
             Self::CurseLimitIsMaximumPowerCharges => {
                 f.write_str("curse-limit-is-maximum-power-charges")

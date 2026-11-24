@@ -85,6 +85,8 @@ const TEXTS: [(&str, &str); 16] = [
 /// lightning or non-damaging ailments, each checked to reach no slice
 /// field (`poe1::mapping::NO_EFFECT`'s comments).
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out M1: a shock on you, guarded by the config's checks.
+    "unaffected_by_shock_if_cast_conductivity_in_past_10_seconds",
     "all_damage_can_shock",
     "always_shock",
     // P6-11ay: shock on you, not the enemy's.
@@ -103,6 +105,9 @@ const NO_EFFECT_NAMING: &[&str] = &[
 /// settles (`poe1::conditions`, P3-8n): "if you have Shocked an Enemy
 /// Recently".
 const CONDITION_ROWS: &[&str] = &[
+    // Close-out M1: the enemy's shock from its check
+    // (`conditions::ENEMY_SHOCKED`).
+    "critical_strike_chance_+%_vs_shocked_enemies",
     "damage_+%_if_you_have_shocked_recently",
     // P6-11gz: exposure while a curse you cast holds (`poe1::exposure`
     // reads them with the settled states).

@@ -90,7 +90,7 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 13] = [
+pub const NO_EFFECT_LOCAL: [&str; 14] = [
     // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
     // `UsingFlask`): no slice field.
     "local_avoid_shock_%_during_flask_effect",
@@ -110,6 +110,9 @@ pub const NO_EFFECT_LOCAL: [&str; 13] = [
     // P6-11dr: energy shield recovered on kill during the effect
     // (`EnergyShieldOnKill` BASE, `UsingFlask`): no slice field.
     "local_flask_recover_%_maximum_energy_shield_on_kill_during_flask_effect",
+    // Close-out M1: mana recovered on kill during the effect (`ManaOnKill`
+    // BASE, `UsingFlask`): no slice field.
+    "local_flask_recover_%_maximum_mana_on_kill_during_flask_effect",
     // P6-11dz: "Removes Curses on use": no slice field.
     "local_flask_remove_curses_on_use",
     "local_flask_use_on_full_charges",
@@ -174,10 +177,34 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_unique_flask_additional_maximum_all_elemental_resistances_%_while_healing",
         "additional_maximum_all_elemental_resistances_%",
     ),
+    // "+#% Chance to Block Attack Damage during Effect" (close-out M1;
+    // `BlockChance` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_block_%_while_healing",
+        "additional_block_%",
+    ),
+    // "Gain #% of Elemental Damage as Extra Chaos Damage during effect"
+    // (close-out M1).
+    (
+        "local_unique_flask_elemental_damage_%_to_add_as_chaos_while_healing",
+        "elemental_damage_%_to_add_as_chaos",
+    ),
+    // "Gain #% of Physical Damage as Extra Chaos Damage during effect"
+    // (close-out M1).
+    (
+        "local_unique_flask_physical_damage_%_to_add_as_chaos_while_healing",
+        "physical_damage_%_to_add_as_chaos",
+    ),
     // "+#% to Elemental Resistances during Effect" (a unique's).
     (
         "local_unique_flask_resist_all_elements_%_during_flask_effect",
         "base_resist_all_elements_%",
+    ),
+    // "+#% Chance to Block Spell Damage during Effect" (close-out M1;
+    // `SpellBlockChance` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_spell_block_%_while_healing",
+        "additional_spell_block_%",
     ),
 ];
 
@@ -192,6 +219,11 @@ pub const FLASK_ROWS: &[&str] = &[
     "local_flask_skill_mana_cost_+%_during_flask_effect",
     // P6-11ce.
     "local_life_loss_%_to_prevent_during_flask_effect_to_lose_over_time",
+    // Close-out M1: "#% increased Critical Strike Chance against Enemies on
+    // Consecrated Ground during Effect" and Lion's Roar's "#% more Melee
+    // Physical Damage during effect".
+    "local_unique_flask_critical_strike_chance_+%_vs_enemies_on_consecrated_ground_during_flask_effect",
+    "local_unique_lions_roar_melee_physical_damage_+%_final_during_flask_effect",
 ];
 
 /// The mapping of a flask's own lines (module docs). Not modelled: a
@@ -636,7 +668,7 @@ mod tests {
         assert_eq!(
             map(
                 &life,
-                "local_flask_number_of_additional_projectiles_during_flask_effect"
+                "local_unique_flask_nearby_enemies_cursed_with_level_x_vulnerability_during_flask_effect"
             ),
             StatMap::Unmapped
         );

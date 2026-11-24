@@ -5058,3 +5058,44 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 6 values move toward PoB (ethereal-knives-mines-assassin.xml: critical strike chance now equal to PoB's, damage, DPS), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M1: conditions
+
+The first close-out batch (`p6-close-out-plan.md`): the 38 stats of `M1-conditions` in `p6-close-out-list.md`.
+
+**Mapped** (rows under conditions the engine settles):
+- **New settled conditions** (`poe1::conditions`): the enemy poisoned, taunted, frozen, shocked, ignited, and on consecrated ground, each from its config check (`ConfigOptions.lua`; the poison count of at least 1 poisons the enemy too, `CalcSetup.lua` 73); on full energy shield; hit with a spell recently (its check, or a main skill that hits as a spell and is not placed, PoB's `skillFlags.hit`, `CalcActiveSkill.lua` 104); your totems hit with a spell recently; and PoB's `varList` of the two. `conditionEnemyPoisoned`, `conditionEnemyTaunted`, `conditionHitSpellRecently`, and `conditionTotemsHitSpellRecently` left `config::NAMED_ONLY`. Malevolence joins `AFFECTED_BY`.
+- **`STATE_ROWS`**: the DoT multipliers for bleeding on poisoned and poison on bleeding enemies and after a kill; critical strike chance against shocked and taunted enemies and the multiplier against taunted ones; cold as extra fire against frozen enemies; damage on full energy shield; damage with hits against ignited enemies; damage with wands after a critical strike (the flags of P6-11ef's wand rows); the Pathfinder's poison chance during a flask effect (`Damage` MORE by the chance); the curse limit while affected by Malevolence (`poe1::gems` reads it with the auras); a flask's critical strike chance against enemies on consecrated ground; and the shield's block replaced (below).
+- **`STATE_DIVIDED_ROWS`** (new, a state row with a divisor): critical strike chance in hundredths while affected by Hatred; "40% increased Critical Strike Chance if you've Summoned a Totem Recently", the stat its duration in milliseconds (4000 in the game's only line, the form PoB parses), so divided by 100; energy shield regenerated over 2 seconds on consuming a corpse (half the stat per second).
+- **Flask lines** (`poe1::flasks`): four aliases (attack and spell block, elemental and physical damage as extra chaos) and two `FLASK_ROWS` (Lion's Roar's more melee physical damage, a `HIT_ROWS` row; the consecrated crit above); mana on kill during the effect joins `NO_EFFECT_LOCAL`.
+- **Arcane Surge** on hitting a unique enemy and when you or your totems hit with a spell: `Poe1Quantity::ArcaneSurgeWhen`, read by `poe1::buffs` while its condition is settled true.
+- **"Gain #% Chance to Block from Equipped Shield instead of the Shield's value"**: `Poe1Quantity::ReplaceShieldBlock`, an override of the shield's chance in attack block's base (`CalcDefence.lua` 678); the "per 5%" lines still read the shield's own.
+
+**`NoEffect`:**
+- a flask's additional projectiles (`projectile-count`, guarded as the plain stat's by Barrage and the projectiles-as-chains line);
+- Unholy Might on critical strike: PoB reads the buff with no skill (`CalcPerform.lua` 720), and its flag needs the crit pass's skill condition, so never;
+- the effect of chill on you reversed and chilled while bleeding: a chill on you, which only the config's checks give (`conditionBleeding` now guards the second; `conditionChilled` already guards a row);
+- the helmet's bleeding and poison immunities: no slice field, and PoB never sets their conditions;
+- life per enemy hit, energy shield on killing a cursed enemy: as the plain recovery stats;
+- unaffected by shock after casting Conductivity: a shock on you (guarded by `conditionShocked` and `conditionOnShockedGround`).
+
+**Moved out of M1** (recorded here, as the plan's rules ask):
+- `gladiator_damage_vs_rare_unique_enemies_+%_final_per_second_in_your_presence_up_to_100%` to `M2-per-and-thresholds`: a per-multiplier line (the enemy's presence seconds, limit 100).
+- `local_unique_flask_nearby_enemies_cursed_with_level_x_vulnerability_during_flask_effect` to `C-item-skill`: a curse aura granted by an item (`ExtraCurse`).
+- `critical_strike_chance_+%_vs_enemies_with_lightning_exposure` stays a reason and joins the game-truth list: PoB never sets `HasLightningExposure`, so it applies nothing in PoB, while in the game it changes critical strike chance.
+- `regenerate_%_maximum_mana_over_2_seconds_on_consuming_corpse` stays a reason: PoB's value is not the percent of the shown maximum mana. Probes (`local/p6/m1-x`): with "Regenerate 10% of Mana over 2 seconds..." PoB adds 30.0 mana per second at 590 mana (5% of 600), 35.0 at 690 (5% of 700), and about 3.0 at level 1 with 56 mana, while "Regenerate 2% of Mana per second" adds exactly 2% of 590. The `PercentStat` of `Mana` reads a larger value than the output; the cause is not found. An item for the report's open list.
+
+**Evidence** (`b-ct`, against P6-11ik's run):
+- **Ten new mechanic fixtures**, each matching PoB on every computed field (the two Smite fixtures but for the weapon's rate, Q11 DIV-0653 to DIV-0664):
+  - `ice-nova-m1-vs-shocked-taunted-witch.xml` and its control `ice-nova-m1-vs-shocked-taunted-none-witch.xml`;
+  - `ice-nova-m1-vs-frozen-ignited-witch.xml`;
+  - `ice-nova-m1-full-es-corpse-totem-witch.xml` (full energy shield, the totem's crit, energy shield over 2 seconds);
+  - `ice-nova-m1-hatred-malevolence-witch.xml` (Hatred's crit; both curses apply with Malevolence);
+  - `ice-nova-m1-arcane-surge-spell-hit-witch.xml` (the main skill's spell hit gives Arcane Surge) and `ice-nova-m1-arcane-surge-unique-witch.xml`;
+  - `ice-nova-m1-flask-lines-witch.xml` (the flask's block, extra chaos, and consecrated crit);
+  - `smite-m1-dot-multipliers-templar.xml` (both DoT multipliers on the enemy's ailments, after a kill, the Pathfinder's poison chance);
+  - `smite-m1-lions-roar-shield-block-templar.xml` (Lion's Roar, the shield's block replaced).
+  - No wand fixture: every wand attack carries its own unmapped skill stats (Power Siphon, Frenzy), so its fields stay partial; the wand row uses P6-11ef's flags.
+- **Public:** 0 unexpected; 38 values moved, 36 toward PoB (lacerate-bleed-gladiator.xml: block and spell block now equal to PoB's; holy-flame-totem-hierophant.xml: speed equal), 2 away: Generals Perforate Zerker.xml's average damage and bleed DPS, which now carry the taunted crit and Lion's Roar (PoB applies both: its config sets the enemy taunted and the flask is active) and were already off for other reasons (its speed 1.64 against PoB's 2.20).
+- **Corpus:** 0 unexpected; 9 values moved, 8 toward PoB, 1 away: a build's average damage with the ignited enemy's damage (its config sets the enemy ignited; PoB applies it too), already above PoB's before.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

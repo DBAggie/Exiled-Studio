@@ -184,7 +184,11 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// - `conditionEnemyBleeding`, `conditionEnemyPoisoned`: the enemy's
 ///   `Condition:Bleeding`, `Condition:Poisoned` (lines 1786, 1798); no
 ///   calc module reads them on the enemy (`CalcSetup.lua` 73 sets
-///   `Poisoned` from poison stacks). `conditionEnemyLowLife` left this
+///   `Poisoned` from poison stacks). Close-out M1 moved
+///   `conditionEnemyPoisoned`, `conditionEnemyTaunted`,
+///   `conditionHitSpellRecently`, and `conditionTotemsHitSpellRecently` to
+///   `poe1::conditions` (rows read them; their implied `HitRecently` and
+///   `TotemsHitRecently` are no row's). `conditionEnemyLowLife` left this
 ///   list in P6-9e: Punishment's hex reads it (`conditions::CHECKS`).
 /// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
@@ -277,14 +281,8 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:ChilledEnemyRecently"],
     ),
     ("conditionEnemyHindered", &["enemy Condition:Hindered"]),
-    ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
-    ("conditionEnemyTaunted", &["enemy Condition:Taunted"]),
     ("conditionHaveEnergyShield", &["Condition:HaveEnergyShield"]),
     ("conditionHitRecently", &["Condition:HitRecently"]),
-    (
-        "conditionHitSpellRecently",
-        &["Condition:HitSpellRecently", "Condition:HitRecently"],
-    ),
     ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),
     ("conditionLowEnergyShield", &["Condition:LowEnergyShield"]),
     (
@@ -294,13 +292,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionSpawnedCorpseRecently",
         &["Condition:SpawnedCorpseRecently"],
-    ),
-    (
-        "conditionTotemsHitSpellRecently",
-        &[
-            "Condition:TotemsHitSpellRecently",
-            "Condition:TotemsHitRecently",
-        ],
     ),
     (
         "configSpectralTigerCount",

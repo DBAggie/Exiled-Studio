@@ -421,7 +421,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ij: accuracy per frenzy charge (`charges::PerCharge::FlatAccuracy`), no non-elemental damage (a hit row), bow culling (a hit row; `combined` queries culling with the main hand's flags); five fixtures, Q11 DIV-0641 to DIV-0652 (`docs/phase-6/stat-mop-up.md`, "P6-11ij")
 - [x] P6-11ik: critical strike multiplier against enemies on low life, more critical strike chance against enemies not on low life (`conditions::ENEMY_NOT_LOW_LIFE`), more damage with at most one and less damage taken with at least two rare or unique enemies nearby (settled from the count); six fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ik")
 - [x] Close-out plan (maintainer 2026-11-24: the rest of Phase 6 in one session, the stat mop-up only, the engineering items deferred): [`p6-close-out-plan.md`](p6-close-out-plan.md), every remaining stat in one batch in [`p6-close-out-list.md`](p6-close-out-list.md)
-- [ ] Close-out `M1-conditions` (38)
+- [x] Close-out `M1-conditions` (38): new settled enemy and player conditions, `STATE_DIVIDED_ROWS`, flask aliases, Arcane Surge under a condition, the shield block override; 4 stats moved (`docs/phase-6/stat-mop-up.md`, "Close-out M1"); ten fixtures, Q11 DIV-0653 to DIV-0664
 - [ ] Close-out `M2-per-and-thresholds` (21)
 - [ ] Close-out `M3-plain` (83; two commits)
 - [ ] Close-out `M4-minion` (12)
