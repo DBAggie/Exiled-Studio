@@ -85,6 +85,11 @@ const TEXTS: [(&str, &str); 16] = [
 /// lightning or non-damaging ailments, each checked to reach no slice
 /// field (`poe1::mapping::NO_EFFECT`'s comments).
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out N: unparsed lines, no slice field.
+    "cannot_have_more_than_1_non_damaging_ailment",
+    "refresh_duration_of_shock_chill_ignite_on_enemy_when_cursing_enemy",
+    "shock_nova_ring_chance_to_shock_+%",
+    "shocked_enemies_explode_for_%_life_as_lightning_damage",
     // Close-out M3: elemental damage can shock, as all damage.
     "elemental_damage_can_shock",
     // Close-out M1: a shock on you, guarded by the config's checks.

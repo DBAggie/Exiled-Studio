@@ -9740,6 +9740,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "bleeding_enemies_explode_for_%_life_as_physical_damage",
         "explosion",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("blight_chilling_tower_freeze_for_ms", "no-slice"),
     ("blight_scout_tower_range_+%", "no-slice"),
     // Close-out M7: the cooldown recovery of Blink and Mirror Arrow, Convocation,
     // and travel skills per frenzy charge (`CooldownRecovery` INC with their
@@ -9747,6 +9750,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("blink_and_mirror_arrow_cooldown_speed_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("boots_implicit_ground_brittle_duration_ms", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("boots_implicit_ground_sapping_duration_ms", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("buff_time_passed_+%_only_buff_category", "no-slice"),
     ("can_have_active_mercenary_follower", "no-slice"),
     ("cannot_be_blinded", "blind-on-self"),
     // P6-11f: "Corrupted Blood cannot be inflicted on you" (`CorruptedBloodImmune`): no slice field.
@@ -9773,7 +9785,28 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ailment-on-self",
     ),
     ("cannot_have_life_leeched_from", "leech"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("cannot_have_mana_leeched_from", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "cannot_have_more_than_1_damaging_ailment",
+        "ailment-on-self",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "cannot_have_more_than_1_non_damaging_ailment",
+        "ailment-on-self",
+    ),
     ("cannot_pierce", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "cannot_summon_mirage_archer_if_near_mirage_archer_radius",
+        "no-slice",
+    ),
     // P6-11eg: lines no slice field reads: taunt duration, Desecrate's and
     // Unearth's corpses, totems' life and resistances, attribute requirements,
     // reflected damage taken.
@@ -9812,6 +9845,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_create_consecrated_ground_on_melee_kill_%",
         "ground-creation-chance",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("chance_to_crush_on_hit_%", "no-slice"),
     // P6-11eb: "Projectiles have #% chance for an additional Projectile when
     // Forking" (PoB: `ProjectileCount` BASE): as the projectile count, read
     // only with `SequentialProjectiles` (Barrage's, a guard).
@@ -9880,6 +9916,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "consecrated_ground_effect_lingers_for_ms_after_leaving_the_area_while_affected_by_zealotry",
+        "no-slice",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("consecrated_ground_immune_to_curses", "no-slice"),
     ("console_skill_dont_chase", "display"),
     ("convocation_cooldown_speed_+%", "no-slice"),
     ("crush_on_hit_ms_vs_full_life_enemies", "on-hit-debuff"),
@@ -9914,10 +9959,22 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("desecrate_maximum_number_of_corpses", "no-slice"),
     // P6-11cy: a support that cannot support melee attacks (which supports apply is the skill's types').
     ("disable_skill_if_melee_attack", "skill type marker"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("dispel_bleed_on_guard_skill_use", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("dispel_corrupted_blood_on_guard_skill_use", "no-slice"),
     // P3-8n: Intensify's text; PoB maps no modifier.
     ("display_base_intensity_loss", "display"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("display_cast_commandment_of_frost_on_kill_%", "no-slice"),
     // P6-11eh: Blight's stack limit shown on the item.
     ("display_max_blight_stacks", "display"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("divination_buff_on_flask_used_duration_cs", "flask"),
     // P6-11ed: display-only lines: gem experience (unparsed in PoB), extra gore,
     // ignite's visual variant, a dummy display stat.
     ("dummy_stat_display_nothing", "display"),
@@ -10003,12 +10060,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("flask_life_to_recover_+%", "flask"),
     // P6-11m: "#% increased Flask Recovery rate" (`FlaskRecoveryRate`).
     ("flask_recovery_speed_+%", "flask"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("flesh_and_stone_area_of_effect_+%", "area"),
     // P6-11eh: "#% increased Projectile Fork angle": PoB parses it as
     // `ProjectileCount` INC (its text's "Projectile"), which no slice field
     // reads either.
     ("forking_angle_+%", "projectile-count"),
     ("fortify_duration_+%", "fortification"),
     ("freeze_duration_+%", "ailment-duration"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("freeze_minimum_duration_X_ms", "no-slice"),
     // Close-out M2: frenzy charge duration per frenzy charge
     // (`FrenzyChargesDuration` INC per `FrenzyCharge`): no slice field.
     (
@@ -10022,6 +10085,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11as: "Gain # Life when you Stun an Enemy": PoB leaves the line
     // unparsed (`ModCache.lua`), and a gain on stun reaches no slice field.
     ("gain_X_life_on_stun", "recovery"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "gain_a_frenzy_charge_every_X_seconds_while_moving",
+        "charge-gain",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "gain_defiance_when_lose_life_to_hit_once_per_x_ms",
+        "no-slice",
+    ),
     // Close-out M3: a support's chance to grant Elusive on crit (PoB leaves the
     // line unparsed): Elusive's effect is the config's buff.
     ("gain_elusive_on_crit_%_chance", "no-slice"),
@@ -10075,6 +10150,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // not read the line (no mod), so it reaches none of PoB's outputs; no
     // minion field reads damage taken.
     ("golem_immunity_to_elemental_damage", "minion-defence"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("graft_skill_cooldown_speed_+%", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("graft_skill_duration_+%", "no-slice"),
     (
         "greater_volley_additional_projectiles_fire_parallel_x_dist",
         "no-slice",
@@ -10100,6 +10181,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: Hoarfrost (`HitsCanInflictHoarfrost`): no calc module of
     // PoB reads the flag.
     ("hoarfrost_on_non_freezing_freezing_hit", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "ignite_X_nearby_enemies_for_4_s_on_killing_ignited_enemy",
+        "no-slice",
+    ),
     ("ignite_art_variation", "display"),
     // P6-11be: "Your Hexes can affect Hexproof Enemies"
     // (`CursesIgnoreHexproof`): no input or modelled modifier makes the enemy
@@ -10140,6 +10227,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // Close-out M3: life flask charges every 3 seconds: no slice field.
     ("life_flask_charges_recovered_per_3_seconds", "flask"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("life_flask_effects_are_not_removed_at_full_life", "flask"),
     // P6-11g: Divine Shield (`Keystone` LIST): energy shield recovery and recoup, no slice field.
     // P6-11g: Mind Over Matter (`Keystone` LIST): damage taken from mana, no slice field.
     (
@@ -10157,10 +10247,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "lightning_arrow_maximum_number_of_extra_targets",
+        "no-slice",
+    ),
     ("lightning_arrow_radius_+%", "area"),
     // Close-out M3: all sockets white (PoB parses no mod): the gems' sockets
     // are the build's.
     ("local_all_sockets_are_white", "sockets"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("local_area_of_effect_+%_per_4%_quality", "area"),
     // P6-11ee: lines no slice field reads: an item's attribute requirements,
     // flask automation and on-use effects, maim's effect, a mercenary's
     // unique slots, a corpse's life, minions' taunt and defensive stance.
@@ -10173,11 +10272,29 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // P6-11id: a local chance to blind on hit (PoB leaves text over; the enemy's blind is the config's).
     ("local_chance_to_blind_on_hit_%", "on-hit-debuff"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "local_display_avoid_interruption_%_while_using_socketed_attack_skills",
+        "no-slice",
+    ),
     // Close-out M3: curse with the socketed hex on hit (PoB parses no mod):
     // the socketed curse is a skill of its own.
     (
         "local_display_curse_enemies_with_socketed_curse_on_hit_%_chance",
         "curse",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "local_display_gain_power_charge_on_spending_mana",
+        "charge-gain",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "local_display_nearby_enemies_flask_charges_granted_+%",
+        "flask",
     ),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
@@ -10190,6 +10307,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "local_flask_cannot_gain_charges_during_flask_effect",
         "flask",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("local_flask_effect_not_removed_at_full_mana", "flask"),
     // P6-11m: flask charges on consuming a corpse (unparsed).
     (
         "local_flask_gain_X_charges_on_consuming_ignited_corpse",
@@ -10251,10 +10371,25 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M1: "Grants # Life per Enemy Hit" (`LifeOnHit` BASE): as
     // `base_life_gain_per_target`.
     ("local_life_gain_per_target", "recovery"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("local_maximum_quality_+", "no-slice"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
     // P6-11ic: Kalandra's Touch's "Reflects your opposite Ring" (PoB: display only; `collect::items` copies the other ring).
     ("local_ring_duplicate_other_ring", "display"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "local_self_chill_effect_+%_during_flask_effect",
+        "ailment-on-self",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "local_self_freeze_duration_+%_during_flask_effect",
+        "ailment-on-self",
+    ),
     // P6-11gi: the parent's "#% increased Effect of Socketed Abyss Jewels":
     // `collect` scales its abyss jewels' modifiers by it.
     ("local_socketed_abyss_jewel_effect_+%", "abyss-jewel-effect"),
@@ -10327,6 +10462,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "local_unique_jewel_passives_in_radius_grant_physical_damage_reduction_rating_+%",
         "radius-jewel",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("lose_X_bark_on_enemy_spell_hit", "no-slice"),
     (
         "lose_a_frenzy_charge_on_travel_skill_use_%_chance",
         "charge-gain-chance",
@@ -10337,6 +10475,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "lose_a_power_charge_when_you_gain_elusive_%_chance",
         "charge-gain-chance",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("lose_all_defiance_on_reaching_x_defiance", "no-slice"),
     // P6-11ia: "Lose all Gale Force when Hit" (PoB leaves it unparsed; the config sets the count).
     ("lose_all_gale_force_when_hit", "no-slice"),
     (
@@ -10364,6 +10505,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "maximum_lightning_damage_to_return_to_melee_attacker",
         "reflect",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("maximum_number_of_X_minion_type_doubled", "no-slice"),
     // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
     // targets, `CalcOffence.lua` 1147): not the hit.
     ("melee_attack_number_of_spirit_strikes", "targeting"),
@@ -10373,6 +10517,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // handed melee weapon, and per power charge (`AreaOfEffect` INC): no slice
     // field reads area.
     ("melee_skills_area_of_effect_+%", "area"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("melee_splash", "no-slice"),
     ("melee_strike_skill_strike_previous_location", "no-slice"),
     ("mercenary_can_use_unique_amulet", "no-slice"),
     ("mercenary_can_use_unique_belt", "no-slice"),
@@ -10408,6 +10555,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `LifeRegen` BASE): no minion field reads regeneration (as the percent
     // form, `MinionValue::LifeRegen`).
     ("minion_life_regeneration_rate_per_second", "minion-regen"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("minion_no_extra_bleed_damage_while_moving", "no-slice"),
     // P6-11be: "Minions Recover #% of Life on Minion Death" (PoB parses
     // none of it): a recovery on an event, no slice field.
     (
@@ -10425,6 +10575,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("minions_are_defensive", "no-slice"),
     // Close-out M3: Mirage Archer's duration: no slice field.
     ("mirage_archer_duration_+%", "mirage"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("mirage_archers_do_not_attach", "no-slice"),
     // P6-7c3: a monster skill's penalty against the player's minions (the
     // Flame Golem's Immolate): PoB's stat map has no row for it.
     (
@@ -10468,8 +10621,26 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: life recovered from flasks (`FlaskLifeRecovery` MORE): no
     // slice field.
     ("pathfinder_flask_life_to_recover_+%_final", "flask"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "permanenet_mercenary_damage_+%_and_minion_damage_+%",
+        "no-slice",
+    ),
     (
         "permanenet_mercenary_damage_+%_final_and_minion_damage_+%_final_from_luminary",
+        "no-slice",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "permanenet_mercenary_damage_taken_recouped_as_life_%_if_life_lower_than_parents_life",
+        "no-slice",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "permanenet_mercenary_maximum_life_+%_and_minion_maximum_life_+%",
         "no-slice",
     ),
     // Quartz Flask's "Phasing" (PoB's `Condition:Phasing`, `ModParser.lua`
@@ -10488,6 +10659,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("power_charge_duration_+%", "charge-duration"),
     ("power_charge_on_block_%_chance", "charge-gain-chance"),
     ("power_charge_on_spell_block_%_chance", "charge-gain-chance"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "profane_ground_on_crit_chance_%_if_highest_attribute_is_intelligence",
+        "no-slice",
+    ),
     // P6-11m: pierce (`PierceCount`), as `always_pierce`.
     ("projectile_base_number_of_targets_to_pierce", "pierce"),
     // Close-out H: projectiles that only explode (`SkillStatMap.lua` 1374:
@@ -10503,6 +10680,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: projectiles return (PoB leaves the line unparsed): no slice
     // field counts a second hit.
     ("projectiles_return", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("puppet_master_base_duration_ms", "no-slice"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
     (
         "quality_display_active_skill_area_damage_quality_negated_from_gem",
@@ -10539,19 +10719,70 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11eg: "Recover #% of Mana on Kill" and "... of Energy Shield on Kill"
     // (`ManaOnKill`, `EnergyShieldOnKill` BASE): no recovery field reads a kill.
     ("recover_%_maximum_mana_on_kill", "recovery"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "recover_%_of_maximum_mana_over_1_second_on_guard_skill_use",
+        "recovery",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("recover_10%_of_maximum_mana_on_skill_use_%", "recovery"),
     ("recover_energy_shield_%_on_kill", "recovery"),
     // Close-out M3: energy shield on suppressing a spell: no recovery field
     // reads it.
     ("recover_x_energy_shield_on_suppressing_spell", "recovery"),
     ("reflect_hexes_chance_%", "curse-on-self"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "refresh_duration_of_shock_chill_ignite_on_enemy_when_cursing_enemy",
+        "no-slice",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "refresh_ignite_duration_on_critical_strike_chance_%",
+        "no-slice",
+    ),
     ("remote_mined_by_support", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("remove_elemental_ailments_on_curse_cast_%", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("remove_maim_and_hinder_on_flask_use", "flask"),
     // P6-11aj: Multistrike's repeats choose nearby targets.
     (
         "repeat_target_selection_distance_from_initial_target_bias",
         "targeting",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "restore_energy_shield_and_mana_when_you_focus_%",
+        "recovery",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("returning_projectiles_always_pierce", "no-slice"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("sacrifice_%_life_on_spell_skill", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("shatter_on_kill_vs_bleeding_enemies", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("shock_nova_ring_chance_to_shock_+%", "no-slice"),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "shocked_enemies_explode_for_%_life_as_lightning_damage",
+        "no-slice",
+    ),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -10723,14 +10954,29 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("supported_skill_can_only_use_wand", "weapon-restriction"),
     ("supported_strike_skill_gem_level_+", "gem-level"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "take_no_fire_damage_over_time_if_stopped_taking_fire_damage_over_time_recently",
+        "ailment-on-self",
+    ),
     ("taunt_duration_+%", "no-slice"),
     (
         "thrown_shield_projectile_fire_random_directions",
         "no-slice",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("tornado_movement_speed_+%", "no-slice"),
     // P6-11u: how long a totem lasts; no slice field.
     ("totem_duration_+%", "totem-duration"),
     ("totem_elemental_resistance_%", "no-slice"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "totem_hinder_nearby_enemies_when_summoned_with_25%_reduced_movement_speed",
+        "no-slice",
+    ),
     ("totem_life_+%", "no-slice"),
     // Close-out M3: totems' additional projectiles (`ProjectileCount` BASE,
     // `KeywordFlag.Totem`): as the plain stat's, guarded.
@@ -10777,6 +11023,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "unaffected_by_vulnerability_while_affected_by_determination",
         "curse-on-self",
     ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "unique_spread_poison_to_nearby_enemies_during_flask_effect",
+        "no-slice",
+    ),
     // Close-out M3: Vaal souls: no slice field.
     ("vaal_skill_soul_gain_preventation_duration_+%", "no-slice"),
     ("vaal_skill_soul_refund_chance_%", "no-slice"),
@@ -10798,6 +11050,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("warcry_gain_mp_from_allies", "display"),
     ("warcry_gain_mp_from_corpses", "display"),
     ("warcry_skill_area_of_effect_+%", "area"),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    ("wither_expire_speed_+%", "no-slice"),
     // Close-out M3: "You cannot be Hindered" (`HinderImmune`): PoB has no
     // hinder on you to configure.
     ("you_cannot_be_hindered", "ailment-on-self"),
@@ -10820,6 +11075,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "your_marks_transfer_to_nearby_enemies_on_death_%_chance",
         "mark-transfer",
+    ),
+    // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
+    // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
+    (
+        "your_profane_ground_effect_lingers_for_ms_after_leaving_the_area",
+        "no-slice",
     ),
 ];
 

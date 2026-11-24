@@ -1259,6 +1259,14 @@ mod tests {
     /// `NoEffect` rows that name shock or damage taken, each checked: none
     /// sets the enemy's shock or damage taken.
     const NO_EFFECT_ROWS: &[&str] = &[
+        // Close-out N: an unparsed line, no slice field.
+        "shocked_enemies_explode_for_%_life_as_lightning_damage",
+        // Close-out N: an unparsed line, no slice field.
+        "shock_nova_ring_chance_to_shock_+%",
+        // Close-out N: an unparsed line, no slice field.
+        "refresh_duration_of_shock_chill_ignite_on_enemy_when_cursing_enemy",
+        // Close-out N: an unparsed line, no slice field.
+        "permanenet_mercenary_damage_taken_recouped_as_life_%_if_life_lower_than_parents_life",
         // Close-out M3: elemental damage can shock, as all damage.
         "elemental_damage_can_shock",
         // Close-out M1: a shock on you, guarded by the config's checks.

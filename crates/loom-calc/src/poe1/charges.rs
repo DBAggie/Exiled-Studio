@@ -965,6 +965,12 @@ mod tests {
     /// `NoEffect` rows that name a charge, each checked: none scales a
     /// slice field per charge or changes a count PoB's calc reads.
     const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
+        // Close-out N: an unparsed line, no slice field.
+        "local_display_nearby_enemies_flask_charges_granted_+%",
+        // Close-out N: an unparsed line, no slice field.
+        "local_display_gain_power_charge_on_spending_mana",
+        // Close-out N: an unparsed line, no slice field.
+        "gain_a_frenzy_charge_every_X_seconds_while_moving",
         // Close-out M7: travel skills' cooldown per frenzy charge.
         "travel_skills_cooldown_speed_+%_per_frenzy_charge",
         // Close-out M3: a life flask's charges.

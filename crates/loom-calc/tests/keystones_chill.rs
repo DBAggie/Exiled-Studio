@@ -125,6 +125,11 @@ const TEXTS: [(&str, &str); 22] = [
 /// skill file words it as its chilled ground's radius; P3-8e), durations,
 /// and chill on you.
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out N: unparsed lines, no slice field.
+    "blight_chilling_tower_freeze_for_ms",
+    "cannot_have_more_than_1_non_damaging_ailment",
+    "local_self_chill_effect_+%_during_flask_effect",
+    "refresh_duration_of_shock_chill_ignite_on_enemy_when_cursing_enemy",
     // Close-out M1: a chill on you, guarded by the config's checks.
     "chill_effect_is_reversed",
     "chilled_while_bleeding",

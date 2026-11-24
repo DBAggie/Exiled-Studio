@@ -430,7 +430,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Close-out `M6-buffs` (19): Anger's and Malevolence's aura effect, Malevolence's and Zealotry's mana reservation efficiency (`NamedEffect::ManaReservationEfficiency`); 3 `NoEffect`; 12 to closed reasons (`docs/phase-6/stat-mop-up.md`, "Close-out M6"); one fixture
 - [x] Close-out `M7-skill-scoped` (9): 4 `NoEffect`, 5 to closed reasons (`docs/phase-6/stat-mop-up.md`, "Close-out M7")
 - [x] Close-out `H-hidden` (13): 10 `NoEffect`, 3 to closed reasons (`docs/phase-6/stat-mop-up.md`, "Close-out H")
-- [ ] Close-out `N-unparsed` (126: `NoEffect` or game-truth reasons)
+- [x] Close-out `N-unparsed` (126): 61 `NoEffect`, 63 on the game-truth list, 2 kept by guard tests (`docs/phase-6/stat-mop-up.md`, "Close-out N")
 - [ ] Close-out report: `docs/phase-6/phase-6-report.md` with the final counts, the `C-*` reasons with each stat, the deferred items, the game-truth list
 - [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)

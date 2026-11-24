@@ -163,6 +163,9 @@ const TEXTS: [(&str, &str); 34] = [
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
 const NO_EFFECT_NAMING: &[&str] = &[
+    // Close-out N: unparsed lines, no slice field.
+    "life_flask_effects_are_not_removed_at_full_life",
+    "local_flask_effect_not_removed_at_full_mana",
     // Close-out M2: area of effect per unreserved mana, area only.
     "hierophant_area_of_effect_+%_per_50_unreserved_mana_up_to_100%",
     "base_aura_area_of_effect_+%",
