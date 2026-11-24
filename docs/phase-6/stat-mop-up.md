@@ -4939,3 +4939,34 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 4 values move toward PoB (cyclone-shockwave-slayer.xml: armour and evasion rating now equal to PoB's, the combined and full DPS), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ih: Adrenaline and movement speed on kill, speeds not below base
+
+**Found** (the unmapped stats left in single builds; `cyclone-shockwave-slayer.xml` has the first three):
+- "Gain Adrenaline for # seconds on Kill";
+- "Gain #% increased Movement Speed for 20 seconds when you Kill an Enemy";
+- "Movement Speed cannot be modified to below Base Value";
+- "Action Speed cannot be modified to below Base Value".
+
+**PoB:**
+- Adrenaline on kill is `Condition:Adrenaline` with `KilledRecently`; `CalcSetup.lua` 85 makes it the `Adrenaline` flag, whose effects are `CalcPerform.lua` 740 to 746 (as the `buffAdrenaline` check, P6-4a).
+- Movement speed on kill is `MovementSpeed` INC with `KilledRecently`.
+- `MovementSpeedCannotBeBelowBase` makes `MovementSpeedMod` at least 1 (`CalcDefence.lua` 1505 to 1507).
+- The action speed line is `MinimumActionSpeed` MAX 100: `calcs.actionSpeedMod` is at least `MinimumActionSpeed / 100` (`CalcPerform.lua` 1109 to 1112).
+
+**The engine:**
+- `Poe1Quantity::AdrenalineOnKill`, a flag: `buffs` grants Adrenaline's effects from it while killed recently is settled true, with the line as their source.
+- Movement speed on kill is a `STATE_ROWS` row with `KILLED_RECENTLY`; it leaves `MOVEMENT_REASONS`.
+- `Poe1Quantity::MovementSpeedNotBelowBase` and `Poe1Quantity::ActionSpeedNotBelowBase`, flags: the movement phase and `hit::action_speed_modifier` take the larger of the modifier and 1. Each flag is queried only when the build has an effect for it, so other builds' graphs (and the goldens) are unchanged.
+- The movement marker test now uses the one stat left in `MOVEMENT_REASONS`, movement speed while no gems are in the boots.
+
+**Evidence** (`b-ct`, against P6-11ig's run):
+- **Five new mechanic fixtures**, each matching PoB on every computed field:
+  - `ice-nova-adrenaline-on-kill-witch.xml`: killed recently, Adrenaline's damage, cast speed, and movement speed (movement 1.25).
+  - `ice-nova-adrenaline-on-kill-not-killed-witch.xml`: no kill, no Adrenaline.
+  - `ice-nova-movement-speed-on-kill-witch.xml`: movement 1.1.
+  - `ice-nova-speed-below-base-witch.xml`: 50% reduced movement speed, 20% reduced action speed: movement 0.5, effective 0.4, the cast rate times 0.8.
+  - `ice-nova-speed-not-below-base-witch.xml`: the same with both lines: all at base.
+- **Public:** 0 unexpected; 13 values move toward PoB (cyclone-shockwave-slayer.xml: physical damage reduction now equal to PoB's, its speed, damage, DPS, movement speed, leech, and life cost). One moves away: its `ManaPerSecondCost` (`Partial`), 95.7 to 105.6 against PoB's 0. It is the mana cost (10, PoB 0, already a difference with its reasons) times the attack rate, which moves toward PoB.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

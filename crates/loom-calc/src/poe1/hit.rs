@@ -2876,8 +2876,10 @@ fn action_speed(
 }
 
 /// PoB's `calcs.actionSpeedMod` as the engine reads it (module docs of
-/// [`action_speed`]): `max(0, 1 + ActionSpeed INC / 100)`, the character's,
-/// with no skill flag. The hit's rate and the effective movement speed
+/// [`action_speed`]): `max(minimum, 1 + ActionSpeed INC / 100)`, the
+/// character's, with no skill flag; the minimum 1 with "Action Speed cannot
+/// be modified to below Base Value" (P6-11ih, PoB's `MinimumActionSpeed`
+/// MAX 100), else 0. The hit's rate and the effective movement speed
 /// ([`super::movement`]) share it.
 pub(super) fn action_speed_modifier(
     calc: &mut Calc<'_>,
@@ -2890,8 +2892,22 @@ pub(super) fn action_speed_modifier(
         &cx,
         reasons,
     )?;
-    let zero = phases::constant(calc, "no-minimum-action-speed", 0.0)?;
-    phases::pair(calc, modifier, zero, Term::Step("action-speed"), false)
+    // Queried only with an effect, so other builds keep their graphs.
+    let quantity = Quantity::Poe1(Poe1Quantity::ActionSpeedNotBelowBase);
+    let floor = if phases::has(calc, quantity) {
+        let (store, graph) = calc.parts();
+        let floor = store.flag(graph, quantity, &cx)?;
+        reasons.extend(&floor.reasons);
+        floor.value > 0.0
+    } else {
+        false
+    };
+    let minimum = if floor {
+        phases::constant(calc, "minimum-action-speed", 1.0)?
+    } else {
+        phases::constant(calc, "no-minimum-action-speed", 0.0)?
+    };
+    phases::pair(calc, modifier, minimum, Term::Step("action-speed"), false)
 }
 
 /// PoB's `ScaledDamageEffect` from double damage (`CalcOffence.lua` 3196

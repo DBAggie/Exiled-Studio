@@ -55,6 +55,9 @@
 //!   BuffEffectOnSelf / 100`; its movement speed (P6-10b) and its
 //!   `PhysicalDamageReduction` BASE `floor(10 x effect)` (P6-10b part 5).
 //!
+//! "Gain Adrenaline for # seconds on Kill" grants Adrenaline while killed
+//! recently is settled true (P6-11ih).
+//!
 //! `buff_effect_on_self_+%` is unmapped ([`DEPENDS_ON`]), so a reason;
 //! Tailwind's own effect is read (P6-11ia, [`TAILWIND_EFFECT_STATS`]: "#%
 //! increased Effect of Tailwind on you", and per Gale Force through
@@ -127,6 +130,10 @@ pub const TAILWIND_EFFECT_STATS: &[&str] = &[
 
 /// The check that grants Adrenaline.
 pub const ADRENALINE_INPUT: &str = "buffAdrenaline";
+
+/// "Gain Adrenaline for # seconds on Kill" (P6-11ih), mapped to
+/// [`Poe1Quantity::AdrenalineOnKill`].
+pub const ADRENALINE_ON_KILL_STAT: &str = "gain_adrenaline_for_X_seconds_on_kill";
 
 /// Adrenaline's increased damage (`CalcPerform.lua` 742).
 pub const ADRENALINE_DAMAGE: f64 = 100.0;
@@ -237,33 +244,65 @@ fn consecrated_ground(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     }
 }
 
-/// A check buff's constant effects (Tailwind, Adrenaline; module docs),
-/// with the check on; a value that is not a boolean is a reason.
+/// A check buff's constant effects (Adrenaline; module docs), with the
+/// check on, else from `other` (a modifier that grants it, its source); a
+/// value that is not a boolean is a reason.
 fn constant_buff(
     set: Option<&ConfigSet>,
     ingest: &mut Ingest<'_>,
     input: &str,
+    other: Option<Source>,
     effects: &[(Quantity, Op, f64, Flags)],
 ) {
-    match check(set, input) {
-        Ok(false) => {}
-        Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+    let source = match check(set, input) {
+        Ok(false) => other,
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.to_owned(),
+            });
+            None
+        }
+        Ok(true) => Some(Source::Config {
             input: input.to_owned(),
         }),
-        Ok(true) => {
-            for &(quantity, op, value, flags) in effects {
-                ingest.effect(Effect {
-                    quantity,
-                    op,
-                    value,
-                    conditions: Conditions::none().with_all(flags),
-                    source: Source::Config {
-                        input: input.to_owned(),
-                    },
-                });
-            }
-        }
+    };
+    let Some(source) = source else {
+        return;
+    };
+    for &(quantity, op, value, flags) in effects {
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions: Conditions::none().with_all(flags),
+            source: source.clone(),
+        });
     }
+}
+
+/// "Gain Adrenaline for # seconds on Kill" (P6-11ih): the stat's flag
+/// while killed recently is settled true, its source; PoB's
+/// `Condition:Adrenaline` with `KilledRecently`.
+fn adrenaline_on_kill(
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &Ingest<'_>,
+) -> Option<Source> {
+    if settled.get(&crate::condition::ConditionKey::new(
+        super::conditions::KILLED_RECENTLY,
+    )) != Some(&true)
+    {
+        return None;
+    }
+    ingest
+        .effects()
+        .iter()
+        .find(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::AdrenalineOnKill)
+                && e.op == Op::Flag
+                && e.value != 0.0
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.source.clone())
 }
 
 /// Tailwind (module docs; P6-11ia): with the check on, or from Gathering
@@ -497,10 +536,12 @@ pub fn buffs(
     convergence(set, ingest);
     consecrated_ground(set, ingest);
     tailwind(set, ingest);
+    let on_kill = adrenaline_on_kill(settled, ingest);
     constant_buff(
         set,
         ingest,
         ADRENALINE_INPUT,
+        on_kill,
         &[
             (
                 Quantity::Damage,
@@ -617,7 +658,8 @@ mod tests {
                 // `poe1::flasks`' (P6-4b).
                 && id != crate::poe1::flasks::SILVER_STAT)
                 || (id.contains("tailwind") && !TAILWIND_EFFECT_STATS.contains(&id))
-                || id.contains("adrenaline")
+                // Adrenaline on kill is read here (P6-11ih).
+                || (id.contains("adrenaline") && id != ADRENALINE_ON_KILL_STAT)
         };
         let ids = HIT_ROWS
             .iter()

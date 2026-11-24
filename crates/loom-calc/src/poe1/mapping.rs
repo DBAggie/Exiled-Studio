@@ -5090,6 +5090,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_UNIQUE_ENEMY,
         )],
     ),
+    // P6-11ih: "Gain #% increased Movement Speed for 20 seconds when you
+    // Kill an Enemy" (`MovementSpeed` INC, `KilledRecently`).
+    (
+        "gain_movement_speed_+%_for_20_seconds_on_kill",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
     (
         "global_critical_strike_chance_+%_while_holding_staff",
         &[(
@@ -6160,6 +6171,16 @@ pub const ROWS: &[Row] = &[
             Quantity::Poe1(Poe1Quantity::ActionSpeed),
             Op::Increased,
             -1.0,
+        )],
+    ),
+    // P6-11ih: "Action Speed cannot be modified to below Base Value"
+    // (`MinimumActionSpeed` MAX 100): the action speed modifier's minimum 1.
+    (
+        "action_speed_cannot_be_reduced_below_base",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ActionSpeedNotBelowBase),
+            Op::Flag,
+            1.0,
         )],
     ),
     // P6-11hk: a skill's "#% Arcane Might" (`SkillStatMap.lua` 910).
@@ -7416,6 +7437,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // P6-11ih: "Gain Adrenaline for # seconds on Kill"
+    // (`Condition:Adrenaline` FLAG with `KilledRecently`; `poe1::buffs`).
+    (
+        "gain_adrenaline_for_X_seconds_on_kill",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AdrenalineOnKill),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-11gs: "#% chance to gain Arcane Surge when you Kill an Enemy"
     // (`Condition:ArcaneSurge` FLAG with `KilledRecently`).
     (
@@ -8250,6 +8281,17 @@ pub const ROWS: &[Row] = &[
     // resolves to this stat; PoB reads the line and the stat as
     // `BlockChance` BASE (`ModParser.lua`, `SkillStatMap.lua` 434).
     ("monster_base_block_%", &[(BLOCK, Op::Base, 1.0)]),
+    // P6-11ih: "Movement Speed cannot be modified to below Base Value"
+    // (`MovementSpeedCannotBeBelowBase`): the movement speed modifier's
+    // minimum 1 (`poe1::movement`).
+    (
+        "movement_speed_cannot_be_reduced_below_base",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeedNotBelowBase),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-9b: "You can apply an additional Curse" (`SkillStatMap.lua` 1317:
     // `EnemyCurseLimit` BASE); `poe1::gems` reads it for the curse slots.
     (
@@ -10254,11 +10296,7 @@ pub const COST_REASONS: &[&str] = &[
 /// during a flask's effect, on low life, and while ignited are
 /// [`STATE_ROWS`] since P6-11ei.) Momentum's Swiftness is
 /// `poe1::gems`'s (P6-11y).
-pub const MOVEMENT_REASONS: &[&str] = &[
-    "gain_movement_speed_+%_for_20_seconds_on_kill",
-    "movement_speed_cannot_be_reduced_below_base",
-    "movement_velocity_+%_while_no_gems_in_boots",
-];
+pub const MOVEMENT_REASONS: &[&str] = &["movement_velocity_+%_while_no_gems_in_boots"];
 
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
@@ -13340,6 +13378,16 @@ mod tests {
                     Op::Increased,
                     Flags::ATTACK,
                     conditions::KILLED_UNIQUE_ENEMY,
+                )],
+            ),
+            // P6-11ih.
+            (
+                "gain_movement_speed_+%_for_20_seconds_on_kill",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::MovementSpeed),
+                    Op::Increased,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
                 )],
             ),
         ]);

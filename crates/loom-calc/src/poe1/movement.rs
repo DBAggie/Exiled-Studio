@@ -9,10 +9,13 @@
 //!   action speed modifier `calcs.actionSpeedMod` (`CalcPerform.lua`
 //!   1107), the hit's ([`super::hit::action_speed_modifier`]).
 //!
+//! - "Movement Speed cannot be modified to below Base Value" (P6-11ih,
+//!   PoB's `MovementSpeedCannotBeBelowBase`, 1505 to 1507): the modifier is
+//!   at least 1.
+//!
 //! Not modelled, so reasons on these fields only
-//! ([`super::mapping::MOVEMENT_REASONS`]): movement speed under conditions
-//! the engine does not settle, the
-//! movement speed that cannot go below its base, and Momentum's Swiftness.
+//! ([`super::mapping::MOVEMENT_REASONS`]): movement speed while no gems are
+//! in the boots. (On kill is a state row since P6-11ih.)
 //!
 //! Per nearby enemy and per summoned phantasm are [`super::stacks`]' (P6-11v,
 //! P6-11ie).
@@ -58,7 +61,7 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &plain,
     )?;
     reasons.extend(&ignore.reasons);
-    let cx = plain.with_state(
+    let cx = plain.clone().with_state(
         ConditionKey::new(IGNORE_MOVEMENT_PENALTIES),
         ignore.value > 0.0,
     );
@@ -82,6 +85,22 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         ],
         Term::Result,
     )?;
+    // Queried only with an effect, so other builds keep their graphs.
+    let floor_quantity = Quantity::Poe1(Poe1Quantity::MovementSpeedNotBelowBase);
+    let floor = if phases::has(calc, floor_quantity) {
+        let (store, graph) = calc.parts();
+        let floor = store.flag(graph, floor_quantity, &plain)?;
+        reasons.extend(&floor.reasons);
+        floor.value > 0.0
+    } else {
+        false
+    };
+    let modifier = if floor {
+        let one = phases::constant(calc, "movement-speed-base", 1.0)?;
+        phases::pair(calc, modifier, one, Term::Result, false)?
+    } else {
+        modifier
+    };
     // The action speed's reasons are the effective field's alone.
     let mut effective_reasons = reasons.clone();
     let action = super::hit::action_speed_modifier(calc, &mut effective_reasons)?;
@@ -107,6 +126,7 @@ const fn reads(quantity: Quantity) -> bool {
             Poe1Quantity::MovementSpeed
                 | Poe1Quantity::MovementReason(_)
                 | Poe1Quantity::IgnoreMovementPenalties
+                | Poe1Quantity::MovementSpeedNotBelowBase
         )
     )
 }

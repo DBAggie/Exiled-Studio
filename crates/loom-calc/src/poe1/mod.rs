@@ -406,6 +406,10 @@ pub enum Poe1Quantity {
     /// read by [`buffs`]' Arcane Surge; [`conditions`] settles the condition
     /// from the passive tree's and items' stats.
     ArcaneSurgeOnKill,
+    /// "Gain Adrenaline for # seconds on Kill" (P6-11ih; PoB's
+    /// `Condition:Adrenaline` FLAG with `KilledRecently`): a `Flag`, read by
+    /// [`buffs`]' Adrenaline while killed recently is settled true.
+    AdrenalineOnKill,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -723,6 +727,15 @@ pub enum Poe1Quantity {
     /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
     /// tick cap ([`hit`]).
     ActionSpeed,
+    /// "Action Speed cannot be modified to below Base Value" (P6-11ih;
+    /// PoB's `MinimumActionSpeed` MAX 100, `calcs.actionSpeedMod`,
+    /// `CalcPerform.lua` 1109 to 1112): a `Flag`, read by the action speed
+    /// modifier as its minimum 1.
+    ActionSpeedNotBelowBase,
+    /// "Movement Speed cannot be modified to below Base Value" (P6-11ih;
+    /// PoB's `MovementSpeedCannotBeBelowBase`, `CalcDefence.lua` 1505 to
+    /// 1507): a `Flag`, read by [`movement`] as the modifier's minimum 1.
+    MovementSpeedNotBelowBase,
     /// Movement speed (PoB's `MovementSpeed`; P6-10b): `Increased` and
     /// `More`, read by [`movement`].
     MovementSpeed,
@@ -1459,6 +1472,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GolemMinion(value) => write!(f, "golem-minion.{}", value.name()),
             Self::CurseLimit => f.write_str("curse-limit"),
             Self::ArcaneSurgeOnKill => f.write_str("arcane-surge-on-kill"),
+            Self::AdrenalineOnKill => f.write_str("adrenaline-on-kill"),
             Self::CurseLimitIsMaximumPowerCharges => {
                 f.write_str("curse-limit-is-maximum-power-charges")
             }
@@ -1640,6 +1654,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
             Self::ActionSpeed => f.write_str("action-speed"),
+            Self::ActionSpeedNotBelowBase => f.write_str("action-speed-not-below-base"),
+            Self::MovementSpeedNotBelowBase => f.write_str("movement-speed-not-below-base"),
             Self::MovementSpeed => f.write_str("movement-speed"),
             Self::IgnoreMovementPenalties => f.write_str("ignore-movement-penalties"),
             Self::MovementReason(stat) => write!(f, "movement-reason.{stat}"),
