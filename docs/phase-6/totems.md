@@ -58,3 +58,22 @@ The rate ignores trap and mine throwing speed: the Trap and Mine supports' speed
 - the reason `totem-data` (above), with a test listing the vetted totem skills;
 - a test that the DoT's excluded kinds equal the attack's;
 - the module docs' lists brought up to date.
+
+## Open items S1: `totem-data` narrowed (2026-11-24)
+
+The engine has read most of what P6-6d listed since then: the totem keyword (`Flags::KEYWORD_TOTEM`, `KeywordFlag.Totem` lines mapped), the conditions PoB sets and leaves unset for a totem main skill (`conditions::summoned_totem`, `skill_used_by_you`, `main_skill_recently`; `CalcPerform.lua` 240 to 270), and the totem limit (`stacks::totems`). The totem's action speed (`CalcOffence.lua` 2346 to 2351) comes only from unmapped stats, each a reason. The reason `totem-data` now stays only where PoB reads totem data the engine does not:
+
+- every field of Siege Ballista of Trarthus (`hit::TOTEM_DATA_SKILLS`): its `totemFireOnce` and ring `dpsMultiplier` (`act_dex.lua` 14127 to 14133; `CalcOffence.lua` 2352 to 2355);
+- a totem's bleed, whose stacks PoB multiplies by the active totems (4327 to 4330);
+- a totem's damage over time (`poe1::dot`, unchanged: `DotCanStackAsTotems`, 5784);
+- a minion's totem skill (unchanged).
+
+**Leech.** A totem's, trap's, or mine's hit leeches only through PoB's `DamageLifeLeechToPlayer` (3528 to 3530), which no mapped stat gives; the engine now sets no leech field for such a hit (`hit::set_ailments`). Before, the totem's reason hid the player's leech the engine computed for it.
+
+PoB's other totem paths reach no slice field: the player's auras copied to the totem as `Totem` defence mods (`CalcPerform.lua` 2466 to 2490, 3371), and the totem's level and life (`CalcActiveSkill.lua` 433, 607).
+
+**Evidence** (`local/p6/s1d`, against S1 part 1's `local/p6/s1c`):
+
+- public `Complete` 38,869 to 38,922 (+53: the 5 Ice Nova spell totem fixtures and the 2 Ballista fixtures); no value moved;
+- the 2 Ballista fixtures differ from PoB only by the Short Bow's rate in floored ms (Q11: 1000 / 667 against PoB's 1.50, ratio 0.99950 in the speed, hit DPS, ignite, full and combined DPS): DIV-0684 to DIV-0693;
+- public `calc-parity`: 692 expected, 0 unexpected; corpus: 0 unexpected, no state changed; both runs byte-identical.

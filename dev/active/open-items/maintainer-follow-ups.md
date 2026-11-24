@@ -46,7 +46,6 @@ The largest steps, deferred by you on 2026-11-24, are stretch work for the open-
 - Blood and Sand, and PoB's full DPS pass (S4);
 - the defences: ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments and leech (S7).
 
-- **Totems' `totem-data` (S1, not reached):** 7 public builds keep only this reason (5 Ice Nova spell totems equal PoB; the 2 Ballista builds differ by the Q11 attack time). Removing it needs every totem path of PoB checked: the player's auras copied as `Totem` mods (`CalcPerform.lua` 3371), buffs on totems (2267, 2299), leech (`CalcOffence.lua` 3528, 3670, 3684), the conditions PoB leaves unset for a totem main skill (`CalcPerform.lua` 240, 259, 265), the totem's level and life (`CalcActiveSkill.lua` 433, 607), and Siege Ballista's `totemFireOnce`.
 - **Static Strike part 1 (S1, not reached):** its function and beam damage act only in part 2, but its zap frequency stats (`static_strike_base_zap_frequency_ms`, `static_strike_zap_speed_+%`) are unmapped; vetting part 1 needs them `NoEffect` outside part 2. Three Smite builds' `FullDPS` wait on it.
 
 ## Housekeeping

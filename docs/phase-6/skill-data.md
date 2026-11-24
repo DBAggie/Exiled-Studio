@@ -142,4 +142,6 @@ Two other reasons, narrowed the same way:
 - both runs byte-identical;
 - `reservation-becomes-cost` is in no build any more.
 
-**Not reached in S1** (open items follow-ups, "Planned for the session, may not be reached"): totems' `totem-data`, Static Strike's part 1, the trigger builds (S3).
+**Totems** (S1 part 2): `totem-data` narrowed to what PoB reads and the engine does not (`docs/phase-6/totems.md`, "Open items S1"); public `Complete` 38,869 to 38,922, the Ballista fixtures' Q11 entries DIV-0684 to DIV-0693.
+
+**Not reached in S1** (open items follow-ups, "Planned for the session, may not be reached"): Static Strike's part 1, the trigger builds (S3).

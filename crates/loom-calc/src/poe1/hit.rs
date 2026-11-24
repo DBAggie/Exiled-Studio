@@ -174,12 +174,27 @@ pub struct SkillPart {
     pub projectile: bool,
 }
 
-/// The reason a totem's skill keeps (P6-6d review): PoB reads totem data
-/// the engine does not (placement time and duration, `totemFireOnce`,
-/// `KeywordFlag.Totem` mods, the totem count for ring overrides), and
-/// some of it can come from stats that are inert elsewhere. A test keeps
-/// every vetted totem skill `Partial` through it.
+/// The reason a totem's skill keeps where PoB reads totem data the engine
+/// does not (P6-6d review; narrowed in open items S1). Since P6-6d the
+/// engine reads the totem keyword (`Flags::KEYWORD_TOTEM`), the totem
+/// conditions (`conditions::summoned_totem`, `skill_used_by_you`,
+/// `main_skill_recently`), and the totem limit (`stacks::totems`); the
+/// totem's action speed comes only from unmapped stats (reasons). What
+/// stays:
+/// - every field of a skill in [`TOTEM_DATA_SKILLS`];
+/// - a totem's bleed, whose stacks PoB multiplies by the active totems
+///   (`CalcOffence.lua` 4327 to 4330), which the engine's bleed does not;
+/// - a totem's damage over time (`poe1::dot`), which PoB may stack per
+///   totem (`DotCanStackAsTotems`, 5784).
+///
+/// A totem's leech is PoB's leech to the player only (3528 to 3530), which
+/// no mapped stat gives: [`super::leech`] sets no leech field for it.
 pub const TOTEM_REASON: &str = "totem-data";
+
+/// Totem skills whose hit reads totem data the engine does not: Siege
+/// Ballista of Trarthus' `totemFireOnce` and ring `dpsMultiplier`
+/// (`act_dex.lua` 14127 to 14133; `CalcOffence.lua` 2352 to 2355).
+pub const TOTEM_DATA_SKILLS: [&str; 1] = ["SiegeBallistaAltY"];
 
 /// The reason a trap's or a mine's spell kept (P6-6e) while the engine did
 /// not read its throw count, its throwing speed, or its keyword mods.
@@ -1200,6 +1215,7 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         super::pob_skill::skill(&spell.skill.effect().id).is_none_or(|p| p.flag("totem"))
     } else {
         spell.skill.types.contains("SummonsTotem")
+            && TOTEM_DATA_SKILLS.contains(&spell.skill.effect().id.as_str())
     };
     if totem {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
@@ -1276,8 +1292,14 @@ fn set_ailments(
     data: &dyn CalcData,
     unvetted: &Reasons,
 ) -> Result<(), CalcError> {
-    // The hit's leech (P6-10b part 9): the character's own.
-    if calc.actor() == crate::engine::Actor::Player {
+    // The hit's leech (P6-10b part 9): the character's own. A totem's,
+    // trap's, or mine's hit leeches only by PoB's `DamageLifeLeechToPlayer`
+    // (`CalcOffence.lua` 3528 to 3530), which no mapped stat gives: no
+    // leech field (open items, S1).
+    let placed = hit
+        .flags
+        .intersects(Flags::KEYWORD_TOTEM | Flags::KEYWORD_TRAP | Flags::KEYWORD_MINE);
+    if calc.actor() == crate::engine::Actor::Player && !placed {
         super::leech::rates(calc, hit, unvetted)?;
     }
     for ailment in super::ailment::Ailment::ALL {
@@ -1285,6 +1307,16 @@ fn set_ailments(
             super::ailment::damaging(calc, hit, enemy, data, ailment)?
         {
             reasons.extend(unvetted);
+            // A totem's bleed stacks per active totem ([`TOTEM_REASON`]).
+            if ailment == super::ailment::Ailment::Bleed
+                && hit.flags.contains(Flags::KEYWORD_TOTEM)
+                && let Some((_, source)) = &hit.skill
+            {
+                reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                    source: source.clone(),
+                    what: TOTEM_REASON,
+                });
+            }
             // The stacks read the hit chance too (attacks; a spell's is
             // the constant 100, not a field).
             let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
@@ -1543,7 +1575,11 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             what: "pob-skill-data",
         });
     }
-    if attack.skill.types.contains("SummonsTotem") {
+    // A totem's attack ([`TOTEM_REASON`]): the character's keeps the reason
+    // only for [`TOTEM_DATA_SKILLS`]; a minion's as before.
+    if attack.skill.types.contains("SummonsTotem")
+        && (calc.actor() == crate::engine::Actor::Minion || TOTEM_DATA_SKILLS.contains(&id))
+    {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: TOTEM_REASON,
