@@ -131,8 +131,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::stacks::nearby_corpses(active_config(build), ingest);
     // Brands attached to the enemy (P6-11ew).
     super::stacks::brands(input, active_config(build), ingest);
-    // Golems summoned (P6-11gc).
-    super::stacks::golems(input, ingest);
+    // Golems (P6-11gc), skeletons, zombies, raging spirits, and phantasms
+    // (P6-11ie) summoned.
+    super::stacks::minions(input, ingest);
     // Armour per warcry power (P6-11hz).
     warcry_power_armour(input, ingest);
     // After the gems' reservations (P6-11ib).

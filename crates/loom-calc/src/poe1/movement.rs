@@ -11,8 +11,11 @@
 //!
 //! Not modelled, so reasons on these fields only
 //! ([`super::mapping::MOVEMENT_REASONS`]): movement speed under conditions
-//! the engine does not settle, per summoned phantasm or nearby enemy, the
+//! the engine does not settle, the
 //! movement speed that cannot go below its base, and Momentum's Swiftness.
+//!
+//! Per nearby enemy and per summoned phantasm are [`super::stacks`]' (P6-11v,
+//! P6-11ie).
 //!
 //! The armour bases' movement penalty (P6-11cp): PoB's `MovementSpeed` INC
 //! with the negated condition `IgnoreMovementPenalties` (`Item.lua` 2362),

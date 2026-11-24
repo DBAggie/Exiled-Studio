@@ -4095,19 +4095,31 @@ pub fn brand_attach_limit(input: &CalcInput<'_>) -> Option<f64> {
     best
 }
 
-/// The number of summoned golems (P6-11gc; PoB's `output.ActiveGolemLimit`,
-/// `CalcPerform.lua` 1401 to 1413): over the skills of the main group and
-/// the enabled groups in an enabled slot whose minion list
-/// ([`super::pob_skill::PobSkill::minions`]) has a minion limited by
-/// `ActiveGolemLimit` (not hostile), the largest `floor(val x more)`: `val`
-/// the skill's `ActiveGolemLimit` BASE (its gems'
-/// `base_number_of_golems_allowed`, plus the character's `extra`; 0 when
-/// the sum is 0, `calcLib.val`), `more` its supports' `ActiveMinionLimit`
-/// MORE (`support_undead_army_minion_maximum_count_+%_final`, `sup_int.lua`
-/// 1063). 0 without one, as PoB's unset output.
+/// The number of summoned golems (P6-11gc): [`minion_limit`] for
+/// `ActiveGolemLimit`.
 #[must_use]
 pub fn golem_limit(input: &CalcInput<'_>, extra: f64) -> f64 {
-    const STAT: &str = "base_number_of_golems_allowed";
+    minion_limit(
+        input,
+        "ActiveGolemLimit",
+        "base_number_of_golems_allowed",
+        extra,
+    )
+}
+
+/// The number of summoned minions of a limit (P6-11gc, P6-11ie; PoB's
+/// `output[limit]`, `CalcPerform.lua` 1401 to 1413): over the skills of the
+/// main group and the enabled groups in an enabled slot whose minion list
+/// (PoB's `CalcActiveSkill.lua` 659 to 679: the active skill's
+/// [`super::pob_skill::PobSkill::minions`], then its supports'
+/// [`super::pob_skill::PobSkill::add_minions`]) has a minion limited by
+/// `limit` (not hostile), the largest `floor(val x more)`: `val` the
+/// skill's `limit` BASE (its gems' `stat`, plus the character's `extra`; 0
+/// when the sum is 0, `calcLib.val`), `more` its supports'
+/// `ActiveMinionLimit` MORE (`support_undead_army_minion_maximum_count_+%_final`,
+/// `sup_int.lua` 1063). 0 without one, as PoB's unset output.
+#[must_use]
+pub fn minion_limit(input: &CalcInput<'_>, limit: &str, stat: &str, extra: f64) -> f64 {
     const MORE: &str = "support_undead_army_minion_maximum_count_+%_final";
     let build = input.build;
     let levels = GemLevels::none();
@@ -4129,13 +4141,17 @@ pub fn golem_limit(input: &CalcInput<'_>, extra: f64) -> f64 {
             if s.global_off {
                 continue;
             }
-            let golem = super::pob_skill::skill(&s.active_gem.effect.id).is_some_and(|p| {
-                p.minions.iter().any(|m| {
-                    super::pob_minion::minion(m)
-                        .is_some_and(|m| m.limit == Some("ActiveGolemLimit") && m.hostile.is_none())
-                })
+            let limited = |m: &&str| {
+                super::pob_minion::minion(m)
+                    .is_some_and(|m| m.limit == Some(limit) && m.hostile.is_none())
+            };
+            let own = super::pob_skill::skill(&s.active_gem.effect.id)
+                .is_some_and(|p| p.minions.iter().any(limited));
+            let added = s.supports.iter().any(|gem| {
+                super::pob_skill::skill(&gem.effect.id)
+                    .is_some_and(|p| p.add_minions.iter().any(limited))
             });
-            if !golem {
+            if !own && !added {
                 continue;
             }
             let mut base = extra;
@@ -4145,7 +4161,7 @@ pub fn golem_limit(input: &CalcInput<'_>, extra: f64) -> f64 {
                 for (id, v) in &instance.stats {
                     #[expect(clippy::cast_precision_loss, reason = "a small count, exact as f64")]
                     let v = *v as f64;
-                    if id == STAT {
+                    if id == stat {
                         base += v;
                     } else if id == MORE {
                         more *= 1.0 + v / 100.0;

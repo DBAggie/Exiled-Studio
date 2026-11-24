@@ -4867,3 +4867,29 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; 7 values move toward PoB (cyclone-shockwave-slayer.xml, boneshatter-juggernaut.xml), none away.
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11ie: effects per summoned skeleton, raised zombie, raging spirit, and phantasm
+
+**Found** (the unmapped stats left in single builds): "#% increased Spell Damage per Summoned Skeleton", "#% increased Attack Damage per Raised Zombie", "#% increased Attack and Cast Speed per Summoned Raging Spirit", "#% increased Movement Speed per Summoned Phantasm" (a passive of `animate-guardian-guardian.xml`, with "#% increased Defences per Raised Spectre").
+
+**PoB:**
+- Each line is a `PerStat` on a limit output: `ActiveSkeletonLimit`, `ActiveZombieLimit`, `ActiveRagingSpiritLimit`, `ActivePhantasmLimit` (`ModParser.lua` 1547 to 1555).
+- `CalcPerform.lua` 1401 to 1413 sets each output: over the active skills whose minion list (`CalcActiveSkill.lua` 659 to 679: the active skill's `minionList`, then its supports' `addMinionList`) has a minion with that limit, the largest `floor(val x more)` of the skill's limit BASE (`base_number_of_skeletons_allowed`, `base_number_of_zombies_allowed`, `base_number_of_raging_spirits_allowed`, `base_number_of_support_ghosts_allowed`, with the character's "+# to maximum number of" lines) and `ActiveMinionLimit` MORE.
+- A spectre's limit is `ActiveSpectreLimit` (`Data.lua` 1131), and Raise Spectre's minion list is the build's spectres (`env.build.spectreList`), which the build model does not keep.
+
+**The engine:**
+- `stacks::StackKind` `Skeletons`, `Zombies`, `RagingSpirits`, `Phantasms`, with `PerStack` `SpellDamage`, `AttackDamage`, `Speed`, `MovementSpeed`, the four per-minion rows and the four "+# to maximum number of" rows (`base_number_of_skeletons_allowed` and `base_number_of_zombies_allowed` leave `NO_EFFECT`).
+- `stacks::minions` (was `golems`) counts each kind of `stacks::MINION_LIMITS` by `gems::minion_limit` (was `golem_limit`, which now calls it): the active skill's minions and its supports' added minions. `SkillMapping` leaves each limit stat to it.
+- The phantasm line leaves `MOVEMENT_REASONS`; an unsettled value is the movement fields' reason alone, as per nearby enemy.
+- Spectres are not counted: "per Raised Spectre" lines stay reasons.
+
+**Evidence** (`b-ct`, against P6-11id's run):
+- **Five new mechanic fixtures**, each matching PoB on every computed field (the Smite one but the weapon's attack rate, Q11, DIV-0602 to DIV-0608 `game-truth`):
+  - `ice-nova-speed-per-raging-spirit-witch.xml`: Summon Raging Spirit (20 spirits), 40% increased cast speed.
+  - `ice-nova-speed-per-raging-spirit-none-witch.xml`: no raging spirit skill, no change.
+  - `ice-nova-spell-damage-per-skeleton-witch.xml`: Summon Skeletons, 6% per skeleton.
+  - `ice-nova-movement-speed-per-phantasm-witch.xml`: a second Ice Nova supported by Summon Phantasm (the support's added minion), 2% movement speed per phantasm.
+  - `smite-attack-damage-per-zombie-templar.xml`: Raise Zombie with "+1 to maximum number of Raised Zombies", 15% per zombie.
+- **Public:** 0 unexpected; no value moved (the one build with these lines keeps its spectre line as a reason).
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

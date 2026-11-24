@@ -110,8 +110,19 @@ pub enum StackKind {
     /// Your brands attached to the enemy (P6-11ew; PoB's enemy
     /// `Multiplier:BrandsAttached`, [`brands`]).
     BrandsAttached,
-    /// Golems summoned (P6-11gc; PoB's `ActiveGolemLimit`, [`golems`]).
+    /// Golems summoned (P6-11gc; PoB's `ActiveGolemLimit`, [`minions`]).
     Golems,
+    /// Skeletons summoned (P6-11ie; PoB's `ActiveSkeletonLimit`,
+    /// [`minions`]).
+    Skeletons,
+    /// Zombies raised (P6-11ie; PoB's `ActiveZombieLimit`, [`minions`]).
+    Zombies,
+    /// Raging spirits summoned (P6-11ie; PoB's `ActiveRagingSpiritLimit`,
+    /// [`minions`]).
+    RagingSpirits,
+    /// Phantasms summoned (P6-11ie; PoB's `ActivePhantasmLimit`,
+    /// [`minions`]).
+    Phantasms,
     /// Trinity's lowest resonance (P6-11gd; PoB's
     /// `Multiplier:ResonanceCount`, the config's `configResonanceCount`).
     Resonance,
@@ -147,6 +158,10 @@ impl StackKind {
             Self::NearbyCorpses => "nearby-corpses",
             Self::BrandsAttached => "brands-attached",
             Self::Golems => "golems",
+            Self::Skeletons => "skeletons",
+            Self::Zombies => "zombies",
+            Self::RagingSpirits => "raging-spirits",
+            Self::Phantasms => "phantasms",
             Self::Resonance => "resonance",
             Self::StationarySeconds => "stationary-seconds",
             Self::ManaSpentRecently => "mana-spent-recently",
@@ -266,6 +281,14 @@ pub enum PerStack {
     TailwindEffect,
     /// More damage taken (`DamageTaken` MORE; P6-11ia).
     DamageTakenMore,
+    /// Increased spell damage (`Damage` INC, `ModFlag.Spell`; P6-11ie).
+    SpellDamage,
+    /// Increased attack damage (`Damage` INC, `ModFlag.Attack`; P6-11ie).
+    AttackDamage,
+    /// Increased attack and cast speed (`Speed` INC; P6-11ie).
+    Speed,
+    /// Increased movement speed (`MovementSpeed` INC; P6-11ie).
+    MovementSpeed,
 }
 
 impl PerStack {
@@ -291,6 +314,10 @@ impl PerStack {
             Self::ArmourUpTo100 => "per.armour-up-to-100",
             Self::TailwindEffect => "per.tailwind-effect",
             Self::DamageTakenMore => "per.damage-taken-more",
+            Self::SpellDamage => "per.spell-damage",
+            Self::AttackDamage => "per.attack-damage",
+            Self::Speed => "per.speed",
+            Self::MovementSpeed => "per.movement-speed",
             Self::DamageMoreWithAny => "per.damage-more-with-any",
             Self::EnemyDamageTaken => "per.enemy-damage-taken",
             Self::ElementalPenetrationIfAll25 => "per.elemental-penetration-if-all-25",
@@ -319,6 +346,9 @@ impl PerStack {
             }
             Self::AreaDamageMore => (Quantity::Damage, Op::More, Flags::AREA, Flags::NONE),
             Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE, Flags::NONE),
+            Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL, Flags::NONE),
+            Self::AttackDamage => (Quantity::Damage, Op::Increased, Flags::ATTACK, Flags::NONE),
+            Self::Speed => (Quantity::Speed, Op::Increased, Flags::NONE, Flags::NONE),
             Self::PhysicalReductionUpTo8
             | Self::PhysicalReductionIfOnlyOne
             | Self::PhysicalReductionUpTo5 => (
@@ -329,7 +359,7 @@ impl PerStack {
                 Flags::NONE,
                 Flags::NONE,
             ),
-            Self::MovementSpeedUpTo8 => (
+            Self::MovementSpeedUpTo8 | Self::MovementSpeed => (
                 Quantity::Poe1(Poe1Quantity::MovementSpeed),
                 Op::Increased,
                 Flags::NONE,
@@ -429,6 +459,20 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::StationarySeconds,
         StackValue::Per(PerStack::ArmourUpTo100),
     ),
+    // P6-11ie: "#% increased Attack and Cast Speed per Summoned Raging
+    // Spirit" (`Speed` INC, `PerStat` `ActiveRagingSpiritLimit`).
+    (
+        "attack_and_cast_speed_+%_per_summoned_raging_spirit",
+        StackKind::RagingSpirits,
+        StackValue::Per(PerStack::Speed),
+    ),
+    // P6-11ie: "#% increased Attack Damage per Raised Zombie" (`Damage` INC,
+    // `ModFlag.Attack`, `PerStat` `ActiveZombieLimit`).
+    (
+        "attack_damage_+%_per_raised_zombie",
+        StackKind::Zombies,
+        StackValue::Per(PerStack::AttackDamage),
+    ),
     // P6-11ep: "Attack Skills have +# to maximum number of Summoned Ballista
     // Totems" (`ActiveBallistaLimit` BASE, `SkillType.TotemsAreBallistae`).
     (
@@ -457,12 +501,40 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Golems,
         StackValue::Maximum,
     ),
+    // P6-11ie: "+# to maximum number of Summoned Raging Spirits"
+    // (`ActiveRagingSpiritLimit` BASE, on every raging spirit skill's list).
+    (
+        "base_number_of_raging_spirits_allowed",
+        StackKind::RagingSpirits,
+        StackValue::Maximum,
+    ),
+    // P6-11ie: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`
+    // BASE).
+    (
+        "base_number_of_skeletons_allowed",
+        StackKind::Skeletons,
+        StackValue::Maximum,
+    ),
+    // P6-11ie: "+# to maximum number of Summoned Phantasms"
+    // (`ActivePhantasmLimit` BASE).
+    (
+        "base_number_of_support_ghosts_allowed",
+        StackKind::Phantasms,
+        StackValue::Maximum,
+    ),
     // P6-11hs: Multiple Totems' "+# to maximum number of Summoned Totems"
     // on the supported skill (`SkillStatMap.lua` 1883: `ActiveTotemLimit`
     // BASE).
     (
         "base_number_of_totems_allowed",
         StackKind::Totems,
+        StackValue::Maximum,
+    ),
+    // P6-11ie: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`
+    // BASE).
+    (
+        "base_number_of_zombies_allowed",
+        StackKind::Zombies,
         StackValue::Maximum,
     ),
     // P6-11ew: "You can Cast an additional Brand" (`ActiveBrandLimit` BASE).
@@ -610,6 +682,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::NearbyEnemies,
         StackValue::Per(PerStack::MovementSpeedUpTo8),
     ),
+    // P6-11ie: "#% increased Movement Speed per Summoned Phantasm"
+    // (`MovementSpeed` INC, `PerStat` `ActivePhantasmLimit`).
+    (
+        "movement_speed_+%_per_summoned_phantasm",
+        StackKind::Phantasms,
+        StackValue::Per(PerStack::MovementSpeed),
+    ),
     (
         "nearby_enemies_are_intimidated_while_you_have_rage",
         StackKind::Rage,
@@ -685,6 +764,13 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "soul_eater_maximum_stacks_+",
         StackKind::SoulEater,
         StackValue::Maximum,
+    ),
+    // P6-11ie: "#% increased Spell Damage per Summoned Skeleton" (`Damage`
+    // INC, `ModFlag.Spell`, `PerStat` `ActiveSkeletonLimit`).
+    (
+        "spell_damage_+%_per_summoned_skeleton",
+        StackKind::Skeletons,
+        StackValue::Per(PerStack::SpellDamage),
     ),
     (
         "support_momentum_attack_speed_+%_per_stack",
@@ -1387,29 +1473,64 @@ fn resonance(ingest: &mut Ingest<'_>, effects: &[Effect], n: f64) {
     }
 }
 
-/// Adds the effects per summoned golem (P6-11gc; PoB's `PerStat`
-/// `ActiveGolemLimit`, which reads the output `CalcPerform.lua` 1412 sets):
-/// [`super::gems::golem_limit`] with the character's "+# to maximum number
-/// of Summoned Golems". 0 without a golem skill.
-pub fn golems(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
-    let effects: Vec<Effect> = ingest
-        .effects()
-        .iter()
-        .filter(|e| {
-            matches!(
-                e.quantity,
-                Quantity::Poe1(Poe1Quantity::Stack(StackKind::Golems, StackValue::Per(_)))
-            ) && e.op == Op::Base
-                && e.conditions == Conditions::none()
-        })
-        .cloned()
-        .collect();
-    if effects.is_empty() {
-        return;
+/// The minion counts (P6-11gc, P6-11ie): each kind, PoB's limit output
+/// its `PerStat` reads, and the gem stat that sets it (`SkillStatMap.lua`).
+pub const MINION_LIMITS: [(StackKind, &str, &str); 5] = [
+    (
+        StackKind::Golems,
+        "ActiveGolemLimit",
+        "base_number_of_golems_allowed",
+    ),
+    (
+        StackKind::Skeletons,
+        "ActiveSkeletonLimit",
+        "base_number_of_skeletons_allowed",
+    ),
+    (
+        StackKind::Zombies,
+        "ActiveZombieLimit",
+        "base_number_of_zombies_allowed",
+    ),
+    (
+        StackKind::RagingSpirits,
+        "ActiveRagingSpiritLimit",
+        "base_number_of_raging_spirits_allowed",
+    ),
+    (
+        StackKind::Phantasms,
+        "ActivePhantasmLimit",
+        "base_number_of_support_ghosts_allowed",
+    ),
+];
+
+/// Adds the effects per summoned minion (P6-11gc golems, P6-11ie
+/// skeletons, zombies, raging spirits, phantasms; PoB's `PerStat` on the
+/// limit output `CalcPerform.lua` 1412 sets): for each kind of
+/// [`MINION_LIMITS`], [`super::gems::minion_limit`] with the character's
+/// "+# to maximum number of" lines. 0 without a skill of that minion.
+/// Spectres are not counted: PoB's list is the build's spectres, which the
+/// build model does not keep, so their lines stay reasons.
+pub fn minions(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    for (kind, limit, stat) in MINION_LIMITS {
+        let effects: Vec<Effect> = ingest
+            .effects()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.quantity,
+                    Quantity::Poe1(Poe1Quantity::Stack(k, StackValue::Per(_))) if k == kind
+                ) && e.op == Op::Base
+                    && e.conditions == Conditions::none()
+            })
+            .cloned()
+            .collect();
+        if effects.is_empty() {
+            continue;
+        }
+        let extra = sum(ingest, kind, StackValue::Maximum).0;
+        let n = super::gems::minion_limit(input, limit, stat, extra);
+        apply(ingest, &effects, multiplier(n), None);
     }
-    let extra = sum(ingest, StackKind::Golems, StackValue::Maximum).0;
-    let n = super::gems::golem_limit(input, extra);
-    apply(ingest, &effects, multiplier(n), None);
 }
 
 /// Adds the effects per nearby corpse (P6-11ev; module docs): the config's

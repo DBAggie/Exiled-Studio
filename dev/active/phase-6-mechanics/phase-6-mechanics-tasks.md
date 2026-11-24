@@ -413,6 +413,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ib: maximum elemental resistances with reserved life and mana (`collect::reserved_max_resist`); two fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ib")
 - [x] P6-11ic: Kalandra's Touch reflects the opposite ring (`collect::other_ring`, `collect::Reflected`); three fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ic")
 - [x] P6-11id: triple damage (`ROWS`), bleeding multiplier per endurance charge (`charges::PerCharge::BleedDotMultiplier`), four lines PoB leaves unapplied `NoEffect`; three fixtures, Q11 DIV-0583 to DIV-0601 (`docs/phase-6/stat-mop-up.md`, "P6-11id")
+- [x] P6-11ie: effects per summoned skeleton, raised zombie, raging spirit, and phantasm (`stacks::minions`, `gems::minion_limit`); five fixtures, Q11 DIV-0602 to DIV-0608 (`docs/phase-6/stat-mop-up.md`, "P6-11ie")
 - [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report

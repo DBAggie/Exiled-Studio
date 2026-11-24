@@ -4183,9 +4183,6 @@ pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
 /// on an item or a passive the stat stays unmapped (a reason).
 pub const ALWAYS_HIT_STAT: &str = "global_always_hit";
 
-/// A golem skill's limit (P6-11gc; [`SkillMapping`]).
-pub const GOLEM_LIMIT_STAT: &str = "base_number_of_golems_allowed";
-
 /// Cyclone's movement speed stat (P6-11cr; [`SkillMapping`]).
 pub const CYCLONE_MOVEMENT_STAT: &str = "cyclone_movement_speed_+%_final";
 
@@ -4203,9 +4200,11 @@ impl StatMapping for SkillMapping {
             || super::dot::DOT_SKILL_STATS.contains(&stat.as_str())
             || stat.as_str() == super::hit::DOUBLE_HITS_STAT
             || stat.as_str() == super::hit::ARROW_STAT
-            // A golem skill's own limit: `poe1::gems::golem_limit` reads
-            // the gems (P6-11gc).
-            || stat.as_str() == GOLEM_LIMIT_STAT
+            // A minion skill's own limit: `poe1::gems::minion_limit` reads
+            // the gems (P6-11gc, P6-11ie).
+            || super::stacks::MINION_LIMITS
+                .iter()
+                .any(|(_, _, limit)| *limit == stat.as_str())
             // A support's global effect: `poe1::gems` applies it (P6-11y).
             || super::gems::is_support_global_stat(stat.as_str())
         {
@@ -9058,13 +9057,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
     ("base_number_of_projectiles", "projectile-count"),
-    // P6-11m: "+# to maximum number of Skeletons" (`ActiveSkeletonLimit`).
-    ("base_number_of_skeletons_allowed", "minion-count"),
     // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count
     // no slice field reads, as the zombies' and skeletons'.
     ("base_number_of_spectres_allowed", "minion-count"),
-    // P6-11m: "+# to maximum number of Raised Zombies" (`ActiveZombieLimit`): a count no slice field reads.
-    ("base_number_of_zombies_allowed", "minion-count"),
     ("base_secondary_skill_effect_duration", "skill-duration"),
     // P6-11em: ignite duration on you and the chance to be frozen, shocked,
     // and ignited (PoB parses neither): no slice field.
@@ -10163,15 +10158,14 @@ pub const COST_REASONS: &[&str] = &[
 /// (P6-10b), sorted: each maps to [`Poe1Quantity::MovementReason`], the
 /// movement fields' reason alone. PoB's text for each (`ModParser.lua`):
 /// on kill (`KilledRecently`) and with no gems in the boots, each a
-/// config condition the engine does not settle; per
-/// summoned phantasm (`PerStat`); movement speed that cannot go below its
-/// base. (The armour movement penalties ignored are a row since P6-11cp;
+/// config condition the engine does not settle; movement speed that
+/// cannot go below its base. (Per summoned phantasm is [`super::stacks`]'
+/// since P6-11ie.) (The armour movement penalties ignored are a row since P6-11cp;
 /// during a flask's effect, on low life, and while ignited are
 /// [`STATE_ROWS`] since P6-11ei.) Momentum's Swiftness is
 /// `poe1::gems`'s (P6-11y).
 pub const MOVEMENT_REASONS: &[&str] = &[
     "gain_movement_speed_+%_for_20_seconds_on_kill",
-    "movement_speed_+%_per_summoned_phantasm",
     "movement_speed_cannot_be_reduced_below_base",
     "movement_velocity_+%_while_no_gems_in_boots",
 ];
@@ -10441,6 +10435,11 @@ impl StatMapping for Poe1Mapping {
                 | Poe1Quantity::Stack(
                     super::stacks::StackKind::NearbyEnemies,
                     super::stacks::StackValue::Per(super::stacks::PerStack::MovementSpeedUpTo8),
+                )
+                // Movement speed per summoned phantasm (P6-11ie).
+                | Poe1Quantity::Stack(
+                    super::stacks::StackKind::Phantasms,
+                    super::stacks::StackValue::Per(super::stacks::PerStack::MovementSpeed),
                 )
                 | Poe1Quantity::MovementReason(_)
                 | Poe1Quantity::CostReason(_),
