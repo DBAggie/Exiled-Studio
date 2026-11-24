@@ -4337,6 +4337,31 @@ const MINION_LIGHTNING_PEN: Quantity = Quantity::Poe1(Poe1Quantity::Minion(
 /// ([`super::states`], P3-8f): `(stat, [(quantity, op, flags, condition)])`.
 type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 
+/// A state row whose effects need one of some flags (P6-11if):
+/// `(stat, [(quantity, op, all, any, condition)])`.
+type StateAnyRow = (
+    &'static str,
+    &'static [(Quantity, Op, Flags, Flags, &'static str)],
+);
+
+/// The state stats whose effects need one of some flags (P6-11if), sorted
+/// by stat ID, as [`STATE_ROWS`] otherwise.
+pub const STATE_ANY_ROWS: &[StateAnyRow] = &[
+    // P6-11if: "#% more Damage with Hits and Ailments against Unique
+    // Enemies" (`Damage` MORE, `KeywordFlag.Hit` or `Ailment`, the enemy's
+    // `RareOrUnique`).
+    (
+        "slayer_damage_+%_final_against_unique_enemies",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            Flags::HIT.union(Flags::AILMENT),
+            conditions::ENEMY_RARE_OR_UNIQUE,
+        )],
+    ),
+];
+
 /// The weapon-condition stats (P3-8f), sorted by stat ID, each read as PoB
 /// v2.67.2 reads its game text: "while wielding a Staff" is
 /// `{ type = "Condition", var = "UsingStaff" }` (`Modules/ModParser.lua`
@@ -4774,6 +4799,17 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::KILLED_RECENTLY,
         )],
     ),
+    // P6-11if: "#% more Damage if you've Killed Recently" (`Damage` MORE,
+    // `KilledRecently`).
+    (
+        "damage_+%_if_enemy_killed_recently_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
     // P3-8n: "if you've Shattered an Enemy Recently" (1935).
     (
         "damage_+%_if_enemy_shattered_recently",
@@ -4888,6 +4924,20 @@ pub const STATE_ROWS: &[StateRow] = &[
                 conditions::NOT_KILLED_RECENTLY,
             ),
         ],
+    ),
+    // P6-11if: "#% reduced Damage taken while Leeching" (`DamageTaken` INC,
+    // `Leeching`).
+    (
+        "damage_taken_+%_while_leeching",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                TakenWhen::Always,
+                TakenOf::All,
+            )),
+            Op::Increased,
+            NONE,
+            conditions::LEECHING,
+        )],
     ),
     (
         "defences_+%_while_wielding_staff",
@@ -5025,6 +5075,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::SELF_CAST_ELEMENTAL_WEAKNESS,
+        )],
+    ),
+    // P6-11if: "Gain #% increased Attack Speed for 20 seconds when you Kill
+    // a Rare or Unique Enemy" (`Speed` INC, `ModFlag.Attack`,
+    // `KilledUniqueEnemy`).
+    (
+        "gain_attack_speed_+%_for_20_seconds_on_killing_rare_or_unique_enemy",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::KILLED_UNIQUE_ENEMY,
         )],
     ),
     (
@@ -10266,6 +10328,24 @@ impl StatMapping for Poe1Mapping {
                     .collect(),
             );
         }
+        if let Ok(i) = STATE_ANY_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                STATE_ANY_ROWS[i]
+                    .1
+                    .iter()
+                    .map(|&(quantity, op, all, any, state)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale: 1.0,
+                        divisor: 1.0,
+                        conditions: Conditions::none()
+                            .with_all(all)
+                            .with_any(any)
+                            .with_state(ConditionKey::new(state), true),
+                    })
+                    .collect(),
+            );
+        }
         if let Ok(i) = STATE_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
             return StatMap::Effects(
                 STATE_ROWS[i]
@@ -13203,7 +13283,51 @@ mod tests {
                     conditions::USED_MINION_SKILL_RECENTLY,
                 )],
             ),
+            // P6-11if.
+            (
+                "damage_+%_if_enemy_killed_recently_final",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    conditions::KILLED_RECENTLY,
+                )],
+            ),
+            (
+                "damage_taken_+%_while_leeching",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::SelfDamageTaken(
+                        TakenWhen::Always,
+                        TakenOf::All,
+                    )),
+                    Op::Increased,
+                    NONE,
+                    conditions::LEECHING,
+                )],
+            ),
+            (
+                "gain_attack_speed_+%_for_20_seconds_on_killing_rare_or_unique_enemy",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::KILLED_UNIQUE_ENEMY,
+                )],
+            ),
         ]);
+        // P6-11if: the rows with "one of" flags.
+        assert!(STATE_ANY_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new(
+            "slayer_damage_+%_final_against_unique_enemies",
+        )) else {
+            panic!("slayer_damage_+%_final_against_unique_enemies");
+        };
+        assert_eq!(
+            t[0].conditions,
+            Conditions::none()
+                .with_any(Flags::HIT.union(Flags::AILMENT))
+                .with_state(ConditionKey::new(conditions::ENEMY_RARE_OR_UNIQUE), true)
+        );
         expected.sort_by(|a, b| a.0.cmp(b.0));
         assert_eq!(STATE_ROWS.len(), expected.len());
         for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {

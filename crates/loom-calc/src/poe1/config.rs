@@ -286,10 +286,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Condition:HitSpellRecently", "Condition:HitRecently"],
     ),
     ("conditionImpaledRecently", &["Condition:ImpaledRecently"]),
-    (
-        "conditionKilledUniqueEnemy",
-        &["Condition:KilledUniqueEnemy"],
-    ),
     ("conditionLowEnergyShield", &["Condition:LowEnergyShield"]),
     (
         "conditionSacrificeMinion",

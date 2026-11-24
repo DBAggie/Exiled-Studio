@@ -245,6 +245,9 @@ pub const NOT_HIT_RECENTLY: &str = "NotBeenHitRecently";
 /// "if you've Killed Recently" (PoB's `KilledRecently`, from
 /// `conditionKilledRecently`; P6-11p).
 pub const KILLED_RECENTLY: &str = "KilledRecently";
+/// "when you Kill a Rare or Unique Enemy" (PoB's `KilledUniqueEnemy`, from
+/// `conditionKilledUniqueEnemy`, `ConfigOptions.lua` 1631; P6-11if).
+pub const KILLED_UNIQUE_ENEMY: &str = "KilledUniqueEnemy";
 /// "while moving" (PoB's `Moving`, from `conditionMoving`; P6-10b part 13).
 pub const MOVING: &str = "Moving";
 /// "while on Burning Ground" (PoB's `OnBurningGround`, from
@@ -358,6 +361,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     // P6-11ei: being ignited.
     ("conditionIgnited", IGNITED),
     ("conditionKilledRecently", KILLED_RECENTLY),
+    // P6-11if: a rare or unique enemy killed.
+    ("conditionKilledUniqueEnemy", KILLED_UNIQUE_ENEMY),
     // P6-11bv: each leeching check sets `Leeching` (PoB's `implyCond`).
     ("conditionLeeching", LEECHING),
     ("conditionLeechingEnergyShield", LEECHING),

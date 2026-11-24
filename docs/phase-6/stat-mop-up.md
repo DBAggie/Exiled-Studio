@@ -4893,3 +4893,27 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - **Public:** 0 unexpected; no value moved (the one build with these lines keeps its spectre line as a reason).
 - **Corpus:** 0 unexpected, no value moved.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## P6-11if: lines under config conditions the engine settles
+
+**Found** (the unmapped stats left in single builds): "#% more Damage if you've Killed Recently", "#% reduced Damage taken while Leeching", "#% more Damage with Hits and Ailments against Unique Enemies" (Slayer), "Gain #% increased Attack Speed for 20 seconds when you Kill a Rare or Unique Enemy".
+
+**PoB:**
+- `Damage` MORE with `Condition:KilledRecently`; `DamageTaken` INC with `Condition:Leeching`; `Damage` MORE with `KeywordFlag.Hit` or `Ailment` and the enemy's `RareOrUnique`; `Speed` INC with `ModFlag.Attack` and `Condition:KilledUniqueEnemy`.
+- `KilledUniqueEnemy` comes from the config's "Killed a Rare or Unique enemy Recently?" (`conditionKilledUniqueEnemy`, `ConfigOptions.lua` 1631), tagged `Combat` as the other combat checks.
+
+**The engine:**
+- `STATE_ROWS`: the killed recently, leeching, and killed unique enemy rows.
+- `STATE_ANY_ROWS` (new): state rows whose effects need one of some flags; the Slayer row.
+- `conditions::KILLED_UNIQUE_ENEMY` from `conditionKilledUniqueEnemy`, which leaves `config::NAMED_ONLY`.
+
+**Evidence** (`b-ct`, against P6-11ie's run):
+- **Five new mechanic fixtures**, each matching PoB on every computed field (the Smite one but the weapon's attack rate, Q11, DIV-0609 to DIV-0615 `game-truth`):
+  - `ice-nova-more-damage-killed-recently-witch.xml`: 10% more damage.
+  - `ice-nova-more-damage-not-killed-recently-witch.xml`: without the check, no change.
+  - `ice-nova-damage-taken-while-leeching-witch.xml`: damage taken times 0.9.
+  - `ice-nova-more-damage-against-unique-witch.xml`: 20% more hit damage.
+  - `smite-attack-speed-killed-unique-templar.xml`: 10% increased attack speed.
+- **Public:** 0 unexpected; 6 values move toward PoB (cyclone-shockwave-slayer.xml), none away.
+- **Corpus:** 0 unexpected, no value moved.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
