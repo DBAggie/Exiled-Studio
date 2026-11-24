@@ -200,7 +200,13 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 30] = [
+pub const STATS: [ModifierRow; 34] = [
+    // Close-out M6: "Anger has #% increased Aura Effect".
+    (
+        "anger_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(2),
+        1.0,
+    ),
     // P6-11k: "Auras from your Skills have #% increased Effect on you"
     // (`SkillAuraEffectOnSelf` INC, `ModParser.lua`; no skill type tag).
     (
@@ -261,6 +267,12 @@ pub const STATS: [ModifierRow; 30] = [
         1.0,
     ),
     ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
+    // Close-out M6: "Malevolence has #% increased Aura Effect".
+    (
+        "delirium_aura_effect_+%",
+        Poe1Quantity::NamedSkillEffect(3),
+        1.0,
+    ),
     ("golem_buff_effect_+%", Poe1Quantity::GolemBuffEffect, 1.0),
     // P6-11at: "#% increased Effect of Herald Buffs on you" (`BuffEffect`
     // INC, `SkillType.Herald`, `ModParser.lua`).
@@ -272,6 +284,12 @@ pub const STATS: [ModifierRow; 30] = [
     (
         "herald_skills_mana_reservation_efficiency_+%",
         Poe1Quantity::HeraldManaReservationEfficiency,
+        1.0,
+    ),
+    // Close-out M6: Malevolence's mana reservation efficiency.
+    (
+        "malevolence_mana_reservation_efficiency_+%",
+        Poe1Quantity::NamedSkillEffect(4),
         1.0,
     ),
     // P6-11ey: "#% increased Mana Reservation Efficiency of Skills that
@@ -365,6 +383,12 @@ pub const STATS: [ModifierRow; 30] = [
         Poe1Quantity::SkillTiming(SkillTiming::WarcrySpeed),
         1.0,
     ),
+    // Close-out M6: Zealotry's mana reservation efficiency.
+    (
+        "zealotry_mana_reservation_efficiency_+%",
+        Poe1Quantity::NamedSkillEffect(5),
+        1.0,
+    ),
 ];
 
 /// What a named skill effect modifies (P6-11gn).
@@ -374,6 +398,9 @@ pub enum NamedEffect {
     Aura,
     /// The skill's curse effect (`CurseEffect` INC): its curse scale.
     Curse,
+    /// The skill's mana reservation efficiency (`ManaReservationEfficiency`
+    /// INC; close-out M6): added to its mana efficiency.
+    ManaReservationEfficiency,
 }
 
 /// The named skill effect modifiers (P6-11gn; PoB's `AuraEffect` or
@@ -381,12 +408,30 @@ pub enum NamedEffect {
 /// #% increased aura effect" and "#% increased <skill> curse effect"):
 /// the stat, the skill's granted effect ID, and what it modifies, by
 /// [`Poe1Quantity::NamedSkillEffect`]'s index.
-pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 2] = [
+pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
     ("pride_aura_effect_+%", "Pride", NamedEffect::Aura),
     (
         "vulnerability_curse_effect_+%",
         "Vulnerability",
         NamedEffect::Curse,
+    ),
+    // Close-out M6: "Anger has #% increased Aura Effect", "Malevolence has
+    // #% increased Aura Effect" (PoB's `includeTransfigured` names: no
+    // transfigured Anger or Malevolence exists).
+    ("anger_aura_effect_+%", "Anger", NamedEffect::Aura),
+    ("delirium_aura_effect_+%", "Malevolence", NamedEffect::Aura),
+    // Close-out M6: "Malevolence has #% increased Mana Reservation
+    // Efficiency", "Zealotry has ..." (`ManaReservationEfficiency` INC with
+    // the `SkillName` tag).
+    (
+        "malevolence_mana_reservation_efficiency_+%",
+        "Malevolence",
+        NamedEffect::ManaReservationEfficiency,
+    ),
+    (
+        "zealotry_mana_reservation_efficiency_+%",
+        "Zealotry",
+        NamedEffect::ManaReservationEfficiency,
     ),
 ];
 
@@ -534,7 +579,7 @@ pub struct Totals {
     pub offering_buff_effect: f64,
     /// Each named skill effect, by [`NAMED_SKILL_EFFECTS`]' index
     /// (P6-11gn).
-    pub named_skill_effect: [f64; 2],
+    pub named_skill_effect: [f64; 6],
     /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
     pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
@@ -701,16 +746,24 @@ impl Totals {
         }
     }
 
-    /// [`Self::reservation`] for a skill of `types`: a herald's mana
-    /// efficiency adds its own (P6-11ag), and a mine skill's its own
-    /// (P6-11ey, the `RemoteMined` type: PoB's mine keyword).
+    /// [`Self::reservation`] for a skill of `types` and granted effect `id`:
+    /// a herald's mana efficiency adds its own (P6-11ag), a mine skill's its
+    /// own (P6-11ey, the `RemoteMined` type: PoB's mine keyword), and a
+    /// named skill's its own (close-out M6).
     #[must_use]
-    pub fn reservation_for(&self, pool: Pool, types: &BTreeSet<String>) -> ReservationTerms {
+    pub fn reservation_for(
+        &self,
+        pool: Pool,
+        types: &BTreeSet<String>,
+        id: &str,
+    ) -> ReservationTerms {
         let mut terms = self.reservation(pool);
         if pool != Pool::Mana {
             return terms;
         }
         let mut own = self.mana_efficiency;
+        // Close-out M6: the skill's named mana reservation efficiency.
+        own += self.named_skill(id, NamedEffect::ManaReservationEfficiency);
         if types.contains("Herald") {
             own += self.herald_mana_efficiency;
         }
@@ -1114,9 +1167,34 @@ mod tests {
         };
         let herald: BTreeSet<String> = ["Herald".to_owned()].into();
         let aura: BTreeSet<String> = ["Aura".to_owned()].into();
-        assert_eq!(t.reservation_for(Pool::Mana, &herald).efficiency, 35.0);
-        assert_eq!(t.reservation_for(Pool::Mana, &aura).efficiency, 15.0);
-        assert_eq!(t.reservation_for(Pool::Life, &herald).efficiency, 5.0);
+        assert_eq!(
+            t.reservation_for(Pool::Mana, &herald, "HeraldOfIce")
+                .efficiency,
+            35.0
+        );
+        assert_eq!(
+            t.reservation_for(Pool::Mana, &aura, "Hatred").efficiency,
+            15.0
+        );
+        assert_eq!(
+            t.reservation_for(Pool::Life, &herald, "HeraldOfIce")
+                .efficiency,
+            5.0
+        );
+        // Close-out M6: a named skill's own efficiency.
+        let z = Totals {
+            mana_efficiency: 10.0,
+            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0],
+            ..Totals::default()
+        };
+        assert_eq!(
+            z.reservation_for(Pool::Mana, &aura, "Zealotry").efficiency,
+            60.0
+        );
+        assert_eq!(
+            z.reservation_for(Pool::Mana, &aura, "Hatred").efficiency,
+            10.0
+        );
     }
 
     #[test]
@@ -1176,7 +1254,7 @@ mod tests {
         assert_eq!(n.named_golem(None), 0.0);
         // P6-11gn: a named skill's effect, for that skill and kind alone.
         let p = Totals {
-            named_skill_effect: [20.0, 15.0],
+            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0],
             ..Totals::default()
         };
         assert_eq!(p.named_skill("Pride", NamedEffect::Aura), 20.0);

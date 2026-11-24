@@ -6303,7 +6303,7 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
                 continue;
             }
         };
-        let terms = totals.reservation_for(pool, &s.types);
+        let terms = totals.reservation_for(pool, &s.types, &s.active_gem.effect.id);
         let amounts = if r.percent {
             skill_modifiers::reserved(0, r.amount, mult, terms)
         } else {

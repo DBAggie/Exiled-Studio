@@ -15,7 +15,12 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 30] = [
+const TEXTS: [(&str, &str); 34] = [
+    // Close-out M6.
+    (
+        "anger_aura_effect_+%",
+        "Anger has {0}% increased Aura Effect",
+    ),
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -31,6 +36,16 @@ const TEXTS: [(&str, &str); 30] = [
     (
         "base_reservation_efficiency_+%",
         "{0}% increased Reservation Efficiency of Skills",
+    ),
+    // Close-out M6.
+    (
+        "delirium_aura_effect_+%",
+        "Malevolence has {0}% increased Aura Effect",
+    ),
+    // Close-out M6.
+    (
+        "malevolence_mana_reservation_efficiency_+%",
+        "Malevolence has {0}% increased Mana Reservation Efficiency",
     ),
     (
         "mana_reservation_efficiency_-2%_per_1",
@@ -135,6 +150,11 @@ const TEXTS: [(&str, &str); 30] = [
     (
         "vulnerability_curse_effect_+%",
         "{0}% increased Vulnerability Curse Effect",
+    ),
+    // Close-out M6.
+    (
+        "zealotry_mana_reservation_efficiency_+%",
+        "Zealotry has {0}% increased Mana Reservation Efficiency",
     ),
 ];
 

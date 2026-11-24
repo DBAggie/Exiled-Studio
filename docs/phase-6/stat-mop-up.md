@@ -5209,3 +5209,21 @@ The fifth batch: the 13 stats of `M5-enemy` (PoB's `EnemyModifier` lines).
 - **Public:** 0 unexpected; 5 values moved, 3 toward PoB, 2 away: Generals Perforate Zerker.xml's average damage and bleed DPS with the warcry-taunted line, which PoB applies too (the build's config sets the enemy taunted and a warcry used); the build was already past PoB's from M1 on, with its other gaps (speed 1.64 against 2.20).
 - **Corpus:** 0 unexpected; 4 values toward PoB, none away.
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M6: auras, buffs, and reservation
+
+The sixth batch: the 19 stats of `M6-buffs`.
+
+**Mapped** (`poe1::skill_modifiers::NAMED_SKILL_EFFECTS`, now six): "Anger has #% increased Aura Effect" and "Malevolence has #% increased Aura Effect" (`NamedEffect::Aura`); "Malevolence has #% increased Mana Reservation Efficiency" and "Zealotry has ..." (`NamedEffect::ManaReservationEfficiency`, new: `Totals::reservation_for` adds the skill's own, by its granted effect).
+
+**`NoEffect`:** a warcry's description of its power (`warcry_count_power_from_enemies`, `warcry_gain_mp_from_allies`, `warcry_gain_mp_from_corpses`; PoB parses no mod, the power is `gems::warcry_power`'s).
+
+**Moved to closed reasons** (each stays `unmapped-stat`):
+- Deferred (Spellslinger): `spellslinger_mana_reservation_efficiency_+%`.
+- `C-engine-system`: `alternate_ascendancy_herald_buff_effect_+%_final_per_1%_mana_reserved` (a `PerStat` of the reserved mana percent); `anger_aura_effect_+%_while_at_maximum_endurance_charges`, `determination_aura_effect_+%_while_at_minimum_endurance_charges` (charge thresholds on a named aura); `elusive_effect_+%`, `elusive_effect_on_self_+%_per_power_charge` (Elusive's effect); `empowered_attack_damage_+%`, `warcries_exert_twice_as_many_attacks`, `warcry_empowers_next_x_melee_attacks` (exerted attacks); `mine_aura_effect_+%` (auras from mines); `non_curse_aura_effect_+%_per_10_devotion` (a devotion reader of a skill modifier: `poe1::skill_modifiers` reads the plain stat before devotion); `warcries_have_infinite_power`.
+
+**Evidence** (`b-ct`, against M5's run):
+- **One new mechanic fixture**, matching PoB on every computed field: `ice-nova-m6-anger-aura-effect-witch.xml`. The reservation efficiency lines are ambiguous as custom lines, so no fixture; probed in PoB: Malevolence with 50% increased efficiency leaves 393 of 590 mana, as `reservation_for` gives.
+- **Public:** 0 unexpected, no value moved.
+- **Corpus:** 0 unexpected; 6 values moved, 3 toward PoB, 3 away, each on a build already past PoB's: one build's average damage and ignite DPS with Anger's effect (110,264 to 114,486 against PoB's 82,711), and one build's unreserved mana with Malevolence's efficiency (24 to 87 against PoB's 2: PoB applies the efficiency too; the build reserves less than PoB from modifiers the engine does not read, as P6-9e recorded).
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.

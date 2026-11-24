@@ -10744,6 +10744,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "warcry_chance_to_gain_frenzy_power_endurance_charge_%_per_power",
         "charge-gain-chance",
     ),
+    // Close-out M6: a warcry's description of its power (PoB parses no mod; the
+    // power is `gems::warcry_power`'s).
+    ("warcry_count_power_from_enemies", "display"),
+    ("warcry_gain_mp_from_allies", "display"),
+    ("warcry_gain_mp_from_corpses", "display"),
     ("warcry_skill_area_of_effect_+%", "area"),
     // Close-out M3: "You cannot be Hindered" (`HinderImmune`): PoB has no
     // hinder on you to configure.
