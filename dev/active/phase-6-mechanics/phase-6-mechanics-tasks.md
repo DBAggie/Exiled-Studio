@@ -420,6 +420,17 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P6-11ii: spell damage during any flask effect (a state row), critical strike chance against chilled enemies and added cold damage against chilled or frozen enemies (`Poe1Quantity::CritVsChilled`, `AddedColdVsChilledOrFrozen`, `damage_taken`); six fixtures, Q11 DIV-0628 to DIV-0640 (`docs/phase-6/stat-mop-up.md`, "P6-11ii")
 - [x] P6-11ij: accuracy per frenzy charge (`charges::PerCharge::FlatAccuracy`), no non-elemental damage (a hit row), bow culling (a hit row; `combined` queries culling with the main hand's flags); five fixtures, Q11 DIV-0641 to DIV-0652 (`docs/phase-6/stat-mop-up.md`, "P6-11ij")
 - [x] P6-11ik: critical strike multiplier against enemies on low life, more critical strike chance against enemies not on low life (`conditions::ENEMY_NOT_LOW_LIFE`), more damage with at most one and less damage taken with at least two rare or unique enemies nearby (settled from the count); six fixtures (`docs/phase-6/stat-mop-up.md`, "P6-11ik")
+- [x] Close-out plan (maintainer 2026-11-24: the rest of Phase 6 in one session, the stat mop-up only, the engineering items deferred): [`p6-close-out-plan.md`](p6-close-out-plan.md), every remaining stat in one batch in [`p6-close-out-list.md`](p6-close-out-list.md)
+- [ ] Close-out `M1-conditions` (38)
+- [ ] Close-out `M2-per-and-thresholds` (21)
+- [ ] Close-out `M3-plain` (83; two commits)
+- [ ] Close-out `M4-minion` (12)
+- [ ] Close-out `M5-enemy` (13)
+- [ ] Close-out `M6-buffs` (19)
+- [ ] Close-out `M7-skill-scoped` (9)
+- [ ] Close-out `H-hidden` (13)
+- [ ] Close-out `N-unparsed` (126: `NoEffect` or game-truth reasons)
+- [ ] Close-out report: `docs/phase-6/phase-6-report.md` with the final counts, the `C-*` reasons with each stat, the deferred items, the game-truth list
 - [ ] Ward's other lines, reasons after P6-11hn: Wicked Ward (ward does not break during flask effect), the chance for ward not to break, ward bypass, restore ward on block, Ghostwrithe's energy shield increases applied to ward, body armour armour and evasion converted to ward
 - [ ] A mine Assassin's remaining gaps to PoB (`ethereal-knives-mines-assassin.xml`): its 16 cluster jewel nodes (the evidence bundle lacks the cluster tables; the maintainer's extraction rerun), its other mine laying speed and crit lines (reasons)
 ## P6-12: combined and full DPS; report
