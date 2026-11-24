@@ -124,7 +124,11 @@ const CONDITION_ROWS: &[&str] = &[
 /// "#% chance to Freeze, Shock and Ignite" is the ignite chance; the
 /// engine computes no shock from a hit (only the config's and the
 /// guaranteed one), so its shock part reaches no field.
-const OTHER_PART_ROWS: &[&str] = &["chance_to_freeze_shock_ignite_%"];
+const OTHER_PART_ROWS: &[&str] = &[
+    "chance_to_freeze_shock_ignite_%",
+    // Close-out M4: the minions' chance, its ignite part only.
+    "minion_chance_to_freeze_shock_ignite_%",
+];
 
 /// Regeneration rows whose text names exposure (P6-10b): the regeneration
 /// field's reason alone (`mapping::REGEN_REASONS`), never the enemy's.

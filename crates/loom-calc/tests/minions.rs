@@ -12,7 +12,7 @@ use loom_calc::quantity::{Bound, DamageType, Op};
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 48] = [
+const TEXTS: [(&str, &str); 50] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -78,6 +78,10 @@ const TEXTS: [(&str, &str); 48] = [
         "Minions have {0}% chance to deal Double Damage",
     ),
     (
+        "minion_chance_to_freeze_shock_ignite_%",
+        "Minions have {0}% chance to Freeze, Shock and Ignite",
+    ),
+    (
         "minion_chance_to_ignite_%",
         "Minions have {0}% chance to Ignite",
     ),
@@ -92,6 +96,10 @@ const TEXTS: [(&str, &str); 48] = [
     (
         "minion_cooldown_recovery_+%",
         "Minions have {0}% increased Cooldown Recovery Rate",
+    ),
+    (
+        "minion_critical_strike_chance_+%",
+        "Minions have {0}% increased Critical Strike Chance",
     ),
     (
         "minion_critical_strike_multiplier_+",
@@ -240,7 +248,7 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
         vec![(MinionValue::AddedDamage(t, bound), op)]
     } else if text.contains("chance to cause Bleeding") {
         vec![(MinionValue::AilmentChance(Ailment::Bleed), op)]
-    } else if text.contains("chance to Ignite") {
+    } else if text.contains("chance to Ignite") || text.contains("Shock and Ignite") {
         vec![(MinionValue::AilmentChance(Ailment::Ignite), op)]
     } else if text.contains("chance to Poison") {
         vec![(MinionValue::AilmentChance(Ailment::Poison), op)]
@@ -248,6 +256,8 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
         vec![(MinionValue::DoubleDamageChance, op)]
     } else if text.contains("Critical Strike Multiplier") {
         vec![(MinionValue::CritMultiplier, op)]
+    } else if text.contains("Critical Strike Chance") {
+        vec![(MinionValue::CritChance, op)]
     } else if text.contains("Attack and Cast Speed") {
         vec![(MinionValue::AttackSpeed, op), (MinionValue::CastSpeed, op)]
     } else if text.contains("Attack Speed") {

@@ -10346,6 +10346,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "minimum_lightning_damage_to_return_to_melee_attacker",
         "reflect",
     ),
+    // Close-out M4: minions' additional physical damage reduction
+    // (`MinionModifier` of `PhysicalDamageReduction` BASE): no minion field
+    // reads it.
+    (
+        "minion_additional_physical_damage_reduction_%",
+        "minion-defence",
+    ),
     ("minion_attacks_chance_to_blind_on_hit_%", "on-hit-debuff"),
     ("minion_attacks_chance_to_taunt_on_hit_%", "on-hit-debuff"),
     ("minion_chance_to_taunt_on_hit_%", "no-slice"),
@@ -10368,6 +10375,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "minion_recover_%_maximum_life_on_minion_death",
         "recovery-event",
     ),
+    // Close-out M4: minions recover life on block (`MinionModifier` of
+    // `LifeOnBlock`): no minion field reads it.
+    ("minion_recover_%_of_maximum_life_on_block", "minion-regen"),
     // P6-11bc: "Minions have #% increased Area of Effect" (the minion's
     // `AreaOfEffect` INC): area, as `base_skill_area_of_effect_+%` (the
     // minion's radius outputs are no slice field either).

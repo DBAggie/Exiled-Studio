@@ -119,6 +119,9 @@ pub enum MinionValue {
     /// `BleedChance` with `KeywordFlag.Attack`, `PoisonChance` BASE;
     /// P6-11fc).
     AilmentChance(super::ailment::Ailment),
+    /// The minion's increased critical strike chance (PoB's `CritChance`
+    /// INC; close-out M4).
+    CritChance,
 }
 
 impl MinionValue {
@@ -169,6 +172,7 @@ impl MinionValue {
             },
             Self::DoubleDamageChance => "double-damage-chance",
             Self::CritMultiplier => "crit-multiplier",
+            Self::CritChance => "crit-chance",
             Self::Penetration(t) => match t {
                 DamageType::Physical => "physical-penetration",
                 DamageType::Fire => "fire-penetration",
@@ -214,6 +218,7 @@ impl MinionValue {
             Self::AddedDamage(t, b) => Quantity::AddedDamage(t, b),
             Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
             Self::CritMultiplier => Quantity::CritMultiplier,
+            Self::CritChance => Quantity::CritChance,
             Self::Penetration(t) => Quantity::Penetration(t),
             // The bleed chance with attacks (`KeywordFlag.Attack`).
             Self::AilmentChance(a) => {
@@ -270,7 +275,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 48] = [
+pub const STATS: [MinionRow; 50] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -345,6 +350,18 @@ pub const STATS: [MinionRow; 48] = [
         "minion_chance_to_deal_double_damage_%",
         &[(minion(MinionValue::DoubleDamageChance), BASE, 1.0)],
     ),
+    // Close-out M4: "Minions have #% chance to Freeze, Shock and Ignite"
+    // (`MinionModifier`s of `EnemyFreezeChance`, `EnemyShockChance`, and
+    // `EnemyIgniteChance` BASE): the ignite's, as the plain line's; no
+    // minion field reads the freeze's or the shock's.
+    (
+        "minion_chance_to_freeze_shock_ignite_%",
+        &[(
+            minion(MinionValue::AilmentChance(super::ailment::Ailment::Ignite)),
+            BASE,
+            1.0,
+        )],
+    ),
     // P6-11fc: "Minions have #% chance to Ignite" (PoB's `MinionModifier`).
     (
         "minion_chance_to_ignite_%",
@@ -365,6 +382,12 @@ pub const STATS: [MinionRow; 48] = [
     (
         "minion_cooldown_recovery_+%",
         &[(minion(MinionValue::CooldownRecovery), INC, 1.0)],
+    ),
+    // Close-out M4: "Minions have #% increased Critical Strike Chance"
+    // (`MinionModifier` of `CritChance` INC).
+    (
+        "minion_critical_strike_chance_+%",
+        &[(minion(MinionValue::CritChance), INC, 1.0)],
     ),
     // P6-11cs: "Minions have +#% to Critical Strike Multiplier"
     // (`MinionModifier` of `CritMultiplier` BASE).

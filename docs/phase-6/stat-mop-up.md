@@ -5172,3 +5172,20 @@ The third batch's other 41 stats (from `mana_%_to_add_as_energy_shield` on).
 - **Public:** 0 unexpected, no value moved.
 - **Corpus:** 0 unexpected; 4 values moved, 3 toward PoB (a build's total EHP with the crit line), 1 away: the same build's number of damaging hits, 2.290 to 2.328 against PoB's 2.279, with its pools still short of PoB's (EHP 56,193 against 64,759).
 - **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
+
+## Close-out M4: minion modifiers
+
+The fourth batch: the 12 stats of `M4-minion`.
+
+**Mapped** (`poe1::minions::STATS`, read on the minion actor): "Minions have #% increased Critical Strike Chance" (`MinionValue::CritChance`, new: the minion's `CritChance` INC); "Minions have #% chance to Freeze, Shock and Ignite" (the ignite's part, as the plain line's; no minion field reads the freeze's or the shock's).
+
+**`NoEffect`:** minions' additional physical damage reduction (`minion-defence`) and their life recovered on block (`minion-regen`): no minion field reads either.
+
+**Moved to closed reasons** (each stays `unmapped-stat`):
+- `C-engine-system`: `alternate_ascendancy_herald_minion_and_herald_damage_+%_final_per_1%_life_reserved` (a `PerStat` of the reserved life percent); the four per-socket conversions `minion_base_physical_damage_%_to_convert_to_<type>_per_<colour>_socket_on_item` (the minion's conversion per socket of the item's colour); `minion_chance_to_gain_onslaught_on_kill_for_4_seconds_%` (the minion's own kill); `minion_maximum_life_%_to_add_as_maximum_energy_shield` (the minion's life gained as energy shield).
+- `C-unmodelled-skill`: `base_movement_velocity_+%` as an aura gem's own stat ("You and nearby allies gain #% increased Movement Speed").
+
+**Evidence** (`b-ct`, against M3's run):
+- **One new mechanic fixture**, matching PoB on every computed field: `minion-m4-flame-golem-crit-ignite-witch.xml` (the golem's crit chance 5 to 7.5, its ignite).
+- **Public:** 0 unexpected, no value moved. **Corpus:** 0 unexpected, 1 value toward PoB.
+- **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
