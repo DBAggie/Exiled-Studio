@@ -29,5 +29,5 @@ Last Updated: 2026-11-24
   - [x] S8 part 2 (`local/p6/s8c`, `s8d`): scorch, sap, and crush from PoB's ailment table, the three grounds in `NAMED_ONLY`, the two guard-kept stats `NoEffect`; 1 fixture (3 of 75); public `Complete` 39,155, 0 unexpected (`docs/phase-6/config-inputs.md`, "Open items S8, part 2"). Brittle stays a reason (its enemy-side crit reaches minions too). Repeats' `FINAL` and `FINAL_DPS`: no build in either set uses them (`repeatMode` is in no run's reasons), so nothing to clear; left as the reason it is
   - [ ] the rest of S8: the close-out's closed reasons (104 stats; by fields: Herald of the Breach's item skill, Empowered attacks, the alternate ascendancy heralds, ...)
 - [ ] S9: resolver and item gaps
-- [ ] S10: PoB's mana `PercentStat`
+- [x] S10: PoB's mana `PercentStat` (`local/p6/s10`): the cause is `PercentStat`'s per-line ceiling (`ModStore.lua` 532), so the stat is mapped as PoB does (`RegenPercentStat`), no register entry; 1 fixture (4 of 75); public `Complete` 39,232, 0 unexpected (`docs/phase-6/stat-mop-up.md`, "Open items S10")
 - [ ] S11: report section, handoff, CLAUDE.md, follow-ups file

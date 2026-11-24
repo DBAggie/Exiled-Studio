@@ -6449,6 +6449,20 @@ pub const STATE_DIVIDED_ROWS: &[StateDividedRow] = &[
             conditions::CONSUMED_CORPSE_IN_PAST_2_SEC,
         )],
     ),
+    // Open items S10: "Regenerate #% of Mana over 2 seconds when you
+    // Consume a corpse" (`ManaRegen` BASE 1 with `PercentStat` `Mana`
+    // percent half the stat, `ConsumedCorpseInPast2Sec`; `ModParser.lua`
+    // 2939): PoB ceils it (`ModStore.lua` 532), so 5% of 590 mana is 30.
+    (
+        "regenerate_%_maximum_mana_over_2_seconds_on_consuming_corpse",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentStat(Pool::Mana)),
+            Op::Base,
+            2.0,
+            NONE,
+            conditions::CONSUMED_CORPSE_IN_PAST_2_SEC,
+        )],
+    ),
 ];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).

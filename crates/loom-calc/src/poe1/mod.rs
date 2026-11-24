@@ -346,6 +346,11 @@ pub enum Poe1Quantity {
     /// game's per-minute stats on a state row, which has no scale; P6-10b):
     /// `Base`, read by [`regen`] divided by 60.
     RegenPercentPerMinute(Pool),
+    /// A pool's flat regeneration per second as a percent of the pool
+    /// (PoB's `<Pool>Regen` BASE 1 with `PercentStat` of the pool; open
+    /// items S10): `Base`, read by [`regen`] as `ceil(pool x value / 100)`
+    /// per effect (`Classes/ModStore.lua` 532), into the flat sum.
+    RegenPercentStat(Pool),
     /// A pool's flat regeneration per minute (a state row's per-minute
     /// stat, which has no scale; P6-10b): `Base`, read by [`regen`] divided
     /// by 60.
@@ -1569,6 +1574,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
             Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
+            Self::RegenPercentStat(p) => write!(f, "regen-percent-stat.{}", p.name()),
             Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
             Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
             Self::RegenPerFortification(p) => {
