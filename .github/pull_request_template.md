@@ -1,5 +1,6 @@
 <!--
-One purpose per PR (ADR-012). CI fails if any evidence section below is empty.
+One coherent body of work per PR, bundled where possible, a commit per step (ADR-012
+Amendment 1). CI fails if any evidence section below is empty.
 Write "None: <reason>" when a section does not apply, e.g. "None: docs only".
 -->
 
@@ -16,12 +17,12 @@ Write "None: <reason>" when a section does not apply, e.g. "None: docs only".
 <!-- Mechanics, data tables, or contracts this PR affects (ADR-007). -->
 
 ## Handoff
-<!-- Each PR is done in a fresh session. List the docs updated so the next session can resume
-     (handoff Current state + Next action on every PR; see AGENTS.md "One PR per session").
+<!-- Sessions are fresh. List the docs updated so the next session can resume
+     (handoff Current state + Next action on every PR; see AGENTS.md "Bundled PRs").
      Right after opening, push a follow-up commit that records this PR's number in the handoff. -->
 
 ## Checklist
-- [ ] Single purpose and small
+- [ ] One coherent body of work, a commit per step
 - [ ] No ADR contradicted (or an amendment is linked)
 - [ ] Core crates stay wasm32-compatible (ADR-016)
 - [ ] No GGG assets added (ADR-000); no telemetry (ADR-011)

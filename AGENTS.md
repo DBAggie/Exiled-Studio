@@ -270,8 +270,10 @@ bash fuzz/seed.sh && cargo +nightly-2026-11-01 fuzz run <target> -- -max_total_t
 - Every `TODO` links an issue: `// TODO(#42): ...`.
 - Tests: descriptive names (`resolve_should_quarantine_unknown_line`), deterministic, no network and no game install. Fixtures from real builds are scrubbed of account names and machine paths (ADR-007).
 
-## One PR per session: leave a handoff
-Each PR is done in its own fresh session, and nothing carries over except what is in the repository. **A PR is not finished until the next session can pick up where it left off from the documents alone.** In the same PR, update every document that the PR made stale:
+## Bundled PRs: leave a handoff
+**Bundle related work into one PR where possible** (ADR-012 Amendment 1, maintainer 2026-11-25: CI takes a long time, and it runs for every PR). The tasks of one list or the steps of one plan go on one branch, **a commit per step**, each with its evidence. Continue the open PR when there is one that fits; open a new one only when the work is unrelated to it, or it is already merged or in the middle of the maintainer's review. Push when a step (or a few) is done, not after every small change: each push starts CI again.
+
+Sessions are still fresh, and nothing carries over except what is in the repository. A PR may span several sessions, and a session may do several steps. **A push is not finished until the next session can pick up where it left off from the documents alone.** In the same PR, update every document that it made stale:
 
 | Document | Update when |
 |---|---|
@@ -292,7 +294,7 @@ When to update:
 Write state as facts with dates and links (PR numbers, CI runs, file paths), not as "see conversation". Record anything learned that is hard to rediscover from the code: failed approaches, environment quirks, open decisions waiting on the maintainer.
 
 ## Pull requests (ADR-012 evidence rule)
-- Small and single-purpose; branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch, and the maintainer keeps it open.
+- One coherent body of work, bundled where possible, a commit per step (ADR-012 Amendment 1; "Bundled PRs" above); branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch, and the maintainer keeps it open.
   - The maintainer merges approved states of `dev` into `experimental`, which holds the experimental installers. Experimental releases are tagged there.
   - The maintainer merges into `main`, which always holds the stable application. Stable releases are tagged there.
   - Both are protected alike (maintainer decision 2026-11-15; `docs/release/channels.md`).

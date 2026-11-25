@@ -2,7 +2,7 @@
 
 Created at the maintainer's request ("create follow up tasks for each open item") when the stack #168 to #179 was merged into `dev`. One task an open item, from the revamp's steps (`ui-revamp-plan.md`, each step's "Not as the mockup") and from what was still open before it (`dev/active/open-items/maintainer-follow-ups.md`).
 
-Each task is its own PR from `dev`. A task that changes how a screen looks shows a mockup for approval first. **Who:** "agent" can be done without the maintainer; "maintainer" needs a decision or an action that is the maintainer's.
+~~Each task is its own PR from `dev`.~~ **Since 2026-11-25 the tasks are bundled:** one PR where possible, a commit per task (the maintainer, on PR #183: CI takes a very long time; ADR-012 Amendment 1). A task that changes how a screen looks shows a mockup for approval first. **Who:** "agent" can be done without the maintainer; "maintainer" needs a decision or an action that is the maintainer's.
 
 ## Revamp: left out of a step
 

@@ -66,7 +66,7 @@ AGENTS.md      contributor rules for humans and AI agents
 ```
 
 ## Contributing
-Read `AGENTS.md`. Pull requests are small and single-purpose and carry their own evidence (tests, parity/divergence diff, coverage touched); the PR template and CI enforce this.
+Read `AGENTS.md`. Pull requests bundle related work, a commit per step, and carry their own evidence (tests, parity/divergence diff, coverage touched); the PR template and CI enforce this.
 
 ## License
 [MIT](LICENSE).
