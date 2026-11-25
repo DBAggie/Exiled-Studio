@@ -427,7 +427,7 @@ describe('the Skills page as a table', () => {
     await user.click(open)
     expect(within(table).getByRole('button', { name: 'Add gem' })).toBeTruthy()
     await expectAccessible()
-    await user.click(within(view).getByRole('button', { name: 'Cards' }))
+    await user.click(within(view).getByRole('button', { name: 'Groups' }))
     expect(screen.queryByRole('table', { name: 'Socket groups' })).toBeNull()
     expect(JSON.parse(api.prefs ?? '{}').skillsTable).toBeUndefined()
   })

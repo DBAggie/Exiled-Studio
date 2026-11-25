@@ -965,7 +965,11 @@ export const en = {
 
   'skills.title': 'Skills',
   'skills.view': 'View',
-  'skills.view.cards': 'Cards',
+  'skills.view.cards': 'Groups',
+  'skills.groups': 'Socket groups',
+  'skills.gemCount': '{n} gems',
+  'skills.gemCount1': '1 gem',
+  'skills.groupOff': 'off',
   'skills.view.table': 'Table',
   'skills.table.group': 'Group',
   'skills.table.skills': 'Skills',

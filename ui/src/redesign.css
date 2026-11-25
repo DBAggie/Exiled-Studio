@@ -820,3 +820,92 @@ select {
   max-width: 11rem;
   padding: 0 8px;
 }
+
+/* ---- Skills in two panes (the revamp's screens, 2026-11-25) -------------
+   Every socket group listed by its slot at the left; the one picked, with
+   its gems, at the right. One column in a narrow window. */
+.skill-panes {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .skill-panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.group-list-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group-list-name {
+  padding: 4px 12px 0;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.group-list-slot > button:not(.link) {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  min-height: 48px;
+  padding: 4px 12px;
+  border: 0;
+  text-align: start;
+  font-weight: 400;
+}
+
+.group-list-slot > button:not(.link) .sub {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.group-list-slot > button[aria-current='true'] {
+  background: var(--c-raised);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+  font-weight: 500;
+}
+
+.group-list-slot > button.off > span:first-child {
+  color: var(--c-muted);
+}
+
+.group-list-add {
+  align-self: flex-start;
+  min-height: 24px;
+  padding: 0 12px;
+  font-size: var(--fs-meta);
+}
+
+/* The picked group is the pane: no card inside the card, and the main
+   skill's group is marked in the list, not by a border. */
+.skill-panes .skill-group,
+.skill-panes .skill-group.main {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* A slot's own "add" shows when the pointer or the keyboard is on that
+   slot; the last one (no slot) is always there. */
+.group-list-slot:not(:last-child) .group-list-add {
+  opacity: 0;
+}
+
+.group-list-slot:hover .group-list-add,
+.group-list-slot:focus-within .group-list-add {
+  opacity: 1;
+}

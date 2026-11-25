@@ -136,6 +136,16 @@ Stacked on #175, PR #176, branch `feat/ui-revamp-equipment`. The mockup is the c
 - **Not as the mockup:** the sockets stay drawn as coloured dots (the mockup wrote them as letters; the dots already show the links and which sockets hold a gem); the inventory picture is unchanged (the selected item's outline belongs to a selection the list does not have: a row opens the item).
 - **Checked in the running application** on the Raise Spectre fixture: the head one row at 1,280 and 1,600 px, two under 1,000 px; the paste form opens under its button inside the window; no sideways scroll.
 
+## Step 4: Skills in two panes (2026-11-25)
+Stacked on #176, branch `feat/ui-revamp-skills`. The mockup is the canvas's "Skills" board; the maintainer chose two panes ("two panes for Skills").
+
+- **Two panes** (`GroupPanes` in `ui/src/screens/Skills.tsx`) take the place of one long page of cards: every socket group listed under its slot at the left (its skill, its gem count, "main skill", "off"), the one picked shown at the right with its slot, its item, its sockets, and its gems. The main skill's group is shown first.
+- **The view's name** is "Groups" (was "Cards"); the Table view is unchanged.
+- **Adding a group:** each slot's "Add a socket group in …" shows when the pointer or the keyboard is on that slot; the one without a slot is always there. A new group is shown at once.
+- **The main skill's group** is marked in the list (and by its chip in the pane), not by a border around a card.
+- **Changed for the user:** only one group's gems are in view at a time; the Table view still shows every group.
+- **Checked in the running application** on the Raise Spectre fixture (18 groups): the main skill's group first, another group picked and shown, the head one row, no sideways scroll at 1,000, 1,280, and 1,600 px (one column under 1,000 px).
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

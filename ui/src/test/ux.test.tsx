@@ -438,6 +438,13 @@ describe('UX High fixes', () => {
       name: 'Supports for Ice Nova',
     })
     expect(within(supports).getByText('Added Cold Damage')).toBeTruthy()
+    // Two panes: every group is listed at the left, the one picked is
+    // shown with its gems. The main skill's group is shown first.
+    await user.click(
+      within(
+        screen.getByRole('navigation', { name: 'Socket groups' }),
+      ).getByRole('button', { name: /Frostblink/ }),
+    )
     // The Boots group has no item in this sample.
     const boots = screen
       .getByRole('heading', { name: 'Boots', level: 2 })
@@ -474,6 +481,13 @@ describe('UX High fixes', () => {
       'edit-gem': { group: 0, gem: 1, enabled: false },
     })
 
+    // Two panes: every group is listed at the left, the one picked is
+    // shown with its gems. The main skill's group is shown first.
+    await user.click(
+      within(
+        screen.getByRole('navigation', { name: 'Socket groups' }),
+      ).getByRole('button', { name: /Frostblink/ }),
+    )
     await user.click(
       screen.getByRole('button', { name: 'Make Frostblink the main skill' }),
     )
@@ -492,8 +506,13 @@ describe('UX High fixes', () => {
     })
     // Undo puts the main skill back.
     await user.click(screen.getByRole('button', { name: 'Undo' }))
+    // The list says which group holds the main skill, whichever is shown.
     await waitFor(() =>
-      expect(within(weapon).getByText('Main skill group')).toBeTruthy(),
+      expect(
+        within(
+          screen.getByRole('navigation', { name: 'Socket groups' }),
+        ).getByRole('button', { name: /Ice Nova.*main skill/ }),
+      ).toBeTruthy(),
     )
   })
 
