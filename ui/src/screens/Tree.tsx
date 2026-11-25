@@ -49,6 +49,7 @@ import {
   type SpriteRect,
   clusterSize,
   fits,
+  pointsOf,
   useTreeLayout,
   useTreeSprites,
   withClusterNodes,
@@ -811,6 +812,41 @@ function Flavour({ text }: { text: string }) {
   )
 }
 
+/** The passive points a character of the build's level would have left
+ * after the change (RV-04): what it has, less what is spent, less the
+ * passive points `nodes` cost (`sign` -1) or plus the ones they give back
+ * (`sign` 1). Nothing when the build names no level, or the change costs
+ * no passive point (ascendancy nodes have their own). */
+function PointsLeft({
+  tree,
+  layout,
+  nodes,
+  sign,
+}: {
+  tree: TreeView
+  layout: TreeLayout
+  nodes: number[]
+  sign: 1 | -1
+}) {
+  const level = useAppSelector((s) => s.session.snapshot?.build?.level ?? null)
+  const has = tree['points-available']
+  if (has == null) return null
+  const cost = pointsOf(nodes, layout, tree)
+  if (cost === 0) return null
+  const left = has - tree.points + sign * cost
+  return (
+    <p className={left < 0 ? 'small-text warn-text' : 'muted small-text'}>
+      {left < 0
+        ? left === -1
+          ? t('tree.pointsOverOne', { level: level ?? '' })
+          : t('tree.pointsOver', { n: -left, level: level ?? '' })
+        : left === 1
+          ? t('tree.pointsLeftOne')
+          : t('tree.pointsLeft', { n: left })}
+    </p>
+  )
+}
+
 /** What a node is and what clicking it would do. */
 function NodeCard({
   node,
@@ -900,6 +936,12 @@ function NodeCard({
                 ? t('tree.allocatesOne')
                 : t('tree.allocates', { n: preview.path.length })}
           </p>
+          <PointsLeft
+            tree={tree}
+            layout={layout}
+            nodes={allocated ? preview.removed : preview.path}
+            sign={allocated ? 1 : -1}
+          />
           {partial ? (
             <p className="muted small-text">{t('tree.calculating')}</p>
           ) : (
@@ -1798,11 +1840,25 @@ export function Tree() {
         </button>
       </div>
       <div className="tree-float tree-bl">
-        <p className="tree-points" aria-live="polite">
-          {t('tree.points', {
-            n: tree.points,
-            a: tree['ascendancy-points'],
-          })}
+        <p
+          className="tree-points"
+          aria-live="polite"
+          title={
+            tree['points-available'] != null
+              ? t('tree.pointsOfHelp', { of: tree['points-available'] })
+              : undefined
+          }
+        >
+          {tree['points-available'] != null
+            ? t('tree.pointsOf', {
+                n: tree.points,
+                of: tree['points-available'],
+                a: tree['ascendancy-points'],
+              })
+            : t('tree.points', {
+                n: tree.points,
+                a: tree['ascendancy-points'],
+              })}
         </p>
         {attributes.str != null &&
           attributes.dex != null &&

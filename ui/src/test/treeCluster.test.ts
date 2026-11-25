@@ -4,7 +4,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { TreeLayout, TreeNodeView, TreeView } from '../api/types'
-import { clusterSize, fits, withClusterNodes } from '../screens/treeLayout'
+import {
+  clusterSize,
+  fits,
+  pointsOf,
+  withClusterNodes,
+} from '../screens/treeLayout'
 
 const node = (id: number, name: string): TreeNodeView => ({
   id,
@@ -69,5 +74,23 @@ describe('cluster jewel nodes', () => {
     expect(fits('small', 'large')).toBe(true)
     expect(fits('medium', 'medium')).toBe(true)
     expect(fits('large', 'medium')).toBe(false)
+  })
+})
+
+describe('the passive points nodes cost (RV-04)', () => {
+  it('counts one each, but none for a start or an ascendancy node', () => {
+    const l: TreeLayout = {
+      ...layout,
+      nodes: [
+        node(1, 'One'),
+        { ...node(2, 'WITCH'), kind: 'class-start' },
+        { ...node(3, 'Mistress of Sacrifice'), ascendancy: 'Necromancer' },
+        { ...node(4, 'Necromancer'), kind: 'ascendancy-start' },
+      ],
+    }
+    expect(pointsOf([1, 2, 3, 4], l, view([]))).toBe(1)
+    // A cluster jewel's node, and one the layout lacks, each cost a point.
+    expect(pointsOf([1, 65537, 999], l, view([node(65537, 'Added')]))).toBe(3)
+    expect(pointsOf([], l, view([]))).toBe(0)
   })
 })

@@ -809,6 +809,12 @@ pub fn view(
             .collect(),
         points: points.passive,
         ascendancy_points: points.ascendancy,
+        points_available: build.character.level.as_ref().map(|l| {
+            poe1::points_at(
+                *l.value(),
+                loom_calc::poe1::collect::killed_all_bandits(build),
+            )
+        }),
         convert: lock
             .as_ref()
             .and(data)

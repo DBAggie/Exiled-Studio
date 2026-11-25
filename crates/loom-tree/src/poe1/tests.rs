@@ -291,6 +291,21 @@ fn points_should_count_as_pob() {
 }
 
 #[test]
+fn points_at_a_level_should_be_its_levels_quests_and_the_bandits() {
+    // PoB shows 99 + 23 + 1 at most.
+    assert_eq!(points_at(100, true), 123);
+    assert_eq!(points_at(100, false), 122);
+    assert_eq!(points_at(1, true), 0);
+    // The bandit quest is the second act's: no point before the third.
+    assert_eq!(points_at(21, true), 20 + 2);
+    assert_eq!(points_at(22, true), 21 + 4 + 1);
+    assert_eq!(points_at(66, false), 65 + 20);
+    assert_eq!(points_at(67, false), 66 + 23);
+    assert_eq!(points_at(0, false), 0);
+    assert_eq!(points_at(250, true), 123);
+}
+
+#[test]
 fn the_url_should_hold_nodes_clusters_and_masteries_without_starts() {
     let t = tree();
     let mut s = spec(1, 1, &[1, 50, 10, 40, 65537]);

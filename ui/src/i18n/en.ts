@@ -879,6 +879,13 @@ export const en = {
   'tree.ascendancy': 'Ascendancy',
   'tree.noAscendancy': 'None',
   'tree.points': 'Passive points: {n} · Ascendancy points: {a}',
+  'tree.pointsOf': 'Passive points: {n} of {of} · Ascendancy points: {a}',
+  'tree.pointsOfHelp':
+    'A character of this level has {of} passive points: one a level, the quests’ by this level, and one for helping no bandit. Below level 67 this is an estimate.',
+  'tree.pointsLeft': '{n} points left after',
+  'tree.pointsLeftOne': '1 point left after',
+  'tree.pointsOver': '{n} points more than a level {level} character has',
+  'tree.pointsOverOne': '1 point more than a level {level} character has',
   'tree.attributes': 'Strength {str} · Dexterity {dex} · Intelligence {int}',
   'tree.search': 'Search nodes',
   'tree.found': '{n} found',

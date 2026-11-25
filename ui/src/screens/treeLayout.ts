@@ -25,6 +25,27 @@ export function withClusterNodes(
   }
 }
 
+/** The passive points `nodes` cost: one each, but none for a start or an
+ * ascendancy's node (those have their own points). A node the layout
+ * lacks counts, as it does in the points spent. */
+export function pointsOf(
+  nodes: readonly number[],
+  layout: TreeLayout,
+  tree: TreeView,
+): number {
+  const added = tree['cluster-nodes'] ?? []
+  return nodes.filter((id) => {
+    const n =
+      added.find((x) => x.id === id) ?? layout.nodes.find((x) => x.id === id)
+    return (
+      n === undefined ||
+      (n.ascendancy == null &&
+        n.kind !== 'class-start' &&
+        n.kind !== 'ascendancy-start')
+    )
+  }).length
+}
+
 /** The size of a cluster jewel base (`Large Cluster Jewel`), if it is
  * one: the base's first word, as the game names them. */
 export function clusterSize(base: string): 'small' | 'medium' | 'large' | null {

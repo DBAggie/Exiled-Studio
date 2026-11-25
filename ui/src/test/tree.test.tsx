@@ -24,7 +24,7 @@ const points = () => screen.getByText(/^Passive points:/).textContent
 describe('passive tree', () => {
   it('allocates, removes, and undoes from the list view', async () => {
     const { user, api } = await openTree()
-    expect(points()).toBe('Passive points: 2 · Ascendancy points: 0')
+    expect(points()).toBe('Passive points: 2 of 2 · Ascendancy points: 0')
     // A notice is an icon with its text one press away, not a row.
     expect(
       screen
@@ -38,7 +38,7 @@ describe('passive tree', () => {
       screen.getByRole('button', { name: 'Allocate Glass Mind' }),
     )
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 5 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 0'),
     )
     expect(api.executed).toContainEqual({
       'allocate-node': { spec: 1, node: 13 },
@@ -48,13 +48,13 @@ describe('passive tree', () => {
     await user.click(screen.getByRole('button', { name: 'Remove Cold Damage' }))
     // 11 leaves 12 and 13 unconnected; the kept node stays.
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 2 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 2 of 2 · Ascendancy points: 0'),
     )
     expect(screen.getByText('Bloodline Passive')).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 5 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 0'),
     )
   })
 
@@ -104,7 +104,7 @@ describe('passive tree', () => {
     )
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 5 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 0'),
     )
 
     await user.selectOptions(
@@ -116,7 +116,7 @@ describe('passive tree', () => {
       await screen.findByRole('button', { name: 'Allocate Shaper of Winter' }),
     )
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 5 · Ascendancy points: 1'),
+      expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 1'),
     )
 
     // Changing class asks first; Cancel changes nothing.
@@ -132,7 +132,7 @@ describe('passive tree', () => {
     )
     // Nothing connects to the Marauder's start; the kept node stays.
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 1 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 1 of 2 · Ascendancy points: 0'),
     )
 
     await user.click(screen.getByRole('button', { name: 'Reset tree' }))
@@ -142,7 +142,7 @@ describe('passive tree', () => {
       }),
     )
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 0 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 0 of 2 · Ascendancy points: 0'),
     )
   })
 
@@ -352,7 +352,7 @@ describe('passive tree', () => {
     expect(await within(request).findByText('Applied')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'Passive tree' }))
     await waitFor(() =>
-      expect(points()).toBe('Passive points: 5 · Ascendancy points: 0'),
+      expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 0'),
     )
   })
 })
