@@ -973,3 +973,70 @@ select {
 .mode-row.chosen .sub {
   color: var(--c-soft);
 }
+
+/* ---- The passive tree (the revamp's last step, 2026-11-25) --------------
+   The controls over the tree sit on cards, so they read against any part
+   of it; their own borders are back. */
+.tree-full .tree-float,
+.tree-full .tree-zoom {
+  padding: 8px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-panel);
+  text-shadow: none;
+}
+
+/* Each top card keeps to its half, so the two never overlap. */
+.tree-full .tree-tl,
+.tree-full .tree-tr {
+  top: 16px;
+  box-sizing: border-box;
+  max-width: calc(50% - 24px);
+}
+
+.tree-full .tree-tl,
+.tree-full .tree-bl {
+  left: 16px;
+}
+
+.tree-full .tree-tr,
+.tree-full .tree-zoom {
+  right: 16px;
+}
+
+.tree-full .tree-bl,
+.tree-full .tree-zoom {
+  bottom: 16px;
+}
+
+.tree-full .tree-bl {
+  padding: 8px 16px;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button),
+.tree-full .tree-tr > button,
+.tree-full .tree-zoom button {
+  border-color: var(--c-border-control);
+  min-height: 32px;
+}
+
+.tree-full .tree-float input[type='search'] {
+  min-height: 32px;
+  background: var(--c-input);
+}
+
+.tree-full .tree-notices {
+  top: 80px;
+  left: 16px;
+}
+
+/* The hover card: solid enough to read, the node's name first. */
+.tree-card {
+  padding: 12px 16px;
+  border-color: var(--c-border-control);
+  border-radius: var(--radius-panel);
+}
+
+.tree-card-name {
+  font-size: var(--fs-section);
+}

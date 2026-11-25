@@ -205,6 +205,13 @@ function drawArt(
   }
 }
 
+/** Zoomed out past FADE_FROM (screen pixels a tree unit), what is not
+ * taken fades, down to FADE_MIN of its strength at FADE_TO. The whole
+ * tree fits at about 0.03 to 0.05. */
+const FADE_FROM = 0.14
+const FADE_TO = 0.06
+const FADE_MIN = 0.35
+
 function TreeCanvas({
   layout,
   sprites,
@@ -212,6 +219,7 @@ function TreeCanvas({
   found,
   preview,
   diff,
+  hovered,
   onHover,
   onActivate,
 }: {
@@ -222,6 +230,8 @@ function TreeCanvas({
   preview: TreePreview | null
   /** The nodes that differ from the stage compared with. */
   diff: StageNodes | null
+  /** The node under the pointer, outlined. */
+  hovered: number | null
   onHover: (node: TreeNodeView | null, at: { x: number; y: number }) => void
   onActivate: (node: TreeNodeView) => void
 }) {
@@ -316,6 +326,15 @@ function TreeCanvas({
       ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
       const at = (n: TreeNodeView) =>
         toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
+      // Zoomed out, what is not taken fades to a field, so the taken path
+      // is the one bright shape (the revamp's tree, 2026-11-25): whole
+      // above FADE_FROM, faintest at FADE_TO and below.
+      const dim =
+        camera.scale >= FADE_FROM
+          ? 1
+          : FADE_MIN +
+            (1 - FADE_MIN) *
+              Math.max(0, (camera.scale - FADE_TO) / (FADE_FROM - FADE_TO))
       // What lies outside the canvas (with a margin for the art) is skipped.
       const margin = 200 * camera.scale + 40
       const shown = (p: { x: number; y: number }) =>
@@ -328,7 +347,13 @@ function TreeCanvas({
       // stroke per link was most of a frame's time.
       const links = new Map<
         string,
-        { path: Path2D; style: string; width: number; alpha: number }
+        {
+          path: Path2D
+          style: string
+          width: number
+          alpha: number
+          dashed: boolean
+        }
       >()
       for (const a of placed) {
         if (a.kind === 'mastery') continue
@@ -359,12 +384,16 @@ function TreeCanvas({
               : on
                 ? c.linkOn
                 : c.link
-          const width = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
-          const alpha = a.modelled && b.modelled ? 1 : 0.35
-          const key = `${style}|${width}|${alpha}`
+          // A taken link stays 2 px wide however far out; the path a
+          // click would take is dashed, so it is not told by colour alone.
+          const lit = on || onPath || gone
+          const width = Math.max(lit ? 2 : 1, (lit ? 10 : 5) * camera.scale)
+          const alpha = (a.modelled && b.modelled ? 1 : 0.35) * (lit ? 1 : dim)
+          const dashed = onPath && !gone
+          const key = `${style}|${width}|${alpha}|${dashed}`
           let bucket = links.get(key)
           if (bucket === undefined) {
-            bucket = { path: new Path2D(), style, width, alpha }
+            bucket = { path: new Path2D(), style, width, alpha, dashed }
             links.set(key, bucket)
           }
           const line = bucket.path
@@ -394,12 +423,14 @@ function TreeCanvas({
           }
         }
       }
-      for (const { path: p, style, width, alpha } of links.values()) {
+      for (const { path: p, style, width, alpha, dashed } of links.values()) {
         ctx.strokeStyle = style
         ctx.lineWidth = width
         ctx.globalAlpha = alpha
+        ctx.setLineDash(dashed ? [6, 5] : [])
         ctx.stroke(p)
       }
+      ctx.setLineDash([])
       ctx.globalAlpha = 1
       for (const n of placed) {
         const p = at(n)
@@ -410,7 +441,14 @@ function TreeCanvas({
           RADIUS[n.kind] * camera.scale,
         )
         const on = allocated.has(n.id)
-        ctx.globalAlpha = n.modelled ? 1 : 0.4
+        const lit =
+          on ||
+          path.has(n.id) ||
+          removed.has(n.id) ||
+          found.has(n.id) ||
+          n.id === hovered ||
+          n.kind === 'class-start'
+        ctx.globalAlpha = (n.modelled ? 1 : 0.4) * (lit ? 1 : dim)
         if (
           sprites !== null &&
           drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
@@ -490,6 +528,22 @@ function TreeCanvas({
         }
       }
       ctx.globalAlpha = 1
+      // The node under the pointer, outlined.
+      const under = hovered === null ? undefined : byId.get(hovered)
+      if (under?.position != null) {
+        const p = at(under)
+        ctx.lineWidth = 2
+        ctx.strokeStyle = c.ring
+        ctx.beginPath()
+        ctx.arc(
+          p.x,
+          p.y,
+          Math.max(6, RADIUS[under.kind] * camera.scale) + 4,
+          0,
+          2 * Math.PI,
+        )
+        ctx.stroke()
+      }
       // The stage compared with: a dashed ring on a node only it has, a
       // solid ring on a node only this stage has (the line, not the colour
       // alone, tells them apart).
@@ -515,6 +569,7 @@ function TreeCanvas({
       diff,
       found,
       groupsOn,
+      hovered,
       layout,
       path,
       placed,
@@ -1890,6 +1945,7 @@ export function Tree() {
             found={found}
             preview={preview === 'refused' ? null : preview}
             diff={diff}
+            hovered={hover?.node.id ?? null}
             onHover={(node, at) =>
               setHover(node === null ? null : { node, ...at })
             }

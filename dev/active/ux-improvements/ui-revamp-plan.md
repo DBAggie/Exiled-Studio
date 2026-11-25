@@ -157,6 +157,20 @@ Stacked on #177, PR #178, branch `feat/ui-revamp-about`. The mockup is the canva
 
 **Step 4 is complete** with this: the start page, Configuration, Lines to review, the page after an import, the Dashboard's layout, Equipment, Skills, and About. Step 5, the passive tree, is next and needs its mockup first.
 
+## Step 5: the passive tree (2026-11-25)
+Stacked on #178, branch `feat/ui-revamp-tree`. The mockups are the canvas's "Passive tree, whole" and "Passive tree, close" boards, with the maintainer's two answers: "icons zoomed out and in, fade zoomed out".
+
+- **The game's node icons stay at every zoom** (the mockup's plain shapes are not built).
+- **Zoomed out, what is not taken fades** (`FADE_FROM`, `FADE_TO`, `FADE_MIN` in `ui/src/screens/Tree.tsx`): nodes and links not taken go down to 35% of their strength at the fitted view, so the taken path is the one bright shape. Taken nodes, the path a click would take, removals, search matches, the node under the pointer, and the class starts keep their strength. A taken link stays at least 2 px wide.
+- **The path a click would take is dashed**, so it is not told from the taken path by colour alone.
+- **The node under the pointer is outlined.**
+- **The controls over the tree sit on cards** (they floated bare with a text shadow): the spec and class at the top left, search and view at the top right, points at the bottom left, zoom at the bottom right; each top card keeps to its half, so they never overlap. Their controls have their borders back.
+- **The hover card** has the node's name larger and more room; its content is unchanged.
+- **Not built from the mockup:** the shapes and their legend (the icons stay), and the card's "points left after" line.
+- **Checked in the running application** on the Raise Spectre fixture: the fitted view (the field faint, the path bright), zoomed in (full strength), a node hovered (outlined, a dashed path to it, its card with the changes), and no card overlapping another at 1,000, 1,280, and 1,600 px.
+
+**The revamp's five steps are built** with this. What is left is in "Open" below.
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
 - The mockups were not rendered here (the canvas is checked by the maintainer).
