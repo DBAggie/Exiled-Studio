@@ -109,7 +109,7 @@ PR #173, branch `feat/recovery-summary`, stacked on step 4's first part (#172) (
 - **Checked in the running application:** a build imported and the application ended without a save; at the next start its copy read "Imported build · Necromancer 92 · Raise Spectre", and the nine older copies were listed as before.
 
 ## Step 4: Lines to review and the page after an import (2026-11-25)
-Stacked on #173, branch `feat/ui-revamp-review`. The mockups are the canvas's "Lines to review" and "After an import" boards.
+Stacked on #173, PR #174, branch `feat/ui-revamp-review`. The mockups are the canvas's "Lines to review" and "After an import" boards.
 
 - **The Warnings page is "Lines to review"**, in the side menu, its heading, and the header's state ("Partial · 5 lines to review").
 - **One list** (`ReviewList`, shared by both pages): the line in the text colour with its reason under it, its item, and a quiet "Detail" link (named "Show technical detail" for a screen reader and on hover) in place of an outlined button a row. The open row is marked. A header names the columns.
