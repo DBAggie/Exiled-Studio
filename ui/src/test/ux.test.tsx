@@ -315,7 +315,7 @@ describe('UX High fixes', () => {
       screen.getByRole('button', { name: 'Remove witch from recent builds' }),
     )
     expect(api.executed).toContainEqual({ 'forget-recent': { id: 'a1' } })
-    expect(await screen.findByText('No recent builds.')).toBeTruthy()
+    expect(await screen.findByText('No recent builds')).toBeTruthy()
     await expectAccessible()
   })
 

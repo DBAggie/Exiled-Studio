@@ -64,7 +64,10 @@ export function Warnings() {
           {used.length === 0 ? (
             <p>{t('warnings.usedNone')}</p>
           ) : (
-            <section className="panel" aria-label={t('warnings.used')}>
+            <section
+              className="panel table-panel"
+              aria-label={t('warnings.used')}
+            >
               <ReviewList warnings={used} />
             </section>
           )}

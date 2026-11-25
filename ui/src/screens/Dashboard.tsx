@@ -893,6 +893,18 @@ function Snapshots() {
           align="end"
           sideOffset={6}
           collisionPadding={8}
+          // Focus goes to the name, not to the help mark: the mark's text
+          // opened over the form, and Escape then closed it first, not
+          // the panel (RV-38).
+          onOpenAutoFocus={(e) => {
+            const field = (e.currentTarget as HTMLElement).querySelector(
+              'input:not(:disabled)',
+            )
+            if (field instanceof HTMLElement) {
+              e.preventDefault()
+              field.focus()
+            }
+          }}
         >
           <div className="panel-head">
             <h2 className="small-text">{t('snapshots.title')}</h2>

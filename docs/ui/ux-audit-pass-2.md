@@ -61,6 +61,19 @@ Added to tasks that were already open:
 - **RV-06** (the remaining pills): the AI connection page has four (Stopped, Allowed, Off, Ask each time); the Skills page's "Main skill group" pill is blue, a second accent beside the violet.
 - **RV-03** (a card under another): at 1,600 px the Defence card's rows stretch about 850 px between a name and its value, and the card has a dead band under "Show all 85" beside the taller Main skill card.
 
+## Done later on the same pull request
+At the maintainer's word (2026-11-25, "continue with the open items"; the bundling rule, ADR-012 Amendment 1), these of the tasks above were done on PR #183, each checked in the running application at 1,280 px:
+
+| Task | Done |
+|---|---|
+| RV-29 | A card's heading and its table's first column are 20 px from the edge on the import review, Lines to review, and Equipment (measured 21 px with the border on each). The revamp's panel rule had added a second 20 px to a table card; the review list and the equipment rows had 16 px. |
+| RV-30 | The slot and note columns are narrower; "Early Trigger wand", "Low budget Helmet", and "Darkness Enthroned" are one line. Long flask names still take two. |
+| RV-36 | The fold has a triangle that turns down when open. |
+| RV-37 | The gem is `SkillGemComboStrike`, which the game itself names "...": an unreleased gem. Left out of the picker, as `[DNT]` names are. |
+| RV-38 | The hint is "Name"; short empty-state lines have no period; the Compare card has its gap; the main skill's name is weight 600. **Escape and the Snapshots panel, settled:** opening the panel put the focus on its help mark, whose text opened over the form and took the first Escape. The focus now goes to the name field, and one Escape closes the panel. Left: the Configuration description that ends in an ellipsis. |
+
+Also on the PR, from the list's older tasks: RV-05 (Discard all), RV-02 (bars against the cap of 75 for block, spell block, and the resistances in the Defence table, one column), RV-13 (see `docs/release/channels.md`, "Going back to an older version").
+
 ## Not covered
 - The Export menu (its capture failed), the breakdown page, the paste form, an item's hover tooltip, the start page with recovery copies. Whether Escape closes the Snapshots panel was not settled.
 - The header at 1,000 px is two rows with Export and Save alone on the second; step 2 accepted that.

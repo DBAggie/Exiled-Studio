@@ -223,6 +223,12 @@ button.icon.quiet:hover:not(:disabled) {
   align-self: center;
 }
 
+/* The main skill's name: the scale's strongest weight, not the
+   browser's bold (RV-38). */
+.main-skill-gems strong {
+  font-weight: 600;
+}
+
 .main-skill-gems .gem-mark.support {
   border-radius: 2px;
 }

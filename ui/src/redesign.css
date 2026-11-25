@@ -198,6 +198,13 @@ select {
   padding: 16px 20px;
 }
 
+/* A card that holds a table has no inset of its own: its heading and its
+   cells carry the 20 px, as every other card's content does (RV-29: the
+   rule above had added a second 20 px). */
+.panel.table-panel {
+  padding: 0;
+}
+
 /* A panel's title is a label, not a headline: the numbers lead. */
 .dash-panel .panel-head h2,
 .stat-tile-button h2,
@@ -614,7 +621,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 12rem) 3.5rem;
   gap: 4px 16px;
-  padding: 8px 16px;
+  padding: 8px 20px;
 }
 
 .review-head {
@@ -675,10 +682,27 @@ select {
 }
 
 .review-fold > summary {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 8px 16px;
+  padding: 8px 20px 8px 40px;
   cursor: pointer;
+}
+
+/* The mark that it opens (RV-36): the flex summary has no marker of its
+   own. It turns down when open. */
+.review-fold > summary::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 14px;
+  border-left: 6px solid var(--c-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+.review-fold[open] > summary::before {
+  transform: rotate(90deg);
 }
 
 .review-fold > summary .sub {
@@ -728,10 +752,12 @@ select {
 .item-head,
 .item-row {
   display: grid;
-  grid-template-columns: 7rem minmax(0, 1fr) 8.5rem 5rem;
+  /* The name gets what the slot and the note can spare (RV-30: names
+     broke over two lines at 1,280 px). */
+  grid-template-columns: 6.5rem minmax(0, 1fr) 8.5rem 4rem;
   gap: 12px;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .item-head {

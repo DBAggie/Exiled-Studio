@@ -115,9 +115,10 @@ fn a_snapshot_with_a_header_key_from_a_newer_version_should_still_be_restored() 
     let path = dir.0.join("a-1.json");
     let mut file: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-    file.as_object_mut()
-        .unwrap()
-        .insert("from-a-newer-version".to_owned(), serde_json::json!({ "level": 92 }));
+    file.as_object_mut().unwrap().insert(
+        "from-a-newer-version".to_owned(),
+        serde_json::json!({ "level": 92 }),
+    );
     std::fs::write(&path, file.to_string()).unwrap();
 
     let b = Recovery::open(&dir.0, "b-1").unwrap();

@@ -66,7 +66,7 @@ pub fn catalog(bundle: &Bundle, group: Option<&SocketGroup>) -> Vec<api::GemCata
 /// A gem effect's name as players read it: its own, else its gem's base
 /// item's (most effects leave the name to the gem item); `None` for a gem
 /// players cannot have: an unreleased placeholder (`[DNT]`, "do not
-/// translate"), a Path of Exile Royale gem (PoB's `bases.lua` skips base
+/// translate", or the name "..."), a Path of Exile Royale gem (PoB's `bases.lua` skips base
 /// items whose ID contains `Royale`, as the extractor's cross-check
 /// records), or no name.
 fn gem_name(bundle: &Bundle, base_item: &str, effect: &GemEffect) -> Option<String> {
@@ -82,7 +82,9 @@ fn gem_name(bundle: &Bundle, base_item: &str, effect: &GemEffect) -> Option<Stri
     } else {
         effect.name.clone()
     };
-    (!name.is_empty() && !name.starts_with("[DNT]")).then_some(name)
+    // "..." is the game's own name for a gem it has not released (build
+    // 26530219: `SkillGemComboStrike`; PoB's gem list does not have it).
+    (!name.is_empty() && !name.starts_with("[DNT]") && name != "...").then_some(name)
 }
 
 /// A new gem of the gem effect `id`, at the default level and quality 0;
