@@ -147,7 +147,7 @@ Stacked on #176, PR #177, branch `feat/ui-revamp-skills`. The mockup is the canv
 - **Checked in the running application** on the Raise Spectre fixture (18 groups): the main skill's group first, another group picked and shown, the head one row, no sideways scroll at 1,000, 1,280, and 1,600 px (one column under 1,000 px).
 
 ## Step 4: About (2026-11-25)
-Stacked on #177, branch `feat/ui-revamp-about`. The mockup is the canvas's "About" board. It is the last screen of step 4.
+Stacked on #177, PR #178, branch `feat/ui-revamp-about`. The mockup is the canvas's "About" board. It is the last screen of step 4.
 
 - **The page's width, in two columns of panels** (one column under 1,000 px): Updates and Game data at the left, Diagnostics and Legal at the right. The version and the game data are one line beside the heading.
 - **The update choices are rows that say what each does** ("Nothing is installed without your approval", "Game data is still downloaded at start", "No updates and no game data. Install game data from a file"), the one chosen marked. The unstyled box around them is gone. Each choice keeps its own name for a screen reader; its line is its description.
