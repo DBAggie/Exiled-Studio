@@ -172,5 +172,4 @@ Stacked on #178, PR #179, branch `feat/ui-revamp-tree`. The mockups are the canv
 **The revamp's five steps are built** with this. What is left is in "Open" below.
 
 ## Open
-- Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
-- The mockups were not rendered here (the canvas is checked by the maintainer).
+The open items are tasks in `ui-revamp-follow-ups.md` (RV-01 to RV-23), created 2026-11-25 when the stack #168 to #179 was merged into `dev`.
