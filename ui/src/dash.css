@@ -838,6 +838,12 @@ button.hint:hover:not(:disabled) {
   color: var(--c-text);
 }
 
+/* Gem names are words, not figures: the text face, as everywhere else
+   (a data table's cells take the figure face; RV-08). Levels keep it. */
+table.skill-table td {
+  font-family: inherit;
+}
+
 .skill-table tbody th > * {
   margin-right: 8px;
 }

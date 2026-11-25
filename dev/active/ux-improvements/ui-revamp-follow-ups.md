@@ -15,7 +15,7 @@ Each task is its own PR from `dev`. A task that changes how a screen looks shows
 | RV-05 | **"Discard all" for unsaved work** on the start page, with a confirmation. | Drawn on the Start board, not built. | agent | small |
 | RV-06 | **The remaining pills that are not a calculation state:** an item line's status in the item editor, "Variant: …", the AI connection's pending count. Decide each: quiet text, the mark, or kept. | Step 3 replaced only the calculation state's pills. | agent, mockup first | small |
 | RV-07 | **The item editor and the AI connection page** were not in the audit's six mockups: review them against the foundations and draw what should change. | Not covered by step 4. | agent, mockup first | medium |
-| RV-08 | **A second pass with the audit list** (the `unslop` skill's signs and checklist) over the merged application, at 1,000, 1,280, and 1,600 px. | Each step was checked alone; nothing has checked the whole after all twelve PRs. | agent | small |
+| RV-08 | **Done 2026-11-25** (branch `chore/rv-08-audit-pass`; `docs/ui/ux-audit-pass-2.md`): seven defects fixed, RV-27 to RV-38 added below. ~~A second pass with the audit list (the `unslop` skill's signs and checklist) over the merged application, at 1,000, 1,280, and 1,600 px.~~ | Each step was checked alone; nothing has checked the whole after all twelve PRs. | agent | small |
 | RV-09 | **The tree's frame rate after the fade.** Measure pan and zoom on the test laptop as `docs/phase-5/performance.md` did (54/49 fps before). | #179 did not measure it. | maintainer runs, agent prepares | small |
 
 ## Revamp: needs work under the UI
@@ -55,5 +55,26 @@ Each task is its own PR from `dev`. A task that changes how a screen looks shows
 | RV-25 | **Repowise's optional parts:** its PR bot's AI review, runtime evidence uploads, and a line in `AGENTS.md` telling agents to ask Repowise first. Each is the maintainer's choice (the review spends credit). | maintainer decides | small |
 | RV-26 | **The oracle fixture selection on a stacked pull request:** `oracle-select.py` fails (`git diff origin/<base>...HEAD` exits 128) when the base is another feature branch that the checkout has not fetched, as on #179. Fetch the base, or fall back to every fixture. | agent | small |
 
+## From the second audit pass (RV-08, 2026-11-25)
+
+Found in the running application on the Raise Spectre fixture (`docs/ui/ux-audit-pass-2.md`, with screenshots in `docs/ui/ux-audit-pass-2/`). Each changes how a screen looks, so a mockup or the maintainer's word comes first, except RV-37.
+
+| ID | Task | Who | Size |
+|---|---|---|---|
+| RV-27 | **Skills under 1,000 px:** the page is one column, so the picked group's gems are below all the groups (18 on the fixture) and picking one changes nothing on screen. Open the group in place, or make the list a picker at that width. | agent, mockup first | small |
+| RV-28 | **The Dashboard at 1,000 px:** the four lead figures are one a row, each mostly empty. The breakpoints measure the window, not the page (the menu takes 208 px). Measure the page, so two fit a row there. | agent, mockup first | small |
+| RV-29 | **One inset for a card's heading:** a card that holds a table has its heading 40 px from the edge (import review, Lines to review, Equipment's "In use", Recent); other cards have 20 px. | agent | small |
+| RV-30 | **Equipment's item column at 1,280 px:** names break over two lines while the Sockets column has room. | agent | small |
+| RV-31 | **The tree's three "i" marks** have nothing beside them ("More information", "About the Necromancer", "Allocated nodes kept as imported: 2"): say what each is, or make them one. The class start's hover card says "WITCH" in capitals. | agent, mockup first | small |
+| RV-32 | **The tree's List view:** rows without a card; a "Remove (whole name)" button of a different width on each row ("Remove", with the name for screen readers). | agent, mockup first | small |
+| RV-33 | **Controls:** About's radio buttons are the browser's own (system blue); selects and inputs are 32 px in some places, 36 px in others; the focus ring is blue beside a violet accent. Decide each. | agent, mockup first | small |
+| RV-34 | **The accent, used rarely:** Lines to review has 30 violet underlined item names; the start page and About end a row of buttons with a violet link. | agent, mockup first | small |
+| RV-35 | **Dividers in the Skills table:** an author's "==== Main Skills ====" group is a row with "No gems yet" and "None"; make it a heading, as the Groups view does. | agent, mockup first | small |
+| RV-36 | **The fold on Lines to review** ("25 lines on items not in use") has no mark that it opens; the import review's has. One form for both. | agent | small |
+| RV-37 | **A gem named "…"** is first in the gem picker (Attack, Melee, Strike): find it in the data, then name it or leave it out. | agent | small |
+| RV-38 | **Small text and overflow:** the Snapshots name hint is cut; a Configuration description ends in an ellipsis at 1,280 px; short empty-state lines end in a period; the Compare card's sentence touches its button; the main skill's name is weight 700. Also check that Escape closes the Snapshots panel. | agent | small |
+
+Added by the pass to tasks above: RV-07 (the item editor's head is broken at 1,280 px: the name in three lines beside an empty row), RV-06 (four pills on the AI connection page; the blue "Main skill group" pill is a second accent), RV-03 (at 1,600 px the Defence rows stretch about 850 px and the card has a dead band beside the Main skill card).
+
 ## Order suggested
-RV-08 first (it may add tasks), then RV-01, RV-05, RV-04, RV-02 (small, visible), then RV-13, then the maintainer's decisions RV-14 to RV-17 at any time, then the larger ones.
+RV-08 is done. Next RV-01, RV-05, RV-04, RV-02 (small, visible), then RV-13, then the audit pass's small ones without a mockup (RV-29, RV-30, RV-36, RV-37, RV-38), then those with one, the maintainer's decisions RV-14 to RV-17 at any time, then the larger ones.

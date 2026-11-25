@@ -665,7 +665,7 @@ function SkillTable({
           aria-hidden="true"
         />
         {g.main ? <strong>{g.name ?? '?'}</strong> : (g.name ?? '?')}{' '}
-        <span className="muted">{g.level}</span>
+        <span className="muted num">{g.level}</span>
       </span>
     ))
   return (
@@ -687,10 +687,13 @@ function SkillTable({
         </thead>
         <tbody>
           {groups.map((group, index) => {
+            // The author's label with its colour codes drawn, never
+            // printed; names read aloud use it plain (as the Groups view).
+            const label =
+              group.label != null && group.label !== '' ? group.label : null
             const title =
-              group.label != null && group.label !== ''
-                ? group.label
-                : t('skills.groupN', { n: index + 1 })
+              (label === null ? '' : plain(label)) ||
+              t('skills.groupN', { n: index + 1 })
             const actives = group.gems.filter((g) => g.support !== true)
             const supports = group.gems.filter((g) => g.support === true)
             const shown = open === index
@@ -700,7 +703,13 @@ function SkillTable({
                   className={`${group.enabled ? '' : 'disabled'}${group.main ? ' main' : ''}`}
                 >
                   <th scope="row">
-                    <span className="skill-table-title">{title}</span>
+                    <span className="skill-table-title">
+                      {label !== null && plain(label) !== '' ? (
+                        <ImportedText text={label} />
+                      ) : (
+                        title
+                      )}
+                    </span>
                     <span className="muted small-text">
                       {group.slot ?? t('skills.other')}
                     </span>

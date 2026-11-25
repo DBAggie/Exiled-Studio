@@ -385,6 +385,10 @@ th.right {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* Text kept for screen readers is placed out of the flow; with the
+     frame as its containing block it is clipped here and cannot make the
+     window itself scroll (RV-08: Configuration had a second scrollbar). */
+  position: relative;
 }
 
 .app.nav-rail {
@@ -1852,6 +1856,7 @@ h1[tabindex='-1']:focus-visible {
   overflow: auto;
   white-space: pre-wrap;
   font-size: var(--fs-meta);
+  font-family: var(--font-mono);
 }
 
 .stats.stale {

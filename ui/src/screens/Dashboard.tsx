@@ -339,7 +339,7 @@ function MainSkillPanel({ build, id }: { build: BuildView; id: string }) {
                       .join(', ')}
                   </span>{' '}
                   {supports > 0 && (
-                    <span className="muted small-text">
+                    <span className="muted small-text nowrap">
                       {supports === 1
                         ? t('dashboard.supports1')
                         : t('dashboard.supportsN', { n: supports })}

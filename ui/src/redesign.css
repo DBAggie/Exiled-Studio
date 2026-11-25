@@ -130,8 +130,10 @@ select {
   overflow: hidden;
   clip-path: none;
   max-width: 100%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* A long name takes a second line; none is cut (RV-08: "Lines to
+     review" ended in an ellipsis). */
+  white-space: normal;
+  text-align: center;
   font-size: var(--fs-meta);
   font-weight: 500;
   line-height: 1.2;

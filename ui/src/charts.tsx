@@ -164,9 +164,33 @@ export function LineChart({
   }
   // Labels on the horizontal axis: the ends, the current point, and as
   // many between as fit without touching.
-  const every = Math.max(1, Math.ceil((points.length * 56) / plotW))
-  const labelled = (i: number) =>
-    i === 0 || i === points.length - 1 || i % every === 0
+  // Each label's room is measured from its own text (the figure face is
+  // fixed-width: 0.6 em of the 12 px tick), so long names such as a
+  // stage's do not run into each other (RV-08). The 7.2 follows
+  // `.chart-tick` (`--fs-meta` in `--font-figure`): change them together.
+  const last = points.length - 1
+  const room = (i: number): [number, number] => {
+    const w = points[i]!.label.length * 7.2
+    const at = x(i)
+    return i === 0
+      ? [at, at + w]
+      : i === last
+        ? [at - w, at]
+        : [at - w / 2, at + w / 2]
+  }
+  const kept: number[] = []
+  const order = [0, last, ...(current === undefined ? [] : [current])]
+  for (let i = 1; i < last; i++) order.push(i)
+  for (const i of order) {
+    if (i < 0 || i > last || kept.includes(i)) continue
+    const [from, to] = room(i)
+    const clear = kept.every((k) => {
+      const [f, t2] = room(k)
+      return to + 12 <= f || t2 + 12 <= from
+    })
+    if (clear) kept.push(i)
+  }
+  const labelled = (i: number) => kept.includes(i)
   const nearest = (clientX: number, box: DOMRect) => {
     const at = clientX - box.left
     let best = known[0]!.i
