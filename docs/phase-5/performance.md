@@ -54,7 +54,7 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 | Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms | yes |
 | Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | first paint 305, 197, 168 ms; pan 27 fps typical, 23 lowest; zoom 52 typical, 42 lowest (measured 2026-11-24 on a laptop, "The maintainer's application test", below) | first paint yes; pan and zoom no before the fix (remeasure) |
 | Version conversion preview ≤ 300 ms | 0.01 to 0.41 ms: `loom_app::tree::converted` on four public builds saved on 3_27 and 3_28, with the real bundle and its packs (release build, 21 runs each; measured 2026-11-16 on `feat/tree-remaining`) | yes |
-| Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); 2026-11-24 on a laptop with the largest build and the tree open: the application 321 MB, with its WebView2 processes 616 MB, 650 MB after a minute of use | yes for the application's process; no if the budget counts WebView2 (the maintainer's call, exception 5) |
+| Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); 2026-11-24 on a laptop with the largest build and the tree open: the application 321 MB, with its WebView2 processes 616 MB, 650 MB after a minute of use | yes: the budget counts the application's process only (maintainer 2026-11-24) |
 | Installer ≤ 40 MB without the bundle | the MSI, the AppImage, the `.deb`, the portable zip: measured by the release workflow's run (gate 6); the NSIS setup with the WebView2 bootstrapper was 5.8 MB locally (P1) | exception: the NSIS setup |
 
 **The core paths with the real bundle (`loom-bench wall`):**
@@ -112,7 +112,7 @@ The maintainer asked for the recommended fixes (2026-11-15). All three are in:
    - **Accepted by the maintainer, 2026-11-24.**
 3. **Tree first paint, pan, and zoom: measured 2026-11-24** ("The maintainer's application test", below). First paint is inside budget; pan and zoom were not, and are fixed in PR #168, to be measured again on its next build.
 4. **Version conversion** is measured since T5b (2026-11-16): inside budget by three orders of magnitude.
-5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. Measured 2026-11-24 with them: 616 MB with the tree open, 650 MB at most after a minute of use, over 600 MB. For the maintainer: whether the budget means the application's process (met) or the whole process tree (not met).
+5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. Measured 2026-11-24 with them: 616 MB with the tree open, 650 MB at most after a minute of use, over 600 MB. **The maintainer decided (2026-11-24): the budget counts the application's process only**, so it is met.
 
 ### The maintainer's application test (2026-11-24)
 `docs/phase-5/maintainer-tests.md`, part A and B1, run by an agent session on the maintainer's second workstation, through the WebView2 debugging port (synthetic input; the tree's sprites from the signed 0.9 data).
@@ -141,7 +141,11 @@ Also seen: the wheel scrolled the page as well as zooming the tree; the node car
 - The wheel listener is the canvas's own and not passive, so the page no longer scrolls.
 - The node card closes when a drag starts.
 
-Not measured here (no WebView2 run on this workstation in this session): the pan and zoom rates after the fix are for the next run of part A on PR #168's next build.
+Not measured here (no WebView2 run on this workstation in this session): the pan and zoom rates after the fix are for the next run of part A on PR #168's next build. The maintainer's own look (2026-11-24): dragging shows no noticeable delay.
+
+**The hover preview** (the maintainer, 2026-11-24: a long delay before a node's card and its path appear). The window asked for the preview 120 ms after the pointer reached a node, and the answer came with a full calculation of the build after the change (about 110 ms for the largest build on the reference tier, nested full DPS included; more on a laptop), so the path showed only with the numbers. Every node the pointer rested on started its own calculation, and none was cancelled when the pointer moved on, so they competed for the processor. Now (PR #168):
+- the path and the nodes removed come first, with no calculation (shell `preview_tree` with `fields: false`, additive), and the card says "Calculating the change…" until the numbers come;
+- a hover preview with fields cancels the previous one's calculation (`App::preview_tree_hover`), through the engine's cancel hook.
 
 **Memory** (private working set, Task Manager's figure):
 

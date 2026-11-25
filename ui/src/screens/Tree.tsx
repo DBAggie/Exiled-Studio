@@ -282,149 +282,185 @@ function TreeCanvas({
 
   // Draw, at most once per frame: pointer and wheel events can come faster
   // than the display, and each would otherwise draw the whole tree.
-  const frame = useRef(0)
-  useEffect(() => {
-    const el = canvas.current
-    if (el === null || camera === null) return
-    cancelAnimationFrame(frame.current)
-    frame.current = requestAnimationFrame(() => draw(el, camera))
-    return () => cancelAnimationFrame(frame.current)
-    // `draw` (below) is rebuilt each render; these are what it reads.
-  }, [
-    allocated,
-    byId,
-    camera,
-    diff,
-    found,
-    groupsOn,
-    layout,
-    path,
-    placed,
-    removed,
-    sprites,
-    toScreen,
-  ])
-
-  const draw = (el: HTMLCanvasElement, camera: Camera) => {
-    const ctx = el.getContext('2d')
-    if (ctx === null) return
-    const dpr = window.devicePixelRatio || 1
-    // Setting the size clears and reallocates the buffer: only on a change.
-    const w = Math.round(el.clientWidth * dpr)
-    const h = Math.round(el.clientHeight * dpr)
-    if (el.width !== w) el.width = w
-    if (el.height !== h) el.height = h
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const c = colours(el)
-    ctx.fillStyle = c.bg
-    ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
-    const at = (n: TreeNodeView) =>
-      toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
-    // What lies outside the canvas (with a margin for the art) is skipped.
-    const margin = 200 * camera.scale + 40
-    const shown = (p: { x: number; y: number }) =>
-      p.x > -margin &&
-      p.y > -margin &&
-      p.x < el.clientWidth + margin &&
-      p.y < el.clientHeight + margin
-    // Links: an arc when both ends share a group and an orbit, else a line.
-    // They are gathered into one path per look and stroked once each: a
-    // stroke per link was most of a frame's time.
-    const links = new Map<
-      string,
-      { path: Path2D; style: string; width: number; alpha: number }
-    >()
-    for (const a of placed) {
-      if (a.kind === 'mastery') continue
-      for (const id of a.links) {
-        const b = byId.get(id)
-        if (
-          b?.position == null ||
-          b['cluster-area'] === true ||
-          b.kind === 'mastery' ||
-          a.ascendancy !== b.ascendancy ||
-          (a.kind === 'class-start' && b.kind === 'ascendancy-start') ||
-          (b.kind === 'class-start' && a.kind === 'ascendancy-start')
-        )
-          continue
-        const on = allocated.has(a.id) && allocated.has(b.id)
-        const onPath =
-          (path.has(a.id) || allocated.has(a.id)) &&
-          (path.has(b.id) || allocated.has(b.id)) &&
-          (path.has(a.id) || path.has(b.id))
-        const gone = removed.has(a.id) || removed.has(b.id)
-        const pa = at(a)
-        const pb = at(b)
-        if (!shown(pa) && !shown(pb)) continue
-        const style = gone
-          ? c.removed
-          : onPath
-            ? c.path
-            : on
-              ? c.linkOn
-              : c.link
-        const width = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
-        const alpha = a.modelled && b.modelled ? 1 : 0.35
-        const key = `${style}|${width}|${alpha}`
-        let bucket = links.get(key)
-        if (bucket === undefined) {
-          bucket = { path: new Path2D(), style, width, alpha }
-          links.set(key, bucket)
-        }
-        const line = bucket.path
-        const g = layout.groups[a.group]
-        if (
-          a.group === b.group &&
-          a.orbit === b.orbit &&
-          a.orbit > 0 &&
-          g !== undefined
-        ) {
-          const centre = toScreen(g.x, g.y, el, camera)
-          const r = (layout['orbit-radii'][a.orbit] ?? 0) * camera.scale
-          let s = Math.atan2(pa.y - centre.y, pa.x - centre.x)
-          let e = Math.atan2(pb.y - centre.y, pb.x - centre.x)
-          // The shorter way round.
-          let d = e - s
-          while (d > Math.PI) d -= 2 * Math.PI
-          while (d < -Math.PI) d += 2 * Math.PI
-          if (d < 0) [s, e] = [e, s]
-          // Start a new piece at the arc's start, or the path would join it
-          // to the last link with a line.
-          line.moveTo(centre.x + r * Math.cos(s), centre.y + r * Math.sin(s))
-          line.arc(centre.x, centre.y, r, s, e)
-        } else {
-          line.moveTo(pa.x, pa.y)
-          line.lineTo(pb.x, pb.y)
+  const draw = useCallback(
+    (el: HTMLCanvasElement, camera: Camera) => {
+      const ctx = el.getContext('2d')
+      if (ctx === null) return
+      const dpr = window.devicePixelRatio || 1
+      // Setting the size clears and reallocates the buffer: only on a change.
+      const w = Math.round(el.clientWidth * dpr)
+      const h = Math.round(el.clientHeight * dpr)
+      if (el.width !== w) el.width = w
+      if (el.height !== h) el.height = h
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const c = colours(el)
+      ctx.fillStyle = c.bg
+      ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
+      const at = (n: TreeNodeView) =>
+        toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
+      // What lies outside the canvas (with a margin for the art) is skipped.
+      const margin = 200 * camera.scale + 40
+      const shown = (p: { x: number; y: number }) =>
+        p.x > -margin &&
+        p.y > -margin &&
+        p.x < el.clientWidth + margin &&
+        p.y < el.clientHeight + margin
+      // Links: an arc when both ends share a group and an orbit, else a line.
+      // They are gathered into one path per look and stroked once each: a
+      // stroke per link was most of a frame's time.
+      const links = new Map<
+        string,
+        { path: Path2D; style: string; width: number; alpha: number }
+      >()
+      for (const a of placed) {
+        if (a.kind === 'mastery') continue
+        for (const id of a.links) {
+          const b = byId.get(id)
+          if (
+            b?.position == null ||
+            b['cluster-area'] === true ||
+            b.kind === 'mastery' ||
+            a.ascendancy !== b.ascendancy ||
+            (a.kind === 'class-start' && b.kind === 'ascendancy-start') ||
+            (b.kind === 'class-start' && a.kind === 'ascendancy-start')
+          )
+            continue
+          const on = allocated.has(a.id) && allocated.has(b.id)
+          const onPath =
+            (path.has(a.id) || allocated.has(a.id)) &&
+            (path.has(b.id) || allocated.has(b.id)) &&
+            (path.has(a.id) || path.has(b.id))
+          const gone = removed.has(a.id) || removed.has(b.id)
+          const pa = at(a)
+          const pb = at(b)
+          if (!shown(pa) && !shown(pb)) continue
+          const style = gone
+            ? c.removed
+            : onPath
+              ? c.path
+              : on
+                ? c.linkOn
+                : c.link
+          const width = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
+          const alpha = a.modelled && b.modelled ? 1 : 0.35
+          const key = `${style}|${width}|${alpha}`
+          let bucket = links.get(key)
+          if (bucket === undefined) {
+            bucket = { path: new Path2D(), style, width, alpha }
+            links.set(key, bucket)
+          }
+          const line = bucket.path
+          const g = layout.groups[a.group]
+          if (
+            a.group === b.group &&
+            a.orbit === b.orbit &&
+            a.orbit > 0 &&
+            g !== undefined
+          ) {
+            const centre = toScreen(g.x, g.y, el, camera)
+            const r = (layout['orbit-radii'][a.orbit] ?? 0) * camera.scale
+            let s = Math.atan2(pa.y - centre.y, pa.x - centre.x)
+            let e = Math.atan2(pb.y - centre.y, pb.x - centre.x)
+            // The shorter way round.
+            let d = e - s
+            while (d > Math.PI) d -= 2 * Math.PI
+            while (d < -Math.PI) d += 2 * Math.PI
+            if (d < 0) [s, e] = [e, s]
+            // Start a new piece at the arc's start, or the path would join it
+            // to the last link with a line.
+            line.moveTo(centre.x + r * Math.cos(s), centre.y + r * Math.sin(s))
+            line.arc(centre.x, centre.y, r, s, e)
+          } else {
+            line.moveTo(pa.x, pa.y)
+            line.lineTo(pb.x, pb.y)
+          }
         }
       }
-    }
-    for (const { path: p, style, width, alpha } of links.values()) {
-      ctx.strokeStyle = style
-      ctx.lineWidth = width
-      ctx.globalAlpha = alpha
-      ctx.stroke(p)
-    }
-    ctx.globalAlpha = 1
-    for (const n of placed) {
-      const p = at(n)
-      if (!shown(p)) continue
-      // A class start keeps a readable size when the whole tree shows.
-      const r = Math.max(
-        n.kind === 'class-start' ? 8 : 2,
-        RADIUS[n.kind] * camera.scale,
-      )
-      const on = allocated.has(n.id)
-      ctx.globalAlpha = n.modelled ? 1 : 0.4
-      if (
-        sprites !== null &&
-        drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
-      ) {
-        // The preview's path and removals as rings over the art.
-        if (path.has(n.id) || removed.has(n.id)) {
-          ctx.lineWidth = Math.max(2, 8 * camera.scale)
-          ctx.strokeStyle = removed.has(n.id) ? c.removed : c.path
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, r + 2, 0, 2 * Math.PI)
+      for (const { path: p, style, width, alpha } of links.values()) {
+        ctx.strokeStyle = style
+        ctx.lineWidth = width
+        ctx.globalAlpha = alpha
+        ctx.stroke(p)
+      }
+      ctx.globalAlpha = 1
+      for (const n of placed) {
+        const p = at(n)
+        if (!shown(p)) continue
+        // A class start keeps a readable size when the whole tree shows.
+        const r = Math.max(
+          n.kind === 'class-start' ? 8 : 2,
+          RADIUS[n.kind] * camera.scale,
+        )
+        const on = allocated.has(n.id)
+        ctx.globalAlpha = n.modelled ? 1 : 0.4
+        if (
+          sprites !== null &&
+          drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
+        ) {
+          // The preview's path and removals as rings over the art.
+          if (path.has(n.id) || removed.has(n.id)) {
+            ctx.lineWidth = Math.max(2, 8 * camera.scale)
+            ctx.strokeStyle = removed.has(n.id) ? c.removed : c.path
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, r + 2, 0, 2 * Math.PI)
+            ctx.stroke()
+          }
+          if (found.has(n.id)) {
+            ctx.lineWidth = 2
+            ctx.strokeStyle = c.match
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
+            ctx.stroke()
+          }
+          continue
+        }
+        ctx.fillStyle = removed.has(n.id)
+          ? c.removed
+          : path.has(n.id)
+            ? c.path
+            : on
+              ? c.nodeOn
+              : n.modelled
+                ? c.node
+                : c.kept
+        ctx.beginPath()
+        if (n.kind === 'keystone' || n.kind === 'class-start') {
+          // An octagon.
+          for (let i = 0; i < 8; i += 1) {
+            const a = (Math.PI / 4) * i + Math.PI / 8
+            const x = p.x + r * Math.cos(a)
+            const y = p.y + r * Math.sin(a)
+            if (i === 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          }
+          ctx.closePath()
+        } else if (n.kind === 'jewel-socket' || n.kind === 'cluster-socket') {
+          ctx.moveTo(p.x, p.y - r)
+          ctx.lineTo(p.x + r, p.y)
+          ctx.lineTo(p.x, p.y + r)
+          ctx.lineTo(p.x - r, p.y)
+          ctx.closePath()
+        } else {
+          ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+        }
+        if (n.kind === 'mastery') {
+          ctx.lineWidth = Math.max(1, 6 * camera.scale)
+          ctx.strokeStyle = ctx.fillStyle
+          ctx.stroke()
+        } else {
+          ctx.fill()
+        }
+        if (
+          n.kind === 'notable' ||
+          n.kind === 'keystone' ||
+          n.kind === 'class-start'
+        ) {
+          // The class start's outline keeps its octagon readable when small.
+          ctx.lineWidth = Math.max(
+            n.kind === 'class-start' ? 2 : 1,
+            4 * camera.scale,
+          )
+          ctx.strokeStyle = c.ring
           ctx.stroke()
         }
         if (found.has(n.id)) {
@@ -434,85 +470,50 @@ function TreeCanvas({
           ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
           ctx.stroke()
         }
-        continue
       }
-      ctx.fillStyle = removed.has(n.id)
-        ? c.removed
-        : path.has(n.id)
-          ? c.path
-          : on
-            ? c.nodeOn
-            : n.modelled
-              ? c.node
-              : c.kept
-      ctx.beginPath()
-      if (n.kind === 'keystone' || n.kind === 'class-start') {
-        // An octagon.
-        for (let i = 0; i < 8; i += 1) {
-          const a = (Math.PI / 4) * i + Math.PI / 8
-          const x = p.x + r * Math.cos(a)
-          const y = p.y + r * Math.sin(a)
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
+      ctx.globalAlpha = 1
+      // The stage compared with: a dashed ring on a node only it has, a
+      // solid ring on a node only this stage has (the line, not the colour
+      // alone, tells them apart).
+      if (diff !== null) {
+        for (const n of placed) {
+          const other = diff.added.has(n.id)
+          if (!other && !diff.removed.has(n.id)) continue
+          const p = at(n)
+          const r = Math.max(4, RADIUS[n.kind] * camera.scale) + 4
+          ctx.lineWidth = 2.5
+          ctx.strokeStyle = other ? c.path : c.removed
+          ctx.setLineDash(other ? [5, 4] : [])
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+          ctx.stroke()
         }
-        ctx.closePath()
-      } else if (n.kind === 'jewel-socket' || n.kind === 'cluster-socket') {
-        ctx.moveTo(p.x, p.y - r)
-        ctx.lineTo(p.x + r, p.y)
-        ctx.lineTo(p.x, p.y + r)
-        ctx.lineTo(p.x - r, p.y)
-        ctx.closePath()
-      } else {
-        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+        ctx.setLineDash([])
       }
-      if (n.kind === 'mastery') {
-        ctx.lineWidth = Math.max(1, 6 * camera.scale)
-        ctx.strokeStyle = ctx.fillStyle
-        ctx.stroke()
-      } else {
-        ctx.fill()
-      }
-      if (
-        n.kind === 'notable' ||
-        n.kind === 'keystone' ||
-        n.kind === 'class-start'
-      ) {
-        // The class start's outline keeps its octagon readable when small.
-        ctx.lineWidth = Math.max(
-          n.kind === 'class-start' ? 2 : 1,
-          4 * camera.scale,
-        )
-        ctx.strokeStyle = c.ring
-        ctx.stroke()
-      }
-      if (found.has(n.id)) {
-        ctx.lineWidth = 2
-        ctx.strokeStyle = c.match
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
-        ctx.stroke()
-      }
-    }
-    ctx.globalAlpha = 1
-    // The stage compared with: a dashed ring on a node only it has, a
-    // solid ring on a node only this stage has (the line, not the colour
-    // alone, tells them apart).
-    if (diff !== null) {
-      for (const n of placed) {
-        const other = diff.added.has(n.id)
-        if (!other && !diff.removed.has(n.id)) continue
-        const p = at(n)
-        const r = Math.max(4, RADIUS[n.kind] * camera.scale) + 4
-        ctx.lineWidth = 2.5
-        ctx.strokeStyle = other ? c.path : c.removed
-        ctx.setLineDash(other ? [5, 4] : [])
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
-        ctx.stroke()
-      }
-      ctx.setLineDash([])
-    }
-  }
+    },
+    [
+      allocated,
+      byId,
+      diff,
+      found,
+      groupsOn,
+      layout,
+      path,
+      placed,
+      removed,
+      sprites,
+      toScreen,
+    ],
+  )
+
+  const frame = useRef(0)
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null || camera === null) return
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(() => draw(el, camera))
+    return () => cancelAnimationFrame(frame.current)
+  }, [camera, draw])
 
   const hit = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const el = canvas.current
@@ -702,11 +703,14 @@ function NodeCard({
   tree,
   layout,
   preview,
+  partial = false,
 }: {
   node: TreeNodeView
   tree: TreeView
   layout: TreeLayout
   preview: TreePreview | null | 'refused'
+  /** The preview has its path but not yet its fields. */
+  partial?: boolean
 }) {
   const chosen = tree.masteries.find((m) => m.node === node.id)
   const effect = layout.masteries
@@ -770,7 +774,11 @@ function NodeCard({
               ? t('tree.removes', { n: preview.removed.length })
               : t('tree.allocates', { n: preview.path.length })}
           </p>
-          <Impact preview={preview} />
+          {partial ? (
+            <p className="muted small-text">{t('tree.calculating')}</p>
+          ) : (
+            <Impact preview={preview} />
+          )}
         </>
       ) : null}
     </>
@@ -919,25 +927,34 @@ function JewelPicker({
           {jewels.length === 0 ? (
             <p className="muted">{t('tree.noJewels')}</p>
           ) : (
-            <ul className="picker-list" aria-label={t('tree.jewels')}>
-              {jewels.map((j) => (
-                <li key={j.id}>
-                  <button
-                    type="button"
-                    className="picker-entry"
-                    aria-pressed={socketed === j.id}
-                    onClick={() => socket(j.id)}
-                  >
-                    <span className="picker-name">{j.name}</span>
-                    <span className="muted small-text">
-                      {j.base}
-                      {elsewhere(j.id) !== undefined &&
-                        ` · ${t('tree.inAnotherSocket')}`}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="picker-lists">
+              <ul className="picker-list" aria-label={t('tree.jewels')}>
+                {jewels.map((j) => (
+                  <li key={j.id}>
+                    <button
+                      type="button"
+                      className="picker-entry jewel-entry"
+                      aria-pressed={socketed === j.id}
+                      onClick={() => socket(j.id)}
+                    >
+                      <span className="picker-name">{j.name}</span>
+                      <span className="muted small-text">{j.base}</span>
+                      {socketed === j.id ? (
+                        <span className="jewel-where small-text">
+                          {t('tree.inThisSocket')}
+                        </span>
+                      ) : (
+                        elsewhere(j.id) !== undefined && (
+                          <span className="jewel-where muted small-text">
+                            {t('tree.inAnotherSocket')}
+                          </span>
+                        )
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <div className="row">
             {socketed !== null && (
@@ -1188,6 +1205,8 @@ export function Tree() {
     node: number
     version: number
     value: TreePreview | 'refused'
+    /** The path only: the fields are still being calculated. */
+    partial?: boolean
   } | null>(null)
   const [mastery, setMastery] = useState<TreeNodeView | null>(null)
   const [socket, setSocket] = useState<TreeNodeView | null>(null)
@@ -1228,7 +1247,10 @@ export function Tree() {
     [layout, ready, search],
   )
 
-  // The hovered node's preview, asked once per node and build version.
+  // The hovered node's preview, asked once per node and build version:
+  // the path at once (no calculation), then, when the pointer rests, the
+  // fields (a calculation; the application cancels it if the pointer
+  // moves to another node first).
   const version = useAppSelector((s) => s.session.snapshot?.version ?? 0)
   const hovered = hover?.node.id ?? null
   // A locked spec is shown, not edited: nothing to preview.
@@ -1236,9 +1258,17 @@ export function Tree() {
   useEffect(() => {
     if (hovered === null || spec === null) return
     let live = true
+    let full = false
+    void dispatch(query((api) => api.previewTree(spec, hovered, false))).then(
+      (p) => {
+        if (live && !full && p !== null)
+          setPreviewed({ node: hovered, version, value: p, partial: true })
+      },
+    )
     const timer = setTimeout(() => {
       void dispatch(query((api) => api.previewTree(spec, hovered))).then(
         (p) => {
+          full = true
           if (live)
             setPreviewed({ node: hovered, version, value: p ?? 'refused' })
         },
@@ -1255,6 +1285,10 @@ export function Tree() {
     previewed.version === version
       ? previewed.value
       : null
+  const partial =
+    previewed !== null &&
+    previewed.node === hovered &&
+    previewed.partial === true
 
   if (layout === null) {
     return (
@@ -1624,6 +1658,7 @@ export function Tree() {
                 tree={tree}
                 layout={layout}
                 preview={preview}
+                partial={partial}
               />
             </HoverCard>
           )}

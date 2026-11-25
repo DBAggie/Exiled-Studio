@@ -1781,13 +1781,16 @@ export class FakeApi implements LoomApi {
     )
   }
 
-  previewTree(spec: number, node: number): Promise<TreePreview> {
+  previewTree(spec: number, node: number, fields = true): Promise<TreePreview> {
     try {
       if (this.current === null) this.fail('APP_NO_BUILD')
       if (spec !== this.current.spec) this.fail('APP_TREE')
-      return Promise.resolve(
-        fakeTree.preview(this.current.tree, node, life(this.current.items)),
+      const p = fakeTree.preview(
+        this.current.tree,
+        node,
+        life(this.current.items),
       )
+      return Promise.resolve(fields ? p : { ...p, fields: [] })
     } catch (e) {
       if (e instanceof fakeTree.TreeRefused) {
         return Promise.reject(

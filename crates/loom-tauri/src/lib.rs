@@ -219,10 +219,19 @@ fn tree_sprites(ctx: State<'_, Ctx>) -> Answer<api::TreeSprites> {
         .map_err(dto)
 }
 
-/// What clicking a node would do (runs off the main thread).
+/// What clicking a node would do (runs off the main thread): the hover
+/// preview, without the fields when `fields` is false (the path at once),
+/// a newer one cancelling an older one's calculation.
 #[tauri::command(async)]
-fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePreview> {
-    ctx.app.preview_tree(spec, node).map_err(dto)
+fn preview_tree(
+    ctx: State<'_, Ctx>,
+    spec: u32,
+    node: u32,
+    fields: Option<bool>,
+) -> Answer<api::TreePreview> {
+    ctx.app
+        .preview_tree_hover(spec, node, fields.unwrap_or(true))
+        .map_err(dto)
 }
 
 /// A what-if query: the computed fields across the build's stages or one

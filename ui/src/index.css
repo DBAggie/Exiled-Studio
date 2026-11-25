@@ -1910,6 +1910,34 @@ h1[tabindex='-1']:focus-visible {
   font-weight: 600;
 }
 
+/* A jewel: its name, its base under it, and where it is socketed at the
+   right (no gem mark, so not the gem rows' three columns). */
+.picker-entry.jewel-entry {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name where'
+    'base where';
+  row-gap: 2px;
+  padding: 8px 12px;
+}
+
+.jewel-entry .picker-name {
+  grid-area: name;
+}
+
+.jewel-entry .picker-name + .muted {
+  grid-area: base;
+}
+
+.jewel-entry .jewel-where {
+  grid-area: where;
+}
+
+.jewel-entry[aria-pressed='true'] {
+  background: var(--c-row);
+  box-shadow: inset 3px 0 0 var(--c-accent);
+}
+
 .gem-mark.square {
   border-radius: 2px;
 }

@@ -90,7 +90,8 @@ export const tauriApi: LoomApi = {
     listen<UpdateStatus>(UPDATE_EVENT, (e) => {
       listener(e.payload)
     }),
-  previewTree: (spec, node) => call('preview_tree', { spec, node }),
+  previewTree: (spec, node, fields = true) =>
+    call('preview_tree', { spec, node, fields }),
   whatIf: (request) => call('what_if', { request }),
   compareFile: () => call('compare_file'),
   stageView: (spec) => call('stage_view', { spec }),

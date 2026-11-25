@@ -1755,6 +1755,23 @@ pub fn preview_tree(
     before: Option<&CalcResult>,
     cancel: &dyn Fn() -> bool,
 ) -> Result<api::TreePreview, AppError> {
+    preview_tree_with(state, data, spec, edit, before, true, cancel)
+}
+
+/// [`preview_tree`], with the fields only when `fields` (without, no
+/// calculation runs: the path and the nodes removed alone).
+///
+/// # Errors
+/// As [`preview_tree`].
+pub fn preview_tree_with(
+    state: &State,
+    data: &GameData,
+    spec: u32,
+    edit: crate::tree::Edit,
+    before: Option<&CalcResult>,
+    fields: bool,
+    cancel: &dyn Fn() -> bool,
+) -> Result<api::TreePreview, AppError> {
     let tree = data
         .tree
         .as_ref()
@@ -1766,8 +1783,9 @@ pub fn preview_tree(
         | crate::tree::Edit::Mastery { node: n, .. } => n,
         _ => 0,
     };
+    let wanted = fields;
     let mut fields = Vec::new();
-    if check_data(&state.build, data).is_ok() {
+    if wanted && check_data(&state.build, data).is_ok() {
         let mut build = state.build.clone();
         crate::tree::write_spec(&mut build, spec, tree, &outcome.spec)?;
         let computed;

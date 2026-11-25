@@ -75,10 +75,10 @@ Run by an agent session on the maintainer's second workstation through the WebVi
 | A4 tree first paint | 305, 197, 168 ms (budget 500) |
 | A5 pan | 27 typical, 23 lowest (budget 50); fixed in PR #168, to measure again |
 | A5 zoom | 52 typical, 42 lowest at 10 ticks a second; 28 and 13 at 20; fixed in PR #168, to measure again |
-| A6 memory | application 321 MB; WebView2 295 MB; total 616 MB; highest 650 MB |
+| A6 memory | application 321 MB; WebView2 295 MB; total 616 MB; highest 650 MB; the budget counts the application's process only (maintainer 2026-11-24): met |
 | A, anything odd | the wheel also scrolled the page and the node card stayed up while dragging (both fixed); a drag seemed to move the tree about twice as far as the pointer (to check by hand) |
 | B1 keyboard on the tree | works through the List view (Tab, typing, Enter, Ctrl+Z); not on the canvas; six problems, `performance.md`, "Accessibility" |
 | B2 screen reader | not done (needs a person) |
 | C2, C3, C4 | not done (after the next release) |
 
-**Next run of part A:** on PR #168's next CI build, A5 again (pan and zoom), and by hand: does the tree follow the pointer exactly when dragged?
+**Next run of part A:** on PR #168's next CI build, A5 again (pan and zoom), and the hover: the time from the pointer resting on a node to its path showing, and to its numbers showing. The maintainer checked dragging by hand (2026-11-24): no noticeable delay.

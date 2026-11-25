@@ -179,8 +179,14 @@ export interface LoomApi {
    * `APP_NO_DATA` when the bundle has none. */
   treeSprites(): Promise<TreeSprites>
   /** What clicking node `node` of spec `spec` would do: allocate it and
-   * its path, or deallocate it and its orphans; never committed. */
-  previewTree(spec: number, node: number): Promise<TreePreview>
+   * its path, or deallocate it and its orphans; never committed. With
+   * `fields` false, the path and removals only (no calculation, so at
+   * once); a newer preview with fields cancels an older one's. */
+  previewTree(
+    spec: number,
+    node: number,
+    fields?: boolean,
+  ): Promise<TreePreview>
   /** The calculated fields at each stage, or with one input swept; never
    * a change to the build (`APP_WHAT_IF` for a range it refuses). */
   whatIf(request: WhatIfRequest): Promise<WhatIfSeries>
