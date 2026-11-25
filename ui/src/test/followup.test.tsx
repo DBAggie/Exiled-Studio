@@ -315,12 +315,13 @@ describe('arranging components by dragging', () => {
     // The whole bar is the handle; Shift with the arrows resizes.
     const cell = container.querySelector(`[data-cell="${start[0]}"]`)!
     const width = () =>
-      /dash-(third|half|two-thirds|full)/.exec(cell.className)?.[1]
-    expect(width()).toBe('third')
+      /dash-(quarter|third|half|two-thirds|full)/.exec(cell.className)?.[1]
+    // A figure starts a quarter wide (four lead the page), the narrowest.
+    expect(width()).toBe('quarter')
     await user.keyboard('{Shift>}{ArrowRight}{/Shift}')
-    await waitFor(() => expect(width()).toBe('half'))
-    await user.keyboard('{Shift>}{ArrowLeft}{ArrowLeft}{/Shift}')
     await waitFor(() => expect(width()).toBe('third'))
+    await user.keyboard('{Shift>}{ArrowLeft}{ArrowLeft}{/Shift}')
+    await waitFor(() => expect(width()).toBe('quarter'))
     // The card's menu starts a new row with it: the room beside the card
     // before it stays empty. Kept with the layout.
     const newRow = async () => {

@@ -1204,7 +1204,7 @@ export function Dashboard() {
                   ...(field === undefined ? {} : { field }),
                   width:
                     kind === 'stat'
-                      ? 'third'
+                      ? 'quarter'
                       : (CATALOG.find((e) => e.kind === kind)?.width ?? 'half'),
                 },
                 ...l,

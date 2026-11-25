@@ -1,7 +1,7 @@
 // The user's dashboards (UX brief note 5, B-5; docs/ui UI-DESIGN-BRIEF.md
 // screens 3 and 9; UX audit 2026-11-15, section D): up to eight, each a
-// list of components on a six-column grid, each a third, a half, two
-// thirds, or the full width. Kept in the UI's preferences document
+// list of components on a twelve-column grid, each a quarter, a third, a
+// half, two thirds, or the full width. Kept in the UI's preferences document
 // (`ui_prefs`, beside the application's settings); a build may keep its
 // own set in its file (`../buildDashboards`): the layout only.
 // An application older than a kind or a width drops that component when
@@ -39,9 +39,18 @@ export const CURVE_VARIES: CurveVary[] = [
   'config-number',
 ]
 
-/** A component's width on the dashboard's six-column grid. */
-export type Width = 'third' | 'half' | 'two-thirds' | 'full'
-export const WIDTHS: Width[] = ['third', 'half', 'two-thirds', 'full']
+/** A component's width on the dashboard's twelve-column grid. A quarter
+ * (the revamp's lead row of four figures, 2026-11-25) is the narrowest;
+ * an application older than it drops a component of that width, as it
+ * does any width it does not know. */
+export type Width = 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
+export const WIDTHS: Width[] = [
+  'quarter',
+  'third',
+  'half',
+  'two-thirds',
+  'full',
+]
 
 /** The library: every kind but `stat`, in order, with its group and the
  * width it starts with. */
@@ -138,12 +147,16 @@ export function defaultPrefs(): Prefs {
         id: 'overview',
         name: 'Overview',
         components: [
-          { id: 'c6', kind: 'stat', field: 'hit-dps', width: 'third' },
-          { id: 'c7', kind: 'stat', field: 'life', width: 'third' },
-          { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'third' },
+          // A lead row of four figures, then a wide table beside a narrow
+          // list: widths that differ, so the page has a first thing to
+          // read (the revamp's dashboard layout, 2026-11-25).
+          { id: 'c6', kind: 'stat', field: 'hit-dps', width: 'quarter' },
+          { id: 'c7', kind: 'stat', field: 'life', width: 'quarter' },
+          { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'quarter' },
+          { id: 'c9', kind: 'stat', field: 'mana', width: 'quarter' },
+          { id: 'c2', kind: 'defence', width: 'two-thirds' },
+          { id: 'c3', kind: 'main-skill', width: 'third' },
           { id: 'c1', kind: 'offence', width: 'half' },
-          { id: 'c2', kind: 'defence', width: 'half' },
-          { id: 'c3', kind: 'main-skill', width: 'half' },
           { id: 'c4', kind: 'equipment', width: 'half' },
           { id: 'c5', kind: 'warnings', width: 'full' },
         ],

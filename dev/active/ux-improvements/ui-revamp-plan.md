@@ -118,6 +118,16 @@ Stacked on #173, PR #174, branch `feat/ui-revamp-review`. The mockups are the ca
 - **Not as the mockup:** the heading is the build's name alone ("Imported build is imported" read badly for a build without a name); the reasons are the ones the application has (the mockup's more specific reasons need the resolver, as before).
 - **Checked in the running application** on the Raise Spectre fixture: both pages, a row opened, no sideways scroll at 1,000, 1,280, and 1,600 px; a page's name in the side menu stays on one line.
 
+## Step 4: the Dashboard's layout (2026-11-25)
+Stacked on #174, branch `feat/ui-revamp-dashboard`. The mockup is the canvas's "Dashboard layout" board.
+
+- **A quarter width** (`Width` `quarter`, `ui/src/dashboards.ts`): the grid has twelve columns (was six), so four figures lead the page. It is the narrowest width and the one a new figure starts with. An application older than this drops a card of that width from a build's own dashboards, as it does any width it does not know.
+- **The default Overview:** four figures (Hit DPS, Life, Energy shield, Mana), then Defence two thirds wide beside the Main skill a third wide, then Offence and Equipment as halves, then the lines to review. Widths that differ, so the page has a first thing to read.
+- **A narrow window:** under 1,100 px a quarter is a half (two figures a row) and two thirds is the whole row; under 1,000 px one column, as before. The breakpoint was 1,280 px, which is the window's own default width, so the wide layout never showed there.
+- **Only the default changes:** a user's saved dashboards, and a build's own, stay as they are.
+- **Not as the mockup:** no bars for capped values in the Defence table (the Resistances card has them); the Main skill and the lines to review are not stacked in one column (a grid row holds one card a cell).
+- **Checked in the running application** with fresh preferences on the Raise Spectre fixture: four figures in one row at 1,280 and 1,600 px, two a row at 1,000 px, no sideways scroll at any.
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

@@ -5,26 +5,36 @@
 /* ------------------------------------------------------------ the grid */
 
 .dash-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
-.dash-third {
-  grid-column: span 2;
-}
-
-.dash-half {
+.dash-quarter {
   grid-column: span 3;
 }
 
-.dash-two-thirds {
+.dash-third {
   grid-column: span 4;
+}
+
+.dash-half {
+  grid-column: span 6;
+}
+
+.dash-two-thirds {
+  grid-column: span 8;
 }
 
 .dash-full {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 1280px) {
+/* A narrower window: a quarter is a half (two figures a row), two thirds
+   is the whole row. */
+@media (max-width: 1100px) {
+  .dash-quarter {
+    grid-column: span 6;
+  }
+
   .dash-two-thirds {
     grid-column: 1 / -1;
   }
@@ -33,18 +43,26 @@
 /* A card set to start a new row leaves the room beside the card before
    it empty (the card menu's "Start a new row"). */
 @media (min-width: 1001px) {
+  .dash-new-row.dash-quarter {
+    grid-column: 1 / span 6;
+  }
+
   .dash-new-row.dash-third {
-    grid-column: 1 / span 2;
+    grid-column: 1 / span 4;
   }
 
   .dash-new-row.dash-half {
-    grid-column: 1 / span 3;
+    grid-column: 1 / span 6;
   }
 }
 
-@media (min-width: 1281px) {
+@media (min-width: 1101px) {
+  .dash-new-row.dash-quarter {
+    grid-column: 1 / span 3;
+  }
+
   .dash-new-row.dash-two-thirds {
-    grid-column: 1 / span 4;
+    grid-column: 1 / span 8;
   }
 }
 
@@ -53,6 +71,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .dash-quarter,
   .dash-third,
   .dash-half,
   .dash-two-thirds,

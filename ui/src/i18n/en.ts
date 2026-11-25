@@ -356,6 +356,7 @@ export const en = {
   'dashboard.showAll': 'Show all {n}',
   'dashboard.showFewer': 'Show fewer',
   'dashboard.width': 'Width',
+  'dashboard.width.quarter': 'One quarter',
   'dashboard.width.third': 'One third',
   'dashboard.width.half': 'Half',
   'dashboard.width.two-thirds': 'Two thirds',
