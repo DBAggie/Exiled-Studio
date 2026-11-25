@@ -2559,6 +2559,28 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("SummonSkeletons", Kind::Inert),
     ("SummonSkeletonsAltX", Kind::Inert),
     ("SummonSkeletonsAltY", Kind::Inert),
+    // Open items (2026-11-24): Summon Skitterbots (`act_int.lua` 20085):
+    // its one global stat, 10% more trap and mine damage (`Damage` MORE,
+    // `KeywordFlag.Mine` or `Trap`, a `Buff`), and its reservation. Its
+    // shock and chill of the enemy are [`skitterbots`]'s; its minions are no
+    // hit of the character's.
+    (
+        "SummonSkitterbots",
+        Kind::Buff {
+            name: "Summon Skitterbots",
+            effect: EffectType::Buff,
+            stats: &[(
+                "skitterbots_trap_mine_damage_+%_final",
+                BuffStat::Rows(&[(
+                    Quantity::Damage,
+                    Op::More,
+                    1.0,
+                    NONE,
+                    Flags::KEYWORD_MINE.union(Flags::KEYWORD_TRAP),
+                )]),
+            )],
+        },
+    ),
     (
         "SummonStoneGolem",
         Kind::Buff {
@@ -4586,7 +4608,7 @@ pub fn gems(
                     });
                 }
                 // PoB's skill list holds the main skill too.
-                guaranteed_chill(input, s, source, ingest);
+                ailment_overrides(input, s, source, ingest);
                 socket_reasons(g, s, ingest);
                 // Its supports' global effects (Arcane Surge's buff) act
                 // as any skill's.
@@ -5158,7 +5180,7 @@ fn one_skill(
     if s.global_off && kind.buff().is_some() {
         return;
     }
-    guaranteed_chill(input, s, active_source.clone(), ingest);
+    ailment_overrides(input, s, active_source.clone(), ingest);
     let mut supported = true;
     for sup in &s.supports {
         if support(&sup.effect.id).is_none() {
@@ -6074,6 +6096,121 @@ fn socket_reasons(g: usize, s: &GroupSkill<'_>, ingest: &mut Ingest<'_>) {
 /// not `ReservationBecomesCost`, `CalcPerform.lua` 1940).
 fn reserves(types: &BTreeSet<String>) -> bool {
     types.contains("HasReservation") && !types.contains("ReservationBecomesCost")
+}
+
+/// Summon Skitterbots' granted effect.
+pub const SKITTERBOTS: &str = "SummonSkitterbots";
+
+/// PoB's choice between a skill's ailment overrides (`CalcPerform.lua`
+/// 1360 to 1399): Summon Skitterbots' own branch ([`skitterbots`]), else a
+/// chilling area's or a non-hit chill's guaranteed chill
+/// ([`guaranteed_chill`]).
+fn ailment_overrides(
+    input: &CalcInput<'_>,
+    s: &GroupSkill<'_>,
+    source: Source,
+    ingest: &mut Ingest<'_>,
+) {
+    if s.active_gem.effect.id == SKITTERBOTS {
+        skitterbots(input, s, source, ingest);
+    } else {
+        guaranteed_chill(input, s, source, ingest);
+    }
+}
+
+/// Summon Skitterbots' shock and chill of the enemy (open items; PoB's
+/// `CalcPerform.lua` 1360 to 1383): `ShockOverride` BASE `15 x (1 + (inc +
+/// SkitterbotAilmentEffect) / 100)` and `ChillOverride` BASE `10 x (...)`,
+/// `inc` the skill's own `EnemyShockEffect` or `EnemyChillEffect` INC (its
+/// mods of source `Skill`: the gem's `shock_effect_+%` and
+/// `chill_effect_+%` at its level), each marking the enemy shocked or
+/// chilled. No effect modifier scales an override afterwards (3509 to
+/// 3519). A support with an ailment effect stat (its `Skill` mods too), Bonechill's flag
+/// on it (`SkitterbotBonechill`), and the modifiers that stop or change
+/// the auras (`SkitterbotsCannotShock`, `SkitterbotAilmentEffect`,
+/// `ScorchingSkitterbot`, `SkitterbotAffectPlayer`: unmapped stats) are
+/// reasons.
+fn skitterbots(input: &CalcInput<'_>, s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
+    // A support's mods of source `Skill` that PoB's override reads: its
+    // shock, chill, and non-damaging ailment effect (`SkillStatMap.lua`:
+    // `EnemyShockEffect`, `EnemyChillEffect` INC), and Bonechill's flag.
+    // Another support changes nothing here (its reservation is
+    // [`reservation`]'s; an unknown one is `unmodelled-gem`).
+    const AILMENT_EFFECT_STATS: [&str; 3] = [
+        "chill_effect_+%",
+        "non_damaging_ailment_effect_+%",
+        "shock_effect_+%",
+    ];
+    let support_reads = s.supports.iter().any(|sup| {
+        sup.effect.id == BONECHILL_SUPPORT
+            || skill::instance(sup.effect, sup.level, sup.quality, input.data)
+                .stats
+                .iter()
+                .any(|(id, v)| *v != 0 && AILMENT_EFFECT_STATS.contains(&id.as_str()))
+    });
+    if support_reads {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "skitterbots-supports",
+        });
+    }
+    let instance = skill::instance(
+        s.active_gem.effect,
+        s.active_gem.level,
+        s.active_gem.quality,
+        input.data,
+    );
+    let stat = |id: &str| {
+        instance
+            .stats
+            .iter()
+            .find(|(s, _)| s == id)
+            .map_or(0.0, |(_, v)| *v as f64)
+    };
+    for (quantity, default, effect) in [
+        (
+            Poe1Quantity::SkillShockOverride,
+            super::damage_taken::SHOCK_DEFAULT,
+            stat("shock_effect_+%"),
+        ),
+        (
+            Poe1Quantity::SkillChillOverride,
+            super::damage_taken::CHILL_DEFAULT,
+            stat("chill_effect_+%"),
+        ),
+    ] {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(quantity),
+            op: Op::Base,
+            value: default * (1.0 + effect / 100.0),
+            conditions: Conditions::none(),
+            source: source.clone(),
+        });
+    }
+}
+
+/// Whether an active Summon Skitterbots shocks the enemy (open items;
+/// `CalcPerform.lua` 1365: `Condition:Shocked` on the enemy):
+/// `Some(true)` when the active skill set has one, `None` when the
+/// skills are not certain.
+#[must_use]
+pub fn skitterbots_shock(input: &CalcInput<'_>) -> Option<bool> {
+    let levels = super::gem_levels::GemLevels::none();
+    let groups = skill::active_groups(input.build).ok()?;
+    let main_group = skill::main_skill(input.build, input.data, &levels)
+        .ok()
+        .map(|m| m.group - 1);
+    Some(groups.iter().enumerate().any(|(g, group)| {
+        let slot = group.slot.as_ref().map(|s| s.as_str());
+        (main_group == Some(g) || (group.enabled && slot_enabled(input.build, slot)))
+            && group.gems.typed().any(|gem| {
+                gem.enabled
+                    && gem
+                        .skill
+                        .as_ref()
+                        .is_some_and(|id| id.as_str() == SKITTERBOTS)
+            })
+    }))
 }
 
 /// The skill type that gives a guaranteed chill whatever the skill's

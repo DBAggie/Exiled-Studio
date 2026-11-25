@@ -354,6 +354,12 @@ pub enum Poe1Quantity {
     /// build; the engine reads that group ([`gems`]) and checks it is there
     /// ([`collect`]).
     GrantsSkill,
+    /// A skill's shock of the enemy that no effect modifier scales (PoB's
+    /// `ShockOverride` BASE from Summon Skitterbots, `CalcPerform.lua`
+    /// 1360 to 1370; open items): `Base`, read by [`damage_taken`].
+    SkillShockOverride,
+    /// The same for chill (`ChillOverride` BASE, 1371 to 1383).
+    SkillChillOverride,
     /// A pool's flat regeneration per second as a percent of the pool
     /// (PoB's `<Pool>Regen` BASE 1 with `PercentStat` of the pool; open
     /// items S10): `Base`, read by [`regen`] as `ceil(pool x value / 100)`
@@ -1584,6 +1590,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
             Self::RegenPercentStat(p) => write!(f, "regen-percent-stat.{}", p.name()),
             Self::GrantsSkill => f.write_str("grants-skill"),
+            Self::SkillShockOverride => f.write_str("skill-shock-override"),
+            Self::SkillChillOverride => f.write_str("skill-chill-override"),
             Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
             Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
             Self::RegenPerFortification(p) => {

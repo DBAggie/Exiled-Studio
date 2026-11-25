@@ -408,3 +408,16 @@ The survey (S0) listed the unmodelled gems by skill ID (`local/p6/tools/gems_unm
 - Unbound Ailments: `non_damaging_ailment_effect_+%` (`EnemyChillEffect` INC).
 
 **Not inert by PoB's calc modules:** Summon Sentinel of Radiance (its life takes damage before yours, `CalcDefence.lua` 34, `CalcPerform.lua` 1223), Pact of Ghorr (the pacts' uptime, `CalcOffence.lua` 2804), Summon Elemental Relic (its minion's auras), and the buffs and auras with global rows (Arcane Cloak, Energy Blade, Petrified Blood, Mana Infused Staff, Aspect of the Cat, Raise Spiders, Convocation, Vaal Grace, Vaal Smite, Close Combat): each needs its rows as a `Kind::Buff` with fixtures, left for a later step. Skitterbots need a data run (follow-ups).
+
+## Summon Skitterbots (open items, 2026-11-24)
+
+S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieties, and PoB's model of the skill beside the main one needs none of them. PoB v2.67.2:
+
+- **Its global effect:** `skitterbots_trap_mine_damage_+%_final`, `Damage` MORE with `KeywordFlag.Mine` or `Trap`, a `Buff` (`act_int.lua` 20085); its reservation, 35% of mana.
+- **Its auras** (`CalcPerform.lua` 1360 to 1394, instead of the chilling-area branch): `ShockOverride` BASE `15 x (1 + (inc + SkitterbotAilmentEffect) / 100)` and `ChillOverride` BASE `10 x (...)`, `inc` the skill's own `EnemyShockEffect` and `EnemyChillEffect` INC of source `Skill` (the gem's `shock_effect_+%`, `chill_effect_+%` at its level); each marks the enemy shocked or chilled. The ailment table takes an override unscaled (3509 to 3519).
+
+**The engine:** `gems::SKILLS` has `SummonSkitterbots` (`Kind::Buff`, the damage row, its reservation); `gems::skitterbots` adds `Poe1Quantity::SkillShockOverride` and `SkillChillOverride`, which `damage_taken::shock` and `chill` take unscaled and which shock or chill the enemy without the config checks; `conditions::settle` sets the enemy's `Shocked` while one is active (`gems::skitterbots_shock`). Reasons: a support with a shock, chill, or non-damaging ailment effect, or Bonechill (`skitterbots-supports`), and the unmapped stats that stop or change the auras. `data-parity`: the gem's minions, types, and chill effect allowed with the reasons above; trap and mine keyword flags now written as PoB writes them (`other-flags 0/12288`); `uncategorized` 0.
+
+**Fixture:** `ice-nova-skitterbots-witch.xml`: Ice Nova with Skitterbots in another group and crit chance against shocked enemies; PoB's `CurrentShock` 17, `CurrentChill` 11; every computed field equals PoB.
+
+**Evidence** (`local/p6/sk` against `local/p6/gs`): public `Complete` 39,309 (+77, the fixture), 0 unexpected, 18 values toward PoB, none away; corpus 0 unexpected, 17 toward, 3 away: one build (by hash `b6098b68`) whose average damage, ignite, and hit DPS now overshoot PoB. PoB's own `CurrentShock` there is 18, the engine's too (a level 21 gem: 15 x 1.20); the build was near PoB before only through other missing terms (its fields keep their other reasons), as the close-out's batches recorded for such builds. Distinct reasons: 318 to 319 (`skitterbots-supports` new); field-reason pairs: corpus 9,434 to 9,272.

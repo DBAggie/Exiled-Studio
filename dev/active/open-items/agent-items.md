@@ -7,7 +7,7 @@ The maintainer (2026-11-24): "compile all items and complete them". Every open i
 Fixture budget: the oracle job now runs only a pull request's own fixtures (`.github/scripts/oracle-select.py`), so the 75-fixture cap of S0 no longer binds a pull request; a full run (pushes to `dev`) still grows with each fixture (about 14.8 s each on Windows).
 
 ## Found to need no data run (2026-11-24)
-- [ ] **Skitterbots** (`SummonSkitterbots`, `Skitterbots`; 5 public, 7 corpus builds): the bundle `b-ct` has the monster varieties (`Metadata/Monsters/Skitterbot/SkitterbotCold`, `SkitterbotLightning`, ...) in `poe1/minions.json`; model the skill and its auras (PoB's `Data/Minions.lua` 1038, 1079).
+- [x] **Skitterbots** (done: `docs/phase-6/gems.md`, "Summon Skitterbots"; `local/p6/sk`) (`SummonSkitterbots`, `Skitterbots`; 5 public, 7 corpus builds): the bundle `b-ct` has the monster varieties (`Metadata/Monsters/Skitterbot/SkitterbotCold`, `SkitterbotLightning`, ...) in `poe1/minions.json`; model the skill and its auras (PoB's `Data/Minions.lua` 1038, 1079).
 - [ ] **The Holy Relic's Nova** (`docs/phase-6/triggers.md`, "The Holy Relic's Nova"): data schema 5 carries skills' level requirements (`EffectLevel::level_requirement`); port PoB's minion skill level (`CalcActiveSkill.lua` 895 to 902) and the kept fixture.
 - [ ] **Vaal souls**: already in `b-ct` (2,268 skill levels carry `vaal_souls`); any reason still waiting on it is agent work.
 - [ ] **The 3_29 ascendancy auras** (Ramako, Void Beacon, Augury of Penitence, Unwavering Crusade: no stats in `PassiveSkills`): look for their buffs in the game files on this workstation (the 26530219 depot in `local/b2/steam-26530219`) before calling it a data gap.

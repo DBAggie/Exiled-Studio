@@ -5359,6 +5359,14 @@
    "step": "S7",
    "effort": "M",
    "note": "a dual wielder's block"
+  },
+  {
+   "key": "unmodelled-skill | skitterbots-supports",
+   "runs": {},
+   "class": "A",
+   "step": "S2",
+   "effort": "S",
+   "note": "Summon Skitterbots with a support whose shock, chill, or non-damaging ailment effect, or Bonechill's flag, PoB's override reads (added after S0)"
   }
  ]
 }

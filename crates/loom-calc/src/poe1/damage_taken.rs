@@ -295,6 +295,10 @@ pub const BLIND_EFFECT_STAT: &str = "blind_effect_+%";
 /// `Modules/Data.lua` 427).
 pub const SHOCK_MAX: f64 = 50.0;
 
+/// The default shock (`data.nonDamagingAilment.Shock.default`, `Modules/Data.lua`
+/// 421): Summon Skitterbots' base (open items).
+pub const SHOCK_DEFAULT: f64 = 15.0;
+
 /// One stat: its quantity and op (scale 1).
 type ShockRow = (&'static str, Poe1Quantity, Op);
 
@@ -790,8 +794,21 @@ fn unconditional<'a>(
 /// The input's name, for a check that is not a boolean or a count that
 /// is not a finite number.
 pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source)>, &'static str> {
+    // A skill's shock override (Summon Skitterbots, open items) shocks the
+    // enemy on its own (`CalcPerform.lua` 3518 to 3520), unscaled.
+    let skill_override = unconditional(ingest, Poe1Quantity::SkillShockOverride, Op::Base)
+        .map(|e| (e.value, e.source.clone()))
+        .fold(None, |best: Option<(f64, Source)>, (v, s)| match best {
+            Some((b, _)) if b >= v => best,
+            _ => Some((v, s)),
+        });
     match last(set, SHOCKED_INPUT, ConfigInputKind::Input) {
-        None | Some(ConfigValue::Boolean(false)) => return Ok(None),
+        None | Some(ConfigValue::Boolean(false)) => {
+            return Ok(skill_override.and_then(|(v, source)| {
+                let shock = crate::math::floor(crate::math::min(v, SHOCK_MAX));
+                (shock > 0.0).then_some((shock, source))
+            }));
+        }
         Some(ConfigValue::Boolean(true)) => {}
         // PoB reads any other value as on, and a string effect as a
         // string: not modelled, a reason.
@@ -821,6 +838,12 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     }
     // `floor(min(max(override, ShockVal), max))`, the maximum 50 without
     // modifiers (precision 0).
+    if let Some((v, s)) = &skill_override
+        && *v > guaranteed
+    {
+        guaranteed = *v;
+        first = Some(s.clone());
+    }
     let shock = crate::math::floor(crate::math::min(
         crate::math::max(guaranteed, configured),
         SHOCK_MAX,
@@ -886,6 +909,15 @@ pub fn chill(
             strongest = Some(e.source.clone());
         }
     }
+    // A skill's chill override (Summon Skitterbots, open items): unscaled
+    // by the character's chill effect, and it chills the enemy.
+    for e in unconditional(ingest, Poe1Quantity::SkillChillOverride, Op::Base) {
+        chilled = true;
+        if strongest.is_none() || e.value > guaranteed {
+            guaranteed = crate::math::max(guaranteed, e.value);
+            strongest = Some(e.source.clone());
+        }
+    }
     if !chilled {
         return Ok(None);
     }
@@ -918,6 +950,9 @@ fn chilled(set: Option<&ConfigSet>, ingest: &Ingest<'_>) -> Result<bool, &'stati
         Some(ConfigValue::Number(_) | ConfigValue::String(_)) => return Err(CHILLED_INPUT),
     };
     Ok(configured
+        || unconditional(ingest, Poe1Quantity::SkillChillOverride, Op::Base)
+            .next()
+            .is_some()
         || unconditional(ingest, Poe1Quantity::SkillChill, Op::Base)
             .next()
             .is_some())
