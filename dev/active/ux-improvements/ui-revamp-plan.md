@@ -59,7 +59,7 @@ PR #169, branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #
 - **Checked in the running application** on the Raise Spectre fixture at 1,280 px: every screen, the collapsed menu (no label cut), no sideways scroll. Measured on the Dashboard: no uppercase text, no letter spacing, radii 4, 8, 12 px and the 2 px marks.
 
 ## Step 2, built (2026-11-25)
-Branch `feat/ui-revamp-shell`, stacked on step 1's. The mockup is board A's header and side menu ("Board A is approved, build step 2").
+PR #170, branch `feat/ui-revamp-shell`, stacked on step 1's (#169). The mockup is board A's header and side menu ("Board A is approved, build step 2").
 
 - **The header is one row** (`Header` in `ui/src/App.tsx`, "The revamp's shell" in `redesign.css`): the build and its state at the left; "Up to date", the stage, Undo and Redo side by side, Export, and Save at the right. Its controls are 32 px tall.
 - **The state is one quiet line of text**, not pills: "Partial · 5 warnings · Unsaved changes". Only a failure keeps its colour.
