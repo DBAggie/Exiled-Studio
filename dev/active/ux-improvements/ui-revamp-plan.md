@@ -79,7 +79,7 @@ PR #171, branch `feat/ui-revamp-mark`, stacked on step 2's (#170). The mockup is
 - **Not in this step:** other chips that are not a calculation state (the Configuration page's "Not calculated" and "Note, no effect", an item line's status, "1 with warnings"): they go with their screens in step 4.
 
 ## Step 4, first part, built (2026-11-25): the start page and Configuration
-Branch `feat/ui-revamp-start-config`, stacked on step 3's. The mockups are the canvas's Start page and Configuration boards ("Build the two approved screens first").
+PR #172, branch `feat/ui-revamp-start-config`, stacked on step 3's (#171). The mockups are the canvas's Start page and Configuration boards ("Build the two approved screens first").
 
 **The start page** (`ui/src/screens/Start.tsx`):
 - The title is "Builds". The import bar leads, with the page's one filled button; the other ways in are under it.
