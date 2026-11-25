@@ -76,5 +76,8 @@ Found in the running application on the Raise Spectre fixture (`docs/ui/ux-audit
 
 Added by the pass to tasks above: RV-07 (the item editor's head is broken at 1,280 px: the name in three lines beside an empty row), RV-06 (four pills on the AI connection page; the blue "Main skill group" pill is a second accent), RV-03 (at 1,600 px the Defence rows stretch about 850 px and the card has a dead band beside the Main skill card).
 
+## Mockups shown, waiting for the maintainer (2026-11-25)
+One design canvas, "Follow-up mockups", eight boards: RV-01, RV-27, RV-28, RV-31, RV-32, RV-33 with RV-34, RV-35, and RV-06 with RV-07 (the item editor and the AI connection page). Each board says what is there now and what is proposed. Nothing of these is built until the maintainer says yes or asks for changes, board by board.
+
 ## Order suggested
 Done on PR #183: RV-08, RV-05, RV-02, RV-13, RV-29, RV-30, RV-36, RV-37, RV-38. Next: RV-04 once the maintainer answers its question; the mockup tasks (RV-01, then RV-27, RV-28, RV-31 to RV-35, RV-06, RV-07), each shown before it is built; RV-26 and RV-24 (no UI); the maintainer's decisions RV-14 to RV-17 at any time; then the larger ones (RV-10 to RV-12, RV-20 to RV-23).
