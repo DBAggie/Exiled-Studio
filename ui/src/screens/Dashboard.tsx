@@ -642,6 +642,24 @@ function ComponentTools({
               ))}
             </DropdownMenu.RadioGroup>
             <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.CheckboxItem
+              className="menu-item menu-radio"
+              checked={c.break === true}
+              // The first card and a full-width one start a row anyway.
+              disabled={index === 0 || c.width === 'full'}
+              onCheckedChange={(on) =>
+                onChange((l) =>
+                  l.map((x) => {
+                    if (x.id !== c.id) return x
+                    const { break: _, ...rest } = x
+                    return on ? { ...rest, break: true } : rest
+                  }),
+                )
+              }
+            >
+              {t('dashboard.newRow')}
+            </DropdownMenu.CheckboxItem>
+            <DropdownMenu.Separator className="menu-separator" />
             <DropdownMenu.Item
               className="menu-item"
               disabled={index === 0}
@@ -1257,8 +1275,8 @@ export function Dashboard() {
             key={c.id}
             data-cell={c.id}
             className={`dash-cell dash-${c.width}${
-              drag?.id === c.id ? ' dragging' : ''
-            }${
+              c.break === true ? ' dash-new-row' : ''
+            }${drag?.id === c.id ? ' dragging' : ''}${
               drag?.target?.id === c.id
                 ? drag.target.after
                   ? ' drop-after'

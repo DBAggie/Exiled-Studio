@@ -30,6 +30,24 @@
   }
 }
 
+/* A card set to start a new row leaves the room beside the card before
+   it empty (the card menu's "Start a new row"). */
+@media (min-width: 1001px) {
+  .dash-new-row.dash-third {
+    grid-column: 1 / span 2;
+  }
+
+  .dash-new-row.dash-half {
+    grid-column: 1 / span 3;
+  }
+}
+
+@media (min-width: 1281px) {
+  .dash-new-row.dash-two-thirds {
+    grid-column: 1 / span 4;
+  }
+}
+
 @media (max-width: 1000px) {
   .dash-grid {
     grid-template-columns: minmax(0, 1fr);

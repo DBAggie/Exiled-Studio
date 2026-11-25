@@ -85,6 +85,9 @@ export interface DashComponent {
   /** For `timeline`: the life to deal damage to. */
   target?: number
   width: Width
+  /** A row break before it: it starts a new row, whatever room the row
+   * before it has left. */
+  break?: boolean
 }
 
 export interface DashboardDef {
@@ -204,7 +207,8 @@ function isComponent(x: unknown): x is DashComponent {
         (CURVE_VARIES as string[]).includes(c.vary))) &&
     (c.input === undefined || typeof c.input === 'string') &&
     (c.target === undefined ||
-      (typeof c.target === 'number' && Number.isFinite(c.target)))
+      (typeof c.target === 'number' && Number.isFinite(c.target))) &&
+    (c.break === undefined || typeof c.break === 'boolean')
   )
 }
 

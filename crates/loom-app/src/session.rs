@@ -1987,6 +1987,7 @@ fn checked_dashboards(dashboards: api::Dashboards) -> Result<Dashboards, AppErro
                         vary: c.vary,
                         input: c.input,
                         target: c.target,
+                        new_row: c.new_row,
                     })
                     .collect(),
             })

@@ -657,6 +657,10 @@
       "description": "One component of a dashboard: what it shows, never the numbers.",
       "type": "object",
       "properties": {
+        "break": {
+          "description": "Whether a row break comes before the component: it starts a new\nrow, whatever room the row before it has left. `break`, one\nword, so the build document and the app API write it alike;\nleft out when false.",
+          "type": "boolean"
+        },
         "field": {
           "description": "The calc result field a stat, history, or curve component\nshows.",
           "type": [

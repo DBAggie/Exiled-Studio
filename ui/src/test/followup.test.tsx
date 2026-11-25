@@ -53,12 +53,20 @@ describe("the build's dashboards section", () => {
             { id: 'c1', kind: 'offence', width: 'half' },
             { id: 'c2', kind: 'hologram', width: 'half' },
             { id: 'c3', kind: 'timeline', width: 'half', target: 1234.6 },
-            { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+            {
+              id: 'c4',
+              kind: 'stat',
+              width: 'third',
+              field: 'life',
+              break: true,
+            },
           ],
         },
       ],
     })
     expect(own?.active).toBe('a')
+    // A row break is kept.
+    expect(own?.list[0]?.components[2]?.break).toBe(true)
     expect(own?.list[0]?.components.map((c) => c.kind)).toEqual([
       'offence',
       'timeline',
@@ -70,7 +78,13 @@ describe("the build's dashboards section", () => {
     expect(written.list[0]!.components).toEqual([
       { id: 'c1', kind: 'offence', width: 'half' },
       { id: 'c3', kind: 'timeline', width: 'half', target: 1235 },
-      { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+      {
+        id: 'c4',
+        kind: 'stat',
+        width: 'third',
+        field: 'life',
+        break: true,
+      },
     ])
     expect(readBuildDashboards(written)?.list[0]?.name).toBe('Mine')
   })
@@ -307,6 +321,30 @@ describe('arranging components by dragging', () => {
     await waitFor(() => expect(width()).toBe('half'))
     await user.keyboard('{Shift>}{ArrowLeft}{ArrowLeft}{/Shift}')
     await waitFor(() => expect(width()).toBe('third'))
+    // The card's menu starts a new row with it: the room beside the card
+    // before it stays empty. Kept with the layout.
+    const newRow = async () => {
+      screen.getByRole('button', { name: /Hit DPS: card menu$/ }).focus()
+      await user.keyboard('{Enter}')
+      const item = await screen.findByRole('menuitemcheckbox', {
+        name: 'Start a new row',
+      })
+      item.focus()
+      await user.keyboard('{Enter}')
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    }
+    const kept = () =>
+      (
+        JSON.parse(api.prefs ?? '{}') as {
+          dashboards: { components: { id: string; break?: boolean }[] }[]
+        }
+      ).dashboards[0]!.components.find((c) => c.id === start[0])?.break
+    await newRow()
+    await waitFor(() => expect(cell.className).toContain('dash-new-row'))
+    expect(kept()).toBe(true)
+    await newRow()
+    await waitFor(() => expect(cell.className).not.toContain('dash-new-row'))
+    expect(kept()).toBeUndefined()
     const bar = screen.getByRole('group', { name: /Hit DPS: arrange$/ })
     fireEvent.pointerDown(bar, { button: 0, pointerId: 2 })
     fireEvent.pointerMove(bar, { clientX: 280, clientY: 400, pointerId: 2 })

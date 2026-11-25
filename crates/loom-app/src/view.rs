@@ -993,6 +993,7 @@ fn dashboards_view(dashboards: &Dashboards) -> api::Dashboards {
                         vary: c.vary.clone(),
                         input: c.input.clone(),
                         target: c.target,
+                        new_row: c.new_row,
                     })
                     .collect(),
             })

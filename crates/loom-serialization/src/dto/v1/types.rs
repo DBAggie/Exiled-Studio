@@ -174,6 +174,12 @@ dto! {
         /// The life a fight timeline deals damage to.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub target: Option<u64>,
+        /// Whether a row break comes before the component: it starts a new
+        /// row, whatever room the row before it has left. `break`, one
+        /// word, so the build document and the app API write it alike;
+        /// left out when false.
+        #[serde(default, rename = "break", skip_serializing_if = "std::ops::Not::not")]
+        pub new_row: bool,
     }
 
     /// Where a typed section sits among untyped ones.

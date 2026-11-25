@@ -49,4 +49,7 @@ pub struct DashboardComponent {
     pub input: Option<String>,
     /// The life a fight timeline deals damage to.
     pub target: Option<u64>,
+    /// Whether the component starts a new row, whatever room the row
+    /// before it has left.
+    pub new_row: bool,
 }

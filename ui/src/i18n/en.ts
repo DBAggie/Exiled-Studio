@@ -320,6 +320,7 @@ export const en = {
   'dashboard.makeHalf': 'Half width',
   'dashboard.remove': 'Remove',
   'dashboard.cardMenu': '{name}: card menu',
+  'dashboard.newRow': 'Start a new row',
   'dashboard.moveTop': 'Move to top',
   'dashboard.moveBottom': 'Move to bottom',
   'dashboard.editBar': 'Edit the dashboard',
@@ -1138,7 +1139,7 @@ export const en = {
   'diag.size': '{n} bytes',
   'updates.title': 'Updates',
   'updates.available': 'Update available',
-  'updates.mode': 'Look for new versions',
+  'updates.mode': 'Look for new versions of Exiled Studio',
   'updates.mode.automatic-check': 'Check at start',
   'updates.mode.manual': 'Only when I ask',
   'updates.mode.strict-offline': 'Never connect (strict offline)',
@@ -1150,6 +1151,8 @@ export const en = {
   'updates.unavailable':
     'This build cannot check for updates (it carries no update key: a development build).',
   'updates.offline': 'Strict offline: Exiled Studio never connects.',
+  'updates.dataNote':
+    'Game data is downloaded for you at start unless you choose never to connect.',
   'updates.offer': 'Version {version} is available. You have {current}.',
   'updates.notes': 'What’s new',
   'updates.install': 'Install and restart',

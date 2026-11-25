@@ -682,6 +682,13 @@ export interface Dashboard {
  */
 export interface DashboardComponent {
   /**
+   * Whether a row break comes before the component: it starts a new
+   * row, whatever room the row before it has left. `break`, one
+   * word, so the build document and the app API write it alike;
+   * left out when false.
+   */
+  break?: boolean
+  /**
    * The calc result field a stat, history, or curve component
    * shows.
    */
