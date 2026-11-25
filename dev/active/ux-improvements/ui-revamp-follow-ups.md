@@ -15,7 +15,7 @@ Each task is its own PR from `dev`. A task that changes how a screen looks shows
 | RV-05 | **"Discard all" for unsaved work** on the start page, with a confirmation. | Drawn on the Start board, not built. | agent | small |
 | RV-06 | **The remaining pills that are not a calculation state:** an item line's status in the item editor, "Variant: …", the AI connection's pending count. Decide each: quiet text, the mark, or kept. | Step 3 replaced only the calculation state's pills. | agent, mockup first | small |
 | RV-07 | **The item editor and the AI connection page** were not in the audit's six mockups: review them against the foundations and draw what should change. | Not covered by step 4. | agent, mockup first | medium |
-| RV-08 | **Done 2026-11-25** (branch `chore/rv-08-audit-pass`; `docs/ui/ux-audit-pass-2.md`): seven defects fixed, RV-27 to RV-38 added below. ~~A second pass with the audit list (the `unslop` skill's signs and checklist) over the merged application, at 1,000, 1,280, and 1,600 px.~~ | Each step was checked alone; nothing has checked the whole after all twelve PRs. | agent | small |
+| RV-08 | **Done 2026-11-25** (branch `chore/rv-08-audit-pass`, PR #183; `docs/ui/ux-audit-pass-2.md`): seven defects fixed, RV-27 to RV-38 added below. ~~A second pass with the audit list (the `unslop` skill's signs and checklist) over the merged application, at 1,000, 1,280, and 1,600 px.~~ | Each step was checked alone; nothing has checked the whole after all twelve PRs. | agent | small |
 | RV-09 | **The tree's frame rate after the fade.** Measure pan and zoom on the test laptop as `docs/phase-5/performance.md` did (54/49 fps before). | #179 did not measure it. | maintainer runs, agent prepares | small |
 
 ## Revamp: needs work under the UI
