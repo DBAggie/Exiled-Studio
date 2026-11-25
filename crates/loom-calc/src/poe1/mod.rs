@@ -346,6 +346,14 @@ pub enum Poe1Quantity {
     /// game's per-minute stats on a state row, which has no scale; P6-10b):
     /// `Base`, read by [`regen`] divided by 60.
     RegenPercentPerMinute(Pool),
+    /// An item grants a skill (PoB's `ExtraSkill`: "Grants Level # <Skill>
+    /// Skill", "Curse Enemies with <Curse> on Hit", "Triggers Level #
+    /// <Skill> when Equipped"; open items, 2026-11-24): a `Flag` with the
+    /// item as its source. PoB builds the skill's socket group from it on
+    /// every calculation (`CalcSetup.lua` 1362 to 1460) and saves it in the
+    /// build; the engine reads that group ([`gems`]) and checks it is there
+    /// ([`collect`]).
+    GrantsSkill,
     /// A pool's flat regeneration per second as a percent of the pool
     /// (PoB's `<Pool>Regen` BASE 1 with `PercentStat` of the pool; open
     /// items S10): `Base`, read by [`regen`] as `ceil(pool x value / 100)`
@@ -1575,6 +1583,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
             Self::RegenPercentStat(p) => write!(f, "regen-percent-stat.{}", p.name()),
+            Self::GrantsSkill => f.write_str("grants-skill"),
             Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
             Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
             Self::RegenPerFortification(p) => {

@@ -11388,11 +11388,39 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
         .map(|i| Poe1Quantity::RegenReason(REGEN_REASONS[i].1, REGEN_REASONS[i].0))
 }
 
+/// Item stats PoB reads as `ExtraSkill`: the item grants a skill, whose
+/// socket group PoB builds and saves in the build (open items,
+/// 2026-11-24; each line's PoB parse in `docs/phase-6/stat-mop-up.md`,
+/// "Item-granted skills"), sorted. [`Poe1Quantity::GrantsSkill`]: the
+/// skill acts through its group ([`super::gems`]); `collect` checks the
+/// group is there.
+pub const GRANTS_SKILL_STATS: &[&str] = &[
+    "curse_on_hit_level_conductivity",
+    "curse_on_hit_level_frostbite",
+    "curse_on_hit_level_vulnerability",
+    "local_display_grants_skill_accuracy_crits_aura_level",
+    "local_display_grants_skill_barkskin",
+    "local_display_grants_skill_enduring_cry_level",
+    "local_display_grants_skill_herald_of_the_breach_level",
+    "local_display_grants_skill_summon_radiant_sentinel",
+    "local_display_raise_spider_on_kill_%_chance",
+    "local_display_trigger_level_x_reflection_skill_on_equip",
+];
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if let Some(q) = field_marker(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
                 quantity: Quantity::Poe1(q),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
+        if GRANTS_SKILL_STATS.binary_search(&stat.as_str()).is_ok() {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::GrantsSkill),
                 op: Op::Flag,
                 scale: 1.0,
                 divisor: 1.0,
@@ -11981,6 +12009,22 @@ mod tests {
         match Poe1Mapping.map(&StatId::new(stat)) {
             StatMap::Effects(e) => e.into_iter().map(|t| (t.quantity, t.op, t.scale)).collect(),
             other => panic!("{stat}: {other:?}"),
+        }
+    }
+
+    /// The item grant stats (open items): sorted, each the one flag, and in
+    /// no other table.
+    #[test]
+    fn grant_stats_should_be_the_grant_flag() {
+        assert!(GRANTS_SKILL_STATS.windows(2).all(|w| w[0] < w[1]));
+        for stat in GRANTS_SKILL_STATS {
+            assert_eq!(
+                effects(stat),
+                [(Quantity::Poe1(Poe1Quantity::GrantsSkill), Op::Flag, 1.0)],
+                "{stat}"
+            );
+            assert!(ROWS.iter().all(|r| r.0 != *stat), "{stat}");
+            assert!(NO_EFFECT.iter().all(|r| r.0 != *stat), "{stat}");
         }
     }
 

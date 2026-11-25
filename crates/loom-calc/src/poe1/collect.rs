@@ -115,6 +115,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
+    granted_skill_groups(input.build, ingest);
     // After the gems (Shield Crush's and Close Combat's stats; P6-11ht).
     melee_proximity(input, ingest);
     accuracy_per_level(input, ingest);
@@ -945,6 +946,55 @@ pub fn active_item_set(build: &Build) -> Option<&ItemSet> {
         .active_set
         .and_then(|id| items.sets().find(|s| s.id == id))
         .or_else(|| items.sets().next())
+}
+
+/// The groups of item-granted skills (open items, 2026-11-24): PoB builds
+/// a socket group from each `ExtraSkill` of an equipped item on every
+/// calculation, with `source = "Item:<id>:<name>"`, and saves it in the
+/// build (`CalcSetup.lua` 718 to 736, 1362 to 1460). The engine reads the
+/// saved group ([`super::gems`]). An item in use with a grant stat
+/// ([`super::Poe1Quantity::GrantsSkill`]) whose group the active skill set
+/// lacks (a build written by another tool) is a reason, never a silent
+/// skill missing.
+fn granted_skill_groups(build: &Build, ingest: &mut Ingest<'_>) {
+    let granting: Vec<ItemId> = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::GrantsSkill))
+        .filter_map(|e| match &e.source {
+            Source::Item { item, .. } => Some(*item),
+            _ => None,
+        })
+        .collect();
+    if granting.is_empty() {
+        return;
+    }
+    let groups = super::skill::active_groups(build).unwrap_or_default();
+    let has_group = |id: ItemId| {
+        let prefix = format!("Item:{}:", id.0);
+        groups
+            .iter()
+            .any(|g| attribute(&g.attributes, "source").is_some_and(|s| s.starts_with(&prefix)))
+    };
+    let mut seen = Vec::new();
+    for id in granting {
+        if seen.contains(&id) || has_group(id) {
+            continue;
+        }
+        seen.push(id);
+        let slot = items_in_use(build)
+            .into_iter()
+            .find_map(|(i, place)| match place {
+                ItemPlace::Slot(slot) if i == id => Some(slot),
+                _ => None,
+            })
+            .unwrap_or_default();
+        ingest.reason(UnsupportedReason::UnmodelledItem {
+            item: id,
+            slot,
+            what: "granted-skill-group",
+        });
+    }
 }
 
 /// Where an item in use is.

@@ -33,7 +33,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [ ] Cold Snap and Unbound Ailments (their chill effect); Corrupting Fever; Blink Arrow; Vaal Absolution; Arcanist Brand, Sacred Wisps, Living Lightning, Spell Totem supports; Summon Sentinel of Radiance; Pact of Ghorr; Summon Elemental Relic; Bane.
 
 ## S8: the close-out's closed reasons and config
-- [ ] Item-granted skills (`C-item-skill`, 13 stats; Herald of the Breach 280 fields): the engine creates the groups PoB creates from `ExtraSkill` (`CalcSetup.lua` 1362 to 1400).
+- [x] Item-granted skills (`C-item-skill`, 10 of 13 stats; Herald of the Breach 280 fields): the grant lines as `GrantsSkill`, the saved group checked (`docs/phase-6/stat-mop-up.md`, "Item-granted skills"); `local/p6/gs`
 - [ ] `C-engine-system` (69), `C-keystone` (6: Corrupted Defences, Crimson Dance, Precise Technique, Quiet Might, Tinctures' life drain, Wicked Ward), `C-gem-property` (7), `C-no-slice` (2).
 - [ ] Config: brittle (an enemy-side crit that reaches minions), the minion inputs (`minionsConditionFullLife`, `minionBuffOnslaught`, the minion charges), Feeding Frenzy, Elemental Equilibrium (`enemyConditionHitByLightningDamage`, `EEIgnoreHitDamage`), `multiplierNearbyAlly`, `presetBossSkills`, `TotalSpectreLife`, `detonateDeadCorpseLife`, `multiplierManaBurnStacks`, `bandit` values, `NoLifeModifiersOnBodyArmour`.
 
