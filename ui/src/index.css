@@ -2596,20 +2596,6 @@ button.inv-slot:focus-visible {
   border-radius: 6px;
 }
 
-.dash-library {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.dash-library li + li {
-  margin-top: 6px;
-}
-
-.dash-stat-add {
-  margin-top: 12px;
-}
-
 .stat-tile-button {
   display: flex;
   flex-direction: column;
@@ -3076,4 +3062,60 @@ button.inv-slot:focus-visible {
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
   text-shadow: none;
+}
+
+/* ----------------------------------------------- dashboard edit mode */
+
+/* A card's bar is its handle. */
+.dash-tools {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dash-cell.dragging .dash-tools {
+  cursor: grabbing;
+}
+
+.dash-edit-help {
+  margin: -4px 0 0;
+}
+
+.menu-label {
+  padding: 6px 10px 2px;
+  color: var(--c-muted);
+  font-size: 0.786rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The chosen width. */
+.menu-radio[data-state='checked'] {
+  font-weight: 650;
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.menu-sub {
+  display: flex;
+  align-items: center;
+}
+
+.menu-sub::after {
+  content: '›';
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--c-muted);
+}
+
+.menu-two {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.menu-long {
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
 }

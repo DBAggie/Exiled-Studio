@@ -308,9 +308,3 @@ select {
 .tree-canvas {
   border-color: var(--c-row);
 }
-
-.dash-library li,
-.dash-library li + li {
-  border-color: var(--c-row);
-  background: var(--c-header);
-}

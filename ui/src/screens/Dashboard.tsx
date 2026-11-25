@@ -6,7 +6,7 @@
 // label, value, and badge on one line; it opens the stat's breakdown.
 // A dashboard is short by default: lists show their first rows, charts
 // their plot, and the rest is one click away.
-import { Popover } from 'radix-ui'
+import { DropdownMenu, Popover } from 'radix-ui'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
@@ -15,7 +15,6 @@ import { Badge, FieldBadge, Hint, Icon, ScreenHeading } from '../components'
 import {
   CATALOG,
   CATEGORIES,
-  type Category,
   type ComponentKind,
   type DashComponent,
   type DashboardDef,
@@ -27,6 +26,7 @@ import {
   dropped,
   moved,
   newId,
+  stepWidth,
 } from '../dashboards'
 import { OFFENCE, fieldLabel, t } from '../i18n'
 import {
@@ -538,14 +538,17 @@ function componentName(c: DashComponent): string {
 
 /** A drag of a component by its handle. */
 interface DragHandlers {
-  down: (e: PointerEvent<HTMLButtonElement>, id: string) => void
-  move: (e: PointerEvent<HTMLButtonElement>) => void
+  down: (e: PointerEvent<HTMLElement>, id: string) => void
+  move: (e: PointerEvent<HTMLElement>) => void
   up: () => void
   cancel: () => void
   key: (e: KeyboardEvent<HTMLButtonElement>, index: number) => void
 }
 
-/** A component's controls while customizing: move, resize, remove. */
+/** A card's controls while customizing (maintainer 2026-11-24): its bar
+ * is the handle (drag it anywhere on the grid; from the grip, the arrow
+ * keys move the card and Shift with them resizes it), and one menu holds
+ * the width, the moves to the top and the bottom, and Remove. */
 function ComponentTools({
   c,
   index,
@@ -560,84 +563,116 @@ function ComponentTools({
   drag: DragHandlers
 }) {
   const name = componentName(c)
+  const setWidth = (width: Width) =>
+    onChange((l) => l.map((x) => (x.id === c.id ? { ...x, width } : x)))
   return (
+    // The shell turns off the browser's own drag and drop, so this is
+    // pointer events (UX audit follow-up).
     <div
       className="dash-tools"
       role="group"
       aria-label={t('dashboard.tools', { name })}
+      onPointerDown={(e) => {
+        // The card's menu is drawn elsewhere but its events come up
+        // through here: only a press on the bar itself starts a drag.
+        if (e.currentTarget.contains(e.target as Node)) drag.down(e, c.id)
+      }}
+      onPointerMove={drag.move}
+      onPointerUp={drag.up}
+      onPointerCancel={drag.cancel}
     >
-      {/* Dragged with the pointer; the arrow keys move it too. The shell
-          turns off the browser's own drag and drop, so this is pointer
-          events (UX audit follow-up). */}
       <button
         type="button"
         className="icon quiet drag-handle"
         aria-label={t('dashboard.drag', { name })}
         title={t('dashboard.dragHelp')}
-        onPointerDown={(e) => drag.down(e, c.id)}
-        onPointerMove={drag.move}
-        onPointerUp={drag.up}
-        onPointerCancel={drag.cancel}
-        onKeyDown={(e) => drag.key(e, index)}
+        onKeyDown={(e) => {
+          const by =
+            e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+              ? -1
+              : e.key === 'ArrowRight' || e.key === 'ArrowDown'
+                ? 1
+                : 0
+          if (e.shiftKey && by !== 0) {
+            e.preventDefault()
+            setWidth(stepWidth(c.width, by))
+          } else {
+            drag.key(e, index)
+          }
+        }}
       >
         <Icon name="grip" size={16} />
       </button>
       <strong className="small-text">{name}</strong>
       <span className="spacer" />
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.moveUp')}
-        title={t('dashboard.moveUp')}
-        disabled={index === 0}
-        onClick={() => onChange((l) => moved(l, index, -1))}
-      >
-        <Icon name="arrow-left" size={16} />
-      </button>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.moveDown')}
-        title={t('dashboard.moveDown')}
-        disabled={index === count - 1}
-        onClick={() => onChange((l) => moved(l, index, 1))}
-      >
-        <Icon name="arrow-right" size={16} />
-      </button>
-      <select
-        aria-label={t('dashboard.width')}
-        title={t('dashboard.width')}
-        value={c.width}
-        onChange={(e) =>
-          onChange((l) =>
-            l.map((x) =>
-              x.id === c.id ? { ...x, width: e.target.value as Width } : x,
-            ),
-          )
-        }
-      >
-        {WIDTHS.map((w) => (
-          <option key={w} value={w}>
-            {t(`dashboard.width.${w}`)}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.remove')}
-        title={t('dashboard.remove')}
-        onClick={() => onChange((l) => l.filter((x) => x.id !== c.id))}
-      >
-        <Icon name="close" size={16} />
-      </button>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button
+            type="button"
+            className="icon quiet"
+            aria-label={t('dashboard.cardMenu', { name })}
+            title={t('dashboard.cardMenu', { name })}
+            // The menu's button is not the handle.
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <span aria-hidden="true">⋯</span>
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            className="menu-content"
+            align="end"
+            sideOffset={6}
+          >
+            <DropdownMenu.Label className="menu-label">
+              {t('dashboard.width')}
+            </DropdownMenu.Label>
+            <DropdownMenu.RadioGroup
+              value={c.width}
+              onValueChange={(w) => setWidth(w as Width)}
+            >
+              {WIDTHS.map((w) => (
+                <DropdownMenu.RadioItem
+                  key={w}
+                  value={w}
+                  className="menu-item menu-radio"
+                >
+                  {t(`dashboard.width.${w}`)}
+                </DropdownMenu.RadioItem>
+              ))}
+            </DropdownMenu.RadioGroup>
+            <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.Item
+              className="menu-item"
+              disabled={index === 0}
+              onSelect={() => onChange((l) => moved(l, index, -l.length))}
+            >
+              {t('dashboard.moveTop')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className="menu-item"
+              disabled={index === count - 1}
+              onSelect={() => onChange((l) => moved(l, index, l.length))}
+            >
+              {t('dashboard.moveBottom')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.Item
+              className="menu-item"
+              onSelect={() => onChange((l) => l.filter((x) => x.id !== c.id))}
+            >
+              {t('dashboard.remove')}
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   )
 }
 
-/** The component library: the components by group with a search; each
- * summary once per dashboard, a chart or a stat tile as often as wanted. */
-function Library({
+/** The Add menu of the edit toolbar: the components by group, each
+ * summary once per dashboard, a chart or a value as often as wanted. */
+function AddMenu({
   dash,
   fields,
   onAdd,
@@ -646,105 +681,73 @@ function Library({
   fields: FieldResult[]
   onAdd: (kind: ComponentKind, field?: string) => void
 }) {
-  const [field, setField] = useState('')
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState<Category | 'all'>('all')
   const has = (kind: ComponentKind, f?: string) =>
     dash.components.some((c) => c.kind === kind && c.field === f)
   const full = dash.components.length >= MAX_COMPONENTS
   const free = fields.filter((f) => !has('stat', f.field))
-  const words = search.trim().toLowerCase()
-  const entries = CATALOG.filter(
-    (e) =>
-      (category === 'all' || e.category === category) &&
-      (words === '' ||
-        `${t(`dashboard.kind.${e.kind}`)} ${t(`dashboard.kindHelp.${e.kind}`)}`
-          .toLowerCase()
-          .includes(words)),
-  )
   return (
-    <section className="panel" aria-labelledby="dash-library">
-      <div className="panel-head">
-        <h2 id="dash-library">{t('dashboard.library')}</h2>
-        <span className="spacer" />
-        <input
-          type="search"
-          className="panel-search"
-          value={search}
-          placeholder={t('dashboard.librarySearch')}
-          aria-label={t('dashboard.librarySearch')}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-      <div
-        className="segmented"
-        role="group"
-        aria-label={t('dashboard.categories')}
-      >
-        {(['all', ...CATEGORIES] as const).map((c) => (
-          <button
-            type="button"
-            key={c}
-            aria-pressed={category === c}
-            onClick={() => setCategory(c)}
-          >
-            {t(`dashboard.category.${c}`)}
-          </button>
-        ))}
-      </div>
-      {entries.length === 0 ? (
-        <p className="muted small-text">{t('dashboard.libraryNone')}</p>
-      ) : (
-        <ul className="dash-library">
-          {entries.map((e) => (
-            <li key={e.kind}>
-              <span className="dash-library-text">
-                <strong>{t(`dashboard.kind.${e.kind}`)}</strong>
-                <span className="muted small-text">
-                  {t(`dashboard.kindHelp.${e.kind}`)}
-                </span>
-              </span>
-              <button
-                type="button"
-                disabled={full || (e.many !== true && has(e.kind))}
-                aria-label={t('dashboard.add', {
-                  name: t(`dashboard.kind.${e.kind}`),
-                })}
-                onClick={() => onAdd(e.kind)}
-              >
-                <Icon name="plus" size={16} />
-                {t('dashboard.addShort')}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="dash-stat-add">
-        <label htmlFor="dash-stat">{t('dashboard.statField')}</label>{' '}
-        <select
-          id="dash-stat"
-          value={field}
-          onChange={(e) => setField(e.target.value)}
-        >
-          <option value="">{t('dashboard.statChoose')}</option>
-          {free.map((f) => (
-            <option key={f.field} value={f.field}>
-              {fieldLabel(f.field)}
-            </option>
-          ))}
-        </select>{' '}
-        <button
-          type="button"
-          disabled={full || field === ''}
-          onClick={() => {
-            onAdd('stat', field)
-            setField('')
-          }}
-        >
-          {t('dashboard.addStat')}
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button type="button" className="primary" disabled={full}>
+          <Icon name="plus" size={16} />
+          {t('dashboard.addShort')}
+          <Icon name="chevron" size={14} />
         </button>
-      </div>
-    </section>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          className="menu-content"
+          align="start"
+          sideOffset={6}
+        >
+          <DropdownMenu.Sub>
+            <DropdownMenu.SubTrigger className="menu-item menu-sub">
+              {t('dashboard.addValue')}
+            </DropdownMenu.SubTrigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.SubContent className="menu-content menu-long">
+                {free.map((f) => (
+                  <DropdownMenu.Item
+                    key={f.field}
+                    className="menu-item"
+                    onSelect={() => onAdd('stat', f.field)}
+                  >
+                    {fieldLabel(f.field)}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.SubContent>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Sub>
+          {CATEGORIES.map((category) => (
+            <DropdownMenu.Sub key={category}>
+              <DropdownMenu.SubTrigger className="menu-item menu-sub">
+                {t(`dashboard.category.${category}`)}
+              </DropdownMenu.SubTrigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.SubContent className="menu-content">
+                  {CATALOG.filter((e) => e.category === category).map((e) => (
+                    <DropdownMenu.Item
+                      key={e.kind}
+                      className="menu-item menu-two"
+                      disabled={e.many !== true && has(e.kind)}
+                      aria-label={t('dashboard.add', {
+                        name: t(`dashboard.kind.${e.kind}`),
+                      })}
+                      onSelect={() => onAdd(e.kind)}
+                    >
+                      <span>{t(`dashboard.kind.${e.kind}`)}</span>
+                      <span className="muted small-text">
+                        {t(`dashboard.kindHelp.${e.kind}`)}
+                      </span>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.SubContent>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Sub>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   )
 }
 
@@ -1158,7 +1161,30 @@ export function Dashboard() {
         </button>
       </div>
       {editing && (
-        <div className="dash-edit-head">
+        <div
+          className="dash-edit-head"
+          role="toolbar"
+          aria-label={t('dashboard.editBar')}
+        >
+          <AddMenu
+            dash={dash}
+            fields={fields.filter((f) => f.value != null)}
+            onAdd={(kind, field) =>
+              // A new card goes to the top, where it is seen; drag it after.
+              change((l) => [
+                {
+                  id: newId('c', ids()),
+                  kind,
+                  ...(field === undefined ? {} : { field }),
+                  width:
+                    kind === 'stat'
+                      ? 'third'
+                      : (CATALOG.find((e) => e.kind === kind)?.width ?? 'half'),
+                },
+                ...l,
+              ])
+            }
+          />
           <label htmlFor="dash-name">{t('dashboard.name')}</label>{' '}
           <CommitField
             id="dash-name"
@@ -1214,6 +1240,11 @@ export function Dashboard() {
           )}
         </div>
       )}
+      {editing && (
+        <p className="muted small-text dash-edit-help">
+          {t('dashboard.editHelp')}
+        </p>
+      )}
       {calc === null && <p>{t('dashboard.noCalc')}</p>}
       {dash.components.length === 0 && !editing && (
         <p className="muted">{t('dashboard.empty')}</p>
@@ -1259,26 +1290,6 @@ export function Dashboard() {
           </div>
         ))}
       </div>
-      {editing && (
-        <Library
-          dash={dash}
-          fields={fields.filter((f) => f.value != null)}
-          onAdd={(kind, field) =>
-            change((l) => [
-              ...l,
-              {
-                id: newId('c', ids()),
-                kind,
-                ...(field === undefined ? {} : { field }),
-                width:
-                  kind === 'stat'
-                    ? 'third'
-                    : (CATALOG.find((e) => e.kind === kind)?.width ?? 'half'),
-              },
-            ])
-          }
-        />
-      )}
     </>
   )
 }

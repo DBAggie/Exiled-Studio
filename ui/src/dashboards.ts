@@ -298,16 +298,40 @@ export interface CellRect {
 
 /** Where a drag at (`x`, `y`) would drop: the cell under the pointer (the
  * nearest in its row when the pointer is in a gap) and the side of its
- * middle the pointer is on; `null` outside every row. */
+ * middle the pointer is on. Between two rows or under the last, the end
+ * of the row above (the card goes under it); above the first row, its
+ * start. `null` only without cells. */
 export function dropTarget(
   cells: CellRect[],
   x: number,
   y: number,
 ): { id: string; after: boolean } | null {
-  const row = cells.filter((c) => y >= c.top && y <= c.bottom)
-  if (row.length === 0) return null
+  if (cells.length === 0) return null
   const distance = (c: CellRect) =>
     x < c.left ? c.left - x : x > c.right ? x - c.right : 0
-  const cell = row.reduce((a, b) => (distance(b) < distance(a) ? b : a))
-  return { id: cell.id, after: x > (cell.left + cell.right) / 2 }
+  const row = cells.filter((c) => y >= c.top && y <= c.bottom)
+  if (row.length > 0) {
+    const cell = row.reduce((a, b) => (distance(b) < distance(a) ? b : a))
+    return { id: cell.id, after: x > (cell.left + cell.right) / 2 }
+  }
+  // The row that ends nearest above the pointer.
+  const above = cells.filter((c) => c.bottom < y)
+  if (above.length === 0) {
+    const first = cells.reduce((a, b) =>
+      b.top < a.top || (b.top === a.top && b.left < a.left) ? b : a,
+    )
+    return { id: first.id, after: false }
+  }
+  const bottom = Math.max(...above.map((c) => c.bottom))
+  const last = above
+    .filter((c) => c.bottom === bottom)
+    .reduce((a, b) => (b.right > a.right ? b : a))
+  return { id: last.id, after: true }
+}
+
+/** The width one step wider (`by` 1) or narrower (-1), stopping at the
+ * ends (Shift with the arrow keys). */
+export function stepWidth(w: Width, by: number): Width {
+  const i = WIDTHS.indexOf(w)
+  return WIDTHS[Math.max(0, Math.min(WIDTHS.length - 1, i + by))]!
 }

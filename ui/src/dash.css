@@ -563,42 +563,6 @@ button.hint:hover:not(:disabled) {
   padding: 0 8px;
 }
 
-.dash-library {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.dash-library li,
-.dash-library li + li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--c-row);
-  border-radius: var(--radius);
-}
-
-.dash-library-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.dash-library button {
-  flex: none;
-  min-height: 32px;
-  padding: 0 10px;
-}
-
-.dash-stat-add {
-  margin-top: 16px;
-}
-
 .other-skills {
   margin: 14px 0 6px;
 }

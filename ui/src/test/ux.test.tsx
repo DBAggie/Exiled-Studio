@@ -788,18 +788,41 @@ describe('dashboards (B-5)', () => {
     const name = screen.getByLabelText('Name')
     await user.clear(name)
     await user.type(name, 'Bossing')
-    await user.click(screen.getByRole('button', { name: 'Add Offence' }))
+    // The edit toolbar's Add menu, by group; a summary once.
+    const bar = screen.getByRole('toolbar', { name: 'Edit the dashboard' })
+    // Menus are driven with the keyboard, as a keyboard user would.
+    const choose = async (el: HTMLElement) => {
+      el.focus()
+      await user.keyboard('{Enter}')
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    }
+    const add = async (group: string, item: string) => {
+      const open = await within(bar).findByRole('button', { name: 'Add' })
+      open.focus()
+      await user.keyboard('{Enter}')
+      const sub = await screen.findByRole('menuitem', { name: group })
+      sub.focus()
+      await user.keyboard('{ArrowRight}')
+      return await screen.findByRole('menuitem', { name: item })
+    }
+    await choose(await add('Summaries', 'Add Offence'))
     expect(
-      screen
-        .getByRole('button', { name: 'Add Offence' })
-        .hasAttribute('disabled'),
-    ).toBe(true)
-    await user.selectOptions(screen.getByLabelText('Stat'), 'life')
-    await user.click(screen.getByRole('button', { name: 'Add stat' }))
+      (await add('Summaries', 'Add Offence')).getAttribute('aria-disabled'),
+    ).toBe('true')
+    await user.keyboard('{Escape}{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    // A new card goes to the top.
+    await choose(await add('A value', 'Life'))
     const life = screen.getByRole('group', { name: 'Stat: Life: arrange' })
-    await user.click(within(life).getByRole('button', { name: 'Move up' }))
-    // Any of four widths on the six-column grid.
-    await user.selectOptions(within(life).getByLabelText('Width'), 'full')
+    // One menu per card: any of four widths, the moves, Remove.
+    const card = async (item: string, role = 'menuitem') => {
+      within(life)
+        .getByRole('button', { name: 'Stat: Life: card menu' })
+        .focus()
+      await user.keyboard('{Enter}')
+      await choose(await screen.findByRole(role, { name: item }))
+    }
+    await card('Full width', 'menuitemradio')
     await expectAccessible()
 
     let saved = JSON.parse(api.prefs ?? '{}') as {
@@ -813,7 +836,21 @@ describe('dashboards (B-5)', () => {
       ['stat', 'full'],
       ['offence', 'half'],
     ])
-    await user.click(within(life).getByRole('button', { name: 'Remove' }))
+    // A press inside a card's menu is not a drag of the card (the menu's
+    // events come up through the card's bar).
+    within(life).getByRole('button', { name: 'Stat: Life: card menu' }).focus()
+    await user.keyboard('{Enter}')
+    fireEvent.pointerDown(
+      await screen.findByRole('menuitem', { name: 'Remove' }),
+      {
+        button: 0,
+        pointerId: 5,
+      },
+    )
+    expect(document.querySelector('.dash-cell.dragging')).toBeNull()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    await card('Remove')
     await user.click(screen.getByRole('button', { name: 'Done' }))
     expect(within(tabs).getByRole('button', { name: 'Bossing' })).toBeTruthy()
 

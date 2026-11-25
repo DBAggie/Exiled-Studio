@@ -234,9 +234,12 @@ describe('arranging components by dragging', () => {
     // In the gap between two cells: the nearer one.
     expect(dropTarget(cells, 112, 10)).toEqual({ id: 'b', after: false })
     expect(dropTarget(cells, 200, 100)).toEqual({ id: 'c', after: true })
-    // Between rows, or outside the grid: nowhere.
-    expect(dropTarget(cells, 50, 60)).toBeNull()
-    expect(dropTarget(cells, 50, 500)).toBeNull()
+    // Between rows, or under the last: after the row above (the card
+    // goes under it). Above the first row: at the start.
+    expect(dropTarget(cells, 50, 60)).toEqual({ id: 'b', after: true })
+    expect(dropTarget(cells, 50, 500)).toEqual({ id: 'c', after: true })
+    expect(dropTarget(cells, 150, -20)).toEqual({ id: 'a', after: false })
+    expect(dropTarget([], 0, 0)).toBeNull()
   })
 
   it('puts the dragged item before or after the target', () => {
@@ -295,6 +298,20 @@ describe('arranging components by dragging', () => {
         ...start.slice(3),
       ]),
     )
+    // The whole bar is the handle; Shift with the arrows resizes.
+    const cell = container.querySelector(`[data-cell="${start[0]}"]`)!
+    const width = () =>
+      /dash-(third|half|two-thirds|full)/.exec(cell.className)?.[1]
+    expect(width()).toBe('third')
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}')
+    await waitFor(() => expect(width()).toBe('half'))
+    await user.keyboard('{Shift>}{ArrowLeft}{ArrowLeft}{/Shift}')
+    await waitFor(() => expect(width()).toBe('third'))
+    const bar = screen.getByRole('group', { name: /Hit DPS: arrange$/ })
+    fireEvent.pointerDown(bar, { button: 0, pointerId: 2 })
+    fireEvent.pointerMove(bar, { clientX: 280, clientY: 400, pointerId: 2 })
+    expect(container.querySelector('.dash-cell.drop-after')).not.toBeNull()
+    fireEvent.pointerCancel(bar, { pointerId: 2 })
     await expectAccessible()
   })
 })
