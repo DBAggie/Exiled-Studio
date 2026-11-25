@@ -137,7 +137,7 @@ Stacked on #175, PR #176, branch `feat/ui-revamp-equipment`. The mockup is the c
 - **Checked in the running application** on the Raise Spectre fixture: the head one row at 1,280 and 1,600 px, two under 1,000 px; the paste form opens under its button inside the window; no sideways scroll.
 
 ## Step 4: Skills in two panes (2026-11-25)
-Stacked on #176, branch `feat/ui-revamp-skills`. The mockup is the canvas's "Skills" board; the maintainer chose two panes ("two panes for Skills").
+Stacked on #176, PR #177, branch `feat/ui-revamp-skills`. The mockup is the canvas's "Skills" board; the maintainer chose two panes ("two panes for Skills").
 
 - **Two panes** (`GroupPanes` in `ui/src/screens/Skills.tsx`) take the place of one long page of cards: every socket group listed under its slot at the left (its skill, its gem count, "main skill", "off"), the one picked shown at the right with its slot, its item, its sockets, and its gems. The main skill's group is shown first.
 - **The view's name** is "Groups" (was "Cards"); the Table view is unchanged.
