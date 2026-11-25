@@ -129,7 +129,7 @@ Stacked on #174, PR #175, branch `feat/ui-revamp-dashboard`. The mockup is the c
 - **Checked in the running application** with fresh preferences on the Raise Spectre fixture: four figures in one row at 1,280 and 1,600 px, two a row at 1,000 px, no sideways scroll at any.
 
 ## Step 4: Equipment (2026-11-25)
-Stacked on #175, branch `feat/ui-revamp-equipment`. The mockup is the canvas's "Equipment" board.
+Stacked on #175, PR #176, branch `feat/ui-revamp-equipment`. The mockup is the canvas's "Equipment" board.
 
 - **The page's controls are one row** at 1,280 px: the item set, the league, the stage to compare with, and **Paste an item** as a button whose form opens under it (it was a panel above the list). A page's pickers have quiet labels and narrower selects on every page.
 - **The items are a table:** slot, item (name in its rarity colour, base under it), sockets, lines to review. The sockets have their own column; "1 line" and "Legacy" are quiet text in the warning colour (muted on an item not in use) in place of pills.
