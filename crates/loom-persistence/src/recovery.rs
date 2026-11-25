@@ -111,8 +111,11 @@ struct HeaderOnly {
     _build: serde::de::IgnoredAny,
 }
 
+// Not strict: a key this version does not know (one a later version
+// added to the header) is ignored, so its snapshot is still restored
+// (RV-13). Versions up to 0.9.0 were strict here and refuse a snapshot
+// that carries `summary`, though they list it.
 #[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 struct File1 {
     format: String,
     version: u32,

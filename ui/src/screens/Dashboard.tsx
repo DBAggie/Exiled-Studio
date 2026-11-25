@@ -10,7 +10,7 @@ import { DropdownMenu, Popover } from 'radix-ui'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
-import { Delta, Sparkline } from '../charts'
+import { Delta, Meter, Sparkline } from '../charts'
 import {
   Badge,
   FieldMark,
@@ -127,6 +127,19 @@ function headlineFirst(fields: FieldResult[]): FieldResult[] {
     .map((x) => x.f)
 }
 
+/** The game's base cap of a value that has one, and the scale its bar is
+ * drawn on (a build's own maximum is not a field yet; the Resistances
+ * card uses the same 75). */
+function capOf(
+  field: string,
+): { cap: number; low: number; high: number } | null {
+  if (field.startsWith('resistance.')) return { cap: 75, low: -60, high: 90 }
+  if (field === 'block-chance' || field === 'poe1.spell-block-chance') {
+    return { cap: 75, low: 0, high: 100 }
+  }
+  return null
+}
+
 function FieldPanel({
   id,
   title,
@@ -163,6 +176,8 @@ function FieldPanel({
             f.field.startsWith('resistance.') &&
             typeof f.value === 'number' &&
             f.value < 0
+          const capped = capOf(f.field)
+          const amount = numberOf(f)
           return (
             <li key={f.field}>
               <button
@@ -181,6 +196,18 @@ function FieldPanel({
                   {reason !== null && <span className="reason">{reason}</span>}
                 </span>
                 <span className="stat-end">
+                  {/* A value with a cap is drawn against it (RV-02). */}
+                  {capped !== null && amount !== null && (
+                    <span className="stat-meter">
+                      <Meter
+                        value={amount}
+                        low={capped.low}
+                        high={capped.high}
+                        cap={capped.cap}
+                        tone={amount >= capped.cap ? 'good' : 'series'}
+                      />
+                    </span>
+                  )}
                   {baseline !== null && (
                     <Delta
                       now={numberOf(f)}

@@ -187,6 +187,13 @@ button.icon.quiet:hover:not(:disabled) {
   justify-content: flex-end;
 }
 
+/* A capped value's bar inside a plain row (the Defence table, RV-02):
+   one width, so the bars of a table share a scale. */
+.stat-meter {
+  flex: none;
+  width: 96px;
+}
+
 .stat-columns {
   columns: 2 22rem;
   column-gap: 28px;
