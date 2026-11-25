@@ -69,7 +69,7 @@ PR #170, branch `feat/ui-revamp-shell`, stacked on step 1's (#169). The mockup i
 - **Seen and left for step 4:** the import review's "Lines to review" column is squeezed to a few words a line at 1,280 px.
 
 ## Step 3, built (2026-11-25)
-Branch `feat/ui-revamp-mark`, stacked on step 2's. The mockup is board A's stat card and Defence rows ("Board A is approved, build step 3").
+PR #171, branch `feat/ui-revamp-mark`, stacked on step 2's (#170). The mockup is board A's stat card and Defence rows ("Board A is approved, build step 3").
 
 - **`StateMark`** (`ui/src/components.tsx`) takes the place of the state pill everywhere it was drawn: the dashboard's stat cards and panel rows, the panels in `DashPanels.tsx`, and a breakdown's heading. A filled circle is Exact, a half Partial, a ring Not yet, a dashed ring Cannot settle; in the secondary text colour, so the state is told by shape.
 - **Every number is marked** now, the exact ones too (before, only the exceptions carried a pill). The mark's name is its tooltip, and is read aloud except for Exact, which a row already says in its own name (UX-12 holds).
