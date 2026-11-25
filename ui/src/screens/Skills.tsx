@@ -5,6 +5,8 @@
 // `supports`). Level, quality, on or off, and the main skill are edited
 // here; every change is one undoable command. Gems are marked by their
 // colour, never with game art (ADR-000).
+import { ImportedText } from '../ImportedText'
+import { plain } from '../colourCodes'
 import { Fragment, useId, useState, type ReactNode } from 'react'
 
 import type {
@@ -276,10 +278,23 @@ function GroupBlock({
   const dispatch = useAppDispatch()
   const id = useId()
   const [picking, setPicking] = useState(false)
+  // The author's label, its colour codes drawn, never printed; names read
+  // aloud use it plain.
+  const label = group.label != null && group.label !== '' ? group.label : null
   const title =
-    group.label != null && group.label !== ''
-      ? group.label
-      : t('skills.groupN', { n: index + 1 })
+    (label === null ? '' : plain(label)) || t('skills.groupN', { n: index + 1 })
+  // The heading the application writes: the group's skill and its links
+  // (maintainer 2026-11-24); the label is the line under it.
+  const lead =
+    group.gems.find((g) => g.main) ??
+    group.gems.find((g) => g.support !== true) ??
+    group.gems[0]
+  const heading =
+    lead?.name == null
+      ? title
+      : group.gems.length > 1
+        ? t('skills.heading', { gem: lead.name, n: group.gems.length })
+        : lead.name
   const place = (change: { slot?: string; label?: string }) =>
     void dispatch(run({ 'edit-socket-group': { group: index, ...change } }))
   const links = linkOf(item?.sockets ?? [])
@@ -298,7 +313,14 @@ function GroupBlock({
       aria-labelledby={id}
     >
       <div className="skill-group-head">
-        <h3 id={id}>{title}</h3>
+        <div className="skill-group-title">
+          <h3 id={id}>{heading}</h3>
+          {label !== null && heading !== title && (
+            <p className="muted small-text">
+              <ImportedText text={label} />
+            </p>
+          )}
+        </div>
         <span className="spacer" />
         {used.size > 1 && <Badge tone="warn">{t('skills.unlinked')}</Badge>}
         {unsocketed > 0 && (

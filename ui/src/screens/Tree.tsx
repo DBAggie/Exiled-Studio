@@ -31,6 +31,8 @@ import type {
   TreeView,
 } from '../api/types'
 import { Hint, ScreenHeading } from '../components'
+import { ImportedText } from '../ImportedText'
+import { plain } from '../colourCodes'
 import { floatingStyle, placeByPoint, useFloating } from '../floating'
 import { fieldLabel, formatNumber, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
@@ -1496,7 +1498,9 @@ export function Tree() {
           role="group"
           aria-label={t('tree.specs')}
         >
-          <span className="muted small-text">{specTitle}</span>
+          <span className="muted small-text">
+            <ImportedText text={specTitle} />
+          </span>
           <button
             type="button"
             className="small"
@@ -1702,7 +1706,7 @@ export function Tree() {
                   {confirm.kind === 'reset'
                     ? t('tree.resetAsk')
                     : confirm.kind === 'delete'
-                      ? t('tree.specDeleteAsk', { name: specTitle })
+                      ? t('tree.specDeleteAsk', { name: plain(specTitle) })
                       : confirm.kind === 'convert'
                         ? t('tree.convertAsk', {
                             version: confirm.version,

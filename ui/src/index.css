@@ -2742,3 +2742,14 @@ button.inv-slot:focus-visible {
   gap: 12px;
   padding: 8px 0;
 }
+
+/* A socket group: the heading the application writes, the author's label
+   under it. */
+.skill-group-title {
+  min-width: 0;
+}
+
+.skill-group-title h3,
+.skill-group-title p {
+  margin: 0;
+}

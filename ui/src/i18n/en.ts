@@ -997,6 +997,7 @@ export const en = {
   'skills.none': 'This skill set has no socket groups.',
   'skills.set': 'Skill set',
   'skills.setN': 'Skill set {n}',
+  'skills.heading': '{gem} · {n} links',
   'skills.groupN': 'Group {n}',
   'skills.gemN': 'Gem {n}',
   'skills.main': 'Main skill',

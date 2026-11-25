@@ -384,9 +384,13 @@ describe('UX High fixes', () => {
     await user.click(
       screen.getByRole('button', { name: 'Make Frostblink the main skill' }),
     )
+    // The heading is the group's skill; the author's label is under it.
     const movement = screen
-      .getByRole('heading', { name: 'Movement' })
+      .getByText('Movement')
       .closest('section') as HTMLElement
+    expect(
+      within(movement).getByRole('heading', { name: /^Frostblink/ }),
+    ).toBeTruthy()
     await waitFor(() =>
       expect(within(movement).getByText('Main skill group')).toBeTruthy(),
     )
