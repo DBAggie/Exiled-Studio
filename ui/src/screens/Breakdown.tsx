@@ -12,7 +12,7 @@ import type {
   Node,
 } from '../api/types'
 import { type ChartPoint, Delta, LineChart } from '../charts'
-import { FieldBadge, ScreenHeading } from '../components'
+import { FieldMark, ScreenHeading } from '../components'
 import { OFFENCE, fieldLabel, formatNumber, t, tOr } from '../i18n'
 import { ReasonGroups } from '../ReasonDetails'
 import { readReason } from '../reasons'
@@ -657,7 +657,7 @@ export function Breakdown() {
               })
             : t('breakdown.titleNoValue', { field: fieldLabel(field) })}
         </ScreenHeading>
-        <FieldBadge field={f} />
+        <FieldMark field={f} text />
         {/* Against the pinned numbers, when comparing (UX audit D-03). */}
         {baseline !== null && (
           <Delta

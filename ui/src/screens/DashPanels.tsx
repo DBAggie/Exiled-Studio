@@ -14,7 +14,7 @@ import type {
 } from '../api/types'
 import { type ChartPoint, Delta, DeltaBar, LineChart, Meter } from '../charts'
 import { compactNumber } from '../chartMath'
-import { FieldBadge, Icon } from '../components'
+import { FieldMark, Icon } from '../components'
 import {
   CURVE_VARIES,
   type CurveVary,
@@ -194,7 +194,7 @@ function StatLine({
         <span className="stat-end">
           {note}
           <span className="stat-value">{value ?? fieldValue(field)}</span>
-          {field.state !== 'complete' && <FieldBadge field={field} />}
+          <FieldMark field={field} />
         </span>
       </button>
     </li>
@@ -440,7 +440,7 @@ export function AllStatsPanel({
                     />
                   )}
                   <span className="stat-value">{fieldValue(f)}</span>
-                  {f.state !== 'complete' && <FieldBadge field={f} />}
+                  <FieldMark field={f} />
                 </span>
               </button>
             </li>

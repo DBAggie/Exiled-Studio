@@ -118,6 +118,7 @@ export const en = {
   'calc.announceDone': 'Calculation finished.',
   'calc.announceRunning': 'Recalculating.',
 
+  'state.legend': 'What the marks mean',
   'state.complete': 'Exact',
   'state.partial': 'Partial',
   'state.unsupported': 'Not yet',
@@ -284,7 +285,7 @@ export const en = {
   'dashboard.title': 'Dashboard',
   'dashboard.offence': 'Offence',
   'dashboard.defence': 'Defence',
-  'dashboard.hint': 'Exact unless marked. Select a number to see why',
+  'dashboard.hint': 'Select a number to see why',
   'dashboard.row': '{field}: {value}, {state}.{reason}',
   'dashboard.noCalc': 'No calculation yet.',
   'dashboard.warnings': '{n} lines with warnings are kept but not calculated.',

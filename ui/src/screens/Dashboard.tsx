@@ -11,7 +11,14 @@ import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
 import { Delta, Sparkline } from '../charts'
-import { Badge, FieldBadge, Hint, Icon, ScreenHeading } from '../components'
+import {
+  Badge,
+  FieldMark,
+  Hint,
+  Icon,
+  ScreenHeading,
+  StateLegend,
+} from '../components'
 import {
   CATALOG,
   CATEGORIES,
@@ -183,8 +190,9 @@ function FieldPanel({
                   <span className={`stat-value${negative ? ' negative' : ''}`}>
                     {fieldValue(f)}
                   </span>
-                  {/* Only the exceptions are marked (UX-12). */}
-                  {f.state !== 'complete' && <FieldBadge field={f} />}
+                  {/* Every number carries its mark; only the exceptions
+                      are read aloud (UX-12). */}
+                  <FieldMark field={f} />
                 </span>
               </button>
             </li>
@@ -423,10 +431,10 @@ function StatTile({
           <h2 id={id} className="small-text">
             {fieldLabel(field.field)}
           </h2>
-          {field.state !== 'complete' && <FieldBadge field={field} />}
         </span>
         <span className="stat-tile-line">
           <span className="stat-tile-value">{fieldValue(field)}</span>
+          <FieldMark field={field} />
           <Sparkline values={trend} />
         </span>
         {baseline !== null && (
@@ -1308,6 +1316,8 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+      {/* What the marks beside the numbers mean, once a page. */}
+      {!editing && <StateLegend />}
     </>
   )
 }

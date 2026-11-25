@@ -68,6 +68,16 @@ PR #170, branch `feat/ui-revamp-shell`, stacked on step 1's (#169). The mockup i
 - **Checked in the running application** on the Raise Spectre fixture: one row of 52 px at 1,100, 1,280, and 1,600 px, two rows at 900 and 1,000 px, no sideways scroll at any; the menu's rows measured 34 px.
 - **Seen and left for step 4:** the import review's "Lines to review" column is squeezed to a few words a line at 1,280 px.
 
+## Step 3, built (2026-11-25)
+Branch `feat/ui-revamp-mark`, stacked on step 2's. The mockup is board A's stat card and Defence rows ("Board A is approved, build step 3").
+
+- **`StateMark`** (`ui/src/components.tsx`) takes the place of the state pill everywhere it was drawn: the dashboard's stat cards and panel rows, the panels in `DashPanels.tsx`, and a breakdown's heading. A filled circle is Exact, a half Partial, a ring Not yet, a dashed ring Cannot settle; in the secondary text colour, so the state is told by shape.
+- **Every number is marked** now, the exact ones too (before, only the exceptions carried a pill). The mark's name is its tooltip, and is read aloud except for Exact, which a row already says in its own name (UX-12 holds).
+- **A stat card's mark is beside its figure.** A breakdown's heading writes the state's name beside the mark.
+- **The legend** (`StateLegend`) is under the dashboard, once a page. The panel hint is now "Select a number to see why".
+- **Checked in the running application** on the Raise Spectre fixture: the dashboard has no amber pill left (the only chip is the game version), the legend shows the four states, a breakdown's heading reads "Partial" beside its mark, no sideways scroll.
+- **Not in this step:** other chips that are not a calculation state (the Configuration page's "Not calculated" and "Note, no effect", an item line's status, "1 with warnings"): they go with their screens in step 4.
+
 ## Open
-- Step 3 (the completeness mark) is next; board A shows it in a stat card and a panel's rows.
+- Step 4 (the screens, worst first) is next: Configuration and the start page have approved mockups; Warnings, About, the Dashboard's layout, Equipment, and Skills need theirs.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

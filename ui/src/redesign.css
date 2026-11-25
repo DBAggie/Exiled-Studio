@@ -396,3 +396,38 @@ select {
 .nav-rail .side-nav .nav-toggle {
   min-height: 34px;
 }
+
+/* ---- The completeness mark (the revamp's signature, 2026-11-25) ---------
+   Beside every number: read by its shape, in the secondary text colour. */
+.state-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  color: var(--c-soft);
+}
+
+.state-mark > svg {
+  flex: none;
+}
+
+.state-mark-text {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+/* In a stat card the mark sits beside the figure, not at the card's edge. */
+.stat-tile-line > .state-mark {
+  align-self: center;
+  margin-left: -4px;
+  margin-right: auto;
+}
+
+.state-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
