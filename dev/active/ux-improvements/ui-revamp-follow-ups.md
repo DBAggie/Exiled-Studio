@@ -47,5 +47,13 @@ Each task is its own PR from `dev`. A task that changes how a screen looks shows
 | RV-22 | **Details as an inline panel**, not a dialog, on a dashboard card (the first mockup's form). | agent, mockup first | small |
 | RV-23 | **The agent list** (`dev/active/open-items/agent-items.md`): Holy Relic Nova and the items after it. | agent | large |
 
+## Added after the merge (2026-11-25)
+
+| ID | Task | Who | Size |
+|---|---|---|---|
+| RV-24 | **Two new security advisories** (RUSTSEC-2026-0592, a stack overflow in `Url::origin()`; RUSTSEC-2026-0594, repeating cookie nonces) failed `cargo-deny advisories` on the bot's pull requests against `main` on 2026-11-25. Check `dev` and `main`, update the dependencies or record why each does not apply (`deny.toml`). | agent | small |
+| RV-25 | **Repowise's optional parts:** its PR bot's AI review, runtime evidence uploads, and a line in `AGENTS.md` telling agents to ask Repowise first. Each is the maintainer's choice (the review spends credit). | maintainer decides | small |
+| RV-26 | **The oracle fixture selection on a stacked pull request:** `oracle-select.py` fails (`git diff origin/<base>...HEAD` exits 128) when the base is another feature branch that the checkout has not fetched, as on #179. Fetch the base, or fall back to every fixture. | agent | small |
+
 ## Order suggested
 RV-08 first (it may add tasks), then RV-01, RV-05, RV-04, RV-02 (small, visible), then RV-13, then the maintainer's decisions RV-14 to RV-17 at any time, then the larger ones.

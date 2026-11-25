@@ -1,0 +1,81 @@
+name: Repowise coverage
+
+# Test coverage of the workspace, uploaded to Repowise (repowise.dev), the
+# hosted code index the maintainer set up on 2026-11-25. It is the workflow
+# Repowise's bot proposed (#180, #181), made to work here: the Tauri system
+# packages, the pinned toolchain, and actions pinned to commit SHAs as in
+# ci.yml. Not a required check: a failed run or a failed upload never blocks
+# a pull request (it is not in ci-ok).
+#
+# What leaves the runner: the lcov report (file paths and line counts, no
+# source), the repository's name, the commit, the pull request's number, and
+# the run's URL. This is CI, not the application: the application still
+# makes no such connection (ADR-011).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write # lets the upload prove it comes from this repository
+
+concurrency:
+  group: repowise-coverage-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+# Third-party actions are pinned to commit SHAs (tag in the trailing comment).
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev libxdo-dev
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - run: rustup component add llvm-tools-preview
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: cargo-llvm-cov
+      # The report is this job's point; ci.yml's rust job is the one that
+      # gates the tests. So a failed test does not stop the report
+      # (--ignore-run-fail runs every test, then writes it). One test fails
+      # here by design of the instrumentation, not of the code:
+      # oracle_process::tests::run_should_pass_only_the_allow_list checks a
+      # child's whole environment, and the profile runtime adds
+      # __LLVM_PROFILE_RT_INIT_ONCE to an instrumented child.
+      - name: Run tests with coverage
+        run: cargo llvm-cov --workspace --locked --ignore-run-fail --lcov --output-path lcov.info
+      - name: Upload coverage to Repowise
+        if: always()
+        continue-on-error: true
+        env:
+          REPORTS: "lcov.info" # space-separated paths or globs
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          shopt -s globstar nullglob
+          files=()
+          for pattern in $REPORTS; do for f in $pattern; do [ -f "$f" ] && files+=(-F "report=@$f"); done; done
+          if [ ${#files[@]} -eq 0 ]; then echo "::warning::Repowise: no coverage report found at: $REPORTS"; exit 0; fi
+          auth=()
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            token=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=repowise" | jq -r '.value // empty' || true)
+            [ -n "$token" ] && auth=(-H "Authorization: Bearer $token")
+          fi
+          curl -sS --fail-with-body --max-time 60 "${auth[@]}" "${files[@]}" \
+            -F "repository=$GITHUB_REPOSITORY" -F "head_sha=$HEAD_SHA" -F "pr_number=$PR_NUMBER" \
+            -F "event=$GITHUB_EVENT_NAME" -F "run_url=$RUN_URL" -F "workspace=$GITHUB_WORKSPACE" \
+            https://api.repowise.dev/ci/coverage \
+            || echo "::warning::Repowise: coverage upload failed; see the message above."
