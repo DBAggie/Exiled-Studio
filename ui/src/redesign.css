@@ -15,18 +15,17 @@
 h1,
 h2,
 h3 {
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-weight: 500;
 }
 
 .page-head h1,
 .tree-screen h1 {
-  font-size: 1.5rem;
+  font-size: var(--fs-title);
 }
 
 .brand {
   font-family: var(--font-brand);
-  font-size: 1.05rem;
+  font-size: var(--fs-section);
 }
 
 .stat-value,
@@ -39,8 +38,8 @@ h3 {
 }
 
 .stat-value {
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: var(--fs-body);
+  font-weight: 500;
 }
 
 /* ------------------------------------------------------------ controls */
@@ -48,7 +47,7 @@ h3 {
 button {
   background: transparent;
   border-color: var(--c-border-control);
-  font-weight: 550;
+  font-weight: 500;
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
@@ -60,10 +59,10 @@ button:hover:not(:disabled) {
 }
 
 button.primary {
-  border-color: var(--c-accent);
-  background: var(--c-accent);
-  color: var(--c-on-accent);
-  font-weight: 650;
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-weight: 500;
 }
 
 input,
@@ -79,24 +78,24 @@ select {
 }
 
 .app.nav-rail {
-  --nav-width: 84px;
+  --nav-width: 104px;
 }
 
 .app-header {
   padding: 8px 20px;
-  gap: 10px;
+  gap: 8px;
   min-height: 52px;
   box-sizing: border-box;
 }
 
 .build-name {
-  font-size: 1.05rem;
-  font-weight: 650;
+  font-size: var(--fs-body);
+  font-weight: 500;
 }
 
 .side-nav {
   border-right-color: var(--c-row);
-  padding: 10px 8px;
+  padding: 12px 8px;
 }
 
 .side-nav button {
@@ -121,7 +120,7 @@ select {
   justify-content: center;
   gap: 4px;
   min-height: 56px;
-  padding: 6px 2px;
+  padding: 4px 2px;
 }
 
 .nav-rail .side-nav .nav-text {
@@ -133,7 +132,7 @@ select {
   max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.714rem;
+  font-size: var(--fs-meta);
   font-weight: 500;
   line-height: 1.2;
 }
@@ -156,7 +155,7 @@ select {
 
 .content {
   padding: 24px 28px 56px;
-  gap: 18px;
+  gap: 16px;
 }
 
 /* The stage as a stepper: the build's progression, one press each. */
@@ -164,19 +163,19 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  padding: 3px;
+  padding: 4px;
   border: 1px solid var(--c-border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--c-input);
 }
 
 .stage-steps button {
   min-height: 28px;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-small);
   color: var(--c-muted);
-  font-size: 0.929rem;
+  font-size: var(--fs-body);
 }
 
 .stage-steps button[aria-pressed='true'] {
@@ -186,7 +185,7 @@ select {
 
 .stage-steps .stage-arrow {
   color: var(--c-border-strong);
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   padding: 0 1px;
 }
 
@@ -194,27 +193,25 @@ select {
 
 .panel {
   border-color: var(--c-row);
-  padding: 18px 20px;
+  padding: 16px 20px;
 }
 
 /* A panel's title is a label, not a headline: the numbers lead. */
 .dash-panel .panel-head h2,
 .stat-tile-button h2,
 .inventory-panel .panel-head h2 {
-  font-size: 0.786rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: var(--fs-meta);
+  font-weight: 500;
   color: var(--c-muted);
 }
 
 .dash-panel .panel-head {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .stat-row {
   min-height: 38px;
-  padding: 7px 0;
+  padding: 8px 0;
 }
 
 .stat-list > li:first-child .stat-row {
@@ -231,20 +228,9 @@ select {
   overflow: hidden;
 }
 
-.stat-tile::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 44px;
-  height: 3px;
-  background: var(--c-accent);
-  border-radius: 0 0 3px 0;
-}
-
 .stat-tile-value {
-  font-size: 2.3rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-size: var(--fs-figure);
+  font-weight: 500;
   line-height: 1.1;
 }
 
@@ -252,7 +238,7 @@ select {
 .dash-bar {
   border-bottom: 1px solid var(--c-row);
   padding-bottom: 0;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   align-items: flex-end;
 }
 
@@ -267,9 +253,9 @@ select {
 
 .dash-tabs button {
   border: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 12px;
   color: var(--c-muted);
   border-bottom: 2px solid transparent;
 }
@@ -286,12 +272,12 @@ select {
 }
 
 .badge {
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .meter {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-small);
 }
 
 .chart-line {
@@ -307,4 +293,19 @@ select {
 
 .tree-canvas {
   border-color: var(--c-row);
+}
+
+/* ---- The revamp's foundations (2026-11-25) ------------------------------
+   Figures are set in the mono face with tabular digits, wherever a number
+   is the content. */
+.stat-tile-value,
+.reason-count,
+.delta,
+.data-table td {
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.dialog-content {
+  border-radius: var(--radius-dialog);
 }

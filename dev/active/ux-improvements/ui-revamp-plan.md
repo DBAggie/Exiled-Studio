@@ -7,7 +7,7 @@ The maintainer asked for a review of the whole UI and a plan to revamp it (2026-
 ## Decisions (maintainer, 2026-11-25)
 - **Depth:** the full revamp, all five steps below.
 - **Direction:** approved as written below.
-- **Accent:** not decided. The maintainer asked to see alternatives; four are on the design canvas "Exiled Studio revamp" (https://claude.ai/artifact/3YUT56ZDe4Gmdq7iQvHvPB, private to the maintainer): violet used rarely, brass, star-chart blue, verdigris. Step 1 waits for the pick.
+- **Accent:** violet, used rarely (board A; "I like A", 2026-11-25), picked from four on the design canvas "Exiled Studio revamp" (https://claude.ai/artifact/3YUT56ZDe4Gmdq7iQvHvPB, private to the maintainer; the others were brass, star-chart blue, verdigris). The accent marks the selection, the active tab, links, and the allocated tree path; the primary button is off-white with dark text.
 
 ## Audit
 The verdict is light slop with a strong template look. There are no emoji, gradients, glows, or looping motion, the icons are one line set, and colours come from tokens. What is wrong is that near-black, Inter, and a violet accent is the default dark application, and several craft issues make screens look unfinished.
@@ -48,7 +48,16 @@ Each step is its own PR from `dev`, with its mockups approved first and its chec
 4. **Screens, worst first.** Configuration, Warnings, the start page, About, then the Dashboard (a lead row of compact figures, varied widths), Equipment, and Skills.
 5. **The passive tree.** Node shapes by kind, link weight, the allocated path's colour, surfaces for the floating controls, labels.
 
+## Step 1, built (2026-11-25)
+Branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #168 is not in `dev` yet, and the screens it restyles are its own). Approved by the maintainer from the canvas's Foundations, Start page, and Configuration boards ("Approved, use mono for figures, build step 1").
+
+- **Tokens** (`ui/src/theme/tokens.css`): the graphite surfaces and text roles, `--c-primary` and `--c-on-primary` (the off-white primary button), `--font-figure`, the five `--fs-*` sizes, the four radii. `--c-on-accent` is gone with its use. The contrast pairs (`pairs.ts`) cover the primary button and its hover; muted text is `#959BA6`, since the mockup's `#8A909B` missed 4.5:1 on a selected row.
+- **The three stylesheets**, by one pass over every declaration: 75 font sizes onto the five tokens, 42 weights onto 400, 500, 600, 7 uppercase rules and all 9 letter spacings removed, 89 paddings, margins, and gaps onto the 4 px scale, 16 radii onto the tokens. Figures (values, counts, chart ticks, table cells, number inputs) are in the mono face.
+- **The accent budget:** the primary button, the stat card's corner mark, the import box's border, and its icon no longer use the accent. The start page's Restore buttons are plain buttons (five filled buttons in a column were louder off-white than violet).
+- **One layout value changed**, because the text grew: the collapsed side menu is 104 px wide (was 84), so its labels fit at 12 px.
+- **Not changed** (later steps): the header's two rows, the status pills, the "Partial" pills, every screen's layout, the tree's drawing.
+- **Checked in the running application** on the Raise Spectre fixture at 1,280 px: every screen, the collapsed menu (no label cut), no sideways scroll. Measured on the Dashboard: no uppercase text, no letter spacing, radii 4, 8, 12 px and the 2 px marks.
+
 ## Open
-- The accent (above).
-- Whether figures are set in the bundled mono face (the mockups show JetBrains Mono for numbers; Inter stays for text). Decided with step 1's mockups.
+- Step 2 (the shell) is next; its mockup is board A's header and side menu, already approved with the accent.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

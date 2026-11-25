@@ -238,7 +238,6 @@ export function Start() {
                   <div className="row end">
                     <button
                       type="button"
-                      className="primary"
                       aria-label={t('start.restore', { name })}
                       onClick={() =>
                         void dispatch(

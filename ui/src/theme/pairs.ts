@@ -60,7 +60,13 @@ export const PAIRS: Pair[] = [
   ...['--c-text', '--c-muted', '--c-rarity-rare', '--c-warn-text'].flatMap(
     (fg) => blocks.map((bg) => ({ fg, bg, min: TEXT, use: 'change block' })),
   ),
-  { fg: '--c-on-accent', bg: '--c-accent', min: TEXT, use: 'primary button' },
+  { fg: '--c-on-primary', bg: '--c-primary', min: TEXT, use: 'primary button' },
+  {
+    fg: '--c-on-primary',
+    bg: '--c-primary-hover',
+    min: TEXT,
+    use: 'primary button, hovered',
+  },
   ...surfaces.map((bg) => ({
     fg: '--c-focus',
     bg,

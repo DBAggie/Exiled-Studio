@@ -60,12 +60,15 @@ surfaces, one accent that is no status's or rarity's colour, one type family.
 
 | Token | Value | Use |
 |---|---|---|
-| Background | `#0B0C0F`, panels `#121419`, raised `#1A1D24`, borders `#22262E` | Dark theme throughout (no light theme, decision 13). The side menu is the page's ground, not a panel |
-| Text | `#ECEEF2`, soft `#C8CDD6`, muted `#A3A9B3` | Muted text still passes 4.5:1 on panels |
-| Accent | `#A995FF` (violet), links `#C3B5FF`, text on the accent `#14102B` | Selection, the one filled button a screen (Save), links, allocated passives. Never a status, a rarity, or a chart series |
+| Background | `#0E0F11`, panels `#15171A`, raised `#1C1E22`, borders `#24272C` (the revamp's foundations, 2026-11-25) | Dark theme throughout (no light theme, decision 13). The side menu is the page's ground, not a panel |
+| Text | `#ECEEF2`, soft `#B4B9C2`, muted `#959BA6` | Muted text still passes 4.5:1 on panels |
+| Accent | `#A995FF` (violet), links `#C3B5FF` | Selection, the active tab, links, allocated passives. Never a status, a rarity, or a chart series. Since 2026-11-25 not a button's fill |
+| Primary button | `#ECEEF2` with text `#0E0F11` | The one filled button a screen (Save, Import) |
 | Focus ring | `#8DC1F2` 2px | All interactive elements |
-| Fonts | Inter (body, headings, numbers: by weight and size, tabular figures for every number), Space Grotesk (the brand mark only), JetBrains Mono (stat IDs, item text) | |
-| Corners | 10 px controls, 14 px panels | |
+| Fonts | Inter (body and headings), JetBrains Mono (figures, with tabular digits; stat IDs; item text), Space Grotesk (the brand mark only) | Figures in the mono face: maintainer 2026-11-25 |
+| Type | 12, 14, 16, 24, 28 px (`--fs-meta`, `--fs-body`, `--fs-section`, `--fs-title`, `--fs-figure`); weights 400, 500, and 600 for rare emphasis; sentence case, no letter spacing | Five sizes, no others |
+| Spacing | 4, 8, 12, 16, 24, 32 px in paddings, margins, and gaps | A 1 or 2 px nudge and a value that places something (a negative margin) are left |
+| Corners | 4 px marks and chips, 8 px controls, 12 px panels, 16 px dialogs (`--radius-small`, `--radius`, `--radius-panel`, `--radius-dialog`) | Tiny gem marks keep 2 px, so a support's square still differs from an active skill's circle |
 | Rarity | Normal `#C9CED6`, Magic `#8DC1F2`, Rare `#F2D97A`, Unique `#E39A6E` | Item borders and names |
 | Gem attribute | Strength `#E0796A`, Dexterity `#7FC27A`, Intelligence `#6FA6E6`, White `#D6D9DE` | Gems, sockets, attribute cards |
 | Links | Gold bar `#B9A57A` | Joins linked gems or sockets |
