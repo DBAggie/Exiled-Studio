@@ -399,7 +399,11 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
             _ => {}
         }
     }
-    tagless(&stats, &named, &input.data.mods_by_tag(LIFE_TAG)?)
+    tagless(
+        &stats,
+        &named,
+        &input.data.mods_by_tag_among(LIFE_TAG, &stats)?,
+    )
 }
 
 /// PoB's spec keys that name an item's crafted affixes (`Prefix: {range:r}

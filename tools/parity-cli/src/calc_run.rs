@@ -419,6 +419,13 @@ impl CalcData for OverlayData<'_> {
     fn mods_by_tag(&self, tag: &str) -> Option<loom_calc::input::ModsByTag> {
         self.bundle.mods_by_tag(tag)
     }
+    fn mods_by_tag_among(
+        &self,
+        tag: &str,
+        stats: &std::collections::BTreeSet<String>,
+    ) -> Option<loom_calc::input::ModsByTag> {
+        self.bundle.mods_by_tag_among(tag, stats)
+    }
 
     fn passive_kind(&self, node: u32) -> Option<loom_calc::input::PassiveKind> {
         self.bundle.passive_kind(node)

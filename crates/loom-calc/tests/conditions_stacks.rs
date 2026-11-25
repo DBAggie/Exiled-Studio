@@ -206,6 +206,17 @@ fn real_mods_should_carry_implicit_tags() {
     // A crafted rare's "+# to maximum Life" is on untagged mods too: only
     // PoB's affix record settles the condition (`poe1::states`).
     assert!(by_tag.untagged.contains("base_maximum_life"));
+    // Asked about a few stats, the answer holds those of them the full
+    // set holds, and the same tagged mods (RV-21).
+    let asked: std::collections::BTreeSet<String> = ["base_maximum_life", "no_such_stat"]
+        .map(str::to_owned)
+        .into();
+    let among = data.mods_by_tag_among("life", &asked).expect("tags");
+    assert_eq!(among.tagged, by_tag.tagged);
+    assert_eq!(
+        among.untagged,
+        asked.intersection(&by_tag.untagged).cloned().collect()
+    );
     let mastery = data.mastery_effect_stats(34242).expect("Life2");
     assert!(
         mastery

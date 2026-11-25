@@ -196,7 +196,24 @@ The re-baselines above asked for a profile before Phase 7 (the maintainer asked 
 
 Both stay inside the item-edit preview's 300 ms; at 231 ms the largest builds were close to it on this workstation.
 
-**Next levers** (for Phase 7, not done here): the main skill and the active skills are still resolved many times per calculation (`states`, `settle`'s checks, the curses, the gems, the costs): a per-calculation cache of the resolved skills would cut most of what is left; the full DPS pass recollects the whole build per included skill, where the items, tree, and config are the same each time; and the store could index its effects by quantity once queries grow.
+**Next levers** (for Phase 7, not done here; see "The skills and the body armour check" below for what a later profile found first): the main skill and the active skills are still resolved many times per calculation (`states`, `settle`'s checks, the curses, the gems, the costs): a per-calculation cache of the resolved skills would cut most of what is left; the full DPS pass recollects the whole build per included skill, where the items, tree, and config are the same each time; and the store could index its effects by quantity once queries grow.
+
+### The skills and the body armour check (RV-21, 2026-11-25)
+
+The hover numbers on the passive tree are one calculation of the build, so the calculation was profiled again (the same bundle, fixture, and method: temporary timers in a local build, never committed). The cache of resolved skills named under "Next levers" was not what the time went to. Two things were, about 80 of the 109 ms:
+
+- **`skill::active_skills` copied the whole build once per active skill** (`with_main_skill`, 18 copies, about 1.8 ms each): it asked for each skill as "the main skill of a copy of the build that picks it". It now asks `skill::skill_at` for the skill by its group and position on the build itself. The trigger, full DPS, and enemy-hit paths still make their own copy for a nested calculation; they need one.
+- **`states::no_life_modifiers_on_body_armour` built the set of every stat of every mod without the `life` tag**, six times a calculation (about 9.5 ms each), to ask about the handful of stats on one item. `CalcData::mods_by_tag_among` gives the tagged mods and, of the other mods' stats, only those asked about. Only a build with "no Life Modifiers on Equipped Body Armour" on its tree paid this; the fixture is one.
+
+**No result changes:** every public calc-run document (535) and corpus document (21 on this workstation) is byte-identical before and after (`local/rv21/before` against `local/rv21/after`, bundle `b-ct`).
+
+| | Before | After |
+|---|---|---|
+| `calculate`, the largest fixture, `b-ct` (median of 20) | 109.0 ms | 43.9 ms |
+| The public calc-run, 536 builds (calculation time) | 2.40 s | 1.67 s |
+| The corpus calc-run, 21 builds (calculation time) | 0.57 s | 0.27 s |
+
+On the test laptop the hover's numbers took 369 to 494 ms, about 3.5 times this workstation's calculation; the same ratio puts them near 150 ms, the budget. Measuring it there is the maintainer's (with RV-09's run).
 
 ## Accessibility (WCAG 2.2 AA)
 - **axe** (`expectAccessible`, `ui/src/test/render.tsx`) runs the WCAG 2.0, 2.1, and 2.2 A and AA rules.

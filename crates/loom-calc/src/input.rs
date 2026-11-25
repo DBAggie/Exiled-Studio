@@ -149,6 +149,19 @@ pub trait CalcData {
         None
     }
 
+    /// [`Self::mods_by_tag`] for a question about `stats` alone: the mods
+    /// that carry the tag, and of the stats of the other mods only those
+    /// among `stats` (the full set is every stat of tens of thousands of
+    /// mods, and one item's lines ask about a handful). The default asks
+    /// for the full set.
+    fn mods_by_tag_among(
+        &self,
+        tag: &str,
+        _stats: &std::collections::BTreeSet<String>,
+    ) -> Option<ModsByTag> {
+        self.mods_by_tag(tag)
+    }
+
     /// Whether a passive node is a notable, and whether it is an
     /// ascendancy's (P3-8n: which node an item's "Allocates <name>"
     /// grants). `None` (the default) when the data does not say.
@@ -542,6 +555,35 @@ impl CalcData for Bundle {
                 });
             } else {
                 out.untagged.extend(m.stats.iter().map(|s| s.stat.clone()));
+            }
+        }
+        Some(out)
+    }
+
+    fn mods_by_tag_among(
+        &self,
+        tag: &str,
+        stats: &std::collections::BTreeSet<String>,
+    ) -> Option<ModsByTag> {
+        if self.manifest.data_schema < IMPLICIT_TAGS_SCHEMA {
+            return None;
+        }
+        let mut out = ModsByTag::default();
+        for m in &self.mods {
+            if m.stats.is_empty() {
+                continue;
+            }
+            if m.implicit_tags.iter().any(|t| t == tag) {
+                out.tagged.push(TaggedMod {
+                    id: m.id.clone(),
+                    stats: m.stats.iter().map(|s| s.stat.clone()).collect(),
+                });
+            } else {
+                for s in &m.stats {
+                    if stats.contains(&s.stat) && !out.untagged.contains(&s.stat) {
+                        out.untagged.insert(s.stat.clone());
+                    }
+                }
             }
         }
         Some(out)
