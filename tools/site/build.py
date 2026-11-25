@@ -32,7 +32,6 @@ SITE = Path(__file__).resolve().parents[2] / "site"
 PACKAGES = [
     ("-setup.exe", "Windows", "Installer (recommended)", True),
     (".msi", "Windows", "MSI installer, for all users", False),
-    ("-portable.zip", "Windows", "Portable zip, no install", False),
     (".AppImage", "Linux", "AppImage", True),
     (".deb", "Linux", "Debian package", False),
 ]

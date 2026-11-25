@@ -1,7 +1,7 @@
 // The user's dashboards (UX brief note 5, B-5; docs/ui UI-DESIGN-BRIEF.md
 // screens 3 and 9; UX audit 2026-11-15, section D): up to eight, each a
-// list of components on a six-column grid, each a third, a half, two
-// thirds, or the full width. Kept in the UI's preferences document
+// list of components on a twelve-column grid, each a quarter, a third, a
+// half, two thirds, or the full width. Kept in the UI's preferences document
 // (`ui_prefs`, beside the application's settings); a build may keep its
 // own set in its file (`../buildDashboards`): the layout only.
 // An application older than a kind or a width drops that component when
@@ -39,9 +39,18 @@ export const CURVE_VARIES: CurveVary[] = [
   'config-number',
 ]
 
-/** A component's width on the dashboard's six-column grid. */
-export type Width = 'third' | 'half' | 'two-thirds' | 'full'
-export const WIDTHS: Width[] = ['third', 'half', 'two-thirds', 'full']
+/** A component's width on the dashboard's twelve-column grid. A quarter
+ * (the revamp's lead row of four figures, 2026-11-25) is the narrowest;
+ * an application older than it drops a component of that width, as it
+ * does any width it does not know. */
+export type Width = 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
+export const WIDTHS: Width[] = [
+  'quarter',
+  'third',
+  'half',
+  'two-thirds',
+  'full',
+]
 
 /** The library: every kind but `stat`, in order, with its group and the
  * width it starts with. */
@@ -85,6 +94,9 @@ export interface DashComponent {
   /** For `timeline`: the life to deal damage to. */
   target?: number
   width: Width
+  /** A row break before it: it starts a new row, whatever room the row
+   * before it has left. */
+  break?: boolean
 }
 
 export interface DashboardDef {
@@ -135,12 +147,16 @@ export function defaultPrefs(): Prefs {
         id: 'overview',
         name: 'Overview',
         components: [
-          { id: 'c6', kind: 'stat', field: 'hit-dps', width: 'third' },
-          { id: 'c7', kind: 'stat', field: 'life', width: 'third' },
-          { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'third' },
+          // A lead row of four figures, then a wide table beside a narrow
+          // list: widths that differ, so the page has a first thing to
+          // read (the revamp's dashboard layout, 2026-11-25).
+          { id: 'c6', kind: 'stat', field: 'hit-dps', width: 'quarter' },
+          { id: 'c7', kind: 'stat', field: 'life', width: 'quarter' },
+          { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'quarter' },
+          { id: 'c9', kind: 'stat', field: 'mana', width: 'quarter' },
+          { id: 'c2', kind: 'defence', width: 'two-thirds' },
+          { id: 'c3', kind: 'main-skill', width: 'third' },
           { id: 'c1', kind: 'offence', width: 'half' },
-          { id: 'c2', kind: 'defence', width: 'half' },
-          { id: 'c3', kind: 'main-skill', width: 'half' },
           { id: 'c4', kind: 'equipment', width: 'half' },
           { id: 'c5', kind: 'warnings', width: 'full' },
         ],
@@ -204,7 +220,8 @@ function isComponent(x: unknown): x is DashComponent {
         (CURVE_VARIES as string[]).includes(c.vary))) &&
     (c.input === undefined || typeof c.input === 'string') &&
     (c.target === undefined ||
-      (typeof c.target === 'number' && Number.isFinite(c.target)))
+      (typeof c.target === 'number' && Number.isFinite(c.target))) &&
+    (c.break === undefined || typeof c.break === 'boolean')
   )
 }
 
@@ -298,16 +315,40 @@ export interface CellRect {
 
 /** Where a drag at (`x`, `y`) would drop: the cell under the pointer (the
  * nearest in its row when the pointer is in a gap) and the side of its
- * middle the pointer is on; `null` outside every row. */
+ * middle the pointer is on. Between two rows or under the last, the end
+ * of the row above (the card goes under it); above the first row, its
+ * start. `null` only without cells. */
 export function dropTarget(
   cells: CellRect[],
   x: number,
   y: number,
 ): { id: string; after: boolean } | null {
-  const row = cells.filter((c) => y >= c.top && y <= c.bottom)
-  if (row.length === 0) return null
+  if (cells.length === 0) return null
   const distance = (c: CellRect) =>
     x < c.left ? c.left - x : x > c.right ? x - c.right : 0
-  const cell = row.reduce((a, b) => (distance(b) < distance(a) ? b : a))
-  return { id: cell.id, after: x > (cell.left + cell.right) / 2 }
+  const row = cells.filter((c) => y >= c.top && y <= c.bottom)
+  if (row.length > 0) {
+    const cell = row.reduce((a, b) => (distance(b) < distance(a) ? b : a))
+    return { id: cell.id, after: x > (cell.left + cell.right) / 2 }
+  }
+  // The row that ends nearest above the pointer.
+  const above = cells.filter((c) => c.bottom < y)
+  if (above.length === 0) {
+    const first = cells.reduce((a, b) =>
+      b.top < a.top || (b.top === a.top && b.left < a.left) ? b : a,
+    )
+    return { id: first.id, after: false }
+  }
+  const bottom = Math.max(...above.map((c) => c.bottom))
+  const last = above
+    .filter((c) => c.bottom === bottom)
+    .reduce((a, b) => (b.right > a.right ? b : a))
+  return { id: last.id, after: true }
+}
+
+/** The width one step wider (`by` 1) or narrower (-1), stopping at the
+ * ends (Shift with the arrow keys). */
+export function stepWidth(w: Width, by: number): Width {
+  const i = WIDTHS.indexOf(w)
+  return WIDTHS[Math.max(0, Math.min(WIDTHS.length - 1, i + by))]!
 }

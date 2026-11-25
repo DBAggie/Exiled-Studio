@@ -34,7 +34,7 @@ tools/
   knowledge-mcp       loom-knowledge-mcp: the knowledge MCP server over stdio, read-only, no network; shipped (ADR-018)
   release             loom-release: data keys, signatures, signed bundle packs, the data feed (docs/release/signing.md)
   bench               loom-bench: the core paths' instruction counts (CI) and wall clock (docs/phase-5/performance.md)
-  package             not a crate: installers, portable zip, smoke runs, release workflow scripts, the release channel (docs/phase-5/packaging.md, docs/release/channels.md)
+  package             not a crate: installers, the PR test zip, smoke runs, release workflow scripts, the release channel (docs/phase-5/packaging.md, docs/release/channels.md)
   site                not a crate: build.py fills site/ from GitHub's releases for the download page (docs/release/channels.md)
 fuzz/                 cargo-fuzz targets of the hostile-input readers; its own workspace (docs/phase-5/security.md)
 release/              trust lists and public keys compiled into the app; bundle.json names the shipped bundle (the maintainer's)
@@ -165,7 +165,10 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/config-options.ps1
 # builds in tools/oracle/fixtures/community/ (SOURCES.md, ADR-007 Amendment 1) by SHA-256, each with
 # its expected outcome; exit 0 when all are met). CI runs the same in the required `oracle` job
 # (Linux under `unshare -rn`, Windows) and compares the two platforms with oracle-compare, which
-# fails on an unregistered difference (exit 20); both jobs are in ci-ok since Spike C's C5:
+# fails on an unregistered difference (exit 20); both jobs are in ci-ok since Spike C's C5;
+# on a pull request the job runs only the smoke set (every fixture not mechanic or community) and the
+# fixtures the pull request adds or changes, and every fixture when it touches the oracle itself or has the
+# label oracle-full; pushes to dev, experimental, main run all (.github/scripts/oracle-select.py):
 cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> tools/oracle/fixtures/fixtures.json
 # The maintainer's corpus (local only, ADR-007): --anonymous names builds by SHA-256, so the report
 # holds no file names; commit only scrubbed summaries (docs/spikes/spike-c/):
@@ -249,7 +252,7 @@ pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Window
 # Release (Phase 5; docs/phase-5/packaging.md, docs/release/signing.md, docs/phase-5/data-bundles.md):
 cargo run -p loom-release -- <keygen|trust|trust-add|sign|verify|test-trust|test-sign|pack|feed> ...   # usage: no arguments
 cargo run -p loom-release -- pack <bundle-dir> --test-key --out <x.loombundle>   # a pack debug and e2e builds trust
-pwsh tools/package/portable.ps1 <loom-tauri.exe> <out-dir> [<version>]           # the portable zip
+pwsh tools/package/portable.ps1 <loom-tauri.exe> <out-dir> [<version>]           # the PR test zip (not released)
 pwsh tools/package/smoke.ps1 <package> <kind> <version>                           # start a package, check its build info
 LOOM_CHANNEL=experimental cargo build ...                                         # an experimental build (docs/release/channels.md)
 python3 -m unittest discover -s tools/site -p 'test_*.py'                         # the download page builder

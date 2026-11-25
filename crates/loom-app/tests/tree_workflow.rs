@@ -199,6 +199,17 @@ fn the_preview_should_never_commit_and_the_export_should_read_back() {
     assert!(p.removed.is_empty());
     assert!(!p.fields.is_empty(), "the synthetic build calculates");
     assert_eq!(tree(&s).nodes, [100, 999], "nothing committed");
+    // The hover's first answer: the same path, no calculation.
+    let quick =
+        loom_app::preview_tree_with(&state, &data, 1, Edit::Allocate(102), None, false, &|| {
+            panic!("no calculation runs, so nothing asks to cancel")
+        })
+        .unwrap();
+    assert_eq!(
+        (quick.path, quick.removed),
+        (p.path.clone(), p.removed.clone())
+    );
+    assert!(quick.fields.is_empty());
 
     s.edit_tree(1, Edit::Allocate(102)).unwrap().unwrap();
     let xml = pob_xml::export(&s.state().unwrap().build);

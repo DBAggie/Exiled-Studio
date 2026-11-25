@@ -52,6 +52,18 @@ fn the_real_tree_should_be_placed_modelled_and_allocatable_from_every_class() {
     let modelled = t.nodes.values().filter(|n| n.modelled).count();
     let kept = t.nodes.len() - modelled;
     println!("nodes {}, modelled {modelled}, kept {kept}", t.nodes.len());
+    // Blight's anointment notables: flagged, placed, never allocated.
+    let anoint: Vec<_> = t.nodes.values().filter(|n| n.anoint_only).collect();
+    assert!(!anoint.is_empty(), "the 3.29 tree has anointment notables");
+    assert!(
+        anoint
+            .iter()
+            .all(|n| !n.modelled && n.neighbours.is_empty())
+    );
+    assert!(
+        t.nodes.get(&62596).is_some_and(|n| n.anoint_only),
+        "Mystic Talents"
+    );
     assert!(t.nodes.values().all(|n| n.position.is_some()));
     let kinds = |k: Kind| {
         t.nodes

@@ -694,6 +694,7 @@ pub fn expand(tree: &Tree, subgraphs: &[Subgraph]) -> Tree {
                             modelled,
                             cluster_area: false,
                             expansion: true,
+                            anoint_only: false,
                         },
                     );
                 }

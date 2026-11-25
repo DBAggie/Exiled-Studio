@@ -219,10 +219,19 @@ fn tree_sprites(ctx: State<'_, Ctx>) -> Answer<api::TreeSprites> {
         .map_err(dto)
 }
 
-/// What clicking a node would do (runs off the main thread).
+/// What clicking a node would do (runs off the main thread): the hover
+/// preview, without the fields when `fields` is false (the path at once),
+/// a newer one cancelling an older one's calculation.
 #[tauri::command(async)]
-fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePreview> {
-    ctx.app.preview_tree(spec, node).map_err(dto)
+fn preview_tree(
+    ctx: State<'_, Ctx>,
+    spec: u32,
+    node: u32,
+    fields: Option<bool>,
+) -> Answer<api::TreePreview> {
+    ctx.app
+        .preview_tree_hover(spec, node, fields.unwrap_or(true))
+        .map_err(dto)
 }
 
 /// A what-if query: the computed fields across the build's stages or one
@@ -591,7 +600,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 39] = [
+pub const COMMANDS: [&str; 41] = [
     "snapshot",
     "calc_document",
     "item",
@@ -631,6 +640,8 @@ pub const COMMANDS: [&str; 39] = [
     "install_bundle",
     "check_data_feed",
     "download_data",
+    "data_auto_status",
+    "fetch_data",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -707,6 +718,8 @@ pub fn build<R: Runtime>(
             install_bundle,
             data_updates::check_data_feed,
             data_updates::download_data,
+            data_updates::data_auto_status,
+            data_updates::fetch_data,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -766,6 +779,7 @@ pub fn build<R: Runtime>(
             app.manage(updates::Updates::new(plugin, settings_for_updates));
             app.manage(data_updates::DataFeed::default());
             updates::at_start(&handle);
+            data_updates::at_start(&handle);
             Ok(())
         })
 }

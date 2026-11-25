@@ -22,22 +22,34 @@ export function UpdateSettings() {
   return (
     <section className="panel stack" aria-labelledby="updates-h">
       <h2 id="updates-h">{t('updates.title')}</h2>
-      <fieldset>
+      {/* Each choice is a row that says what it does; the one chosen is
+          marked. */}
+      <fieldset className="mode-list">
         <legend>{t('updates.mode')}</legend>
         {(Object.keys(MODES) as UpdateMode[]).map((mode) => (
-          <label key={mode} className="row">
+          <div
+            key={mode}
+            className={`mode-row${status.mode === mode ? ' chosen' : ''}`}
+          >
             <input
               type="radio"
+              id={`update-mode-${mode}`}
               name="update-mode"
               value={mode}
               checked={status.mode === mode}
+              aria-describedby={`update-mode-${mode}-help`}
               onChange={() => void dispatch(setUpdateMode(mode))}
             />
-            {t(MODES[mode])}
-          </label>
+            <div>
+              <label htmlFor={`update-mode-${mode}`}>{t(MODES[mode])}</label>
+              <span id={`update-mode-${mode}-help`} className="sub">
+                {t(`${MODES[mode]}.help`)}
+              </span>
+            </div>
+          </div>
         ))}
       </fieldset>
-      <p className="muted">{t('updates.privacy')}</p>
+      <p className="muted small-text">{t('updates.privacy')}</p>
       {!status.available ? (
         <p className="muted">{t('updates.unavailable')}</p>
       ) : offline ? (

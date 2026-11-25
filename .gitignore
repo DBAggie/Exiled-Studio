@@ -28,3 +28,6 @@ crates/loom-tauri/binaries/
 
 # Python bytecode (tools/site tests)
 __pycache__/
+
+# The oracle job's per-PR fixture list (.github/scripts/oracle-select.py)
+tools/oracle/fixtures/selected.json

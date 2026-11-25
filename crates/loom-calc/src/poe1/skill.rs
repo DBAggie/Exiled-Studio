@@ -548,6 +548,23 @@ pub fn gem_variant<'d>(
     Some((Some(effect), out))
 }
 
+/// PoB's `getActiveSkillCount` flag for a Vaal gem (`Calcs.lua` 150 to
+/// 174): the full DPS counts the gem's first granted effect when its
+/// `enableGlobal1` is on, its second when `enableGlobal2` is
+/// ([`global_enabled`]). `None` for a gem that is not a Vaal gem (the
+/// game's `IsVaalGem`, PoB's `vaalGem`), one the data does not have, or an
+/// effect past the second, which PoB counts as any skill (open items, S1).
+#[must_use]
+pub fn vaal_full_dps_enabled(gem: &Gem, effect_id: &str, data: &dyn CalcData) -> Option<bool> {
+    let row = data.skill_gem(gem.gem.as_ref()?.as_str())?;
+    if !row.vaal {
+        return None;
+    }
+    let (_, effects) = gem_variant(gem, data)?;
+    let n = effects.iter().position(|e| e.id == effect_id)? + 1;
+    (n <= 2).then(|| global_enabled(gem, n))
+}
+
 /// Whether PoB counts the gem's `n`-th effect (1-based) as enabled for a
 /// global effect: `enableGlobal1` defaults to on, the others to off.
 fn global_enabled(gem: &Gem, n: usize) -> bool {

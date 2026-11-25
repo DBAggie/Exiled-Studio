@@ -96,7 +96,8 @@ class BuildTest(unittest.TestCase):
         self.assertNotIn("latest.json", page)
         self.assertNotIn("loombundle", page)
         self.assertIn("Exiled Studio_0.2.0_x64-setup.exe", page)
-        self.assertIn("Exiled-Studio-Experimental_0.3.0-2_x64-portable.zip", page)
+        # A release that still has a portable zip does not offer it.
+        self.assertNotIn("portable", page)
         self.assertIn("<code>" + "a" * 64 + "</code>", page)
         self.assertIn("133.5 MB", page)
         self.assertNotIn("{{", page)

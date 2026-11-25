@@ -89,7 +89,8 @@ A spec on another tree version can be converted to the data's version, as PoB's 
 | `convert-tree-version` (T5b) | converts a spec to the data's tree version as a new active copy (above) |
 | `TreeView.cluster_nodes`, `cluster_sockets`, `convert` (T5b) | the expanded cluster nodes, each cluster socket's size (`small`, `medium`, `large`), and what conversion would do |
 | Shell `tree_layout` | the loaded data's tree: groups, nodes (kind, position, links, stat lines printed from `passive_skill_stat_descriptions`), classes, mastery effects. Made once per data load. |
-| Shell `preview_tree` | what clicking a node would do: the path or the removed nodes, and each slice field before and after. Calculated off the writer, never committed. |
+| `TreeNodeView.anoint-only` | whether only an anointment grants the node (Blight's notables; the passives table's `anoint_only`): drawn where the tree data places it, as PoB draws it, never allocated; its card says so (app API v1, additive, 2026-11-24). |
+| Shell `preview_tree` | what clicking a node would do: the path or the removed nodes, and each slice field before and after. Calculated off the writer, never committed. The optional `fields` (default true; additive, 2026-11-24): false gives the path and removals alone with no calculation, which the window shows at once; a newer hover preview with fields cancels an older one's calculation (`App::preview_tree_hover`). |
 
 `GameData` builds the tree and its layout DTO when the bundle loads. A stat no description prints is shown as its ID and value (ADR-015), except one the game declares without a description.
 
@@ -133,3 +134,18 @@ The cut-line steps T3, T4, T5b, and T8 were done on `feat/tree-remaining` (2026-
 - **Timeless jewels and the other radius jewels** (transforming nodes, counting attributes): not modelled; their nodes are allocated as usual.
 - **Editing an older spec on its own tree**: it is calculated on its pack but edited only after conversion.
 - **The private corpus run** on the tree packs: the corpus is on the main workstation ([tree-report.md](tree-report.md), "Maintainer-run").
+
+## The page (2026-11-25)
+
+In the Tree view the tree fills the content area under the build's header (maintainer 2026-11-24; the mockup is on the Design canvas "Exiled Studio UI redesigns"). The screen's section carries `tree-full`; `.content:has(> .tree-full)` drops the page's padding and scrolling, and the canvas takes the whole box. A `ResizeObserver` on the canvas fits the tree again when the box changes while the view is still the fitted one (`fitted`, cleared by a drag or a zoom, set by Fit), and otherwise redraws the kept view at the new size.
+
+The controls are the same elements in both views. In the List view they are rows above the list; over the tree they sit in the corners with no filled boxes, read through a text shadow in the tree's background colour:
+
+| Corner | Controls |
+|---|---|
+| Top left | The tree's name, a menu with New, Copy, Rename, Delete; class; ascendancy; info icons for the help, the ascendancy's quote, and the nodes kept as imported |
+| Top right | Search, Tree or List, the stage to compare with, Reset |
+| Bottom left | Points and attribute totals |
+| Bottom right | Zoom in, zoom out, Fit |
+
+A container appears only where one is unavoidable, and is see-through: the hover card, the rename form, the locked notice, the stage comparison. The hover card lists at most six changed numbers (the headline ones first, `IMPACT_FIRST`), then counts the rest.

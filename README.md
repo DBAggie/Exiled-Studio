@@ -4,7 +4,7 @@ An independent, open-source build planner for Path of Exile, written in Rust wit
 
 > **Not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.** Exiled Studio is a separate project with its own governance. Path of Building is used only as a pinned regression reference.
 
-**Status: pre-release scaffold.** The repository has a workspace, CI, and contributor rules, but no build-planning features yet. The three spikes (game-data extraction, text-to-stat-ID resolution, and the legacy PoB oracle harness) have met their gates, and so has Phase 2, the canonical build model and data (import and export of PoB builds and share codes, the successor's JSON build document, game-data bundles; `docs/phase-2/phase-2-report.md`), and Phase 3, the first calculations (a self-cast spell's and a main-hand attack's hit, the character and its core defences, each field with a completeness state and a breakdown, checked against PoB; `docs/phase-3/phase-3-report.md`). Phase 4 adds the desktop application: import a PoB build, a dashboard and breakdowns, item editing with background recalculation and undo, save and export, and a local MCP server an AI client can read the build through (changes need the user's approval; `docs/phase-4/phase-4-report.md`). Phase 5 adds the release: installers and a portable zip for Windows and Linux, signed application updates, signed game-data bundles with a signed feed, local logs, crash records, and a diagnostic package the user previews, plus the security and performance reports (`docs/phase-5/`). No version has been released yet. The name gets a final trademark check before the first release.
+**Status: pre-release scaffold.** The repository has a workspace, CI, and contributor rules, but no build-planning features yet. The three spikes (game-data extraction, text-to-stat-ID resolution, and the legacy PoB oracle harness) have met their gates, and so has Phase 2, the canonical build model and data (import and export of PoB builds and share codes, the successor's JSON build document, game-data bundles; `docs/phase-2/phase-2-report.md`), and Phase 3, the first calculations (a self-cast spell's and a main-hand attack's hit, the character and its core defences, each field with a completeness state and a breakdown, checked against PoB; `docs/phase-3/phase-3-report.md`). Phase 4 adds the desktop application: import a PoB build, a dashboard and breakdowns, item editing with background recalculation and undo, save and export, and a local MCP server an AI client can read the build through (changes need the user's approval; `docs/phase-4/phase-4-report.md`). Phase 5 adds the release: installers for Windows and Linux, signed application updates, signed game-data bundles with a signed feed, local logs, crash records, and a diagnostic package the user previews, plus the security and performance reports (`docs/phase-5/`). No version has been released yet. The name gets a final trademark check before the first release.
 
 ## Principles
 - The game is the source of truth. Path of Building v2.67.2 is a pinned regression oracle; every intentional difference is recorded with evidence.
@@ -22,11 +22,10 @@ Download from **https://dbaggie.github.io/Exiled-Studio/** once the first releas
 Each channel has these packages:
 - **Windows:**
   - the setup (`*_x64-setup.exe`), which also installs Microsoft's WebView2 runtime if it is missing, with no network needed;
-  - the MSI;
-  - a portable zip, which keeps its data in a `data` folder beside the program.
+  - the MSI.
 - **Linux:** an AppImage and a `.deb`.
 
-The setup, the MSI, and the AppImage update themselves, within their channel, when you approve. The `.deb` and the portable zip tell you a new version exists.
+The setup, the MSI, and the AppImage update themselves, within their channel, when you approve. The `.deb` tells you a new version exists.
 
 **Windows SmartScreen:** the installers are not code signed. The first time you run a downloaded setup, Windows shows "Windows protected your PC". Click **More info**, then **Run anyway**. Updates and game data are signed with the project's own keys and checked before they are used (`docs/release/signing.md`).
 

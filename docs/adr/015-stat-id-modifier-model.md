@@ -1,6 +1,6 @@
 # ADR-015: Stat-ID-First Modifier Model
 
-- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR)
+- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR; Amendment 3, 2026-11-24: reviewed rewordings for item lines, proposed in PR #168)
 - Date: 2026-11-08
 
 ## Context
@@ -59,3 +59,37 @@ For custom modifier lines of PoE1 config sets only (item lines are unchanged):
 - The note rule is a heuristic outside the fixtures. A numberless line PoB applies is a sentence ("Cannot be Stunned", "You have Onslaught"), so a line with a modifier's word stays unresolved, a reason; a numberless line PoB parses without such a word (a keystone's name is excluded) would still become a note. The `custom-lines` check finds such a line among the committed fixtures; a new one found later becomes a pattern or an exception.
 - The patterns are text, the hybrid fallback this ADR allows per area: here the area is the player's custom lines, whose text no game data describes.
 - Build v1 gains the typed kinds `custom-note` and `custom-pattern`; calc result v1 gains `reasons.notes` (both additive).
+
+## Amendment 3 (2026-11-24, proposed): Reviewed rewordings for item lines
+Asked for by the maintainer on 2026-11-24 ("Draft the amendment"), from the open items survey (`dev/active/open-items/open-items-inventory.md`, S0; `dev/active/open-items/maintainer-follow-ups.md`, "Older item wordings"). Proposed in PR #168; accepted when the maintainer accepts it and merges the PR. Nothing here is implemented until then.
+
+### Context
+Item text in PoB builds is often older than the game data the bundle is built from (build 26530219). PoB reads it with its own parser; the resolver reads it only through the current stat descriptions, so a line in an older wording has no template. In the open items survey this is the largest reason that needs a decision: `unresolved-line` `no-template` blocks 1,259 public fields in 17 builds (67 fields by it alone) and 757 corpus fields in 10 builds. Its lines are of four kinds (75 distinct public lines and 60 corpus lines, each run through PoB's `modLib.parseMod` with `tools/oracle/data/pob_parse_lines.lua`):
+
+- **An older wording of a stat the game still has.** "+1 to Maximum Endurance Charge" (now "Charges"), "21% reduced Charges used" (now "Charges per use"), "+13% to Critical Strike Multiplier for Spells" (now "for Spell Damage"), "12% increased Attack Speed during Flask effect" (now "during Effect"). PoB parses each old and current wording into the same mods.
+- **A mechanic that changed under similar words.** "7% reduced Mana Reserved" is now "Mana Reservation Efficiency": PoB parses them into different mods (`ManaReserved` INC against `ManaReservationEfficiency` INC), and the game changed the mechanic.
+- **A mechanic the game removed**, which PoB still reads for legacy items: "10% chance to Dodge Spell Hits while moving", the pre-3.15 flask immunities ("Immunity to Freeze and Chill during Flask effect"). No current stat stands for them.
+- **Not a modifier:** the author's notes ("Vendor Recipe. Higher Rarity Sash = Higher % Phys"), item properties ("Intangibility: 14%", "Recovers 374 Mana over 6.50 Seconds"), names ("Essence of Envy"). PoB parses none of them.
+
+Of the public lines PoB applies 49 and reads none of 26; of the corpus lines, 9 and 51. The tree packs already read older node text through a reviewed table (`tools/tree/rewordings.json`, `docs/tree/tree-packs.md`, "Rewordings"), learned from two versions of GGG's own data. Items have no older GGG data to learn from, so they need another check.
+
+### Decision
+For PoE1 item lines (custom modifier lines keep Amendment 2):
+
+- **A reviewed rewording table** (`tools/rewordings/items.json`, the tree table's format: `accepted` and `rejected` pairs of templates, numbers written as `#`, each rejection with its reason). A pair maps an older template to a current template of the bundle's stat descriptions.
+- **A pair is accepted only when both hold:**
+  1. PoB v2.67.2 parses the old and the current wording, at the same numbers, into identical mods (name, type, value, flags, keyword flags, tags) and with no text left over. This is checked by a tool, not by eye: `loom-parity-cli item-rewordings`, maintainer-run with the oracle as `custom-lines` is, reads `pob_parse_lines.lua`'s output and fails on any accepted pair whose parses differ.
+  2. A review finds the change one of wording alone (the tree table's rule). PoB reading two texts the same is evidence, not proof: PoB may itself have kept an old mechanic under the new words.
+- **Applied only as a tolerance.** A rewording is tried only when exact matching finds no template, after the existing tolerances; the line then resolves to the current template's stat IDs and carries `adapted` with the new tolerance `reworded` (Amendment 1), through import, the quarantine and display views, and the calculation's sources. An unlisted or rejected line stays `no-template`, a reason, as today.
+- **Contract changes, additive:** `Adapted` gains `reworded` in the domain, in build v1 (`dto::v1::types::Adapted`), and wherever calc result v1 names a line's `adapted` flag. A reader of v1 that does not know `reworded` sees an unknown string, as for any additive kind before it. Export keeps the line's original text.
+- **Unchanged.** Stat IDs stay first: a line that reads exactly is never reworded. Removed mechanics and lines that are not modifiers stay quarantined with their reason (but see "Not decided here").
+
+### Consequences
+- The largest maintainer-blocked reason becomes agent work: building the table from the survey's lines, one pair at a time with PoB's parse as evidence, and re-running the public and corpus calculations (each value that moves is compared with PoB, as for any mapping).
+- The check makes a PoB/game mismatch visible rather than hidden: a pair PoB reads differently is rejected by the tool before review.
+- The UI marks reworded lines as it marks other adapted lines, so the player sees that the text is not the game's.
+- New leagues: a reworded line's current template must exist in the bundle; a later re-extraction that drops it turns the line back into `no-template`, never into a guess.
+
+### Not decided here (for the maintainer)
+1. **Removed mechanics** (Dodge, the old flask immunities). Options: (a) stay reasons (default: no stat-ID reading exists, and a current item cannot have them); (b) a curated `legacy-pattern` typed kind, as Amendment 2's `custom-pattern`, each pattern naming PoB's mod with a test, for legacy items in Standard; (c) the same, but only for mechanics the engine models anyway.
+2. **Non-modifier lines in items** (notes, names). Options: (a) stay reasons (default); (b) extend Amendment 2's `custom-note` rule to item lines that PoB parses into nothing and that have no digit and no modifier's word, shown and kept for export, never a reason. Item properties ("Intangibility", a flask's recovery line) are a resolver gap under Amendment 1's `item-property` kind, agent work either way.

@@ -94,6 +94,11 @@ pub struct Header {
     pub path: Option<String>,
     /// The file it was imported from, if any.
     pub origin: Option<String>,
+    /// What the build is (class, ascendancy, level, main skill), so
+    /// snapshots of builds with the same name are told apart. Absent in a
+    /// snapshot written before 2026-11-25, and left out when not known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summary: Option<crate::recent::Summary>,
 }
 
 #[derive(Deserialize)]

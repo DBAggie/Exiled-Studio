@@ -24,7 +24,9 @@ describe('workflow', () => {
       await screen.findByRole('heading', { name: 'Imported build', level: 1 }),
     )
     expect(screen.getByText('Nothing like this')).toBeTruthy()
-    expect(screen.getByText('Lines to review')).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: 'Lines to review', level: 2 }),
+    ).toBeTruthy()
 
     // The dashboard: every field with its state; one without a value says why.
     await user.click(screen.getByRole('button', { name: 'Open the dashboard' }))
@@ -34,8 +36,8 @@ describe('workflow', () => {
         'Calculation finished.',
       ),
     )
-    // Label, value, and badge are one row (one button). Exact numbers carry
-    // no chip, only in their name (UX-12).
+    // Label, value, and mark are one row (one button). An exact number's
+    // mark is not read aloud: the row says it in its name (UX-12).
     const life = row('Life')
     expect(within(life).getByText('70')).toBeTruthy()
     expect(within(life).queryByText('Exact')).toBeNull()
@@ -47,6 +49,21 @@ describe('workflow', () => {
       within(dps).getByText('Not calculated by this version yet.'),
     ).toBeTruthy()
     expect(within(row('Average hit')).getByText('Cannot settle')).toBeTruthy()
+    // Every number carries its mark, told by its shape; its name is the
+    // tooltip, and the page says once what the marks mean.
+    expect(
+      life.querySelector('.state-mark.state-complete')?.getAttribute('title'),
+    ).toBe('Exact')
+    expect(dps.querySelector('.state-mark.state-unsupported')).not.toBeNull()
+    expect(
+      row('Average hit').querySelector('.state-mark.state-indeterminate'),
+    ).not.toBeNull()
+    const legend = screen.getByRole('list', { name: 'What the marks mean' })
+    expect(
+      within(legend)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['Exact', 'Partial', 'Not yet', 'Cannot settle'])
 
     // The breakdown of life: the item by slot and name, with its line.
     await user.click(row('Life'))

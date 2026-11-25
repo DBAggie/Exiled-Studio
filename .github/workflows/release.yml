@@ -98,20 +98,10 @@ jobs:
         id: version
         shell: bash
         run: echo "version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "loom-tauri") | .version')" >> "$GITHUB_OUTPUT"
-      # Before any `tauri build`: the bundler patches the executable in place.
-      - name: Portable zip
-        shell: pwsh
-        run: |
-          # A plain build reads the channel's config from TAURI_CONFIG (the
-          # tauri CLI passes --config files the same way).
-          if ($env:LOOM_CHANNEL -eq 'experimental') { $env:TAURI_CONFIG = Get-Content -Raw crates/loom-tauri/tauri.experimental.conf.json }
-          cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
-          # The knowledge MCP server (ADR-018): in the portable zip and its own asset.
-          cargo build --release --locked -p loom-knowledge-mcp
-          $v = & target/release/exiled-studio-knowledge-mcp.exe --version
-          if ($v -ne "exiled-studio-knowledge-mcp ${{ steps.version.outputs.version }}") { throw "knowledge MCP version: $v" }
-          ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
-      # The installers carry it too, beside the application (a sidecar).
+      # No portable zip (maintainer 2026-11-25: the application is
+      # installed; docs/phase-5/packaging.md). The knowledge MCP server
+      # (ADR-018) is its own asset, and the installers carry it beside the
+      # application (a sidecar); the script builds it and checks its version.
       - name: Knowledge MCP sidecar
         shell: bash
         run: bash tools/package/knowledge-sidecar.sh ${{ steps.version.outputs.version }}
@@ -124,13 +114,11 @@ jobs:
       - name: Collect
         shell: bash
         run: |
+          mkdir -p out/release
           cp target/release/bundle/nsis/*-setup.exe* target/release/bundle/msi/*.msi* out/release/
           cp target/release/exiled-studio-knowledge-mcp.exe "out/release/exiled-studio-knowledge-mcp_${{ steps.version.outputs.version }}_x64.exe"
           # The shipped pack once, for the data feed (the Windows job's).
           cp crates/loom-tauri/shipped/*.loombundle out/release/ 2>/dev/null || true
-      - name: Portable zip, started
-        shell: pwsh
-        run: ./tools/package/smoke.ps1 (Get-ChildItem out/release/*-portable.zip).FullName plain ${{ steps.version.outputs.version }}
       - name: NSIS, installed, started, uninstalled
         shell: pwsh
         run: ./tools/package/install-windows.ps1 nsis (Get-ChildItem out/release/*-setup.exe).FullName ${{ steps.version.outputs.version }}

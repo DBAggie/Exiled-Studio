@@ -48,25 +48,76 @@ export function Badge({
   )
 }
 
-const STATE_TONE: Record<string, Tone> = {
-  complete: 'ok',
-  partial: 'warn',
-  unsupported: 'neutral',
-  indeterminate: 'warn',
-}
+const STATES = ['complete', 'partial', 'unsupported', 'indeterminate']
 
-/** A calculation state (Exact, Partial, Not yet, Cannot settle). */
-export function StateBadge({ state }: { state: string }) {
+/** A calculation state (Exact, Partial, Not yet, Cannot settle) as a small
+ * mark read by its shape, never by colour alone (the revamp's signature,
+ * 2026-11-25): a filled circle, a half, a ring, a dashed ring. Its name is
+ * the tooltip, and is read aloud except for Exact, which a row says in its
+ * own name; `text` writes the name beside the mark. `name` says the state
+ * in a page's own words (a custom modifier line is "Counted"). */
+export function StateMark({
+  state,
+  text = false,
+  name: named,
+}: {
+  state: string
+  text?: boolean
+  name?: string
+}) {
+  const known = STATES.includes(state) ? state : 'unsupported'
+  const name = named ?? tDynamic(`state.${known}`, 'state.unsupported')
   return (
-    <Badge tone={STATE_TONE[state] ?? 'neutral'}>
-      {tDynamic(`state.${state}`, 'state.unsupported')}
-    </Badge>
+    <span className={`state-mark state-${known}`} title={name}>
+      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12">
+        {known === 'complete' ? (
+          <circle cx="6" cy="6" r="5" fill="currentColor" />
+        ) : (
+          <circle
+            cx="6"
+            cy="6"
+            r="4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray={known === 'indeterminate' ? '2 2' : undefined}
+          />
+        )}
+        {known === 'partial' && (
+          <path d="M6 1.5a4.5 4.5 0 000 9z" fill="currentColor" />
+        )}
+      </svg>
+      {text ? (
+        <span className="state-mark-text">{name}</span>
+      ) : (
+        known !== 'complete' && <span className="visually-hidden">{name}</span>
+      )}
+    </span>
   )
 }
 
-/** A field's state badge. */
-export function FieldBadge({ field }: { field: FieldResult }) {
-  return <StateBadge state={field.state} />
+/** A field's state mark. */
+export function FieldMark({
+  field,
+  text,
+}: {
+  field: FieldResult
+  text?: boolean
+}) {
+  return <StateMark state={field.state} text={text} />
+}
+
+/** What the marks mean, once a page. */
+export function StateLegend() {
+  return (
+    <ul className="state-legend" aria-label={t('state.legend')}>
+      {STATES.map((state) => (
+        <li key={state}>
+          <StateMark state={state} text />
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 const LINE_TONE: Record<LineView['status'], Tone> = {

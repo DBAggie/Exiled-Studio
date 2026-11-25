@@ -64,3 +64,37 @@ After this step, 36 distinct inputs remain reasons, in 26 builds.
 **Corpus:** no unexpected difference.
 
 Both runs were byte-identical.
+
+## Open items S8 (2026-11-24): config inputs
+
+The open items survey (S0) listed 28 `unmodelled-config` inputs. This step settles those whose PoB effect is fully known; each change is in `poe1::config`, `poe1::buffs`, or `poe1::damage_taken`, with PoB's lines in the code.
+
+**No effect in a computed field** (each a `NoEffect` input now):
+
+- `stormRainBeamOverlap`, `stormRainActiveArrows`, `toxicRainPodOverlap` (`config::SKILL_DATA_ONLY`): a `SkillData` value for the named skill (`SkillName` tag), read only by that skill's `preDamageFunc` as its `dpsMultiplier` (`act_dex.lua` 11747, 11851, 14933, 15025, 15114). Every such skill is unvetted for its hit, and Toxic Rain's for its DoT too (a test: `skill_data_only_skills_should_stay_unvetted`), so the value reaches no `Complete` field. The DoT vetting is now a function, `dot::pob_dot_vetted`.
+- `ActiveBrands` (`NAMED_ONLY`): `Multiplier:ConfigActiveBrands`, which `CalcPerform.lua` 1327 to 1330 turns into `Multiplier:ActiveBrand` for an active brand skill; only "per Brand" modifiers read it (`ModParser.lua` 1342, 1343). Their stats, found by the text in the bundle's descriptions, join `DEPENDS_ON`: `cooldown_speed_+%_per_brand_up_to_40%`, `critical_strike_chance_+%_per_brand`, `sigil_recall_cooldown_speed_+%_per_brand_up_to_40%`.
+- `buffAlchemistsGenius` (`NAMED_ONLY`): its condition holds only with `Condition:CanHaveAlchemistGenius` (`ConfigOptions.lua` 1044), which only "Gain Alchemist's Genius when you use a Flask" sets (`ModParser.lua` 5102 to 5107); its stat, `gain_alchemists_genius_on_flask_use_%`, joins `DEPENDS_ON`.
+
+**Modelled:**
+
+- **Unholy Might** (`buffUnholyMight`, `poe1::buffs`): `PhysicalDamageConvertToChaos` BASE `floor(100 x (1 + BuffEffectOnSelf / 100))` and `Condition:CanWither` (`CalcPerform.lua` 720 to 724), which enables Withered's chaos damage taken (2704 to 2707, 811 to 814; `poe1::damage_taken`, run after the buffs). `BuffEffectOnSelf` is unmapped, so 100.
+- **A moving enemy's bleed** (`conditionEnemyMoving`, `poe1::damage_taken`): PoB's base modifier `Damage` MORE 200 with `KeywordFlag.Bleed` while the enemy is `Moving` (`CalcSetup.lua` 537). Its exception, `NoExtraBleedDamageToMovingEnemy`, comes only from unmapped stats (Crimson Dance, a unique's line).
+
+**Fixtures** (2 of the session's 75):
+
+- `ice-nova-s8-unholy-might-withered-witch.xml`: added physical spell damage converted to chaos, the enemy at 10 Withered stacks: every computed field equals PoB.
+- `smite-s8-bleed-moving-enemy-templar.xml`: the bleed against a moving enemy equals PoB per hit; the rate differs only by the Rusted Hatchet's 667 ms (Q11), carried into the hit DPS, the bleed, the mana per second, and the full DPS: DIV-0694 to DIV-0699.
+
+**Still reasons** (follow-ups or later steps): the minion inputs (`minionsConditionFullLife`, `minionBuffOnslaught`, the minion charge inputs; the minion actor's conditions), Feeding Frenzy (its minion damage and speed), `enemyConditionHitByLightningDamage` (Elemental Equilibrium's exposure, `CalcPerform.lua` 3562 to 3572, and the hit sets it, `CalcOffence.lua` 3609), `multiplierNearbyAlly` (Rallying Cry's allies), brittle (`conditionEnemyBrittle`, `conditionBrittleEffect`; scorch, sap, crush, and the grounds are part 2, below), `bandit` as a value the engine does not read, `presetBossSkills`, `TotalSpectreLife`, `detonateDeadCorpseLife`, `multiplierManaBurnStacks`, `EEIgnoreHitDamage`.
+
+### Open items S8, part 2: scorch, sap, crush, the grounds, two stats
+
+- **Scorch and sap** (`poe1::damage_taken::alt_ailments`): PoB's ailment table (`CalcPerform.lua` 3469 to 3546). The check sets the enemy's `Condition:<ailment>` and `<ailment>Config`; the effect input sets `<ailment>Val` while that holds (`ConfigOptions.lua` 1858 to 1865, 1932 to 1939). The ailment is `floor(min(max(override, Val), max))`, the maxima 30 and 20 (`Data.lua` 422, 424). Its `Base`, `Override`, and `Minimum` modifiers and the skills' maxima come only from unmapped stats. Scorch gives the enemy `ElementalResist` BASE `-num` (`Poe1Quantity::EnemyResistance` for fire, cold, and lightning), sap gives it `Damage` MORE `-num` (`EnemyDamage`).
+- **Crushed** (`conditionEnemyCrushed`): an actor's `PhysicalDamageReduction` BASE -15 while crushed (`CalcSetup.lua` 109), the enemy's here (`EnemyPhysicalDamageReduction`).
+- **The grounds** (`conditionEnemyOnBrittleGround`, `OnSappedGround`, `OnScorchedGround`) in `NAMED_ONLY`: each sets the ailment's condition and its ground's, but no `Val` (that needs the check's `Config` condition), so the table adds an effect of 0.
+- **Brittle stays a reason**: its `SelfCritChance` BASE sits on the enemy and so reaches a minion's hits too (`CalcOffence.lua` 3015), which a character effect would not.
+- **Two stats `NoEffect`**, the guard tests naming each: `chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%` (PoB parses its first line with text left over and applies no mod of such a line, `Item.lua` 2504, 2531; the joined line does not parse) and `travel_skills_cannot_be_exerted` (unparsed).
+
+**Fixture** (3 of the session's 75): `ice-nova-s8-scorch-sap-crushed-witch.xml`, Ice Nova with added physical spell damage, the enemy scorched (20), sapped (15), and crushed: every computed field equals PoB, and each input is a source in the graph.
+
+**Evidence** (`local/p6/s8c`, `s8d`): public `Complete` 39,155 with the fixture, 0 unexpected; corpus 0 unexpected, 3 values of the crushed build toward PoB, none away.

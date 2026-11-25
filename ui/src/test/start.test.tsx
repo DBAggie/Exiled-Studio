@@ -28,7 +28,7 @@ describe('start page', () => {
 
     // From the start page, Ctrl N does the same.
     await user.click(screen.getByRole('button', { name: 'Close build' }))
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     await user.keyboard('{Control>}n{/Control}')
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
     expect(api.executed.filter((c) => c === 'new-build')).toHaveLength(2)

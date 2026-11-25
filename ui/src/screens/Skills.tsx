@@ -5,6 +5,8 @@
 // `supports`). Level, quality, on or off, and the main skill are edited
 // here; every change is one undoable command. Gems are marked by their
 // colour, never with game art (ADR-000).
+import { ImportedText } from '../ImportedText'
+import { plain } from '../colourCodes'
 import { Fragment, useId, useState, type ReactNode } from 'react'
 
 import type {
@@ -276,10 +278,23 @@ function GroupBlock({
   const dispatch = useAppDispatch()
   const id = useId()
   const [picking, setPicking] = useState(false)
+  // The author's label, its colour codes drawn, never printed; names read
+  // aloud use it plain.
+  const label = group.label != null && group.label !== '' ? group.label : null
   const title =
-    group.label != null && group.label !== ''
-      ? group.label
-      : t('skills.groupN', { n: index + 1 })
+    (label === null ? '' : plain(label)) || t('skills.groupN', { n: index + 1 })
+  // The heading the application writes: the group's skill and its links
+  // (maintainer 2026-11-24); the label is the line under it.
+  const lead =
+    group.gems.find((g) => g.main) ??
+    group.gems.find((g) => g.support !== true) ??
+    group.gems[0]
+  const heading =
+    lead?.name == null
+      ? title
+      : group.gems.length > 1
+        ? t('skills.heading', { gem: lead.name, n: group.gems.length })
+        : lead.name
   const place = (change: { slot?: string; label?: string }) =>
     void dispatch(run({ 'edit-socket-group': { group: index, ...change } }))
   const links = linkOf(item?.sockets ?? [])
@@ -298,7 +313,14 @@ function GroupBlock({
       aria-labelledby={id}
     >
       <div className="skill-group-head">
-        <h3 id={id}>{title}</h3>
+        <div className="skill-group-title">
+          <h3 id={id}>{heading}</h3>
+          {label !== null && heading !== title && (
+            <p className="muted small-text">
+              <ImportedText text={label} />
+            </p>
+          )}
+        </div>
         <span className="spacer" />
         {used.size > 1 && <Badge tone="warn">{t('skills.unlinked')}</Badge>}
         {unsocketed > 0 && (
@@ -412,56 +434,116 @@ interface Placed {
   index: number
 }
 
-function SlotCard({
-  slot,
-  item,
+/** A group's name in the list: its skill, as its block's heading says
+ * it, else the author's label, else its number. */
+function groupName(group: SkillGroupView, index: number): string {
+  const lead =
+    group.gems.find((g) => g.main) ??
+    group.gems.find((g) => g.support !== true) ??
+    group.gems[0]
+  const label = group.label != null && group.label !== '' ? group.label : null
+  return (
+    lead?.name ??
+    ((label === null ? '' : plain(label)) ||
+      t('skills.groupN', { n: index + 1 }))
+  )
+}
+
+/** The socket groups in two panes (the revamp's Skills page, maintainer
+ * 2026-11-25): every group listed by its slot at the left, the one picked
+ * with its gems at the right. The main skill's group is shown first. */
+function GroupPanes({
   groups,
+  socketed,
+  inSlot,
 }: {
-  slot: string | null
-  item: ItemSummary | undefined
-  groups: Placed[]
+  groups: SkillGroupView[]
+  socketed: string[]
+  inSlot: (slot: string | null) => ItemSummary | undefined
 }) {
   const dispatch = useAppDispatch()
   const id = useId()
+  const [picked, setPicked] = useState<number | null>(null)
+  const main = groups.findIndex((g) => g.main)
+  const shown =
+    picked !== null && picked < groups.length ? picked : Math.max(main, 0)
+  const group = groups[shown]
+  const item = group === undefined ? undefined : inSlot(group.slot ?? null)
   const filled = new Set(
-    groups.flatMap(({ group }) =>
-      group.gems.map((g) => g.socket).filter((s) => s != null),
-    ),
+    groups
+      .filter(
+        (g) => group !== undefined && (g.slot ?? null) === (group.slot ?? null),
+      )
+      .flatMap((g) => g.gems.map((x) => x.socket).filter((x) => x != null)),
   )
+  const add = (slot: string | null) => {
+    const at = groups.length
+    void dispatch(run({ 'add-socket-group': { slot, label: null } })).then(
+      (o) => {
+        // The new group is the one to fill: show it.
+        if (o !== null) setPicked(at)
+      },
+    )
+  }
   return (
-    <section className="panel slot-card" aria-labelledby={id}>
-      <div className="panel-head">
-        <div>
-          <h2 id={id}>{slot ?? t('skills.other')}</h2>
-          <span className="sub">
-            {slot == null
-              ? t('skills.otherSub')
-              : item == null
-                ? t('skills.noItem')
-                : itemName(item)}
-          </span>
-        </div>
-        <span className="spacer" />
-        {item != null && <Sockets groups={item.sockets} filled={filled} />}
-      </div>
-      {groups.length === 0 && (
-        <p className="muted small-text">{t('skills.slotEmpty')}</p>
+    <div className="skill-panes">
+      <nav className="panel group-list" aria-label={t('skills.groups')}>
+        {bySlot(groups, socketed).map(([slot, placed]) => (
+          <div key={slot ?? ''} className="group-list-slot">
+            <span className="group-list-name">{slot ?? t('skills.other')}</span>
+            {placed.map(({ group: g, index }) => (
+              <button
+                type="button"
+                key={index}
+                aria-current={index === shown ? 'true' : undefined}
+                className={g.enabled ? undefined : 'off'}
+                onClick={() => setPicked(index)}
+              >
+                <span>{groupName(g, index)}</span>
+                <span className="sub">
+                  {[
+                    g.gems.length === 1
+                      ? t('skills.gemCount1')
+                      : t('skills.gemCount', { n: g.gems.length }),
+                    ...(g.main ? [t('skills.main').toLowerCase()] : []),
+                    ...(g.enabled ? [] : [t('skills.groupOff')]),
+                  ].join(' · ')}
+                </span>
+              </button>
+            ))}
+            <button
+              type="button"
+              className="link quiet group-list-add"
+              onClick={() => add(slot)}
+            >
+              {slot == null
+                ? t('skills.addGroup')
+                : t('skills.addGroupIn', { slot })}
+            </button>
+          </div>
+        ))}
+      </nav>
+      {group !== undefined && (
+        <section className="panel slot-card" aria-labelledby={id}>
+          <div className="panel-head">
+            <div>
+              <h2 id={id}>{group.slot ?? t('skills.other')}</h2>
+              <span className="sub">
+                {group.slot == null
+                  ? t('skills.otherSub')
+                  : item == null
+                    ? t('skills.noItem')
+                    : itemName(item)}
+              </span>
+            </div>
+            <span className="spacer" />
+            {item != null && <Sockets groups={item.sockets} filled={filled} />}
+          </div>
+          {/* Keyed by the group: its picker and its settings start closed. */}
+          <GroupBlock key={shown} group={group} index={shown} item={item} />
+        </section>
       )}
-      {groups.map(({ group, index }) => (
-        <GroupBlock key={index} group={group} index={index} item={item} />
-      ))}
-      <button
-        type="button"
-        className="link top-gap"
-        onClick={() =>
-          void dispatch(
-            run({ 'add-socket-group': { slot: slot ?? null, label: null } }),
-          )
-        }
-      >
-        {slot == null ? t('skills.addGroup') : t('skills.addGroupIn', { slot })}
-      </button>
-    </section>
+    </div>
   )
 }
 
@@ -743,21 +825,13 @@ export function Skills() {
       {table && groups.length > 0 ? (
         <SkillTable groups={groups} inSlot={inSlot} />
       ) : (
-        <div className="skill-grid">
-          {bySlot(
-            groups,
-            build.items
-              .filter((i) => i['in-use'] && i.sockets.length > 0)
-              .flatMap((i) => (i.slot == null ? [] : [i.slot])),
-          ).map(([slot, placed]) => (
-            <SlotCard
-              key={slot ?? ''}
-              slot={slot}
-              item={inSlot(slot)}
-              groups={placed}
-            />
-          ))}
-        </div>
+        <GroupPanes
+          groups={groups}
+          socketed={build.items
+            .filter((i) => i['in-use'] && i.sockets.length > 0)
+            .flatMap((i) => (i.slot == null ? [] : [i.slot]))}
+          inSlot={inSlot}
+        />
       )}
     </>
   )

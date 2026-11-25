@@ -12,6 +12,7 @@ import type {
   CrashRecord,
   DataFeedStatus,
   UpdateOffer,
+  DataAutoStatus,
   UpdateStatus,
   QuarantinedBundle,
   CustomBlockView,
@@ -100,6 +101,7 @@ export type {
   TreeSprites,
   TreeView,
   UpdateOffer,
+  DataAutoStatus,
   UpdateStatus,
   WarningView,
   WhatIfPoint,
@@ -179,8 +181,14 @@ export interface LoomApi {
    * `APP_NO_DATA` when the bundle has none. */
   treeSprites(): Promise<TreeSprites>
   /** What clicking node `node` of spec `spec` would do: allocate it and
-   * its path, or deallocate it and its orphans; never committed. */
-  previewTree(spec: number, node: number): Promise<TreePreview>
+   * its path, or deallocate it and its orphans; never committed. With
+   * `fields` false, the path and removals only (no calculation, so at
+   * once); a newer preview with fields cancels an older one's. */
+  previewTree(
+    spec: number,
+    node: number,
+    fields?: boolean,
+  ): Promise<TreePreview>
   /** The calculated fields at each stage, or with one input swept; never
    * a change to the build (`APP_WHAT_IF` for a range it refuses). */
   whatIf(request: WhatIfRequest): Promise<WhatIfSeries>
@@ -210,6 +218,14 @@ export interface LoomApi {
   installUpdate(): Promise<void>
   /** The check at start reports here. */
   onUpdates(listener: (status: UpdateStatus) => void): Promise<() => void>
+  /** The automatic game data's state (the shell gets the data this
+   * computer lacks at start, and when asked). */
+  dataAutoStatus(): Promise<DataAutoStatus>
+  /** Gets the game data this computer lacks, now (the user asked); the
+   * answer is the state it ended in, a failure included. */
+  fetchData(): Promise<DataAutoStatus>
+  /** The automatic game data reports here. */
+  onDataAuto(listener: (status: DataAutoStatus) => void): Promise<() => void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

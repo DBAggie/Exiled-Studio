@@ -34,6 +34,7 @@ import {
   type QuarantinedBundle,
   type UpdateMode,
   type UpdateOffer,
+  type DataAutoStatus,
   type UpdateStatus,
   type DiagnosticFile,
   type TreeChange,
@@ -260,9 +261,11 @@ function sampleItems(): ItemView[] {
           status: 'other',
         }),
         line(1, 'Spare Band', { kind: 'name', section: null, status: 'other' }),
-        line(2, 'Something else unread', {
+        line(2, '{variant:2}{range:0.5}(8-12)% Something else unread', {
           status: 'warning',
           code: 'LINE_NO_TEMPLATE',
+          shown: '10% Something else unread',
+          variants: [2],
         }),
         line(3, 'Variant: Pre 3.7.0', {
           kind: 'spec',
@@ -527,6 +530,28 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
           unsupported: ['unchecked-tree-version'],
         },
         { field: 'hit-dps', state: 'unsupported', reason: 'not-computed' },
+        {
+          field: 'energy-shield',
+          state: 'partial',
+          value: 40,
+          node: null,
+          unsupported: [
+            {
+              'unresolved-line': {
+                source: { item: { item: 1, line: 5 } },
+                reason: 'no-template',
+              },
+            },
+            {
+              'unmapped-stat': {
+                stat: 'some_internal_stat_id',
+                source: { item: { item: 1, line: 4 } },
+              },
+            },
+            { 'unmodelled-config': { input: 'conditionFullLife' } },
+            { 'unmodelled-config': { input: 'conditionFullLife' } },
+          ],
+        },
         {
           field: 'average-damage',
           state: 'indeterminate',
@@ -887,6 +912,8 @@ export class FakeApi implements LoomApi {
           text: l.text,
           code: l.code ?? '',
           'in-use': inUse(item.id),
+          shown: l.shown ?? null,
+          variants: l.variants,
         })),
     )
     const all = items
@@ -1781,13 +1808,16 @@ export class FakeApi implements LoomApi {
     )
   }
 
-  previewTree(spec: number, node: number): Promise<TreePreview> {
+  previewTree(spec: number, node: number, fields = true): Promise<TreePreview> {
     try {
       if (this.current === null) this.fail('APP_NO_BUILD')
       if (spec !== this.current.spec) this.fail('APP_TREE')
-      return Promise.resolve(
-        fakeTree.preview(this.current.tree, node, life(this.current.items)),
+      const p = fakeTree.preview(
+        this.current.tree,
+        node,
+        life(this.current.items),
       )
+      return Promise.resolve(fields ? p : { ...p, fields: [] })
     } catch (e) {
       if (e instanceof fakeTree.TreeRefused) {
         return Promise.reject(
@@ -1947,6 +1977,53 @@ export class FakeApi implements LoomApi {
     }
     this.installs += 1
     return Promise.resolve()
+  }
+
+  /** The automatic game data's state (tests set it). */
+  dataAuto: DataAutoStatus = { state: 'idle' }
+  /** How often the user asked for the data. */
+  fetches = 0
+  private dataListeners: ((s: DataAutoStatus) => void)[] = []
+
+  dataAutoStatus(): Promise<DataAutoStatus> {
+    return Promise.resolve(structuredClone(this.dataAuto))
+  }
+
+  /** As the shell: refused offline; else the feed's packs are installed. */
+  async fetchData(): Promise<DataAutoStatus> {
+    this.fetches += 1
+    if (this.updates.mode === 'strict-offline') {
+      this.dataAuto = {
+        state: 'failed',
+        error: { code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' },
+      }
+    } else {
+      for (const offer of this.options.feed?.offers ?? []) {
+        await this.downloadData(offer.id)
+      }
+      // Without data loaded, what was installed is taken at once.
+      if (this.options.data === false) {
+        this.options.data = true
+        this.version += 1
+        this.emit('build-changed')
+      }
+      this.dataAuto = { state: 'done' }
+    }
+    this.emitDataAuto()
+    return structuredClone(this.dataAuto)
+  }
+
+  onDataAuto(listener: (s: DataAutoStatus) => void): Promise<() => void> {
+    this.dataListeners.push(listener)
+    return Promise.resolve(() => {
+      this.dataListeners = this.dataListeners.filter((l) => l !== listener)
+    })
+  }
+
+  /** The automatic game data reports (tests). */
+  emitDataAuto(status?: DataAutoStatus) {
+    if (status !== undefined) this.dataAuto = status
+    for (const l of this.dataListeners) l(structuredClone(this.dataAuto))
   }
 
   onUpdates(listener: (s: UpdateStatus) => void): Promise<() => void> {

@@ -63,6 +63,8 @@ dto! {
         pub updates: UpdateStatus,
         /// The data feed's answer (Phase 5, P-e).
         pub data_feed: DataFeedStatus,
+        /// The automatic game data's state (additive, 2026-11-25).
+        pub data_auto: DataAutoStatus,
         /// A what-if query.
         pub what_if: WhatIfRequest,
         /// A what-if query's answer.
@@ -171,6 +173,39 @@ dto! {
         pub bytes: u64,
         /// Whether a bundle with this ID is installed (loaded or not).
         pub installed: bool,
+    }
+
+    /// Where the automatic game data is (maintainer 2026-11-24: game data
+    /// is handled by the application, not by the user): at start in
+    /// `automatic-check` mode, and when the user asks, the shell reads the
+    /// data feed and installs the packs this computer lacks (additive,
+    /// 2026-11-25).
+    #[derive(Default)]
+    pub struct DataAutoStatus {
+        /// Where it is.
+        pub state: DataAutoState,
+        /// The pack downloading, in `downloading`.
+        #[serde(default)]
+        pub id: Option<String>,
+        /// Why the last run failed, in `failed`.
+        #[serde(default)]
+        pub error: Option<ApiError>,
+    }
+
+    /// A state of the automatic game data.
+    #[derive(Copy, Eq, Default)]
+    pub enum DataAutoState {
+        #[default]
+        /// Nothing ran yet.
+        Idle,
+        /// Reading the data feed.
+        Checking,
+        /// Downloading and installing a pack.
+        Downloading,
+        /// The last run finished: nothing was missing, or it is installed.
+        Done,
+        /// The last run failed.
+        Failed,
     }
 
     /// How the application looks for its own updates (Phase 5, P-d). Every
@@ -489,6 +524,12 @@ dto! {
         /// The life a fight timeline deals damage to.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub target: Option<u64>,
+        /// Whether a row break comes before the component: it starts a new
+        /// row, whatever room the row before it has left. `break`, one
+        /// word, so the build document and the app API write it alike;
+        /// left out when false.
+        #[serde(default, rename = "break", skip_serializing_if = "std::ops::Not::not")]
+        pub new_row: bool,
     }
 
     /// The active passive spec as the tree editor sees it.
@@ -717,6 +758,12 @@ dto! {
         /// (the game data's; B-2 item evidence), lines split by `\n`.
         #[serde(default)]
         pub flavour: Option<String>,
+        /// Whether only an anointment grants it (the passives table's
+        /// `anoint_only`: Blight's notables): drawn where the tree data
+        /// places it, as PoB does, never allocated on the tree (additive,
+        /// 2026-11-24).
+        #[serde(default)]
+        pub anoint_only: bool,
     }
 
     /// A class on the tree.
@@ -1211,6 +1258,16 @@ dto! {
         /// Whether the line's item is in use ([`ItemSummary::in_use`]): a
         /// warning on an item not in use does not touch the calculation.
         pub in_use: bool,
+        /// A modifier line as the game prints it, its roll applied and
+        /// its prefixes left out ([`LineView::shown`]); `None` when the
+        /// line is shown as written (additive, 2026-11-25).
+        #[serde(default)]
+        pub shown: Option<String>,
+        /// The variants (1-based) the line belongs to
+        /// ([`LineView::variants`]); empty for every variant (additive,
+        /// 2026-11-25).
+        #[serde(default)]
+        pub variants: Vec<u32>,
     }
 
     /// Undo and redo.
@@ -1388,6 +1445,19 @@ dto! {
         pub path: Option<String>,
         /// The file it was imported from, if any.
         pub origin: Option<String>,
+        /// The class, if known (a snapshot written before 2026-11-25 has
+        /// none of these four).
+        #[serde(default)]
+        pub class: Option<String>,
+        /// The ascendancy, if known.
+        #[serde(default)]
+        pub ascendancy: Option<String>,
+        /// The character level, if known.
+        #[serde(default)]
+        pub level: Option<u32>,
+        /// The main skill, if known.
+        #[serde(default)]
+        pub main_skill: Option<String>,
     }
 
     /// A recent build.
@@ -2128,6 +2198,7 @@ mod tests {
             vary: None,
             input: None,
             target: None,
+            new_row: false,
         };
         let dashboards = Dashboards {
             active: "overview".to_owned(),

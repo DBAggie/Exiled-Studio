@@ -12,7 +12,7 @@
 // ascendancy, and a reset are one undoable change each. Nodes the editor
 // keeps but does not edit (bloodline passives, cluster jewels' nodes) are
 // drawn faded and listed as kept.
-import { Dialog } from 'radix-ui'
+import { AlertDialog, Dialog, DropdownMenu } from 'radix-ui'
 import {
   useCallback,
   useEffect,
@@ -30,7 +30,9 @@ import type {
   TreePreview,
   TreeView,
 } from '../api/types'
-import { Hint, ScreenHeading } from '../components'
+import { Hint, Icon, ScreenHeading } from '../components'
+import { ImportedText } from '../ImportedText'
+import { plain } from '../colourCodes'
 import { floatingStyle, placeByPoint, useFloating } from '../floating'
 import { fieldLabel, formatNumber, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
@@ -203,6 +205,13 @@ function drawArt(
   }
 }
 
+/** Zoomed out past FADE_FROM (screen pixels a tree unit), what is not
+ * taken fades, down to FADE_MIN of its strength at FADE_TO. The whole
+ * tree fits at about 0.03 to 0.05. */
+const FADE_FROM = 0.14
+const FADE_TO = 0.06
+const FADE_MIN = 0.35
+
 function TreeCanvas({
   layout,
   sprites,
@@ -210,6 +219,7 @@ function TreeCanvas({
   found,
   preview,
   diff,
+  hovered,
   onHover,
   onActivate,
 }: {
@@ -220,6 +230,8 @@ function TreeCanvas({
   preview: TreePreview | null
   /** The nodes that differ from the stage compared with. */
   diff: StageNodes | null
+  /** The node under the pointer, outlined. */
+  hovered: number | null
   onHover: (node: TreeNodeView | null, at: { x: number; y: number }) => void
   onActivate: (node: TreeNodeView) => void
 }) {
@@ -251,10 +263,14 @@ function TreeCanvas({
   const path = useMemo(() => new Set(preview?.path ?? []), [preview])
   const removed = useMemo(() => new Set(preview?.removed ?? []), [preview])
 
+  // Whether the view is still the fitted one: a resize then fits again;
+  // after a move or a zoom the view is the user's and is kept.
+  const fitted = useRef(true)
   // Fit the tree on first draw.
   const fit = useCallback(() => {
     const el = canvas.current
     if (el === null || placed.length === 0) return
+    fitted.current = true
     const xs = placed.map((n) => n.position?.x ?? 0)
     const ys = placed.map((n) => n.position?.y ?? 0)
     const [x0, x1, y0, y1] = [
@@ -271,6 +287,18 @@ function TreeCanvas({
   useEffect(() => {
     if (camera === null) fit()
   }, [camera, fit])
+  // The tree fills its page: when the window (so the canvas) changes
+  // size, fit again, or draw the kept view at the new size.
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      if (fitted.current) fit()
+      else setCamera((cam) => (cam === null ? cam : { ...cam }))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fit])
 
   const toScreen = useCallback(
     (x: number, y: number, el: HTMLCanvasElement, cam: Camera) => ({
@@ -280,97 +308,215 @@ function TreeCanvas({
     [],
   )
 
-  // Draw.
-  useEffect(() => {
-    const el = canvas.current
-    if (el === null || camera === null) return
-    const ctx = el.getContext('2d')
-    if (ctx === null) return
-    const dpr = window.devicePixelRatio || 1
-    el.width = Math.round(el.clientWidth * dpr)
-    el.height = Math.round(el.clientHeight * dpr)
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const c = colours(el)
-    ctx.fillStyle = c.bg
-    ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
-    const at = (n: TreeNodeView) =>
-      toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
-    // Links: an arc when both ends share a group and an orbit, else a line.
-    for (const a of placed) {
-      if (a.kind === 'mastery') continue
-      for (const id of a.links) {
-        const b = byId.get(id)
-        if (
-          b?.position == null ||
-          b['cluster-area'] === true ||
-          b.kind === 'mastery' ||
-          a.ascendancy !== b.ascendancy ||
-          (a.kind === 'class-start' && b.kind === 'ascendancy-start') ||
-          (b.kind === 'class-start' && a.kind === 'ascendancy-start')
+  // Draw, at most once per frame: pointer and wheel events can come faster
+  // than the display, and each would otherwise draw the whole tree.
+  const draw = useCallback(
+    (el: HTMLCanvasElement, camera: Camera) => {
+      const ctx = el.getContext('2d')
+      if (ctx === null) return
+      const dpr = window.devicePixelRatio || 1
+      // Setting the size clears and reallocates the buffer: only on a change.
+      const w = Math.round(el.clientWidth * dpr)
+      const h = Math.round(el.clientHeight * dpr)
+      if (el.width !== w) el.width = w
+      if (el.height !== h) el.height = h
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const c = colours(el)
+      ctx.fillStyle = c.bg
+      ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
+      const at = (n: TreeNodeView) =>
+        toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
+      // Zoomed out, what is not taken fades to a field, so the taken path
+      // is the one bright shape (the revamp's tree, 2026-11-25): whole
+      // above FADE_FROM, faintest at FADE_TO and below.
+      const dim =
+        camera.scale >= FADE_FROM
+          ? 1
+          : FADE_MIN +
+            (1 - FADE_MIN) *
+              Math.max(0, (camera.scale - FADE_TO) / (FADE_FROM - FADE_TO))
+      // What lies outside the canvas (with a margin for the art) is skipped.
+      const margin = 200 * camera.scale + 40
+      const shown = (p: { x: number; y: number }) =>
+        p.x > -margin &&
+        p.y > -margin &&
+        p.x < el.clientWidth + margin &&
+        p.y < el.clientHeight + margin
+      // Links: an arc when both ends share a group and an orbit, else a line.
+      // They are gathered into one path per look and stroked once each: a
+      // stroke per link was most of a frame's time.
+      const links = new Map<
+        string,
+        {
+          path: Path2D
+          style: string
+          width: number
+          alpha: number
+          dashed: boolean
+        }
+      >()
+      for (const a of placed) {
+        if (a.kind === 'mastery') continue
+        for (const id of a.links) {
+          const b = byId.get(id)
+          if (
+            b?.position == null ||
+            b['cluster-area'] === true ||
+            b.kind === 'mastery' ||
+            a.ascendancy !== b.ascendancy ||
+            (a.kind === 'class-start' && b.kind === 'ascendancy-start') ||
+            (b.kind === 'class-start' && a.kind === 'ascendancy-start')
+          )
+            continue
+          const on = allocated.has(a.id) && allocated.has(b.id)
+          const onPath =
+            (path.has(a.id) || allocated.has(a.id)) &&
+            (path.has(b.id) || allocated.has(b.id)) &&
+            (path.has(a.id) || path.has(b.id))
+          const gone = removed.has(a.id) || removed.has(b.id)
+          const pa = at(a)
+          const pb = at(b)
+          if (!shown(pa) && !shown(pb)) continue
+          const style = gone
+            ? c.removed
+            : onPath
+              ? c.path
+              : on
+                ? c.linkOn
+                : c.link
+          // A taken link stays 2 px wide however far out; the path a
+          // click would take is dashed, so it is not told by colour alone.
+          const lit = on || onPath || gone
+          const width = Math.max(lit ? 2 : 1, (lit ? 10 : 5) * camera.scale)
+          const alpha = (a.modelled && b.modelled ? 1 : 0.35) * (lit ? 1 : dim)
+          const dashed = onPath && !gone
+          const key = `${style}|${width}|${alpha}|${dashed}`
+          let bucket = links.get(key)
+          if (bucket === undefined) {
+            bucket = { path: new Path2D(), style, width, alpha, dashed }
+            links.set(key, bucket)
+          }
+          const line = bucket.path
+          const g = layout.groups[a.group]
+          if (
+            a.group === b.group &&
+            a.orbit === b.orbit &&
+            a.orbit > 0 &&
+            g !== undefined
+          ) {
+            const centre = toScreen(g.x, g.y, el, camera)
+            const r = (layout['orbit-radii'][a.orbit] ?? 0) * camera.scale
+            let s = Math.atan2(pa.y - centre.y, pa.x - centre.x)
+            let e = Math.atan2(pb.y - centre.y, pb.x - centre.x)
+            // The shorter way round.
+            let d = e - s
+            while (d > Math.PI) d -= 2 * Math.PI
+            while (d < -Math.PI) d += 2 * Math.PI
+            if (d < 0) [s, e] = [e, s]
+            // Start a new piece at the arc's start, or the path would join it
+            // to the last link with a line.
+            line.moveTo(centre.x + r * Math.cos(s), centre.y + r * Math.sin(s))
+            line.arc(centre.x, centre.y, r, s, e)
+          } else {
+            line.moveTo(pa.x, pa.y)
+            line.lineTo(pb.x, pb.y)
+          }
+        }
+      }
+      for (const { path: p, style, width, alpha, dashed } of links.values()) {
+        ctx.strokeStyle = style
+        ctx.lineWidth = width
+        ctx.globalAlpha = alpha
+        ctx.setLineDash(dashed ? [6, 5] : [])
+        ctx.stroke(p)
+      }
+      ctx.setLineDash([])
+      ctx.globalAlpha = 1
+      for (const n of placed) {
+        const p = at(n)
+        if (!shown(p)) continue
+        // A class start keeps a readable size when the whole tree shows.
+        const r = Math.max(
+          n.kind === 'class-start' ? 8 : 2,
+          RADIUS[n.kind] * camera.scale,
         )
+        const on = allocated.has(n.id)
+        const lit =
+          on ||
+          path.has(n.id) ||
+          removed.has(n.id) ||
+          found.has(n.id) ||
+          n.id === hovered ||
+          n.kind === 'class-start'
+        ctx.globalAlpha = (n.modelled ? 1 : 0.4) * (lit ? 1 : dim)
+        if (
+          sprites !== null &&
+          drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
+        ) {
+          // The preview's path and removals as rings over the art.
+          if (path.has(n.id) || removed.has(n.id)) {
+            ctx.lineWidth = Math.max(2, 8 * camera.scale)
+            ctx.strokeStyle = removed.has(n.id) ? c.removed : c.path
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, r + 2, 0, 2 * Math.PI)
+            ctx.stroke()
+          }
+          if (found.has(n.id)) {
+            ctx.lineWidth = 2
+            ctx.strokeStyle = c.match
+            ctx.beginPath()
+            ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
+            ctx.stroke()
+          }
           continue
-        const on = allocated.has(a.id) && allocated.has(b.id)
-        const onPath =
-          (path.has(a.id) || allocated.has(a.id)) &&
-          (path.has(b.id) || allocated.has(b.id)) &&
-          (path.has(a.id) || path.has(b.id))
-        const gone = removed.has(a.id) || removed.has(b.id)
-        ctx.strokeStyle = gone
+        }
+        ctx.fillStyle = removed.has(n.id)
           ? c.removed
-          : onPath
+          : path.has(n.id)
             ? c.path
             : on
-              ? c.linkOn
-              : c.link
-        ctx.lineWidth = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
-        ctx.globalAlpha = a.modelled && b.modelled ? 1 : 0.35
+              ? c.nodeOn
+              : n.modelled
+                ? c.node
+                : c.kept
         ctx.beginPath()
-        const pa = at(a)
-        const pb = at(b)
-        const g = layout.groups[a.group]
-        if (
-          a.group === b.group &&
-          a.orbit === b.orbit &&
-          a.orbit > 0 &&
-          g !== undefined
-        ) {
-          const centre = toScreen(g.x, g.y, el, camera)
-          const r = (layout['orbit-radii'][a.orbit] ?? 0) * camera.scale
-          let s = Math.atan2(pa.y - centre.y, pa.x - centre.x)
-          let e = Math.atan2(pb.y - centre.y, pb.x - centre.x)
-          // The shorter way round.
-          let d = e - s
-          while (d > Math.PI) d -= 2 * Math.PI
-          while (d < -Math.PI) d += 2 * Math.PI
-          if (d < 0) [s, e] = [e, s]
-          ctx.arc(centre.x, centre.y, r, s, e)
+        if (n.kind === 'keystone' || n.kind === 'class-start') {
+          // An octagon.
+          for (let i = 0; i < 8; i += 1) {
+            const a = (Math.PI / 4) * i + Math.PI / 8
+            const x = p.x + r * Math.cos(a)
+            const y = p.y + r * Math.sin(a)
+            if (i === 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          }
+          ctx.closePath()
+        } else if (n.kind === 'jewel-socket' || n.kind === 'cluster-socket') {
+          ctx.moveTo(p.x, p.y - r)
+          ctx.lineTo(p.x + r, p.y)
+          ctx.lineTo(p.x, p.y + r)
+          ctx.lineTo(p.x - r, p.y)
+          ctx.closePath()
         } else {
-          ctx.moveTo(pa.x, pa.y)
-          ctx.lineTo(pb.x, pb.y)
+          ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
         }
-        ctx.stroke()
-      }
-    }
-    ctx.globalAlpha = 1
-    for (const n of placed) {
-      const p = at(n)
-      // A class start keeps a readable size when the whole tree shows.
-      const r = Math.max(
-        n.kind === 'class-start' ? 8 : 2,
-        RADIUS[n.kind] * camera.scale,
-      )
-      const on = allocated.has(n.id)
-      ctx.globalAlpha = n.modelled ? 1 : 0.4
-      if (
-        sprites !== null &&
-        drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
-      ) {
-        // The preview's path and removals as rings over the art.
-        if (path.has(n.id) || removed.has(n.id)) {
-          ctx.lineWidth = Math.max(2, 8 * camera.scale)
-          ctx.strokeStyle = removed.has(n.id) ? c.removed : c.path
-          ctx.beginPath()
-          ctx.arc(p.x, p.y, r + 2, 0, 2 * Math.PI)
+        if (n.kind === 'mastery') {
+          ctx.lineWidth = Math.max(1, 6 * camera.scale)
+          ctx.strokeStyle = ctx.fillStyle
+          ctx.stroke()
+        } else {
+          ctx.fill()
+        }
+        if (
+          n.kind === 'notable' ||
+          n.kind === 'keystone' ||
+          n.kind === 'class-start'
+        ) {
+          // The class start's outline keeps its octagon readable when small.
+          ctx.lineWidth = Math.max(
+            n.kind === 'class-start' ? 2 : 1,
+            4 * camera.scale,
+          )
+          ctx.strokeStyle = c.ring
           ctx.stroke()
         }
         if (found.has(n.id)) {
@@ -380,98 +526,67 @@ function TreeCanvas({
           ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
           ctx.stroke()
         }
-        continue
       }
-      ctx.fillStyle = removed.has(n.id)
-        ? c.removed
-        : path.has(n.id)
-          ? c.path
-          : on
-            ? c.nodeOn
-            : n.modelled
-              ? c.node
-              : c.kept
-      ctx.beginPath()
-      if (n.kind === 'keystone' || n.kind === 'class-start') {
-        // An octagon.
-        for (let i = 0; i < 8; i += 1) {
-          const a = (Math.PI / 4) * i + Math.PI / 8
-          const x = p.x + r * Math.cos(a)
-          const y = p.y + r * Math.sin(a)
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-        ctx.closePath()
-      } else if (n.kind === 'jewel-socket' || n.kind === 'cluster-socket') {
-        ctx.moveTo(p.x, p.y - r)
-        ctx.lineTo(p.x + r, p.y)
-        ctx.lineTo(p.x, p.y + r)
-        ctx.lineTo(p.x - r, p.y)
-        ctx.closePath()
-      } else {
-        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
-      }
-      if (n.kind === 'mastery') {
-        ctx.lineWidth = Math.max(1, 6 * camera.scale)
-        ctx.strokeStyle = ctx.fillStyle
-        ctx.stroke()
-      } else {
-        ctx.fill()
-      }
-      if (
-        n.kind === 'notable' ||
-        n.kind === 'keystone' ||
-        n.kind === 'class-start'
-      ) {
-        // The class start's outline keeps its octagon readable when small.
-        ctx.lineWidth = Math.max(
-          n.kind === 'class-start' ? 2 : 1,
-          4 * camera.scale,
-        )
-        ctx.strokeStyle = c.ring
-        ctx.stroke()
-      }
-      if (found.has(n.id)) {
+      ctx.globalAlpha = 1
+      // The node under the pointer, outlined.
+      const under = hovered === null ? undefined : byId.get(hovered)
+      if (under?.position != null) {
+        const p = at(under)
         ctx.lineWidth = 2
-        ctx.strokeStyle = c.match
+        ctx.strokeStyle = c.ring
         ctx.beginPath()
-        ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
+        ctx.arc(
+          p.x,
+          p.y,
+          Math.max(6, RADIUS[under.kind] * camera.scale) + 4,
+          0,
+          2 * Math.PI,
+        )
         ctx.stroke()
       }
-    }
-    ctx.globalAlpha = 1
-    // The stage compared with: a dashed ring on a node only it has, a
-    // solid ring on a node only this stage has (the line, not the colour
-    // alone, tells them apart).
-    if (diff !== null) {
-      for (const n of placed) {
-        const other = diff.added.has(n.id)
-        if (!other && !diff.removed.has(n.id)) continue
-        const p = at(n)
-        const r = Math.max(4, RADIUS[n.kind] * camera.scale) + 4
-        ctx.lineWidth = 2.5
-        ctx.strokeStyle = other ? c.path : c.removed
-        ctx.setLineDash(other ? [5, 4] : [])
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
-        ctx.stroke()
+      // The stage compared with: a dashed ring on a node only it has, a
+      // solid ring on a node only this stage has (the line, not the colour
+      // alone, tells them apart).
+      if (diff !== null) {
+        for (const n of placed) {
+          const other = diff.added.has(n.id)
+          if (!other && !diff.removed.has(n.id)) continue
+          const p = at(n)
+          const r = Math.max(4, RADIUS[n.kind] * camera.scale) + 4
+          ctx.lineWidth = 2.5
+          ctx.strokeStyle = other ? c.path : c.removed
+          ctx.setLineDash(other ? [5, 4] : [])
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+          ctx.stroke()
+        }
+        ctx.setLineDash([])
       }
-      ctx.setLineDash([])
-    }
-  }, [
-    allocated,
-    byId,
-    camera,
-    diff,
-    found,
-    groupsOn,
-    layout,
-    path,
-    placed,
-    removed,
-    sprites,
-    toScreen,
-  ])
+    },
+    [
+      allocated,
+      byId,
+      diff,
+      found,
+      groupsOn,
+      hovered,
+      layout,
+      path,
+      placed,
+      removed,
+      sprites,
+      toScreen,
+    ],
+  )
+
+  const frame = useRef(0)
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null || camera === null) return
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(() => draw(el, camera))
+    return () => cancelAnimationFrame(frame.current)
+  }, [camera, draw])
 
   const hit = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const el = canvas.current
@@ -496,19 +611,45 @@ function TreeCanvas({
     return best
   }
 
-  const zoom = (factor: number, cx?: number, cy?: number) => {
+  // Camera changes build on the latest camera, not the one this render
+  // saw: several wheel or pointer events can arrive before React renders,
+  // and each must count once.
+  const zoom = useCallback((factor: number, cx?: number, cy?: number) => {
     const el = canvas.current
-    if (el === null || camera === null) return
-    const scale = Math.min(2, Math.max(0.01, camera.scale * factor))
-    // Keep the point under the pointer still.
-    const px = (cx ?? el.clientWidth / 2) - el.clientWidth / 2
-    const py = (cy ?? el.clientHeight / 2) - el.clientHeight / 2
-    setCamera({
-      scale,
-      x: camera.x + px / camera.scale - px / scale,
-      y: camera.y + py / camera.scale - py / scale,
+    if (el === null) return
+    fitted.current = false
+    setCamera((camera) => {
+      if (camera === null) return camera
+      const scale = Math.min(2, Math.max(0.01, camera.scale * factor))
+      // Keep the point under the pointer still.
+      const px = (cx ?? el.clientWidth / 2) - el.clientWidth / 2
+      const py = (cy ?? el.clientHeight / 2) - el.clientHeight / 2
+      return {
+        scale,
+        x: camera.x + px / camera.scale - px / scale,
+        y: camera.y + py / camera.scale - py / scale,
+      }
     })
-  }
+  }, [])
+
+  // The wheel zooms the tree and never scrolls the page: React's wheel
+  // handler is passive and cannot stop the scroll, so the listener is the
+  // element's own.
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      zoom(
+        e.deltaY < 0 ? 1.2 : 1 / 1.2,
+        e.clientX - rect.left,
+        e.clientY - rect.top,
+      )
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [zoom])
 
   return (
     <div className="tree-canvas-wrap">
@@ -517,14 +658,6 @@ function TreeCanvas({
         className="tree-canvas"
         // The list view is the accessible equivalent (ADR-008).
         aria-hidden="true"
-        onWheel={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          zoom(
-            e.deltaY < 0 ? 1.2 : 1 / 1.2,
-            e.clientX - rect.left,
-            e.clientY - rect.top,
-          )
-        }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY, moved: false }
           e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -535,14 +668,21 @@ function TreeCanvas({
             const dx = e.clientX - d.x
             const dy = e.clientY - d.y
             if (d.moved || Math.hypot(dx, dy) > 4) {
+              // The node card would hide what is being dragged to.
+              if (!d.moved) onHover(null, { x: 0, y: 0 })
               d.moved = true
+              fitted.current = false
               d.x = e.clientX
               d.y = e.clientY
-              setCamera({
-                ...camera,
-                x: camera.x - dx / camera.scale,
-                y: camera.y - dy / camera.scale,
-              })
+              setCamera((cam) =>
+                cam === null
+                  ? cam
+                  : {
+                      ...cam,
+                      x: cam.x - dx / cam.scale,
+                      y: cam.y - dy / cam.scale,
+                    },
+              )
               return
             }
           }
@@ -584,37 +724,76 @@ function TreeCanvas({
 }
 
 /** A preview's changed fields. */
+/** The numbers a hover card shows first, in this order; the rest follow
+ * in the calculation's order. */
+const IMPACT_FIRST = [
+  'hit-dps',
+  'minion.hit-dps',
+  'poe1.full-dps',
+  'life',
+  'energy-shield',
+  'mana',
+  'armour',
+  'evasion',
+  'block-chance',
+  'strength',
+  'dexterity',
+  'intelligence',
+]
+
+/** The changes a hover card lists; the rest are counted (a node can
+ * change twenty numbers, and the card must not cover the tree). */
+const IMPACT_SHOWN = 6
+
 function Impact({ preview }: { preview: TreePreview }) {
-  const changed = preview.fields.filter(
-    (f) => f.before !== f.after || f['state-before'] !== f['state-after'],
-  )
-  if (changed.length === 0) return null
+  const rank = (field: string) => {
+    const i = IMPACT_FIRST.indexOf(field)
+    return i < 0 ? IMPACT_FIRST.length : i
+  }
+  const all = preview.fields
+    .filter(
+      (f) => f.before !== f.after || f['state-before'] !== f['state-after'],
+    )
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => rank(a.f.field) - rank(b.f.field) || a.i - b.i)
+    .map((x) => x.f)
+  if (all.length === 0) return null
+  // One or two over the limit are shown, not counted.
+  const changed =
+    all.length > IMPACT_SHOWN + 2 ? all.slice(0, IMPACT_SHOWN) : all
   return (
-    <ul className="impact-list">
-      {changed.map((f) => {
-        const delta =
-          f.before != null && f.after != null ? f.after - f.before : null
-        return (
-          <li key={f.field}>
-            <span>{fieldLabel(f.field)}</span>
-            <span className="row">
-              <span className="before">
-                {f.before == null ? '—' : withUnit(f.field, f.before)} →
-              </span>
-              <span className="after">
-                {f.after == null ? '—' : withUnit(f.field, f.after)}
-              </span>
-              {delta !== null && delta !== 0 && (
-                <span className={delta > 0 ? 'delta-up' : 'delta-down'}>
-                  {delta > 0 ? '+' : '−'}
-                  {withUnit(f.field, Math.abs(delta))}
+    <>
+      <ul className="impact-list">
+        {changed.map((f) => {
+          const delta =
+            f.before != null && f.after != null ? f.after - f.before : null
+          return (
+            <li key={f.field}>
+              <span>{fieldLabel(f.field)}</span>
+              <span className="row">
+                <span className="before">
+                  {f.before == null ? '—' : withUnit(f.field, f.before)} →
                 </span>
-              )}
-            </span>
-          </li>
-        )
-      })}
-    </ul>
+                <span className="after">
+                  {f.after == null ? '—' : withUnit(f.field, f.after)}
+                </span>
+                {delta !== null && delta !== 0 && (
+                  <span className={delta > 0 ? 'delta-up' : 'delta-down'}>
+                    {delta > 0 ? '+' : '−'}
+                    {withUnit(f.field, Math.abs(delta))}
+                  </span>
+                )}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {all.length > changed.length && (
+        <p className="muted small-text">
+          {t('tree.moreChanges', { n: all.length - changed.length })}
+        </p>
+      )}
+    </>
   )
 }
 
@@ -638,11 +817,14 @@ function NodeCard({
   tree,
   layout,
   preview,
+  partial = false,
 }: {
   node: TreeNodeView
   tree: TreeView
   layout: TreeLayout
   preview: TreePreview | null | 'refused'
+  /** The preview has its path but not yet its fields. */
+  partial?: boolean
 }) {
   const chosen = tree.masteries.find((m) => m.node === node.id)
   const effect = layout.masteries
@@ -691,7 +873,9 @@ function NodeCard({
           ))}
         </ul>
       )}
-      {!node.modelled ? (
+      {node['anoint-only'] === true ? (
+        <p className="muted small-text">{t('tree.anointOnly')}</p>
+      ) : !node.modelled ? (
         <p className="muted small-text">{t('tree.keptNote')}</p>
       ) : tree.locked != null ? null : preview === 'refused' ? (
         node.kind !== 'class-start' &&
@@ -703,10 +887,18 @@ function NodeCard({
         <>
           <p className="small-text">
             {allocated
-              ? t('tree.removes', { n: preview.removed.length })
-              : t('tree.allocates', { n: preview.path.length })}
+              ? preview.removed.length === 1
+                ? t('tree.removesOne')
+                : t('tree.removes', { n: preview.removed.length })
+              : preview.path.length === 1
+                ? t('tree.allocatesOne')
+                : t('tree.allocates', { n: preview.path.length })}
           </p>
-          <Impact preview={preview} />
+          {partial ? (
+            <p className="muted small-text">{t('tree.calculating')}</p>
+          ) : (
+            <Impact preview={preview} />
+          )}
         </>
       ) : null}
     </>
@@ -809,6 +1001,13 @@ function MasteryPicker({
  * `JEWEL_CLASSES`). */
 const JEWEL_CLASSES = ['Jewel', 'AbyssJewel']
 
+/** A jewel's lines in the picker, in one wrapped run: jewels of one base
+ * often share their first lines, so the ones that differ must show. */
+function JewelLines({ lines }: { lines: string[] | undefined }) {
+  if (lines === undefined || lines.length === 0) return null
+  return <span className="jewel-lines small-text">{lines.join(' · ')}</span>
+}
+
 function JewelPicker({
   node,
   tree,
@@ -844,6 +1043,26 @@ function JewelPicker({
   }
   const elsewhere = (item: number) =>
     tree.jewels?.find((j) => j.item === item && j.node !== node?.id)
+  // Each jewel's lines as the game prints them, so jewels of one base can
+  // be told apart (maintainer 2026-11-24): asked for when the picker opens.
+  const [lines, setLines] = useState<ReadonlyMap<number, string[]>>(new Map())
+  const ids = jewels.map((j) => j.id).join(',')
+  useEffect(() => {
+    if (node === null || ids === '') return
+    let live = true
+    for (const id of ids.split(',').map(Number)) {
+      void dispatch(query((api) => api.item(id))).then((v) => {
+        if (!live || v === null) return
+        const shown = v.lines
+          .filter((l) => l.kind === 'modifier' && l.status !== 'excluded')
+          .map((l) => l.shown ?? l.text)
+        setLines((m) => new Map(m).set(id, shown))
+      })
+    }
+    return () => {
+      live = false
+    }
+  }, [dispatch, node, ids])
   return (
     <Dialog.Root open={node !== null} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
@@ -855,25 +1074,35 @@ function JewelPicker({
           {jewels.length === 0 ? (
             <p className="muted">{t('tree.noJewels')}</p>
           ) : (
-            <ul className="picker-list" aria-label={t('tree.jewels')}>
-              {jewels.map((j) => (
-                <li key={j.id}>
-                  <button
-                    type="button"
-                    className="picker-entry"
-                    aria-pressed={socketed === j.id}
-                    onClick={() => socket(j.id)}
-                  >
-                    <span className="picker-name">{j.name}</span>
-                    <span className="muted small-text">
-                      {j.base}
-                      {elsewhere(j.id) !== undefined &&
-                        ` · ${t('tree.inAnotherSocket')}`}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="picker-lists">
+              <ul className="picker-list" aria-label={t('tree.jewels')}>
+                {jewels.map((j) => (
+                  <li key={j.id}>
+                    <button
+                      type="button"
+                      className="picker-entry jewel-entry"
+                      aria-pressed={socketed === j.id}
+                      onClick={() => socket(j.id)}
+                    >
+                      <span className="picker-name">{j.name}</span>
+                      <span className="muted small-text">{j.base}</span>
+                      <JewelLines lines={lines.get(j.id)} />
+                      {socketed === j.id ? (
+                        <span className="jewel-where small-text">
+                          {t('tree.inThisSocket')}
+                        </span>
+                      ) : (
+                        elsewhere(j.id) !== undefined && (
+                          <span className="jewel-where muted small-text">
+                            {t('tree.inAnotherSocket')}
+                          </span>
+                        )
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <div className="row">
             {socketed !== null && (
@@ -924,6 +1153,62 @@ function TreeList({
   search: string
   onActivate: (node: TreeNodeView) => void
 }) {
+  const dispatch = useAppDispatch()
+  const listId = useId()
+  // The list is one Tab stop; the arrow keys, Home, and End move inside it
+  // (keyboard test B1: 60 Tabs did not leave the notables).
+  const [active, setActive] = useState(0)
+  const list = useRef<HTMLUListElement>(null)
+  const onListKey = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    const buttons = [
+      ...(list.current?.querySelectorAll<HTMLButtonElement>(
+        'button[data-row]',
+      ) ?? []),
+    ]
+    if (buttons.length === 0) return
+    const at = Math.max(0, buttons.indexOf(e.target as HTMLButtonElement))
+    const to =
+      e.key === 'ArrowDown'
+        ? Math.min(buttons.length - 1, at + 1)
+        : e.key === 'ArrowUp'
+          ? Math.max(0, at - 1)
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? buttons.length - 1
+              : null
+    if (to === null) return
+    e.preventDefault()
+    setActive(to)
+    buttons[to]?.focus()
+  }
+  // What the focused row's button would do, said before it is pressed:
+  // the path's or the removal's node count (the preview without fields).
+  const [told, setTold] = useState<{ node: number; text: string } | null>(null)
+  const tell = (n: TreeNodeView, on: boolean) => {
+    if (
+      n.kind === 'mastery' ||
+      n.kind === 'jewel-socket' ||
+      tree.locked != null
+    )
+      return
+    void dispatch(query((api) => api.previewTree(tree.spec, n.id, false))).then(
+      (p) => {
+        if (p === null) return
+        const count = on ? p.removed.length : p.path.length
+        setTold({
+          node: n.id,
+          text: on
+            ? count <= 1
+              ? t('tree.list.removesOne')
+              : t('tree.list.removes', { n: count })
+            : count <= 1
+              ? t('tree.list.allocatesOne')
+              : t('tree.list.allocates', { n: count }),
+        })
+      },
+    )
+  }
   const [section, setSection] = useState<Section>(
     search.trim() === '' ? 'allocated' : 'found',
   )
@@ -980,8 +1265,13 @@ function TreeList({
       {shown.length === 0 ? (
         <p className="muted">{t('tree.listEmpty')}</p>
       ) : (
-        <ul className="tree-node-list" aria-label={t('tree.listLabel')}>
-          {shown.slice(0, 300).map((n) => {
+        <ul
+          ref={list}
+          className="tree-node-list"
+          aria-label={t('tree.listLabel')}
+          onKeyDown={onListKey}
+        >
+          {shown.slice(0, 300).map((n, i) => {
             const on = allocated.has(n.id)
             const start =
               n.kind === 'class-start' || n.kind === 'ascendancy-start'
@@ -992,15 +1282,43 @@ function TreeList({
                   <span className="muted small-text">
                     {kindText(n)}
                     {on && ` · ${t('tree.allocated')}`}
-                    {!n.modelled && ` · ${t('tree.kept')}`}
+                    {n['anoint-only'] === true
+                      ? ` · ${t('tree.anointOnlyShort')}`
+                      : !n.modelled && ` · ${t('tree.kept')}`}
                   </span>
                   {n.lines.length > 0 && (
-                    <p className="small-text">{n.lines.join(' · ')}</p>
+                    <p className="small-text" id={`${listId}-${n.id}`}>
+                      {n.lines.join(' · ')}
+                    </p>
+                  )}
+                  {told?.node === n.id && (
+                    <p className="small-text" id={`${listId}-${n.id}-told`}>
+                      {told.text}
+                    </p>
                   )}
                   {n.flavour != null && <Flavour text={n.flavour} />}
                 </div>
                 {n.modelled && !start && tree.locked == null && (
-                  <button type="button" onClick={() => onActivate(n)}>
+                  <button
+                    type="button"
+                    data-row
+                    tabIndex={i === Math.min(active, shown.length - 1) ? 0 : -1}
+                    // Same-named nodes are told apart by their lines, and
+                    // the count of nodes it changes once known.
+                    aria-describedby={
+                      [
+                        n.lines.length > 0 ? `${listId}-${n.id}` : null,
+                        told?.node === n.id ? `${listId}-${n.id}-told` : null,
+                      ]
+                        .filter((x) => x !== null)
+                        .join(' ') || undefined
+                    }
+                    onFocus={() => {
+                      setActive(i)
+                      tell(n, on)
+                    }}
+                    onClick={() => onActivate(n)}
+                  >
                     {n.kind === 'mastery'
                       ? t('tree.chooseEffectFor', { node: n.name })
                       : on &&
@@ -1124,6 +1442,8 @@ export function Tree() {
     node: number
     version: number
     value: TreePreview | 'refused'
+    /** The path only: the fields are still being calculated. */
+    partial?: boolean
   } | null>(null)
   const [mastery, setMastery] = useState<TreeNodeView | null>(null)
   const [socket, setSocket] = useState<TreeNodeView | null>(null)
@@ -1134,6 +1454,7 @@ export function Tree() {
     | { kind: 'convert'; version: string; dropped: number }
     | null
   >(null)
+  const confirmOpener = useRef<HTMLElement | null>(null)
   const [specForm, setSpecForm] = useState<{
     kind: 'new' | 'copy' | 'rename'
     title: string
@@ -1164,7 +1485,10 @@ export function Tree() {
     [layout, ready, search],
   )
 
-  // The hovered node's preview, asked once per node and build version.
+  // The hovered node's preview, asked once per node and build version:
+  // the path at once (no calculation), then, when the pointer rests, the
+  // fields (a calculation; the application cancels it if the pointer
+  // moves to another node first).
   const version = useAppSelector((s) => s.session.snapshot?.version ?? 0)
   const hovered = hover?.node.id ?? null
   // A locked spec is shown, not edited: nothing to preview.
@@ -1172,9 +1496,17 @@ export function Tree() {
   useEffect(() => {
     if (hovered === null || spec === null) return
     let live = true
+    let full = false
+    void dispatch(query((api) => api.previewTree(spec, hovered, false))).then(
+      (p) => {
+        if (live && !full && p !== null)
+          setPreviewed({ node: hovered, version, value: p, partial: true })
+      },
+    )
     const timer = setTimeout(() => {
       void dispatch(query((api) => api.previewTree(spec, hovered))).then(
         (p) => {
+          full = true
           if (live)
             setPreviewed({ node: hovered, version, value: p ?? 'refused' })
         },
@@ -1191,6 +1523,10 @@ export function Tree() {
     previewed.version === version
       ? previewed.value
       : null
+  const partial =
+    previewed !== null &&
+    previewed.node === hovered &&
+    previewed.partial === true
 
   if (layout === null) {
     return (
@@ -1211,8 +1547,9 @@ export function Tree() {
 
   const view = mode ?? (layout.placed ? 'canvas' : 'list')
   const cls = layout.classes.find((c) => c.number === tree.class)
-  const quote =
-    cls?.ascendancies.find((a) => a.number === tree.ascendancy)?.flavour ?? null
+  const ascendancy = cls?.ascendancies.find((a) => a.number === tree.ascendancy)
+  const ascName = ascendancy?.name
+  const quote = ascendancy?.flavour ?? null
   const locked = tree.locked ?? null
   const activate = (n: TreeNodeView) => {
     if (
@@ -1261,55 +1598,71 @@ export function Tree() {
     void dispatch(run(command))
   }
 
+  // The tree fills the page, its controls floating over it in the four
+  // corners with no filled boxes (maintainer 2026-11-24); the list keeps
+  // the same controls in rows above it.
+  const full = view === 'canvas' && layout.placed
   return (
-    <section className="screen tree-screen">
-      {/* The heading row: the page, how to use it (one press away), and
-          the tree's own actions; then one row of controls. */}
-      <div className="page-head">
+    <section className={`screen tree-screen${full ? ' tree-full' : ''}`}>
+      <div className="tree-float tree-tl">
         <ScreenHeading>{t('tree.title')}</ScreenHeading>
-        <Hint>{t('tree.canvasHelp')}</Hint>
-        <span className="spacer" />
-        <div
-          className="row tree-specs"
-          role="group"
-          aria-label={t('tree.specs')}
-        >
-          <span className="muted small-text">{specTitle}</span>
-          <button
-            type="button"
-            className="small"
-            onClick={() => setSpecForm({ kind: 'new', title: '' })}
-          >
-            {t('tree.specNew')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={() =>
-              setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
-            }
-          >
-            {t('tree.specCopy')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
-          >
-            {t('tree.specRename')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            disabled={specs.length <= 1}
-            onClick={() => setConfirm({ kind: 'delete' })}
-          >
-            {t('tree.specDelete')}
-          </button>
+        <div className="tree-specs" role="group" aria-label={t('tree.specs')}>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                type="button"
+                className="tree-spec-button"
+                aria-label={t('tree.specMenu', { name: plain(specTitle) })}
+              >
+                <ImportedText text={specTitle} />
+                <Icon name="chevron" size={14} />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="menu-content"
+                align="start"
+                sideOffset={6}
+              >
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() => setSpecForm({ kind: 'new', title: '' })}
+                >
+                  {t('tree.specNew')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() =>
+                    setSpecForm({
+                      kind: 'copy',
+                      title: `${plain(specTitle)} (copy)`,
+                    })
+                  }
+                >
+                  {t('tree.specCopy')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() =>
+                    setSpecForm({ kind: 'rename', title: specTitle })
+                  }
+                >
+                  {t('tree.specRename')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  disabled={specs.length <= 1}
+                  onSelect={() => setConfirm({ kind: 'delete' })}
+                >
+                  {t('tree.specDelete')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
-      </div>
-      <div className="row tree-bar">
-        <label htmlFor={classId}>{t('tree.class')}</label>
+        <label htmlFor={classId} className="visually-hidden">
+          {t('tree.class')}
+        </label>
         <select
           id={classId}
           value={tree.class}
@@ -1330,7 +1683,9 @@ export function Tree() {
             </option>
           ))}
         </select>
-        <label htmlFor={ascId}>{t('tree.ascendancy')}</label>
+        <label htmlFor={ascId} className="visually-hidden">
+          {t('tree.ascendancy')}
+        </label>
         <select
           id={ascId}
           value={tree.ascendancy}
@@ -1353,26 +1708,20 @@ export function Tree() {
             </option>
           ))}
         </select>
-        {quote != null && <Flavour text={quote} />}
-        <p className="tree-points" aria-live="polite">
-          {t('tree.points', {
-            n: tree.points,
-            a: tree['ascendancy-points'],
-          })}
-        </p>
-        {attributes.str != null &&
-          attributes.dex != null &&
-          attributes.int != null && (
-            <p className="tree-points" aria-live="polite">
-              {t('tree.attributes', {
-                str: formatNumber(attributes.str),
-                dex: formatNumber(attributes.dex),
-                int: formatNumber(attributes.int),
-              })}
-            </p>
-          )}
-        <span className="spacer" />
-        {build != null && <StageCompareSelect build={build} />}
+        {/* Notices are one press away, not rows above the tree. */}
+        <Hint>{t('tree.canvasHelp')}</Hint>
+        {quote != null && (
+          <Hint label={t('tree.flavourLabel', { name: ascName ?? '' })}>
+            {quote}
+          </Hint>
+        )}
+        {tree.kept.length > 0 && (
+          <Hint label={t('tree.keptLabel', { n: tree.kept.length })}>
+            {t('tree.keptCount', { n: tree.kept.length })}
+          </Hint>
+        )}
+      </div>
+      <div className="tree-float tree-tr">
         <label htmlFor={searchId} className="visually-hidden">
           {t('tree.search')}
         </label>
@@ -1405,6 +1754,7 @@ export function Tree() {
             {t('tree.viewList')}
           </button>
         </div>
+        {build != null && <StageCompareSelect build={build} />}
         <button
           type="button"
           disabled={locked !== null}
@@ -1413,133 +1763,180 @@ export function Tree() {
           {t('tree.reset')}
         </button>
       </div>
-      {specForm !== null && (
-        <form
-          className="panel row"
-          aria-label={
-            specForm.kind === 'rename'
-              ? t('tree.specRename')
-              : specForm.kind === 'copy'
-                ? t('tree.specCopy')
-                : t('tree.specNew')
-          }
-          onSubmit={(e) => {
-            e.preventDefault()
-            saveSpec()
-          }}
-        >
-          <label htmlFor={specNameId}>{t('tree.specName')}</label>
-          <input
-            id={specNameId}
-            value={specForm.title}
-            onChange={(e) =>
-              setSpecForm({ ...specForm, title: e.target.value })
-            }
-          />
-          <button
-            type="submit"
-            className="primary"
-            disabled={specForm.title.trim() === ''}
-          >
-            {t('tree.specSave')}
-          </button>
-          <button type="button" onClick={() => setSpecForm(null)}>
-            {t('tree.cancel')}
-          </button>
-          {specForm.kind === 'new' && (
-            <p className="muted small-text">{t('tree.specNewHelp')}</p>
+      <div className="tree-float tree-bl">
+        <p className="tree-points" aria-live="polite">
+          {t('tree.points', {
+            n: tree.points,
+            a: tree['ascendancy-points'],
+          })}
+        </p>
+        {attributes.str != null &&
+          attributes.dex != null &&
+          attributes.int != null && (
+            <p className="tree-points" aria-live="polite">
+              {t('tree.attributes', {
+                str: formatNumber(attributes.str),
+                dex: formatNumber(attributes.dex),
+                int: formatNumber(attributes.int),
+              })}
+            </p>
           )}
-        </form>
-      )}
-      {confirm !== null && (
-        <div
-          className="panel"
-          role="alertdialog"
-          aria-labelledby={`${classId}-c`}
-        >
-          <p id={`${classId}-c`}>
-            {confirm.kind === 'reset'
-              ? t('tree.resetAsk')
-              : confirm.kind === 'delete'
-                ? t('tree.specDeleteAsk', { name: specTitle })
-                : confirm.kind === 'convert'
-                  ? t('tree.convertAsk', {
-                      version: confirm.version,
-                      n: confirm.dropped,
-                    })
-                  : t('tree.classAsk')}
-          </p>
-          <div className="row">
+      </div>
+      <div className="tree-notices">
+        {specForm !== null && (
+          <form
+            className="panel row"
+            aria-label={
+              specForm.kind === 'rename'
+                ? t('tree.specRename')
+                : specForm.kind === 'copy'
+                  ? t('tree.specCopy')
+                  : t('tree.specNew')
+            }
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveSpec()
+            }}
+          >
+            <label htmlFor={specNameId}>{t('tree.specName')}</label>
+            <input
+              id={specNameId}
+              value={specForm.title}
+              onChange={(e) =>
+                setSpecForm({ ...specForm, title: e.target.value })
+              }
+            />
             <button
-              type="button"
+              type="submit"
               className="primary"
-              onClick={() => {
-                const command =
-                  confirm.kind === 'reset'
-                    ? { 'reset-tree': { spec: tree.spec } }
-                    : confirm.kind === 'delete'
-                      ? { 'delete-spec': { spec: tree.spec } }
-                      : confirm.kind === 'convert'
-                        ? { 'convert-tree-version': { spec: tree.spec } }
-                        : {
-                            'select-class': {
-                              spec: tree.spec,
-                              class: confirm.class,
-                            },
-                          }
-                setConfirm(null)
-                void dispatch(run(command))
-              }}
+              disabled={specForm.title.trim() === ''}
             >
-              {confirm.kind === 'reset'
-                ? t('tree.reset')
-                : confirm.kind === 'delete'
-                  ? t('tree.specDelete')
-                  : confirm.kind === 'convert'
-                    ? t('tree.convert', { version: confirm.version })
-                    : t('tree.changeClass')}
+              {t('tree.specSave')}
             </button>
-            <button type="button" onClick={() => setConfirm(null)}>
+            <button type="button" onClick={() => setSpecForm(null)}>
               {t('tree.cancel')}
             </button>
-          </div>
-        </div>
-      )}
-      {locked !== null && (
-        <div className="panel row" role="status">
-          <p>{t('tree.locked', { why: locked })}</p>
-          {tree.convert != null && (
-            <button
-              type="button"
-              onClick={() =>
-                tree.convert != null &&
-                setConfirm({
-                  kind: 'convert',
-                  version: tree.convert.version,
-                  dropped: tree.convert.dropped.length,
-                })
-              }
+            {specForm.kind === 'new' && (
+              <p className="muted small-text">{t('tree.specNewHelp')}</p>
+            )}
+          </form>
+        )}
+        {/* A modal: Escape cancels, and the focus goes back to the button
+          that asked (keyboard test B1, 2026-11-24). */}
+        <AlertDialog.Root
+          open={confirm !== null}
+          onOpenChange={(open) => !open && setConfirm(null)}
+        >
+          <AlertDialog.Portal>
+            <AlertDialog.Overlay className="dialog-overlay" />
+            <AlertDialog.Content
+              className="dialog-content"
+              // No trigger element: remember the button that asked, and give
+              // the focus back to it on close.
+              onOpenAutoFocus={() => {
+                const at = document.activeElement
+                confirmOpener.current = at instanceof HTMLElement ? at : null
+              }}
+              onCloseAutoFocus={(e) => {
+                if (confirmOpener.current?.isConnected === true) {
+                  e.preventDefault()
+                  confirmOpener.current.focus()
+                }
+              }}
             >
-              {t('tree.convert', { version: tree.convert.version })}
-            </button>
-          )}
-        </div>
-      )}
-      {tree.kept.length > 0 && (
-        <p className="muted small-text">
-          {t('tree.keptCount', { n: tree.kept.length })}
-        </p>
-      )}
-      {stage !== null && (
-        <StageNodeDiff
-          title={stage.title}
-          state={other.state}
-          diff={diff}
-          layout={layout}
-        />
-      )}
-      {!layout.placed && <p className="muted">{t('tree.notPlaced')}</p>}
-      {view === 'canvas' && layout.placed ? (
+              {confirm !== null && (
+                <>
+                  <AlertDialog.Title>
+                    {confirm.kind === 'reset'
+                      ? t('tree.resetAsk')
+                      : confirm.kind === 'delete'
+                        ? t('tree.specDeleteAsk', { name: plain(specTitle) })
+                        : confirm.kind === 'convert'
+                          ? t('tree.convertAsk', {
+                              version: confirm.version,
+                              n: confirm.dropped,
+                            })
+                          : t('tree.classAsk')}
+                  </AlertDialog.Title>
+                  <AlertDialog.Description className="visually-hidden">
+                    {t('tree.confirmHelp')}
+                  </AlertDialog.Description>
+                  <div className="row">
+                    <AlertDialog.Action asChild>
+                      <button
+                        type="button"
+                        className="primary"
+                        onClick={() => {
+                          const command =
+                            confirm.kind === 'reset'
+                              ? { 'reset-tree': { spec: tree.spec } }
+                              : confirm.kind === 'delete'
+                                ? { 'delete-spec': { spec: tree.spec } }
+                                : confirm.kind === 'convert'
+                                  ? {
+                                      'convert-tree-version': {
+                                        spec: tree.spec,
+                                      },
+                                    }
+                                  : {
+                                      'select-class': {
+                                        spec: tree.spec,
+                                        class: confirm.class,
+                                      },
+                                    }
+                          setConfirm(null)
+                          void dispatch(run(command))
+                        }}
+                      >
+                        {confirm.kind === 'reset'
+                          ? t('tree.reset')
+                          : confirm.kind === 'delete'
+                            ? t('tree.specDelete')
+                            : confirm.kind === 'convert'
+                              ? t('tree.convert', { version: confirm.version })
+                              : t('tree.changeClass')}
+                      </button>
+                    </AlertDialog.Action>
+                    <AlertDialog.Cancel asChild>
+                      <button type="button">{t('tree.cancel')}</button>
+                    </AlertDialog.Cancel>
+                  </div>
+                </>
+              )}
+            </AlertDialog.Content>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
+        {locked !== null && (
+          <div className="panel row" role="status">
+            <p>{t('tree.locked', { why: locked })}</p>
+            {tree.convert != null && (
+              <button
+                type="button"
+                onClick={() =>
+                  tree.convert != null &&
+                  setConfirm({
+                    kind: 'convert',
+                    version: tree.convert.version,
+                    dropped: tree.convert.dropped.length,
+                  })
+                }
+              >
+                {t('tree.convert', { version: tree.convert.version })}
+              </button>
+            )}
+          </div>
+        )}
+        {stage !== null && (
+          <StageNodeDiff
+            title={stage.title}
+            state={other.state}
+            diff={diff}
+            layout={layout}
+          />
+        )}
+        {!layout.placed && <p className="muted">{t('tree.notPlaced')}</p>}
+      </div>
+      {full ? (
         <div className="tree-stage">
           <TreeCanvas
             layout={layout}
@@ -1548,6 +1945,7 @@ export function Tree() {
             found={found}
             preview={preview === 'refused' ? null : preview}
             diff={diff}
+            hovered={hover?.node.id ?? null}
             onHover={(node, at) =>
               setHover(node === null ? null : { node, ...at })
             }
@@ -1560,6 +1958,7 @@ export function Tree() {
                 tree={tree}
                 layout={layout}
                 preview={preview}
+                partial={partial}
               />
             </HoverCard>
           )}

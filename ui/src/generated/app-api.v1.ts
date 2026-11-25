@@ -568,12 +568,13 @@ export interface ApplicationAPIV1 {
    * Crash records (Phase 5, P-f).
    */
   crashes: CrashRecord[]
+  'data-auto': DataAutoStatus
   'data-feed': DataFeedStatus
   /**
    * The diagnostic package's preview (Phase 5, P-f).
    */
   diagnostics: DiagnosticFile[]
-  error: ApiError
+  error: ApiError1
   event: Event
   /**
    * The gems the game data offers.
@@ -724,6 +725,13 @@ export interface Dashboard {
  */
 export interface DashboardComponent {
   /**
+   * Whether a row break comes before the component: it starts a new
+   * row, whatever room the row before it has left. `break`, one
+   * word, so the build document and the app API write it alike;
+   * left out when false.
+   */
+  break?: boolean
+  /**
    * The calc result field a stat, history, or curve component
    * shows.
    */
@@ -792,6 +800,38 @@ export interface CrashRecord {
   version: string
 }
 /**
+ * The automatic game data's state (additive, 2026-11-25).
+ */
+export interface DataAutoStatus {
+  /**
+   * Why the last run failed, in `failed`.
+   */
+  error?: ApiError | null
+  /**
+   * The pack downloading, in `downloading`.
+   */
+  id?: string | null
+  /**
+   * Where it is.
+   */
+  state: 'idle' | 'checking' | 'downloading' | 'done' | 'failed'
+}
+/**
+ * An error: a stable code (ADR-014) and a message for logs. The UI
+ * shows text for the code, not the message.
+ */
+export interface ApiError {
+  /**
+   * The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,
+   * `APP_*`, ...).
+   */
+  code: string
+  /**
+   * Detail in English, for diagnostics.
+   */
+  message: string
+}
+/**
  * The data feed's answer (Phase 5, P-e).
  */
 export interface DataFeedStatus {
@@ -840,9 +880,10 @@ export interface DiagnosticFile {
   text: string
 }
 /**
- * An error.
+ * An error: a stable code (ADR-014) and a message for logs. The UI
+ * shows text for the code, not the message.
  */
-export interface ApiError {
+export interface ApiError1 {
   /**
    * The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,
    * `APP_*`, ...).
@@ -885,13 +926,13 @@ export interface Event {
       }
     | {
         'calc-failed': {
-          error: ApiError1
+          error: ApiError2
         }
       }
     | 'mcp-changed'
     | {
         failed: {
-          error: ApiError2
+          error: ApiError3
         }
       }
   /**
@@ -900,9 +941,10 @@ export interface Event {
   version: number
 }
 /**
- * Why.
+ * An error: a stable code (ADR-014) and a message for logs. The UI
+ * shows text for the code, not the message.
  */
-export interface ApiError1 {
+export interface ApiError2 {
   /**
    * The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,
    * `APP_*`, ...).
@@ -914,9 +956,10 @@ export interface ApiError1 {
   message: string
 }
 /**
- * Why.
+ * An error: a stable code (ADR-014) and a message for logs. The UI
+ * shows text for the code, not the message.
  */
-export interface ApiError2 {
+export interface ApiError3 {
   /**
    * The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,
    * `APP_*`, ...).
@@ -1380,7 +1423,7 @@ export interface ChangeRequest {
   /**
    * Why it failed, if it did.
    */
-  error?: ApiError3 | null
+  error?: ApiError | null
   /**
    * Its ID, unique in the session.
    */
@@ -1405,21 +1448,6 @@ export interface ChangeRequest {
    * The tree change's effect, calculated when it arrived.
    */
   'tree-preview'?: TreePreview | null
-}
-/**
- * An error: a stable code (ADR-014) and a message for logs. The UI
- * shows text for the code, not the message.
- */
-export interface ApiError3 {
-  /**
-   * The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,
-   * `APP_*`, ...).
-   */
-  code: string
-  /**
-   * Detail in English, for diagnostics.
-   */
-  message: string
 }
 /**
  * An item edit's effect, calculated by the application (never by the
@@ -1566,9 +1594,26 @@ export interface RecentEntry {
  */
 export interface RecoveryEntry {
   /**
+   * The ascendancy, if known.
+   */
+  ascendancy?: string | null
+  /**
+   * The class, if known (a snapshot written before 2026-11-25 has
+   * none of these four).
+   */
+  class?: string | null
+  /**
    * Its ID (the file's stem).
    */
   id: string
+  /**
+   * The character level, if known.
+   */
+  level?: number | null
+  /**
+   * The main skill, if known.
+   */
+  'main-skill'?: string | null
   /**
    * The build's display name.
    */
@@ -1607,7 +1652,7 @@ export interface Snapshot {
    * from this bundle's, so they stand and rolled values stay
    * unsettled).
    */
-  notices: ApiError3[]
+  notices: ApiError[]
   /**
    * The file the build was imported from, if any; never written.
    */
@@ -2134,6 +2179,13 @@ export interface TreeView {
  */
 export interface TreeNodeView {
   /**
+   * Whether only an anointment grants it (the passives table's
+   * `anoint_only`: Blight's notables): drawn where the tree data
+   * places it, as PoB does, never allocated on the tree (additive,
+   * 2026-11-24).
+   */
+  'anoint-only'?: boolean
+  /**
    * The ascendancy it belongs to (its ID), if any.
    */
   ascendancy?: string | null
@@ -2289,9 +2341,21 @@ export interface WarningView {
    */
   line: number
   /**
+   * A modifier line as the game prints it, its roll applied and
+   * its prefixes left out ([`LineView::shown`]); `None` when the
+   * line is shown as written (additive, 2026-11-25).
+   */
+  shown?: string | null
+  /**
    * The line as written.
    */
   text: string
+  /**
+   * The variants (1-based) the line belongs to
+   * ([`LineView::variants`]); empty for every variant (additive,
+   * 2026-11-25).
+   */
+  variants?: number[]
 }
 /**
  * The calculation of the latest version.
@@ -2300,7 +2364,7 @@ export interface CalcStatus {
   /**
    * Why the latest calculation failed, if it did.
    */
-  error?: ApiError3 | null
+  error?: ApiError | null
   /**
    * The result's overall state (`complete`, `partial`,
    * `unsupported`, `indeterminate`), when there is one.
@@ -2337,7 +2401,7 @@ export interface DataStatus {
   /**
    * Why the bundle did not load, if it did not (a stable code).
    */
-  error?: ApiError3 | null
+  error?: ApiError | null
   /**
    * The bundles installed in the application's `bundles/` folder,
    * newest first (B-1). The UI switches between them by ID with
@@ -2355,7 +2419,7 @@ export interface DataStatus {
    * an error: `APP_BUNDLE_FALLBACK` when the remembered bundle did
    * not load and the newest installed one was taken instead.
    */
-  notice?: ApiError3 | null
+  notice?: ApiError | null
   /**
    * The installed bundle the open build was made with, when it is not
    * the loaded one (ADR-010: never switched silently; the UI offers
@@ -2823,7 +2887,7 @@ export interface UpdateStatus {
   /**
    * Why the last check or install failed, if it did.
    */
-  error?: ApiError3 | null
+  error?: ApiError | null
   /**
    * Whether this package installs an update itself (`nsis`, `msi`,
    * `app-image`); the others only link to the release.

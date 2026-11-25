@@ -9,7 +9,6 @@ import type {
   ItemSummary,
   LineOp,
   TreeLayout,
-  WarningView,
 } from '../api/types'
 import {
   Badge,
@@ -27,6 +26,7 @@ import {
   tDynamic,
   type MessageKey,
 } from '../i18n'
+import { ReviewList } from '../ReviewLines'
 import { actions, attempt, query, run, setPermissions } from '../store'
 import {
   dataName,
@@ -35,6 +35,7 @@ import {
   useAppDispatch,
   useAppSelector,
   withUnit,
+  warningRows,
 } from '../util'
 import { useTreeLayout } from './treeLayout'
 import { UpdateSettings } from './Updates'
@@ -48,75 +49,46 @@ export function Warnings() {
       <div className="page-head">
         <ScreenHeading>{t('warnings.title')}</ScreenHeading>
         <Hint>{t('warnings.help')}</Hint>
+        {used.length > 0 && (
+          <span className="muted">
+            {warningRows(used).length === 1
+              ? t('warnings.usedCount1')
+              : t('warnings.usedCount', { n: warningRows(used).length })}
+          </span>
+        )}
       </div>
       {build.warnings.length === 0 ? (
         <p>{t('warnings.none')}</p>
       ) : (
         <>
-          <h2>{t('warnings.used')}</h2>
           {used.length === 0 ? (
             <p>{t('warnings.usedNone')}</p>
           ) : (
-            <WarningTable label={t('warnings.used')} warnings={used} />
+            <section className="panel" aria-label={t('warnings.used')}>
+              <ReviewList warnings={used} />
+            </section>
           )}
+          {/* They change no number: folded to one row until asked for. */}
           {unused.length > 0 && (
-            <>
-              <h2>{t('warnings.unused')}</h2>
-              <p className="muted">{t('warnings.unusedHelp')}</p>
-              <WarningTable label={t('warnings.unused')} warnings={unused} />
-            </>
+            <details className="panel review-fold">
+              <summary>
+                <span>
+                  {warningRows(unused).length === 1
+                    ? t('warnings.unusedSummary1')
+                    : t('warnings.unusedSummary', {
+                        n: warningRows(unused).length,
+                      })}
+                </span>
+                <span className="sub">{t('warnings.unusedHelp')}</span>
+              </summary>
+              <section aria-label={t('warnings.unused')}>
+                <ReviewList warnings={unused} />
+              </section>
+            </details>
           )}
         </>
       )}
     </>
-  )
-}
-
-function WarningTable({
-  label,
-  warnings,
-}: {
-  label: string
-  warnings: WarningView[]
-}) {
-  const dispatch = useAppDispatch()
-  return (
-    <section className="panel table-panel" aria-label={label}>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{t('warnings.text')}</th>
-            <th scope="col">{t('warnings.item')}</th>
-            <th scope="col">{t('warnings.reason')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {warnings.map((w) => (
-            <tr key={`${w.item}-${w.line}`}>
-              <td className="mono">{w.text}</td>
-              <td>
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => dispatch(actions.editItem(w.item))}
-                >
-                  {w['item-name'] ?? `#${w.item}`}
-                </button>
-              </td>
-              <td>
-                <Badge tone="warn">{t('warning.badge')}</Badge>
-                <p className="muted small-text">
-                  {tDynamic(`warning.${w.code}`, 'reason.generic', {
-                    kind: w.code,
-                  })}
-                </p>
-                <ErrorCode code={w.code} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
   )
 }
 
@@ -671,7 +643,7 @@ function GameData() {
     })
   }
   return (
-    <section className="stack" aria-labelledby="about-data">
+    <section className="panel stack" aria-labelledby="about-data">
       <h2 id="about-data">{t('data.heading')}</h2>
       {installed.length === 0 ? (
         <p className="muted">{t('data.noneInstalled')}</p>
@@ -838,28 +810,38 @@ export function About() {
   )
   const tree = useAppSelector((s) => s.session.snapshot?.data['tree-version'])
   return (
-    <section className="stack about">
-      <ScreenHeading>{t('about.title')}</ScreenHeading>
-      <p>{t('app.notice')}</p>
-      <dl className="about-versions">
-        <dt>{t('about.version')}</dt>
-        <dd className="mono">{__APP_VERSION__}</dd>
-        <dt>{t('about.data')}</dt>
-        <dd className="mono">
+    <section className="about">
+      <div className="page-head">
+        <ScreenHeading>{t('about.title')}</ScreenHeading>
+        <span className="mono muted small-text">
+          {t('about.versionLine', { version: __APP_VERSION__ })}
+          {' · '}
           {version == null
             ? t('about.dataNone')
             : `${dataName(version, tree)} · ${t('data.steamBuild', { build: version['steam-build'] ?? '?' })}`}
-        </dd>
-      </dl>
-      <GameData />
-      <UpdateSettings />
-      <Diagnostics />
-      <p>{t('about.license')}</p>
-      <p>{t('about.privacy')}</p>
-      <p className="muted">{t('about.fonts')}</p>
-      {LICENSES.map((l) => (
-        <LicenseText key={l.file} name={l.name} file={l.file} />
-      ))}
+        </span>
+      </div>
+      {/* Two columns: what the application fetches at the left, help and
+          the legal texts at the right; one column in a narrow window. */}
+      <div className="about-columns">
+        <div className="stack">
+          <UpdateSettings />
+          <GameData />
+        </div>
+        <div className="stack">
+          <Diagnostics />
+          <section className="panel stack" aria-labelledby="about-legal">
+            <h2 id="about-legal">{t('about.legal')}</h2>
+            <p>{t('app.notice')}</p>
+            <p>{t('about.license')}</p>
+            <p className="muted">{t('about.privacy')}</p>
+            <p className="muted">{t('about.fonts')}</p>
+            {LICENSES.map((l) => (
+              <LicenseText key={l.file} name={l.name} file={l.file} />
+            ))}
+          </section>
+        </div>
+      </div>
     </section>
   )
 }

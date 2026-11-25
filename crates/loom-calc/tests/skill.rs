@@ -5,7 +5,6 @@
 mod common;
 
 use common::bundle;
-use loom_calc::CalcData;
 use std::collections::BTreeSet;
 
 use loom_calc::poe1::Poe1Mapping;

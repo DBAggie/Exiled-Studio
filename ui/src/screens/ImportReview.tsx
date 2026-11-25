@@ -3,74 +3,17 @@
 // those on items in use, then, folded, those on other items; the same
 // line on several copies of an item once (UX-16). The data the build is
 // pinned to.
-import type { WarningView } from '../api/types'
-import { Badge, ErrorCode, ScreenHeading } from '../components'
-import { formatNumber, t, tDynamic } from '../i18n'
+import { ScreenHeading } from '../components'
+import { formatNumber, t } from '../i18n'
+import { ReviewList } from '../ReviewLines'
 import { actions } from '../store'
 import {
-  buildStatus,
   splitWarnings,
   useAppDispatch,
   useAppSelector,
   useDataName,
+  warningRows,
 } from '../util'
-
-/** Warnings with the same item name, text, and reason as one row, with
- * the items it is on. */
-function grouped(warnings: WarningView[]) {
-  const rows = new Map<string, { w: WarningView; items: number[] }>()
-  for (const w of warnings) {
-    const key = `${w['item-name'] ?? w.item}\u0000${w.text}\u0000${w.code}`
-    const row = rows.get(key)
-    if (row === undefined) rows.set(key, { w, items: [w.item] })
-    else if (!row.items.includes(w.item)) row.items.push(w.item)
-  }
-  return [...rows.values()]
-}
-
-function ReviewList({ warnings }: { warnings: WarningView[] }) {
-  const dispatch = useAppDispatch()
-  return (
-    <ul className="review-list">
-      {grouped(warnings).map(({ w, items }) => {
-        const item = w['item-name'] ?? `#${w.item}`
-        return (
-          <li key={`${w.item}-${w.line}`}>
-            <div>
-              <div className="line-text">{w.text}</div>
-              <span className="sub">
-                {items.length > 1
-                  ? t('import.onCopies', { item, n: items.length })
-                  : item}
-              </span>
-            </div>
-            <div>
-              <Badge tone="warn">{t('warning.badge')}</Badge>
-              <p className="muted small-text">
-                {tDynamic(`warning.${w.code}`, 'reason.generic', {
-                  kind: w.code,
-                })}
-              </p>
-              <ErrorCode code={w.code} />
-            </div>
-            <div className="actions">
-              <button
-                type="button"
-                aria-label={t('import.openItemName', {
-                  item,
-                  line: w.line + 1,
-                })}
-                onClick={() => dispatch(actions.editItem(w.item))}
-              >
-                {t('import.openItem')}
-              </button>
-            </div>
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
 
 export function ImportReview() {
   const dispatch = useAppDispatch()
@@ -80,7 +23,6 @@ export function ImportReview() {
     return null
   }
   const c = build.lines
-  const status = buildStatus(build)
   const { used, unused } = splitWarnings(build)
   const name = build.name === '' ? t('app.untitled') : build.name
   // Of the lines that apply (not other variants or notes), the share the
@@ -102,20 +44,7 @@ export function ImportReview() {
           audit follow-up): the numbers start right under it. */}
       <div className="import-head">
         <div className="import-title">
-          <div className="row">
-            <ScreenHeading>{name}</ScreenHeading>
-            <Badge tone={status.tone}>
-              {t('import.imported', {
-                state: tDynamic(
-                  `state.${build['in-use-completeness']}`,
-                  'state.unsupported',
-                ),
-              })}
-            </Badge>
-            <Badge tone="neutral">
-              {build.game === 'poe2' ? 'PoE2' : 'PoE1'}
-            </Badge>
-          </div>
+          <ScreenHeading>{name}</ScreenHeading>
           <p className="muted">
             {build.warnings.length === 0
               ? t('import.summaryClean')
@@ -138,7 +67,7 @@ export function ImportReview() {
       <dl className="stat-cards">
         <div className="panel stat-card">
           <dt>{t('import.calculated')}</dt>
-          <dd className="tone-ok">{formatNumber(calculated)}</dd>
+          <dd>{formatNumber(calculated)}</dd>
           <dd className="sub">
             {t('import.calculatedOf', { share, n: applies })}
           </dd>
@@ -152,15 +81,21 @@ export function ImportReview() {
         </div>
         <div className="panel stat-card">
           <dt>{t('import.adapted')}</dt>
-          <dd className="tone-info">{formatNumber(c.adapted)}</dd>
+          <dd>{formatNumber(c.adapted)}</dd>
           <dd className="sub">{t('import.adaptedHelp')}</dd>
         </div>
         <div className="panel stat-card">
           <dt>{t('import.warnings')}</dt>
-          <dd className={c.warnings > 0 ? 'tone-warn' : undefined}>
-            {formatNumber(c.warnings)}
+          {/* What touches the numbers: the lines on items in use. Those
+              on other items are said beside it. */}
+          <dd className={used.length > 0 ? 'tone-warn' : undefined}>
+            {formatNumber(warningRows(used).length)}
           </dd>
-          <dd className="sub">{t('import.warningsSub')}</dd>
+          <dd className="sub">
+            {unused.length > 0
+              ? t('import.reviewMore', { n: warningRows(unused).length })
+              : t('import.warningsSub')}
+          </dd>
         </div>
       </dl>
 
@@ -181,7 +116,9 @@ export function ImportReview() {
               {unused.length > 0 && (
                 <details className="unused-review">
                   <summary>
-                    {t('import.reviewUnused', { n: grouped(unused).length })}
+                    {t('import.reviewUnused', {
+                      n: warningRows(unused).length,
+                    })}
                   </summary>
                   <ReviewList warnings={unused} />
                 </details>

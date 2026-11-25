@@ -53,12 +53,20 @@ describe("the build's dashboards section", () => {
             { id: 'c1', kind: 'offence', width: 'half' },
             { id: 'c2', kind: 'hologram', width: 'half' },
             { id: 'c3', kind: 'timeline', width: 'half', target: 1234.6 },
-            { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+            {
+              id: 'c4',
+              kind: 'stat',
+              width: 'third',
+              field: 'life',
+              break: true,
+            },
           ],
         },
       ],
     })
     expect(own?.active).toBe('a')
+    // A row break is kept.
+    expect(own?.list[0]?.components[2]?.break).toBe(true)
     expect(own?.list[0]?.components.map((c) => c.kind)).toEqual([
       'offence',
       'timeline',
@@ -70,7 +78,13 @@ describe("the build's dashboards section", () => {
     expect(written.list[0]!.components).toEqual([
       { id: 'c1', kind: 'offence', width: 'half' },
       { id: 'c3', kind: 'timeline', width: 'half', target: 1235 },
-      { id: 'c4', kind: 'stat', width: 'third', field: 'life' },
+      {
+        id: 'c4',
+        kind: 'stat',
+        width: 'third',
+        field: 'life',
+        break: true,
+      },
     ])
     expect(readBuildDashboards(written)?.list[0]?.name).toBe('Mine')
   })
@@ -234,9 +248,12 @@ describe('arranging components by dragging', () => {
     // In the gap between two cells: the nearer one.
     expect(dropTarget(cells, 112, 10)).toEqual({ id: 'b', after: false })
     expect(dropTarget(cells, 200, 100)).toEqual({ id: 'c', after: true })
-    // Between rows, or outside the grid: nowhere.
-    expect(dropTarget(cells, 50, 60)).toBeNull()
-    expect(dropTarget(cells, 50, 500)).toBeNull()
+    // Between rows, or under the last: after the row above (the card
+    // goes under it). Above the first row: at the start.
+    expect(dropTarget(cells, 50, 60)).toEqual({ id: 'b', after: true })
+    expect(dropTarget(cells, 50, 500)).toEqual({ id: 'c', after: true })
+    expect(dropTarget(cells, 150, -20)).toEqual({ id: 'a', after: false })
+    expect(dropTarget([], 0, 0)).toBeNull()
   })
 
   it('puts the dragged item before or after the target', () => {
@@ -295,6 +312,45 @@ describe('arranging components by dragging', () => {
         ...start.slice(3),
       ]),
     )
+    // The whole bar is the handle; Shift with the arrows resizes.
+    const cell = container.querySelector(`[data-cell="${start[0]}"]`)!
+    const width = () =>
+      /dash-(quarter|third|half|two-thirds|full)/.exec(cell.className)?.[1]
+    // A figure starts a quarter wide (four lead the page), the narrowest.
+    expect(width()).toBe('quarter')
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}')
+    await waitFor(() => expect(width()).toBe('third'))
+    await user.keyboard('{Shift>}{ArrowLeft}{ArrowLeft}{/Shift}')
+    await waitFor(() => expect(width()).toBe('quarter'))
+    // The card's menu starts a new row with it: the room beside the card
+    // before it stays empty. Kept with the layout.
+    const newRow = async () => {
+      screen.getByRole('button', { name: /Hit DPS: card menu$/ }).focus()
+      await user.keyboard('{Enter}')
+      const item = await screen.findByRole('menuitemcheckbox', {
+        name: 'Start a new row',
+      })
+      item.focus()
+      await user.keyboard('{Enter}')
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    }
+    const kept = () =>
+      (
+        JSON.parse(api.prefs ?? '{}') as {
+          dashboards: { components: { id: string; break?: boolean }[] }[]
+        }
+      ).dashboards[0]!.components.find((c) => c.id === start[0])?.break
+    await newRow()
+    await waitFor(() => expect(cell.className).toContain('dash-new-row'))
+    expect(kept()).toBe(true)
+    await newRow()
+    await waitFor(() => expect(cell.className).not.toContain('dash-new-row'))
+    expect(kept()).toBeUndefined()
+    const bar = screen.getByRole('group', { name: /Hit DPS: arrange$/ })
+    fireEvent.pointerDown(bar, { button: 0, pointerId: 2 })
+    fireEvent.pointerMove(bar, { clientX: 280, clientY: 400, pointerId: 2 })
+    expect(container.querySelector('.dash-cell.drop-after')).not.toBeNull()
+    fireEvent.pointerCancel(bar, { pointerId: 2 })
     await expectAccessible()
   })
 })
@@ -371,7 +427,7 @@ describe('the Skills page as a table', () => {
     await user.click(open)
     expect(within(table).getByRole('button', { name: 'Add gem' })).toBeTruthy()
     await expectAccessible()
-    await user.click(within(view).getByRole('button', { name: 'Cards' }))
+    await user.click(within(view).getByRole('button', { name: 'Groups' }))
     expect(screen.queryByRole('table', { name: 'Socket groups' })).toBeNull()
     expect(JSON.parse(api.prefs ?? '{}').skillsTable).toBeUndefined()
   })

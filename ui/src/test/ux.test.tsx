@@ -41,7 +41,7 @@ describe('UX High fixes', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Save and close' }),
     )
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(api.executed).toContain('close')
   })
 
@@ -50,7 +50,7 @@ describe('UX High fixes', () => {
     await user.click(screen.getByRole('button', { name: 'Open a file…' }))
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
     await user.click(screen.getByRole('button', { name: 'Close build' }))
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(api.executed).toContain('close')
 
@@ -67,19 +67,93 @@ describe('UX High fixes', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Close without saving' }),
     )
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(api.executed.filter((c) => c === 'close')).toHaveLength(2)
   })
 
   it('counts only warnings on items in use (UX-03)', async () => {
     const { user } = await importBuild()
     // Two lines have warnings; one is on an item of another item set.
-    expect(screen.getByText('Partial · 1 warning')).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: /^Warnings/ }))
+    expect(screen.getByText('Partial · 1 line to review')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /^Lines to review/ }))
+    expect(
+      screen.getByText('1 line on an item in use is kept but not counted'),
+    ).toBeTruthy()
     const used = screen.getByRole('region', { name: 'On items in use' })
     expect(within(used).getByText('Nothing like this')).toBeTruthy()
+    // Lines on items not in use change no number: one row until opened.
+    expect(document.querySelector('.review-fold')?.hasAttribute('open')).toBe(
+      false,
+    )
+    await user.click(screen.getByText('1 line on an item not in use'))
     const unused = screen.getByRole('region', { name: 'On items not in use' })
-    expect(within(unused).getByText('Something else unread')).toBeTruthy()
+    // The line as the game prints it; the text as written, its variant,
+    // and its code only behind the technical detail.
+    expect(within(unused).getByText('10% Something else unread')).toBeTruthy()
+    expect(within(unused).queryByText(/\{variant:2\}/)).toBeNull()
+    expect(within(unused).queryByText(/LINE_NO_TEMPLATE/)).toBeNull()
+    const toggle = within(unused).getByRole('button', {
+      name: 'Show technical detail',
+    })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    await user.click(toggle)
+    expect(
+      within(unused).getByText(
+        '{variant:2}{range:0.5}(8-12)% Something else unread',
+      ),
+    ).toBeTruthy()
+    expect(within(unused).getByText(/variant 2 of the item/)).toBeTruthy()
+    expect(within(unused).getByText(/LINE_NO_TEMPLATE/)).toBeTruthy()
+    expect(
+      within(unused)
+        .getByRole('button', { name: 'Hide technical detail' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
+  })
+
+  it('says what a card leaves out in one line, with grouped Details', async () => {
+    const { user } = await importBuild()
+    const tile = screen
+      .getByRole('heading', { name: 'Energy shield', level: 2 })
+      .closest('section') as HTMLElement
+    expect(within(tile).getByText('40')).toBeTruthy()
+    expect(within(tile).getByText(/4 things not counted yet/)).toBeTruthy()
+    // No stat ID, code, or repeated sentence on the card.
+    expect(within(tile).queryByText(/some_internal_stat_id/)).toBeNull()
+    expect(within(tile).queryByText(/unmapped-stat/)).toBeNull()
+    await user.click(
+      within(tile).getByRole('button', {
+        name: 'Details: what Energy shield does not count yet',
+      }),
+    )
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Energy shield · 4 things not counted yet',
+    })
+    // Grouped and counted, each thing by the game's text with its place.
+    const group = (name: string) =>
+      within(dialog).getByText(name).closest('details') as HTMLElement
+    const lines = group('Lines not read yet')
+    expect(within(lines).getByText('1')).toBeTruthy()
+    expect(await within(lines).findByText('Nothing like this')).toBeTruthy()
+    const stats = group('Modifiers read but not counted yet')
+    expect(await within(stats).findByText('+12 to Accuracy')).toBeTruthy()
+    const config = group('Configuration options not counted yet')
+    expect(within(config).getByText('2')).toBeTruthy()
+    expect(within(config).getByText('× 2')).toBeTruthy()
+    // Codes and stat IDs only under the technical detail.
+    const codes = within(dialog)
+      .getByText('Show technical detail')
+      .closest('details') as HTMLElement
+    expect(within(codes).getByText(/unmodelled-config 2/)).toBeTruthy()
+    expect(
+      within(codes).getByText('unmapped-stat: some_internal_stat_id'),
+    ).toBeTruthy()
+    // A thing's link leads to it and closes the dialog.
+    await user.click(
+      within(lines).getByRole('button', { name: 'Loom Test Band' }),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await screen.findByRole('heading', { name: /Loom Test Band/, level: 1 })
   })
 
   it('shows the active item set first and switches sets (UX-02)', async () => {
@@ -196,17 +270,36 @@ describe('UX High fixes', () => {
           path: null,
           origin: 'C:\\pob\\lost.xml',
         },
+        {
+          id: 'r2',
+          'saved-at': now - 600,
+          name: 'lost',
+          path: null,
+          origin: null,
+          class: 'Witch',
+          ascendancy: 'Necromancer',
+          level: 92,
+          'main-skill': 'Raise Spectre',
+        },
       ],
     })
+    // Two copies of one name are told apart by what the build is, on the
+    // row and in its buttons' names.
+    expect(screen.getByText('Necromancer 92 · Raise Spectre')).toBeTruthy()
+    expect(
+      screen.getByRole('button', {
+        name: 'Restore lost, Necromancer 92 · Raise Spectre',
+      }),
+    ).toBeTruthy()
     // Recovery comes before the command bar.
     const recovery = screen.getByRole('heading', {
-      name: 'Unsaved work from a session that ended',
+      name: 'Unsaved work',
     })
     const bar = screen.getByLabelText('Paste a share code or build XML')
     expect(
       recovery.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(screen.getByText(/Last changed 2 minutes ago/)).toBeTruthy()
+    expect(screen.getByText(/Changed 2 minutes ago/)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Restore lost' })).toBeTruthy()
     // Recent: the file name, the time in words, and a way to remove it.
     expect(screen.getByText('witch.json').getAttribute('title')).toBe(
@@ -345,6 +438,13 @@ describe('UX High fixes', () => {
       name: 'Supports for Ice Nova',
     })
     expect(within(supports).getByText('Added Cold Damage')).toBeTruthy()
+    // Two panes: every group is listed at the left, the one picked is
+    // shown with its gems. The main skill's group is shown first.
+    await user.click(
+      within(
+        screen.getByRole('navigation', { name: 'Socket groups' }),
+      ).getByRole('button', { name: /Frostblink/ }),
+    )
     // The Boots group has no item in this sample.
     const boots = screen
       .getByRole('heading', { name: 'Boots', level: 2 })
@@ -381,12 +481,23 @@ describe('UX High fixes', () => {
       'edit-gem': { group: 0, gem: 1, enabled: false },
     })
 
+    // Two panes: every group is listed at the left, the one picked is
+    // shown with its gems. The main skill's group is shown first.
+    await user.click(
+      within(
+        screen.getByRole('navigation', { name: 'Socket groups' }),
+      ).getByRole('button', { name: /Frostblink/ }),
+    )
     await user.click(
       screen.getByRole('button', { name: 'Make Frostblink the main skill' }),
     )
+    // The heading is the group's skill; the author's label is under it.
     const movement = screen
-      .getByRole('heading', { name: 'Movement' })
+      .getByText('Movement')
       .closest('section') as HTMLElement
+    expect(
+      within(movement).getByRole('heading', { name: /^Frostblink/ }),
+    ).toBeTruthy()
     await waitFor(() =>
       expect(within(movement).getByText('Main skill group')).toBeTruthy(),
     )
@@ -395,8 +506,13 @@ describe('UX High fixes', () => {
     })
     // Undo puts the main skill back.
     await user.click(screen.getByRole('button', { name: 'Undo' }))
+    // The list says which group holds the main skill, whichever is shown.
     await waitFor(() =>
-      expect(within(weapon).getByText('Main skill group')).toBeTruthy(),
+      expect(
+        within(
+          screen.getByRole('navigation', { name: 'Socket groups' }),
+        ).getByRole('button', { name: /Ice Nova.*main skill/ }),
+      ).toBeTruthy(),
     )
   })
 
@@ -410,7 +526,18 @@ describe('UX High fixes', () => {
       .getByRole('heading', { name: 'Enemy', level: 3 })
       .closest('div') as HTMLElement
     expect(within(enemy).getByText('Is the enemy a Boss?')).toBeTruthy()
-    expect(within(enemy).getByText(/enemyLevel · default value/)).toBeTruthy()
+    // A default is said; the input's technical name only on request.
+    expect(within(enemy).getByText('default value')).toBeTruthy()
+    expect(within(enemy).queryByText('enemyLevel')).toBeNull()
+    await user.click(
+      screen.getByRole('button', { name: 'Show technical detail' }),
+    )
+    expect(within(enemy).getByText('enemyLevel')).toBeTruthy()
+    // Finding an input by its words.
+    await user.type(screen.getByLabelText('Find an input'), 'boss')
+    expect(within(enemy).getByText('Is the enemy a Boss?')).toBeTruthy()
+    expect(within(enemy).queryByText('enemyLevel')).toBeNull()
+    await user.clear(screen.getByLabelText('Find an input'))
     const conditions = screen
       .getByRole('heading', { name: 'Conditions', level: 3 })
       .closest('div') as HTMLElement
@@ -478,9 +605,7 @@ describe('UX High fixes', () => {
     ).toBeTruthy()
 
     // An input by its PoB name; it is not calculated yet.
-    await user.click(
-      screen.getByText('Add an input by its Path of Building name'),
-    )
+    await user.click(screen.getByText('Add an input by its technical name'))
     await user.type(screen.getByLabelText('Name'), 'conditionOnFungalGround')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(api.executed).toContainEqual({
@@ -498,6 +623,17 @@ describe('UX High fixes', () => {
       .getByRole('heading', { name: 'Block 1', level: 3 })
       .closest('section') as HTMLElement
     expect(within(block).getByText('Note, no effect')).toBeTruthy()
+    // Its lines are the block: a counted line carries the filled mark.
+    // The text is edited on request.
+    expect(
+      block
+        .querySelector('.config-lines .state-mark.state-complete')
+        ?.getAttribute('title'),
+    ).toBe('Counted')
+    expect(within(block).queryByLabelText('Text of Block 1')).toBeNull()
+    await user.click(
+      within(block).getByRole('button', { name: 'Edit as text' }),
+    )
     const text = within(block).getByLabelText('Text of Block 1')
     await user.type(text, '{Enter}+7 to nothing known')
     await user.click(within(block).getByRole('button', { name: 'Apply text' }))
@@ -720,18 +856,41 @@ describe('dashboards (B-5)', () => {
     const name = screen.getByLabelText('Name')
     await user.clear(name)
     await user.type(name, 'Bossing')
-    await user.click(screen.getByRole('button', { name: 'Add Offence' }))
+    // The edit toolbar's Add menu, by group; a summary once.
+    const bar = screen.getByRole('toolbar', { name: 'Edit the dashboard' })
+    // Menus are driven with the keyboard, as a keyboard user would.
+    const choose = async (el: HTMLElement) => {
+      el.focus()
+      await user.keyboard('{Enter}')
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    }
+    const add = async (group: string, item: string) => {
+      const open = await within(bar).findByRole('button', { name: 'Add' })
+      open.focus()
+      await user.keyboard('{Enter}')
+      const sub = await screen.findByRole('menuitem', { name: group })
+      sub.focus()
+      await user.keyboard('{ArrowRight}')
+      return await screen.findByRole('menuitem', { name: item })
+    }
+    await choose(await add('Summaries', 'Add Offence'))
     expect(
-      screen
-        .getByRole('button', { name: 'Add Offence' })
-        .hasAttribute('disabled'),
-    ).toBe(true)
-    await user.selectOptions(screen.getByLabelText('Stat'), 'life')
-    await user.click(screen.getByRole('button', { name: 'Add stat' }))
+      (await add('Summaries', 'Add Offence')).getAttribute('aria-disabled'),
+    ).toBe('true')
+    await user.keyboard('{Escape}{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    // A new card goes to the top.
+    await choose(await add('A value', 'Life'))
     const life = screen.getByRole('group', { name: 'Stat: Life: arrange' })
-    await user.click(within(life).getByRole('button', { name: 'Move up' }))
-    // Any of four widths on the six-column grid.
-    await user.selectOptions(within(life).getByLabelText('Width'), 'full')
+    // One menu per card: any of four widths, the moves, Remove.
+    const card = async (item: string, role = 'menuitem') => {
+      within(life)
+        .getByRole('button', { name: 'Stat: Life: card menu' })
+        .focus()
+      await user.keyboard('{Enter}')
+      await choose(await screen.findByRole(role, { name: item }))
+    }
+    await card('Full width', 'menuitemradio')
     await expectAccessible()
 
     let saved = JSON.parse(api.prefs ?? '{}') as {
@@ -745,7 +904,21 @@ describe('dashboards (B-5)', () => {
       ['stat', 'full'],
       ['offence', 'half'],
     ])
-    await user.click(within(life).getByRole('button', { name: 'Remove' }))
+    // A press inside a card's menu is not a drag of the card (the menu's
+    // events come up through the card's bar).
+    within(life).getByRole('button', { name: 'Stat: Life: card menu' }).focus()
+    await user.keyboard('{Enter}')
+    fireEvent.pointerDown(
+      await screen.findByRole('menuitem', { name: 'Remove' }),
+      {
+        button: 0,
+        pointerId: 5,
+      },
+    )
+    expect(document.querySelector('.dash-cell.dragging')).toBeNull()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    await card('Remove')
     await user.click(screen.getByRole('button', { name: 'Done' }))
     expect(within(tabs).getByRole('button', { name: 'Bossing' })).toBeTruthy()
 

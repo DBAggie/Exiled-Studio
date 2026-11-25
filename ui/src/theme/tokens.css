@@ -1,33 +1,41 @@
 /* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2: the redesign the
-   maintainer chose on 2026-11-16, docs/ui/ux-redesign.md): neutral
-   near-black surfaces, a violet accent, one type family. Every colour the UI uses is a
+   maintainer chose on 2026-11-16, docs/ui/ux-redesign.md; the revamp's
+   foundations, approved 2026-11-25, dev/active/ux-improvements/
+   ui-revamp-plan.md): neutral graphite surfaces, a violet accent used
+   only for selection, links and the allocated tree path, an off-white
+   primary button, one type family with a mono face for figures, five
+   type sizes, a 4px spacing scale, four corner sizes. Every colour the UI uses is a
    token here; theme/pairs.ts lists each foreground and background pair the
    CSS combines, and a test checks their contrast (WCAG 2.2 AA) and that no
    other CSS file writes a colour. */
 :root {
   /* Surfaces, darkest first. */
-  --c-bg: #0b0c0f;
-  --c-input: #08090b;
-  --c-nav: #0b0c0f;
-  --c-header: #0e1014;
-  --c-panel: #121419;
-  --c-raised: #1a1d24;
-  --c-hover: #1d2129;
-  --c-selected: #272c36;
+  --c-bg: #0e0f11;
+  --c-input: #0b0c0e;
+  --c-nav: #0e0f11;
+  --c-header: #0e0f11;
+  --c-panel: #15171a;
+  --c-raised: #1c1e22;
+  --c-hover: #1f2226;
+  --c-selected: #26292f;
 
   /* Lines. */
-  --c-row: #1b1e25;
-  --c-border: #22262e;
-  --c-border-control: #343a45;
+  --c-row: #1e2024;
+  --c-border: #24272c;
+  --c-border-control: #363a41;
   --c-border-strong: #6b7380;
 
   /* Text. */
   --c-text: #eceef2;
-  --c-soft: #c8cdd6;
-  --c-muted: #a3a9b3;
+  --c-soft: #b4b9c2;
+  --c-muted: #959ba6;
   --c-link: #c3b5ff;
   --c-accent: #a995ff;
-  --c-on-accent: #14102b;
+  /* The primary button: off-white with dark text; the accent is kept for
+     selection. */
+  --c-primary: #eceef2;
+  --c-primary-hover: #ffffff;
+  --c-on-primary: #0e0f11;
   --c-focus: #8dc1f2;
 
   /* States (text). */
@@ -124,7 +132,7 @@
   --c-chart-shield: #8fc7d6;
   --c-chart-good: #3fae6a;
   --c-chart-bad: #e0665a;
-  --c-chart-grid: #22262e;
+  --c-chart-grid: #24272c;
   --c-chart-axis: #6b7380;
   --c-scrim: rgb(8 9 11 / 0.6);
 
@@ -140,6 +148,20 @@
     'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Mono',
     monospace;
 
-  --radius: 10px;
-  --radius-panel: 14px;
+  /* Figures (values, counts, chart ticks): the mono face, tabular. */
+  --font-figure: var(--font-mono);
+
+  /* Type: five sizes on a 14px root (12, 14, 16, 24, 28 px); weights 400,
+     500, and 600 for rare emphasis. */
+  --fs-meta: 0.857rem;
+  --fs-body: 1rem;
+  --fs-section: 1.143rem;
+  --fs-title: 1.714rem;
+  --fs-figure: 2rem;
+
+  /* Corners: a small mark or chip, a control, a card, a dialog. */
+  --radius-small: 4px;
+  --radius: 8px;
+  --radius-panel: 12px;
+  --radius-dialog: 16px;
 }

@@ -4,7 +4,9 @@
 //! What PoB does: for each active skill of a group marked "Include in Full
 //! DPS" (`includeInFullDPS`), the skill is computed as the main skill and
 //! its count read (`getActiveSkillCount`, 150 to 174: the group's
-//! `groupCount`, else the gem's `count`, 1 by default). Then:
+//! `groupCount`, else the gem's `count`, 1 by default; a Vaal gem's first
+//! and second effects only when its `enableGlobal1` and `enableGlobal2`
+//! are on, [`super::skill::vaal_full_dps_enabled`]). Then:
 //! - `TotalDPS` (the hit's DPS) times the count, when above 0; for a skill
 //!   with a minion, the minion's `TotalDPS` times the count too;
 //! - the largest ignite, burning ground (P6-11ga), and bleeding of all
@@ -24,8 +26,7 @@
 //! is a reason (`full-dps-skill`), counted as nothing. Not modelled, each a
 //! reason: a skill's mirage (PoB adds the mirage's own output), damage over
 //! time of a skill with a count above 1 (`DotCanStack` is not known),
-//! a skill's own burning ground and caustic ground, corrupting blood, decay, a Vaal gem's two
-//! effects (PoB counts each by its `enableGlobal` flag), and the skills
+//! a skill's own burning ground and caustic ground, corrupting blood, decay, and the skills
 //! PoB counts once by a config condition (Absolution, Dominating Blow,
 //! Holy Strike).
 
@@ -87,9 +88,25 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         };
         // A Vaal gem's two effects: PoB counts each by the gem's
         // `enableGlobal1` and `enableGlobal2` (`getActiveSkillCount`, 159
-        // to 164), which the engine does not read yet.
-        if skill.types.contains("Vaal") {
-            reasons.partial.insert(unmodelled("full-dps-vaal"));
+        // to 164; open items, S1). A Vaal skill whose gem the engine cannot
+        // read that way keeps the reason, as does a Vaal skill that summons
+        // minions: PoB's full DPS of Vaal Summon Skeletons (417) is not its
+        // minion's `TotalDPS` (115) times the count, for a cause not found
+        // (`minion-vaal-summon-skeletons-witch.xml`; open items follow-ups).
+        let gem = group.gems.typed().nth(skill.active_gem.gem);
+        let vaal_minions = skill.types.contains("Vaal")
+            && ["CreatesMinion", "Minion"]
+                .iter()
+                .any(|t| skill.types.contains(*t));
+        match gem.and_then(|gem| {
+            super::skill::vaal_full_dps_enabled(gem, &skill.active_gem.effect.id, input.data)
+        }) {
+            Some(false) => continue,
+            Some(true) if !vaal_minions => {}
+            None if !skill.types.contains("Vaal") => {}
+            _ => {
+                reasons.partial.insert(unmodelled("full-dps-vaal"));
+            }
         }
         let count = count(group, &skill);
         let b = super::skill::with_main_skill(input.build, g, a);

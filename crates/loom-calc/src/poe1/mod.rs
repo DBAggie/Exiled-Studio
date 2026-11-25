@@ -126,9 +126,10 @@ pub enum Poe1Quantity {
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
     EnemyEvasion,
     /// The enemy's resistance to an elemental damage type from exposure
-    /// (PoB's `<Type>Resist` BASE on the enemy, P3-8k): `Base`, only
-    /// [`exposure`] adds them; a hit adds their sum to the enemy's base
-    /// resistance before its maximum ([`hit`]).
+    /// (PoB's `<Type>Resist` BASE on the enemy, P3-8k): `Base`, added by
+    /// [`exposure`] and by scorch ([`damage_taken`], open items S8); a hit
+    /// adds their sum to the enemy's base resistance before its maximum
+    /// ([`hit`]).
     EnemyResistance(DamageType),
     /// A modifier of one end of a hit's damage range (P6-11bo; PoB's
     /// `calcDamage`, `CalcOffence.lua` 113 to 138): with no type, PoB's
@@ -345,6 +346,25 @@ pub enum Poe1Quantity {
     /// game's per-minute stats on a state row, which has no scale; P6-10b):
     /// `Base`, read by [`regen`] divided by 60.
     RegenPercentPerMinute(Pool),
+    /// An item grants a skill (PoB's `ExtraSkill`: "Grants Level # <Skill>
+    /// Skill", "Curse Enemies with <Curse> on Hit", "Triggers Level #
+    /// <Skill> when Equipped"; open items, 2026-11-24): a `Flag` with the
+    /// item as its source. PoB builds the skill's socket group from it on
+    /// every calculation (`CalcSetup.lua` 1362 to 1460) and saves it in the
+    /// build; the engine reads that group ([`gems`]) and checks it is there
+    /// ([`collect`]).
+    GrantsSkill,
+    /// A skill's shock of the enemy that no effect modifier scales (PoB's
+    /// `ShockOverride` BASE from Summon Skitterbots, `CalcPerform.lua`
+    /// 1360 to 1370; open items): `Base`, read by [`damage_taken`].
+    SkillShockOverride,
+    /// The same for chill (`ChillOverride` BASE, 1371 to 1383).
+    SkillChillOverride,
+    /// A pool's flat regeneration per second as a percent of the pool
+    /// (PoB's `<Pool>Regen` BASE 1 with `PercentStat` of the pool; open
+    /// items S10): `Base`, read by [`regen`] as `ceil(pool x value / 100)`
+    /// per effect (`Classes/ModStore.lua` 532), into the flat sum.
+    RegenPercentStat(Pool),
     /// A pool's flat regeneration per minute (a state row's per-minute
     /// stat, which has no scale; P6-10b): `Base`, read by [`regen`] divided
     /// by 60.
@@ -394,7 +414,8 @@ pub enum Poe1Quantity {
     /// by a hit's armour ([`hit`]).
     IgnorePdrChance,
     /// The enemy's physical damage reduction (PoB's `PhysicalDamageReduction`
-    /// BASE on the enemy; Poacher's Mark, P6-9e): `Base`, added to the
+    /// BASE on the enemy; Poacher's Mark, P6-9e; a crushed enemy, open
+    /// items S8): `Base`, added to the
     /// armour reduction of a physical hit, and alone for physical damage
     /// over time ([`hit`]).
     EnemyPhysicalDamageReduction,
@@ -871,7 +892,7 @@ pub enum Poe1Quantity {
     /// BASE; P6-10b part 12).
     CritExtraDamageReduction,
     /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
-    /// `Increased` (delirium's) and `More`.
+    /// `Increased` (delirium's) and `More` (sap's too, open items S8).
     EnemyDamage,
     /// A share of a type's damage taken as another (PoB's
     /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and
@@ -1567,6 +1588,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenReason(p, stat) => write!(f, "regen-reason.{}.{stat}", p.name()),
             Self::RegenPerMinute(p) => write!(f, "regen-per-minute.{}", p.name()),
             Self::RegenPercentPerMinute(p) => write!(f, "regen-percent-per-minute.{}", p.name()),
+            Self::RegenPercentStat(p) => write!(f, "regen-percent-stat.{}", p.name()),
+            Self::GrantsSkill => f.write_str("grants-skill"),
+            Self::SkillShockOverride => f.write_str("skill-shock-override"),
+            Self::SkillChillOverride => f.write_str("skill-chill-override"),
             Self::RegenIncPerSpellBlock(p) => write!(f, "regen-inc-per-spell-block.{}", p.name()),
             Self::RegenPerFireResist(p) => write!(f, "regen-per-fire-resist.{}", p.name()),
             Self::RegenPerFortification(p) => {

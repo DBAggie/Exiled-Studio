@@ -38,7 +38,7 @@ pub use error::{AppError, Code};
 pub use session::{
     GroupPlace, HISTORY_LIMIT, MAX_DASHBOARD_COMPONENTS, MAX_DASHBOARD_FIELDS, MAX_DASHBOARD_NAME,
     MAX_DASHBOARD_TEXT, MAX_DASHBOARDS, Session, State, calculate, check_data, preview,
-    preview_tree,
+    preview_tree, preview_tree_with,
 };
 pub use view::{build_view, item_view, stage_view};
 pub use what_if::what_if;

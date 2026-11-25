@@ -235,6 +235,14 @@ fn workflow_should_import_edit_recalculate_undo_save_reopen_and_export() {
         "the synthetic build has warning lines"
     );
     assert_eq!(build.warnings.len() as u32, build.lines.warnings);
+    // A warning carries its line as the item's view shows it: the game's
+    // text and the variants, so a list never prints the prefixes.
+    for w in &build.warnings {
+        let item = r.app.item(w.item).unwrap();
+        let line = &item.lines[w.line as usize];
+        assert_eq!((&w.shown, &w.variants), (&line.shown, &line.variants));
+        assert!(w.shown.as_deref().is_none_or(|s| !s.starts_with('{')));
+    }
 
     // Out-of-scope content: every field has a state, and every field
     // without a value says why (never a blank or a zero; finding 6).
@@ -478,6 +486,14 @@ fn unsaved_changes_should_be_recoverable_after_the_app_ends() {
     );
     assert!(r.app.snapshot().dirty);
     assert!(r.app.recovery().is_empty());
+    // The offer said what the build is, as the build itself does, so
+    // unsaved builds of one name are told apart.
+    let restored = r.app.snapshot().build.unwrap();
+    assert!(found[0].class.is_some(), "the snapshot names the class");
+    assert_eq!(found[0].class, restored.class);
+    assert_eq!(found[0].ascendancy, restored.ascendancy);
+    assert_eq!(found[0].level, restored.level);
+    assert_eq!(found[0].main_skill, restored.main_skill);
     // The undo history came back with it (UX-19): undo reaches the import.
     let history = r.app.snapshot().history;
     assert!(history.can_undo, "the edit can be undone after a restore");

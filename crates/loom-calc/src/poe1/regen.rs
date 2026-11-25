@@ -140,6 +140,37 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 Term::Step("flat-per-fire-resistance"),
             )?);
         }
+        // A percent of the pool as flat regeneration (open items S10; PoB's
+        // `PercentStat`, `ModStore.lua` 487 to 536): `ceil(pool x value /
+        // 100)` per effect, which is why PoB's 5% of 590 mana is 30.
+        let percent_stat = Quantity::Poe1(Poe1Quantity::RegenPercentStat(pool));
+        if phases::has(calc, percent_stat) {
+            let cx = calc.context(Flags::NONE);
+            let mut total = 0.0;
+            for e in calc.store().effects() {
+                if e.quantity != percent_stat || e.op != Op::Base {
+                    continue;
+                }
+                match e.conditions.applies(&cx) {
+                    crate::condition::Applies::Yes => {
+                        total += crate::math::ceil(e.value * value / 100.0);
+                    }
+                    crate::condition::Applies::No => {}
+                    crate::condition::Applies::Unknown(keys) => {
+                        for condition in keys {
+                            reasons.partial.insert(
+                                crate::state::UnsupportedReason::UnmodelledCondition {
+                                    condition,
+                                    quantity: percent_stat,
+                                    source: e.source.clone(),
+                                },
+                            );
+                        }
+                    }
+                }
+            }
+            flat_terms.push(phases::constant(calc, "flat-percent-of-pool", total)?);
+        }
         if pool == Pool::Mana
             && let Some(per_mana) = per_minute_constant(calc, MANA_BASE_STAT, &mut reasons)?
         {

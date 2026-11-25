@@ -172,6 +172,9 @@ pub struct Ingest<'m> {
     item_lines: Option<&'m ItemLines>,
     store: ModStore,
     reasons: Reasons,
+    /// The calculation's settled conditions, when the engine settled them
+    /// before collecting ([`Ingest::with_states`]).
+    settled: Option<BTreeMap<crate::condition::ConditionKey, bool>>,
 }
 
 impl core::fmt::Debug for Ingest<'_> {
@@ -198,7 +201,23 @@ impl<'m> Ingest<'m> {
             item_lines: None,
             store: ModStore::new(),
             reasons: Reasons::new(),
+            settled: None,
         }
+    }
+
+    /// Takes the calculation's settled conditions (the ruleset's
+    /// `states`), so the rules read them while collecting instead of
+    /// settling them again (performance profile, 2026-11-24).
+    #[must_use]
+    pub fn with_states(mut self, settled: BTreeMap<crate::condition::ConditionKey, bool>) -> Self {
+        self.settled = Some(settled);
+        self
+    }
+
+    /// The settled conditions [`Ingest::with_states`] gave, if any.
+    #[must_use]
+    pub const fn states(&self) -> Option<&BTreeMap<crate::condition::ConditionKey, bool>> {
+        self.settled.as_ref()
     }
 
     /// Takes the host's settled values of item lines ([`ItemLines`]):

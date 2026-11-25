@@ -660,6 +660,20 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             None => {}
         }
     }
+    // An active Summon Skitterbots shocks the enemy whatever the check
+    // (`CalcPerform.lua` 1365; open items): true with one, unsettled when
+    // the skills are not certain.
+    match super::gems::skitterbots_shock(input) {
+        Some(true) => {
+            out.insert(ConditionKey::new(ENEMY_SHOCKED), true);
+        }
+        Some(false) => {}
+        None => {
+            if out.get(&ConditionKey::new(ENEMY_SHOCKED)) == Some(&false) {
+                out.remove(&ConditionKey::new(ENEMY_SHOCKED));
+            }
+        }
+    }
     // Arcane Surge on kill (P6-11gs; `Condition:ArcaneSurge` with
     // `KilledRecently`): with the stat, killed recently sets Arcane Surge.
     if out.get(&ConditionKey::new(KILLED_RECENTLY)) == Some(&true)

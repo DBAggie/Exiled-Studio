@@ -866,6 +866,8 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
                     text: view.text,
                     code,
                     in_use: used(item.id),
+                    shown: view.shown,
+                    variants: view.variants,
                 });
             }
         }
@@ -991,6 +993,7 @@ fn dashboards_view(dashboards: &Dashboards) -> api::Dashboards {
                         vary: c.vary.clone(),
                         input: c.input.clone(),
                         target: c.target,
+                        new_row: c.new_row,
                     })
                     .collect(),
             })

@@ -173,7 +173,12 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             }
         }
     }
-    if skill.types.contains("ReservationBecomesCost") {
+    // PoB adds the skill's reservation to its mana cost for this type
+    // (`CalcOffence.lua` 1693 to 1700): the active level's flat or percent
+    // mana reservation, or a support level's `manaReservationPercent`
+    // (`CalcActiveSkill.lua` 516, Divine Blessing). Without any, nothing is
+    // added and the cost is the engine's (open items, S1); otherwise a reason.
+    if skill.types.contains("ReservationBecomesCost") && reservation_reaches_cost(&skill, level) {
         reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "reservation-becomes-cost",
@@ -320,6 +325,20 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 }
 
 /// PoB's `round(mana x share / 100)`, the cost moved from mana.
+/// Whether a reservation reaches a `ReservationBecomesCost` skill's cost
+/// (`CalcOffence.lua` 1693 to 1700): the active level reserves anything, or
+/// a support's level does (`CalcActiveSkill.lua` 516); a support level the
+/// engine cannot find counts as one.
+fn reservation_reaches_cost(
+    skill: &super::skill::MainSkill<'_>,
+    level: &loom_data::bundle::skills::EffectLevel,
+) -> bool {
+    !level.reservations.is_empty()
+        || skill.supports.iter().any(|s| {
+            super::skill::effect_level(s.effect, s.level).is_none_or(|l| !l.reservations.is_empty())
+        })
+}
+
 fn share_of(calc: &mut Calc<'_>, mana: Valued, share: Valued) -> Result<Valued, CalcError> {
     let hundredth = phases::constant(calc, "percent", 0.01)?;
     let raw = phases::product(calc, &[mana, share, hundredth], Term::Step("moved-raw"))?;

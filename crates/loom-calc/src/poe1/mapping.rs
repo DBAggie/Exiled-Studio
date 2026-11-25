@@ -6449,6 +6449,20 @@ pub const STATE_DIVIDED_ROWS: &[StateDividedRow] = &[
             conditions::CONSUMED_CORPSE_IN_PAST_2_SEC,
         )],
     ),
+    // Open items S10: "Regenerate #% of Mana over 2 seconds when you
+    // Consume a corpse" (`ManaRegen` BASE 1 with `PercentStat` `Mana`
+    // percent half the stat, `ConsumedCorpseInPast2Sec`; `ModParser.lua`
+    // 2939): PoB ceils it (`ModStore.lua` 532), so 5% of 590 mana is 30.
+    (
+        "regenerate_%_maximum_mana_over_2_seconds_on_consuming_corpse",
+        &[(
+            Quantity::Poe1(Poe1Quantity::RegenPercentStat(Pool::Mana)),
+            Op::Base,
+            2.0,
+            NONE,
+            conditions::CONSUMED_CORPSE_IN_PAST_2_SEC,
+        )],
+    ),
 ];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
@@ -9853,6 +9867,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // only with `SequentialProjectiles` (Barrage's, a guard).
     ("chance_to_fork_extra_projectile_%", "projectile-count"),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    // Open items S8: Adrenaline when leech is removed by filling unreserved
+    // life: PoB parses the first of its two lines with text left over and
+    // applies no mod of a line with leftover text (`Item.lua` 2504, 2531);
+    // the joined line does not parse either. Adrenaline is the config's
+    // (`poe1::buffs`; the guard there names it).
+    (
+        "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+        "buff-chance",
+    ),
     // P6-11eg: chances to gain a charge on block and on a non-critical strike
     // (PoB does not parse them; the counts are the config's).
     (
@@ -10990,6 +11013,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
+    // Open items S8: "Warcries cannot Exert Travel Skills": PoB leaves the
+    // line unparsed (ModCache: no mods), and exerted travel skills reach no
+    // slice field (the guard in `poe1::gems` names it).
+    ("travel_skills_cannot_be_exerted", "exert"),
     (
         "travel_skills_cooldown_speed_+%_per_frenzy_charge",
         "no-slice",
@@ -11361,11 +11388,39 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
         .map(|i| Poe1Quantity::RegenReason(REGEN_REASONS[i].1, REGEN_REASONS[i].0))
 }
 
+/// Item stats PoB reads as `ExtraSkill`: the item grants a skill, whose
+/// socket group PoB builds and saves in the build (open items,
+/// 2026-11-24; each line's PoB parse in `docs/phase-6/stat-mop-up.md`,
+/// "Item-granted skills"), sorted. [`Poe1Quantity::GrantsSkill`]: the
+/// skill acts through its group ([`super::gems`]); `collect` checks the
+/// group is there.
+pub const GRANTS_SKILL_STATS: &[&str] = &[
+    "curse_on_hit_level_conductivity",
+    "curse_on_hit_level_frostbite",
+    "curse_on_hit_level_vulnerability",
+    "local_display_grants_skill_accuracy_crits_aura_level",
+    "local_display_grants_skill_barkskin",
+    "local_display_grants_skill_enduring_cry_level",
+    "local_display_grants_skill_herald_of_the_breach_level",
+    "local_display_grants_skill_summon_radiant_sentinel",
+    "local_display_raise_spider_on_kill_%_chance",
+    "local_display_trigger_level_x_reflection_skill_on_equip",
+];
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if let Some(q) = field_marker(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
                 quantity: Quantity::Poe1(q),
+                op: Op::Flag,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
+        if GRANTS_SKILL_STATS.binary_search(&stat.as_str()).is_ok() {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::GrantsSkill),
                 op: Op::Flag,
                 scale: 1.0,
                 divisor: 1.0,
@@ -11954,6 +12009,22 @@ mod tests {
         match Poe1Mapping.map(&StatId::new(stat)) {
             StatMap::Effects(e) => e.into_iter().map(|t| (t.quantity, t.op, t.scale)).collect(),
             other => panic!("{stat}: {other:?}"),
+        }
+    }
+
+    /// The item grant stats (open items): sorted, each the one flag, and in
+    /// no other table.
+    #[test]
+    fn grant_stats_should_be_the_grant_flag() {
+        assert!(GRANTS_SKILL_STATS.windows(2).all(|w| w[0] < w[1]));
+        for stat in GRANTS_SKILL_STATS {
+            assert_eq!(
+                effects(stat),
+                [(Quantity::Poe1(Poe1Quantity::GrantsSkill), Op::Flag, 1.0)],
+                "{stat}"
+            );
+            assert!(ROWS.iter().all(|r| r.0 != *stat), "{stat}");
+            assert!(NO_EFFECT.iter().all(|r| r.0 != *stat), "{stat}");
         }
     }
 

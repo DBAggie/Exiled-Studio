@@ -261,6 +261,10 @@ const ALLOWED_TYPES: &[(&str, &str)] = &[
     ("SummonStoneGolem", "Minion"),
     ("SummonStoneGolemAltY", "CreatesMinion"),
     ("SummonStoneGolemAltY", "Minion"),
+    // Open items: Summon Skitterbots' minions are no hit of the character's;
+    // its shock and chill are `gems::skitterbots`'.
+    ("SummonSkitterbots", "CreatesMinion"),
+    ("SummonSkitterbots", "Minion"),
     ("SupportBluntWeaponShockwave", "Triggered"),
 ];
 
@@ -296,6 +300,10 @@ const ALLOWED_MINIONS: &[&str] = &[
     "SummonSkeletons",
     "SummonSkeletonsAltX",
     "SummonSkeletonsAltY",
+    // Open items: the Skitterbots' skills (`SkitterbotWait`,
+    // `SkitterbotDetonateMines`) have no `GlobalEffect` mod; PoB gives their
+    // auras in `CalcPerform.lua` 1360 to 1394 (`gems::skitterbots`).
+    "SummonSkitterbots",
     "SummonStoneGolem",
     "SummonStoneGolemAltY",
     "SummonVoidSpawn",
@@ -379,6 +387,9 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // cold damage taken); its chill effect on a chilling area is a
     // `skill-chill-effect` reason (`gems::guaranteed_chill`).
     ("SupportBonechill", "EnemyChillEffect"),
+    // Open items: Summon Skitterbots' own chill effect, which its chill
+    // override reads (`gems::skitterbots`).
+    ("SummonSkitterbots", "EnemyChillEffect"),
     ("SupportBonechill", "supportBonechill"),
     // P6-11ft: Generosity's aura does not affect you
     // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
@@ -1282,11 +1293,46 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)], enemy: bool) -> Vec<S
                     | Flags::SKILL_NOT_TOTEM
                     | Flags::POISON)
                     .contains(all);
+            // Keyword flags PoB writes as numbers (open items: Summon
+            // Skitterbots' trap or mine damage, `KeywordFlag.Trap` 0x1000
+            // and `Mine` 0x2000, `Data/Global.lua` 149 and 150), when they
+            // are a row's only "any" flags and its "all" flags are known.
+            let keyword_bits = [
+                (Flags::KEYWORD_TRAP, 0x1000_u32),
+                (Flags::KEYWORD_MINE, 0x2000),
+            ];
+            let known_all = (Flags::ATTACK
+                | Flags::SPELL
+                | Flags::HIT
+                | Flags::CAST
+                | Flags::PROJECTILE
+                | Flags::DOT
+                | Flags::AREA
+                | Flags::SKILL_MELEE
+                | Flags::MELEE
+                | Flags::SKILL_NOT_TOTEM
+                | Flags::POISON)
+                .contains(all);
+            let keywords = (known_all
+                && !any.is_empty()
+                && (Flags::KEYWORD_TRAP | Flags::KEYWORD_MINE).contains(any))
+            .then(|| {
+                keyword_bits
+                    .iter()
+                    .filter(|(flag, _)| any.contains(*flag))
+                    .map(|(_, bit)| bit)
+                    .sum::<u32>()
+            });
+            let other_text = match keywords {
+                Some(bits) => format!(" other-flags 0/{bits}"),
+                None if other => " other-flags".to_owned(),
+                None => String::new(),
+            };
             format!(
                 "{} {kind} [{}]{}{}",
                 name,
                 f.join(","),
-                if other { " other-flags" } else { "" },
+                other_text,
                 // A divisor of -1 is PoB's `mult = -1` (a "-%" stat).
                 if divisor == 1.0 {
                     String::new()

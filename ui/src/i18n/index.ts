@@ -52,7 +52,27 @@ export function errorText(code: string): string {
 /** A field's label (its name when the catalog has none). */
 export function fieldLabel(field: string): string {
   const key = `field.${field}`
-  return key in en ? en[key as MessageKey] : field
+  return key in en ? en[key as MessageKey] : readable(field)
+}
+
+/** Words a field ID spells short. */
+const SHORT: Record<string, string> = {
+  dps: 'DPS',
+  ehp: 'EHP',
+  mult: 'multiplier',
+}
+
+/** A field the catalogue does not name yet, in words rather than its ID
+ * (`poe1.max-life-leech-rate` reads "Max life leech rate"): the card and
+ * the lists never show a stat ID (maintainer 2026-11-24). */
+export function readable(field: string): string {
+  const words = field
+    .replace(/^poe\d\./, '')
+    .split(/[.-]/)
+    .filter((w) => w !== '')
+    .map((w) => SHORT[w] ?? w)
+  const text = words.join(' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /** Offence fields; the rest are defence. */

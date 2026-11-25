@@ -19,6 +19,10 @@
         "$ref": "#/$defs/CrashRecord"
       }
     },
+    "data-auto": {
+      "description": "The automatic game data's state (additive, 2026-11-25).",
+      "$ref": "#/$defs/DataAutoStatus"
+    },
     "data-feed": {
       "description": "The data feed's answer (Phase 5, P-e).",
       "$ref": "#/$defs/DataFeedStatus"
@@ -128,6 +132,7 @@
     "diagnostics",
     "updates",
     "data-feed",
+    "data-auto",
     "what-if",
     "what-if-series",
     "build-fields",
@@ -2273,6 +2278,10 @@
       "description": "One component of a dashboard: what it shows, never the numbers.\nEvery text here is 1 to 64 characters.",
       "type": "object",
       "properties": {
+        "break": {
+          "description": "Whether a row break comes before the component: it starts a new\nrow, whatever room the row before it has left. `break`, one\nword, so the build document and the app API write it alike;\nleft out when false.",
+          "type": "boolean"
+        },
         "field": {
           "description": "The calc result field a stat, history, or curve component\nshows.",
           "type": [
@@ -2350,6 +2359,70 @@
       "required": [
         "active",
         "list"
+      ]
+    },
+    "DataAutoState": {
+      "description": "A state of the automatic game data.",
+      "oneOf": [
+        {
+          "description": "Nothing ran yet.",
+          "type": "string",
+          "const": "idle"
+        },
+        {
+          "description": "Reading the data feed.",
+          "type": "string",
+          "const": "checking"
+        },
+        {
+          "description": "Downloading and installing a pack.",
+          "type": "string",
+          "const": "downloading"
+        },
+        {
+          "description": "The last run finished: nothing was missing, or it is installed.",
+          "type": "string",
+          "const": "done"
+        },
+        {
+          "description": "The last run failed.",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "DataAutoStatus": {
+      "description": "Where the automatic game data is (maintainer 2026-11-24: game data\nis handled by the application, not by the user): at start in\n`automatic-check` mode, and when the user asks, the shell reads the\ndata feed and installs the packs this computer lacks (additive,\n2026-11-25).",
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "Why the last run failed, in `failed`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "description": "The pack downloading, in `downloading`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "state": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/DataAutoState"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state"
       ]
     },
     "DataFeedStatus": {
@@ -4147,9 +4220,43 @@
       "description": "A recovery snapshot (autosave) found at start.",
       "type": "object",
       "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "class": {
+          "description": "The class, if known (a snapshot written before 2026-11-25 has\nnone of these four).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "id": {
           "description": "Its ID (the file's stem).",
           "type": "string"
+        },
+        "level": {
+          "description": "The character level, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
+          "minimum": 0
+        },
+        "main-skill": {
+          "description": "The main skill, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "name": {
           "description": "The build's display name.",
@@ -4875,6 +4982,11 @@
       "description": "One node of the tree.",
       "type": "object",
       "properties": {
+        "anoint-only": {
+          "description": "Whether only an anointment grants it (the passives table's\n`anoint_only`: Blight's notables): drawn where the tree data\nplaces it, as PoB does, never allocated on the tree (additive,\n2026-11-24).",
+          "type": "boolean",
+          "default": false
+        },
         "ascendancy": {
           "description": "The ascendancy it belongs to (its ID), if any.",
           "type": [
@@ -5450,9 +5562,27 @@
           "format": "uint32",
           "minimum": 0
         },
+        "shown": {
+          "description": "A modifier line as the game prints it, its roll applied and\nits prefixes left out ([`LineView::shown`]); `None` when the\nline is shown as written (additive, 2026-11-25).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "text": {
           "description": "The line as written.",
           "type": "string"
+        },
+        "variants": {
+          "description": "The variants (1-based) the line belongs to\n([`LineView::variants`]); empty for every variant (additive,\n2026-11-25).",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
         }
       },
       "additionalProperties": false,

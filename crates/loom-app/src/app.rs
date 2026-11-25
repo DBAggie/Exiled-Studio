@@ -232,12 +232,26 @@ struct Job {
     data: Arc<GameData>,
 }
 
+/// Which preview [`App::preview_tree_edit`] makes.
+#[derive(Clone, Copy)]
+enum Hover {
+    /// Not a hover preview: never superseded.
+    No,
+    /// The hover preview's path only, no calculation.
+    PathOnly,
+    /// The hover preview numbered so, with its fields.
+    Fields(u64),
+}
+
 struct Shared {
     published: RwLock<Published>,
     /// The latest version a calculation was asked for (the cancel hook).
     latest: AtomicU64,
     correlation: AtomicU64,
     requests: AtomicU64,
+    /// The latest hover preview of the tree (`App::preview_tree_hover`):
+    /// an older one's calculation stops when the pointer has moved on.
+    hover: AtomicU64,
 }
 
 /// The running application.
@@ -326,6 +340,7 @@ impl App {
             latest: AtomicU64::new(0),
             correlation: AtomicU64::new(0),
             requests: AtomicU64::new(0),
+            hover: AtomicU64::new(0),
         });
         let (tx, rx) = mpsc::channel();
         if config.load_in_background {
@@ -663,7 +678,32 @@ impl App {
     /// # Errors
     /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_TREE`, the calculation's codes.
     pub fn preview_tree(&self, spec: u32, node: u32) -> Result<api::TreePreview, AppError> {
-        self.preview_tree_edit(spec, node, None).map(|(p, _)| p)
+        self.preview_tree_edit(spec, node, None, Hover::No)
+            .map(|(p, _)| p)
+    }
+
+    /// The application's own hover preview of a node, as
+    /// [`App::preview_tree`]. Without `fields`, only the path and the
+    /// nodes removed, with no calculation, so the window can show them at
+    /// once and ask for the fields after. A newer hover preview with
+    /// fields cancels an older one's calculation: its node is no longer
+    /// under the pointer.
+    ///
+    /// # Errors
+    /// As [`App::preview_tree`]; a cancelled one, the calculation's code.
+    pub fn preview_tree_hover(
+        &self,
+        spec: u32,
+        node: u32,
+        fields: bool,
+    ) -> Result<api::TreePreview, AppError> {
+        let hover = if fields {
+            Hover::Fields(self.shared.hover.fetch_add(1, Ordering::SeqCst) + 1)
+        } else {
+            Hover::PathOnly
+        };
+        self.preview_tree_edit(spec, node, None, hover)
+            .map(|(p, _)| p)
     }
 
     /// A requested tree change's effect, as [`App::preview_tree`]
@@ -676,7 +716,8 @@ impl App {
         change: &api::TreeChange,
     ) -> Result<api::TreePreview, AppError> {
         let (spec, edit) = crate::tree::change_edit(change);
-        self.preview_tree_edit(spec, 0, Some(edit)).map(|(p, _)| p)
+        self.preview_tree_edit(spec, 0, Some(edit), Hover::No)
+            .map(|(p, _)| p)
     }
 
     /// The preview of `edit` on spec `spec`, or, without one, of clicking
@@ -686,6 +727,7 @@ impl App {
         spec: u32,
         node: u32,
         edit: Option<crate::tree::Edit>,
+        hover: Hover,
     ) -> Result<(api::TreePreview, u64), AppError> {
         let (state, data, calc, version, generation) = self.read(|p| {
             (
@@ -723,8 +765,13 @@ impl App {
             .filter(|(v, _, _)| *v == version)
             .map(|(_, r, _)| r.as_ref());
         let shared = &self.shared;
-        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
-        session::preview_tree(&state, &data, spec, edit, before, &cancel).map(|p| (p, generation))
+        let cancel = || {
+            shared.latest.load(Ordering::SeqCst) != version
+                || matches!(hover, Hover::Fields(h) if shared.hover.load(Ordering::SeqCst) != h)
+        };
+        let fields = !matches!(hover, Hover::PathOnly);
+        session::preview_tree_with(&state, &data, spec, edit, before, fields, &cancel)
+            .map(|p| (p, generation))
     }
 
     /// The recent builds.
@@ -809,7 +856,7 @@ impl App {
     ) -> Result<api::ChangeRequest, AppError> {
         self.admit()?;
         let (spec, edit) = crate::tree::change_edit(&change);
-        let (preview, generation) = self.preview_tree_edit(spec, 0, Some(edit))?;
+        let (preview, generation) = self.preview_tree_edit(spec, 0, Some(edit), Hover::No)?;
         let mut request = self.new_request(client, note);
         request.tree = Some(change);
         request.tree_preview = Some(preview);
@@ -1176,12 +1223,19 @@ impl Writer {
         self.recovery
             .list(self.session.store())
             .into_iter()
-            .map(|f| api::RecoveryEntry {
-                id: f.id,
-                saved_at: f.header.saved_at,
-                name: f.header.name,
-                path: f.header.path,
-                origin: f.header.origin,
+            .map(|f| {
+                let s = f.header.summary.unwrap_or_default();
+                api::RecoveryEntry {
+                    id: f.id,
+                    saved_at: f.header.saved_at,
+                    name: f.header.name,
+                    path: f.header.path,
+                    origin: f.header.origin,
+                    class: s.class,
+                    ascendancy: s.ascendancy,
+                    level: s.level,
+                    main_skill: s.skill,
+                }
             })
             .collect()
     }
@@ -1276,6 +1330,11 @@ impl Writer {
                 name: self.session.name(),
                 path: self.session.path().map(|p| p.display().to_string()),
                 origin: self.session.origin().map(|p| p.display().to_string()),
+                // What the build is, as the recent list says it.
+                summary: Some(crate::view::recent_summary(
+                    &state.build,
+                    self.session.data().map(|d| d.bundle),
+                )),
             };
             // A failed autosave is retried with the next change. The
             // history first: a snapshot is never newer than its history.

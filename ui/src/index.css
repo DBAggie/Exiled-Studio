@@ -3,7 +3,7 @@
 /* Layout and components after the mockups (docs/ui, rendered-html/): 14px
    Inter body, Space Grotesk headings and numbers, JetBrains Mono for item
    text and game stat IDs; 36px controls, 44px menu items; panels with a
-   10px radius. Colours only through tokens (theme.test.ts). */
+   token radii. Colours only through tokens (theme.test.ts). */
 
 :root {
   color-scheme: dark;
@@ -24,21 +24,21 @@ h1,
 h2,
 h3 {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.25;
   margin: 0;
 }
 
 h1 {
-  font-size: 1.75rem;
+  font-size: var(--fs-title);
 }
 
 h2 {
-  font-size: 1.15rem;
+  font-size: var(--fs-section);
 }
 
 h3 {
-  font-size: 1rem;
+  font-size: var(--fs-body);
 }
 
 p {
@@ -59,7 +59,7 @@ textarea {
 }
 
 .num {
-  font-family: var(--font-heading);
+  font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
 }
 
@@ -80,11 +80,11 @@ select {
 
 button {
   min-height: 36px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: var(--radius);
   border: 1px solid var(--c-border-control);
   background: var(--c-raised);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -102,13 +102,13 @@ button:disabled {
 }
 
 button.primary {
-  background: var(--c-accent);
-  color: var(--c-on-accent);
-  border-color: var(--c-accent);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  border-color: var(--c-primary);
 }
 
 button.primary:hover:not(:disabled) {
-  background: var(--c-link);
+  background: var(--c-primary-hover);
 }
 
 button.primary:disabled {
@@ -124,8 +124,8 @@ button.icon {
 
 button.small {
   min-height: 28px;
-  padding: 0 10px;
-  font-size: 0.875rem;
+  padding: 0 8px;
+  font-size: var(--fs-meta);
 }
 
 /* A control that reads as text (a link-like action in a sentence). */
@@ -162,7 +162,7 @@ select {
 
 textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-family: var(--font-mono);
   resize: vertical;
 }
@@ -202,7 +202,7 @@ svg {
 
 .panel-head h2 {
   flex: 1;
-  font-size: 1.15rem;
+  font-size: var(--fs-section);
 }
 
 .stack {
@@ -235,7 +235,7 @@ svg {
 }
 
 .small-text {
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
 }
 
 .error {
@@ -243,20 +243,18 @@ svg {
 }
 
 .eyebrow {
-  font-size: 0.857rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.857rem;
-  font-weight: 600;
+  border-radius: var(--radius-small);
+  font-size: var(--fs-meta);
+  font-weight: 500;
   white-space: nowrap;
   line-height: 1.4;
 }
@@ -290,7 +288,7 @@ svg {
 .count {
   min-width: 22px;
   justify-content: center;
-  padding: 2px 6px;
+  padding: 2px 8px;
 }
 
 .rarity-normal {
@@ -325,15 +323,13 @@ td {
 
 thead th {
   border-top: 0;
-  font-size: 0.857rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-meta);
+  font-weight: 500;
   color: var(--c-muted);
 }
 
 tbody th {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 td.right,
@@ -364,7 +360,7 @@ th.right {
 .sub {
   display: block;
   font-weight: 400;
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
 }
 
@@ -402,7 +398,7 @@ th.right {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding: 10px 20px;
+  padding: 8px 20px;
   background: var(--c-header);
   border-bottom: 1px solid var(--c-border);
 }
@@ -410,10 +406,10 @@ th.right {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.15rem;
+  font-weight: 600;
+  font-size: var(--fs-section);
   color: var(--c-text);
 }
 
@@ -422,13 +418,13 @@ th.right {
 }
 
 .build-name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .side-nav {
   background: var(--c-nav);
   border-right: 1px solid var(--c-border);
-  padding: 12px 10px;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -453,8 +449,8 @@ th.right {
 .side-nav button {
   width: 100%;
   min-height: 40px;
-  padding: 0 10px;
-  gap: 10px;
+  padding: 0 12px;
+  gap: 8px;
   justify-content: flex-start;
   border: 0;
   background: transparent;
@@ -505,8 +501,8 @@ th.right {
   right: 2px;
   margin: 0;
   min-width: 0;
-  padding: 0 5px;
-  font-size: 0.65rem;
+  padding: 0 4px;
+  font-size: var(--fs-meta);
 }
 
 .content {
@@ -533,12 +529,12 @@ th.right {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .page-head h1 {
   margin-right: 8px;
-  font-size: 1.75rem;
+  font-size: var(--fs-title);
 }
 
 .lead {
@@ -587,7 +583,7 @@ th.right {
 }
 
 .menu-item {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: var(--radius);
   cursor: pointer;
   min-height: 24px;
@@ -650,19 +646,18 @@ th.right {
 }
 
 .start h1 {
-  font-size: 2rem;
+  font-size: var(--fs-title);
 }
 
 .start .lead {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .command-panel {
-  border-color: var(--c-accent);
-  padding: 14px 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Start page B: one input with its icon and the import button. */
@@ -674,7 +669,7 @@ th.right {
 
 .command-bar > svg {
   flex: none;
-  color: var(--c-accent);
+  color: var(--c-muted);
 }
 
 .command-bar textarea {
@@ -686,7 +681,7 @@ th.right {
 }
 
 .command-panel .small {
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
 }
 
 .start-actions {
@@ -698,12 +693,12 @@ th.right {
 
 .start-actions kbd {
   margin-left: 4px;
-  padding: 0 6px;
+  padding: 0 8px;
   border: 1px solid var(--c-border-control);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: var(--c-muted);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-meta);
 }
 
 /* A file dragged over the window. */
@@ -715,13 +710,13 @@ th.right {
   align-items: center;
   justify-content: center;
   border: 2px dashed var(--c-accent);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
   background: var(--c-panel);
   pointer-events: none;
 }
 
 .drop-hint p {
-  font-size: 1.25rem;
+  font-size: var(--fs-section);
 }
 
 .data-line .link {
@@ -737,22 +732,22 @@ th.right {
 
 /* A recent build is one line: its name, what it is, its file, when. */
 .recent-what {
-  margin-left: 10px;
+  margin-left: 8px;
   font-weight: 400;
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
   color: var(--c-muted);
 }
 
 .table-panel td.col-file {
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
   overflow-wrap: anywhere;
 }
 
 .start .table-panel th,
 .start .table-panel td {
-  padding-top: 7px;
-  padding-bottom: 7px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .nowrap {
@@ -780,7 +775,7 @@ button.link.quiet:hover:not(:disabled) {
   padding: 0;
   border: 0;
   background: transparent;
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
 }
 
@@ -797,7 +792,7 @@ button.link.quiet:hover:not(:disabled) {
   padding: 16px 24px;
   border-top: 1px solid var(--c-border);
   color: var(--c-muted);
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
 }
 
 /* ------------------------------------------------------ import result */
@@ -821,7 +816,7 @@ button.link.quiet:hover:not(:disabled) {
 }
 
 .import-title p {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   max-width: 62rem;
 }
 
@@ -840,26 +835,24 @@ button.link.quiet:hover:not(:disabled) {
 
 /* The label, then the number with what it counts beside it. */
 .stat-card {
-  padding: 10px 16px 12px;
+  padding: 8px 16px 12px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  column-gap: 10px;
+  column-gap: 8px;
 }
 
 .stat-card dt {
   grid-column: 1 / -1;
-  font-size: 0.857rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-meta);
   color: var(--c-soft);
 }
 
 .stat-card dd:not(.sub) {
   margin: 2px 0 0;
-  font-family: var(--font-heading);
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-family: var(--font-figure);
+  font-size: var(--fs-title);
+  font-weight: 500;
   line-height: 1.2;
 }
 
@@ -885,35 +878,74 @@ button.link.quiet:hover:not(:disabled) {
   padding: 0;
 }
 
-/* A line to review is one row: the line and its item, why it is not
-   calculated, the way to the item. */
+/* A line to review is one row: the line as the game prints it with why
+   it is not calculated, its item, and the technical detail's toggle. */
 .review-list > li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px 20px;
-  padding: 10px 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 14rem) auto;
+  align-items: start;
+  gap: 8px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--c-row);
 }
 
-.review-list .line-text {
-  font-family: var(--font-mono);
-  font-size: 0.928rem;
+.review-list > li:first-child {
+  border-top: 0;
+}
+
+.review-line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.review-list .line-text,
+.warning-strip .line-text {
+  color: var(--c-rarity-magic);
   overflow-wrap: anywhere;
 }
 
-.review-list p {
-  margin: 2px 0 0;
+.review-reason {
+  color: var(--c-soft);
+  font-size: var(--fs-body);
+}
+
+.review-item {
+  justify-self: start;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.review-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--c-bg);
+}
+
+.review-detail-head {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.review-detail code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  overflow-wrap: anywhere;
 }
 
 .unused-review > summary {
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-top: 1px solid var(--c-row);
   cursor: pointer;
 }
 
 .panel-foot {
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-top: 1px solid var(--c-row);
   color: var(--c-muted);
 }
@@ -954,7 +986,7 @@ button.link.quiet:hover:not(:disabled) {
 .stat-row {
   width: 100%;
   min-height: 42px;
-  padding: 9px 0;
+  padding: 8px 0;
   border: 0;
   border-top: 1px solid var(--c-row);
   border-radius: 0;
@@ -979,7 +1011,7 @@ button.link.quiet:hover:not(:disabled) {
 }
 
 .stat-label .reason {
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
 }
 
 .stat-end {
@@ -990,9 +1022,9 @@ button.link.quiet:hover:not(:disabled) {
 }
 
 .stat-value {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-family: var(--font-figure);
+  font-size: var(--fs-body);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--c-text);
 }
@@ -1010,18 +1042,17 @@ button.link.quiet:hover:not(:disabled) {
   padding: 0;
 }
 
+/* A line as the game prints it, whole, with its item under it. */
 .warning-strip li {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
   border-top: 1px solid var(--c-row);
 }
 
-.warning-strip .mono {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.warning-strip .muted {
+  font-size: var(--fs-meta);
 }
 
 /* ---------------------------------------------------------- breakdown */
@@ -1030,7 +1061,7 @@ button.link.quiet:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--c-soft);
 }
 
@@ -1038,7 +1069,7 @@ button.link.quiet:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1046,7 +1077,7 @@ button.link.quiet:hover:not(:disabled) {
 
 .factor {
   min-width: 7.5rem;
-  padding: 10px 16px;
+  padding: 8px 16px;
   background: var(--c-raised);
   border: 1px solid var(--c-border-control);
   border-radius: var(--radius);
@@ -1055,19 +1086,19 @@ button.link.quiet:hover:not(:disabled) {
 .factor .label {
   display: block;
   color: var(--c-soft);
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
 }
 
 .factor .value {
   display: block;
-  font-family: var(--font-heading);
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-family: var(--font-figure);
+  font-size: var(--fs-section);
+  font-weight: 500;
 }
 
 .factor-op {
   color: var(--c-muted);
-  font-size: 1.15rem;
+  font-size: var(--fs-section);
 }
 
 .tree,
@@ -1084,11 +1115,11 @@ button.link.quiet:hover:not(:disabled) {
 }
 
 .tree li {
-  padding: 3px 0;
+  padding: 4px 0;
 }
 
 .tree .num {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* The step outline (UX-04): one row per step, its parts indented. */
@@ -1135,7 +1166,7 @@ button.link.quiet:hover:not(:disabled) {
 }
 
 .step-value {
-  font-weight: 600;
+  font-weight: 500;
   text-align: right;
 }
 
@@ -1146,10 +1177,8 @@ button.link.quiet:hover:not(:disabled) {
 /* Sources grouped by what they change. */
 .sources tr.group th {
   padding-top: 16px;
-  font-size: 0.857rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-meta);
+  font-weight: 500;
   color: var(--c-soft);
 }
 
@@ -1165,7 +1194,7 @@ details > summary {
 
 .stat-id {
   font-family: var(--font-mono);
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   color: var(--c-info);
 }
 
@@ -1180,7 +1209,7 @@ details > summary {
 .item-row {
   width: 100%;
   min-height: 56px;
-  padding: 10px 20px;
+  padding: 8px 20px;
   border: 0;
   border-top: 1px solid var(--c-row);
   border-radius: 0;
@@ -1206,7 +1235,7 @@ details > summary {
 }
 
 .set-picker label {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Items the calculation does not read, collapsed under the used ones. */
@@ -1215,12 +1244,12 @@ details > summary {
 }
 
 .unused-items > summary {
-  padding: 14px 20px;
-  font-weight: 600;
+  padding: 12px 20px;
+  font-weight: 500;
 }
 
 .item-row .name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* "Paste an item": a game copy or PoB item text added to the build. */
@@ -1230,8 +1259,8 @@ details > summary {
 }
 
 .paste-item > summary {
-  padding: 14px 0;
-  font-weight: 600;
+  padding: 12px 0;
+  font-weight: 500;
 }
 
 .paste-item textarea {
@@ -1239,7 +1268,7 @@ details > summary {
   width: 100%;
   margin: 4px 0 12px;
   font-family: var(--font-mono, monospace);
-  font-size: 0.85rem;
+  font-size: var(--fs-meta);
 }
 
 .paste-actions {
@@ -1260,18 +1289,18 @@ details > summary {
 }
 
 .item-head h1 {
-  font-size: 1.75rem;
+  font-size: var(--fs-title);
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 16px;
-  padding: 10px 20px;
+  gap: 8px 16px;
+  padding: 8px 20px;
   border-top: 1px solid var(--c-row);
   color: var(--c-muted);
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
 }
 
 .legend span {
@@ -1300,9 +1329,7 @@ details > summary {
 }
 
 .line-row .kind {
-  font-size: 0.857rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
 }
 
@@ -1322,7 +1349,7 @@ details > summary {
 .line-row .stats {
   margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
   overflow-wrap: anywhere;
 }
@@ -1341,7 +1368,7 @@ details > summary {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--c-row);
 }
 
@@ -1361,19 +1388,19 @@ details > summary {
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--c-row);
 }
 
 .impact-list .before {
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   color: var(--c-muted);
 }
 
 .impact-list .after {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.05rem;
+  font-family: var(--font-figure);
+  font-weight: 500;
+  font-size: var(--fs-body);
 }
 
 .delta-up {
@@ -1417,7 +1444,7 @@ details > summary {
 .check {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
 }
 
@@ -1432,11 +1459,11 @@ details > summary {
 
 .command {
   display: block;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: var(--c-input);
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   overflow-wrap: anywhere;
 }
 
@@ -1457,8 +1484,8 @@ details > summary {
 }
 
 .request h3 {
-  font-size: 1.3rem;
-  margin: 8px 0 6px;
+  font-size: var(--fs-section);
+  margin: 8px 0 8px;
 }
 
 .request .note {
@@ -1473,7 +1500,7 @@ details > summary {
 
 .block {
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 12px 12px;
   border: 1px solid;
 }
 
@@ -1488,16 +1515,16 @@ details > summary {
 }
 
 .block .title {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--c-rarity-rare);
 }
 
 .block ul {
   list-style: none;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   font-family: var(--font-mono);
-  font-size: 0.928rem;
+  font-size: var(--fs-body);
 }
 
 .perms {
@@ -1562,7 +1589,7 @@ details > summary {
 .stage-picker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--c-muted);
 }
 
@@ -1575,9 +1602,9 @@ details > summary {
 /* A slot card holds the slot's groups; each group is a block under it. */
 .skill-group {
   margin-top: 12px;
-  padding: 10px 12px 12px;
+  padding: 8px 12px 12px;
   border: 1px solid var(--c-row);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .skill-group.main {
@@ -1593,7 +1620,7 @@ details > summary {
 
 .skill-group-head h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--fs-body);
 }
 
 /* An item's sockets: circles in the gem token colours, linked ones joined
@@ -1601,7 +1628,7 @@ details > summary {
 .sockets {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -1674,7 +1701,7 @@ details > summary {
 .gem-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem 28px 28px;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -1738,11 +1765,11 @@ details > summary {
 
 .gem-title {
   display: block;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .gem-row.nested .gem-name {
-  padding-left: 6px;
+  padding-left: 8px;
 }
 
 /* The tree branch before a support: a corner drawn in CSS (the box
@@ -1773,14 +1800,14 @@ details > summary {
   width: 100%;
   min-height: 32px;
   padding: 0 8px;
-  font-family: var(--font-heading);
+  font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
 }
 
 /* The main skill among a group's gems. */
 .main-gem {
   color: var(--c-info);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 label.check {
@@ -1799,7 +1826,7 @@ label.check {
   margin: 2px 0 0;
   color: var(--c-muted);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-meta);
 }
 
 /* A screen heading takes focus on arrival for screen readers; it is not
@@ -1824,7 +1851,7 @@ h1[tabindex='-1']:focus-visible {
   max-height: 20rem;
   overflow: auto;
   white-space: pre-wrap;
-  font-size: 0.8rem;
+  font-size: var(--fs-meta);
 }
 
 .stats.stale {
@@ -1891,7 +1918,7 @@ h1[tabindex='-1']:focus-visible {
 .picker-entry {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   width: 100%;
   min-height: 40px;
@@ -1907,7 +1934,40 @@ h1[tabindex='-1']:focus-visible {
 }
 
 .picker-name {
-  font-weight: 600;
+  font-weight: 500;
+}
+
+/* A jewel: its name, its base under it, and where it is socketed at the
+   right (no gem mark, so not the gem rows' three columns). */
+.picker-entry.jewel-entry {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name where'
+    'base where';
+  row-gap: 2px;
+  padding: 8px 12px;
+}
+
+.jewel-entry .picker-name {
+  grid-area: name;
+}
+
+.jewel-entry .picker-name + .muted {
+  grid-area: base;
+}
+
+.jewel-entry .jewel-lines {
+  grid-column: 1 / -1;
+  font-weight: 400;
+}
+
+.jewel-entry .jewel-where {
+  grid-area: where;
+}
+
+.jewel-entry[aria-pressed='true'] {
+  background: var(--c-row);
+  box-shadow: inset 3px 0 0 var(--c-accent);
 }
 
 .gem-mark.square {
@@ -1962,7 +2022,7 @@ button.danger {
 
 .config-group h3 {
   margin: 16px 0 4px;
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
   color: var(--c-muted);
 }
 
@@ -1976,7 +2036,7 @@ button.danger {
 .config-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 9rem minmax(0, 10rem) 28px;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   min-height: 44px;
   border-bottom: 1px solid var(--c-row);
@@ -1998,7 +2058,7 @@ button.danger {
 }
 
 .config-number {
-  font-family: var(--font-heading);
+  font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2047,15 +2107,15 @@ button.danger {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--c-row);
 }
 
 .config-block {
   margin: 12px 0;
-  padding: 10px 12px 12px;
+  padding: 8px 12px 12px;
   border: 1px solid var(--c-row);
-  border-radius: 6px;
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2120,7 +2180,7 @@ button.line-edit {
 
 .item-badges {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
@@ -2146,7 +2206,7 @@ button.line-edit {
 
 .file-fields code {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--fs-meta);
 }
 
 /* The equipment panel (B-2): the game's inventory layout. */
@@ -2171,7 +2231,7 @@ button.line-edit {
     'glove glove . belt belt . boot boot'
     'spare . f1 f2 f3 f4 f5 .'
     '. . f1 f2 f3 f4 f5 .';
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
   padding: 16px;
   background: var(--c-tt-bg);
@@ -2200,7 +2260,7 @@ button.line-edit {
   justify-content: center;
   background: var(--c-inv-slot);
   border: 1px solid var(--c-inv-slot-border);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: var(--c-tt-label);
 }
 
@@ -2312,9 +2372,9 @@ button.inv-slot:focus-visible {
 
 .inv-swap button {
   min-height: 0;
-  padding: 0 10px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: 700;
+  padding: 0 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
   background: var(--c-inv-slot);
   color: var(--c-tt-label);
   border: 1px solid var(--c-inv-slot-border);
@@ -2347,14 +2407,14 @@ button.inv-slot:focus-visible {
 }
 
 .tt-header {
-  padding: 6px 16px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--c-tt-border);
-  font-size: 1.15rem;
+  font-size: var(--fs-section);
   background: linear-gradient(var(--c-tt-sheen), transparent);
 }
 
 .tt-block {
-  padding: 6px 16px;
+  padding: 8px 16px;
 }
 
 .tt-block + .tt-block {
@@ -2428,7 +2488,7 @@ button.inv-slot:focus-visible {
 /* The Alt view's mod header: small, grey, italic, above its lines. */
 .tt-affix {
   color: var(--c-tt-label);
-  font-size: 0.8rem;
+  font-size: var(--fs-meta);
   font-style: italic;
 }
 
@@ -2445,7 +2505,7 @@ button.inv-slot:focus-visible {
 .inv-tree-jewels ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin: 0.25rem 0 0;
   padding: 0;
   list-style: none;
@@ -2522,21 +2582,7 @@ button.inv-slot:focus-visible {
   margin-bottom: 4px;
   padding: 4px 8px;
   border: 1px dashed var(--c-border);
-  border-radius: 6px;
-}
-
-.dash-library {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.dash-library li + li {
-  margin-top: 6px;
-}
-
-.dash-stat-add {
-  margin-top: 12px;
+  border-radius: var(--radius);
 }
 
 .stat-tile-button {
@@ -2557,8 +2603,8 @@ button.inv-slot:focus-visible {
 }
 
 .stat-tile-value {
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: var(--fs-figure);
+  font-weight: 500;
 }
 
 .main-skill-gems {
@@ -2621,7 +2667,7 @@ button.inv-slot:focus-visible {
   position: fixed;
   z-index: 50;
   max-width: 22rem;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: var(--c-raised);
   border: 1px solid var(--c-border-strong);
   border-radius: var(--radius);
@@ -2633,7 +2679,7 @@ button.inv-slot:focus-visible {
 }
 
 .tree-card-name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .tree-lines {
@@ -2660,7 +2706,7 @@ button.inv-slot:focus-visible {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--c-row);
 }
 
@@ -2690,12 +2736,12 @@ button.inv-slot:focus-visible {
   margin: 8px 0 0;
   padding: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-meta);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   background: var(--c-input);
   border: 1px solid var(--c-row);
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 /* A crash record from an earlier run (Phase 5, P-f). */
@@ -2708,4 +2754,355 @@ button.inv-slot:focus-visible {
 .crash-notice li {
   gap: 12px;
   padding: 8px 0;
+}
+
+/* A socket group: the heading the application writes, the author's label
+   under it. */
+.skill-group-title {
+  min-width: 0;
+}
+
+.skill-group-title h3,
+.skill-group-title p {
+  margin: 0;
+}
+
+/* ------------------------------------------------- what is not counted */
+
+/* A card's one line about what its value leaves out. */
+.reason-summary {
+  margin: 8px 0 0;
+  color: var(--c-soft);
+  font-size: var(--fs-meta);
+}
+
+.stat-tile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.stat-tile-words {
+  font-size: var(--fs-section);
+  font-weight: 500;
+}
+
+.reason-groups {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.reason-group {
+  border-top: 1px solid var(--c-row);
+}
+
+.reason-group > summary,
+.reason-codes > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.reason-codes {
+  border-top: 1px solid var(--c-row);
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.reason-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-soft);
+}
+
+.reason-group > ul,
+.reason-codes > ul {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  list-style: none;
+}
+
+.reason-group li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.reason-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.reason-group li > .link {
+  flex-shrink: 0;
+  max-width: 45%;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------ the full-page tree */
+
+/* The controls' groups: rows above the list; over the tree, its four
+   corners (maintainer 2026-11-24). */
+.tree-float {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.tree-float .tree-points {
+  margin: 0;
+}
+
+.tree-spec-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.tree-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tree-notices:empty {
+  display: none;
+}
+
+/* The tree takes the whole content area under the build's header. */
+.content:has(> .tree-full) {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.content:has(> .tree-full) > :not(.tree-full) {
+  width: auto;
+  margin: 8px 20px 0;
+}
+
+.content > .tree-full {
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  max-width: none;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-tree-bg);
+}
+
+.tree-full .tree-stage,
+.tree-full .tree-canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.tree-full .tree-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Over the tree: text and outlines only, read through a soft shadow. */
+.tree-full .tree-float,
+.tree-full .tree-zoom,
+.tree-full .tree-notices {
+  position: absolute;
+  z-index: 2;
+  text-shadow:
+    0 1px 3px var(--c-tree-bg),
+    0 0 10px var(--c-tree-bg);
+}
+
+.tree-full .tree-tl {
+  top: 14px;
+  left: 20px;
+  max-width: calc(50% - 20px);
+}
+
+.tree-full .tree-tr {
+  top: 14px;
+  right: 20px;
+  max-width: calc(50% - 20px);
+  justify-content: flex-end;
+}
+
+.tree-full .tree-float :is(select, input) {
+  width: auto;
+  min-width: 0;
+}
+
+.tree-full .tree-float input[type='search'] {
+  width: 10rem;
+}
+
+.tree-full .tree-float .set-picker {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+/* The select says "No comparison" or the stage: its label is for
+   screen readers here. */
+.tree-full .tree-float .set-picker label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tree-full .tree-float .set-picker select {
+  max-width: 11rem;
+}
+
+.tree-full .tree-float .segmented button {
+  border-color: transparent;
+}
+
+.tree-full .tree-tr > button {
+  border-color: transparent;
+}
+
+.tree-full .tree-tr > button:hover {
+  border-color: var(--c-border-control);
+}
+
+.tree-full .tree-bl {
+  bottom: 14px;
+  left: 20px;
+  max-width: calc(100% - 220px);
+}
+
+.tree-full .tree-zoom {
+  top: auto;
+  right: 20px;
+  bottom: 12px;
+}
+
+.tree-full .tree-notices {
+  top: 96px;
+  left: 20px;
+  width: min(440px, calc(100% - 40px));
+  max-height: calc(100% - 160px);
+  overflow-y: auto;
+}
+
+/* The heading stays for screen readers and the focus on arrival. */
+.tree-full h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tree-full .tree-float :is(button, select, input, .segmented),
+.tree-full .tree-zoom button {
+  background: transparent;
+  text-shadow: inherit;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button, .segmented),
+.tree-full .tree-float .set-picker select {
+  border-color: transparent;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button):hover {
+  border-color: var(--c-border-control);
+}
+
+.tree-full .tree-float .segmented button[aria-pressed='true'] {
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--c-accent);
+  border-radius: 0;
+}
+
+.tree-full .tree-float .tree-points {
+  padding: 0;
+  border: 0;
+  color: var(--c-text);
+  font-size: var(--fs-body);
+}
+
+/* A container only where one is unavoidable, and then see-through. */
+.tree-full .tree-notices > *,
+.tree-card {
+  background: color-mix(in srgb, var(--c-raised) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tree-full .tree-notices > * {
+  padding: 8px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  text-shadow: none;
+}
+
+/* ----------------------------------------------- dashboard edit mode */
+
+/* A card's bar is its handle. */
+.dash-tools {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dash-cell.dragging .dash-tools {
+  cursor: grabbing;
+}
+
+.dash-edit-help {
+  margin: -4px 0 0;
+}
+
+.menu-label {
+  padding: 8px 12px 4px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+/* The chosen width. */
+.menu-radio[data-state='checked'] {
+  font-weight: 500;
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.menu-sub {
+  display: flex;
+  align-items: center;
+}
+
+.menu-sub::after {
+  content: '›';
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--c-muted);
+}
+
+.menu-two {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.menu-long {
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
 }

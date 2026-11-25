@@ -6,16 +6,22 @@
 // label, value, and badge on one line; it opens the stat's breakdown.
 // A dashboard is short by default: lists show their first rows, charts
 // their plot, and the rest is one click away.
-import { Popover } from 'radix-ui'
+import { DropdownMenu, Popover } from 'radix-ui'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
 import { Delta, Sparkline } from '../charts'
-import { Badge, FieldBadge, Hint, Icon, ScreenHeading } from '../components'
+import {
+  Badge,
+  FieldMark,
+  Hint,
+  Icon,
+  ScreenHeading,
+  StateLegend,
+} from '../components'
 import {
   CATALOG,
   CATEGORIES,
-  type Category,
   type ComponentKind,
   type DashComponent,
   type DashboardDef,
@@ -27,6 +33,7 @@ import {
   dropped,
   moved,
   newId,
+  stepWidth,
 } from '../dashboards'
 import { OFFENCE, fieldLabel, t } from '../i18n'
 import {
@@ -62,19 +69,19 @@ import {
   useDataName,
 } from '../util'
 import { useBuildDashboards } from '../buildDashboards'
+import { ReasonSummary } from '../ReasonDetails'
+import { entriesOf } from '../reasons'
 import { MAX_NAME, MAX_SNAPSHOTS, markOfKept } from '../kept'
 
-function why(f: FieldResult): string | null {
-  if (f.state === 'unsupported' && f.reason != null) {
-    return reasonText(f.reason)
-  }
-  if (f.state === 'indeterminate' && f.indeterminate !== undefined) {
-    return f.indeterminate.map(reasonText).join(' ')
-  }
-  if (f.state === 'partial' && f.unsupported !== undefined) {
-    return f.unsupported.map(reasonText).join(' ')
-  }
-  return null
+/** A field's one reason about no particular thing, as its sentence (a
+ * row says it; several reasons are behind the card's Details and the
+ * breakdown). */
+function loneReason(f: FieldResult): string | null {
+  const entries = entriesOf(f)
+  const first = entries[0]
+  return entries.length === 1 && first?.target.kind === 'none'
+    ? reasonText(first.code)
+    : null
 }
 
 /** The rows a stat list shows before "Show all" (a list only a little
@@ -135,14 +142,23 @@ function FieldPanel({
 }) {
   const dispatch = useAppDispatch()
   const [all, setAll] = useState(false)
-  const ordered = headlineFirst(fields)
+  // Several numbers with the same lone reason are said once, under the
+  // rows (not one sentence a row).
+  const bare = new Map<string, FieldResult[]>()
+  for (const f of fields) {
+    const reason = numberOf(f) === null ? loneReason(f) : null
+    if (reason !== null) bare.set(reason, [...(bare.get(reason) ?? []), f])
+  }
+  const folded = [...bare].filter(([, list]) => list.length > 2)
+  const hidden = new Set(folded.flatMap(([, list]) => list))
+  const ordered = headlineFirst(fields.filter((f) => !hidden.has(f)))
   const long = ordered.length > SHORT + 2
   const shown = all || !long ? ordered : ordered.slice(0, SHORT)
   return (
     <Panel id={id} title={title} hint={hint}>
       <ul className="stat-list">
         {shown.map((f) => {
-          const reason = why(f)
+          const reason = loneReason(f)
           const negative =
             f.field.startsWith('resistance.') &&
             typeof f.value === 'number' &&
@@ -174,14 +190,24 @@ function FieldPanel({
                   <span className={`stat-value${negative ? ' negative' : ''}`}>
                     {fieldValue(f)}
                   </span>
-                  {/* Only the exceptions are marked (UX-12). */}
-                  {f.state !== 'complete' && <FieldBadge field={f} />}
+                  {/* Every number carries its mark; only the exceptions
+                      are read aloud (UX-12). */}
+                  <FieldMark field={f} />
                 </span>
               </button>
             </li>
           )
         })}
       </ul>
+      {folded.map(([reason, list]) => (
+        <p key={reason} className="reason-summary">
+          {t('dashboard.folded', {
+            n: list.length,
+            reason,
+            list: list.map((f) => fieldLabel(f.field)).join(', '),
+          })}
+        </p>
+      ))}
       {long && (
         <button
           type="button"
@@ -191,7 +217,7 @@ function FieldPanel({
         >
           {all
             ? t('dashboard.showFewer')
-            : t('dashboard.showAll', { n: fields.length })}
+            : t('dashboard.showAll', { n: ordered.length })}
         </button>
       )}
     </Panel>
@@ -233,9 +259,7 @@ function WarningsPanel({ build, id }: { build: BuildView; id: string }) {
           <ul className="warning-strip">
             {used.slice(0, 6).map((w) => (
               <li key={`${w.item}-${w.line}`}>
-                <span className="mono" title={w.text}>
-                  {w.text}
-                </span>
+                <span className="line-text">{w.shown ?? w.text}</span>
                 <span className="muted">{w['item-name'] ?? `#${w.item}`}</span>
               </li>
             ))}
@@ -335,10 +359,16 @@ function MainSkillPanel({ build, id }: { build: BuildView; id: string }) {
  * the pinned numbers and its trend over this session's changes. */
 function StatTile({
   field,
+  fields,
+  skill,
   id,
   baseline,
 }: {
   field: FieldResult | undefined
+  /** Every field: a minion build's hit points at its minion's. */
+  fields: FieldResult[]
+  /** The main skill's name. */
+  skill: string | null | undefined
   id: string
   baseline: Mark | null
 }) {
@@ -353,10 +383,43 @@ function StatTile({
       </section>
     )
   }
-  const reason = why(field)
   const trend = trail
     .map((m) => m.fields[field.field])
     .filter((v): v is number => typeof v === 'number')
+  // A minion build's own hit: the damage is the minions' (maintainer
+  // 2026-11-24).
+  const minion =
+    field.field === 'hit-dps' && numberOf(field) === null
+      ? fields.find((f) => f.field === 'minion.hit-dps')
+      : undefined
+  if (minion !== undefined) {
+    return (
+      <section className="panel stat-tile" aria-labelledby={id}>
+        <div className="stat-tile-button">
+          <h2 id={id} className="small-text">
+            {fieldLabel(field.field)}
+          </h2>
+          <span className="stat-tile-words">{t('dashboard.minionDamage')}</span>
+        </div>
+        <p className="reason-summary">
+          {skill == null
+            ? t('dashboard.minionDeals')
+            : t('dashboard.minionSkill', { skill })}
+          {numberOf(minion) === null && ` ${t('dashboard.minionNotYet')}`}
+          {' · '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => dispatch(actions.breakdown(minion.field))}
+          >
+            {numberOf(minion) === null
+              ? t('dashboard.minionWhy')
+              : t('dashboard.minionLink', { value: fieldValue(minion) })}
+          </button>
+        </p>
+      </section>
+    )
+  }
   return (
     <section className="panel stat-tile" aria-labelledby={id}>
       <button
@@ -364,19 +427,21 @@ function StatTile({
         className="stat-tile-button"
         onClick={() => dispatch(actions.breakdown(field.field))}
       >
-        <h2 id={id} className="small-text">
-          {fieldLabel(field.field)}
-        </h2>
+        <span className="stat-tile-head">
+          <h2 id={id} className="small-text">
+            {fieldLabel(field.field)}
+          </h2>
+        </span>
         <span className="stat-tile-line">
           <span className="stat-tile-value">{fieldValue(field)}</span>
+          <FieldMark field={field} />
           <Sparkline values={trend} />
         </span>
         {baseline !== null && (
           <Delta now={numberOf(field)} before={baseline.fields[field.field]} />
         )}
-        {field.state !== 'complete' && <FieldBadge field={field} />}
-        {reason !== null && <span className="reason">{reason}</span>}
       </button>
+      <ReasonSummary field={field} />
     </section>
   )
 }
@@ -433,6 +498,8 @@ function Component({
       return (
         <StatTile
           field={fields.find((f) => f.field === c.field)}
+          fields={fields}
+          skill={build['main-skill']}
           id={id}
           baseline={baseline}
         />
@@ -479,14 +546,17 @@ function componentName(c: DashComponent): string {
 
 /** A drag of a component by its handle. */
 interface DragHandlers {
-  down: (e: PointerEvent<HTMLButtonElement>, id: string) => void
-  move: (e: PointerEvent<HTMLButtonElement>) => void
+  down: (e: PointerEvent<HTMLElement>, id: string) => void
+  move: (e: PointerEvent<HTMLElement>) => void
   up: () => void
   cancel: () => void
   key: (e: KeyboardEvent<HTMLButtonElement>, index: number) => void
 }
 
-/** A component's controls while customizing: move, resize, remove. */
+/** A card's controls while customizing (maintainer 2026-11-24): its bar
+ * is the handle (drag it anywhere on the grid; from the grip, the arrow
+ * keys move the card and Shift with them resizes it), and one menu holds
+ * the width, the moves to the top and the bottom, and Remove. */
 function ComponentTools({
   c,
   index,
@@ -501,84 +571,134 @@ function ComponentTools({
   drag: DragHandlers
 }) {
   const name = componentName(c)
+  const setWidth = (width: Width) =>
+    onChange((l) => l.map((x) => (x.id === c.id ? { ...x, width } : x)))
   return (
+    // The shell turns off the browser's own drag and drop, so this is
+    // pointer events (UX audit follow-up).
     <div
       className="dash-tools"
       role="group"
       aria-label={t('dashboard.tools', { name })}
+      onPointerDown={(e) => {
+        // The card's menu is drawn elsewhere but its events come up
+        // through here: only a press on the bar itself starts a drag.
+        if (e.currentTarget.contains(e.target as Node)) drag.down(e, c.id)
+      }}
+      onPointerMove={drag.move}
+      onPointerUp={drag.up}
+      onPointerCancel={drag.cancel}
     >
-      {/* Dragged with the pointer; the arrow keys move it too. The shell
-          turns off the browser's own drag and drop, so this is pointer
-          events (UX audit follow-up). */}
       <button
         type="button"
         className="icon quiet drag-handle"
         aria-label={t('dashboard.drag', { name })}
         title={t('dashboard.dragHelp')}
-        onPointerDown={(e) => drag.down(e, c.id)}
-        onPointerMove={drag.move}
-        onPointerUp={drag.up}
-        onPointerCancel={drag.cancel}
-        onKeyDown={(e) => drag.key(e, index)}
+        onKeyDown={(e) => {
+          const by =
+            e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+              ? -1
+              : e.key === 'ArrowRight' || e.key === 'ArrowDown'
+                ? 1
+                : 0
+          if (e.shiftKey && by !== 0) {
+            e.preventDefault()
+            setWidth(stepWidth(c.width, by))
+          } else {
+            drag.key(e, index)
+          }
+        }}
       >
         <Icon name="grip" size={16} />
       </button>
       <strong className="small-text">{name}</strong>
       <span className="spacer" />
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.moveUp')}
-        title={t('dashboard.moveUp')}
-        disabled={index === 0}
-        onClick={() => onChange((l) => moved(l, index, -1))}
-      >
-        <Icon name="arrow-left" size={16} />
-      </button>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.moveDown')}
-        title={t('dashboard.moveDown')}
-        disabled={index === count - 1}
-        onClick={() => onChange((l) => moved(l, index, 1))}
-      >
-        <Icon name="arrow-right" size={16} />
-      </button>
-      <select
-        aria-label={t('dashboard.width')}
-        title={t('dashboard.width')}
-        value={c.width}
-        onChange={(e) =>
-          onChange((l) =>
-            l.map((x) =>
-              x.id === c.id ? { ...x, width: e.target.value as Width } : x,
-            ),
-          )
-        }
-      >
-        {WIDTHS.map((w) => (
-          <option key={w} value={w}>
-            {t(`dashboard.width.${w}`)}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('dashboard.remove')}
-        title={t('dashboard.remove')}
-        onClick={() => onChange((l) => l.filter((x) => x.id !== c.id))}
-      >
-        <Icon name="close" size={16} />
-      </button>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button
+            type="button"
+            className="icon quiet"
+            aria-label={t('dashboard.cardMenu', { name })}
+            title={t('dashboard.cardMenu', { name })}
+            // The menu's button is not the handle.
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <span aria-hidden="true">⋯</span>
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            className="menu-content"
+            align="end"
+            sideOffset={6}
+          >
+            <DropdownMenu.Label className="menu-label">
+              {t('dashboard.width')}
+            </DropdownMenu.Label>
+            <DropdownMenu.RadioGroup
+              value={c.width}
+              onValueChange={(w) => setWidth(w as Width)}
+            >
+              {WIDTHS.map((w) => (
+                <DropdownMenu.RadioItem
+                  key={w}
+                  value={w}
+                  className="menu-item menu-radio"
+                >
+                  {t(`dashboard.width.${w}`)}
+                </DropdownMenu.RadioItem>
+              ))}
+            </DropdownMenu.RadioGroup>
+            <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.CheckboxItem
+              className="menu-item menu-radio"
+              checked={c.break === true}
+              // The first card and a full-width one start a row anyway.
+              disabled={index === 0 || c.width === 'full'}
+              onCheckedChange={(on) =>
+                onChange((l) =>
+                  l.map((x) => {
+                    if (x.id !== c.id) return x
+                    const { break: _, ...rest } = x
+                    return on ? { ...rest, break: true } : rest
+                  }),
+                )
+              }
+            >
+              {t('dashboard.newRow')}
+            </DropdownMenu.CheckboxItem>
+            <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.Item
+              className="menu-item"
+              disabled={index === 0}
+              onSelect={() => onChange((l) => moved(l, index, -l.length))}
+            >
+              {t('dashboard.moveTop')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className="menu-item"
+              disabled={index === count - 1}
+              onSelect={() => onChange((l) => moved(l, index, l.length))}
+            >
+              {t('dashboard.moveBottom')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className="menu-separator" />
+            <DropdownMenu.Item
+              className="menu-item"
+              onSelect={() => onChange((l) => l.filter((x) => x.id !== c.id))}
+            >
+              {t('dashboard.remove')}
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </div>
   )
 }
 
-/** The component library: the components by group with a search; each
- * summary once per dashboard, a chart or a stat tile as often as wanted. */
-function Library({
+/** The Add menu of the edit toolbar: the components by group, each
+ * summary once per dashboard, a chart or a value as often as wanted. */
+function AddMenu({
   dash,
   fields,
   onAdd,
@@ -587,105 +707,73 @@ function Library({
   fields: FieldResult[]
   onAdd: (kind: ComponentKind, field?: string) => void
 }) {
-  const [field, setField] = useState('')
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState<Category | 'all'>('all')
   const has = (kind: ComponentKind, f?: string) =>
     dash.components.some((c) => c.kind === kind && c.field === f)
   const full = dash.components.length >= MAX_COMPONENTS
   const free = fields.filter((f) => !has('stat', f.field))
-  const words = search.trim().toLowerCase()
-  const entries = CATALOG.filter(
-    (e) =>
-      (category === 'all' || e.category === category) &&
-      (words === '' ||
-        `${t(`dashboard.kind.${e.kind}`)} ${t(`dashboard.kindHelp.${e.kind}`)}`
-          .toLowerCase()
-          .includes(words)),
-  )
   return (
-    <section className="panel" aria-labelledby="dash-library">
-      <div className="panel-head">
-        <h2 id="dash-library">{t('dashboard.library')}</h2>
-        <span className="spacer" />
-        <input
-          type="search"
-          className="panel-search"
-          value={search}
-          placeholder={t('dashboard.librarySearch')}
-          aria-label={t('dashboard.librarySearch')}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-      <div
-        className="segmented"
-        role="group"
-        aria-label={t('dashboard.categories')}
-      >
-        {(['all', ...CATEGORIES] as const).map((c) => (
-          <button
-            type="button"
-            key={c}
-            aria-pressed={category === c}
-            onClick={() => setCategory(c)}
-          >
-            {t(`dashboard.category.${c}`)}
-          </button>
-        ))}
-      </div>
-      {entries.length === 0 ? (
-        <p className="muted small-text">{t('dashboard.libraryNone')}</p>
-      ) : (
-        <ul className="dash-library">
-          {entries.map((e) => (
-            <li key={e.kind}>
-              <span className="dash-library-text">
-                <strong>{t(`dashboard.kind.${e.kind}`)}</strong>
-                <span className="muted small-text">
-                  {t(`dashboard.kindHelp.${e.kind}`)}
-                </span>
-              </span>
-              <button
-                type="button"
-                disabled={full || (e.many !== true && has(e.kind))}
-                aria-label={t('dashboard.add', {
-                  name: t(`dashboard.kind.${e.kind}`),
-                })}
-                onClick={() => onAdd(e.kind)}
-              >
-                <Icon name="plus" size={16} />
-                {t('dashboard.addShort')}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="dash-stat-add">
-        <label htmlFor="dash-stat">{t('dashboard.statField')}</label>{' '}
-        <select
-          id="dash-stat"
-          value={field}
-          onChange={(e) => setField(e.target.value)}
-        >
-          <option value="">{t('dashboard.statChoose')}</option>
-          {free.map((f) => (
-            <option key={f.field} value={f.field}>
-              {fieldLabel(f.field)}
-            </option>
-          ))}
-        </select>{' '}
-        <button
-          type="button"
-          disabled={full || field === ''}
-          onClick={() => {
-            onAdd('stat', field)
-            setField('')
-          }}
-        >
-          {t('dashboard.addStat')}
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button type="button" className="primary" disabled={full}>
+          <Icon name="plus" size={16} />
+          {t('dashboard.addShort')}
+          <Icon name="chevron" size={14} />
         </button>
-      </div>
-    </section>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          className="menu-content"
+          align="start"
+          sideOffset={6}
+        >
+          <DropdownMenu.Sub>
+            <DropdownMenu.SubTrigger className="menu-item menu-sub">
+              {t('dashboard.addValue')}
+            </DropdownMenu.SubTrigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.SubContent className="menu-content menu-long">
+                {free.map((f) => (
+                  <DropdownMenu.Item
+                    key={f.field}
+                    className="menu-item"
+                    onSelect={() => onAdd('stat', f.field)}
+                  >
+                    {fieldLabel(f.field)}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.SubContent>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Sub>
+          {CATEGORIES.map((category) => (
+            <DropdownMenu.Sub key={category}>
+              <DropdownMenu.SubTrigger className="menu-item menu-sub">
+                {t(`dashboard.category.${category}`)}
+              </DropdownMenu.SubTrigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.SubContent className="menu-content">
+                  {CATALOG.filter((e) => e.category === category).map((e) => (
+                    <DropdownMenu.Item
+                      key={e.kind}
+                      className="menu-item menu-two"
+                      disabled={e.many !== true && has(e.kind)}
+                      aria-label={t('dashboard.add', {
+                        name: t(`dashboard.kind.${e.kind}`),
+                      })}
+                      onSelect={() => onAdd(e.kind)}
+                    >
+                      <span>{t(`dashboard.kind.${e.kind}`)}</span>
+                      <span className="muted small-text">
+                        {t(`dashboard.kindHelp.${e.kind}`)}
+                      </span>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.SubContent>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Sub>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   )
 }
 
@@ -1099,7 +1187,30 @@ export function Dashboard() {
         </button>
       </div>
       {editing && (
-        <div className="dash-edit-head">
+        <div
+          className="dash-edit-head"
+          role="toolbar"
+          aria-label={t('dashboard.editBar')}
+        >
+          <AddMenu
+            dash={dash}
+            fields={fields.filter((f) => f.value != null)}
+            onAdd={(kind, field) =>
+              // A new card goes to the top, where it is seen; drag it after.
+              change((l) => [
+                {
+                  id: newId('c', ids()),
+                  kind,
+                  ...(field === undefined ? {} : { field }),
+                  width:
+                    kind === 'stat'
+                      ? 'quarter'
+                      : (CATALOG.find((e) => e.kind === kind)?.width ?? 'half'),
+                },
+                ...l,
+              ])
+            }
+          />
           <label htmlFor="dash-name">{t('dashboard.name')}</label>{' '}
           <CommitField
             id="dash-name"
@@ -1155,6 +1266,11 @@ export function Dashboard() {
           )}
         </div>
       )}
+      {editing && (
+        <p className="muted small-text dash-edit-help">
+          {t('dashboard.editHelp')}
+        </p>
+      )}
       {calc === null && <p>{t('dashboard.noCalc')}</p>}
       {dash.components.length === 0 && !editing && (
         <p className="muted">{t('dashboard.empty')}</p>
@@ -1167,8 +1283,8 @@ export function Dashboard() {
             key={c.id}
             data-cell={c.id}
             className={`dash-cell dash-${c.width}${
-              drag?.id === c.id ? ' dragging' : ''
-            }${
+              c.break === true ? ' dash-new-row' : ''
+            }${drag?.id === c.id ? ' dragging' : ''}${
               drag?.target?.id === c.id
                 ? drag.target.after
                   ? ' drop-after'
@@ -1200,26 +1316,8 @@ export function Dashboard() {
           </div>
         ))}
       </div>
-      {editing && (
-        <Library
-          dash={dash}
-          fields={fields.filter((f) => f.value != null)}
-          onAdd={(kind, field) =>
-            change((l) => [
-              ...l,
-              {
-                id: newId('c', ids()),
-                kind,
-                ...(field === undefined ? {} : { field }),
-                width:
-                  kind === 'stat'
-                    ? 'third'
-                    : (CATALOG.find((e) => e.kind === kind)?.width ?? 'half'),
-              },
-            ])
-          }
-        />
-      )}
+      {/* What the marks beside the numbers mean, once a page. */}
+      {!editing && <StateLegend />}
     </>
   )
 }

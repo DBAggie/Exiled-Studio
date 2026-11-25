@@ -86,6 +86,14 @@ Debug and `e2e` builds trust the public test key (`loom_tauri::TEST_KEYS`, `loom
   - one download of a pack at a time (`FEED_BUSY`);
   - then installed like a pack from a file, with its own signature and every check above.
 - **Strict offline** refuses both before any connection (`UPDATE_OFFLINE`); the update mode governs both kinds of network use.
+- **Automatic** (maintainer decision 2026-11-24: game data is handled by the application, not by the user; `loom_tauri::data_updates`, 2026-11-25). One run reads the feed, then downloads and installs each pack this computer lacks:
+  - **which packs** (`wanted`): per game the feed's newest (the feed lists newest first), unless a bundle of that game with the same or a newer Steam build and schema is here, loaded or quarantined. An older pack of the feed is never fetched;
+  - **when**: at start in every update mode but strict offline (`at_start`, `starts`, after the installed data has loaded; the `manual` mode too since the maintainer's decision of 2026-11-25: its "Only when I ask" is about new versions of the application), and when the user asks (the start page's **Download game data**; command `fetch_data`). Strict offline never does: the start page then offers **Install game data from a file…**, the signed install;
+  - **not** in a smoke run, an `e2e` build, a test (no updater plugin), or with `LOOM_DATA_DIR` set (development): those never connect on their own;
+  - **retries**: a failed connection (`FEED_HTTP`) is tried again after 2 s and after 8 s; a refused feed (signature, format, rollback) is not;
+  - **what the user sees**: the state (`idle`, `checking`, `downloading`, `done`, `failed`; app API v1 `DataAutoStatus`, additive; event `loom://data-auto`; query `data_auto_status`) on the start page's data line: "Looking for game data…", "Downloading game data…", then the data's name. A failure is a sentence on that line with **Try again**, only when no data is loaded; with data in use nothing is shown. Every failure is logged with its code and reason (`data feed check failed`, `automatic game data failed`);
+  - **what is used**: a pack installed while no data is loaded is taken at once (`HostCommand::InstallBundle`); one installed beside loaded data is in use from the next start, as the start picks the newest;
+  - the start page no longer leads to the unsigned development folder picker, which is on the About page only; `APP_NO_DATA` says to download the data.
 - **Published by** the `release` workflow's draft job (`tools/package/data-feed.sh`), listing the shipped pack. The sequence is the workflow's run number, which only grows.
 
 ## The shipped bundle
@@ -106,7 +114,7 @@ The `release` workflow's `tools/package/shipped-bundle.sh` then:
 - downloads the zip and checks its hash;
 - runs `bundle-check` on it;
 - packs it signed with `LOOM_DATA_KEY` into `crates/loom-tauri/shipped/game-data.loombundle` (ignored by git);
-- puts it in the installers' resources (`tauri.shipped.conf.json`, `bundles/`) and in the portable zip's `bundles\`.
+- puts it in the installers' resources (`tauri.shipped.conf.json`, `bundles/`).
 
 At start the application installs each shipped pack not installed yet (`bundles::Library::install_shipped`, `install::install_shipped`), then chooses the data to load. Both happen on the writer thread after the window is up, while the start screen says "Loading game data…" (`docs/phase-5/performance.md`, "Startup").
 - **A pack already installed** is left as it is when the installed copy has the same manifest, a trusted signature, and every file at its listed size. Its files are not hashed, the same check as the start's scan; **Verify** hashes them.

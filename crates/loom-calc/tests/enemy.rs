@@ -287,7 +287,6 @@ fn the_config_rules_stats_should_be_real_stats() {
     reason = "a maintainer-run test reads the bundle named by the environment"
 )]
 fn the_gem_tables_should_name_real_granted_effects() {
-    use loom_calc::CalcData;
     let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
     let data = common::bundle_at(std::path::Path::new(&dir));
     let missing: Vec<_> = loom_calc::poe1::gems::SKILLS

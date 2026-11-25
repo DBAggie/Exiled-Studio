@@ -174,12 +174,27 @@ pub struct SkillPart {
     pub projectile: bool,
 }
 
-/// The reason a totem's skill keeps (P6-6d review): PoB reads totem data
-/// the engine does not (placement time and duration, `totemFireOnce`,
-/// `KeywordFlag.Totem` mods, the totem count for ring overrides), and
-/// some of it can come from stats that are inert elsewhere. A test keeps
-/// every vetted totem skill `Partial` through it.
+/// The reason a totem's skill keeps where PoB reads totem data the engine
+/// does not (P6-6d review; narrowed in open items S1). Since P6-6d the
+/// engine reads the totem keyword (`Flags::KEYWORD_TOTEM`), the totem
+/// conditions (`conditions::summoned_totem`, `skill_used_by_you`,
+/// `main_skill_recently`), and the totem limit (`stacks::totems`); the
+/// totem's action speed comes only from unmapped stats (reasons). What
+/// stays:
+/// - every field of a skill in [`TOTEM_DATA_SKILLS`];
+/// - a totem's bleed, whose stacks PoB multiplies by the active totems
+///   (`CalcOffence.lua` 4327 to 4330), which the engine's bleed does not;
+/// - a totem's damage over time (`poe1::dot`), which PoB may stack per
+///   totem (`DotCanStackAsTotems`, 5784).
+///
+/// A totem's leech is PoB's leech to the player only (3528 to 3530), which
+/// no mapped stat gives: [`super::leech`] sets no leech field for it.
 pub const TOTEM_REASON: &str = "totem-data";
+
+/// Totem skills whose hit reads totem data the engine does not: Siege
+/// Ballista of Trarthus' `totemFireOnce` and ring `dpsMultiplier`
+/// (`act_dex.lua` 14127 to 14133; `CalcOffence.lua` 2352 to 2355).
+pub const TOTEM_DATA_SKILLS: [&str; 1] = ["SiegeBallistaAltY"];
 
 /// The reason a trap's or a mine's spell kept (P6-6e) while the engine did
 /// not read its throw count, its throwing speed, or its keyword mods.
@@ -306,12 +321,71 @@ pub fn weapon_type_flags(class: &str) -> Option<Flags> {
 /// the hit is `Partial` (`unmodelled-skill`, `pob-skill-data`): PoB computes
 /// it from data the engine does not read. The skill sweep is the evidence
 /// (`docs/phase-6/skill-data.md`, "P6-6b").
+///
+/// Three lists name what the engine reads of that data (open items, S1):
+/// [`READ_OWN_STATS`], [`READ_PART_BASE_MODS`], and [`READ_FUNCTIONS`]
+/// (the last only through [`pob_vetted_with`], which knows the level's
+/// cooldown; here no function counts as read).
 #[must_use]
 pub fn pob_vetted(id: &str, index: usize) -> bool {
+    pob_vetted_with(id, index, false)
+}
+
+/// Stats of a skill's own stat map that PoB reads under a tag
+/// ([`super::pob_skill::PobSkill::own_stats`]) and the engine reads with
+/// that tag (open items, S1):
+/// - Shield Crush's added damage per 15 of the shield's armour and evasion
+///   (`act_str.lua` 9856; `SkillStatMap.lua` 1675 to 1697, `PerStat`
+///   `ArmourOnWeapon` and `EvasionOnWeapon` div 15): `hit::shield_added`
+///   (P6-11hd);
+/// - Shield Crush's damage by distance (`MORE` `Hit` with `MeleeProximity`
+///   ramp `{1, 0}`, `act_str.lua` 9875 to 9877):
+///   `collect::melee_proximity` (P6-11ht).
+pub const READ_OWN_STATS: [(&str, &str); 3] = [
+    (
+        "ShieldCrush",
+        "off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating",
+    ),
+    (
+        "ShieldCrush",
+        "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating",
+    ),
+    ("ShieldCrush", "shield_crush_damage_+%_final_from_distance"),
+];
+
+/// Base mods tagged with one part (`{ type = "SkillPart", skillPart = n }`)
+/// that the engine does not read: (skill, `SkillData` key, part). The other
+/// parts are vetted; that part keeps `pob-skill-data` (open items, S1):
+/// - Shield Crush's `dpsMultiplier` 2 in part 2, "2 Overlapping Waves"
+///   (`act_str.lua` 9887). The engine's `dpsMultiplier` is 1
+///   ([`hit_dps`]).
+pub const READ_PART_BASE_MODS: [(&str, &str, usize); 1] = [("ShieldCrush", "dpsMultiplier", 2)];
+
+/// Skill functions that change nothing while the main skill's level has no
+/// cooldown (open items, S1). The engine maps no added cooldown (each such
+/// stat is a reason, [`cooldown_limit`]), so without the level's cooldown
+/// PoB's `output.Cooldown` is nil:
+/// - Vortex's `preDamageFunc` (`act_int.lua` 20542 to 20544) sets
+///   `hitTimeOverride = output.Cooldown`, which `CalcOffence.lua` 2403
+///   reads only when set. Vortex's levels have no cooldown.
+pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
+
+/// [`pob_vetted`], where `no_cooldown` says the main skill's level has no
+/// cooldown: only then a function of [`READ_FUNCTIONS`] counts as read.
+#[must_use]
+pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
     let Some(pob) = super::pob_skill::skill(id) else {
         return false;
     };
-    if !pob.functions.is_empty() || !pob.own_stats.is_empty() {
+    let function_read = |f: &&str| no_cooldown && READ_FUNCTIONS.contains(&(id, *f));
+    if !pob.functions.iter().all(function_read) {
+        return false;
+    }
+    if !pob
+        .own_stats
+        .iter()
+        .all(|s| READ_OWN_STATS.contains(&(id, *s)))
+    {
         return false;
     }
     // A channelled release skill: PoB sets its hit time outside its data
@@ -320,10 +394,27 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
     if pob.flag("channelRelease") {
         return false;
     }
+    // Display data, or a DoT's flags (`dotIsArea` and kin), which PoB reads
+    // only in the DoT's config (`CalcOffence.lua` 5657 to 5669) and the DoT
+    // vets itself (`dot::DOT_SKILL_DATA_KEYS`; open items, S1).
     let display = |m: &super::pob_skill::PobBaseMod| {
-        m.name == "SkillData" && !m.tagged && m.key.is_some_and(|k| DISPLAY_SKILL_DATA.contains(&k))
+        m.name == "SkillData"
+            && !m.tagged
+            && m.key.is_some_and(|k| {
+                DISPLAY_SKILL_DATA.contains(&k) || super::dot::DOT_SKILL_DATA_KEYS.contains(&k)
+            })
     };
-    if !pob.base_mods.iter().all(display) {
+    // A part's own base mod, in another part than this one.
+    let other_part = |m: &super::pob_skill::PobBaseMod| {
+        m.name == "SkillData"
+            && m.tagged
+            && m.key.is_some_and(|k| {
+                READ_PART_BASE_MODS
+                    .iter()
+                    .any(|&(s, key, part)| s == id && key == k && part != index)
+            })
+    };
+    if !pob.base_mods.iter().all(|m| display(m) || other_part(m)) {
         return false;
     }
     match index.checked_sub(1).and_then(|i| pob.parts.get(i)) {
@@ -577,7 +668,7 @@ pub fn spell_skill<'d>(
         area: part.area,
         projectile: part.projectile,
         melee: part.melee,
-        vetted: known && pob_vetted(&effect.id, part_index),
+        vetted: known && pob_vetted_with(&effect.id, part_index, level_row.cooldown == 0),
     })
 }
 
@@ -1124,6 +1215,7 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         super::pob_skill::skill(&spell.skill.effect().id).is_none_or(|p| p.flag("totem"))
     } else {
         spell.skill.types.contains("SummonsTotem")
+            && TOTEM_DATA_SKILLS.contains(&spell.skill.effect().id.as_str())
     };
     if totem {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
@@ -1200,8 +1292,14 @@ fn set_ailments(
     data: &dyn CalcData,
     unvetted: &Reasons,
 ) -> Result<(), CalcError> {
-    // The hit's leech (P6-10b part 9): the character's own.
-    if calc.actor() == crate::engine::Actor::Player {
+    // The hit's leech (P6-10b part 9): the character's own. A totem's,
+    // trap's, or mine's hit leeches only by PoB's `DamageLifeLeechToPlayer`
+    // (`CalcOffence.lua` 3528 to 3530), which no mapped stat gives: no
+    // leech field (open items, S1).
+    let placed = hit
+        .flags
+        .intersects(Flags::KEYWORD_TOTEM | Flags::KEYWORD_TRAP | Flags::KEYWORD_MINE);
+    if calc.actor() == crate::engine::Actor::Player && !placed {
         super::leech::rates(calc, hit, unvetted)?;
     }
     for ailment in super::ailment::Ailment::ALL {
@@ -1209,6 +1307,16 @@ fn set_ailments(
             super::ailment::damaging(calc, hit, enemy, data, ailment)?
         {
             reasons.extend(unvetted);
+            // A totem's bleed stacks per active totem ([`TOTEM_REASON`]).
+            if ailment == super::ailment::Ailment::Bleed
+                && hit.flags.contains(Flags::KEYWORD_TOTEM)
+                && let Some((_, source)) = &hit.skill
+            {
+                reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                    source: source.clone(),
+                    what: TOTEM_REASON,
+                });
+            }
             // The stacks read the hit chance too (attacks; a spell's is
             // the constant 100, not a field).
             let deps: &[Field] = if hit.flags.contains(Flags::ATTACK) {
@@ -1467,7 +1575,11 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             what: "pob-skill-data",
         });
     }
-    if attack.skill.types.contains("SummonsTotem") {
+    // A totem's attack ([`TOTEM_REASON`]): the character's keeps the reason
+    // only for [`TOTEM_DATA_SKILLS`]; a minion's as before.
+    if attack.skill.types.contains("SummonsTotem")
+        && (calc.actor() == crate::engine::Actor::Minion || TOTEM_DATA_SKILLS.contains(&id))
+    {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: TOTEM_REASON,
@@ -4799,6 +4911,35 @@ mod tests {
         // weapon picks one (`weapon_flags`).
         let (melee, i) = pob_part("Melee", 1).unwrap();
         assert!(melee.melee && melee.projectile && pob_vetted("Melee", i));
+    }
+
+    /// What the engine reads of PoB's hand-written data (open items, S1):
+    /// Shield Crush's tagged stats in both parts, its `dpsMultiplier` in
+    /// part 2 only; Vortex's `preDamageFunc` only without a cooldown.
+    #[test]
+    fn read_lists_should_vet_only_what_the_engine_reads() {
+        assert!(pob_vetted("ShieldCrush", 1));
+        assert!(!pob_vetted("ShieldCrush", 2));
+        assert!(!pob_vetted("Vortex", 0));
+        assert!(pob_vetted_with("Vortex", 0, true));
+        assert!(!pob_vetted_with("IceSpear", 1, true));
+        // Every listed entry is in PoB's data as listed.
+        for (id, stat) in READ_OWN_STATS {
+            let s = super::super::pob_skill::skill(id).unwrap();
+            assert!(s.own_stats.contains(&stat), "{id} {stat}");
+        }
+        for (id, key, part) in READ_PART_BASE_MODS {
+            let s = super::super::pob_skill::skill(id).unwrap();
+            assert!(part <= s.parts.len(), "{id}");
+            assert!(
+                s.base_mods.iter().any(|m| m.tagged && m.key == Some(key)),
+                "{id} {key}"
+            );
+        }
+        for (id, f) in READ_FUNCTIONS {
+            let s = super::super::pob_skill::skill(id).unwrap();
+            assert!(s.functions.contains(&f), "{id} {f}");
+        }
     }
 
     /// PoB's weapon rule (P6-6c review): a melee weapon keeps melee, a bow

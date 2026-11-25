@@ -241,6 +241,9 @@ jobs:
     # 46 minutes on the runners, past the former 45. 150 since P6-11hm: with
     # the fixtures each step adds, successful runs took 49 to 84 minutes, and
     # the Linux run of 698abc68 was cut at 90.
+    # Since 2026-11-24 a pull request runs only the fixtures it needs (the
+    # Select step); a full run (pushes, oracle changes) took about 132 minutes
+    # on Windows at 535 fixtures.
     timeout-minutes: 150
     strategy:
       fail-fast: false
@@ -251,6 +254,26 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The base branch's history, for the fixtures a pull request changed.
+          fetch-depth: 0
+      # A pull request runs the smoke set and the fixtures it adds or changes;
+      # every fixture when it changes the oracle, carries the label
+      # `oracle-full`, or for any other event (.github/scripts/oracle-select.py;
+      # maintainer request 2026-11-24).
+      - name: Select the fixtures
+        id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          # Windows runners may resolve python3 to the Store stub.
+          if [ "$RUNNER_OS" = Windows ]; then PY=python; else PY=python3; fi
+          manifest=$("$PY" -I .github/scripts/oracle-select.py "$EVENT" "$BASE" "$LABELS" tools/oracle/fixtures/selected.json)
+          test -f "$manifest"
+          echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
       - run: rustup toolchain install # reads rust-toolchain.toml
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Build loom-parity-cli
@@ -286,12 +309,12 @@ jobs:
           fi
           echo "no network inside the namespace"
           unshare -rn target/release/loom-parity-cli oracle-run tools/oracle/manifest.json local/oracle \
-            --out out/oracle tools/oracle/fixtures/fixtures.json
+            --out out/oracle ${{ steps.select.outputs.manifest }}
       - name: Run the fixtures (Windows)
         if: runner.os == 'Windows'
         run: >-
           target/release/loom-parity-cli oracle-run tools/oracle/manifest.json local/oracle
-          --out out/oracle tools/oracle/fixtures/fixtures.json
+          --out out/oracle ${{ steps.select.outputs.manifest }}
       - name: Summary
         if: always()
         run: |

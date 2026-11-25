@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use loom_calc::{CalcData, GemEffect};
+use loom_calc::GemEffect;
 use loom_data::bundle::Bundle;
 use loom_domain::{Gem, GemId, SkillId, SocketGroup, Sourced};
 use loom_serialization::dto::app::v1 as api;

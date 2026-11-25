@@ -24,6 +24,7 @@ import { errorText, t, tDynamic } from './i18n'
 import {
   actions,
   attempt,
+  fetchData,
   closeBuild,
   perform,
   replaceBuild,
@@ -59,9 +60,11 @@ function CalcStatus() {
     case 'done':
       // Nothing to act on: said quietly (UX audit A-04).
       return (
-        <span className="calc-quiet">
+        // A dot, named on hover and for a screen reader: the header's
+        // room goes to the build's state (the revamp's screens).
+        <span className="calc-quiet" title={t('calc.done')}>
           <span className="calc-dot" aria-hidden="true" />
-          {t('calc.done')}
+          <span className="visually-hidden">{t('calc.done')}</span>
         </span>
       )
     case 'failed':
@@ -276,40 +279,50 @@ function Header() {
       <span aria-hidden="true" className="muted">
         /
       </span>
-      <span className="build-name">
+      {/* The name gives way in a narrow window: its whole text on hover. */}
+      <span className="build-name" title={build?.name || undefined}>
         {build?.name === '' || build?.name === undefined
           ? t('app.untitled')
           : build.name}
       </span>
-      {status !== null && <Badge tone={status.tone}>{status.text}</Badge>}
-      {snapshot?.dirty === true && (
-        <Badge tone="neutral">{t('header.unsaved')}</Badge>
-      )}
+      {/* The build's state, said quietly: one line of text, not pills (the
+          revamp's shell, 2026-11-25). Only a failure keeps its colour. */}
+      <span className="header-status">
+        {status !== null && (
+          <span className={`status-${status.tone}`}>{status.text}</span>
+        )}
+        {status !== null && snapshot?.dirty === true && (
+          <span aria-hidden="true">·</span>
+        )}
+        {snapshot?.dirty === true && <span>{t('header.unsaved')}</span>}
+      </span>
+      <span className="spacer" />
+      <CalcStatus />
       {build != null && build.loadouts.length > 1 && (
         <StagePicker loadouts={build.loadouts} />
       )}
-      <span className="spacer" />
-      <CalcStatus />
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('header.undo')}
-        title={`${undoLabel} (Ctrl+Z)`}
-        disabled={history?.['can-undo'] !== true}
-        onClick={() => void dispatch(run('undo'))}
-      >
-        <Icon name="undo" />
-      </button>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('header.redo')}
-        title={`${redoLabel} (Ctrl+Y)`}
-        disabled={history?.['can-redo'] !== true}
-        onClick={() => void dispatch(run('redo'))}
-      >
-        <Icon name="redo" />
-      </button>
+      <span className="header-history">
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('header.undo')}
+          title={`${undoLabel} (Ctrl+Z)`}
+          disabled={history?.['can-undo'] !== true}
+          onClick={() => void dispatch(run('undo'))}
+        >
+          <Icon name="undo" />
+        </button>
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('header.redo')}
+          title={`${redoLabel} (Ctrl+Y)`}
+          disabled={history?.['can-redo'] !== true}
+          onClick={() => void dispatch(run('redo'))}
+        >
+          <Icon name="redo" />
+        </button>
+      </span>
       <ExportMenu />
       <button
         type="button"
@@ -345,7 +358,14 @@ function NavButton({
         type="button"
         aria-current={current ? 'page' : undefined}
         title={label}
-        onClick={() => dispatch(actions.go(screen))}
+        onClick={() => {
+          // The screen already shown does not mount again: move the focus
+          // to its heading as a new screen would (keyboard test B1).
+          dispatch(actions.go(screen))
+          if (current) {
+            document.querySelector<HTMLElement>('h1[tabindex]')?.focus()
+          }
+        }}
       >
         <Icon name={icon} />
         <span className="nav-text">{label}</span>
@@ -661,7 +681,7 @@ function StartFrame({ screen }: { screen: Screen }) {
       <header className="start-header">
         <Brand />
         <span className="spacer" />
-        <Badge tone="neutral">{t('start.offline')}</Badge>
+        <span className="header-status">{t('start.offline')}</span>
         {screen === 'about' ? (
           <button type="button" onClick={() => dispatch(actions.go('start'))}>
             {t('nav.start')}
@@ -696,8 +716,18 @@ function DataLine({
 }) {
   const dispatch = useAppDispatch()
   const data = useAppSelector((s) => s.session.snapshot?.data)
+  // Game data is the application's job (maintainer 2026-11-24): the shell
+  // gets what is missing at start; this line says where that is, and
+  // offers the one action when it could not (asked not to connect at
+  // start, or the download failed).
+  const auto = useAppSelector((s) => s.lists.dataAuto)
+  const offline = useAppSelector(
+    (s) => s.lists.updates?.mode === 'strict-offline',
+  )
   const error = data?.error
   const installed = data?.installed ?? []
+  const getting = auto?.state === 'checking' || auto?.state === 'downloading'
+  const none = version == null && data?.loading !== true
   return (
     <span className="data-line">
       {version != null
@@ -706,14 +736,27 @@ function DataLine({
           })
         : data?.loading === true
           ? t('start.dataLoading')
-          : error != null
-            ? t('start.dataFailed')
-            : t('start.dataNoneYet')}{' '}
+          : getting
+            ? auto.state === 'downloading'
+              ? t('start.dataDownloading')
+              : t('start.dataChecking')
+            : error != null
+              ? t('start.dataFailed')
+              : t('start.dataNoneYet')}{' '}
       {data?.notice != null && (
         <>{tDynamic(`notice.${data.notice.code}`, 'error.generic')} </>
       )}
-      {/* With installed data, the choice is About's list (B-1); without,
-          only a development folder can be picked. */}
+      {none && !getting && auto?.state === 'failed' && (
+        <>
+          {tDynamic(
+            `start.dataWhy.${auto.error?.code ?? ''}`,
+            'start.dataWhy.other',
+          )}{' '}
+        </>
+      )}
+      {/* With installed data, the choice is About's list (B-1). Without:
+          the signed download, or, never connecting, the signed file. The
+          development folder is About's only. */}
       {installed.length > 0 || version != null ? (
         <button
           type="button"
@@ -722,13 +765,23 @@ function DataLine({
         >
           {version != null ? t('start.dataChange') : t('start.dataChoose')}
         </button>
+      ) : getting || data?.loading === true ? null : offline ? (
+        <button
+          type="button"
+          className="link"
+          onClick={() => void dispatch(attempt((api) => api.installBundle()))}
+        >
+          {t('data.install')}
+        </button>
       ) : (
         <button
           type="button"
           className="link"
-          onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
+          onClick={() => void dispatch(fetchData())}
         >
-          {t('start.dataAdd')}
+          {auto?.state === 'failed'
+            ? t('start.dataRetry')
+            : t('start.dataDownload')}
         </button>
       )}
     </span>

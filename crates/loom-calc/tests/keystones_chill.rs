@@ -275,8 +275,7 @@ fn real_keystone_and_chill_stats_should_be_covered() {
     reason = "a maintainer-run test reads the bundle named by the environment"
 )]
 fn modelled_chilling_skills_should_be_chilling_areas() {
-    use loom_calc::CalcData;
-    use loom_calc::poe1::gems::{CHILLING_AREA, NON_HIT_CHILL, SKILLS};
+    use loom_calc::poe1::gems::{CHILLING_AREA, NON_HIT_CHILL, SKILLS, SKITTERBOTS};
     let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
     let data = common::bundle_at(std::path::Path::new(&dir));
     let mut chilling = Vec::new();
@@ -290,7 +289,12 @@ fn modelled_chilling_skills_should_be_chilling_areas() {
             continue;
         };
         let has = |t: &str| active.types.iter().any(|x| x == t);
-        assert!(!has(NON_HIT_CHILL) || has(CHILLING_AREA), "{id}");
+        // Summon Skitterbots chills through its own branch (`gems::skitterbots`,
+        // `CalcPerform.lua` 1360; open items).
+        assert!(
+            !has(NON_HIT_CHILL) || has(CHILLING_AREA) || *id == SKITTERBOTS,
+            "{id}"
+        );
         if has(CHILLING_AREA) {
             chilling.push(*id);
         }

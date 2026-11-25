@@ -15,18 +15,17 @@
 h1,
 h2,
 h3 {
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-weight: 500;
 }
 
 .page-head h1,
 .tree-screen h1 {
-  font-size: 1.5rem;
+  font-size: var(--fs-title);
 }
 
 .brand {
   font-family: var(--font-brand);
-  font-size: 1.05rem;
+  font-size: var(--fs-section);
 }
 
 .stat-value,
@@ -39,8 +38,8 @@ h3 {
 }
 
 .stat-value {
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: var(--fs-body);
+  font-weight: 500;
 }
 
 /* ------------------------------------------------------------ controls */
@@ -48,7 +47,7 @@ h3 {
 button {
   background: transparent;
   border-color: var(--c-border-control);
-  font-weight: 550;
+  font-weight: 500;
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
@@ -60,10 +59,10 @@ button:hover:not(:disabled) {
 }
 
 button.primary {
-  border-color: var(--c-accent);
-  background: var(--c-accent);
-  color: var(--c-on-accent);
-  font-weight: 650;
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  font-weight: 500;
 }
 
 input,
@@ -79,24 +78,24 @@ select {
 }
 
 .app.nav-rail {
-  --nav-width: 84px;
+  --nav-width: 104px;
 }
 
 .app-header {
   padding: 8px 20px;
-  gap: 10px;
+  gap: 8px;
   min-height: 52px;
   box-sizing: border-box;
 }
 
 .build-name {
-  font-size: 1.05rem;
-  font-weight: 650;
+  font-size: var(--fs-body);
+  font-weight: 500;
 }
 
 .side-nav {
   border-right-color: var(--c-row);
-  padding: 10px 8px;
+  padding: 12px 8px;
 }
 
 .side-nav button {
@@ -121,7 +120,7 @@ select {
   justify-content: center;
   gap: 4px;
   min-height: 56px;
-  padding: 6px 2px;
+  padding: 4px 2px;
 }
 
 .nav-rail .side-nav .nav-text {
@@ -133,7 +132,7 @@ select {
   max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.714rem;
+  font-size: var(--fs-meta);
   font-weight: 500;
   line-height: 1.2;
 }
@@ -156,7 +155,7 @@ select {
 
 .content {
   padding: 24px 28px 56px;
-  gap: 18px;
+  gap: 16px;
 }
 
 /* The stage as a stepper: the build's progression, one press each. */
@@ -164,19 +163,19 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  padding: 3px;
+  padding: 4px;
   border: 1px solid var(--c-border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--c-input);
 }
 
 .stage-steps button {
   min-height: 28px;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-small);
   color: var(--c-muted);
-  font-size: 0.929rem;
+  font-size: var(--fs-body);
 }
 
 .stage-steps button[aria-pressed='true'] {
@@ -186,7 +185,7 @@ select {
 
 .stage-steps .stage-arrow {
   color: var(--c-border-strong);
-  font-size: 0.857rem;
+  font-size: var(--fs-meta);
   padding: 0 1px;
 }
 
@@ -194,27 +193,25 @@ select {
 
 .panel {
   border-color: var(--c-row);
-  padding: 18px 20px;
+  padding: 16px 20px;
 }
 
 /* A panel's title is a label, not a headline: the numbers lead. */
 .dash-panel .panel-head h2,
 .stat-tile-button h2,
 .inventory-panel .panel-head h2 {
-  font-size: 0.786rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: var(--fs-meta);
+  font-weight: 500;
   color: var(--c-muted);
 }
 
 .dash-panel .panel-head {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .stat-row {
   min-height: 38px;
-  padding: 7px 0;
+  padding: 8px 0;
 }
 
 .stat-list > li:first-child .stat-row {
@@ -231,20 +228,9 @@ select {
   overflow: hidden;
 }
 
-.stat-tile::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 44px;
-  height: 3px;
-  background: var(--c-accent);
-  border-radius: 0 0 3px 0;
-}
-
 .stat-tile-value {
-  font-size: 2.3rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-size: var(--fs-figure);
+  font-weight: 500;
   line-height: 1.1;
 }
 
@@ -252,7 +238,7 @@ select {
 .dash-bar {
   border-bottom: 1px solid var(--c-row);
   padding-bottom: 0;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   align-items: flex-end;
 }
 
@@ -267,9 +253,9 @@ select {
 
 .dash-tabs button {
   border: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 12px;
   color: var(--c-muted);
   border-bottom: 2px solid transparent;
 }
@@ -286,12 +272,12 @@ select {
 }
 
 .badge {
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .meter {
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-small);
 }
 
 .chart-line {
@@ -309,8 +295,748 @@ select {
   border-color: var(--c-row);
 }
 
-.dash-library li,
-.dash-library li + li {
-  border-color: var(--c-row);
-  background: var(--c-header);
+/* ---- The revamp's foundations (2026-11-25) ------------------------------
+   Figures are set in the mono face with tabular digits, wherever a number
+   is the content. */
+.stat-tile-value,
+.reason-count,
+.delta,
+.data-table td {
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.dialog-content {
+  border-radius: var(--radius-dialog);
+}
+
+/* ---- The revamp's shell (2026-11-25) ------------------------------------
+   One row: the build and its state at the left, the stage, Undo and Redo
+   together, Export, and Save at the right. The name and the state give way
+   first; under 1,000 px the row may wrap. */
+.app-header {
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.app-header > * {
+  flex: none;
+}
+
+.app-header > .build-name,
+.app-header > .header-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The state gives way entirely before the name loses a pixel (a smaller
+   factor shares the loss, and the name would end in an ellipsis). */
+.app-header > .header-status {
+  flex-shrink: 1000000;
+}
+
+.app-header > .spacer {
+  flex: 1 1 0;
+}
+
+.header-status {
+  display: inline-flex;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.header-status .status-danger {
+  color: var(--c-danger);
+}
+
+.header-history {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.app-header button {
+  min-height: 32px;
+}
+
+.app-header button.icon {
+  width: 32px;
+}
+
+.app-header .stage-picker select {
+  min-height: 32px;
+  max-width: 15rem;
+}
+
+@media (max-width: 1000px) {
+  .app-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* The side menu: 34 px rows, the page shown marked by a bar and its icon,
+   counts as quiet figures. */
+.side-nav button {
+  min-height: 34px;
+}
+
+.side-nav button[aria-current='page'] {
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.side-nav .badge.count {
+  background: transparent;
+  border-color: transparent;
+  color: var(--c-muted);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-rail .side-nav .nav-toggle {
+  min-height: 34px;
+}
+
+/* ---- The completeness mark (the revamp's signature, 2026-11-25) ---------
+   Beside every number: read by its shape, in the secondary text colour. */
+.state-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  color: var(--c-soft);
+}
+
+.state-mark > svg {
+  flex: none;
+}
+
+.state-mark-text {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+/* In a stat card the mark sits beside the figure, not at the card's edge. */
+.stat-tile-line > .state-mark {
+  align-self: center;
+  margin-left: -4px;
+  margin-right: auto;
+}
+
+.state-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- The start page (the revamp's screens, 2026-11-25) ------------------
+   The page's work at the left: the import bar with its one filled button,
+   the other ways in, the recent builds. Unsaved work in a panel beside
+   it; first, above the page, in a narrow window. */
+.start-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: 24px;
+  align-items: start;
+}
+
+.start-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* The panel is first in the document; beside the page it sits at the
+   right. */
+.start-columns > .start-main {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.start-columns > .recovery {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 1000px) {
+  .start-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .start-columns > .start-main,
+  .start-columns > .recovery {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.command-panel {
+  padding: 0;
+  gap: 12px;
+}
+
+.command-bar textarea {
+  background: var(--c-input);
+}
+
+.recovery {
+  padding: 16px;
+}
+
+.recovery h2 {
+  margin: 0;
+}
+
+.recovery > .sub {
+  display: block;
+  margin: 4px 0 8px;
+  color: var(--c-muted);
+}
+
+.recovery-list li {
+  flex-wrap: nowrap;
+  min-height: 36px;
+}
+
+.recovery-list li > div:first-child {
+  min-width: 0;
+}
+
+.recovery-list .sub {
+  color: var(--c-muted);
+  overflow-wrap: anywhere;
+}
+
+.recovery-list .row {
+  flex: none;
+  gap: 12px;
+}
+
+/* A recent build: its name, and what it is under it. */
+.recent-what {
+  display: block;
+  margin-left: 0;
+  font-size: var(--fs-meta);
+}
+
+/* ---- Configuration (the revamp's screens, 2026-11-25) -------------------
+   An input is one row: its question with its help under it, what the
+   calculation does with it, its control, Remove. The inputs take the
+   room; the custom modifiers are a column beside them. */
+@media (min-width: 1100px) {
+  .config-grid {
+    grid-template-columns: minmax(0, 1fr) 26rem;
+  }
+}
+
+.config-find {
+  width: 14rem;
+  min-height: 32px;
+}
+
+.config-group h3 {
+  margin: 16px 0 4px;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.config-row {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.config-name {
+  flex: 1 1 0;
+}
+
+.config-value,
+.config-effect {
+  flex: none;
+}
+
+.config-value input:not([type='checkbox']) {
+  width: 8rem;
+}
+
+.config-value select {
+  max-width: 14rem;
+}
+
+.config-detail {
+  margin-top: 12px;
+  align-self: flex-start;
+}
+
+/* A custom modifier block: its lines, each with its mark; a note of the
+   user's is a quiet heading among them. */
+.config-lines li {
+  flex-wrap: nowrap;
+  align-items: baseline;
+  padding: 8px 0;
+}
+
+.config-lines li > .state-mark {
+  align-self: center;
+}
+
+.config-lines .config-line-note {
+  padding-top: 12px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.config-block .skill-group-head {
+  flex-wrap: wrap;
+}
+
+/* ---- Lines to review and the page after an import (the revamp's screens,
+   2026-11-25). One list: the line with its reason under it, its item, a
+   quiet link to its technical detail; the open row is marked. */
+.review-head,
+.review-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 12rem) 3.5rem;
+  gap: 4px 16px;
+  padding: 8px 16px;
+}
+
+.review-head {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  border-bottom: 1px solid var(--c-row);
+}
+
+.review-list > li {
+  align-items: center;
+  min-height: 36px;
+}
+
+.review-list > li.open {
+  background: var(--c-selected);
+}
+
+.review-list .line-text,
+.warning-strip .line-text {
+  color: var(--c-text);
+}
+
+.review-reason {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.review-toggle {
+  justify-self: end;
+  min-height: 24px;
+  padding: 0;
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+
+.review-detail {
+  background: var(--c-input);
+  border: 1px solid var(--c-row);
+}
+
+@media (max-width: 720px) {
+  .review-head {
+    display: none;
+  }
+
+  .review-list > li {
+    grid-template-columns: 1fr;
+  }
+
+  .review-toggle {
+    justify-self: start;
+  }
+}
+
+/* Lines that change no number: one row until opened. */
+.review-fold {
+  padding: 0;
+}
+
+.review-fold > summary {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.review-fold > summary .sub {
+  color: var(--c-muted);
+}
+
+.review-fold[open] > summary {
+  border-bottom: 1px solid var(--c-row);
+}
+
+/* After an import: the counts as plain figures (only what is to review
+   keeps its colour), the lines to review with the room, the build's
+   facts in a narrow column. */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+}
+
+.stat-card dd:not(.sub) {
+  margin: 0;
+  font-size: var(--fs-figure);
+}
+
+.stat-card dd.sub {
+  color: var(--c-muted);
+}
+
+.import-page .columns > * {
+  flex: 1 1 32rem;
+}
+
+.import-page .columns > .aside {
+  flex: 0 1 20rem;
+}
+
+/* A page's name in the side menu stays on one line. */
+.side-nav .nav-text {
+  white-space: nowrap;
+  text-align: start;
+}
+
+/* ---- Equipment (the revamp's screens, 2026-11-25) -----------------------
+   The items are a table: slot, item, sockets, lines to review. Paste an
+   item is a button among the page's controls; its form opens under it. */
+.item-head,
+.item-row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) 8.5rem 5rem;
+  gap: 12px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.item-head {
+  min-height: 36px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.item-row {
+  min-height: 48px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.item-head > :last-child,
+.item-notes {
+  text-align: end;
+}
+
+.item-notes {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fs-meta);
+}
+
+.item-row .slot {
+  color: var(--c-soft);
+}
+
+@media (max-width: 720px) {
+  .item-head {
+    display: none;
+  }
+
+  .item-row {
+    grid-template-columns: 6rem minmax(0, 1fr);
+  }
+
+  .item-sockets,
+  .item-notes {
+    grid-column: 2;
+    text-align: start;
+  }
+}
+
+.paste-item {
+  position: relative;
+  margin-top: 0;
+  padding: 0;
+}
+
+.paste-item > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--c-border-control);
+  border-radius: var(--radius);
+  cursor: pointer;
+  list-style: none;
+}
+
+.paste-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.paste-item > summary:hover {
+  background: var(--c-hover);
+}
+
+.paste-item-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(32rem, calc(100vw - 48px));
+  padding: 16px;
+  background: var(--c-raised);
+}
+
+/* A page's pickers: quiet labels and selects no wider than they need, so
+   the head stays one row at the usual window width. */
+.page-head .set-picker {
+  flex-wrap: nowrap;
+}
+
+.page-head .set-picker label {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.page-head .set-picker select {
+  max-width: 11rem;
+  padding: 0 8px;
+}
+
+/* ---- Skills in two panes (the revamp's screens, 2026-11-25) -------------
+   Every socket group listed by its slot at the left; the one picked, with
+   its gems, at the right. One column in a narrow window. */
+.skill-panes {
+  display: grid;
+  grid-template-columns: 19rem minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .skill-panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.group-list-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group-list-name {
+  padding: 4px 12px 0;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.group-list-slot > button:not(.link) {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  min-height: 48px;
+  padding: 4px 12px;
+  border: 0;
+  text-align: start;
+  font-weight: 400;
+}
+
+.group-list-slot > button:not(.link) .sub {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.group-list-slot > button[aria-current='true'] {
+  background: var(--c-raised);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+  font-weight: 500;
+}
+
+.group-list-slot > button.off > span:first-child {
+  color: var(--c-muted);
+}
+
+.group-list-add {
+  align-self: flex-start;
+  min-height: 24px;
+  padding: 0 12px;
+  font-size: var(--fs-meta);
+}
+
+/* The picked group is the pane: no card inside the card, and the main
+   skill's group is marked in the list, not by a border. */
+.skill-panes .skill-group,
+.skill-panes .skill-group.main {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* A slot's own "add" shows when the pointer or the keyboard is on that
+   slot; the last one (no slot) is always there. */
+.group-list-slot:not(:last-child) .group-list-add {
+  opacity: 0;
+}
+
+.group-list-slot:hover .group-list-add,
+.group-list-slot:focus-within .group-list-add {
+  opacity: 1;
+}
+
+/* ---- About (the revamp's screens, 2026-11-25) ---------------------------
+   The page's width, in two columns of panels. The update choices are rows
+   that say what each does. */
+.about {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .about-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mode-list {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.mode-list > legend {
+  padding: 0 0 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0 -20px;
+  padding: 4px 20px;
+  border-top: 1px solid var(--c-row);
+}
+
+.mode-row.chosen {
+  background: var(--c-selected);
+}
+
+.mode-row > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-row .sub {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.mode-row.chosen .sub {
+  color: var(--c-soft);
+}
+
+/* ---- The passive tree (the revamp's last step, 2026-11-25) --------------
+   The controls over the tree sit on cards, so they read against any part
+   of it; their own borders are back. */
+.tree-full .tree-float,
+.tree-full .tree-zoom {
+  padding: 8px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-panel);
+  text-shadow: none;
+}
+
+/* Each top card keeps to its half, so the two never overlap. */
+.tree-full .tree-tl,
+.tree-full .tree-tr {
+  top: 16px;
+  box-sizing: border-box;
+  max-width: calc(50% - 24px);
+}
+
+.tree-full .tree-tl,
+.tree-full .tree-bl {
+  left: 16px;
+}
+
+.tree-full .tree-tr,
+.tree-full .tree-zoom {
+  right: 16px;
+}
+
+.tree-full .tree-bl,
+.tree-full .tree-zoom {
+  bottom: 16px;
+}
+
+.tree-full .tree-bl {
+  padding: 8px 16px;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button),
+.tree-full .tree-tr > button,
+.tree-full .tree-zoom button {
+  border-color: var(--c-border-control);
+  min-height: 32px;
+}
+
+.tree-full .tree-float input[type='search'] {
+  min-height: 32px;
+  background: var(--c-input);
+}
+
+.tree-full .tree-notices {
+  top: 80px;
+  left: 16px;
+}
+
+/* The hover card: solid enough to read, the node's name first. */
+.tree-card {
+  padding: 12px 16px;
+  border-color: var(--c-border-control);
+  border-radius: var(--radius-panel);
+}
+
+.tree-card-name {
+  font-size: var(--fs-section);
 }

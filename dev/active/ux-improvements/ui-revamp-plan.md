@@ -1,0 +1,175 @@
+# UI revamp plan (2026-11-25)
+
+The maintainer asked for a review of the whole UI and a plan to revamp it (2026-11-25, with the `unslop` skill installed in the maintainer's personal skills folder). The review ran the application on the Raise Spectre community fixture at 1,280 px and read the CSS. This file is the audit, the direction the maintainer approved, and the steps. Nothing in the application is changed by this plan.
+
+**Standing rules that apply:** mockups are approved before any step is built; the UI does not name PoB outside import and export; no game art (ADR-000); every colour is a token with its contrast pair checked (`ui/src/theme/tokens.css`, `pairs.ts`).
+
+## Decisions (maintainer, 2026-11-25)
+- **Depth:** the full revamp, all five steps below.
+- **Direction:** approved as written below.
+- **Accent:** violet, used rarely (board A; "I like A", 2026-11-25), picked from four on the design canvas "Exiled Studio revamp" (https://claude.ai/artifact/3YUT56ZDe4Gmdq7iQvHvPB, private to the maintainer; the others were brass, star-chart blue, verdigris). The accent marks the selection, the active tab, links, and the allocated tree path; the primary button is off-white with dark text.
+
+## Audit
+The verdict is light slop with a strong template look. There are no emoji, gradients, glows, or looping motion, the icons are one line set, and colours come from tokens. What is wrong is that near-black, Inter, and a violet accent is the default dark application, and several craft issues make screens look unfinished.
+
+| Area | Finding | Where |
+|---|---|---|
+| Colour | The accent is on everything, so nothing leads: Save, four stacked Restore buttons, links, tabs, checkboxes, tree nodes, a mark on each stat card | every screen; start page |
+| Colour | The amber "Partial" pill repeats on every row of a panel | Dashboard, Defence |
+| Colour | Four pills in the header and page head at once | shell |
+| Colour | Three ink colours for text the user acts on | Warnings |
+| Type | Uppercase tracked labels on cards and table headers (7 rules) | Dashboard, start page, Equipment |
+| Type | 24 distinct font sizes, six weights (400 to 700), negative letter spacing | `index.css`, `dash.css`, `redesign.css` |
+| Spacing | Off a 4 px grid: 10 px 45 times, 6 px 36 times, 14 px 12 times | the same files |
+| Layout | The header wraps to two rows at 1,280 px; Undo and Redo are apart | shell |
+| Layout | The Inputs column wraps at three words a line, breaks technical names mid-word, and shows names the "technical detail" rule hides | Configuration |
+| Layout | An unstyled box around the update modes; a narrower column than other pages | About |
+| Layout | An outlined "Show technical detail" button on every row | Warnings |
+| Layout | Near-equal cards with no lead; the second card is a paragraph saying Offence is not calculated | Dashboard |
+| Details | Eight corner radii (2, 3, 4, 6, 8, 10, 14 px, pill) | CSS |
+| Copy | A headline that fits any product; four recovery rows all named "Imported build"; periods on short hints | start page, throughout |
+| Moment | The passive tree, the one thing only this product has, draws as small dots under controls with no surface | Passive tree |
+
+## Direction
+- **Product:** a build planner for Path of Exile that calculates a character's numbers and shows why each one is what it is.
+- **Character:** exact, patient, a little arcane.
+- **World:** a cartographer's workbench: the passive tree as a star chart, ink and instrument markings, lamp light on a dark desk.
+- **Moments:** the passive tree drawn with care, and the reason behind a number (the breakdown).
+- **Signature:** one small completeness mark beside every number (a filled circle for exact, a half for partial, a ring for not counted), which opens the number's reasons. It replaces the amber pills. It tells by shape, so it does not depend on colour.
+
+Surfaces stay neutral grey. The world shows in the tree, the charts, and the mark, never in the backgrounds.
+
+## Steps
+Each step is its own PR from `dev`, with its mockups approved first and its check in the running application.
+
+1. **Foundations.** Tokens only, no layout change: five type sizes, weights 400, 500, 600, sentence-case labels, a 4 px spacing scale, three radii (control, card, panel), the accent budget (selection and the allocated tree path; the primary button off-white with dark text unless the accent pick says otherwise). The contrast pairs test is updated with the tokens.
+2. **Shell.** A one-row header with Undo and Redo together, status as quiet text, a side menu of 34 px rows.
+3. **The completeness mark.** One component used by the dashboard cards, the panels' rows, breakdowns, and tables; the "Partial" pills go.
+4. **Screens, worst first.** Configuration, Warnings, the start page, About, then the Dashboard (a lead row of compact figures, varied widths), Equipment, and Skills.
+5. **The passive tree.** Node shapes by kind, link weight, the allocated path's colour, surfaces for the floating controls, labels.
+
+## Step 1, built (2026-11-25)
+PR #169, branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #168 is not in `dev` yet, and the screens it restyles are its own). Approved by the maintainer from the canvas's Foundations, Start page, and Configuration boards ("Approved, use mono for figures, build step 1").
+
+- **Tokens** (`ui/src/theme/tokens.css`): the graphite surfaces and text roles, `--c-primary` and `--c-on-primary` (the off-white primary button), `--font-figure`, the five `--fs-*` sizes, the four radii. `--c-on-accent` is gone with its use. The contrast pairs (`pairs.ts`) cover the primary button and its hover; muted text is `#959BA6`, since the mockup's `#8A909B` missed 4.5:1 on a selected row.
+- **The three stylesheets**, by one pass over every declaration: 75 font sizes onto the five tokens, 42 weights onto 400, 500, 600, 7 uppercase rules and all 9 letter spacings removed, 89 paddings, margins, and gaps onto the 4 px scale, 16 radii onto the tokens. Figures (values, counts, chart ticks, table cells, number inputs) are in the mono face.
+- **The accent budget:** the primary button, the stat card's corner mark, the import box's border, and its icon no longer use the accent. The start page's Restore buttons are plain buttons (five filled buttons in a column were louder off-white than violet).
+- **One layout value changed**, because the text grew: the collapsed side menu is 104 px wide (was 84), so its labels fit at 12 px.
+- **Not changed** (later steps): the header's two rows, the status pills, the "Partial" pills, every screen's layout, the tree's drawing.
+- **Checked in the running application** on the Raise Spectre fixture at 1,280 px: every screen, the collapsed menu (no label cut), no sideways scroll. Measured on the Dashboard: no uppercase text, no letter spacing, radii 4, 8, 12 px and the 2 px marks.
+
+## Step 2, built (2026-11-25)
+PR #170, branch `feat/ui-revamp-shell`, stacked on step 1's (#169). The mockup is board A's header and side menu ("Board A is approved, build step 2").
+
+- **The header is one row** (`Header` in `ui/src/App.tsx`, "The revamp's shell" in `redesign.css`): the build and its state at the left; "Up to date", the stage, Undo and Redo side by side, Export, and Save at the right. Its controls are 32 px tall.
+- **The state is one quiet line of text**, not pills: "Partial · 5 warnings · Unsaved changes". Only a failure keeps its colour.
+- **A narrow window:** the state gives way first, then the name (its whole text on hover); under 1,000 px the row wraps to two.
+- **The side menu:** 34 px rows (were 40), the page shown marked by a bar and its icon in the accent, counts as quiet figures instead of amber pills.
+- **Checked in the running application** on the Raise Spectre fixture: one row of 52 px at 1,100, 1,280, and 1,600 px, two rows at 900 and 1,000 px, no sideways scroll at any; the menu's rows measured 34 px.
+- **Seen and left for step 4:** the import review's "Lines to review" column is squeezed to a few words a line at 1,280 px.
+
+## Step 3, built (2026-11-25)
+PR #171, branch `feat/ui-revamp-mark`, stacked on step 2's (#170). The mockup is board A's stat card and Defence rows ("Board A is approved, build step 3").
+
+- **`StateMark`** (`ui/src/components.tsx`) takes the place of the state pill everywhere it was drawn: the dashboard's stat cards and panel rows, the panels in `DashPanels.tsx`, and a breakdown's heading. A filled circle is Exact, a half Partial, a ring Not yet, a dashed ring Cannot settle; in the secondary text colour, so the state is told by shape.
+- **Every number is marked** now, the exact ones too (before, only the exceptions carried a pill). The mark's name is its tooltip, and is read aloud except for Exact, which a row already says in its own name (UX-12 holds).
+- **A stat card's mark is beside its figure.** A breakdown's heading writes the state's name beside the mark.
+- **The legend** (`StateLegend`) is under the dashboard, once a page. The panel hint is now "Select a number to see why".
+- **Checked in the running application** on the Raise Spectre fixture: the dashboard has no amber pill left (the only chip is the game version), the legend shows the four states, a breakdown's heading reads "Partial" beside its mark, no sideways scroll.
+- **Not in this step:** other chips that are not a calculation state (the Configuration page's "Not calculated" and "Note, no effect", an item line's status, "1 with warnings"): they go with their screens in step 4.
+
+## Step 4, first part, built (2026-11-25): the start page and Configuration
+PR #172, branch `feat/ui-revamp-start-config`, stacked on step 3's (#171). The mockups are the canvas's Start page and Configuration boards ("Build the two approved screens first").
+
+**The start page** (`ui/src/screens/Start.tsx`):
+- The title is "Builds". The import bar leads, with the page's one filled button; the other ways in are under it.
+- Unsaved work is a panel beside the page (first, above it, under 1,000 px; first in the document either way), with Restore and Discard as quiet links.
+- A recent build shows what it is under its name. The header's "Offline · no account" is quiet text.
+- **Not as the mockup:** a recovery copy is still named by its build's name, which for an import without one is "Imported build" (the mockup showed class and skill; `RecoveryEntry` does not carry them, an app API addition); no "Discard all"; the button still reads "Import build", and the link to import a Path of Building file is kept.
+
+**Configuration** (`ui/src/screens/Config.tsx`):
+- An input is one row: its question on one line, its help under it, what the calculation does with it (the ring mark and "Not calculated yet", or a quiet "Changes no number"), its control, Remove. The technical name is shown only with **Show technical detail**.
+- **Find an input** filters the inputs by their words or technical name.
+- The inputs take the room; the custom modifiers are a 26 rem column beside them (from 1,100 px).
+- A custom modifier block shows its lines as they were read: a counted line with the filled mark, one not calculated with the ring, a note of the user's as a quiet heading. **Edit as text** opens the text (open at once for an empty block).
+- **Not as the mockup:** the League picker and the "N inputs are not calculated yet" sentence stay; the note headings are the user's own text as written (the mockup tidied their wording).
+
+**The header again** (found while checking, fixed here): at the real 1,280 px window the name ended in an ellipsis while the state was still showing, since the two shared the loss; the state now gives way entirely first, and "Up to date" is its dot alone, named on hover and for a screen reader, so the name and the state both fit at 1,280 px.
+
+**Checked in the running application** on the Raise Spectre fixture: Configuration's questions each on one line (20 px), no sideways scroll at 1,000, 1,280, and 1,600 px, no technical name shown until asked; the start page with eight recovery copies and one recent build.
+
+## A recovery copy says what its build is (2026-11-25)
+PR #173, branch `feat/recovery-summary`, stacked on step 4's first part (#172) (maintainer: "Yes, add class and skill").
+
+- **The snapshot's header** (`loom_persistence::recovery::Header`) gains an optional `summary`: class, ascendancy, level, main skill, the recent list's `Summary`, written at each autosave (`loom_app` `write_recovery`, `view::recent_summary`). Left out when not known, so a snapshot without it is the file as it was.
+- **App API v1, additive:** `RecoveryEntry` gains `class`, `ascendancy`, `level`, `main-skill`, as `RecentEntry` has them.
+- **The start page** shows "Necromancer 92 · Raise Spectre" under a copy's name, and Restore and Discard carry it in their names, so copies of one name are told apart by sight and by a screen reader.
+- **Older copies** (written before this) list and restore as before, without the line.
+- **One limit:** an application older than this change, reading a snapshot written by a newer one, may refuse the unknown `summary` key on restore (the file's reader is strict). It arises only when a user goes back to an older version with unsaved work pending; the stable and experimental channels keep separate data folders. Not tested here.
+- **Checked in the running application:** a build imported and the application ended without a save; at the next start its copy read "Imported build · Necromancer 92 · Raise Spectre", and the nine older copies were listed as before.
+
+## Step 4: Lines to review and the page after an import (2026-11-25)
+Stacked on #173, PR #174, branch `feat/ui-revamp-review`. The mockups are the canvas's "Lines to review" and "After an import" boards.
+
+- **The Warnings page is "Lines to review"**, in the side menu, its heading, and the header's state ("Partial · 5 lines to review").
+- **One list** (`ReviewList`, shared by both pages): the line in the text colour with its reason under it, its item, and a quiet "Detail" link (named "Show technical detail" for a screen reader and on hover) in place of an outlined button a row. The open row is marked. A header names the columns.
+- **Lines on items not in use** are one row until opened ("25 lines on items not in use"), since they change no number.
+- **After an import:** the four counts are plain figures; only "To review" keeps its colour, and it counts the lines on items in use, with "and 25 more on items not in use" under it (it showed all 35 before). The pills beside the name are gone (the header says the state). The list has the room: its line column was about 70 px at 1,280 px and is the widest now.
+- **Not as the mockup:** the heading is the build's name alone ("Imported build is imported" read badly for a build without a name); the reasons are the ones the application has (the mockup's more specific reasons need the resolver, as before).
+- **Checked in the running application** on the Raise Spectre fixture: both pages, a row opened, no sideways scroll at 1,000, 1,280, and 1,600 px; a page's name in the side menu stays on one line.
+
+## Step 4: the Dashboard's layout (2026-11-25)
+Stacked on #174, PR #175, branch `feat/ui-revamp-dashboard`. The mockup is the canvas's "Dashboard layout" board.
+
+- **A quarter width** (`Width` `quarter`, `ui/src/dashboards.ts`): the grid has twelve columns (was six), so four figures lead the page. It is the narrowest width and the one a new figure starts with. An application older than this drops a card of that width from a build's own dashboards, as it does any width it does not know.
+- **The default Overview:** four figures (Hit DPS, Life, Energy shield, Mana), then Defence two thirds wide beside the Main skill a third wide, then Offence and Equipment as halves, then the lines to review. Widths that differ, so the page has a first thing to read.
+- **A narrow window:** under 1,100 px a quarter is a half (two figures a row) and two thirds is the whole row; under 1,000 px one column, as before. The breakpoint was 1,280 px, which is the window's own default width, so the wide layout never showed there.
+- **Only the default changes:** a user's saved dashboards, and a build's own, stay as they are.
+- **Not as the mockup:** no bars for capped values in the Defence table (the Resistances card has them); the Main skill and the lines to review are not stacked in one column (a grid row holds one card a cell).
+- **Checked in the running application** with fresh preferences on the Raise Spectre fixture: four figures in one row at 1,280 and 1,600 px, two a row at 1,000 px, no sideways scroll at any.
+
+## Step 4: Equipment (2026-11-25)
+Stacked on #175, PR #176, branch `feat/ui-revamp-equipment`. The mockup is the canvas's "Equipment" board.
+
+- **The page's controls are one row** at 1,280 px: the item set, the league, the stage to compare with, and **Paste an item** as a button whose form opens under it (it was a panel above the list). A page's pickers have quiet labels and narrower selects on every page.
+- **The items are a table:** slot, item (name in its rarity colour, base under it), sockets, lines to review. The sockets have their own column; "1 line" and "Legacy" are quiet text in the warning colour (muted on an item not in use) in place of pills.
+- **Not as the mockup:** the sockets stay drawn as coloured dots (the mockup wrote them as letters; the dots already show the links and which sockets hold a gem); the inventory picture is unchanged (the selected item's outline belongs to a selection the list does not have: a row opens the item).
+- **Checked in the running application** on the Raise Spectre fixture: the head one row at 1,280 and 1,600 px, two under 1,000 px; the paste form opens under its button inside the window; no sideways scroll.
+
+## Step 4: Skills in two panes (2026-11-25)
+Stacked on #176, PR #177, branch `feat/ui-revamp-skills`. The mockup is the canvas's "Skills" board; the maintainer chose two panes ("two panes for Skills").
+
+- **Two panes** (`GroupPanes` in `ui/src/screens/Skills.tsx`) take the place of one long page of cards: every socket group listed under its slot at the left (its skill, its gem count, "main skill", "off"), the one picked shown at the right with its slot, its item, its sockets, and its gems. The main skill's group is shown first.
+- **The view's name** is "Groups" (was "Cards"); the Table view is unchanged.
+- **Adding a group:** each slot's "Add a socket group in …" shows when the pointer or the keyboard is on that slot; the one without a slot is always there. A new group is shown at once.
+- **The main skill's group** is marked in the list (and by its chip in the pane), not by a border around a card.
+- **Changed for the user:** only one group's gems are in view at a time; the Table view still shows every group.
+- **Checked in the running application** on the Raise Spectre fixture (18 groups): the main skill's group first, another group picked and shown, the head one row, no sideways scroll at 1,000, 1,280, and 1,600 px (one column under 1,000 px).
+
+## Step 4: About (2026-11-25)
+Stacked on #177, PR #178, branch `feat/ui-revamp-about`. The mockup is the canvas's "About" board. It is the last screen of step 4.
+
+- **The page's width, in two columns of panels** (one column under 1,000 px): Updates and Game data at the left, Diagnostics and Legal at the right. The version and the game data are one line beside the heading.
+- **The update choices are rows that say what each does** ("Nothing is installed without your approval", "Game data is still downloaded at start", "No updates and no game data. Install game data from a file"), the one chosen marked. The unstyled box around them is gone. Each choice keeps its own name for a screen reader; its line is its description.
+- **Legal** gathers the notice, the license, the privacy sentence, and the font licenses in one panel.
+- **Not as the mockup:** only what the page has: no "Open the logs folder", no "Verify" link beside the data in use (Verify is on an installed pack's row, as before); the heading is still "About Exiled Studio".
+- **Checked in the running application** on the Raise Spectre fixture: two columns at 1,280 and 1,600 px, one at 1,000 px, no sideways scroll.
+
+**Step 4 is complete** with this: the start page, Configuration, Lines to review, the page after an import, the Dashboard's layout, Equipment, Skills, and About. Step 5, the passive tree, is next and needs its mockup first.
+
+## Step 5: the passive tree (2026-11-25)
+Stacked on #178, PR #179, branch `feat/ui-revamp-tree`. The mockups are the canvas's "Passive tree, whole" and "Passive tree, close" boards, with the maintainer's two answers: "icons zoomed out and in, fade zoomed out".
+
+- **The game's node icons stay at every zoom** (the mockup's plain shapes are not built).
+- **Zoomed out, what is not taken fades** (`FADE_FROM`, `FADE_TO`, `FADE_MIN` in `ui/src/screens/Tree.tsx`): nodes and links not taken go down to 35% of their strength at the fitted view, so the taken path is the one bright shape. Taken nodes, the path a click would take, removals, search matches, the node under the pointer, and the class starts keep their strength. A taken link stays at least 2 px wide.
+- **The path a click would take is dashed**, so it is not told from the taken path by colour alone.
+- **The node under the pointer is outlined.**
+- **The controls over the tree sit on cards** (they floated bare with a text shadow): the spec and class at the top left, search and view at the top right, points at the bottom left, zoom at the bottom right; each top card keeps to its half, so they never overlap. Their controls have their borders back.
+- **The hover card** has the node's name larger and more room; its content is unchanged.
+- **Not built from the mockup:** the shapes and their legend (the icons stay), and the card's "points left after" line.
+- **Checked in the running application** on the Raise Spectre fixture: the fitted view (the field faint, the path bright), zoomed in (full strength), a node hovered (outlined, a dashed path to it, its card with the changes), and no card overlapping another at 1,000, 1,280, and 1,600 px.
+
+**The revamp's five steps are built** with this. What is left is in "Open" below.
+
+## Open
+The open items are tasks in `ui-revamp-follow-ups.md` (RV-01 to RV-23), created 2026-11-25 when the stack #168 to #179 was merged into `dev`.

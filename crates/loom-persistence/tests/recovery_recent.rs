@@ -34,6 +34,7 @@ fn header(at: u64) -> Header {
         name: "Test".to_owned(),
         path: None,
         origin: Some("C:/builds/test.xml".to_owned()),
+        summary: None,
     }
 }
 
@@ -62,6 +63,39 @@ fn recovery_should_offer_an_ended_instances_snapshot_and_restore_it() {
     assert_eq!(restored, build);
     third.discard("first-1").unwrap();
     assert!(third.list(&store).is_empty());
+}
+
+#[test]
+fn a_snapshot_should_keep_what_its_build_is_and_read_without_it() {
+    let dir = Scratch::new("summary");
+    let store = Store::new();
+    let build = Build::new(Game::Poe1);
+    let with = Header {
+        summary: Some(loom_persistence::recent::Summary {
+            class: Some("Witch".to_owned()),
+            ascendancy: Some("Necromancer".to_owned()),
+            level: Some(92),
+            skill: Some("Raise Spectre".to_owned()),
+        }),
+        ..header(7)
+    };
+    {
+        let a = Recovery::open(&dir.0, "a-1").unwrap();
+        a.write(&store, &with, &build).unwrap();
+        let b = Recovery::open(&dir.0, "b-1").unwrap();
+        b.write(&store, &header(8), &build).unwrap();
+    }
+    // Without a summary the file is as it was before the field: no key,
+    // so an older application reads it, and this one reads an older file.
+    let plain = std::fs::read_to_string(dir.0.join("b-1.json")).unwrap();
+    assert!(!plain.contains("summary"), "{plain}");
+    let c = Recovery::open(&dir.0, "c-1").unwrap();
+    let found = c.list(&store);
+    assert_eq!(found.len(), 2);
+    assert_eq!(found[0].header, with);
+    assert_eq!(found[1].header.summary, None);
+    assert_eq!(c.read(&store, "a-1").unwrap().0, with);
+    assert_eq!(c.read(&store, "b-1").unwrap().0, header(8));
 }
 
 #[test]

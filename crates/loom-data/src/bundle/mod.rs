@@ -389,6 +389,95 @@ pub struct Bundle {
     pub tree_sprites: Option<tree_sprites::TreeSprites>,
     /// The older tree versions listed ([`tree_packs`]), by version.
     pub tree_packs: std::collections::BTreeMap<String, tree_packs::TreePack>,
+    /// The tables' indexes by key ([`Bundle::granted_effect`] and kin),
+    /// built on first use.
+    index: Index,
+}
+
+/// One table's index: its length when built, and each key's first row.
+type KeyIndex<K> = std::sync::OnceLock<(usize, std::collections::BTreeMap<K, usize>)>;
+
+/// Indexes of the tables the calculations look up by key (performance
+/// profile, 2026-11-24: the linear scans of `granted_effects`, `gems`, and
+/// `gem_effects` were most of a calculation's time with a real bundle).
+#[derive(Debug, Clone, Default)]
+struct Index {
+    granted_effects: KeyIndex<String>,
+    gem_effects: KeyIndex<String>,
+    gems: KeyIndex<String>,
+    active_skills: KeyIndex<String>,
+    stat_sets: KeyIndex<String>,
+    passives: KeyIndex<i64>,
+}
+
+/// The first row of `rows` whose key is `key`, as `rows.iter().find` gives
+/// it. The index is built on first use; a hit is checked against the row,
+/// and a miss, or a table whose length changed since (the tables are
+/// public), falls back to the scan, so the answer never differs from it.
+fn indexed<'a, T, K: Ord + ?Sized + ToOwned<Owned = O>, O: Ord + core::borrow::Borrow<K>>(
+    rows: &'a [T],
+    cell: &KeyIndex<O>,
+    key: &K,
+    key_of: impl Fn(&T) -> &K,
+) -> Option<&'a T> {
+    let (len, map) = cell.get_or_init(|| {
+        let mut map = std::collections::BTreeMap::new();
+        for (i, row) in rows.iter().enumerate() {
+            map.entry(key_of(row).to_owned()).or_insert(i);
+        }
+        (rows.len(), map)
+    });
+    if *len == rows.len()
+        && let Some(row) = map.get(key).and_then(|&i| rows.get(i))
+        && key_of(row) == key
+    {
+        return Some(row);
+    }
+    rows.iter().find(|row| key_of(row) == key)
+}
+
+impl Bundle {
+    /// The granted effect with this ID.
+    #[must_use]
+    pub fn granted_effect(&self, id: &str) -> Option<&skills::GrantedEffect> {
+        let rows = &self.skills.as_ref()?.granted_effects;
+        indexed(rows, &self.index.granted_effects, id, |r| r.id.as_str())
+    }
+
+    /// The gem effect with this ID.
+    #[must_use]
+    pub fn gem_effect(&self, id: &str) -> Option<&skills::GemEffect> {
+        let rows = &self.skills.as_ref()?.gem_effects;
+        indexed(rows, &self.index.gem_effects, id, |r| r.id.as_str())
+    }
+
+    /// The skill gem of this base item.
+    #[must_use]
+    pub fn skill_gem(&self, base_item: &str) -> Option<&skills::SkillGem> {
+        let rows = &self.skills.as_ref()?.gems;
+        indexed(rows, &self.index.gems, base_item, |r| r.base_item.as_str())
+    }
+
+    /// The active skill with this ID.
+    #[must_use]
+    pub fn active_skill(&self, id: &str) -> Option<&skills::ActiveSkill> {
+        let rows = &self.skills.as_ref()?.active_skills;
+        indexed(rows, &self.index.active_skills, id, |r| r.id.as_str())
+    }
+
+    /// The stat set with this ID.
+    #[must_use]
+    pub fn stat_set(&self, id: &str) -> Option<&skills::StatSet> {
+        let rows = &self.skills.as_ref()?.stat_sets;
+        indexed(rows, &self.index.stat_sets, id, |r| r.id.as_str())
+    }
+
+    /// The passive with this node ID.
+    #[must_use]
+    pub fn passive(&self, node: i64) -> Option<&passives::Passive> {
+        let rows = &self.passives.as_ref()?.passives;
+        indexed(rows, &self.index.passives, &node, |r| &r.node)
+    }
 }
 
 /// Why a bundle did not load.
@@ -590,6 +679,7 @@ impl Bundle {
             },
             game,
             manifest,
+            index: Index::default(),
         })
     }
 }

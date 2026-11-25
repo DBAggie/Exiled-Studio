@@ -76,7 +76,7 @@ fn dashboards(s: &Session) -> Option<api::Dashboards> {
 
 /// The dashboards as the UI writes them: a stat, a progression chart, and
 /// a fight timeline.
-const DOCUMENT: &str = r#"{"active":"overview","list":[{"id":"overview","name":"Overview","components":[{"id":"c1","kind":"stat","width":"third","field":"hit-dps"},{"id":"c2","kind":"progression","width":"full","fields":["life","hit-dps"]},{"id":"c3","kind":"timeline","width":"half","target":5000000}]}]}"#;
+const DOCUMENT: &str = r#"{"active":"overview","list":[{"id":"overview","name":"Overview","components":[{"id":"c1","kind":"stat","width":"third","field":"hit-dps"},{"id":"c2","kind":"progression","width":"full","fields":["life","hit-dps"]},{"id":"c3","kind":"timeline","width":"half","target":5000000,"break":true}]}]}"#;
 
 fn document() -> api::Dashboards {
     serde_json::from_str(DOCUMENT).unwrap()
@@ -92,6 +92,7 @@ fn component(id: &str) -> api::DashboardComponent {
         vary: None,
         input: None,
         target: None,
+        new_row: false,
     }
 }
 
@@ -377,6 +378,7 @@ fn dashboards_outside_a_limit_should_be_refused_and_change_nothing() {
         vary: Some(text.clone()),
         input: Some(text),
         target: Some(u64::MAX),
+        new_row: true,
     };
     full.list[3].components[0].kind = "a-kind-of-later".to_owned();
     s.set_dashboards(Some(full.clone())).unwrap().unwrap();
