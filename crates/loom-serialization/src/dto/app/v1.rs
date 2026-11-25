@@ -73,6 +73,30 @@ dto! {
         pub build_fields: BuildFields,
         /// A stage's tree and equipment (the `stage_view` query).
         pub stage_view: StageView,
+        /// Passives' lines with their stats (the `passive_lines` query;
+        /// additive, 2026-11-25).
+        pub passive_lines: Vec<PassiveLines>,
+    }
+
+    /// A passive node's lines as the game prints them, each with the
+    /// stats it prints (the `passive_lines` query): a calc result names a
+    /// passive's stat by its ID, and this says which line that is.
+    pub struct PassiveLines {
+        /// The node number.
+        pub node: u32,
+        /// Its name in the game data.
+        pub name: String,
+        /// Its lines, in the game's order.
+        pub lines: Vec<PassiveLine>,
+    }
+
+    /// One line of a passive node.
+    pub struct PassiveLine {
+        /// The line as the game prints it; a stat the descriptions cannot
+        /// print is its ID and value.
+        pub text: String,
+        /// The IDs of the stats the line prints.
+        pub stats: Vec<String>,
     }
 
     /// The computed fields of a build file calculated without opening it,

@@ -454,6 +454,11 @@ fn the_dashboards_and_the_comparison_queries_should_run_through_the_commands() {
     assert_eq!(stage["slots"], json!([{"slot": "Ring 1", "item": 1}]));
     let err = s.invoke("stage_view", json!({"spec": 9})).unwrap_err();
     assert_eq!(err["code"], "APP_LOADOUT");
+    // Passives' lines with their stats: a node the data lacks is left out.
+    assert_eq!(
+        s.ok("passive_lines", json!({"nodes": [999_999]})),
+        json!([])
+    );
     assert_eq!(s.ok("snapshot", json!({}))["version"], version);
 }
 

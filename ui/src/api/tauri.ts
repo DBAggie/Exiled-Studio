@@ -104,6 +104,7 @@ export const tauriApi: LoomApi = {
   whatIf: (request) => call('what_if', { request }),
   compareFile: () => call('compare_file'),
   stageView: (spec) => call('stage_view', { spec }),
+  passiveLines: (nodes) => call('passive_lines', { nodes }),
   uiPrefs: () => call('ui_prefs'),
   setUiPrefs: (text) => call('set_ui_prefs', { text }),
   onEvent: (listener) =>

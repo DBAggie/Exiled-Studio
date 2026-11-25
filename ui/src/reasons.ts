@@ -2,7 +2,7 @@
 // grouped by kind, each pointing at the item, passive, gem, or setting it
 // comes from, with the calculation's codes kept apart for reports (the
 // dashboard cards redesign, maintainer 2026-11-24).
-import type { FieldResult } from './api/types'
+import type { FieldResult, PassiveLines } from './api/types'
 
 /** The groups, in the order they are shown. */
 export const GROUPS = ['lines', 'stats', 'config', 'content', 'other'] as const
@@ -117,6 +117,23 @@ export function readReason(reason: unknown): ReasonEntry {
       null,
     target,
   }
+}
+
+/** The line of a passive that prints the stat `stat`, with the passive's
+ * name: an uncounted modifier of a passive is named by its own line, not
+ * by the passive it is on (RV-11). `null` when the lines are not known
+ * yet, or none prints the stat. */
+export function passiveLine(
+  passives: readonly PassiveLines[],
+  node: number,
+  stat: string | null,
+): { text: string; passive: string } | null {
+  if (stat === null) return null
+  const passive = passives.find((p) => p.node === node)
+  const line = passive?.lines.find((l) => l.stats.includes(stat))
+  return passive === undefined || line === undefined
+    ? null
+    : { text: line.text, passive: passive.name }
 }
 
 /** The reasons a field carries, whatever its state. */

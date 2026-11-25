@@ -39,6 +39,7 @@ import {
   type DiagnosticFile,
   type TreeChange,
   type TreePreview,
+  type PassiveLines,
   type StageView,
   type WhatIfRequest,
   type WhatIfSeries,
@@ -2211,6 +2212,28 @@ export class FakeApi implements LoomApi {
   /** A stage's tree and equipment: the active stage's as they are;
    * another stage's item set, and the tree with the fixed difference
    * the sample build has between its stages. */
+  /** The sample passive's lines, each with the stat it prints. */
+  passiveLines(nodes: number[]): Promise<PassiveLines[]> {
+    return Promise.resolve(
+      nodes
+        .filter((node) => node === 420)
+        .map((node) => ({
+          node,
+          name: 'Heart of Ice',
+          lines: [
+            {
+              text: '10% increased Cold Damage',
+              stats: ['cold_damage_+%'],
+            },
+            {
+              text: '5% chance to Freeze',
+              stats: ['base_chance_to_freeze_%'],
+            },
+          ],
+        })),
+    )
+  }
+
   stageView(spec: number): Promise<StageView> {
     const state = this.current
     if (state === null) this.fail('APP_NO_BUILD')

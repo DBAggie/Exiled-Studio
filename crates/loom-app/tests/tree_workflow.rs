@@ -95,6 +95,33 @@ fn the_layout_should_carry_kinds_links_lines_and_classes() {
     assert_eq!(view.points, 1, "the unknown node counts as PoB counts it");
 }
 
+/// RV-11: a calc result names a passive's stat by its ID; `passive_lines`
+/// says which of the node's lines prints it.
+#[test]
+fn passive_lines_should_name_each_lines_stats() {
+    let data =
+        loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1"))
+            .unwrap();
+    let layout = data.tree_layout.clone().unwrap();
+    let shown = &layout.nodes.iter().find(|n| n.id == 101).unwrap().lines;
+    // The node the data does not have is left out; the order is as asked.
+    let lines = loom_app::tree::passive_lines(data.bundle, &[999, 101]);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].node, 101);
+    assert!(!lines[0].name.is_empty());
+    // The same lines the tree shows, each with the stats it prints.
+    let texts: Vec<&str> = lines[0].lines.iter().map(|l| l.text.as_str()).collect();
+    assert_eq!(&texts, shown);
+    let stats = data.bundle.passives.as_ref().unwrap();
+    let node = stats.passives.iter().find(|p| p.node == 101).unwrap();
+    for line in &lines[0].lines {
+        assert!(!line.stats.is_empty(), "{line:?}");
+        for id in &line.stats {
+            assert!(node.stats.iter().any(|s| &s.stat == id), "{id}");
+        }
+    }
+}
+
 #[test]
 fn tree_commands_should_be_undoable_and_keep_the_unknown_node() {
     use loom_app::tree::Edit;

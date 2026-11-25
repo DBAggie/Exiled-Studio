@@ -607,6 +607,11 @@ export interface ApplicationAPIV1 {
         }
       }
     | 'nothing'
+  /**
+   * Passives' lines with their stats (the `passive_lines` query;
+   * additive, 2026-11-25).
+   */
+  'passive-lines': PassiveLines[]
   preview: ItemEditPreview1
   /**
    * Recent builds.
@@ -1538,6 +1543,39 @@ export interface TreePreview {
    * Nodes deallocated, ascending.
    */
   removed: number[]
+}
+/**
+ * A passive node's lines as the game prints them, each with the
+ * stats it prints (the `passive_lines` query): a calc result names a
+ * passive's stat by its ID, and this says which line that is.
+ */
+export interface PassiveLines {
+  /**
+   * Its lines, in the game's order.
+   */
+  lines: PassiveLine[]
+  /**
+   * Its name in the game data.
+   */
+  name: string
+  /**
+   * The node number.
+   */
+  node: number
+}
+/**
+ * One line of a passive node.
+ */
+export interface PassiveLine {
+  /**
+   * The IDs of the stats the line prints.
+   */
+  stats: string[]
+  /**
+   * The line as the game prints it; a stat the descriptions cannot
+   * print is its ID and value.
+   */
+  text: string
 }
 /**
  * An item edit's effect, calculated by the application (never by the

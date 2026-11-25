@@ -259,6 +259,13 @@ fn stage_view(ctx: State<'_, Ctx>, spec: u32) -> Answer<api::StageView> {
     ctx.app.stage_view(spec).map_err(dto)
 }
 
+/// The lines of the passives `nodes` names, each with the stats it
+/// prints.
+#[tauri::command]
+fn passive_lines(ctx: State<'_, Ctx>, nodes: Vec<u32>) -> Vec<api::PassiveLines> {
+    ctx.app.passive_lines(&nodes)
+}
+
 /// Runs an API command.
 #[tauri::command(async)]
 fn execute(ctx: State<'_, Ctx>, command: api::Command) -> Answer<api::Outcome> {
@@ -600,7 +607,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 41] = [
+pub const COMMANDS: [&str; 42] = [
     "snapshot",
     "calc_document",
     "item",
@@ -628,6 +635,7 @@ pub const COMMANDS: [&str; 41] = [
     "what_if",
     "compare_file",
     "stage_view",
+    "passive_lines",
     "crashes",
     "dismiss_crash",
     "diagnostics",
@@ -706,6 +714,7 @@ pub fn build<R: Runtime>(
             what_if,
             compare_file,
             stage_view,
+            passive_lines,
             crashes,
             dismiss_crash,
             diagnostics,

@@ -647,6 +647,16 @@ impl App {
         crate::view::stage_view(&state.build, spec, data.as_deref())
     }
 
+    /// The lines of the passives `nodes` names, each with the stats it
+    /// prints ([`crate::tree::passive_lines`]), from the loaded data:
+    /// nothing is calculated or changed. Empty when no data is loaded.
+    #[must_use]
+    pub fn passive_lines(&self, nodes: &[u32]) -> Vec<api::PassiveLines> {
+        self.read(|p| p.data.clone())
+            .map(|data| crate::tree::passive_lines(data.bundle, nodes))
+            .unwrap_or_default()
+    }
+
     /// The loaded data's passive tree layout (static while the data is
     /// loaded; the UI caches it by the data version).
     ///
