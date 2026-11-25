@@ -49,7 +49,7 @@ Each step is its own PR from `dev`, with its mockups approved first and its chec
 5. **The passive tree.** Node shapes by kind, link weight, the allocated path's colour, surfaces for the floating controls, labels.
 
 ## Step 1, built (2026-11-25)
-Branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #168 is not in `dev` yet, and the screens it restyles are its own). Approved by the maintainer from the canvas's Foundations, Start page, and Configuration boards ("Approved, use mono for figures, build step 1").
+PR #169, branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #168 is not in `dev` yet, and the screens it restyles are its own). Approved by the maintainer from the canvas's Foundations, Start page, and Configuration boards ("Approved, use mono for figures, build step 1").
 
 - **Tokens** (`ui/src/theme/tokens.css`): the graphite surfaces and text roles, `--c-primary` and `--c-on-primary` (the off-white primary button), `--font-figure`, the five `--fs-*` sizes, the four radii. `--c-on-accent` is gone with its use. The contrast pairs (`pairs.ts`) cover the primary button and its hover; muted text is `#959BA6`, since the mockup's `#8A909B` missed 4.5:1 on a selected row.
 - **The three stylesheets**, by one pass over every declaration: 75 font sizes onto the five tokens, 42 weights onto 400, 500, 600, 7 uppercase rules and all 9 letter spacings removed, 89 paddings, margins, and gaps onto the 4 px scale, 16 radii onto the tokens. Figures (values, counts, chart ticks, table cells, number inputs) are in the mono face.
