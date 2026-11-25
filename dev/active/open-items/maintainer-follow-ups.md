@@ -7,9 +7,9 @@ Items an agent cannot finish without you. The open-items session (`open-items-pl
 ## Gates
 1. **Phase 5 gate** (`docs/phase-5/phase-5-report.md`, "For the maintainer"):
    - Gate 6: run `release.yml` by hand on `main` and record it in `docs/phase-5/packaging.md`, or accept the tagged 0.9 runs (`v0.9.0-1`: 43822600359; `v0.9.0`: 43866901437) as the record.
-   - Gate 9: accept or refuse the NSIS size exception; measure tree paint and pan and zoom fps in the release app; say whether peak memory includes WebView2.
+   - Gate 9: the NSIS size exception **accepted 2026-11-24**; tree paint, pan and zoom fps, and peak memory with WebView2: planned (`docs/phase-5/maintainer-tests.md`).
    - Copy the private signing keys offline twice (`docs/release/signing.md`, "First keys").
-   - After the next release: a real update from 0.9 (`docs/phase-5/updates.md`, "Not tested here").
+   - After the next release: a real update from 0.9 (`docs/phase-5/updates.md`, "Not tested here"); planned with the keyboard and screen reader checks (`docs/phase-5/maintainer-tests.md`). The passive tree packs check is deferred (maintainer 2026-11-24).
 2. **Passive tree gate** (`docs/tree/tree-report.md`, "Maintainer-run", items 1 to 5): the signed bundle with the 3_25 to 3_28 packs; `data-parity` per pack; the private corpus run on the packs; T3's three cluster items (gate 3); `TREES="3_25 3_26 3_27 3_28" tools/tree/parity.sh <bundle>` on the signed bundle.
 3. **Phase 6 gate** (`docs/phase-6/phase-6-report.md`, "The close-out (2026-11-24)"). Public: 0 unexpected, 38,757 `Complete`. Corpus: no `Complete` field yet.
 4. When those gates pass: move `dev/active/passive-tree-and-phase-5/` and `dev/active/phase-6-mechanics/` to `dev/completed/`.

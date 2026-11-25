@@ -109,9 +109,11 @@ The maintainer asked for the recommended fixes (2026-11-15). All three are in:
    - Without it the setup is about 6 MB.
    - The MSI and the portable zip use the WebView2 runtime Windows already has.
    - Proposed: accept. The budget excludes the bundle, and the WebView2 runtime is Microsoft's, not this project's.
+   - **Accepted by the maintainer, 2026-11-24.**
 3. **Tree first paint and pan and zoom are not measured yet.**
    - They are the webview's. The core part, the tree's layout, is in `load`.
    - Proposed: the maintainer measures them in the release app with the browser tools (WebView2 DevTools, Performance panel) on the real bundle and records them here.
+   - Planned (maintainer 2026-11-24), with peak memory (5): `docs/phase-5/maintainer-tests.md`.
    - The CI e2e on the synthetic bundle checks the tree renders.
 4. **Version conversion** is measured since T5b (2026-11-16): inside budget by three orders of magnitude.
 5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. The maintainer can add them from Task Manager's process tree if the budget means the whole tree.
