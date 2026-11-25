@@ -2134,6 +2134,13 @@ export interface TreeView {
  */
 export interface TreeNodeView {
   /**
+   * Whether only an anointment grants it (the passives table's
+   * `anoint_only`: Blight's notables): drawn where the tree data
+   * places it, as PoB does, never allocated on the tree (additive,
+   * 2026-11-24).
+   */
+  'anoint-only'?: boolean
+  /**
    * The ascendancy it belongs to (its ID), if any.
    */
   ascendancy?: string | null

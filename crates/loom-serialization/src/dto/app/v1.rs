@@ -717,6 +717,12 @@ dto! {
         /// (the game data's; B-2 item evidence), lines split by `\n`.
         #[serde(default)]
         pub flavour: Option<String>,
+        /// Whether only an anointment grants it (the passives table's
+        /// `anoint_only`: Blight's notables): drawn where the tree data
+        /// places it, as PoB does, never allocated on the tree (additive,
+        /// 2026-11-24).
+        #[serde(default)]
+        pub anoint_only: bool,
     }
 
     /// A class on the tree.

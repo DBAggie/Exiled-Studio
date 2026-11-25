@@ -1929,6 +1929,11 @@ h1[tabindex='-1']:focus-visible {
   grid-area: base;
 }
 
+.jewel-entry .jewel-lines {
+  grid-column: 1 / -1;
+  font-weight: 400;
+}
+
 .jewel-entry .jewel-where {
   grid-area: where;
 }

@@ -89,6 +89,7 @@ A spec on another tree version can be converted to the data's version, as PoB's 
 | `convert-tree-version` (T5b) | converts a spec to the data's tree version as a new active copy (above) |
 | `TreeView.cluster_nodes`, `cluster_sockets`, `convert` (T5b) | the expanded cluster nodes, each cluster socket's size (`small`, `medium`, `large`), and what conversion would do |
 | Shell `tree_layout` | the loaded data's tree: groups, nodes (kind, position, links, stat lines printed from `passive_skill_stat_descriptions`), classes, mastery effects. Made once per data load. |
+| `TreeNodeView.anoint-only` | whether only an anointment grants the node (Blight's notables; the passives table's `anoint_only`): drawn where the tree data places it, as PoB draws it, never allocated; its card says so (app API v1, additive, 2026-11-24). |
 | Shell `preview_tree` | what clicking a node would do: the path or the removed nodes, and each slice field before and after. Calculated off the writer, never committed. The optional `fields` (default true; additive, 2026-11-24): false gives the path and removals alone with no calculation, which the window shows at once; a newer hover preview with fields cancels an older one's calculation (`App::preview_tree_hover`). |
 
 `GameData` builds the tree and its layout DTO when the bundle loads. A stat no description prints is shown as its ID and value (ADR-015), except one the game declares without a description.

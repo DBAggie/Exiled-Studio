@@ -55,6 +55,35 @@ describe('passive tree', () => {
     )
   })
 
+  it('is one Tab stop, says what a button changes, and asks with Escape to cancel', async () => {
+    const { user } = await openTree()
+    await user.click(screen.getByRole('button', { name: 'Keystones' }))
+    const rows = screen
+      .getAllByRole('button')
+      .filter((b) => b.hasAttribute('data-row'))
+    expect(rows.filter((b) => b.tabIndex === 0)).toHaveLength(1)
+    rows[0]?.focus()
+    // The node's lines and the count of nodes the button would allocate.
+    await waitFor(() =>
+      expect(rows[0]?.getAttribute('aria-describedby') ?? '').toContain('told'),
+    )
+    const told = rows[0]?.getAttribute('aria-describedby')?.split(' ').at(-1)
+    expect(document.getElementById(told ?? '')?.textContent).toMatch(
+      /^Allocates (this node only|\d+ nodes)/,
+    )
+    if (rows.length > 1) {
+      await user.keyboard('{ArrowDown}')
+      expect(document.activeElement).toBe(rows[1])
+    }
+
+    const reset = screen.getByRole('button', { name: 'Reset tree' })
+    await user.click(reset)
+    await screen.findByRole('alertdialog')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect(document.activeElement).toBe(reset)
+  })
+
   it('chooses a mastery effect, the ascendancy, and the class', async () => {
     const { user } = await openTree()
     await user.click(screen.getByRole('button', { name: 'Notables' }))

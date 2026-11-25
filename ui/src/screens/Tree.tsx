@@ -12,7 +12,7 @@
 // ascendancy, and a reset are one undoable change each. Nodes the editor
 // keeps but does not edit (bloodline passives, cluster jewels' nodes) are
 // drawn faded and listed as kept.
-import { Dialog } from 'radix-ui'
+import { AlertDialog, Dialog } from 'radix-ui'
 import {
   useCallback,
   useEffect,
@@ -759,7 +759,9 @@ function NodeCard({
           ))}
         </ul>
       )}
-      {!node.modelled ? (
+      {node['anoint-only'] === true ? (
+        <p className="muted small-text">{t('tree.anointOnly')}</p>
+      ) : !node.modelled ? (
         <p className="muted small-text">{t('tree.keptNote')}</p>
       ) : tree.locked != null ? null : preview === 'refused' ? (
         node.kind !== 'class-start' &&
@@ -885,6 +887,13 @@ function MasteryPicker({
  * `JEWEL_CLASSES`). */
 const JEWEL_CLASSES = ['Jewel', 'AbyssJewel']
 
+/** A jewel's lines in the picker, in one wrapped run: jewels of one base
+ * often share their first lines, so the ones that differ must show. */
+function JewelLines({ lines }: { lines: string[] | undefined }) {
+  if (lines === undefined || lines.length === 0) return null
+  return <span className="jewel-lines small-text">{lines.join(' · ')}</span>
+}
+
 function JewelPicker({
   node,
   tree,
@@ -920,6 +929,26 @@ function JewelPicker({
   }
   const elsewhere = (item: number) =>
     tree.jewels?.find((j) => j.item === item && j.node !== node?.id)
+  // Each jewel's lines as the game prints them, so jewels of one base can
+  // be told apart (maintainer 2026-11-24): asked for when the picker opens.
+  const [lines, setLines] = useState<ReadonlyMap<number, string[]>>(new Map())
+  const ids = jewels.map((j) => j.id).join(',')
+  useEffect(() => {
+    if (node === null || ids === '') return
+    let live = true
+    for (const id of ids.split(',').map(Number)) {
+      void dispatch(query((api) => api.item(id))).then((v) => {
+        if (!live || v === null) return
+        const shown = v.lines
+          .filter((l) => l.kind === 'modifier' && l.status !== 'excluded')
+          .map((l) => l.shown ?? l.text)
+        setLines((m) => new Map(m).set(id, shown))
+      })
+    }
+    return () => {
+      live = false
+    }
+  }, [dispatch, node, ids])
   return (
     <Dialog.Root open={node !== null} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
@@ -943,6 +972,7 @@ function JewelPicker({
                     >
                       <span className="picker-name">{j.name}</span>
                       <span className="muted small-text">{j.base}</span>
+                      <JewelLines lines={lines.get(j.id)} />
                       {socketed === j.id ? (
                         <span className="jewel-where small-text">
                           {t('tree.inThisSocket')}
@@ -1009,6 +1039,62 @@ function TreeList({
   search: string
   onActivate: (node: TreeNodeView) => void
 }) {
+  const dispatch = useAppDispatch()
+  const listId = useId()
+  // The list is one Tab stop; the arrow keys, Home, and End move inside it
+  // (keyboard test B1: 60 Tabs did not leave the notables).
+  const [active, setActive] = useState(0)
+  const list = useRef<HTMLUListElement>(null)
+  const onListKey = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    const buttons = [
+      ...(list.current?.querySelectorAll<HTMLButtonElement>(
+        'button[data-row]',
+      ) ?? []),
+    ]
+    if (buttons.length === 0) return
+    const at = Math.max(0, buttons.indexOf(e.target as HTMLButtonElement))
+    const to =
+      e.key === 'ArrowDown'
+        ? Math.min(buttons.length - 1, at + 1)
+        : e.key === 'ArrowUp'
+          ? Math.max(0, at - 1)
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? buttons.length - 1
+              : null
+    if (to === null) return
+    e.preventDefault()
+    setActive(to)
+    buttons[to]?.focus()
+  }
+  // What the focused row's button would do, said before it is pressed:
+  // the path's or the removal's node count (the preview without fields).
+  const [told, setTold] = useState<{ node: number; text: string } | null>(null)
+  const tell = (n: TreeNodeView, on: boolean) => {
+    if (
+      n.kind === 'mastery' ||
+      n.kind === 'jewel-socket' ||
+      tree.locked != null
+    )
+      return
+    void dispatch(query((api) => api.previewTree(tree.spec, n.id, false))).then(
+      (p) => {
+        if (p === null) return
+        const count = on ? p.removed.length : p.path.length
+        setTold({
+          node: n.id,
+          text: on
+            ? count <= 1
+              ? t('tree.list.removesOne')
+              : t('tree.list.removes', { n: count })
+            : count <= 1
+              ? t('tree.list.allocatesOne')
+              : t('tree.list.allocates', { n: count }),
+        })
+      },
+    )
+  }
   const [section, setSection] = useState<Section>(
     search.trim() === '' ? 'allocated' : 'found',
   )
@@ -1065,8 +1151,13 @@ function TreeList({
       {shown.length === 0 ? (
         <p className="muted">{t('tree.listEmpty')}</p>
       ) : (
-        <ul className="tree-node-list" aria-label={t('tree.listLabel')}>
-          {shown.slice(0, 300).map((n) => {
+        <ul
+          ref={list}
+          className="tree-node-list"
+          aria-label={t('tree.listLabel')}
+          onKeyDown={onListKey}
+        >
+          {shown.slice(0, 300).map((n, i) => {
             const on = allocated.has(n.id)
             const start =
               n.kind === 'class-start' || n.kind === 'ascendancy-start'
@@ -1077,15 +1168,43 @@ function TreeList({
                   <span className="muted small-text">
                     {kindText(n)}
                     {on && ` · ${t('tree.allocated')}`}
-                    {!n.modelled && ` · ${t('tree.kept')}`}
+                    {n['anoint-only'] === true
+                      ? ` · ${t('tree.anointOnlyShort')}`
+                      : !n.modelled && ` · ${t('tree.kept')}`}
                   </span>
                   {n.lines.length > 0 && (
-                    <p className="small-text">{n.lines.join(' · ')}</p>
+                    <p className="small-text" id={`${listId}-${n.id}`}>
+                      {n.lines.join(' · ')}
+                    </p>
+                  )}
+                  {told?.node === n.id && (
+                    <p className="small-text" id={`${listId}-${n.id}-told`}>
+                      {told.text}
+                    </p>
                   )}
                   {n.flavour != null && <Flavour text={n.flavour} />}
                 </div>
                 {n.modelled && !start && tree.locked == null && (
-                  <button type="button" onClick={() => onActivate(n)}>
+                  <button
+                    type="button"
+                    data-row
+                    tabIndex={i === Math.min(active, shown.length - 1) ? 0 : -1}
+                    // Same-named nodes are told apart by their lines, and
+                    // the count of nodes it changes once known.
+                    aria-describedby={
+                      [
+                        n.lines.length > 0 ? `${listId}-${n.id}` : null,
+                        told?.node === n.id ? `${listId}-${n.id}-told` : null,
+                      ]
+                        .filter((x) => x !== null)
+                        .join(' ') || undefined
+                    }
+                    onFocus={() => {
+                      setActive(i)
+                      tell(n, on)
+                    }}
+                    onClick={() => onActivate(n)}
+                  >
                     {n.kind === 'mastery'
                       ? t('tree.chooseEffectFor', { node: n.name })
                       : on &&
@@ -1221,6 +1340,7 @@ export function Tree() {
     | { kind: 'convert'; version: string; dropped: number }
     | null
   >(null)
+  const confirmOpener = useRef<HTMLElement | null>(null)
   const [specForm, setSpecForm] = useState<{
     kind: 'new' | 'copy' | 'rename'
     title: string
@@ -1553,60 +1673,89 @@ export function Tree() {
           )}
         </form>
       )}
-      {confirm !== null && (
-        <div
-          className="panel"
-          role="alertdialog"
-          aria-labelledby={`${classId}-c`}
-        >
-          <p id={`${classId}-c`}>
-            {confirm.kind === 'reset'
-              ? t('tree.resetAsk')
-              : confirm.kind === 'delete'
-                ? t('tree.specDeleteAsk', { name: specTitle })
-                : confirm.kind === 'convert'
-                  ? t('tree.convertAsk', {
-                      version: confirm.version,
-                      n: confirm.dropped,
-                    })
-                  : t('tree.classAsk')}
-          </p>
-          <div className="row">
-            <button
-              type="button"
-              className="primary"
-              onClick={() => {
-                const command =
-                  confirm.kind === 'reset'
-                    ? { 'reset-tree': { spec: tree.spec } }
+      {/* A modal: Escape cancels, and the focus goes back to the button
+          that asked (keyboard test B1, 2026-11-24). */}
+      <AlertDialog.Root
+        open={confirm !== null}
+        onOpenChange={(open) => !open && setConfirm(null)}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="dialog-overlay" />
+          <AlertDialog.Content
+            className="dialog-content"
+            // No trigger element: remember the button that asked, and give
+            // the focus back to it on close.
+            onOpenAutoFocus={() => {
+              const at = document.activeElement
+              confirmOpener.current = at instanceof HTMLElement ? at : null
+            }}
+            onCloseAutoFocus={(e) => {
+              if (confirmOpener.current?.isConnected === true) {
+                e.preventDefault()
+                confirmOpener.current.focus()
+              }
+            }}
+          >
+            {confirm !== null && (
+              <>
+                <AlertDialog.Title>
+                  {confirm.kind === 'reset'
+                    ? t('tree.resetAsk')
                     : confirm.kind === 'delete'
-                      ? { 'delete-spec': { spec: tree.spec } }
+                      ? t('tree.specDeleteAsk', { name: specTitle })
                       : confirm.kind === 'convert'
-                        ? { 'convert-tree-version': { spec: tree.spec } }
-                        : {
-                            'select-class': {
-                              spec: tree.spec,
-                              class: confirm.class,
-                            },
-                          }
-                setConfirm(null)
-                void dispatch(run(command))
-              }}
-            >
-              {confirm.kind === 'reset'
-                ? t('tree.reset')
-                : confirm.kind === 'delete'
-                  ? t('tree.specDelete')
-                  : confirm.kind === 'convert'
-                    ? t('tree.convert', { version: confirm.version })
-                    : t('tree.changeClass')}
-            </button>
-            <button type="button" onClick={() => setConfirm(null)}>
-              {t('tree.cancel')}
-            </button>
-          </div>
-        </div>
-      )}
+                        ? t('tree.convertAsk', {
+                            version: confirm.version,
+                            n: confirm.dropped,
+                          })
+                        : t('tree.classAsk')}
+                </AlertDialog.Title>
+                <AlertDialog.Description className="visually-hidden">
+                  {t('tree.confirmHelp')}
+                </AlertDialog.Description>
+                <div className="row">
+                  <AlertDialog.Action asChild>
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => {
+                        const command =
+                          confirm.kind === 'reset'
+                            ? { 'reset-tree': { spec: tree.spec } }
+                            : confirm.kind === 'delete'
+                              ? { 'delete-spec': { spec: tree.spec } }
+                              : confirm.kind === 'convert'
+                                ? {
+                                    'convert-tree-version': { spec: tree.spec },
+                                  }
+                                : {
+                                    'select-class': {
+                                      spec: tree.spec,
+                                      class: confirm.class,
+                                    },
+                                  }
+                        setConfirm(null)
+                        void dispatch(run(command))
+                      }}
+                    >
+                      {confirm.kind === 'reset'
+                        ? t('tree.reset')
+                        : confirm.kind === 'delete'
+                          ? t('tree.specDelete')
+                          : confirm.kind === 'convert'
+                            ? t('tree.convert', { version: confirm.version })
+                            : t('tree.changeClass')}
+                    </button>
+                  </AlertDialog.Action>
+                  <AlertDialog.Cancel asChild>
+                    <button type="button">{t('tree.cancel')}</button>
+                  </AlertDialog.Cancel>
+                </div>
+              </>
+            )}
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
       {locked !== null && (
         <div className="panel row" role="status">
           <p>{t('tree.locked', { why: locked })}</p>

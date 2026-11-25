@@ -345,7 +345,14 @@ function NavButton({
         type="button"
         aria-current={current ? 'page' : undefined}
         title={label}
-        onClick={() => dispatch(actions.go(screen))}
+        onClick={() => {
+          // The screen already shown does not mount again: move the focus
+          // to its heading as a new screen would (keyboard test B1).
+          dispatch(actions.go(screen))
+          if (current) {
+            document.querySelector<HTMLElement>('h1[tabindex]')?.focus()
+          }
+        }}
       >
         <Icon name={icon} />
         <span className="nav-text">{label}</span>

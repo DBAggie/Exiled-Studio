@@ -887,10 +887,18 @@ export const en = {
   'tree.convert': 'Convert to {version}',
   'tree.convertAsk':
     'Convert this passive tree to {version}? A converted copy is added after it and becomes active; {n} allocated nodes the new tree lacks or no longer connects are left out. The old tree stays.',
+  'tree.anointOnly':
+    'Granted only by anointing an amulet with oils; it cannot be allocated on the tree.',
+  'tree.anointOnlyShort': 'anointment only',
   'tree.keptNote': 'Kept as imported; Exiled Studio does not edit this node.',
   'tree.unreachable': 'No path reaches this node.',
   'tree.calculating': 'Calculating the change…',
+  'tree.confirmHelp': 'Confirm, or press Escape to cancel.',
   'tree.allocates': 'Click to allocate {n} nodes.',
+  'tree.list.allocates': 'Allocates {n} nodes, with the path to it.',
+  'tree.list.allocatesOne': 'Allocates this node only.',
+  'tree.list.removes': 'Removes {n} nodes: it and those left unconnected.',
+  'tree.list.removesOne': 'Removes this node only.',
   'tree.allocatesOne': 'Click to allocate this node.',
   'tree.removes': 'Click to remove {n} nodes.',
   'tree.removesOne': 'Click to remove this node.',

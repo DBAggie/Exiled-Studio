@@ -71,6 +71,9 @@ pub struct Node {
     /// Whether the game marks it as a cluster jewel's (the passives
     /// table's `expansion`): a socket or node of the cluster areas.
     pub expansion: bool,
+    /// Whether only an anointment grants it (the passives table's
+    /// `anoint_only`): never modelled, since no path reaches it.
+    pub anoint_only: bool,
 }
 
 /// A group of nodes around one centre.
@@ -256,6 +259,7 @@ impl Tree {
                         modelled: false,
                         cluster_area: false,
                         expansion: row.expansion,
+                        anoint_only: row.anoint_only,
                     },
                 );
             }

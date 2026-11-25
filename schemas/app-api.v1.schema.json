@@ -4875,6 +4875,11 @@
       "description": "One node of the tree.",
       "type": "object",
       "properties": {
+        "anoint-only": {
+          "description": "Whether only an anointment grants it (the passives table's\n`anoint_only`: Blight's notables): drawn where the tree data\nplaces it, as PoB does, never allocated on the tree (additive,\n2026-11-24).",
+          "type": "boolean",
+          "default": false
+        },
         "ascendancy": {
           "description": "The ascendancy it belongs to (its ID), if any.",
           "type": [

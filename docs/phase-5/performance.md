@@ -217,4 +217,5 @@ Both stay inside the item-edit preview's 300 ms; at 231 ms the largest builds we
   - every row of a list is a Tab stop with no way past (60 Tabs did not leave the Notables list);
   - the Delete tree confirmation does not close on Escape, and after Cancel the focus falls to the page;
   - Enter on the screen already shown does not move the focus to its heading.
+  Fixed in PR #168 (2026-11-24) except the canvas: the confirmations are a modal (Escape cancels, the focus returns), each list is one Tab stop with the arrow keys inside, each list button is described by its node's lines and what it changes, and the current screen's navigation button moves the focus to its heading. Tests: `ui/src/test/tree.test.tsx`, "is one Tab stop, says what a button changes, and asks with Escape to cancel".
 - **The screen reader pass** is still the maintainer's (it needs a person listening).

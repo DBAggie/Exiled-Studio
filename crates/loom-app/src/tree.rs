@@ -904,6 +904,7 @@ fn node_view(
         mastery_group: n.mastery_group.clone(),
         modelled: n.modelled,
         cluster_area: n.cluster_area,
+        anoint_only: n.anoint_only,
         links: n.neighbours.iter().copied().filter(|m| *m > n.id).collect(),
         lines: lines(&n.stats),
         flavour: None,
