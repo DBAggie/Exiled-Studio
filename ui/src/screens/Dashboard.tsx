@@ -62,19 +62,19 @@ import {
   useDataName,
 } from '../util'
 import { useBuildDashboards } from '../buildDashboards'
+import { ReasonSummary } from '../ReasonDetails'
+import { entriesOf } from '../reasons'
 import { MAX_NAME, MAX_SNAPSHOTS, markOfKept } from '../kept'
 
-function why(f: FieldResult): string | null {
-  if (f.state === 'unsupported' && f.reason != null) {
-    return reasonText(f.reason)
-  }
-  if (f.state === 'indeterminate' && f.indeterminate !== undefined) {
-    return f.indeterminate.map(reasonText).join(' ')
-  }
-  if (f.state === 'partial' && f.unsupported !== undefined) {
-    return f.unsupported.map(reasonText).join(' ')
-  }
-  return null
+/** A field's one reason about no particular thing, as its sentence (a
+ * row says it; several reasons are behind the card's Details and the
+ * breakdown). */
+function loneReason(f: FieldResult): string | null {
+  const entries = entriesOf(f)
+  const first = entries[0]
+  return entries.length === 1 && first?.target.kind === 'none'
+    ? reasonText(first.code)
+    : null
 }
 
 /** The rows a stat list shows before "Show all" (a list only a little
@@ -135,14 +135,23 @@ function FieldPanel({
 }) {
   const dispatch = useAppDispatch()
   const [all, setAll] = useState(false)
-  const ordered = headlineFirst(fields)
+  // Several numbers with the same lone reason are said once, under the
+  // rows (not one sentence a row).
+  const bare = new Map<string, FieldResult[]>()
+  for (const f of fields) {
+    const reason = numberOf(f) === null ? loneReason(f) : null
+    if (reason !== null) bare.set(reason, [...(bare.get(reason) ?? []), f])
+  }
+  const folded = [...bare].filter(([, list]) => list.length > 2)
+  const hidden = new Set(folded.flatMap(([, list]) => list))
+  const ordered = headlineFirst(fields.filter((f) => !hidden.has(f)))
   const long = ordered.length > SHORT + 2
   const shown = all || !long ? ordered : ordered.slice(0, SHORT)
   return (
     <Panel id={id} title={title} hint={hint}>
       <ul className="stat-list">
         {shown.map((f) => {
-          const reason = why(f)
+          const reason = loneReason(f)
           const negative =
             f.field.startsWith('resistance.') &&
             typeof f.value === 'number' &&
@@ -182,6 +191,15 @@ function FieldPanel({
           )
         })}
       </ul>
+      {folded.map(([reason, list]) => (
+        <p key={reason} className="reason-summary">
+          {t('dashboard.folded', {
+            n: list.length,
+            reason,
+            list: list.map((f) => fieldLabel(f.field)).join(', '),
+          })}
+        </p>
+      ))}
       {long && (
         <button
           type="button"
@@ -191,7 +209,7 @@ function FieldPanel({
         >
           {all
             ? t('dashboard.showFewer')
-            : t('dashboard.showAll', { n: fields.length })}
+            : t('dashboard.showAll', { n: ordered.length })}
         </button>
       )}
     </Panel>
@@ -333,10 +351,16 @@ function MainSkillPanel({ build, id }: { build: BuildView; id: string }) {
  * the pinned numbers and its trend over this session's changes. */
 function StatTile({
   field,
+  fields,
+  skill,
   id,
   baseline,
 }: {
   field: FieldResult | undefined
+  /** Every field: a minion build's hit points at its minion's. */
+  fields: FieldResult[]
+  /** The main skill's name. */
+  skill: string | null | undefined
   id: string
   baseline: Mark | null
 }) {
@@ -351,10 +375,43 @@ function StatTile({
       </section>
     )
   }
-  const reason = why(field)
   const trend = trail
     .map((m) => m.fields[field.field])
     .filter((v): v is number => typeof v === 'number')
+  // A minion build's own hit: the damage is the minions' (maintainer
+  // 2026-11-24).
+  const minion =
+    field.field === 'hit-dps' && numberOf(field) === null
+      ? fields.find((f) => f.field === 'minion.hit-dps')
+      : undefined
+  if (minion !== undefined) {
+    return (
+      <section className="panel stat-tile" aria-labelledby={id}>
+        <div className="stat-tile-button">
+          <h2 id={id} className="small-text">
+            {fieldLabel(field.field)}
+          </h2>
+          <span className="stat-tile-words">{t('dashboard.minionDamage')}</span>
+        </div>
+        <p className="reason-summary">
+          {skill == null
+            ? t('dashboard.minionDeals')
+            : t('dashboard.minionSkill', { skill })}
+          {numberOf(minion) === null && ` ${t('dashboard.minionNotYet')}`}
+          {' · '}
+          <button
+            type="button"
+            className="link"
+            onClick={() => dispatch(actions.breakdown(minion.field))}
+          >
+            {numberOf(minion) === null
+              ? t('dashboard.minionWhy')
+              : t('dashboard.minionLink', { value: fieldValue(minion) })}
+          </button>
+        </p>
+      </section>
+    )
+  }
   return (
     <section className="panel stat-tile" aria-labelledby={id}>
       <button
@@ -362,9 +419,12 @@ function StatTile({
         className="stat-tile-button"
         onClick={() => dispatch(actions.breakdown(field.field))}
       >
-        <h2 id={id} className="small-text">
-          {fieldLabel(field.field)}
-        </h2>
+        <span className="stat-tile-head">
+          <h2 id={id} className="small-text">
+            {fieldLabel(field.field)}
+          </h2>
+          {field.state !== 'complete' && <FieldBadge field={field} />}
+        </span>
         <span className="stat-tile-line">
           <span className="stat-tile-value">{fieldValue(field)}</span>
           <Sparkline values={trend} />
@@ -372,9 +432,8 @@ function StatTile({
         {baseline !== null && (
           <Delta now={numberOf(field)} before={baseline.fields[field.field]} />
         )}
-        {field.state !== 'complete' && <FieldBadge field={field} />}
-        {reason !== null && <span className="reason">{reason}</span>}
       </button>
+      <ReasonSummary field={field} />
     </section>
   )
 }
@@ -431,6 +490,8 @@ function Component({
       return (
         <StatTile
           field={fields.find((f) => f.field === c.field)}
+          fields={fields}
+          skill={build['main-skill']}
           id={id}
           baseline={baseline}
         />

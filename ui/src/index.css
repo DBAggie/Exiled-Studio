@@ -2791,3 +2791,83 @@ button.inv-slot:focus-visible {
 .skill-group-title p {
   margin: 0;
 }
+
+/* ------------------------------------------------- what is not counted */
+
+/* A card's one line about what its value leaves out. */
+.reason-summary {
+  margin: 6px 0 0;
+  color: var(--c-soft);
+  font-size: 0.857rem;
+}
+
+.stat-tile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.stat-tile-words {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.reason-groups {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.reason-group {
+  border-top: 1px solid var(--c-row);
+}
+
+.reason-group > summary,
+.reason-codes > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+
+.reason-codes {
+  border-top: 1px solid var(--c-row);
+  color: var(--c-muted);
+  font-size: 0.857rem;
+}
+
+.reason-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--c-soft);
+}
+
+.reason-group > ul,
+.reason-codes > ul {
+  margin: 0 0 10px;
+  padding: 0 4px;
+  list-style: none;
+}
+
+.reason-group li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.reason-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.reason-group li > .link {
+  flex-shrink: 0;
+  max-width: 45%;
+  text-align: end;
+  overflow-wrap: anywhere;
+}

@@ -530,6 +530,28 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
         },
         { field: 'hit-dps', state: 'unsupported', reason: 'not-computed' },
         {
+          field: 'energy-shield',
+          state: 'partial',
+          value: 40,
+          node: null,
+          unsupported: [
+            {
+              'unresolved-line': {
+                source: { item: { item: 1, line: 5 } },
+                reason: 'no-template',
+              },
+            },
+            {
+              'unmapped-stat': {
+                stat: 'some_internal_stat_id',
+                source: { item: { item: 1, line: 4 } },
+              },
+            },
+            { 'unmodelled-config': { input: 'conditionFullLife' } },
+            { 'unmodelled-config': { input: 'conditionFullLife' } },
+          ],
+        },
+        {
           field: 'average-damage',
           state: 'indeterminate',
           indeterminate: [{ 'unsettled-value': { source: 'enemy' } }],

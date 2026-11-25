@@ -103,6 +103,51 @@ describe('UX High fixes', () => {
     ).toBe('true')
   })
 
+  it('says what a card leaves out in one line, with grouped Details', async () => {
+    const { user } = await importBuild()
+    const tile = screen
+      .getByRole('heading', { name: 'Energy shield', level: 2 })
+      .closest('section') as HTMLElement
+    expect(within(tile).getByText('40')).toBeTruthy()
+    expect(within(tile).getByText(/4 things not counted yet/)).toBeTruthy()
+    // No stat ID, code, or repeated sentence on the card.
+    expect(within(tile).queryByText(/some_internal_stat_id/)).toBeNull()
+    expect(within(tile).queryByText(/unmapped-stat/)).toBeNull()
+    await user.click(
+      within(tile).getByRole('button', {
+        name: 'Details: what Energy shield does not count yet',
+      }),
+    )
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Energy shield · 4 things not counted yet',
+    })
+    // Grouped and counted, each thing by the game's text with its place.
+    const group = (name: string) =>
+      within(dialog).getByText(name).closest('details') as HTMLElement
+    const lines = group('Lines not read yet')
+    expect(within(lines).getByText('1')).toBeTruthy()
+    expect(await within(lines).findByText('Nothing like this')).toBeTruthy()
+    const stats = group('Modifiers read but not counted yet')
+    expect(await within(stats).findByText('+12 to Accuracy')).toBeTruthy()
+    const config = group('Configuration options not counted yet')
+    expect(within(config).getByText('2')).toBeTruthy()
+    expect(within(config).getByText('× 2')).toBeTruthy()
+    // Codes and stat IDs only under the technical detail.
+    const codes = within(dialog)
+      .getByText('Show technical detail')
+      .closest('details') as HTMLElement
+    expect(within(codes).getByText(/unmodelled-config 2/)).toBeTruthy()
+    expect(
+      within(codes).getByText('unmapped-stat: some_internal_stat_id'),
+    ).toBeTruthy()
+    // A thing's link leads to it and closes the dialog.
+    await user.click(
+      within(lines).getByRole('button', { name: 'Loom Test Band' }),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await screen.findByRole('heading', { name: /Loom Test Band/, level: 1 })
+  })
+
   it('shows the active item set first and switches sets (UX-02)', async () => {
     const { user, api } = await importBuild()
     await user.click(screen.getByRole('button', { name: 'Equipment' }))

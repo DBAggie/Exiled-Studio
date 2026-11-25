@@ -14,12 +14,13 @@ import type {
 import { type ChartPoint, Delta, LineChart } from '../charts'
 import { FieldBadge, ScreenHeading } from '../components'
 import { OFFENCE, fieldLabel, formatNumber, t, tOr } from '../i18n'
+import { ReasonGroups } from '../ReasonDetails'
+import { readReason } from '../reasons'
 import { actions, query } from '../store'
 import {
   fieldValue,
   itemName,
   numberOf,
-  reasonText,
   useAppDispatch,
   useAppSelector,
   withUnit,
@@ -715,11 +716,7 @@ export function Breakdown() {
             <div className="panel-head">
               <h2 id="br-h">{t('breakdown.reasons')}</h2>
             </div>
-            <ul>
-              {reasons.map((r, i) => (
-                <li key={i}>{reasonText(r)}</li>
-              ))}
-            </ul>
+            <ReasonGroups entries={reasons.map(readReason)} />
             <button
               type="button"
               className="link"
