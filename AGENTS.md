@@ -165,7 +165,10 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/config-options.ps1
 # builds in tools/oracle/fixtures/community/ (SOURCES.md, ADR-007 Amendment 1) by SHA-256, each with
 # its expected outcome; exit 0 when all are met). CI runs the same in the required `oracle` job
 # (Linux under `unshare -rn`, Windows) and compares the two platforms with oracle-compare, which
-# fails on an unregistered difference (exit 20); both jobs are in ci-ok since Spike C's C5:
+# fails on an unregistered difference (exit 20); both jobs are in ci-ok since Spike C's C5;
+# on a pull request the job runs only the smoke set (every fixture not mechanic or community) and the
+# fixtures the pull request adds or changes, and every fixture when it touches the oracle itself or has the
+# label oracle-full; pushes to dev, experimental, main run all (.github/scripts/oracle-select.py):
 cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> tools/oracle/fixtures/fixtures.json
 # The maintainer's corpus (local only, ADR-007): --anonymous names builds by SHA-256, so the report
 # holds no file names; commit only scrubbed summaries (docs/spikes/spike-c/):
