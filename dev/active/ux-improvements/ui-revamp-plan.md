@@ -158,7 +158,7 @@ Stacked on #177, PR #178, branch `feat/ui-revamp-about`. The mockup is the canva
 **Step 4 is complete** with this: the start page, Configuration, Lines to review, the page after an import, the Dashboard's layout, Equipment, Skills, and About. Step 5, the passive tree, is next and needs its mockup first.
 
 ## Step 5: the passive tree (2026-11-25)
-Stacked on #178, branch `feat/ui-revamp-tree`. The mockups are the canvas's "Passive tree, whole" and "Passive tree, close" boards, with the maintainer's two answers: "icons zoomed out and in, fade zoomed out".
+Stacked on #178, PR #179, branch `feat/ui-revamp-tree`. The mockups are the canvas's "Passive tree, whole" and "Passive tree, close" boards, with the maintainer's two answers: "icons zoomed out and in, fade zoomed out".
 
 - **The game's node icons stay at every zoom** (the mockup's plain shapes are not built).
 - **Zoomed out, what is not taken fades** (`FADE_FROM`, `FADE_TO`, `FADE_MIN` in `ui/src/screens/Tree.tsx`): nodes and links not taken go down to 35% of their strength at the fitted view, so the taken path is the one bright shape. Taken nodes, the path a click would take, removals, search matches, the node under the pointer, and the class starts keep their strength. A taken link stays at least 2 px wide.
