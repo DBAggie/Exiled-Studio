@@ -41,7 +41,7 @@ The maintainer's request on 2026-11-15:
   - The smoke run's build info reports the channel, and `tools/package/smoke.ps1` and `smoke.sh` check it against `LOOM_CHANNEL`.
 - **`crates/loom-tauri/tauri.experimental.conf.json`** carries the name, binary, identifier, window title, and update endpoint.
   - `tauri build` takes it with `--config`.
-  - The portable zip's plain `cargo build` takes it from `TAURI_CONFIG`.
+  - A plain `cargo build` takes it from `TAURI_CONFIG` (no release step builds one since the portable zip was dropped, 2026-11-25).
   - `crates/loom-tauri/tests/release_config.rs` checks that it differs from the stable configuration only where it must.
 
 ### The release workflow

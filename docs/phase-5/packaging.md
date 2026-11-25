@@ -1,6 +1,6 @@
 # Packaging (Phase 5, P1)
 
-The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): installers and portable packages for Windows and Linux, one version policy, a PR-time `package` job, and a `release` workflow that installs, starts, and uninstalls every artifact.
+The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): installers for Windows and Linux, one version policy, a PR-time `package` job, and a `release` workflow that installs, starts, and uninstalls every artifact.
 
 ## Artifacts
 
@@ -8,7 +8,6 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
 |---|---|---|---|---|
 | NSIS setup (`*_x64-setup.exe`) | Windows | `tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json` | per user, `%LOCALAPPDATA%\Exiled Studio` | installs the new version itself |
 | MSI (`*_x64_en-US.msi`) | Windows | `tauri build --bundles msi` | per machine, `%ProgramFiles%\Exiled Studio` | installs the new version itself |
-| Portable zip (`*_x64-portable.zip`) | Windows | `tools/package/portable.ps1` | anywhere it is unpacked | notifies only |
 | AppImage | Linux | `tauri build --bundles appimage` | runs where it is | installs the new version itself |
 | `.deb` | Linux | `tauri build --bundles deb` | `/usr/bin/exiled-studio` | notifies only |
 
@@ -17,12 +16,13 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
   - The NSIS setup carries Microsoft's offline WebView2 installer (`tauri.nsis.conf.json`), so installing needs no network (ADR-010, "fully useful offline"). It adds about 130 MB to the setup.
   - The MSI and the default config embed the small bootstrapper, which downloads WebView2 if the machine lacks it. Windows 10 and 11 ship WebView2, so this only matters on machines where it was removed.
   - The portable zip expects WebView2 to be present.
-- **Portable zip.** It holds `Exiled Studio.exe`, a `portable` marker file, and the license. With the marker beside it, the application keeps its data in `data\` beside the executable, not in the user's application data folder (`loom_tauri::release::portable_data`). `LOOM_DATA_DIR` still wins, for development.
-- **One trap:** `tauri build` patches the executable in place with its installer type (Tauri's `__TAURI_BUNDLE_TYPE`). The portable zip is therefore made from the executable `cargo build` writes, before any `tauri build`. Otherwise it would report itself as an installer and try to update itself.
+- **No portable zip** (maintainer 2026-11-25: "I don't think we really need a portable version. A standard installation of the application I think is ideal"). The release made one through 0.9.0; from the next release it makes none, and the download page does not list an old release's. A copy already unpacked keeps working and still tells its user of a new version, whose page offers the installers.
+- **The PR test zip.** CI's `package` job still makes the zip (`tools/package/portable.ps1`), as the build the maintainer downloads to test a pull request without installing (`docs/phase-5/maintainer-tests.md`); it is never a release asset. It holds `Exiled Studio.exe`, a `portable` marker file, and the license. With the marker beside it, the application keeps its data in `data\` beside the executable, not in the user's application data folder (`loom_tauri::release::portable_data`). `LOOM_DATA_DIR` still wins, for development.
+- **One trap:** `tauri build` patches the executable in place with its installer type (Tauri's `__TAURI_BUNDLE_TYPE`). The test zip is therefore made from the executable `cargo build` writes, before any `tauri build`. Otherwise it would report itself as an installer and try to update itself.
 - **The knowledge MCP server** (ADR-018). Every installer carries `exiled-studio-knowledge-mcp` beside the application: in the install folder on Windows, in `/usr/bin` in the `.deb` and the AppImage.
   - It is a Tauri sidecar: `tools/package/knowledge-sidecar.sh` builds it and copies it to `crates/loom-tauri/binaries/` with the host's target triple in its name (ignored by git), and `tauri build` takes it when given `--config crates/loom-tauri/tauri.knowledge.conf.json` (`bundle.externalBin`).
   - Only the release workflow and CI's `package` job pass that config. A plain `cargo build` or `tauri dev` does not need the binary.
-  - The portable zip has it from `portable.ps1`, and the release also ships it as its own asset.
+  - The release also ships it as its own asset.
   - The install checks find it, run `--version`, and check it is gone after uninstalling (`install-windows.ps1`, `install-deb.sh`); `appimage-sidecar.sh` checks the AppImage's.
   - **Known limitation:** an update replaces the sidecar's file. On Windows, if an MCP client is running the server during an in-app update, the file may be locked, and the installer may fail to replace it or need a restart. Closing the MCP client first avoids it.
 - **Not made:** macOS packages (out of scope), RPM.
@@ -59,10 +59,10 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
   An installed build runs with a throwaway `LOOM_DATA_DIR`, never the user's application data.
 
 ## CI
-- **`package` (every PR, gates `ci-ok`).** Windows builds the portable zip; Linux builds the AppImage (`APPIMAGE_EXTRACT_AND_RUN`, since runners have no FUSE) with the knowledge MCP sidecar inside, and checks the sidecar runs. Each is smoke-run, Linux under Xvfb. The packages are uploaded as artifacts.
+- **`package` (every PR, gates `ci-ok`).** Windows builds the test zip; Linux builds the AppImage (`APPIMAGE_EXTRACT_AND_RUN`, since runners have no FUSE) with the knowledge MCP sidecar inside, and checks the sidecar runs. Each is smoke-run, Linux under Xvfb. The packages are uploaded as artifacts.
 - **`release` (`.github/workflows/release.yml`; by hand, or on a `v*` tag).**
-  - All five artifacts are built.
-  - The portable zip and the AppImage are smoke-run.
+  - The four artifacts are built (five through 0.9.0, with the portable zip).
+  - The AppImage is smoke-run.
   - The NSIS setup and the MSI are installed silently, smoke-run from the installed folder, uninstalled silently, and the folder must be gone afterwards (`tools/package/install-windows.ps1`: NSIS `/S`, `msiexec /qn`, `msiexec /x`).
   - The `.deb` is installed with `apt-get`, smoke-run, and removed (`tools/package/install-deb.sh`).
   - On a tag, a draft GitHub release with every artifact; the maintainer writes the notes and publishes it (MQ5).
