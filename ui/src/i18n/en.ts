@@ -176,6 +176,11 @@ export const en = {
   'start.restore': 'Restore {name}',
   'start.restoreShort': 'Restore',
   'start.discardShort': 'Discard',
+  'start.discardAll': 'Discard all',
+  'start.discardAllTitle': 'Discard all unsaved work?',
+  'start.discardAllHelp':
+    'The {n} copies listed here are removed. This cannot be undone. Builds you saved are not touched.',
+  'start.discardAllConfirm': 'Discard all {n}',
   'start.recoveryWhen': 'Changed {when}',
   'start.forget': 'Remove {name} from recent builds',
   'start.forgetShort': 'Remove',

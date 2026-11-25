@@ -5,6 +5,7 @@
 // data's status is the frame's footer line (App.tsx), and a file can be
 // dropped anywhere in the window.
 import { useEffect, useId, useRef, useState } from 'react'
+import { Dialog } from 'radix-ui'
 
 import { ErrorCode, Icon, ScreenHeading } from '../components'
 import type { CrashRecord, RecentEntry } from '../api/types'
@@ -129,6 +130,47 @@ function CrashNotice() {
   )
 }
 
+/** Discards every recovery copy at once, after asking: it cannot be
+ * undone (RV-05, drawn on the Start board). */
+function DiscardAll({ ids }: { ids: string[] }) {
+  const dispatch = useAppDispatch()
+  const [open, setOpen] = useState(false)
+  const discard = async () => {
+    setOpen(false)
+    for (const id of ids) {
+      await dispatch(run({ discard: { id } }))
+    }
+    await dispatch(refreshLists())
+  }
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button type="button" className="link quiet">
+          {t('start.discardAll')}
+        </button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title>{t('start.discardAllTitle')}</Dialog.Title>
+          <Dialog.Description className="muted">
+            {t('start.discardAllHelp', { n: ids.length })}
+          </Dialog.Description>
+          <div className="row">
+            <button type="button" onClick={() => void discard()}>
+              {t('start.discardAllConfirm', { n: ids.length })}
+            </button>
+            <Dialog.Close asChild>
+              <button type="button" className="primary">
+                {t('close.cancel')}
+              </button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
 export function Start() {
   const dispatch = useAppDispatch()
   const snapshot = useAppSelector((s) => s.session.snapshot)
@@ -217,7 +259,13 @@ export function Start() {
           Import stays the page's one filled button. */}
         {recovery.length > 0 && (
           <aside className="panel recovery" aria-labelledby="recovery-h">
-            <h2 id="recovery-h">{t('start.recovery')}</h2>
+            <div className="recovery-head">
+              <h2 id="recovery-h">{t('start.recovery')}</h2>
+              {/* With one copy, its own Discard is the same thing. */}
+              {recovery.length > 1 && (
+                <DiscardAll ids={recovery.map((r) => r.id)} />
+              )}
+            </div>
             <p className="sub">{t('start.recoveryLead')}</p>
             <ul className="recovery-list">
               {recovery.map((r) => {
