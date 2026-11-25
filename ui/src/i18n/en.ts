@@ -1140,6 +1140,8 @@ export const en = {
   'ai.status.failed': 'Failed',
 
   'about.title': 'About Exiled Studio',
+  'about.versionLine': 'Version {version}',
+  'about.legal': 'Legal',
   'about.license': 'Free and open source under the MIT license.',
   'about.privacy':
     'Works offline. No account and no telemetry. The only connections it makes are the checks for a new version and for new game data, which you can turn off under Updates. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
@@ -1164,6 +1166,11 @@ export const en = {
   'updates.available': 'Update available',
   'updates.mode': 'Look for new versions of Exiled Studio',
   'updates.mode.automatic-check': 'Check at start',
+  'updates.mode.automatic-check.help':
+    'Nothing is installed without your approval',
+  'updates.mode.manual.help': 'Game data is still downloaded at start',
+  'updates.mode.strict-offline.help':
+    'No updates and no game data. Install game data from a file',
   'updates.mode.manual': 'Only when I ask',
   'updates.mode.strict-offline': 'Never connect (strict offline)',
   'updates.privacy':
@@ -1174,8 +1181,6 @@ export const en = {
   'updates.unavailable':
     'This build cannot check for updates (it carries no update key: a development build).',
   'updates.offline': 'Strict offline: Exiled Studio never connects.',
-  'updates.dataNote':
-    'Game data is downloaded for you at start unless you choose never to connect.',
   'updates.offer': 'Version {version} is available. You have {current}.',
   'updates.notes': 'What’s new',
   'updates.install': 'Install and restart',

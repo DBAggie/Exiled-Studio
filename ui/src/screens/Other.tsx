@@ -643,7 +643,7 @@ function GameData() {
     })
   }
   return (
-    <section className="stack" aria-labelledby="about-data">
+    <section className="panel stack" aria-labelledby="about-data">
       <h2 id="about-data">{t('data.heading')}</h2>
       {installed.length === 0 ? (
         <p className="muted">{t('data.noneInstalled')}</p>
@@ -810,28 +810,38 @@ export function About() {
   )
   const tree = useAppSelector((s) => s.session.snapshot?.data['tree-version'])
   return (
-    <section className="stack about">
-      <ScreenHeading>{t('about.title')}</ScreenHeading>
-      <p>{t('app.notice')}</p>
-      <dl className="about-versions">
-        <dt>{t('about.version')}</dt>
-        <dd className="mono">{__APP_VERSION__}</dd>
-        <dt>{t('about.data')}</dt>
-        <dd className="mono">
+    <section className="about">
+      <div className="page-head">
+        <ScreenHeading>{t('about.title')}</ScreenHeading>
+        <span className="mono muted small-text">
+          {t('about.versionLine', { version: __APP_VERSION__ })}
+          {' · '}
           {version == null
             ? t('about.dataNone')
             : `${dataName(version, tree)} · ${t('data.steamBuild', { build: version['steam-build'] ?? '?' })}`}
-        </dd>
-      </dl>
-      <GameData />
-      <UpdateSettings />
-      <Diagnostics />
-      <p>{t('about.license')}</p>
-      <p>{t('about.privacy')}</p>
-      <p className="muted">{t('about.fonts')}</p>
-      {LICENSES.map((l) => (
-        <LicenseText key={l.file} name={l.name} file={l.file} />
-      ))}
+        </span>
+      </div>
+      {/* Two columns: what the application fetches at the left, help and
+          the legal texts at the right; one column in a narrow window. */}
+      <div className="about-columns">
+        <div className="stack">
+          <UpdateSettings />
+          <GameData />
+        </div>
+        <div className="stack">
+          <Diagnostics />
+          <section className="panel stack" aria-labelledby="about-legal">
+            <h2 id="about-legal">{t('about.legal')}</h2>
+            <p>{t('app.notice')}</p>
+            <p>{t('about.license')}</p>
+            <p className="muted">{t('about.privacy')}</p>
+            <p className="muted">{t('about.fonts')}</p>
+            {LICENSES.map((l) => (
+              <LicenseText key={l.file} name={l.name} file={l.file} />
+            ))}
+          </section>
+        </div>
+      </div>
     </section>
   )
 }
