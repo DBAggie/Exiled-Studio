@@ -11,7 +11,7 @@ Fill in the results table at the end and send it back (or paste it into the sess
 3. **A large build to load**: `tools/oracle/fixtures/community/forged-frostbearer-spectre-necromancer.xml` from branch `feat/open-items` (`git fetch origin` then `git checkout feat/open-items` and `git pull`, or open the file on GitHub and save it).
 4. **Microsoft Edge** (for the WebView2 tools) and, for part B, NVDA (free) or Windows Narrator (built in, Ctrl+Win+Enter).
 
-Game data: on first start the application fetches the signed data from its feed (about 8 MB; the stable and experimental feeds both point to `game-data.loombundle`, game build 26530219). If it says no game data is installed, download `game-data.loombundle` from the **Exiled Studio 0.9.0** release's assets and use **Install game data from a file…** in the application; it checks the signature before installing.
+Game data: the application does not download it on its own, and the start page's **Add game data…** link opens the folder picker for unsigned development data (do not use it). Download `game-data.loombundle` (8 MB, signed, game build 26530219) from the **Exiled Studio 0.9.0** release's assets, then in the application open **About**, section **Game data**, and use **Install game data from a file…**; it should then show "Signed by the project" and "In use".
 
 ## A. Passive tree paint, frame rate, and memory (gate 9)
 

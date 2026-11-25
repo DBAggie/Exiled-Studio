@@ -56,6 +56,9 @@ Not reached in the session of 2026-11-24 either (agent work, no decision needed;
 
 - **Static Strike part 1 (S1, not reached):** its function and beam damage act only in part 2, but its zap frequency stats (`static_strike_base_zap_frequency_ms`, `static_strike_zap_speed_+%`) are unmapped; vetting part 1 needs them `NoEffect` outside part 2. Three Smite builds' `FullDPS` wait on it.
 
+## Found in the maintainer's application test (2026-11-24, agent work)
+- **Getting game data is hard for a new user.** The start page's **Add game data…** link (`ui/src/App.tsx` 726 to 732) opens the unsigned development folder picker (`chooseBundle`); the `APP_NO_DATA` message says to choose "the game data folder"; the signed install (**Install game data from a file…**) is only on the About page; and no screen offers to download the signed data from the feed. Wanted: the link and the message lead to the signed install, and a first-start "Download game data" action fetches the feed's pack.
+
 ## Housekeeping
 - PR #167's oracle jobs were still running when it merged (2026-11-24 22:15 UTC). Check that the oracle jobs of `dev`'s run at `6deeb5da` passed (still running at 23:40 UTC, 85 minutes in; about 131 expected at 531 fixtures).
 - **The oracle jobs' time:** this PR adds 4 fixtures (535 in all); at about 14.8 s each the Windows job should take about 132 minutes of its 150.
