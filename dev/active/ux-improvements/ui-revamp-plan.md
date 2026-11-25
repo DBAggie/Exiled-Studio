@@ -119,7 +119,7 @@ Stacked on #173, PR #174, branch `feat/ui-revamp-review`. The mockups are the ca
 - **Checked in the running application** on the Raise Spectre fixture: both pages, a row opened, no sideways scroll at 1,000, 1,280, and 1,600 px; a page's name in the side menu stays on one line.
 
 ## Step 4: the Dashboard's layout (2026-11-25)
-Stacked on #174, branch `feat/ui-revamp-dashboard`. The mockup is the canvas's "Dashboard layout" board.
+Stacked on #174, PR #175, branch `feat/ui-revamp-dashboard`. The mockup is the canvas's "Dashboard layout" board.
 
 - **A quarter width** (`Width` `quarter`, `ui/src/dashboards.ts`): the grid has twelve columns (was six), so four figures lead the page. It is the narrowest width and the one a new figure starts with. An application older than this drops a card of that width from a build's own dashboards, as it does any width it does not know.
 - **The default Overview:** four figures (Hit DPS, Life, Energy shield, Mana), then Defence two thirds wide beside the Main skill a third wide, then Offence and Equipment as halves, then the lines to review. Widths that differ, so the page has a first thing to read.
