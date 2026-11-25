@@ -51,8 +51,8 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 | Startup to first screen ≤ 2.0 s | 1.41 to 1.84 s with the real bundle installed (median 1.77 s, 11 runs); 0.71 to 0.82 s with no bundle (7 runs). Was 3.0 to 3.8 s (median 3.11 s) before the startup fix ("Startup", below) | yes |
 | Import and first calculation ≤ 1.5 s | import 28.8 ms + calculate 6.7 ms (medians; slowest 31.0 + 7.8 ms) | yes |
 | Item-edit preview ≤ 300 ms | one calculation, 6.7 ms (the preview applies the edit and calculates the edited build; the current result is reused) | yes |
-| Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms | yes |
-| Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | first paint 305, 197, 168 ms; pan 27 fps typical, 23 lowest; zoom 52 typical, 42 lowest (measured 2026-11-24 on a laptop, "The maintainer's application test", below) | first paint yes; pan and zoom no before the fix (remeasure) |
+| Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms; with the largest build after Phase 6 about 110 ms ("The calculation profile"); in the application on the laptop (2026-11-24): the path 8 to 64 ms, the numbers 369 to 494 ms | the path yes; the numbers not on the laptop (to measure on the reference tier) |
+| Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | first paint 305, 197, 168 ms; after the fix pan 54 fps typical, 49 lowest; zoom 58 to 59 typical, 52 to 55 lowest (before: pan 27 and 23, zoom 52 and 42; measured 2026-11-24 on a laptop, "The maintainer's application test", below) | yes (pan's lowest 49 on the laptop, one frame of 51 ms) |
 | Version conversion preview ≤ 300 ms | 0.01 to 0.41 ms: `loom_app::tree::converted` on four public builds saved on 3_27 and 3_28, with the real bundle and its packs (release build, 21 runs each; measured 2026-11-16 on `feat/tree-remaining`) | yes |
 | Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); 2026-11-24 on a laptop with the largest build and the tree open: the application 321 MB, with its WebView2 processes 616 MB, 650 MB after a minute of use | yes: the budget counts the application's process only (maintainer 2026-11-24) |
 | Installer ≤ 40 MB without the bundle | the MSI, the AppImage, the `.deb`, the portable zip: measured by the release workflow's run (gate 6); the NSIS setup with the WebView2 bootstrapper was 5.8 MB locally (P1) | exception: the NSIS setup |
@@ -146,6 +146,19 @@ Not measured here (no WebView2 run on this workstation in this session): the pan
 **The hover preview** (the maintainer, 2026-11-24: a long delay before a node's card and its path appear). The window asked for the preview 120 ms after the pointer reached a node, and the answer came with a full calculation of the build after the change (about 110 ms for the largest build on the reference tier, nested full DPS included; more on a laptop), so the path showed only with the numbers. Every node the pointer rested on started its own calculation, and none was cancelled when the pointer moved on, so they competed for the processor. Now (PR #168):
 - the path and the nodes removed come first, with no calculation (shell `preview_tree` with `fields: false`, additive), and the card says "Calculating the change…" until the numbers come;
 - a hover preview with fields cancels the previous one's calculation (`App::preview_tree_hover`), through the engine's cancel hook.
+
+**After the fixes** (the same session, same laptop and build, PR #168's package of CI run 45542395784):
+
+| Run | Typical fps (before, now) | Lowest fps (before, now) | Worst frame (before, now) |
+|---|---|---|---|
+| Idle | 60, 60 | 60, 60 | 17, 19 ms |
+| Pan, from Fit | 27, 54 | 23, 49 | 166, 51 ms |
+| Zoom, 10 ticks a second | 52, 58 | 42, 52 | 135, 67 ms |
+| Zoom, 20 ticks a second | 28, 59 | 13, 55 | 367, 48 ms |
+
+The 20-ticks run before waited for each event and did not start from Fit, so that row is not like for like. The wheel no longer scrolled the page, and the node card closed as a drag began.
+
+The hover (from the pointer's event in the page; five notables at three zoom steps, two passes each): the card 3 to 6 ms; its path ("Click to allocate", drawn with it) 8 to 64 ms; the numbers 369 to 494 ms. After a sweep of 6 or 10 nodes, 100 ms each, the last node's numbers came in 395 and 430 ms, so the superseded calculations no longer pile up. The numbers' time is one calculation of the largest build on this laptop (the reference tier's 110 ms, about 3.5 times slower here); the next lever is the per-calculation cache of resolved skills ("The calculation profile", "Next levers").
 
 **Memory** (private working set, Task Manager's figure):
 

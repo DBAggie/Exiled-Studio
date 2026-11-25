@@ -81,4 +81,6 @@ Run by an agent session on the maintainer's second workstation through the WebVi
 | B2 screen reader | not done (needs a person) |
 | C2, C3, C4 | not done (after the next release) |
 
-**Next run of part A:** on PR #168's next CI build, A5 again (pan and zoom), and the hover: the time from the pointer resting on a node to its path showing, and to its numbers showing. The maintainer checked dragging by hand (2026-11-24): no noticeable delay.
+**Rerun, 2026-11-24** (PR #168's package of CI run 45542395784; `performance.md`, "After the fixes"): pan 54 fps typical, 49 lowest; zoom 58 to 59 typical, 52 to 55 lowest; the wheel no longer scrolls the page; the hover's path in 8 to 64 ms and its numbers in 369 to 494 ms; the jewel picker as fixed. Still to do: B2, and C after the next release.
+
+**Next run of part A (before the rerun):** on PR #168's next CI build, A5 again (pan and zoom), and the hover: the time from the pointer resting on a node to its path showing, and to its numbers showing. The maintainer checked dragging by hand (2026-11-24): no noticeable delay.

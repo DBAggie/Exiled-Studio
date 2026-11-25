@@ -771,8 +771,12 @@ function NodeCard({
         <>
           <p className="small-text">
             {allocated
-              ? t('tree.removes', { n: preview.removed.length })
-              : t('tree.allocates', { n: preview.path.length })}
+              ? preview.removed.length === 1
+                ? t('tree.removesOne')
+                : t('tree.removes', { n: preview.removed.length })
+              : preview.path.length === 1
+                ? t('tree.allocatesOne')
+                : t('tree.allocates', { n: preview.path.length })}
           </p>
           {partial ? (
             <p className="muted small-text">{t('tree.calculating')}</p>
