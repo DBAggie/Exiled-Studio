@@ -58,6 +58,16 @@ PR #169, branch `feat/ui-revamp-foundations`, stacked on `feat/open-items` (PR #
 - **Not changed** (later steps): the header's two rows, the status pills, the "Partial" pills, every screen's layout, the tree's drawing.
 - **Checked in the running application** on the Raise Spectre fixture at 1,280 px: every screen, the collapsed menu (no label cut), no sideways scroll. Measured on the Dashboard: no uppercase text, no letter spacing, radii 4, 8, 12 px and the 2 px marks.
 
+## Step 2, built (2026-11-25)
+Branch `feat/ui-revamp-shell`, stacked on step 1's. The mockup is board A's header and side menu ("Board A is approved, build step 2").
+
+- **The header is one row** (`Header` in `ui/src/App.tsx`, "The revamp's shell" in `redesign.css`): the build and its state at the left; "Up to date", the stage, Undo and Redo side by side, Export, and Save at the right. Its controls are 32 px tall.
+- **The state is one quiet line of text**, not pills: "Partial · 5 warnings · Unsaved changes". Only a failure keeps its colour.
+- **A narrow window:** the state gives way first, then the name (its whole text on hover); under 1,000 px the row wraps to two.
+- **The side menu:** 34 px rows (were 40), the page shown marked by a bar and its icon in the accent, counts as quiet figures instead of amber pills.
+- **Checked in the running application** on the Raise Spectre fixture: one row of 52 px at 1,100, 1,280, and 1,600 px, two rows at 900 and 1,000 px, no sideways scroll at any; the menu's rows measured 34 px.
+- **Seen and left for step 4:** the import review's "Lines to review" column is squeezed to a few words a line at 1,280 px.
+
 ## Open
-- Step 2 (the shell) is next; its mockup is board A's header and side menu, already approved with the accent.
+- Step 3 (the completeness mark) is next; board A shows it in a stat card and a panel's rows.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

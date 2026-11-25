@@ -309,3 +309,90 @@ select {
 .dialog-content {
   border-radius: var(--radius-dialog);
 }
+
+/* ---- The revamp's shell (2026-11-25) ------------------------------------
+   One row: the build and its state at the left, the stage, Undo and Redo
+   together, Export, and Save at the right. The name and the state give way
+   first; under 1,000 px the row may wrap. */
+.app-header {
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.app-header > * {
+  flex: none;
+}
+
+.app-header > .build-name,
+.app-header > .header-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-header > .header-status {
+  flex-shrink: 100;
+}
+
+.app-header > .spacer {
+  flex: 1 1 0;
+}
+
+.header-status {
+  display: inline-flex;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.header-status .status-danger {
+  color: var(--c-danger);
+}
+
+.header-history {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.app-header button {
+  min-height: 32px;
+}
+
+.app-header button.icon {
+  width: 32px;
+}
+
+.app-header .stage-picker select {
+  min-height: 32px;
+  max-width: 15rem;
+}
+
+@media (max-width: 1000px) {
+  .app-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* The side menu: 34 px rows, the page shown marked by a bar and its icon,
+   counts as quiet figures. */
+.side-nav button {
+  min-height: 34px;
+}
+
+.side-nav button[aria-current='page'] {
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.side-nav .badge.count {
+  background: transparent;
+  border-color: transparent;
+  color: var(--c-muted);
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-rail .side-nav .nav-toggle {
+  min-height: 34px;
+}

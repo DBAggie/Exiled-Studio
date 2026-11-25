@@ -277,40 +277,50 @@ function Header() {
       <span aria-hidden="true" className="muted">
         /
       </span>
-      <span className="build-name">
+      {/* The name gives way in a narrow window: its whole text on hover. */}
+      <span className="build-name" title={build?.name || undefined}>
         {build?.name === '' || build?.name === undefined
           ? t('app.untitled')
           : build.name}
       </span>
-      {status !== null && <Badge tone={status.tone}>{status.text}</Badge>}
-      {snapshot?.dirty === true && (
-        <Badge tone="neutral">{t('header.unsaved')}</Badge>
-      )}
+      {/* The build's state, said quietly: one line of text, not pills (the
+          revamp's shell, 2026-11-25). Only a failure keeps its colour. */}
+      <span className="header-status">
+        {status !== null && (
+          <span className={`status-${status.tone}`}>{status.text}</span>
+        )}
+        {status !== null && snapshot?.dirty === true && (
+          <span aria-hidden="true">·</span>
+        )}
+        {snapshot?.dirty === true && <span>{t('header.unsaved')}</span>}
+      </span>
+      <span className="spacer" />
+      <CalcStatus />
       {build != null && build.loadouts.length > 1 && (
         <StagePicker loadouts={build.loadouts} />
       )}
-      <span className="spacer" />
-      <CalcStatus />
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('header.undo')}
-        title={`${undoLabel} (Ctrl+Z)`}
-        disabled={history?.['can-undo'] !== true}
-        onClick={() => void dispatch(run('undo'))}
-      >
-        <Icon name="undo" />
-      </button>
-      <button
-        type="button"
-        className="icon"
-        aria-label={t('header.redo')}
-        title={`${redoLabel} (Ctrl+Y)`}
-        disabled={history?.['can-redo'] !== true}
-        onClick={() => void dispatch(run('redo'))}
-      >
-        <Icon name="redo" />
-      </button>
+      <span className="header-history">
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('header.undo')}
+          title={`${undoLabel} (Ctrl+Z)`}
+          disabled={history?.['can-undo'] !== true}
+          onClick={() => void dispatch(run('undo'))}
+        >
+          <Icon name="undo" />
+        </button>
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('header.redo')}
+          title={`${redoLabel} (Ctrl+Y)`}
+          disabled={history?.['can-redo'] !== true}
+          onClick={() => void dispatch(run('redo'))}
+        >
+          <Icon name="redo" />
+        </button>
+      </span>
       <ExportMenu />
       <button
         type="button"
