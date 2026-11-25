@@ -11,8 +11,10 @@
 //! mode, [`crate::updates`]).
 //!
 //! **Automatic** (maintainer 2026-11-24: game data is handled by the
-//! application, not by the user). [`at_start`], in `automatic-check` mode,
-//! and [`fetch_data`], when the user asks, do both steps: read the feed,
+//! application, not by the user). [`at_start`], in every mode but
+//! strict offline (maintainer 2026-11-25: the update mode's "only when I
+//! ask" is about new versions of the application; game data is fetched
+//! for the user), and [`fetch_data`], when the user asks, do both steps: read the feed,
 //! retrying a failed connection ([`RETRY_WAITS`]), then download and
 //! install each pack this computer lacks ([`wanted`]: per game the feed's
 //! newest, unless a bundle of that game as new or newer is here). The
@@ -345,15 +347,21 @@ pub async fn fetch_data<R: Runtime>(handle: AppHandle<R>) -> Answer<api::DataAut
     blocking(handle, |h| Ok(fetch(h))).await
 }
 
-/// The automatic data at start, in `automatic-check` mode: in the
-/// background, after the installed data has loaded. Not in a smoke run,
+/// Whether the start looks for game data in `mode`: always, unless the
+/// user set the application never to connect.
+fn starts(mode: api::UpdateMode) -> bool {
+    mode != api::UpdateMode::StrictOffline
+}
+
+/// The automatic data at start, in every update mode but strict offline:
+/// in the background, after the installed data has loaded. Not in a smoke run,
 /// an `e2e` build, a test (no updater plugin), or with `LOOM_DATA_DIR`
 /// (development and tests), which never connect on their own.
 pub fn at_start<R: Runtime>(handle: &AppHandle<R>) {
     let Some(updates) = handle.try_state::<updates::Updates>() else {
         return;
     };
-    if updates.mode() != api::UpdateMode::AutomaticCheck
+    if !starts(updates.mode())
         || cfg!(feature = "e2e")
         || handle.try_state::<updates::Plugin>().is_none()
         || handle.try_state::<crate::release::Smoke>().is_some()
@@ -378,6 +386,15 @@ mod tests {
 
     fn ids(list: &[&str]) -> Vec<String> {
         list.iter().map(|s| (*s).to_owned()).collect()
+    }
+
+    #[test]
+    fn the_start_should_look_for_data_unless_set_never_to_connect() {
+        use api::UpdateMode::{AutomaticCheck, Manual, StrictOffline};
+        // "Only when I ask" is about new versions of the application.
+        assert!(starts(AutomaticCheck));
+        assert!(starts(Manual));
+        assert!(!starts(StrictOffline));
     }
 
     #[test]

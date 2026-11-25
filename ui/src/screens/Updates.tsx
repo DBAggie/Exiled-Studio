@@ -38,6 +38,7 @@ export function UpdateSettings() {
         ))}
       </fieldset>
       <p className="muted">{t('updates.privacy')}</p>
+      {!offline && <p className="muted">{t('updates.dataNote')}</p>}
       {!status.available ? (
         <p className="muted">{t('updates.unavailable')}</p>
       ) : offline ? (

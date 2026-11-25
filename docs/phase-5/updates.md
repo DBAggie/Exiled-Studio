@@ -30,6 +30,8 @@ Kept in `settings.json` (`updates`), set under About, Updates.
 | `strict-offline` | no | refused, `UPDATE_OFFLINE` | refused, `UPDATE_OFFLINE` |
 
 - A smoke run and an `e2e` build never check at start.
+- The mode's first two columns are about new versions of the application. Game data is fetched at start in `automatic-check` and in `manual` alike (maintainer 2026-11-25; `docs/phase-5/data-bundles.md`, "The data feed", Automatic); only `strict-offline` stops it. The settings say so under the modes.
+- No portable zip is released after 0.9.0 (`docs/phase-5/packaging.md`); what this page says of it holds for copies already unpacked and for CI's test zip.
 - Switching to strict offline forgets an offer.
 
 ## Per package
