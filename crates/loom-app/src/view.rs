@@ -866,6 +866,8 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
                     text: view.text,
                     code,
                     in_use: used(item.id),
+                    shown: view.shown,
+                    variants: view.variants,
                 });
             }
         }

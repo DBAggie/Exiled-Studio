@@ -885,25 +885,64 @@ button.link.quiet:hover:not(:disabled) {
   padding: 0;
 }
 
-/* A line to review is one row: the line and its item, why it is not
-   calculated, the way to the item. */
+/* A line to review is one row: the line as the game prints it with why
+   it is not calculated, its item, and the technical detail's toggle. */
 .review-list > li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 14rem) auto;
+  align-items: start;
   gap: 6px 20px;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-top: 1px solid var(--c-row);
 }
 
-.review-list .line-text {
-  font-family: var(--font-mono);
-  font-size: 0.928rem;
+.review-list > li:first-child {
+  border-top: 0;
+}
+
+.review-line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.review-list .line-text,
+.warning-strip .line-text {
+  color: var(--c-rarity-magic);
   overflow-wrap: anywhere;
 }
 
-.review-list p {
-  margin: 2px 0 0;
+.review-reason {
+  color: var(--c-soft);
+  font-size: 0.928rem;
+}
+
+.review-item {
+  justify-self: start;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.review-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--c-bg);
+}
+
+.review-detail-head {
+  color: var(--c-muted);
+  font-size: 0.857rem;
+}
+
+.review-detail code {
+  font-family: var(--font-mono);
+  font-size: 0.857rem;
+  overflow-wrap: anywhere;
 }
 
 .unused-review > summary {
@@ -1010,18 +1049,17 @@ button.link.quiet:hover:not(:disabled) {
   padding: 0;
 }
 
+/* A line as the game prints it, whole, with its item under it. */
 .warning-strip li {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
   padding: 10px 0;
   border-top: 1px solid var(--c-row);
 }
 
-.warning-strip .mono {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.warning-strip .muted {
+  font-size: 0.857rem;
 }
 
 /* ---------------------------------------------------------- breakdown */

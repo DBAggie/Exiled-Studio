@@ -260,9 +260,11 @@ function sampleItems(): ItemView[] {
           status: 'other',
         }),
         line(1, 'Spare Band', { kind: 'name', section: null, status: 'other' }),
-        line(2, 'Something else unread', {
+        line(2, '{variant:2}{range:0.5}(8-12)% Something else unread', {
           status: 'warning',
           code: 'LINE_NO_TEMPLATE',
+          shown: '10% Something else unread',
+          variants: [2],
         }),
         line(3, 'Variant: Pre 3.7.0', {
           kind: 'spec',
@@ -887,6 +889,8 @@ export class FakeApi implements LoomApi {
           text: l.text,
           code: l.code ?? '',
           'in-use': inUse(item.id),
+          shown: l.shown ?? null,
+          variants: l.variants,
         })),
     )
     const all = items

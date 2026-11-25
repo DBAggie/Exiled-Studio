@@ -233,9 +233,7 @@ function WarningsPanel({ build, id }: { build: BuildView; id: string }) {
           <ul className="warning-strip">
             {used.slice(0, 6).map((w) => (
               <li key={`${w.item}-${w.line}`}>
-                <span className="mono" title={w.text}>
-                  {w.text}
-                </span>
+                <span className="line-text">{w.shown ?? w.text}</span>
                 <span className="muted">{w['item-name'] ?? `#${w.item}`}</span>
               </li>
             ))}

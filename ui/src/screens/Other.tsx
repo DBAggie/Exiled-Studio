@@ -9,7 +9,6 @@ import type {
   ItemSummary,
   LineOp,
   TreeLayout,
-  WarningView,
 } from '../api/types'
 import {
   Badge,
@@ -27,6 +26,7 @@ import {
   tDynamic,
   type MessageKey,
 } from '../i18n'
+import { ReviewList } from '../ReviewLines'
 import { actions, attempt, query, run, setPermissions } from '../store'
 import {
   dataName,
@@ -57,66 +57,22 @@ export function Warnings() {
           {used.length === 0 ? (
             <p>{t('warnings.usedNone')}</p>
           ) : (
-            <WarningTable label={t('warnings.used')} warnings={used} />
+            <section className="panel" aria-label={t('warnings.used')}>
+              <ReviewList warnings={used} />
+            </section>
           )}
           {unused.length > 0 && (
             <>
               <h2>{t('warnings.unused')}</h2>
               <p className="muted">{t('warnings.unusedHelp')}</p>
-              <WarningTable label={t('warnings.unused')} warnings={unused} />
+              <section className="panel" aria-label={t('warnings.unused')}>
+                <ReviewList warnings={unused} />
+              </section>
             </>
           )}
         </>
       )}
     </>
-  )
-}
-
-function WarningTable({
-  label,
-  warnings,
-}: {
-  label: string
-  warnings: WarningView[]
-}) {
-  const dispatch = useAppDispatch()
-  return (
-    <section className="panel table-panel" aria-label={label}>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{t('warnings.text')}</th>
-            <th scope="col">{t('warnings.item')}</th>
-            <th scope="col">{t('warnings.reason')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {warnings.map((w) => (
-            <tr key={`${w.item}-${w.line}`}>
-              <td className="mono">{w.text}</td>
-              <td>
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => dispatch(actions.editItem(w.item))}
-                >
-                  {w['item-name'] ?? `#${w.item}`}
-                </button>
-              </td>
-              <td>
-                <Badge tone="warn">{t('warning.badge')}</Badge>
-                <p className="muted small-text">
-                  {tDynamic(`warning.${w.code}`, 'reason.generic', {
-                    kind: w.code,
-                  })}
-                </p>
-                <ErrorCode code={w.code} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
   )
 }
 

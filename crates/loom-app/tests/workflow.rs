@@ -235,6 +235,14 @@ fn workflow_should_import_edit_recalculate_undo_save_reopen_and_export() {
         "the synthetic build has warning lines"
     );
     assert_eq!(build.warnings.len() as u32, build.lines.warnings);
+    // A warning carries its line as the item's view shows it: the game's
+    // text and the variants, so a list never prints the prefixes.
+    for w in &build.warnings {
+        let item = r.app.item(w.item).unwrap();
+        let line = &item.lines[w.line as usize];
+        assert_eq!((&w.shown, &w.variants), (&line.shown, &line.variants));
+        assert!(w.shown.as_deref().is_none_or(|s| !s.starts_with('{')));
+    }
 
     // Out-of-scope content: every field has a state, and every field
     // without a value says why (never a blank or a zero; finding 6).

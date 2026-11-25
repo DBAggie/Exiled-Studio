@@ -77,6 +77,25 @@ export function splitWarnings(build: BuildView): {
   }
 }
 
+/** A line to review with the items it is on. */
+export interface WarningRow {
+  w: BuildView['warnings'][number]
+  items: number[]
+}
+
+/** Warnings with the same item name, text, and reason as one row, with
+ * the items it is on (UX-16). */
+export function warningRows(warnings: BuildView['warnings']): WarningRow[] {
+  const rows = new Map<string, WarningRow>()
+  for (const w of warnings) {
+    const key = `${w['item-name'] ?? w.item}\u0000${w.text}\u0000${w.code}`
+    const row = rows.get(key)
+    if (row === undefined) rows.set(key, { w, items: [w.item] })
+    else if (!row.items.includes(w.item)) row.items.push(w.item)
+  }
+  return [...rows.values()]
+}
+
 /** The build's status pill: the completeness of what the calculation
  * reads, and the warnings on it. */
 export function buildStatus(build: BuildView): { tone: Tone; text: string } {

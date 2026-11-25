@@ -79,7 +79,28 @@ describe('UX High fixes', () => {
     const used = screen.getByRole('region', { name: 'On items in use' })
     expect(within(used).getByText('Nothing like this')).toBeTruthy()
     const unused = screen.getByRole('region', { name: 'On items not in use' })
-    expect(within(unused).getByText('Something else unread')).toBeTruthy()
+    // The line as the game prints it; the text as written, its variant,
+    // and its code only behind the technical detail.
+    expect(within(unused).getByText('10% Something else unread')).toBeTruthy()
+    expect(within(unused).queryByText(/\{variant:2\}/)).toBeNull()
+    expect(within(unused).queryByText(/LINE_NO_TEMPLATE/)).toBeNull()
+    const toggle = within(unused).getByRole('button', {
+      name: 'Show technical detail',
+    })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    await user.click(toggle)
+    expect(
+      within(unused).getByText(
+        '{variant:2}{range:0.5}(8-12)% Something else unread',
+      ),
+    ).toBeTruthy()
+    expect(within(unused).getByText(/variant 2 of the item/)).toBeTruthy()
+    expect(within(unused).getByText(/LINE_NO_TEMPLATE/)).toBeTruthy()
+    expect(
+      within(unused)
+        .getByRole('button', { name: 'Hide technical detail' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
   })
 
   it('shows the active item set first and switches sets (UX-02)', async () => {
@@ -482,9 +503,7 @@ describe('UX High fixes', () => {
     ).toBeTruthy()
 
     // An input by its PoB name; it is not calculated yet.
-    await user.click(
-      screen.getByText('Add an input by its Path of Building name'),
-    )
+    await user.click(screen.getByText('Add an input by its technical name'))
     await user.type(screen.getByLabelText('Name'), 'conditionOnFungalGround')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(api.executed).toContainEqual({

@@ -764,7 +764,7 @@ export const en = {
   'editor.mark.other': '{mark}',
   'editor.fileFields': 'File fields ({n})',
   'editor.fileFieldsHelp':
-    'Path of Building’s own fields for this item, kept as written and exported unchanged.',
+    'Technical detail the build file holds for this item, kept as written and exported unchanged.',
   'card.label': 'Item details',
   'card.quality': 'Quality +{q}%',
   'card.itemLevel': 'Item level {n}',
@@ -787,7 +787,7 @@ export const en = {
 
   'config.title': 'Configuration',
   'config.help':
-    'The situation the numbers are calculated for: the enemy, your charges, and conditions such as being on full life, as Path of Building sets them. Each change is one step you can undo.',
+    'The situation the numbers are calculated for: the enemy, your charges, and conditions such as being on full life. Each change is one step you can undo.',
   'config.unmodelledHelp':
     '{n} inputs are not calculated yet: the numbers that depend on them are marked partial.',
   'config.set': 'Configuration set',
@@ -806,15 +806,15 @@ export const en = {
   'config.remove': 'Remove {input}',
   'config.addOption': 'Add an option',
   'config.addOptionHelp':
-    'Path of Building’s configuration options ({version}). Shown first: the options for every build and for this build’s skills.',
+    'Every configuration option ({version}). Shown first: the options for every build and for this build’s skills.',
   'config.search': 'Search options',
   'config.allOptions': 'All options',
   'config.optionsFound': '{n} options',
   'config.optionsMore': '{n} more: search to narrow the list.',
   'config.addNamed': 'Add {option}',
-  'config.addInput': 'Add an input by its Path of Building name',
+  'config.addInput': 'Add an input by its technical name',
   'config.addHelp':
-    'For an option this list does not show yet. Use the name Path of Building saves it under.',
+    'For an option this list does not show yet. Use the name the build file saves it under.',
   'config.inputName': 'Name',
   'config.inputKind': 'Type',
   'config.inputValue': 'Value',
@@ -824,7 +824,7 @@ export const en = {
   'config.add': 'Add',
   'config.blocks': 'Custom modifiers',
   'config.blocksHelp':
-    'One modifier per line, as Path of Building reads them; each applies to the character when its block is on. Lines that match nothing are kept as warnings and not calculated.',
+    'One modifier per line, worded as on an item; each applies to the character when its block is on. Lines that match nothing are kept as warnings and not calculated.',
   'config.blockN': 'Block {n}',
   'config.blockOn': '{block} on',
   'config.blockText': 'Text of {block}',
@@ -836,7 +836,7 @@ export const en = {
   'config.lines': 'Lines read',
   'config.lineWarning': 'Not calculated',
   'config.lineNote': 'Note, no effect',
-  'config.linePattern': 'Read as Path of Building reads it',
+  'config.linePattern': 'Read by its wording, not from the game’s text',
   'tree.title': 'Passive tree',
   'tree.noData':
     'The game data has no passive tree, so the tree cannot be shown or edited.',
@@ -1018,7 +1018,7 @@ export const en = {
 
   'warnings.title': 'Warnings',
   'warnings.help':
-    'These lines could not be read. They are kept, shown here, and exported unchanged, but not calculated.',
+    'Each line is shown as the game prints it, at your item’s roll. The numbers leave these lines out; the lines are kept and exported unchanged.',
   'warnings.item': 'Item',
   'warnings.text': 'Line',
   'warnings.reason': 'Reason',
@@ -1292,14 +1292,23 @@ export const en = {
   'error.generic': 'Something unexpected happened.',
 
   'warning.badge': 'Not calculated',
-  'warning.LINE_NO_TEMPLATE': 'No game description matches this text.',
+  'review.showDetail': 'Show technical detail',
+  'review.hideDetail': 'Hide technical detail',
+  'review.detail': 'Technical detail · the line as the build file holds it',
+  'review.detailVariant':
+    'Technical detail · variant {n} of the item · the line as the build file holds it',
+  'review.detailVariants':
+    'Technical detail · variants {list} of the item · the line as the build file holds it',
+  'warning.LINE_NO_TEMPLATE':
+    'The game has no line worded like this now: an older wording, or a note written in the item.',
   'warning.LINE_AMBIGUOUS':
     'Several game stats match; it cannot be told which.',
   'warning.LINE_NO_VARIANT_FITS':
     'The values do not fit the game’s description.',
-  'warning.LINE_ONLY_SHADOWED': 'Only a hidden description matches.',
+  'warning.LINE_ONLY_SHADOWED':
+    'Only a line the game does not show matches this text.',
   'warning.LINE_NO_BASE': 'The item’s base type is unknown.',
-  'warning.LINE_PENDING': 'Not read yet.',
+  'warning.LINE_PENDING': 'Not read yet: the game data was not loaded.',
   'warning.LINE_UNRECOGNIZED': 'Not a line Exiled Studio recognizes.',
   'warning.LINE_UNKNOWN_SPEC': 'An item property Exiled Studio does not know.',
 

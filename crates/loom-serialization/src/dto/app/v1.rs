@@ -1217,6 +1217,16 @@ dto! {
         /// Whether the line's item is in use ([`ItemSummary::in_use`]): a
         /// warning on an item not in use does not touch the calculation.
         pub in_use: bool,
+        /// A modifier line as the game prints it, its roll applied and
+        /// its prefixes left out ([`LineView::shown`]); `None` when the
+        /// line is shown as written (additive, 2026-11-25).
+        #[serde(default)]
+        pub shown: Option<String>,
+        /// The variants (1-based) the line belongs to
+        /// ([`LineView::variants`]); empty for every variant (additive,
+        /// 2026-11-25).
+        #[serde(default)]
+        pub variants: Vec<u32>,
     }
 
     /// Undo and redo.

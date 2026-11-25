@@ -5455,9 +5455,27 @@
           "format": "uint32",
           "minimum": 0
         },
+        "shown": {
+          "description": "A modifier line as the game prints it, its roll applied and\nits prefixes left out ([`LineView::shown`]); `None` when the\nline is shown as written (additive, 2026-11-25).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "text": {
           "description": "The line as written.",
           "type": "string"
+        },
+        "variants": {
+          "description": "The variants (1-based) the line belongs to\n([`LineView::variants`]); empty for every variant (additive,\n2026-11-25).",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
         }
       },
       "additionalProperties": false,

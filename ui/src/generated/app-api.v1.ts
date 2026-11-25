@@ -2296,9 +2296,21 @@ export interface WarningView {
    */
   line: number
   /**
+   * A modifier line as the game prints it, its roll applied and
+   * its prefixes left out ([`LineView::shown`]); `None` when the
+   * line is shown as written (additive, 2026-11-25).
+   */
+  shown?: string | null
+  /**
    * The line as written.
    */
   text: string
+  /**
+   * The variants (1-based) the line belongs to
+   * ([`LineView::variants`]); empty for every variant (additive,
+   * 2026-11-25).
+   */
+  variants?: number[]
 }
 /**
  * The calculation of the latest version.
