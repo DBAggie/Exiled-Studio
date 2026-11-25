@@ -11,7 +11,7 @@ import type {
   CustomBlockView,
   SetView,
 } from '../api/types'
-import { Badge, Hint, Icon, ScreenHeading } from '../components'
+import { Hint, Icon, ScreenHeading, StateMark } from '../components'
 import {
   initialValue,
   matches,
@@ -196,12 +196,15 @@ function ValueEditor({
   )
 }
 
-function EffectBadge({ input }: { input: ConfigInputView }) {
+/** What the calculation does with an input, when that is not "counted":
+ * the mark for one not calculated yet, a quiet note for one that changes
+ * no number. */
+function EffectNote({ input }: { input: ConfigInputView }) {
   if (input.effect === 'unmodelled') {
-    return <Badge tone="warn">{t('config.unmodelled')}</Badge>
+    return <StateMark state="unsupported" name={t('config.unmodelled')} text />
   }
   if (input.effect === 'no-effect') {
-    return <Badge tone="neutral">{t('config.noEffect')}</Badge>
+    return <span className="muted small-text">{t('config.noEffect')}</span>
   }
   return null
 }
@@ -217,7 +220,14 @@ function helpLine(option: ConfigOption | undefined): string | null {
   return first != null && first !== '' ? first : null
 }
 
-function InputRow({ input }: { input: ConfigInputView }) {
+function InputRow({
+  input,
+  detail,
+}: {
+  input: ConfigInputView
+  /** Whether the input's technical name is shown. */
+  detail: boolean
+}) {
   const dispatch = useAppDispatch()
   const option = optionOf(input.name)
   const label = optionLabel(input.name)
@@ -234,10 +244,16 @@ function InputRow({ input }: { input: ConfigInputView }) {
             {help}
           </span>
         )}
-        <span className="muted small-text">
-          {input.name}
-          {input.placeholder && ` · ${t('config.placeholder')}`}
-        </span>
+        {(detail || input.placeholder) && (
+          <span className="muted small-text">
+            {detail && <span className="mono">{input.name}</span>}
+            {detail && input.placeholder && ' · '}
+            {input.placeholder && t('config.placeholder')}
+          </span>
+        )}
+      </div>
+      <div className="config-effect">
+        <EffectNote input={input} />
       </div>
       <div className="config-value">
         <ValueEditor
@@ -250,12 +266,9 @@ function InputRow({ input }: { input: ConfigInputView }) {
           }
         />
       </div>
-      <div className="config-effect">
-        <EffectBadge input={input} />
-      </div>
       <button
         type="button"
-        className="icon small"
+        className="icon small quiet"
         aria-label={t('config.remove', { input: label })}
         title={t('config.remove', { input: label })}
         onClick={() =>
@@ -453,6 +466,10 @@ function Block({ block, index }: { block: CustomBlockView; index: number }) {
   const edit = (change: { enabled?: boolean; text?: string }) =>
     dispatch(run({ 'edit-custom-block': { block: index, ...change } }))
   const warnings = block.lines.filter((l) => l.status === 'warning').length
+  // The lines as they were read are the block; its text is edited on
+  // request (an empty block starts with its text open).
+  const [asText, setAsText] = useState(block.lines.length === 0)
+  const editing = asText || text !== block.text
   return (
     <section
       className={`config-block${block.enabled ? '' : ' disabled'}`}
@@ -462,10 +479,18 @@ function Block({ block, index }: { block: CustomBlockView; index: number }) {
         <h3 id={id}>{title}</h3>
         <span className="spacer" />
         {warnings > 0 && (
-          <Badge tone="warn">
+          <span className="muted small-text">
             {t('config.blockWarnings', { n: warnings })}
-          </Badge>
+          </span>
         )}
+        <button
+          type="button"
+          className="link"
+          aria-expanded={editing}
+          onClick={() => setAsText(!editing)}
+        >
+          {editing ? t('config.hideText') : t('config.editText')}
+        </button>
         <label className="check">
           <input
             type="checkbox"
@@ -476,58 +501,77 @@ function Block({ block, index }: { block: CustomBlockView; index: number }) {
           {t('skills.on')}
         </label>
       </div>
-      <label className="visually-hidden" htmlFor={`${id}-text`}>
-        {t('config.blockText', { block: title })}
-      </label>
-      <textarea
-        id={`${id}-text`}
-        className="config-text"
-        rows={Math.min(12, Math.max(3, text.split('\n').length + 1))}
-        value={text}
-        spellCheck={false}
-        onChange={(e) => setText(e.target.value)}
-      />
-      <div className="row">
-        <button
-          type="button"
-          className="primary"
-          disabled={text === block.text}
-          onClick={() => void edit({ text })}
-        >
-          {t('config.applyText')}
-        </button>
-        {text !== block.text && (
-          <button type="button" onClick={() => setText(block.text)}>
-            {t('config.revertText')}
-          </button>
-        )}
-        <span className="spacer" />
-        <button
-          type="button"
-          className="danger"
-          onClick={() =>
-            void dispatch(run({ 'remove-custom-block': { block: index } }))
-          }
-        >
-          {t('config.removeBlock')}
-        </button>
-      </div>
       {block.lines.length > 0 && (
         <ul className="config-lines" aria-label={t('config.lines')}>
           {block.lines.map((line, i) => {
             const note = lineNote(line)
             return (
-              <li key={i}>
-                <span>{line.text}</span>
-                {note !== null && (
-                  <Badge tone={line.status === 'warning' ? 'warn' : 'neutral'}>
-                    {note}
-                  </Badge>
-                )}
-              </li>
+              // A note is a heading of the user's own; a line carries
+              // its mark: counted, or not.
+              line.typed === 'custom-note' && line.status !== 'warning' ? (
+                <li key={i} className="config-line-note">
+                  <span>{line.text}</span>
+                  <span className="visually-hidden">{note}</span>
+                </li>
+              ) : (
+                <li key={i}>
+                  {line.status === 'warning' ? (
+                    <StateMark state="unsupported" name={note ?? undefined} />
+                  ) : (
+                    <StateMark
+                      state="complete"
+                      name={t('config.lineCounted')}
+                    />
+                  )}
+                  <span>{line.text}</span>
+                  {note !== null && line.status !== 'warning' && (
+                    <span className="muted small-text">{note}</span>
+                  )}
+                </li>
+              )
             )
           })}
         </ul>
+      )}
+      {editing && (
+        <>
+          <label className="visually-hidden" htmlFor={`${id}-text`}>
+            {t('config.blockText', { block: title })}
+          </label>
+          <textarea
+            id={`${id}-text`}
+            className="config-text"
+            rows={Math.min(12, Math.max(3, text.split('\n').length + 1))}
+            value={text}
+            spellCheck={false}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <div className="row">
+            <button
+              type="button"
+              className="primary"
+              disabled={text === block.text}
+              onClick={() => void edit({ text })}
+            >
+              {t('config.applyText')}
+            </button>
+            {text !== block.text && (
+              <button type="button" onClick={() => setText(block.text)}>
+                {t('config.revertText')}
+              </button>
+            )}
+            <span className="spacer" />
+            <button
+              type="button"
+              className="danger"
+              onClick={() =>
+                void dispatch(run({ 'remove-custom-block': { block: index } }))
+              }
+            >
+              {t('config.removeBlock')}
+            </button>
+          </div>
+        </>
       )}
     </section>
   )
@@ -562,17 +606,32 @@ function ConfigSetPicker({ sets }: { sets: SetView[] }) {
 export function Config() {
   const dispatch = useAppDispatch()
   const build = useAppSelector((s) => s.session.snapshot?.build)
+  const [find, setFind] = useState('')
+  const [detail, setDetail] = useState(false)
   if (build == null) return null
   const config = build.config
   const sets = build['config-sets']
   const inputs = config?.inputs ?? []
   const unmodelled = inputs.filter((i) => i.effect === 'unmodelled').length
+  const words = find.trim().toLowerCase()
+  const found = (i: ConfigInputView) =>
+    words === '' ||
+    optionLabel(i.name).toLowerCase().includes(words) ||
+    i.name.toLowerCase().includes(words)
   return (
     <>
       <div className="page-head">
         <ScreenHeading>{t('config.title')}</ScreenHeading>
         <Hint>{t('config.help')}</Hint>
         <span className="spacer" />
+        <input
+          type="search"
+          className="config-find"
+          aria-label={t('config.find')}
+          placeholder={t('config.find')}
+          value={find}
+          onChange={(e) => setFind(e.target.value)}
+        />
         <LeaguePicker league={build.league} />
         {sets.length > 1 && <ConfigSetPicker sets={sets} />}
       </div>
@@ -586,7 +645,9 @@ export function Config() {
             <p className="muted">{t('config.noInputs')}</p>
           )}
           {GROUPS.map((g) => {
-            const shown = inputs.filter((i) => groupOf(i.name) === g)
+            const shown = inputs.filter(
+              (i) => groupOf(i.name) === g && found(i),
+            )
             if (shown.length === 0) return null
             // Default values that change no number are folded away, so
             // what the build sets stands out.
@@ -600,7 +661,7 @@ export function Config() {
                 {set.length > 0 && (
                   <ul className="config-list">
                     {set.map((i) => (
-                      <InputRow key={i.name} input={i} />
+                      <InputRow key={i.name} input={i} detail={detail} />
                     ))}
                   </ul>
                 )}
@@ -611,7 +672,7 @@ export function Config() {
                     </summary>
                     <ul className="config-list">
                       {defaults.map((i) => (
-                        <InputRow key={i.name} input={i} />
+                        <InputRow key={i.name} input={i} detail={detail} />
                       ))}
                     </ul>
                   </details>
@@ -619,8 +680,21 @@ export function Config() {
               </div>
             )
           })}
+          {words !== '' && !inputs.some(found) && (
+            <p className="muted" role="status">
+              {t('config.findNone')}
+            </p>
+          )}
           <AddOption have={new Set(inputs.map((i) => i.name))} />
           <AddInput />
+          <button
+            type="button"
+            className="link quiet config-detail"
+            aria-pressed={detail}
+            onClick={() => setDetail(!detail)}
+          >
+            {detail ? t('review.hideDetail') : t('review.showDetail')}
+          </button>
         </section>
         <section className="panel" aria-labelledby="config-blocks">
           <h2 id="config-blocks">{t('config.blocks')}</h2>

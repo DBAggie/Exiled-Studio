@@ -332,8 +332,10 @@ select {
   white-space: nowrap;
 }
 
+/* The state gives way entirely before the name loses a pixel (a smaller
+   factor shares the loss, and the name would end in an ellipsis). */
 .app-header > .header-status {
-  flex-shrink: 100;
+  flex-shrink: 1000000;
 }
 
 .app-header > .spacer {
@@ -430,4 +432,167 @@ select {
   margin: 16px 0 0;
   padding: 0;
   list-style: none;
+}
+
+/* ---- The start page (the revamp's screens, 2026-11-25) ------------------
+   The page's work at the left: the import bar with its one filled button,
+   the other ways in, the recent builds. Unsaved work in a panel beside
+   it; first, above the page, in a narrow window. */
+.start-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: 24px;
+  align-items: start;
+}
+
+.start-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* The panel is first in the document; beside the page it sits at the
+   right. */
+.start-columns > .start-main {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.start-columns > .recovery {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 1000px) {
+  .start-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .start-columns > .start-main,
+  .start-columns > .recovery {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.command-panel {
+  padding: 0;
+  gap: 12px;
+}
+
+.command-bar textarea {
+  background: var(--c-input);
+}
+
+.recovery {
+  padding: 16px;
+}
+
+.recovery h2 {
+  margin: 0;
+}
+
+.recovery > .sub {
+  display: block;
+  margin: 4px 0 8px;
+  color: var(--c-muted);
+}
+
+.recovery-list li {
+  flex-wrap: nowrap;
+  min-height: 36px;
+}
+
+.recovery-list li > div:first-child {
+  min-width: 0;
+}
+
+.recovery-list .sub {
+  color: var(--c-muted);
+  overflow-wrap: anywhere;
+}
+
+.recovery-list .row {
+  flex: none;
+  gap: 12px;
+}
+
+/* A recent build: its name, and what it is under it. */
+.recent-what {
+  display: block;
+  margin-left: 0;
+  font-size: var(--fs-meta);
+}
+
+/* ---- Configuration (the revamp's screens, 2026-11-25) -------------------
+   An input is one row: its question with its help under it, what the
+   calculation does with it, its control, Remove. The inputs take the
+   room; the custom modifiers are a column beside them. */
+@media (min-width: 1100px) {
+  .config-grid {
+    grid-template-columns: minmax(0, 1fr) 26rem;
+  }
+}
+
+.config-find {
+  width: 14rem;
+  min-height: 32px;
+}
+
+.config-group h3 {
+  margin: 16px 0 4px;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.config-row {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.config-name {
+  flex: 1 1 0;
+}
+
+.config-value,
+.config-effect {
+  flex: none;
+}
+
+.config-value input:not([type='checkbox']) {
+  width: 8rem;
+}
+
+.config-value select {
+  max-width: 14rem;
+}
+
+.config-detail {
+  margin-top: 12px;
+  align-self: flex-start;
+}
+
+/* A custom modifier block: its lines, each with its mark; a note of the
+   user's is a quiet heading among them. */
+.config-lines li {
+  flex-wrap: nowrap;
+  align-items: baseline;
+  padding: 8px 0;
+}
+
+.config-lines li > .state-mark {
+  align-self: center;
+}
+
+.config-lines .config-line-note {
+  padding-top: 12px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.config-block .skill-group-head {
+  flex-wrap: wrap;
 }

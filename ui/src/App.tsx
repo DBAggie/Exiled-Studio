@@ -60,9 +60,11 @@ function CalcStatus() {
     case 'done':
       // Nothing to act on: said quietly (UX audit A-04).
       return (
-        <span className="calc-quiet">
+        // A dot, named on hover and for a screen reader: the header's
+        // room goes to the build's state (the revamp's screens).
+        <span className="calc-quiet" title={t('calc.done')}>
           <span className="calc-dot" aria-hidden="true" />
-          {t('calc.done')}
+          <span className="visually-hidden">{t('calc.done')}</span>
         </span>
       )
     case 'failed':
@@ -679,7 +681,7 @@ function StartFrame({ screen }: { screen: Screen }) {
       <header className="start-header">
         <Brand />
         <span className="spacer" />
-        <Badge tone="neutral">{t('start.offline')}</Badge>
+        <span className="header-status">{t('start.offline')}</span>
         {screen === 'about' ? (
           <button type="button" onClick={() => dispatch(actions.go('start'))}>
             {t('nav.start')}

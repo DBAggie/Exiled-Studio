@@ -41,7 +41,7 @@ describe('UX High fixes', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Save and close' }),
     )
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(api.executed).toContain('close')
   })
 
@@ -50,7 +50,7 @@ describe('UX High fixes', () => {
     await user.click(screen.getByRole('button', { name: 'Open a file…' }))
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
     await user.click(screen.getByRole('button', { name: 'Close build' }))
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(api.executed).toContain('close')
 
@@ -67,7 +67,7 @@ describe('UX High fixes', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Close without saving' }),
     )
-    await screen.findByRole('heading', { name: 'What do you want to do?' })
+    await screen.findByRole('heading', { name: 'Builds' })
     expect(api.executed.filter((c) => c === 'close')).toHaveLength(2)
   })
 
@@ -266,13 +266,13 @@ describe('UX High fixes', () => {
     })
     // Recovery comes before the command bar.
     const recovery = screen.getByRole('heading', {
-      name: 'Unsaved work from a session that ended',
+      name: 'Unsaved work',
     })
     const bar = screen.getByLabelText('Paste a share code or build XML')
     expect(
       recovery.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(screen.getByText(/Last changed 2 minutes ago/)).toBeTruthy()
+    expect(screen.getByText(/Changed 2 minutes ago/)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Restore lost' })).toBeTruthy()
     // Recent: the file name, the time in words, and a way to remove it.
     expect(screen.getByText('witch.json').getAttribute('title')).toBe(
@@ -480,7 +480,18 @@ describe('UX High fixes', () => {
       .getByRole('heading', { name: 'Enemy', level: 3 })
       .closest('div') as HTMLElement
     expect(within(enemy).getByText('Is the enemy a Boss?')).toBeTruthy()
-    expect(within(enemy).getByText(/enemyLevel · default value/)).toBeTruthy()
+    // A default is said; the input's technical name only on request.
+    expect(within(enemy).getByText('default value')).toBeTruthy()
+    expect(within(enemy).queryByText('enemyLevel')).toBeNull()
+    await user.click(
+      screen.getByRole('button', { name: 'Show technical detail' }),
+    )
+    expect(within(enemy).getByText('enemyLevel')).toBeTruthy()
+    // Finding an input by its words.
+    await user.type(screen.getByLabelText('Find an input'), 'boss')
+    expect(within(enemy).getByText('Is the enemy a Boss?')).toBeTruthy()
+    expect(within(enemy).queryByText('enemyLevel')).toBeNull()
+    await user.clear(screen.getByLabelText('Find an input'))
     const conditions = screen
       .getByRole('heading', { name: 'Conditions', level: 3 })
       .closest('div') as HTMLElement
@@ -566,6 +577,17 @@ describe('UX High fixes', () => {
       .getByRole('heading', { name: 'Block 1', level: 3 })
       .closest('section') as HTMLElement
     expect(within(block).getByText('Note, no effect')).toBeTruthy()
+    // Its lines are the block: a counted line carries the filled mark.
+    // The text is edited on request.
+    expect(
+      block
+        .querySelector('.config-lines .state-mark.state-complete')
+        ?.getAttribute('title'),
+    ).toBe('Counted')
+    expect(within(block).queryByLabelText('Text of Block 1')).toBeNull()
+    await user.click(
+      within(block).getByRole('button', { name: 'Edit as text' }),
+    )
     const text = within(block).getByLabelText('Text of Block 1')
     await user.type(text, '{Enter}+7 to nothing known')
     await user.click(within(block).getByRole('button', { name: 'Apply text' }))

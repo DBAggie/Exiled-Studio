@@ -99,7 +99,7 @@ try {
   ).sessionId
 
   step('the start screen')
-  await text('What do you want to do?')
+  await text('Builds')
 
   step('import a file the user picks')
   await click(

@@ -54,16 +54,19 @@ const STATES = ['complete', 'partial', 'unsupported', 'indeterminate']
  * mark read by its shape, never by colour alone (the revamp's signature,
  * 2026-11-25): a filled circle, a half, a ring, a dashed ring. Its name is
  * the tooltip, and is read aloud except for Exact, which a row says in its
- * own name; `text` writes the name beside the mark. */
+ * own name; `text` writes the name beside the mark. `name` says the state
+ * in a page's own words (a custom modifier line is "Counted"). */
 export function StateMark({
   state,
   text = false,
+  name: named,
 }: {
   state: string
   text?: boolean
+  name?: string
 }) {
   const known = STATES.includes(state) ? state : 'unsupported'
-  const name = tDynamic(`state.${known}`, 'state.unsupported')
+  const name = named ?? tDynamic(`state.${known}`, 'state.unsupported')
   return (
     <span className={`state-mark state-${known}`} title={name}>
       <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12">

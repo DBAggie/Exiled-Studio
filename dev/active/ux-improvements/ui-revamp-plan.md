@@ -78,6 +78,27 @@ PR #171, branch `feat/ui-revamp-mark`, stacked on step 2's (#170). The mockup is
 - **Checked in the running application** on the Raise Spectre fixture: the dashboard has no amber pill left (the only chip is the game version), the legend shows the four states, a breakdown's heading reads "Partial" beside its mark, no sideways scroll.
 - **Not in this step:** other chips that are not a calculation state (the Configuration page's "Not calculated" and "Note, no effect", an item line's status, "1 with warnings"): they go with their screens in step 4.
 
+## Step 4, first part, built (2026-11-25): the start page and Configuration
+Branch `feat/ui-revamp-start-config`, stacked on step 3's. The mockups are the canvas's Start page and Configuration boards ("Build the two approved screens first").
+
+**The start page** (`ui/src/screens/Start.tsx`):
+- The title is "Builds". The import bar leads, with the page's one filled button; the other ways in are under it.
+- Unsaved work is a panel beside the page (first, above it, under 1,000 px; first in the document either way), with Restore and Discard as quiet links.
+- A recent build shows what it is under its name. The header's "Offline · no account" is quiet text.
+- **Not as the mockup:** a recovery copy is still named by its build's name, which for an import without one is "Imported build" (the mockup showed class and skill; `RecoveryEntry` does not carry them, an app API addition); no "Discard all"; the button still reads "Import build", and the link to import a Path of Building file is kept.
+
+**Configuration** (`ui/src/screens/Config.tsx`):
+- An input is one row: its question on one line, its help under it, what the calculation does with it (the ring mark and "Not calculated yet", or a quiet "Changes no number"), its control, Remove. The technical name is shown only with **Show technical detail**.
+- **Find an input** filters the inputs by their words or technical name.
+- The inputs take the room; the custom modifiers are a 26 rem column beside them (from 1,100 px).
+- A custom modifier block shows its lines as they were read: a counted line with the filled mark, one not calculated with the ring, a note of the user's as a quiet heading. **Edit as text** opens the text (open at once for an empty block).
+- **Not as the mockup:** the League picker and the "N inputs are not calculated yet" sentence stay; the note headings are the user's own text as written (the mockup tidied their wording).
+
+**The header again** (found while checking, fixed here): at the real 1,280 px window the name ended in an ellipsis while the state was still showing, since the two shared the loss; the state now gives way entirely first, and "Up to date" is its dot alone, named on hover and for a screen reader, so the name and the state both fit at 1,280 px.
+
+**Checked in the running application** on the Raise Spectre fixture: Configuration's questions each on one line (20 px), no sideways scroll at 1,000, 1,280, and 1,600 px, no technical name shown until asked; the start page with eight recovery copies and one recent build.
+
 ## Open
-- Step 4 (the screens, worst first) is next: Configuration and the start page have approved mockups; Warnings, About, the Dashboard's layout, Equipment, and Skills need theirs.
+- Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
+- A recovery copy's class and main skill (an additive `RecoveryEntry` field), so unsaved work is told apart when the builds have no name.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

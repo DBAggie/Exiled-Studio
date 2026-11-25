@@ -10,7 +10,7 @@ describe('keyboard', () => {
   it('imports, navigates, and uses the export menu without a mouse', async () => {
     const { user } = await renderApp()
     // The start screen's heading has focus; Tab reaches the import field.
-    expect(document.activeElement?.textContent).toBe('What do you want to do?')
+    expect(document.activeElement?.textContent).toBe('Builds')
     await user.tab()
     expect(document.activeElement).toBe(
       screen.getByLabelText('Paste a share code or build XML'),
