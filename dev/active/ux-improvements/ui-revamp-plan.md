@@ -99,7 +99,7 @@ PR #172, branch `feat/ui-revamp-start-config`, stacked on step 3's (#171). The m
 **Checked in the running application** on the Raise Spectre fixture: Configuration's questions each on one line (20 px), no sideways scroll at 1,000, 1,280, and 1,600 px, no technical name shown until asked; the start page with eight recovery copies and one recent build.
 
 ## A recovery copy says what its build is (2026-11-25)
-Branch `feat/recovery-summary`, stacked on step 4's first part (maintainer: "Yes, add class and skill").
+PR #173, branch `feat/recovery-summary`, stacked on step 4's first part (#172) (maintainer: "Yes, add class and skill").
 
 - **The snapshot's header** (`loom_persistence::recovery::Header`) gains an optional `summary`: class, ascendancy, level, main skill, the recent list's `Summary`, written at each autosave (`loom_app` `write_recovery`, `view::recent_summary`). Left out when not known, so a snapshot without it is the file as it was.
 - **App API v1, additive:** `RecoveryEntry` gains `class`, `ascendancy`, `level`, `main-skill`, as `RecentEntry` has them.
