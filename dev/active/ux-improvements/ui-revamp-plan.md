@@ -108,6 +108,16 @@ PR #173, branch `feat/recovery-summary`, stacked on step 4's first part (#172) (
 - **One limit:** an application older than this change, reading a snapshot written by a newer one, may refuse the unknown `summary` key on restore (the file's reader is strict). It arises only when a user goes back to an older version with unsaved work pending; the stable and experimental channels keep separate data folders. Not tested here.
 - **Checked in the running application:** a build imported and the application ended without a save; at the next start its copy read "Imported build · Necromancer 92 · Raise Spectre", and the nine older copies were listed as before.
 
+## Step 4: Lines to review and the page after an import (2026-11-25)
+Stacked on #173, branch `feat/ui-revamp-review`. The mockups are the canvas's "Lines to review" and "After an import" boards.
+
+- **The Warnings page is "Lines to review"**, in the side menu, its heading, and the header's state ("Partial · 5 lines to review").
+- **One list** (`ReviewList`, shared by both pages): the line in the text colour with its reason under it, its item, and a quiet "Detail" link (named "Show technical detail" for a screen reader and on hover) in place of an outlined button a row. The open row is marked. A header names the columns.
+- **Lines on items not in use** are one row until opened ("25 lines on items not in use"), since they change no number.
+- **After an import:** the four counts are plain figures; only "To review" keeps its colour, and it counts the lines on items in use, with "and 25 more on items not in use" under it (it showed all 35 before). The pills beside the name are gone (the header says the state). The list has the room: its line column was about 70 px at 1,280 px and is the widest now.
+- **Not as the mockup:** the heading is the build's name alone ("Imported build is imported" read badly for a build without a name); the reasons are the ones the application has (the mockup's more specific reasons need the resolver, as before).
+- **Checked in the running application** on the Raise Spectre fixture: both pages, a row opened, no sideways scroll at 1,000, 1,280, and 1,600 px; a page's name in the side menu stays on one line.
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

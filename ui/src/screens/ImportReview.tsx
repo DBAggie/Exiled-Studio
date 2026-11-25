@@ -3,12 +3,11 @@
 // those on items in use, then, folded, those on other items; the same
 // line on several copies of an item once (UX-16). The data the build is
 // pinned to.
-import { Badge, ScreenHeading } from '../components'
-import { formatNumber, t, tDynamic } from '../i18n'
+import { ScreenHeading } from '../components'
+import { formatNumber, t } from '../i18n'
 import { ReviewList } from '../ReviewLines'
 import { actions } from '../store'
 import {
-  buildStatus,
   splitWarnings,
   useAppDispatch,
   useAppSelector,
@@ -24,7 +23,6 @@ export function ImportReview() {
     return null
   }
   const c = build.lines
-  const status = buildStatus(build)
   const { used, unused } = splitWarnings(build)
   const name = build.name === '' ? t('app.untitled') : build.name
   // Of the lines that apply (not other variants or notes), the share the
@@ -46,20 +44,7 @@ export function ImportReview() {
           audit follow-up): the numbers start right under it. */}
       <div className="import-head">
         <div className="import-title">
-          <div className="row">
-            <ScreenHeading>{name}</ScreenHeading>
-            <Badge tone={status.tone}>
-              {t('import.imported', {
-                state: tDynamic(
-                  `state.${build['in-use-completeness']}`,
-                  'state.unsupported',
-                ),
-              })}
-            </Badge>
-            <Badge tone="neutral">
-              {build.game === 'poe2' ? 'PoE2' : 'PoE1'}
-            </Badge>
-          </div>
+          <ScreenHeading>{name}</ScreenHeading>
           <p className="muted">
             {build.warnings.length === 0
               ? t('import.summaryClean')
@@ -82,7 +67,7 @@ export function ImportReview() {
       <dl className="stat-cards">
         <div className="panel stat-card">
           <dt>{t('import.calculated')}</dt>
-          <dd className="tone-ok">{formatNumber(calculated)}</dd>
+          <dd>{formatNumber(calculated)}</dd>
           <dd className="sub">
             {t('import.calculatedOf', { share, n: applies })}
           </dd>
@@ -96,15 +81,21 @@ export function ImportReview() {
         </div>
         <div className="panel stat-card">
           <dt>{t('import.adapted')}</dt>
-          <dd className="tone-info">{formatNumber(c.adapted)}</dd>
+          <dd>{formatNumber(c.adapted)}</dd>
           <dd className="sub">{t('import.adaptedHelp')}</dd>
         </div>
         <div className="panel stat-card">
           <dt>{t('import.warnings')}</dt>
-          <dd className={c.warnings > 0 ? 'tone-warn' : undefined}>
-            {formatNumber(c.warnings)}
+          {/* What touches the numbers: the lines on items in use. Those
+              on other items are said beside it. */}
+          <dd className={used.length > 0 ? 'tone-warn' : undefined}>
+            {formatNumber(warningRows(used).length)}
           </dd>
-          <dd className="sub">{t('import.warningsSub')}</dd>
+          <dd className="sub">
+            {unused.length > 0
+              ? t('import.reviewMore', { n: warningRows(unused).length })
+              : t('import.warningsSub')}
+          </dd>
         </div>
       </dl>
 

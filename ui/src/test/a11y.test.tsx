@@ -58,8 +58,8 @@ describe('accessibility', () => {
     await screen.findByRole('heading', { name: 'Impact of this edit' })
     await expectAccessible()
 
-    await user.click(screen.getByRole('button', { name: /Warnings/ }))
-    await screen.findByRole('heading', { name: 'Warnings', level: 1 })
+    await user.click(screen.getByRole('button', { name: /Lines to review/ }))
+    await screen.findByRole('heading', { name: 'Lines to review', level: 1 })
     await expectAccessible()
 
     await user.click(screen.getByRole('button', { name: 'AI connection' }))

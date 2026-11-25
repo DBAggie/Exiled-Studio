@@ -35,6 +35,7 @@ import {
   useAppDispatch,
   useAppSelector,
   withUnit,
+  warningRows,
 } from '../util'
 import { useTreeLayout } from './treeLayout'
 import { UpdateSettings } from './Updates'
@@ -48,12 +49,18 @@ export function Warnings() {
       <div className="page-head">
         <ScreenHeading>{t('warnings.title')}</ScreenHeading>
         <Hint>{t('warnings.help')}</Hint>
+        {used.length > 0 && (
+          <span className="muted">
+            {warningRows(used).length === 1
+              ? t('warnings.usedCount1')
+              : t('warnings.usedCount', { n: warningRows(used).length })}
+          </span>
+        )}
       </div>
       {build.warnings.length === 0 ? (
         <p>{t('warnings.none')}</p>
       ) : (
         <>
-          <h2>{t('warnings.used')}</h2>
           {used.length === 0 ? (
             <p>{t('warnings.usedNone')}</p>
           ) : (
@@ -61,14 +68,23 @@ export function Warnings() {
               <ReviewList warnings={used} />
             </section>
           )}
+          {/* They change no number: folded to one row until asked for. */}
           {unused.length > 0 && (
-            <>
-              <h2>{t('warnings.unused')}</h2>
-              <p className="muted">{t('warnings.unusedHelp')}</p>
-              <section className="panel" aria-label={t('warnings.unused')}>
+            <details className="panel review-fold">
+              <summary>
+                <span>
+                  {warningRows(unused).length === 1
+                    ? t('warnings.unusedSummary1')
+                    : t('warnings.unusedSummary', {
+                        n: warningRows(unused).length,
+                      })}
+                </span>
+                <span className="sub">{t('warnings.unusedHelp')}</span>
+              </summary>
+              <section aria-label={t('warnings.unused')}>
                 <ReviewList warnings={unused} />
               </section>
-            </>
+            </details>
           )}
         </>
       )}

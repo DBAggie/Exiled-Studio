@@ -25,7 +25,7 @@ function ReviewRow({ w, items }: WarningRow) {
   const item = w['item-name'] ?? `#${w.item}`
   const variants = w.variants ?? []
   return (
-    <li>
+    <li className={open ? 'open' : undefined}>
       <div className="review-line">
         <span id={`${id}-line`} className="line-text">
           {gameText(w)}
@@ -57,15 +57,19 @@ function ReviewRow({ w, items }: WarningRow) {
           ? t('import.onCopies', { item, n: items.length })
           : item}
       </button>
+      {/* A quiet link, not a button a row: its full name is read aloud
+          and shown on hover. */}
       <button
         type="button"
-        className="review-toggle"
+        className="link quiet review-toggle"
         aria-expanded={open}
         aria-controls={open ? `${id}-detail` : undefined}
         aria-describedby={`${id}-line`}
+        aria-label={open ? t('review.hideDetail') : t('review.showDetail')}
+        title={open ? t('review.hideDetail') : t('review.showDetail')}
         onClick={() => setOpen(!open)}
       >
-        {open ? t('review.hideDetail') : t('review.showDetail')}
+        {open ? t('review.hideShort') : t('review.detailShort')}
       </button>
     </li>
   )
@@ -74,10 +78,17 @@ function ReviewRow({ w, items }: WarningRow) {
 /** The lines, one row each. */
 export function ReviewList({ warnings }: { warnings: WarningView[] }) {
   return (
-    <ul className="review-list">
-      {warningRows(warnings).map((row) => (
-        <ReviewRow key={`${row.w.item}-${row.w.line}`} {...row} />
-      ))}
-    </ul>
+    <>
+      <div className="review-head" aria-hidden="true">
+        <span>{t('review.colLine')}</span>
+        <span>{t('review.colItem')}</span>
+        <span />
+      </div>
+      <ul className="review-list">
+        {warningRows(warnings).map((row) => (
+          <ReviewRow key={`${row.w.item}-${row.w.line}`} {...row} />
+        ))}
+      </ul>
+    </>
   )
 }

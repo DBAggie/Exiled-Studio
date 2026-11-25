@@ -24,7 +24,9 @@ describe('workflow', () => {
       await screen.findByRole('heading', { name: 'Imported build', level: 1 }),
     )
     expect(screen.getByText('Nothing like this')).toBeTruthy()
-    expect(screen.getByText('Lines to review')).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: 'Lines to review', level: 2 }),
+    ).toBeTruthy()
 
     // The dashboard: every field with its state; one without a value says why.
     await user.click(screen.getByRole('button', { name: 'Open the dashboard' }))

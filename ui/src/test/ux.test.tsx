@@ -74,10 +74,18 @@ describe('UX High fixes', () => {
   it('counts only warnings on items in use (UX-03)', async () => {
     const { user } = await importBuild()
     // Two lines have warnings; one is on an item of another item set.
-    expect(screen.getByText('Partial · 1 warning')).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: /^Warnings/ }))
+    expect(screen.getByText('Partial · 1 line to review')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /^Lines to review/ }))
+    expect(
+      screen.getByText('1 line on an item in use is kept but not counted'),
+    ).toBeTruthy()
     const used = screen.getByRole('region', { name: 'On items in use' })
     expect(within(used).getByText('Nothing like this')).toBeTruthy()
+    // Lines on items not in use change no number: one row until opened.
+    expect(document.querySelector('.review-fold')?.hasAttribute('open')).toBe(
+      false,
+    )
+    await user.click(screen.getByText('1 line on an item not in use'))
     const unused = screen.getByRole('region', { name: 'On items not in use' })
     // The line as the game prints it; the text as written, its variant,
     // and its code only behind the technical detail.

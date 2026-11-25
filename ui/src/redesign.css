@@ -596,3 +596,119 @@ select {
 .config-block .skill-group-head {
   flex-wrap: wrap;
 }
+
+/* ---- Lines to review and the page after an import (the revamp's screens,
+   2026-11-25). One list: the line with its reason under it, its item, a
+   quiet link to its technical detail; the open row is marked. */
+.review-head,
+.review-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 12rem) 3.5rem;
+  gap: 4px 16px;
+  padding: 8px 16px;
+}
+
+.review-head {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  border-bottom: 1px solid var(--c-row);
+}
+
+.review-list > li {
+  align-items: center;
+  min-height: 36px;
+}
+
+.review-list > li.open {
+  background: var(--c-selected);
+}
+
+.review-list .line-text,
+.warning-strip .line-text {
+  color: var(--c-text);
+}
+
+.review-reason {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.review-toggle {
+  justify-self: end;
+  min-height: 24px;
+  padding: 0;
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+
+.review-detail {
+  background: var(--c-input);
+  border: 1px solid var(--c-row);
+}
+
+@media (max-width: 720px) {
+  .review-head {
+    display: none;
+  }
+
+  .review-list > li {
+    grid-template-columns: 1fr;
+  }
+
+  .review-toggle {
+    justify-self: start;
+  }
+}
+
+/* Lines that change no number: one row until opened. */
+.review-fold {
+  padding: 0;
+}
+
+.review-fold > summary {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.review-fold > summary .sub {
+  color: var(--c-muted);
+}
+
+.review-fold[open] > summary {
+  border-bottom: 1px solid var(--c-row);
+}
+
+/* After an import: the counts as plain figures (only what is to review
+   keeps its colour), the lines to review with the room, the build's
+   facts in a narrow column. */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+}
+
+.stat-card dd:not(.sub) {
+  margin: 0;
+  font-size: var(--fs-figure);
+}
+
+.stat-card dd.sub {
+  color: var(--c-muted);
+}
+
+.import-page .columns > * {
+  flex: 1 1 32rem;
+}
+
+.import-page .columns > .aside {
+  flex: 0 1 20rem;
+}
+
+/* A page's name in the side menu stays on one line. */
+.side-nav .nav-text {
+  white-space: nowrap;
+  text-align: start;
+}
