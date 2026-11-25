@@ -20,6 +20,7 @@ import {
   type RecoveryEntry,
   type Snapshot,
   type UpdateMode,
+  type DataAutoStatus,
   type UpdateStatus,
 } from '../api/types'
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
@@ -229,6 +230,8 @@ interface ListsState {
   mcp: McpStatus | null
   /** Application updates (Phase 5, P-d); null before the shell answers. */
   updates: UpdateStatus | null
+  /** The automatic game data's state; null before the shell answers. */
+  dataAuto: DataAutoStatus | null
   /** The offered version the user put off with "Later". */
   updateLater: string | null
 }
@@ -240,6 +243,7 @@ const lists = createSlice({
     recovery: [],
     mcp: null,
     updates: null,
+    dataAuto: null,
     updateLater: null,
   } as ListsState,
   reducers: {
@@ -254,6 +258,9 @@ const lists = createSlice({
     },
     updates(state, action: PayloadAction<UpdateStatus>) {
       state.updates = action.payload
+    },
+    dataAuto(state, action: PayloadAction<DataAutoStatus>) {
+      state.dataAuto = action.payload
     },
     updateLater(state, action: PayloadAction<string | null>) {
       state.updateLater = action.payload
@@ -543,6 +550,18 @@ export const checkUpdates = (): Thunk => async (dispatch, _getState, api) => {
   }
 }
 
+/** Gets the game data this computer lacks (the user asked on the start
+ * page). A failure is in the state, said on the page, never a banner. */
+export const fetchData = (): Thunk => async (dispatch, _getState, api) => {
+  dispatch(actions.dataAuto({ state: 'checking' }))
+  const status = await api.fetchData().catch((e: unknown): DataAutoStatus => ({
+    state: 'failed',
+    error: { code: codeOf(e), message: '' },
+  }))
+  dispatch(actions.dataAuto(status))
+  await dispatch(refresh())
+}
+
 /** Installs the offered update (the user approved it); the application
  * restarts when it is done. */
 export const installUpdate = (): Thunk => async (dispatch, _getState, api) => {
@@ -588,10 +607,18 @@ export async function startSync(store: Store, api: LoomApi) {
   const stopUpdates = await api.onUpdates((status) => {
     store.dispatch(actions.updates(status))
   })
+  // The shell gets missing game data by itself: its state, and what it
+  // installed (a snapshot query), as it goes.
+  const stopData = await api.onDataAuto((status) => {
+    store.dispatch(actions.dataAuto(status))
+    if (status.state === 'done') void store.dispatch(refresh())
+  })
   await store.dispatch(refresh())
   await store.dispatch(refreshLists())
   const updates = await api.updateStatus().catch(() => null)
   if (updates !== null) store.dispatch(actions.updates(updates))
+  const dataAuto = await api.dataAutoStatus().catch(() => null)
+  if (dataAuto !== null) store.dispatch(actions.dataAuto(dataAuto))
   // The first screen has its data: a packaged smoke run quits here (Phase
   // 5, P1); a failure only means the shell is older or absent.
   setTimeout(() => void api.ready().catch(() => undefined), 0)
@@ -600,5 +627,6 @@ export async function startSync(store: Store, api: LoomApi) {
     stop()
     stopDrop()
     stopUpdates()
+    stopData()
   }
 }

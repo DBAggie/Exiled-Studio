@@ -37,5 +37,7 @@
   "install_update",
   "install_bundle",
   "check_data_feed",
-  "download_data"
+  "download_data",
+  "data_auto_status",
+  "fetch_data"
 ]

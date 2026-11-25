@@ -154,7 +154,7 @@ export const en = {
   'start.importSafe':
     'Your original file is never changed. You can also drop a file anywhere in the window.',
   'start.needData':
-    'Add game data (at the bottom of the page) to import or start builds. Saved builds open without it.',
+    'Game data is needed to import or start builds: it is at the bottom of the page. Saved builds open without it.',
   'start.newBuild': 'New build',
   'start.fromClipboard': 'Import from clipboard',
   'start.clipboardEmpty': 'The clipboard has no text to import.',
@@ -186,7 +186,15 @@ export const en = {
   'start.dataNoneYet': 'No game data yet.',
   'start.dataLoading': 'Loading game data…',
   'start.dataFailed': 'The game data did not load.',
-  'start.dataAdd': 'Add game data…',
+  'start.dataChecking': 'Looking for game data…',
+  'start.dataDownloading':
+    'Downloading game data… This takes a minute or two the first time.',
+  'start.dataDownload': 'Download game data',
+  'start.dataRetry': 'Try again',
+  'start.dataWhy.FEED_HTTP':
+    'The download did not get through. Check the connection.',
+  'start.dataWhy.UPDATE_OFFLINE': 'The application is set never to connect.',
+  'start.dataWhy.other': 'The game data could not be downloaded.',
   'start.dataChange': 'Change',
   'start.dataChoose': 'Choose game data',
   'data.heading': 'Game data',
@@ -1159,7 +1167,7 @@ export const en = {
   'error.dismiss': 'Dismiss',
   'error.code': 'Code {code}',
   'error.APP_NO_DATA':
-    'Game data is not loaded yet. Under “Game data” on the start page, choose the game data folder, then try again.',
+    'Game data is not installed yet. Close the build, and on the start page choose “Download game data”; then try again.',
   'error.APP_NO_BUNDLE':
     'That game data is no longer installed. Choose game data in About.',
   'error.APP_BUNDLE':

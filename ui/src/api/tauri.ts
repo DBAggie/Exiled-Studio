@@ -12,6 +12,7 @@ import {
   type CalcResultDocumentV1,
   type DropNotice,
   type LoomApi,
+  type DataAutoStatus,
   type UpdateStatus,
 } from './types'
 
@@ -21,6 +22,8 @@ export const DROP_EVENT = 'loom://drop'
 
 /** The update check's channel (Rust `updates::UPDATE_EVENT`). */
 export const UPDATE_EVENT = 'loom://updates'
+/** The automatic game data's channel (Rust `data_updates::DATA_EVENT`). */
+export const DATA_EVENT = 'loom://data-auto'
 
 type Name = (typeof commands)[number]
 
@@ -88,6 +91,12 @@ export const tauriApi: LoomApi = {
   installUpdate: () => call('install_update'),
   onUpdates: (listener) =>
     listen<UpdateStatus>(UPDATE_EVENT, (e) => {
+      listener(e.payload)
+    }),
+  dataAutoStatus: () => call('data_auto_status'),
+  fetchData: () => call('fetch_data'),
+  onDataAuto: (listener) =>
+    listen<DataAutoStatus>(DATA_EVENT, (e) => {
       listener(e.payload)
     }),
   previewTree: (spec, node, fields = true) =>

@@ -63,6 +63,8 @@ dto! {
         pub updates: UpdateStatus,
         /// The data feed's answer (Phase 5, P-e).
         pub data_feed: DataFeedStatus,
+        /// The automatic game data's state (additive, 2026-11-25).
+        pub data_auto: DataAutoStatus,
         /// A what-if query.
         pub what_if: WhatIfRequest,
         /// A what-if query's answer.
@@ -171,6 +173,39 @@ dto! {
         pub bytes: u64,
         /// Whether a bundle with this ID is installed (loaded or not).
         pub installed: bool,
+    }
+
+    /// Where the automatic game data is (maintainer 2026-11-24: game data
+    /// is handled by the application, not by the user): at start in
+    /// `automatic-check` mode, and when the user asks, the shell reads the
+    /// data feed and installs the packs this computer lacks (additive,
+    /// 2026-11-25).
+    #[derive(Default)]
+    pub struct DataAutoStatus {
+        /// Where it is.
+        pub state: DataAutoState,
+        /// The pack downloading, in `downloading`.
+        #[serde(default)]
+        pub id: Option<String>,
+        /// Why the last run failed, in `failed`.
+        #[serde(default)]
+        pub error: Option<ApiError>,
+    }
+
+    /// A state of the automatic game data.
+    #[derive(Copy, Eq, Default)]
+    pub enum DataAutoState {
+        #[default]
+        /// Nothing ran yet.
+        Idle,
+        /// Reading the data feed.
+        Checking,
+        /// Downloading and installing a pack.
+        Downloading,
+        /// The last run finished: nothing was missing, or it is installed.
+        Done,
+        /// The last run failed.
+        Failed,
     }
 
     /// How the application looks for its own updates (Phase 5, P-d). Every

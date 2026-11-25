@@ -12,6 +12,7 @@ import type {
   CrashRecord,
   DataFeedStatus,
   UpdateOffer,
+  DataAutoStatus,
   UpdateStatus,
   QuarantinedBundle,
   CustomBlockView,
@@ -100,6 +101,7 @@ export type {
   TreeSprites,
   TreeView,
   UpdateOffer,
+  DataAutoStatus,
   UpdateStatus,
   WarningView,
   WhatIfPoint,
@@ -216,6 +218,14 @@ export interface LoomApi {
   installUpdate(): Promise<void>
   /** The check at start reports here. */
   onUpdates(listener: (status: UpdateStatus) => void): Promise<() => void>
+  /** The automatic game data's state (the shell gets the data this
+   * computer lacks at start, and when asked). */
+  dataAutoStatus(): Promise<DataAutoStatus>
+  /** Gets the game data this computer lacks, now (the user asked); the
+   * answer is the state it ended in, a failure included. */
+  fetchData(): Promise<DataAutoStatus>
+  /** The automatic game data reports here. */
+  onDataAuto(listener: (status: DataAutoStatus) => void): Promise<() => void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

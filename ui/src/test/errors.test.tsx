@@ -1,7 +1,7 @@
 // Error states (Phase 4 plan, decision 13): no data, a failed import, a
 // failed calculation, a stale edit. Each says what happened, as an alert,
 // with its code.
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { expectAccessible, renderApp } from './render'
@@ -28,7 +28,7 @@ describe('error states', () => {
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.getByText(/No game data yet\./)).toBeTruthy()
     expect(
-      screen.getByText(/Add game data .* to import or start builds/),
+      screen.getByText(/Game data is needed to import or start builds/),
     ).toBeTruthy()
     await user.type(
       screen.getByLabelText('Paste a share code or build XML'),
@@ -54,16 +54,62 @@ describe('error states', () => {
     ).toBe(false)
     expect(api.executed).toEqual([])
     await expectAccessible()
-    await user.click(screen.getByRole('button', { name: 'Add game data…' }))
+    // One action gets the signed data; the development folder picker is
+    // not offered here.
+    expect(screen.queryByRole('button', { name: /folder/ })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Download game data' }))
     await waitFor(() =>
       expect(
         screen.getByText(/Game data ready · Path of Exile 3\.29\./),
       ).toBeTruthy(),
     )
+    expect(api.fetches).toBe(1)
     expect(
       (screen.getByRole('button', { name: 'New build' }) as HTMLButtonElement)
         .disabled,
     ).toBe(false)
+  })
+
+  it('says where the automatic game data is, and why it failed, without a banner', async () => {
+    const { user, api } = await renderApp({ data: false })
+    // The shell is getting the data by itself: the line says so, and
+    // offers nothing to press meanwhile.
+    act(() => api.emitDataAuto({ state: 'checking' }))
+    expect(await screen.findByText(/Looking for game data…/)).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: 'Download game data' }),
+    ).toBeNull()
+    act(() =>
+      api.emitDataAuto({ state: 'downloading', id: 'poe1/26530219-s4' }),
+    )
+    expect(await screen.findByText(/Downloading game data…/)).toBeTruthy()
+    // A failure is said in words on the line, with a way to try again.
+    act(() =>
+      api.emitDataAuto({
+        state: 'failed',
+        error: { code: 'FEED_HTTP', message: 'x' },
+      }),
+    )
+    expect(
+      await screen.findByText(/The download did not get through\./),
+    ).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Game data ready · Path of Exile 3\.29\./),
+      ).toBeTruthy(),
+    )
+  })
+
+  it('offers the signed file, not a download, when set never to connect', async () => {
+    await renderApp({ data: false, updates: { mode: 'strict-offline' } })
+    expect(
+      screen.queryByRole('button', { name: 'Download game data' }),
+    ).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Install game data from a file…' }),
+    ).toBeTruthy()
   })
 
   it('shows a failed import with its code', async () => {

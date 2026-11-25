@@ -34,6 +34,7 @@ import {
   type QuarantinedBundle,
   type UpdateMode,
   type UpdateOffer,
+  type DataAutoStatus,
   type UpdateStatus,
   type DiagnosticFile,
   type TreeChange,
@@ -1976,6 +1977,53 @@ export class FakeApi implements LoomApi {
     }
     this.installs += 1
     return Promise.resolve()
+  }
+
+  /** The automatic game data's state (tests set it). */
+  dataAuto: DataAutoStatus = { state: 'idle' }
+  /** How often the user asked for the data. */
+  fetches = 0
+  private dataListeners: ((s: DataAutoStatus) => void)[] = []
+
+  dataAutoStatus(): Promise<DataAutoStatus> {
+    return Promise.resolve(structuredClone(this.dataAuto))
+  }
+
+  /** As the shell: refused offline; else the feed's packs are installed. */
+  async fetchData(): Promise<DataAutoStatus> {
+    this.fetches += 1
+    if (this.updates.mode === 'strict-offline') {
+      this.dataAuto = {
+        state: 'failed',
+        error: { code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' },
+      }
+    } else {
+      for (const offer of this.options.feed?.offers ?? []) {
+        await this.downloadData(offer.id)
+      }
+      // Without data loaded, what was installed is taken at once.
+      if (this.options.data === false) {
+        this.options.data = true
+        this.version += 1
+        this.emit('build-changed')
+      }
+      this.dataAuto = { state: 'done' }
+    }
+    this.emitDataAuto()
+    return structuredClone(this.dataAuto)
+  }
+
+  onDataAuto(listener: (s: DataAutoStatus) => void): Promise<() => void> {
+    this.dataListeners.push(listener)
+    return Promise.resolve(() => {
+      this.dataListeners = this.dataListeners.filter((l) => l !== listener)
+    })
+  }
+
+  /** The automatic game data reports (tests). */
+  emitDataAuto(status?: DataAutoStatus) {
+    if (status !== undefined) this.dataAuto = status
+    for (const l of this.dataListeners) l(structuredClone(this.dataAuto))
   }
 
   onUpdates(listener: (s: UpdateStatus) => void): Promise<() => void> {

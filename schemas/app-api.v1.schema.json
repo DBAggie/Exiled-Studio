@@ -19,6 +19,10 @@
         "$ref": "#/$defs/CrashRecord"
       }
     },
+    "data-auto": {
+      "description": "The automatic game data's state (additive, 2026-11-25).",
+      "$ref": "#/$defs/DataAutoStatus"
+    },
     "data-feed": {
       "description": "The data feed's answer (Phase 5, P-e).",
       "$ref": "#/$defs/DataFeedStatus"
@@ -128,6 +132,7 @@
     "diagnostics",
     "updates",
     "data-feed",
+    "data-auto",
     "what-if",
     "what-if-series",
     "build-fields",
@@ -2350,6 +2355,70 @@
       "required": [
         "active",
         "list"
+      ]
+    },
+    "DataAutoState": {
+      "description": "A state of the automatic game data.",
+      "oneOf": [
+        {
+          "description": "Nothing ran yet.",
+          "type": "string",
+          "const": "idle"
+        },
+        {
+          "description": "Reading the data feed.",
+          "type": "string",
+          "const": "checking"
+        },
+        {
+          "description": "Downloading and installing a pack.",
+          "type": "string",
+          "const": "downloading"
+        },
+        {
+          "description": "The last run finished: nothing was missing, or it is installed.",
+          "type": "string",
+          "const": "done"
+        },
+        {
+          "description": "The last run failed.",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "DataAutoStatus": {
+      "description": "Where the automatic game data is (maintainer 2026-11-24: game data\nis handled by the application, not by the user): at start in\n`automatic-check` mode, and when the user asks, the shell reads the\ndata feed and installs the packs this computer lacks (additive,\n2026-11-25).",
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "Why the last run failed, in `failed`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "description": "The pack downloading, in `downloading`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "state": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/DataAutoState"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state"
       ]
     },
     "DataFeedStatus": {

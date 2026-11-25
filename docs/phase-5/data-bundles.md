@@ -86,6 +86,14 @@ Debug and `e2e` builds trust the public test key (`loom_tauri::TEST_KEYS`, `loom
   - one download of a pack at a time (`FEED_BUSY`);
   - then installed like a pack from a file, with its own signature and every check above.
 - **Strict offline** refuses both before any connection (`UPDATE_OFFLINE`); the update mode governs both kinds of network use.
+- **Automatic** (maintainer decision 2026-11-24: game data is handled by the application, not by the user; `loom_tauri::data_updates`, 2026-11-25). One run reads the feed, then downloads and installs each pack this computer lacks:
+  - **which packs** (`wanted`): per game the feed's newest (the feed lists newest first), unless a bundle of that game with the same or a newer Steam build and schema is here, loaded or quarantined. An older pack of the feed is never fetched;
+  - **when**: at start in the `automatic-check` update mode (`at_start`, after the installed data has loaded), and when the user asks (the start page's **Download game data**; command `fetch_data`). The `manual` mode connects only on that request. Strict offline never does: the start page then offers **Install game data from a file…**, the signed install;
+  - **not** in a smoke run, an `e2e` build, a test (no updater plugin), or with `LOOM_DATA_DIR` set (development): those never connect on their own;
+  - **retries**: a failed connection (`FEED_HTTP`) is tried again after 2 s and after 8 s; a refused feed (signature, format, rollback) is not;
+  - **what the user sees**: the state (`idle`, `checking`, `downloading`, `done`, `failed`; app API v1 `DataAutoStatus`, additive; event `loom://data-auto`; query `data_auto_status`) on the start page's data line: "Looking for game data…", "Downloading game data…", then the data's name. A failure is a sentence on that line with **Try again**, only when no data is loaded; with data in use nothing is shown. Every failure is logged with its code and reason (`data feed check failed`, `automatic game data failed`);
+  - **what is used**: a pack installed while no data is loaded is taken at once (`HostCommand::InstallBundle`); one installed beside loaded data is in use from the next start, as the start picks the newest;
+  - the start page no longer leads to the unsigned development folder picker, which is on the About page only; `APP_NO_DATA` says to download the data.
 - **Published by** the `release` workflow's draft job (`tools/package/data-feed.sh`), listing the shipped pack. The sequence is the workflow's run number, which only grows.
 
 ## The shipped bundle

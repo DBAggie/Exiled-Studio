@@ -24,6 +24,7 @@ import { errorText, t, tDynamic } from './i18n'
 import {
   actions,
   attempt,
+  fetchData,
   closeBuild,
   perform,
   replaceBuild,
@@ -703,8 +704,18 @@ function DataLine({
 }) {
   const dispatch = useAppDispatch()
   const data = useAppSelector((s) => s.session.snapshot?.data)
+  // Game data is the application's job (maintainer 2026-11-24): the shell
+  // gets what is missing at start; this line says where that is, and
+  // offers the one action when it could not (asked not to connect at
+  // start, or the download failed).
+  const auto = useAppSelector((s) => s.lists.dataAuto)
+  const offline = useAppSelector(
+    (s) => s.lists.updates?.mode === 'strict-offline',
+  )
   const error = data?.error
   const installed = data?.installed ?? []
+  const getting = auto?.state === 'checking' || auto?.state === 'downloading'
+  const none = version == null && data?.loading !== true
   return (
     <span className="data-line">
       {version != null
@@ -713,14 +724,27 @@ function DataLine({
           })
         : data?.loading === true
           ? t('start.dataLoading')
-          : error != null
-            ? t('start.dataFailed')
-            : t('start.dataNoneYet')}{' '}
+          : getting
+            ? auto.state === 'downloading'
+              ? t('start.dataDownloading')
+              : t('start.dataChecking')
+            : error != null
+              ? t('start.dataFailed')
+              : t('start.dataNoneYet')}{' '}
       {data?.notice != null && (
         <>{tDynamic(`notice.${data.notice.code}`, 'error.generic')} </>
       )}
-      {/* With installed data, the choice is About's list (B-1); without,
-          only a development folder can be picked. */}
+      {none && !getting && auto?.state === 'failed' && (
+        <>
+          {tDynamic(
+            `start.dataWhy.${auto.error?.code ?? ''}`,
+            'start.dataWhy.other',
+          )}{' '}
+        </>
+      )}
+      {/* With installed data, the choice is About's list (B-1). Without:
+          the signed download, or, never connecting, the signed file. The
+          development folder is About's only. */}
       {installed.length > 0 || version != null ? (
         <button
           type="button"
@@ -729,13 +753,23 @@ function DataLine({
         >
           {version != null ? t('start.dataChange') : t('start.dataChoose')}
         </button>
+      ) : getting || data?.loading === true ? null : offline ? (
+        <button
+          type="button"
+          className="link"
+          onClick={() => void dispatch(attempt((api) => api.installBundle()))}
+        >
+          {t('data.install')}
+        </button>
       ) : (
         <button
           type="button"
           className="link"
-          onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
+          onClick={() => void dispatch(fetchData())}
         >
-          {t('start.dataAdd')}
+          {auto?.state === 'failed'
+            ? t('start.dataRetry')
+            : t('start.dataDownload')}
         </button>
       )}
     </span>

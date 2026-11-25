@@ -600,7 +600,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 39] = [
+pub const COMMANDS: [&str; 41] = [
     "snapshot",
     "calc_document",
     "item",
@@ -640,6 +640,8 @@ pub const COMMANDS: [&str; 39] = [
     "install_bundle",
     "check_data_feed",
     "download_data",
+    "data_auto_status",
+    "fetch_data",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -716,6 +718,8 @@ pub fn build<R: Runtime>(
             install_bundle,
             data_updates::check_data_feed,
             data_updates::download_data,
+            data_updates::data_auto_status,
+            data_updates::fetch_data,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -775,6 +779,7 @@ pub fn build<R: Runtime>(
             app.manage(updates::Updates::new(plugin, settings_for_updates));
             app.manage(data_updates::DataFeed::default());
             updates::at_start(&handle);
+            data_updates::at_start(&handle);
             Ok(())
         })
 }
