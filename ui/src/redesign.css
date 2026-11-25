@@ -712,3 +712,111 @@ select {
   white-space: nowrap;
   text-align: start;
 }
+
+/* ---- Equipment (the revamp's screens, 2026-11-25) -----------------------
+   The items are a table: slot, item, sockets, lines to review. Paste an
+   item is a button among the page's controls; its form opens under it. */
+.item-head,
+.item-row {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) 8.5rem 5rem;
+  gap: 12px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.item-head {
+  min-height: 36px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.item-row {
+  min-height: 48px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.item-head > :last-child,
+.item-notes {
+  text-align: end;
+}
+
+.item-notes {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fs-meta);
+}
+
+.item-row .slot {
+  color: var(--c-soft);
+}
+
+@media (max-width: 720px) {
+  .item-head {
+    display: none;
+  }
+
+  .item-row {
+    grid-template-columns: 6rem minmax(0, 1fr);
+  }
+
+  .item-sockets,
+  .item-notes {
+    grid-column: 2;
+    text-align: start;
+  }
+}
+
+.paste-item {
+  position: relative;
+  margin-top: 0;
+  padding: 0;
+}
+
+.paste-item > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--c-border-control);
+  border-radius: var(--radius);
+  cursor: pointer;
+  list-style: none;
+}
+
+.paste-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.paste-item > summary:hover {
+  background: var(--c-hover);
+}
+
+.paste-item-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(32rem, calc(100vw - 48px));
+  padding: 16px;
+  background: var(--c-raised);
+}
+
+/* A page's pickers: quiet labels and selects no wider than they need, so
+   the head stays one row at the usual window width. */
+.page-head .set-picker {
+  flex-wrap: nowrap;
+}
+
+.page-head .set-picker label {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.page-head .set-picker select {
+  max-width: 11rem;
+  padding: 0 8px;
+}

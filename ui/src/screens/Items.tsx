@@ -99,18 +99,22 @@ function ItemRow({ item, place }: { item: ItemSummary; place: string }) {
           {item.base != null && item.base !== itemName(item) && (
             <span className="sub">{item.base}</span>
           )}
+        </span>
+        <span className="item-sockets">
           {item.sockets.length > 0 && (
-            <span className="item-sockets">
-              <Sockets groups={item.sockets} filled={filled} />
-            </span>
+            <Sockets groups={item.sockets} filled={filled} />
           )}
         </span>
-        <span className="item-badges">
-          {legacy && <Badge tone="warn">{t('items.legacy')}</Badge>}
+        {/* Quiet text, not pills: lines to review keep the warning colour
+            only on an item in use. */}
+        <span className="item-notes">
+          {legacy && <span className="tone-warn">{t('items.legacy')}</span>}
           {item.warnings > 0 && (
-            <Badge tone={item['in-use'] ? 'warn' : 'neutral'}>
-              {t('items.warningCount', { n: item.warnings })}
-            </Badge>
+            <span className={item['in-use'] ? 'tone-warn' : 'muted'}>
+              {item.warnings === 1
+                ? t('items.reviewCount1')
+                : t('items.reviewCount', { n: item.warnings })}
+            </span>
           )}
         </span>
       </button>
@@ -193,9 +197,10 @@ export function Items() {
       <div className="page-head">
         <ScreenHeading>{t('items.title')}</ScreenHeading>
         <span className="spacer" />
-        <StageCompareSelect build={build} />
-        <LeaguePicker league={build.league} />
         {sets.length > 1 && <ItemSetPicker sets={sets} />}
+        <LeaguePicker league={build.league} />
+        <StageCompareSelect build={build} />
+        <PasteItem />
       </div>
       {/* The inventory stays in view beside the list (the brief's screen
           7); one column where the window is narrow. */}
@@ -203,7 +208,6 @@ export function Items() {
         <Inventory />
         <div className="equip-side">
           <EquipmentDiff build={build} />
-          <PasteItem />
           {items.length === 0 ? (
             <p>{t('items.none')}</p>
           ) : (
@@ -218,19 +222,27 @@ export function Items() {
                 {used.length === 0 ? (
                   <p className="panel-foot">{t('items.inUseNone')}</p>
                 ) : (
-                  <ul className="item-list">
-                    {used.map((item) => (
-                      <ItemRow
-                        key={item.id}
-                        item={item}
-                        place={
-                          item['tree-socket'] != null
-                            ? t('items.treeSocket')
-                            : (item.slot ?? '—')
-                        }
-                      />
-                    ))}
-                  </ul>
+                  <>
+                    <div className="item-head" aria-hidden="true">
+                      <span>{t('items.colSlot')}</span>
+                      <span>{t('items.colItem')}</span>
+                      <span>{t('items.colSockets')}</span>
+                      <span>{t('items.colReview')}</span>
+                    </div>
+                    <ul className="item-list">
+                      {used.map((item) => (
+                        <ItemRow
+                          key={item.id}
+                          item={item}
+                          place={
+                            item['tree-socket'] != null
+                              ? t('items.treeSocket')
+                              : (item.slot ?? '—')
+                          }
+                        />
+                      ))}
+                    </ul>
+                  </>
                 )}
               </section>
               {unused.length > 0 && (
@@ -308,49 +320,52 @@ function PasteItem() {
   }
   return (
     <details
-      className="panel paste-item"
+      className="paste-item"
       open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary>{t('items.paste.title')}</summary>
-      <p className="muted small-text">{t('items.paste.help')}</p>
-      <label htmlFor={textId}>{t('items.paste.text')}</label>
-      <textarea
-        id={textId}
-        rows={8}
-        value={text}
-        spellCheck={false}
-        onChange={(e) => {
-          setText(e.target.value)
-          setAdded(null)
-        }}
-      />
-      <div className="paste-actions">
-        <label htmlFor={slotId}>{t('items.paste.slot')}</label>
-        <select
-          id={slotId}
-          value={slot}
-          onChange={(e) => setSlot(e.target.value)}
-        >
-          <option value="">{t('items.paste.noSlot')}</option>
-          {SLOT_ORDER.filter((s) => s !== 'Ring 3').map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          className="primary"
-          disabled={text.trim() === ''}
-          onClick={() => void add()}
-        >
-          {t('items.paste.add')}
-        </button>
+      {/* Opens under its button, over the page. */}
+      <div className="paste-item-body panel">
+        <p className="muted small-text">{t('items.paste.help')}</p>
+        <label htmlFor={textId}>{t('items.paste.text')}</label>
+        <textarea
+          id={textId}
+          rows={8}
+          value={text}
+          spellCheck={false}
+          onChange={(e) => {
+            setText(e.target.value)
+            setAdded(null)
+          }}
+        />
+        <div className="paste-actions">
+          <label htmlFor={slotId}>{t('items.paste.slot')}</label>
+          <select
+            id={slotId}
+            value={slot}
+            onChange={(e) => setSlot(e.target.value)}
+          >
+            <option value="">{t('items.paste.noSlot')}</option>
+            {SLOT_ORDER.filter((s) => s !== 'Ring 3').map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="primary"
+            disabled={text.trim() === ''}
+            onClick={() => void add()}
+          >
+            {t('items.paste.add')}
+          </button>
+        </div>
+        {added !== null && (
+          <p role="status">{t('items.paste.added', { name: added })}</p>
+        )}
       </div>
-      {added !== null && (
-        <p role="status">{t('items.paste.added', { name: added })}</p>
-      )}
     </details>
   )
 }

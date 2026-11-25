@@ -128,6 +128,14 @@ Stacked on #174, PR #175, branch `feat/ui-revamp-dashboard`. The mockup is the c
 - **Not as the mockup:** no bars for capped values in the Defence table (the Resistances card has them); the Main skill and the lines to review are not stacked in one column (a grid row holds one card a cell).
 - **Checked in the running application** with fresh preferences on the Raise Spectre fixture: four figures in one row at 1,280 and 1,600 px, two a row at 1,000 px, no sideways scroll at any.
 
+## Step 4: Equipment (2026-11-25)
+Stacked on #175, branch `feat/ui-revamp-equipment`. The mockup is the canvas's "Equipment" board.
+
+- **The page's controls are one row** at 1,280 px: the item set, the league, the stage to compare with, and **Paste an item** as a button whose form opens under it (it was a panel above the list). A page's pickers have quiet labels and narrower selects on every page.
+- **The items are a table:** slot, item (name in its rarity colour, base under it), sockets, lines to review. The sockets have their own column; "1 line" and "Legacy" are quiet text in the warning colour (muted on an item not in use) in place of pills.
+- **Not as the mockup:** the sockets stay drawn as coloured dots (the mockup wrote them as letters; the dots already show the links and which sockets hold a gem); the inventory picture is unchanged (the selected item's outline belongs to a selection the list does not have: a row opens the item).
+- **Checked in the running application** on the Raise Spectre fixture: the head one row at 1,280 and 1,600 px, two under 1,000 px; the paste form opens under its button inside the window; no sideways scroll.
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

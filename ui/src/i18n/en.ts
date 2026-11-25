@@ -657,6 +657,12 @@ export const en = {
   'items.none': 'This build has no items.',
   'items.warningCount': '{n} with warnings',
   'items.legacy': 'Legacy',
+  'items.reviewCount': '{n} lines',
+  'items.reviewCount1': '1 line',
+  'items.colSlot': 'Slot',
+  'items.colItem': 'Item',
+  'items.colSockets': 'Sockets',
+  'items.colReview': 'To review',
   'inventory.treeJewels': 'Jewels in the passive tree',
   'inventory.treeJewel': 'Passive tree jewel: {name}',
   'inventory.attributes':
