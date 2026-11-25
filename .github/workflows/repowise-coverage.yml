@@ -47,8 +47,15 @@ jobs:
       - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
         with:
           tool: cargo-llvm-cov
+      # The report is this job's point; ci.yml's rust job is the one that
+      # gates the tests. So a failed test does not stop the report
+      # (--ignore-run-fail runs every test, then writes it). One test fails
+      # here by design of the instrumentation, not of the code:
+      # oracle_process::tests::run_should_pass_only_the_allow_list checks a
+      # child's whole environment, and the profile runtime adds
+      # __LLVM_PROFILE_RT_INIT_ONCE to an instrumented child.
       - name: Run tests with coverage
-        run: cargo llvm-cov --workspace --locked --lcov --output-path lcov.info
+        run: cargo llvm-cov --workspace --locked --ignore-run-fail --lcov --output-path lcov.info
       - name: Upload coverage to Repowise
         if: always()
         continue-on-error: true
