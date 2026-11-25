@@ -1223,12 +1223,19 @@ impl Writer {
         self.recovery
             .list(self.session.store())
             .into_iter()
-            .map(|f| api::RecoveryEntry {
-                id: f.id,
-                saved_at: f.header.saved_at,
-                name: f.header.name,
-                path: f.header.path,
-                origin: f.header.origin,
+            .map(|f| {
+                let s = f.header.summary.unwrap_or_default();
+                api::RecoveryEntry {
+                    id: f.id,
+                    saved_at: f.header.saved_at,
+                    name: f.header.name,
+                    path: f.header.path,
+                    origin: f.header.origin,
+                    class: s.class,
+                    ascendancy: s.ascendancy,
+                    level: s.level,
+                    main_skill: s.skill,
+                }
             })
             .collect()
     }
@@ -1323,6 +1330,11 @@ impl Writer {
                 name: self.session.name(),
                 path: self.session.path().map(|p| p.display().to_string()),
                 origin: self.session.origin().map(|p| p.display().to_string()),
+                // What the build is, as the recent list says it.
+                summary: Some(crate::view::recent_summary(
+                    &state.build,
+                    self.session.data().map(|d| d.bundle),
+                )),
             };
             // A failed autosave is retried with the next change. The
             // history first: a snapshot is never newer than its history.

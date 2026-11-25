@@ -64,8 +64,11 @@ function looksLikeBuild(text: string): boolean {
   )
 }
 
-/** "Inquisitor 92 · Smite" (UX-20); empty when the list has nothing. */
-function summary(r: RecentEntry): string {
+/** "Inquisitor 92 · Smite" (UX-20); empty when the list has nothing. A
+ * recovery copy says the same, so copies of one name are told apart. */
+function summary(
+  r: Pick<RecentEntry, 'class' | 'ascendancy' | 'level' | 'main-skill'>,
+): string {
   const who = [r.ascendancy ?? r.class, r.level].filter((x) => x != null)
   return [who.join(' '), r['main-skill']].filter((x) => x).join(' · ')
 }
@@ -218,12 +221,17 @@ export function Start() {
             <p className="sub">{t('start.recoveryLead')}</p>
             <ul className="recovery-list">
               {recovery.map((r) => {
-                const name = r.name === '' ? t('app.untitled') : r.name
+                const title = r.name === '' ? t('app.untitled') : r.name
+                // What the build is tells copies of one name apart, on
+                // the row and in its buttons' names.
+                const what = summary(r)
+                const name = what === '' ? title : `${title}, ${what}`
                 const file = r.path ?? r.origin
                 return (
                   <li key={r.id}>
                     <div>
-                      <strong>{name}</strong>
+                      <strong>{title}</strong>
+                      {what !== '' && <span className="sub">{what}</span>}
                       <span className="sub">
                         {t('start.recoveryWhen', { when: ago(r['saved-at']) })}
                         {file != null && (

@@ -1594,9 +1594,26 @@ export interface RecentEntry {
  */
 export interface RecoveryEntry {
   /**
+   * The ascendancy, if known.
+   */
+  ascendancy?: string | null
+  /**
+   * The class, if known (a snapshot written before 2026-11-25 has
+   * none of these four).
+   */
+  class?: string | null
+  /**
    * Its ID (the file's stem).
    */
   id: string
+  /**
+   * The character level, if known.
+   */
+  level?: number | null
+  /**
+   * The main skill, if known.
+   */
+  'main-skill'?: string | null
   /**
    * The build's display name.
    */

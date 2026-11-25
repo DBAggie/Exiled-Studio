@@ -1445,6 +1445,19 @@ dto! {
         pub path: Option<String>,
         /// The file it was imported from, if any.
         pub origin: Option<String>,
+        /// The class, if known (a snapshot written before 2026-11-25 has
+        /// none of these four).
+        #[serde(default)]
+        pub class: Option<String>,
+        /// The ascendancy, if known.
+        #[serde(default)]
+        pub ascendancy: Option<String>,
+        /// The character level, if known.
+        #[serde(default)]
+        pub level: Option<u32>,
+        /// The main skill, if known.
+        #[serde(default)]
+        pub main_skill: Option<String>,
     }
 
     /// A recent build.

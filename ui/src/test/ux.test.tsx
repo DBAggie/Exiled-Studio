@@ -262,8 +262,27 @@ describe('UX High fixes', () => {
           path: null,
           origin: 'C:\\pob\\lost.xml',
         },
+        {
+          id: 'r2',
+          'saved-at': now - 600,
+          name: 'lost',
+          path: null,
+          origin: null,
+          class: 'Witch',
+          ascendancy: 'Necromancer',
+          level: 92,
+          'main-skill': 'Raise Spectre',
+        },
       ],
     })
+    // Two copies of one name are told apart by what the build is, on the
+    // row and in its buttons' names.
+    expect(screen.getByText('Necromancer 92 · Raise Spectre')).toBeTruthy()
+    expect(
+      screen.getByRole('button', {
+        name: 'Restore lost, Necromancer 92 · Raise Spectre',
+      }),
+    ).toBeTruthy()
     // Recovery comes before the command bar.
     const recovery = screen.getByRole('heading', {
       name: 'Unsaved work',

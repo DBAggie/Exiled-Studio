@@ -98,7 +98,16 @@ PR #172, branch `feat/ui-revamp-start-config`, stacked on step 3's (#171). The m
 
 **Checked in the running application** on the Raise Spectre fixture: Configuration's questions each on one line (20 px), no sideways scroll at 1,000, 1,280, and 1,600 px, no technical name shown until asked; the start page with eight recovery copies and one recent build.
 
+## A recovery copy says what its build is (2026-11-25)
+Branch `feat/recovery-summary`, stacked on step 4's first part (maintainer: "Yes, add class and skill").
+
+- **The snapshot's header** (`loom_persistence::recovery::Header`) gains an optional `summary`: class, ascendancy, level, main skill, the recent list's `Summary`, written at each autosave (`loom_app` `write_recovery`, `view::recent_summary`). Left out when not known, so a snapshot without it is the file as it was.
+- **App API v1, additive:** `RecoveryEntry` gains `class`, `ascendancy`, `level`, `main-skill`, as `RecentEntry` has them.
+- **The start page** shows "Necromancer 92 · Raise Spectre" under a copy's name, and Restore and Discard carry it in their names, so copies of one name are told apart by sight and by a screen reader.
+- **Older copies** (written before this) list and restore as before, without the line.
+- **One limit:** an application older than this change, reading a snapshot written by a newer one, may refuse the unknown `summary` key on restore (the file's reader is strict). It arises only when a user goes back to an older version with unsaved work pending; the stable and experimental channels keep separate data folders. Not tested here.
+- **Checked in the running application:** a build imported and the application ended without a save; at the next start its copy read "Imported build · Necromancer 92 · Raise Spectre", and the nine older copies were listed as before.
+
 ## Open
 - Step 4's other screens need their mockups first: Warnings, About, the import review (its "Lines to review" column is squeezed at 1,280 px), the Dashboard's layout, Equipment, and Skills.
-- A recovery copy's class and main skill (an additive `RecoveryEntry` field), so unsaved work is told apart when the builds have no name.
 - The mockups were not rendered here (the canvas is checked by the maintainer).

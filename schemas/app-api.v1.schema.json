@@ -4220,9 +4220,43 @@
       "description": "A recovery snapshot (autosave) found at start.",
       "type": "object",
       "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "class": {
+          "description": "The class, if known (a snapshot written before 2026-11-25 has\nnone of these four).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "id": {
           "description": "Its ID (the file's stem).",
           "type": "string"
+        },
+        "level": {
+          "description": "The character level, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
+          "minimum": 0
+        },
+        "main-skill": {
+          "description": "The main skill, if known.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "name": {
           "description": "The build's display name.",
