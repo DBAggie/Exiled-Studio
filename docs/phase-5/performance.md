@@ -116,6 +116,33 @@ The maintainer asked for the recommended fixes (2026-11-15). All three are in:
 4. **Version conversion** is measured since T5b (2026-11-16): inside budget by three orders of magnitude.
 5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. The maintainer can add them from Task Manager's process tree if the budget means the whole tree.
 
+## The calculation profile (2026-11-24)
+
+The re-baselines above asked for a profile before Phase 7 (the maintainer asked for it on 2026-11-24). Measured with `loom-bench wall` on the evidence bundle `local/p6/packs/b-ct` (build 26530219, data schema 5) and the largest public fixture (`forged-frostbearer-spectre-necromancer.xml`), release build, Windows workstation. The bench's synthetic bundle has a few rows per table, so CI's instruction counts could not show what follows.
+
+**Where the time went** (temporary timers and counters in a local build, never committed: each phase, each step of `poe1::collect`, `poe1::states::states` and `conditions::settle`, the store's queries, and each data lookup):
+
+- **One `calculate` was four calculations:** the build's own and three nested ones for the full DPS (`poe1::full_dps`, one per included skill). The phases themselves took about 12 ms in all; the rest was collecting.
+- **Data lookups were linear scans.** `CalcData for Bundle` found a row with `iter().find` over the whole table: per `calculate` about 12,000 `granted_effect` lookups over 12,829 rows, and about 11,000 each of `skill_gem` (847 rows) and `gem_effect` (1,292 rows), plus `passive_stats`, `passive_kind` (5,706 rows), `active_skill`, and `stat_set`: on the order of 100 million string comparisons.
+- **The settled conditions were settled three times per calculation** (`super::states::states(input)` in `collect` for the buffs and for the exposure, and the engine'"'"'s `rules.states` after collecting), each resolving the main skill and the active skills again.
+- **Not the cause:** the store'"'"'s queries. They scan all effects (no index by quantity), but per `calculate` that was about 2,750 queries over about a million effects in all, a few milliseconds. The re-baselines'"'"' candidate is not the bottleneck.
+
+**Changed** (no result changes: every public and corpus calc-run document is byte-identical to the run before, `local/p6/s2` against `local/p6/perf-pub` and `perf-cor`):
+
+- `loom_data::bundle::Bundle` keeps a key index per table (`granted_effect`, `gem_effect`, `skill_gem`, `active_skill`, `stat_set`, `passive`), built on first use. Each lookup checks the row it finds and falls back to the scan on a miss or when the table'"'"'s length changed (the tables are public), so its answer is always the scan'"'"'s. One `calculate`: about 44,000 hits, 84 misses.
+- The engine settles the conditions once, before collecting, and hands them to the rules through `Ingest::with_states`; `poe1::collect` reads them there.
+
+**Result:**
+
+| | Before | After |
+|---|---|---|
+| `calculate`, the largest fixture, `b-ct` (median of 30) | 231 ms | 106 to 112 ms |
+| The public calc-run, 535 builds (calculation time) | 5.14 s | 2.38 s |
+
+Both stay inside the item-edit preview'"'"'s 300 ms; at 231 ms the largest builds were close to it on this workstation.
+
+**Next levers** (for Phase 7, not done here): the main skill and the active skills are still resolved many times per calculation (`states`, `settle`'"'"'s checks, the curses, the gems, the costs): a per-calculation cache of the resolved skills would cut most of what is left; the full DPS pass recollects the whole build per included skill, where the items, tree, and config are the same each time; and the store could index its effects by quantity once queries grow.
+
 ## Accessibility (WCAG 2.2 AA)
 - **axe** (`expectAccessible`, `ui/src/test/render.tsx`) runs the WCAG 2.0, 2.1, and 2.2 A and AA rules.
   - `a11y.test.tsx` checks every screen; eight other test files check their own dialogs and panels.

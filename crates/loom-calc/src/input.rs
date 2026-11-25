@@ -335,12 +335,7 @@ impl CalcData for Bundle {
     }
 
     fn passive_stats(&self, node: u32) -> Option<&[StatAmount]> {
-        self.passives
-            .as_ref()?
-            .passives
-            .iter()
-            .find(|p| p.node == i64::from(node))
-            .map(|p| p.stats.as_slice())
+        Bundle::passive(self, i64::from(node)).map(|p| p.stats.as_slice())
     }
 
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]> {
@@ -417,39 +412,23 @@ impl CalcData for Bundle {
     }
 
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
-        self.skills
-            .as_ref()?
-            .gems
-            .iter()
-            .find(|g| g.base_item == base_item)
+        Bundle::skill_gem(self, base_item)
     }
 
     fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
-        self.skills
-            .as_ref()?
-            .gem_effects
-            .iter()
-            .find(|e| e.id == id)
+        Bundle::gem_effect(self, id)
     }
 
     fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
-        self.skills
-            .as_ref()?
-            .granted_effects
-            .iter()
-            .find(|e| e.id == id)
+        Bundle::granted_effect(self, id)
     }
 
     fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
-        self.skills
-            .as_ref()?
-            .active_skills
-            .iter()
-            .find(|a| a.id == id)
+        Bundle::active_skill(self, id)
     }
 
     fn stat_set(&self, id: &str) -> Option<&StatSet> {
-        self.skills.as_ref()?.stat_sets.iter().find(|s| s.id == id)
+        Bundle::stat_set(self, id)
     }
 
     fn monster_level(&self, level: i64) -> Option<MonsterStats> {
@@ -539,12 +518,7 @@ impl CalcData for Bundle {
     }
 
     fn passive_kind(&self, node: u32) -> Option<PassiveKind> {
-        let p = self
-            .passives
-            .as_ref()?
-            .passives
-            .iter()
-            .find(|p| p.node == i64::from(node))?;
+        let p = Bundle::passive(self, i64::from(node))?;
         Some(PassiveKind {
             notable: p.notable,
             ascendancy: p.ascendancy.is_some(),

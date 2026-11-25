@@ -138,12 +138,17 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     warcry_power_armour(input, ingest);
     // After the gems' reservations (P6-11ib).
     reserved_max_resist(ingest);
-    super::buffs::buffs(active_config(build), &super::states::states(input), ingest);
+    // The settled conditions: the engine's, else settled here (once).
+    let settled = ingest
+        .states()
+        .cloned()
+        .unwrap_or_else(|| super::states::states(input));
+    super::buffs::buffs(active_config(build), &settled, ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
     // effect and minimum (P3-8k).
-    super::exposure::exposure(active_config(build), &super::states::states(input), ingest);
+    super::exposure::exposure(active_config(build), &settled, ingest);
     super::damage_taken::damage_taken(input, active_config(build), ingest);
     // After every source of resistance modifiers, buffs included (P6-11ah).
     super::resist_conversion::resist_conversion(ingest);

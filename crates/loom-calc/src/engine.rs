@@ -407,10 +407,14 @@ pub(crate) fn collected<'a>(
     input: &'a CalcInput<'a>,
     rules: &dyn Ruleset,
 ) -> Result<Calc<'a>, CalcError> {
-    let mut ingest = Ingest::new(rules.mapping()).with_item_lines(&input.options.item_lines);
+    // The settled conditions depend on the input alone: settled once, and
+    // read by the rules while collecting (performance profile, 2026-11-24).
+    let states = rules.states(input);
+    let mut ingest = Ingest::new(rules.mapping())
+        .with_item_lines(&input.options.item_lines)
+        .with_states(states.clone());
     rules.collect(input, &mut ingest)?;
     let (store, global) = ingest.finish();
-    let states = rules.states(input);
     let (minion, minion_problem) = match rules.minion(input, &store) {
         Some(Ok(m)) => (Some(m), None),
         Some(Err(reason)) => (None, Some(reason)),
