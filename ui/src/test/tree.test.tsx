@@ -25,9 +25,12 @@ describe('passive tree', () => {
   it('allocates, removes, and undoes from the list view', async () => {
     const { user, api } = await openTree()
     expect(points()).toBe('Passive points: 2 · Ascendancy points: 0')
+    // A notice is an icon with its text one press away, not a row.
     expect(
-      screen.getByText(/^Allocated nodes kept as imported: 1\./),
-    ).toBeTruthy()
+      screen
+        .getByRole('button', { name: 'Allocated nodes kept as imported: 1' })
+        .getAttribute('aria-description'),
+    ).toMatch(/^Allocated nodes kept as imported: 1\./)
     await expectAccessible()
 
     await user.click(screen.getByRole('button', { name: 'Keystones' }))
@@ -151,12 +154,15 @@ describe('passive tree', () => {
     expect(text.closest('.tree-flavour')?.textContent).toBe(
       'A made-up keystone line.A second one.',
     )
-    expect(screen.queryByText('A made-up quote.')).toBeNull()
+    expect(screen.queryByRole('button', { name: /^About the/ })).toBeNull()
     await user.selectOptions(
       screen.getByLabelText('Ascendancy'),
       'Elementalist',
     )
-    expect(await screen.findByText('A made-up quote.')).toBeTruthy()
+    const about = await screen.findByRole('button', {
+      name: 'About the Elementalist',
+    })
+    expect(about.getAttribute('aria-description')).toBe('A made-up quote.')
   })
 
   it('shows the calculated attribute totals by the points', async () => {
@@ -233,7 +239,13 @@ describe('passive tree', () => {
   it('adds, renames, and deletes passive trees', async () => {
     const { user, api } = await openTree()
     const bar = screen.getByRole('group', { name: 'Passive trees' })
-    await user.click(within(bar).getByRole('button', { name: 'New tree' }))
+    const menu = async (item: string) => {
+      await user.click(
+        within(bar).getByRole('button', { name: /^Passive tree:/ }),
+      )
+      await user.click(await screen.findByRole('menuitem', { name: item }))
+    }
+    await menu('New tree')
     const form = screen.getByRole('form', { name: 'New tree' })
     await user.type(within(form).getByLabelText('Name'), 'Bossing')
     await user.click(within(form).getByRole('button', { name: 'Save' }))
@@ -242,14 +254,14 @@ describe('passive tree', () => {
         'new-spec': { title: 'Bossing', copy: null },
       }),
     )
-    await user.click(within(bar).getByRole('button', { name: 'Rename tree' }))
+    await menu('Rename tree')
     const rename = screen.getByRole('form', { name: 'Rename tree' })
     const name = within(rename).getByLabelText('Name')
     await user.clear(name)
     await user.type(name, 'Campaign')
     await user.click(within(rename).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(within(bar).getByText(/^Campaign/)).toBeTruthy())
-    await user.click(within(bar).getByRole('button', { name: 'Delete tree' }))
+    await menu('Delete tree')
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
         name: 'Delete tree',

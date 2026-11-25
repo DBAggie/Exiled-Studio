@@ -862,6 +862,10 @@ export const en = {
   'tree.keptCount':
     'Allocated nodes kept as imported: {n}. Exiled Studio does not edit them (bloodline passives, cluster jewels’ nodes).',
   'tree.specs': 'Passive trees',
+  'tree.moreChanges': 'and {n} more numbers change.',
+  'tree.specMenu': 'Passive tree: {name}',
+  'tree.keptLabel': 'Allocated nodes kept as imported: {n}',
+  'tree.flavourLabel': 'About the {name}',
   'tree.specNew': 'New tree',
   'tree.specCopy': 'Copy tree',
   'tree.specRename': 'Rename tree',

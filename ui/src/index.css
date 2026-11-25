@@ -2871,3 +2871,209 @@ button.inv-slot:focus-visible {
   text-align: end;
   overflow-wrap: anywhere;
 }
+
+/* ------------------------------------------------ the full-page tree */
+
+/* The controls' groups: rows above the list; over the tree, its four
+   corners (maintainer 2026-11-24). */
+.tree-float {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.tree-float .tree-points {
+  margin: 0;
+}
+
+.tree-spec-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+}
+
+.tree-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tree-notices:empty {
+  display: none;
+}
+
+/* The tree takes the whole content area under the build's header. */
+.content:has(> .tree-full) {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.content:has(> .tree-full) > :not(.tree-full) {
+  width: auto;
+  margin: 8px 20px 0;
+}
+
+.content > .tree-full {
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  max-width: none;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-tree-bg);
+}
+
+.tree-full .tree-stage,
+.tree-full .tree-canvas-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.tree-full .tree-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Over the tree: text and outlines only, read through a soft shadow. */
+.tree-full .tree-float,
+.tree-full .tree-zoom,
+.tree-full .tree-notices {
+  position: absolute;
+  z-index: 2;
+  text-shadow:
+    0 1px 3px var(--c-tree-bg),
+    0 0 10px var(--c-tree-bg);
+}
+
+.tree-full .tree-tl {
+  top: 14px;
+  left: 20px;
+  max-width: calc(50% - 20px);
+}
+
+.tree-full .tree-tr {
+  top: 14px;
+  right: 20px;
+  max-width: calc(50% - 20px);
+  justify-content: flex-end;
+}
+
+.tree-full .tree-float :is(select, input) {
+  width: auto;
+  min-width: 0;
+}
+
+.tree-full .tree-float input[type='search'] {
+  width: 10rem;
+}
+
+.tree-full .tree-float .set-picker {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+/* The select says "No comparison" or the stage: its label is for
+   screen readers here. */
+.tree-full .tree-float .set-picker label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tree-full .tree-float .set-picker select {
+  max-width: 11rem;
+}
+
+.tree-full .tree-float .segmented button {
+  border-color: transparent;
+}
+
+.tree-full .tree-tr > button {
+  border-color: transparent;
+}
+
+.tree-full .tree-tr > button:hover {
+  border-color: var(--c-border-control);
+}
+
+.tree-full .tree-bl {
+  bottom: 14px;
+  left: 20px;
+  max-width: calc(100% - 220px);
+}
+
+.tree-full .tree-zoom {
+  top: auto;
+  right: 20px;
+  bottom: 12px;
+}
+
+.tree-full .tree-notices {
+  top: 96px;
+  left: 20px;
+  width: min(440px, calc(100% - 40px));
+  max-height: calc(100% - 160px);
+  overflow-y: auto;
+}
+
+/* The heading stays for screen readers and the focus on arrival. */
+.tree-full h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tree-full .tree-float :is(button, select, input, .segmented),
+.tree-full .tree-zoom button {
+  background: transparent;
+  text-shadow: inherit;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button, .segmented),
+.tree-full .tree-float .set-picker select {
+  border-color: transparent;
+}
+
+.tree-full .tree-float :is(select, .tree-spec-button):hover {
+  border-color: var(--c-border-control);
+}
+
+.tree-full .tree-float .segmented button[aria-pressed='true'] {
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--c-accent);
+  border-radius: 0;
+}
+
+.tree-full .tree-float .tree-points {
+  padding: 0;
+  border: 0;
+  color: var(--c-text);
+  font-size: 0.928rem;
+}
+
+/* A container only where one is unavoidable, and then see-through. */
+.tree-full .tree-notices > *,
+.tree-card {
+  background: color-mix(in srgb, var(--c-raised) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tree-full .tree-notices > * {
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  text-shadow: none;
+}

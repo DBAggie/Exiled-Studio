@@ -12,7 +12,7 @@
 // ascendancy, and a reset are one undoable change each. Nodes the editor
 // keeps but does not edit (bloodline passives, cluster jewels' nodes) are
 // drawn faded and listed as kept.
-import { AlertDialog, Dialog } from 'radix-ui'
+import { AlertDialog, Dialog, DropdownMenu } from 'radix-ui'
 import {
   useCallback,
   useEffect,
@@ -30,7 +30,7 @@ import type {
   TreePreview,
   TreeView,
 } from '../api/types'
-import { Hint, ScreenHeading } from '../components'
+import { Hint, Icon, ScreenHeading } from '../components'
 import { ImportedText } from '../ImportedText'
 import { plain } from '../colourCodes'
 import { floatingStyle, placeByPoint, useFloating } from '../floating'
@@ -253,10 +253,14 @@ function TreeCanvas({
   const path = useMemo(() => new Set(preview?.path ?? []), [preview])
   const removed = useMemo(() => new Set(preview?.removed ?? []), [preview])
 
+  // Whether the view is still the fitted one: a resize then fits again;
+  // after a move or a zoom the view is the user's and is kept.
+  const fitted = useRef(true)
   // Fit the tree on first draw.
   const fit = useCallback(() => {
     const el = canvas.current
     if (el === null || placed.length === 0) return
+    fitted.current = true
     const xs = placed.map((n) => n.position?.x ?? 0)
     const ys = placed.map((n) => n.position?.y ?? 0)
     const [x0, x1, y0, y1] = [
@@ -273,6 +277,18 @@ function TreeCanvas({
   useEffect(() => {
     if (camera === null) fit()
   }, [camera, fit])
+  // The tree fills its page: when the window (so the canvas) changes
+  // size, fit again, or draw the kept view at the new size.
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      if (fitted.current) fit()
+      else setCamera((cam) => (cam === null ? cam : { ...cam }))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fit])
 
   const toScreen = useCallback(
     (x: number, y: number, el: HTMLCanvasElement, cam: Camera) => ({
@@ -546,6 +562,7 @@ function TreeCanvas({
   const zoom = useCallback((factor: number, cx?: number, cy?: number) => {
     const el = canvas.current
     if (el === null) return
+    fitted.current = false
     setCamera((camera) => {
       if (camera === null) return camera
       const scale = Math.min(2, Math.max(0.01, camera.scale * factor))
@@ -599,6 +616,7 @@ function TreeCanvas({
               // The node card would hide what is being dragged to.
               if (!d.moved) onHover(null, { x: 0, y: 0 })
               d.moved = true
+              fitted.current = false
               d.x = e.clientX
               d.y = e.clientY
               setCamera((cam) =>
@@ -651,37 +669,76 @@ function TreeCanvas({
 }
 
 /** A preview's changed fields. */
+/** The numbers a hover card shows first, in this order; the rest follow
+ * in the calculation's order. */
+const IMPACT_FIRST = [
+  'hit-dps',
+  'minion.hit-dps',
+  'poe1.full-dps',
+  'life',
+  'energy-shield',
+  'mana',
+  'armour',
+  'evasion',
+  'block-chance',
+  'strength',
+  'dexterity',
+  'intelligence',
+]
+
+/** The changes a hover card lists; the rest are counted (a node can
+ * change twenty numbers, and the card must not cover the tree). */
+const IMPACT_SHOWN = 6
+
 function Impact({ preview }: { preview: TreePreview }) {
-  const changed = preview.fields.filter(
-    (f) => f.before !== f.after || f['state-before'] !== f['state-after'],
-  )
-  if (changed.length === 0) return null
+  const rank = (field: string) => {
+    const i = IMPACT_FIRST.indexOf(field)
+    return i < 0 ? IMPACT_FIRST.length : i
+  }
+  const all = preview.fields
+    .filter(
+      (f) => f.before !== f.after || f['state-before'] !== f['state-after'],
+    )
+    .map((f, i) => ({ f, i }))
+    .sort((a, b) => rank(a.f.field) - rank(b.f.field) || a.i - b.i)
+    .map((x) => x.f)
+  if (all.length === 0) return null
+  // One or two over the limit are shown, not counted.
+  const changed =
+    all.length > IMPACT_SHOWN + 2 ? all.slice(0, IMPACT_SHOWN) : all
   return (
-    <ul className="impact-list">
-      {changed.map((f) => {
-        const delta =
-          f.before != null && f.after != null ? f.after - f.before : null
-        return (
-          <li key={f.field}>
-            <span>{fieldLabel(f.field)}</span>
-            <span className="row">
-              <span className="before">
-                {f.before == null ? '—' : withUnit(f.field, f.before)} →
-              </span>
-              <span className="after">
-                {f.after == null ? '—' : withUnit(f.field, f.after)}
-              </span>
-              {delta !== null && delta !== 0 && (
-                <span className={delta > 0 ? 'delta-up' : 'delta-down'}>
-                  {delta > 0 ? '+' : '−'}
-                  {withUnit(f.field, Math.abs(delta))}
+    <>
+      <ul className="impact-list">
+        {changed.map((f) => {
+          const delta =
+            f.before != null && f.after != null ? f.after - f.before : null
+          return (
+            <li key={f.field}>
+              <span>{fieldLabel(f.field)}</span>
+              <span className="row">
+                <span className="before">
+                  {f.before == null ? '—' : withUnit(f.field, f.before)} →
                 </span>
-              )}
-            </span>
-          </li>
-        )
-      })}
-    </ul>
+                <span className="after">
+                  {f.after == null ? '—' : withUnit(f.field, f.after)}
+                </span>
+                {delta !== null && delta !== 0 && (
+                  <span className={delta > 0 ? 'delta-up' : 'delta-down'}>
+                    {delta > 0 ? '+' : '−'}
+                    {withUnit(f.field, Math.abs(delta))}
+                  </span>
+                )}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {all.length > changed.length && (
+        <p className="muted small-text">
+          {t('tree.moreChanges', { n: all.length - changed.length })}
+        </p>
+      )}
+    </>
   )
 }
 
@@ -1435,8 +1492,9 @@ export function Tree() {
 
   const view = mode ?? (layout.placed ? 'canvas' : 'list')
   const cls = layout.classes.find((c) => c.number === tree.class)
-  const quote =
-    cls?.ascendancies.find((a) => a.number === tree.ascendancy)?.flavour ?? null
+  const ascendancy = cls?.ascendancies.find((a) => a.number === tree.ascendancy)
+  const ascName = ascendancy?.name
+  const quote = ascendancy?.flavour ?? null
   const locked = tree.locked ?? null
   const activate = (n: TreeNodeView) => {
     if (
@@ -1485,57 +1543,71 @@ export function Tree() {
     void dispatch(run(command))
   }
 
+  // The tree fills the page, its controls floating over it in the four
+  // corners with no filled boxes (maintainer 2026-11-24); the list keeps
+  // the same controls in rows above it.
+  const full = view === 'canvas' && layout.placed
   return (
-    <section className="screen tree-screen">
-      {/* The heading row: the page, how to use it (one press away), and
-          the tree's own actions; then one row of controls. */}
-      <div className="page-head">
+    <section className={`screen tree-screen${full ? ' tree-full' : ''}`}>
+      <div className="tree-float tree-tl">
         <ScreenHeading>{t('tree.title')}</ScreenHeading>
-        <Hint>{t('tree.canvasHelp')}</Hint>
-        <span className="spacer" />
-        <div
-          className="row tree-specs"
-          role="group"
-          aria-label={t('tree.specs')}
-        >
-          <span className="muted small-text">
-            <ImportedText text={specTitle} />
-          </span>
-          <button
-            type="button"
-            className="small"
-            onClick={() => setSpecForm({ kind: 'new', title: '' })}
-          >
-            {t('tree.specNew')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={() =>
-              setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
-            }
-          >
-            {t('tree.specCopy')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
-          >
-            {t('tree.specRename')}
-          </button>
-          <button
-            type="button"
-            className="small"
-            disabled={specs.length <= 1}
-            onClick={() => setConfirm({ kind: 'delete' })}
-          >
-            {t('tree.specDelete')}
-          </button>
+        <div className="tree-specs" role="group" aria-label={t('tree.specs')}>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button
+                type="button"
+                className="tree-spec-button"
+                aria-label={t('tree.specMenu', { name: plain(specTitle) })}
+              >
+                <ImportedText text={specTitle} />
+                <Icon name="chevron" size={14} />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="menu-content"
+                align="start"
+                sideOffset={6}
+              >
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() => setSpecForm({ kind: 'new', title: '' })}
+                >
+                  {t('tree.specNew')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() =>
+                    setSpecForm({
+                      kind: 'copy',
+                      title: `${plain(specTitle)} (copy)`,
+                    })
+                  }
+                >
+                  {t('tree.specCopy')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  onSelect={() =>
+                    setSpecForm({ kind: 'rename', title: specTitle })
+                  }
+                >
+                  {t('tree.specRename')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="menu-item"
+                  disabled={specs.length <= 1}
+                  onSelect={() => setConfirm({ kind: 'delete' })}
+                >
+                  {t('tree.specDelete')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
-      </div>
-      <div className="row tree-bar">
-        <label htmlFor={classId}>{t('tree.class')}</label>
+        <label htmlFor={classId} className="visually-hidden">
+          {t('tree.class')}
+        </label>
         <select
           id={classId}
           value={tree.class}
@@ -1556,7 +1628,9 @@ export function Tree() {
             </option>
           ))}
         </select>
-        <label htmlFor={ascId}>{t('tree.ascendancy')}</label>
+        <label htmlFor={ascId} className="visually-hidden">
+          {t('tree.ascendancy')}
+        </label>
         <select
           id={ascId}
           value={tree.ascendancy}
@@ -1579,26 +1653,20 @@ export function Tree() {
             </option>
           ))}
         </select>
-        {quote != null && <Flavour text={quote} />}
-        <p className="tree-points" aria-live="polite">
-          {t('tree.points', {
-            n: tree.points,
-            a: tree['ascendancy-points'],
-          })}
-        </p>
-        {attributes.str != null &&
-          attributes.dex != null &&
-          attributes.int != null && (
-            <p className="tree-points" aria-live="polite">
-              {t('tree.attributes', {
-                str: formatNumber(attributes.str),
-                dex: formatNumber(attributes.dex),
-                int: formatNumber(attributes.int),
-              })}
-            </p>
-          )}
-        <span className="spacer" />
-        {build != null && <StageCompareSelect build={build} />}
+        {/* Notices are one press away, not rows above the tree. */}
+        <Hint>{t('tree.canvasHelp')}</Hint>
+        {quote != null && (
+          <Hint label={t('tree.flavourLabel', { name: ascName ?? '' })}>
+            {quote}
+          </Hint>
+        )}
+        {tree.kept.length > 0 && (
+          <Hint label={t('tree.keptLabel', { n: tree.kept.length })}>
+            {t('tree.keptCount', { n: tree.kept.length })}
+          </Hint>
+        )}
+      </div>
+      <div className="tree-float tree-tr">
         <label htmlFor={searchId} className="visually-hidden">
           {t('tree.search')}
         </label>
@@ -1631,6 +1699,7 @@ export function Tree() {
             {t('tree.viewList')}
           </button>
         </div>
+        {build != null && <StageCompareSelect build={build} />}
         <button
           type="button"
           disabled={locked !== null}
@@ -1639,162 +1708,180 @@ export function Tree() {
           {t('tree.reset')}
         </button>
       </div>
-      {specForm !== null && (
-        <form
-          className="panel row"
-          aria-label={
-            specForm.kind === 'rename'
-              ? t('tree.specRename')
-              : specForm.kind === 'copy'
-                ? t('tree.specCopy')
-                : t('tree.specNew')
-          }
-          onSubmit={(e) => {
-            e.preventDefault()
-            saveSpec()
-          }}
-        >
-          <label htmlFor={specNameId}>{t('tree.specName')}</label>
-          <input
-            id={specNameId}
-            value={specForm.title}
-            onChange={(e) =>
-              setSpecForm({ ...specForm, title: e.target.value })
-            }
-          />
-          <button
-            type="submit"
-            className="primary"
-            disabled={specForm.title.trim() === ''}
-          >
-            {t('tree.specSave')}
-          </button>
-          <button type="button" onClick={() => setSpecForm(null)}>
-            {t('tree.cancel')}
-          </button>
-          {specForm.kind === 'new' && (
-            <p className="muted small-text">{t('tree.specNewHelp')}</p>
-          )}
-        </form>
-      )}
-      {/* A modal: Escape cancels, and the focus goes back to the button
-          that asked (keyboard test B1, 2026-11-24). */}
-      <AlertDialog.Root
-        open={confirm !== null}
-        onOpenChange={(open) => !open && setConfirm(null)}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="dialog-overlay" />
-          <AlertDialog.Content
-            className="dialog-content"
-            // No trigger element: remember the button that asked, and give
-            // the focus back to it on close.
-            onOpenAutoFocus={() => {
-              const at = document.activeElement
-              confirmOpener.current = at instanceof HTMLElement ? at : null
-            }}
-            onCloseAutoFocus={(e) => {
-              if (confirmOpener.current?.isConnected === true) {
-                e.preventDefault()
-                confirmOpener.current.focus()
-              }
-            }}
-          >
-            {confirm !== null && (
-              <>
-                <AlertDialog.Title>
-                  {confirm.kind === 'reset'
-                    ? t('tree.resetAsk')
-                    : confirm.kind === 'delete'
-                      ? t('tree.specDeleteAsk', { name: plain(specTitle) })
-                      : confirm.kind === 'convert'
-                        ? t('tree.convertAsk', {
-                            version: confirm.version,
-                            n: confirm.dropped,
-                          })
-                        : t('tree.classAsk')}
-                </AlertDialog.Title>
-                <AlertDialog.Description className="visually-hidden">
-                  {t('tree.confirmHelp')}
-                </AlertDialog.Description>
-                <div className="row">
-                  <AlertDialog.Action asChild>
-                    <button
-                      type="button"
-                      className="primary"
-                      onClick={() => {
-                        const command =
-                          confirm.kind === 'reset'
-                            ? { 'reset-tree': { spec: tree.spec } }
-                            : confirm.kind === 'delete'
-                              ? { 'delete-spec': { spec: tree.spec } }
-                              : confirm.kind === 'convert'
-                                ? {
-                                    'convert-tree-version': { spec: tree.spec },
-                                  }
-                                : {
-                                    'select-class': {
-                                      spec: tree.spec,
-                                      class: confirm.class,
-                                    },
-                                  }
-                        setConfirm(null)
-                        void dispatch(run(command))
-                      }}
-                    >
-                      {confirm.kind === 'reset'
-                        ? t('tree.reset')
-                        : confirm.kind === 'delete'
-                          ? t('tree.specDelete')
-                          : confirm.kind === 'convert'
-                            ? t('tree.convert', { version: confirm.version })
-                            : t('tree.changeClass')}
-                    </button>
-                  </AlertDialog.Action>
-                  <AlertDialog.Cancel asChild>
-                    <button type="button">{t('tree.cancel')}</button>
-                  </AlertDialog.Cancel>
-                </div>
-              </>
-            )}
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
-      {locked !== null && (
-        <div className="panel row" role="status">
-          <p>{t('tree.locked', { why: locked })}</p>
-          {tree.convert != null && (
-            <button
-              type="button"
-              onClick={() =>
-                tree.convert != null &&
-                setConfirm({
-                  kind: 'convert',
-                  version: tree.convert.version,
-                  dropped: tree.convert.dropped.length,
-                })
-              }
-            >
-              {t('tree.convert', { version: tree.convert.version })}
-            </button>
-          )}
-        </div>
-      )}
-      {tree.kept.length > 0 && (
-        <p className="muted small-text">
-          {t('tree.keptCount', { n: tree.kept.length })}
+      <div className="tree-float tree-bl">
+        <p className="tree-points" aria-live="polite">
+          {t('tree.points', {
+            n: tree.points,
+            a: tree['ascendancy-points'],
+          })}
         </p>
-      )}
-      {stage !== null && (
-        <StageNodeDiff
-          title={stage.title}
-          state={other.state}
-          diff={diff}
-          layout={layout}
-        />
-      )}
-      {!layout.placed && <p className="muted">{t('tree.notPlaced')}</p>}
-      {view === 'canvas' && layout.placed ? (
+        {attributes.str != null &&
+          attributes.dex != null &&
+          attributes.int != null && (
+            <p className="tree-points" aria-live="polite">
+              {t('tree.attributes', {
+                str: formatNumber(attributes.str),
+                dex: formatNumber(attributes.dex),
+                int: formatNumber(attributes.int),
+              })}
+            </p>
+          )}
+      </div>
+      <div className="tree-notices">
+        {specForm !== null && (
+          <form
+            className="panel row"
+            aria-label={
+              specForm.kind === 'rename'
+                ? t('tree.specRename')
+                : specForm.kind === 'copy'
+                  ? t('tree.specCopy')
+                  : t('tree.specNew')
+            }
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveSpec()
+            }}
+          >
+            <label htmlFor={specNameId}>{t('tree.specName')}</label>
+            <input
+              id={specNameId}
+              value={specForm.title}
+              onChange={(e) =>
+                setSpecForm({ ...specForm, title: e.target.value })
+              }
+            />
+            <button
+              type="submit"
+              className="primary"
+              disabled={specForm.title.trim() === ''}
+            >
+              {t('tree.specSave')}
+            </button>
+            <button type="button" onClick={() => setSpecForm(null)}>
+              {t('tree.cancel')}
+            </button>
+            {specForm.kind === 'new' && (
+              <p className="muted small-text">{t('tree.specNewHelp')}</p>
+            )}
+          </form>
+        )}
+        {/* A modal: Escape cancels, and the focus goes back to the button
+          that asked (keyboard test B1, 2026-11-24). */}
+        <AlertDialog.Root
+          open={confirm !== null}
+          onOpenChange={(open) => !open && setConfirm(null)}
+        >
+          <AlertDialog.Portal>
+            <AlertDialog.Overlay className="dialog-overlay" />
+            <AlertDialog.Content
+              className="dialog-content"
+              // No trigger element: remember the button that asked, and give
+              // the focus back to it on close.
+              onOpenAutoFocus={() => {
+                const at = document.activeElement
+                confirmOpener.current = at instanceof HTMLElement ? at : null
+              }}
+              onCloseAutoFocus={(e) => {
+                if (confirmOpener.current?.isConnected === true) {
+                  e.preventDefault()
+                  confirmOpener.current.focus()
+                }
+              }}
+            >
+              {confirm !== null && (
+                <>
+                  <AlertDialog.Title>
+                    {confirm.kind === 'reset'
+                      ? t('tree.resetAsk')
+                      : confirm.kind === 'delete'
+                        ? t('tree.specDeleteAsk', { name: plain(specTitle) })
+                        : confirm.kind === 'convert'
+                          ? t('tree.convertAsk', {
+                              version: confirm.version,
+                              n: confirm.dropped,
+                            })
+                          : t('tree.classAsk')}
+                  </AlertDialog.Title>
+                  <AlertDialog.Description className="visually-hidden">
+                    {t('tree.confirmHelp')}
+                  </AlertDialog.Description>
+                  <div className="row">
+                    <AlertDialog.Action asChild>
+                      <button
+                        type="button"
+                        className="primary"
+                        onClick={() => {
+                          const command =
+                            confirm.kind === 'reset'
+                              ? { 'reset-tree': { spec: tree.spec } }
+                              : confirm.kind === 'delete'
+                                ? { 'delete-spec': { spec: tree.spec } }
+                                : confirm.kind === 'convert'
+                                  ? {
+                                      'convert-tree-version': {
+                                        spec: tree.spec,
+                                      },
+                                    }
+                                  : {
+                                      'select-class': {
+                                        spec: tree.spec,
+                                        class: confirm.class,
+                                      },
+                                    }
+                          setConfirm(null)
+                          void dispatch(run(command))
+                        }}
+                      >
+                        {confirm.kind === 'reset'
+                          ? t('tree.reset')
+                          : confirm.kind === 'delete'
+                            ? t('tree.specDelete')
+                            : confirm.kind === 'convert'
+                              ? t('tree.convert', { version: confirm.version })
+                              : t('tree.changeClass')}
+                      </button>
+                    </AlertDialog.Action>
+                    <AlertDialog.Cancel asChild>
+                      <button type="button">{t('tree.cancel')}</button>
+                    </AlertDialog.Cancel>
+                  </div>
+                </>
+              )}
+            </AlertDialog.Content>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
+        {locked !== null && (
+          <div className="panel row" role="status">
+            <p>{t('tree.locked', { why: locked })}</p>
+            {tree.convert != null && (
+              <button
+                type="button"
+                onClick={() =>
+                  tree.convert != null &&
+                  setConfirm({
+                    kind: 'convert',
+                    version: tree.convert.version,
+                    dropped: tree.convert.dropped.length,
+                  })
+                }
+              >
+                {t('tree.convert', { version: tree.convert.version })}
+              </button>
+            )}
+          </div>
+        )}
+        {stage !== null && (
+          <StageNodeDiff
+            title={stage.title}
+            state={other.state}
+            diff={diff}
+            layout={layout}
+          />
+        )}
+        {!layout.placed && <p className="muted">{t('tree.notPlaced')}</p>}
+      </div>
+      {full ? (
         <div className="tree-stage">
           <TreeCanvas
             layout={layout}
