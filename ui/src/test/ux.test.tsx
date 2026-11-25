@@ -683,7 +683,7 @@ describe('UX High fixes', () => {
     expect(await screen.findByText('+15 to maximum Life')).toBeTruthy()
     expect(screen.queryByText(/\{variant:1\}/)).toBeNull()
     expect(
-      screen.getByText('Variant: Pre 3.7.0', { selector: '.badge' }),
+      screen.getByText('Variant: Pre 3.7.0', { selector: '.line-mark' }),
     ).toBeTruthy()
     expect(screen.getByText('Crafted')).toBeTruthy()
     // The file fields are folded away, kept as written.

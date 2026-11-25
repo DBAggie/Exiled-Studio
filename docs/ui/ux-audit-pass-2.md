@@ -74,6 +74,23 @@ At the maintainer's word (2026-11-25, "continue with the open items"; the bundli
 
 Also on the PR, from the list's older tasks: RV-05 (Discard all), RV-02 (bars against the cap of 75 for block, spell block, and the resistances in the Defence table, one column), RV-13 (see `docs/release/channels.md`, "Going back to an older version").
 
+## Built from the approved mockups
+The maintainer approved eight boards on 2026-11-25; each is built on PR #183 and was checked in the running application on the same fixture.
+
+| Task | Built | Checked |
+|---|---|---|
+| RV-01 | "Reset to default" in Customize, for a changed Overview, Defence, or Trends; asks first | Not offered before a change; the test `rv-mockups.test.tsx` removes a card and resets |
+| RV-27 | Skills under 1,000 px: one picker with previous and next over the group | At 1,000 px the picker shows and the list is hidden, the group's card starts at 221 px; Next goes to the Helmet's group; at 1,280 px the list is back |
+| RV-28 | Dashboard: two lead figures a row down to 760 px | Two a row at 1,000 and 800 px, one at 700 px; no overflow |
+| RV-31 | The tree's notes as words; "Witch" | "About the Necromancer", "2 nodes kept as imported"; the class start's card reads "Witch" |
+| RV-32 | The tree's list in a card, tabs, one short action a row | "Remove" 53 px on every row; no overflow at 1,000 and 1,600 px |
+| RV-33 | The application's own radio buttons; 36 px selects and fields | The radio is 16 px in the accent; Configuration's selects and fields all 36 px |
+| RV-34 | Quiet links in tables and beside buttons | Item names on Lines to review in the text's colour |
+| RV-35 | An author's divider as a heading in the Skills table | "Main Skills", "Utility", "Auras" are headings |
+| RV-06, RV-07 | The item editor's head and line states; the AI connection page's states | The name is one line (30 px); no overflow at 1,000 and 1,600 px |
+
+Not as the mockup: the dashboard reset is not taken back by Undo when the dashboards are kept for every build (they are preferences, outside the build's history); the Dashboard follows the window's width, not the page's own (a container would have caught the item tooltip); the tree keeps one "i" for the page's help.
+
 ## Not covered
 - The Export menu (its capture failed), the breakdown page, the paste form, an item's hover tooltip, the start page with recovery copies. Whether Escape closes the Snapshots panel was not settled.
 - The header at 1,000 px is two rows with Export and Save alone on the second; step 2 accepted that.

@@ -177,6 +177,30 @@ input[type='checkbox'] {
   flex: none;
 }
 
+/* Radio buttons drawn by the application (RV-33): the system's own were
+   system blue beside the application's ticks. */
+input[type='radio'] {
+  appearance: none;
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  border: 1px solid var(--c-border-control);
+  border-radius: 50%;
+  background: var(--c-input);
+}
+
+input[type='radio']:checked {
+  border: 5px solid var(--c-accent);
+  background: var(--c-bg);
+}
+
+input[type='radio']:disabled {
+  opacity: 0.5;
+}
+
 svg {
   flex: none;
 }
@@ -766,6 +790,20 @@ button.link.quiet {
 
 button.link.quiet:hover:not(:disabled) {
   color: var(--c-text);
+}
+
+/* A link inside a table (an item's name on a line to review): the text's
+   own colour with a quiet underline, so a list of them is not a column
+   of the accent (RV-34). */
+button.link.plain {
+  color: var(--c-text);
+  font-weight: 400;
+  text-decoration-color: var(--c-border-strong);
+  text-underline-offset: 3px;
+}
+
+button.link.plain:hover:not(:disabled) {
+  text-decoration-color: var(--c-text);
 }
 
 @media (max-width: 720px) {
@@ -1802,7 +1840,7 @@ details > summary {
 
 .gem-number {
   width: 100%;
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 8px;
   font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
@@ -2059,7 +2097,7 @@ button.danger {
 
 .config-value input:not([type='checkbox']) {
   width: 100%;
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .config-number {

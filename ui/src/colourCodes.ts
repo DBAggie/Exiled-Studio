@@ -102,3 +102,20 @@ export function plain(text: string): string {
     .map((p) => p.text)
     .join('')
 }
+
+/** An empty group whose label is a divider the build's author drew
+ * ("==== Main Skills ===="): its words without the signs, and its colour.
+ * `null` for any other group. */
+export function dividerOf(
+  label: string | null,
+  gems: number,
+): { text: string; colour: string | null } | null {
+  if (label === null || gems > 0) return null
+  const whole = plain(label).trim()
+  const text = whole.replace(/^[=\-_~*#\s]+|[=\-_~*#\s]+$/g, '')
+  if (text === '' || !/^[=\-_~*#]{2,}|[=\-_~*#]{2,}$/.test(whole)) return null
+  return {
+    text,
+    colour: parts(label).find((x) => x.colour !== null)?.colour ?? null,
+  }
+}

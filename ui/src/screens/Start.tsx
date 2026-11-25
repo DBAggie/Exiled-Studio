@@ -409,7 +409,7 @@ export function Start() {
               </button>
               <button
                 type="button"
-                className="link"
+                className="link quiet"
                 disabled={!hasData || reading}
                 onClick={() => void dispatch(replaceBuild('import-file'))}
               >

@@ -6,7 +6,7 @@
 // label, value, and badge on one line; it opens the stat's breakdown.
 // A dashboard is short by default: lists show their first rows, charts
 // their plot, and the rest is one click away.
-import { DropdownMenu, Popover } from 'radix-ui'
+import { Dialog, DropdownMenu, Popover } from 'radix-ui'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
@@ -33,6 +33,7 @@ import {
   dropped,
   moved,
   newId,
+  defaultPrefs,
   stepWidth,
 } from '../dashboards'
 import { OFFENCE, fieldLabel, t } from '../i18n'
@@ -1039,6 +1040,59 @@ function BaselineControl() {
   )
 }
 
+/** Puts the default layout in place of a dashboard the user changed,
+ * after asking (RV-01). Offered only for a dashboard that has a default
+ * (Overview, Defence, Trends, by its ID) and differs from it. */
+function ResetDashboard({
+  dash,
+  onReset,
+}: {
+  dash: DashboardDef
+  onReset: (components: DashComponent[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const standard = defaultPrefs().dashboards.find((d) => d.id === dash.id)
+  if (
+    standard === undefined ||
+    JSON.stringify(standard.components) === JSON.stringify(dash.components)
+  ) {
+    return null
+  }
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button type="button">{t('dashboard.reset')}</button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title>
+            {t('dashboard.resetTitle', { name: dash.name })}
+          </Dialog.Title>
+          <Dialog.Description className="muted">
+            {t('dashboard.resetHelp')}
+          </Dialog.Description>
+          <div className="row">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                onReset(standard.components)
+              }}
+            >
+              {t('dashboard.resetConfirm', { name: dash.name })}
+            </button>
+            <Dialog.Close asChild>
+              <button type="button" className="primary">
+                {t('close.cancel')}
+              </button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
 export function Dashboard() {
   const dispatch = useAppDispatch()
   const snapshot = useAppSelector((s) => s.session.snapshot)
@@ -1270,6 +1324,10 @@ export function Dashboard() {
               {t('dashboard.deleteDashboard')}
             </button>
           )}
+          <ResetDashboard
+            dash={dash}
+            onReset={(components) => change(() => components)}
+          />
           <span className="spacer" />
           <span className="small-text muted" id="dash-scope">
             {t('dashboard.scope')}

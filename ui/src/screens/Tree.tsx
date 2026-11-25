@@ -849,7 +849,13 @@ function NodeCard({
   )
   return (
     <>
-      <p className="tree-card-name">{node.name}</p>
+      <p className="tree-card-name">
+        {/* The game names a class start in capitals ("WITCH"); a card
+            shows it as the name it is (RV-31). */}
+        {node.kind === 'class-start'
+          ? node.name.charAt(0) + node.name.slice(1).toLowerCase()
+          : node.name}
+      </p>
       <p className="muted small-text">
         {kindText(node)}
         {node.ascendancy != null && ` · ${node.ascendancy}`}
@@ -1250,7 +1256,11 @@ function TreeList({
   ]
   return (
     <div className="tree-list">
-      <div className="segmented" role="group" aria-label={t('tree.listLabel')}>
+      <div
+        className="dash-tabs tree-sections"
+        role="group"
+        aria-label={t('tree.listLabel')}
+      >
         {sections.map((s) => (
           <button
             key={s}
@@ -1302,6 +1312,20 @@ function TreeList({
                   <button
                     type="button"
                     data-row
+                    // One short word in one column; the node's name is in
+                    // the button's own name, for a screen reader (RV-32).
+                    className={on ? 'link quiet' : undefined}
+                    aria-label={
+                      n.kind === 'mastery'
+                        ? t('tree.chooseEffectFor', { node: n.name })
+                        : on &&
+                            (n.kind === 'jewel-socket' ||
+                              n.kind === 'cluster-socket')
+                          ? t('tree.chooseJewelFor', { node: n.name })
+                          : on
+                            ? t('tree.deallocate', { node: n.name })
+                            : t('tree.allocate', { node: n.name })
+                    }
                     tabIndex={i === Math.min(active, shown.length - 1) ? 0 : -1}
                     // Same-named nodes are told apart by their lines, and
                     // the count of nodes it changes once known.
@@ -1320,14 +1344,14 @@ function TreeList({
                     onClick={() => onActivate(n)}
                   >
                     {n.kind === 'mastery'
-                      ? t('tree.chooseEffectFor', { node: n.name })
+                      ? t('tree.chooseEffectShort')
                       : on &&
                           (n.kind === 'jewel-socket' ||
                             n.kind === 'cluster-socket')
-                        ? t('tree.chooseJewelFor', { node: n.name })
+                        ? t('tree.chooseJewelShort')
                         : on
-                          ? t('tree.deallocate', { node: n.name })
-                          : t('tree.allocate', { node: n.name })}
+                          ? t('tree.deallocateShort')
+                          : t('tree.allocateShort')}
                   </button>
                 )}
               </li>
@@ -1711,12 +1735,22 @@ export function Tree() {
         {/* Notices are one press away, not rows above the tree. */}
         <Hint>{t('tree.canvasHelp')}</Hint>
         {quote != null && (
-          <Hint label={t('tree.flavourLabel', { name: ascName ?? '' })}>
+          <Hint
+            label={t('tree.flavourLabel', { name: ascName ?? '' })}
+            text={t('tree.flavourLabel', { name: ascName ?? '' })}
+          >
             {quote}
           </Hint>
         )}
         {tree.kept.length > 0 && (
-          <Hint label={t('tree.keptLabel', { n: tree.kept.length })}>
+          <Hint
+            label={t('tree.keptLabel', { n: tree.kept.length })}
+            text={
+              tree.kept.length === 1
+                ? t('tree.keptShort1')
+                : t('tree.keptShort', { n: tree.kept.length })
+            }
+          >
             {t('tree.keptCount', { n: tree.kept.length })}
           </Hint>
         )}

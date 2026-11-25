@@ -120,23 +120,20 @@ export function StateLegend() {
   )
 }
 
-const LINE_TONE: Record<LineView['status'], Tone> = {
-  matched: 'ok',
-  adapted: 'info',
-  warning: 'warn',
-  excluded: 'neutral',
-  continues: 'neutral',
-  other: 'neutral',
-}
-
 export function LineBadge({ status }: { status: LineView['status'] }) {
   if (status === 'other') {
     return null
   }
+  // A small mark read by its shape, as a calculation state is (RV-06):
+  // filled for a line read, half for one whose text differs, a ring for
+  // one not used, a ring in the warning colour for one to review. Its
+  // name is the tooltip and is read aloud.
+  const name = t(`status.${status}` as MessageKey)
   return (
-    <Badge tone={LINE_TONE[status]}>
-      {t(`status.${status}` as MessageKey)}
-    </Badge>
+    <span className={`line-state line-state-${status}`} title={name}>
+      <span className="line-state-dot" aria-hidden="true" />
+      <span className="visually-hidden">{name}</span>
+    </span>
   )
 }
 
@@ -379,9 +376,13 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
 export function Hint({
   children,
   label,
+  text,
 }: {
   children: string
   label?: string
+  /** Words in place of the mark, where several notes sit together and a
+   * row of marks would not say which is which (RV-31). */
+  text?: string
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -390,12 +391,12 @@ export function Hint({
         <Tooltip.Trigger asChild>
           <button
             type="button"
-            className="hint"
+            className={text === undefined ? 'hint' : 'link quiet hint-text'}
             aria-label={label ?? t('hint.label')}
             aria-description={children}
             onClick={() => setOpen(true)}
           >
-            <Icon name="info" size={16} />
+            {text ?? <Icon name="info" size={16} />}
           </button>
         </Tooltip.Trigger>
         <Tooltip.Portal>

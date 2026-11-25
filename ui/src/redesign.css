@@ -553,7 +553,7 @@ select {
 
 .config-find {
   width: 14rem;
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .config-group h3 {
@@ -866,9 +866,36 @@ select {
   align-items: start;
 }
 
+.group-pick {
+  display: none;
+}
+
 @media (max-width: 1000px) {
   .skill-panes {
     grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  /* The list becomes one picker over the group (RV-27). */
+  .skill-panes > .group-list {
+    display: none;
+  }
+
+  .group-pick {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-pick > label {
+    color: var(--c-muted);
+    font-size: var(--fs-meta);
+  }
+
+  .group-pick > select {
+    flex: 1 1 16rem;
+    min-width: 0;
   }
 }
 
@@ -1052,11 +1079,11 @@ select {
 .tree-full .tree-tr > button,
 .tree-full .tree-zoom button {
   border-color: var(--c-border-control);
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .tree-full .tree-float input[type='search'] {
-  min-height: 32px;
+  min-height: 36px;
   background: var(--c-input);
 }
 
@@ -1074,4 +1101,121 @@ select {
 
 .tree-card-name {
   font-size: var(--fs-section);
+}
+
+/* The passive tree's list (RV-32): a card like every other list, the
+   filter as a row of tabs, one short action a row in one column. */
+.tree-sections {
+  border-bottom: 1px solid var(--c-row);
+  margin-bottom: 12px;
+}
+
+.tree-node-list {
+  border: 1px solid var(--c-row);
+  border-radius: var(--radius-panel);
+  background: var(--c-panel);
+  overflow: hidden;
+}
+
+.tree-node-list li {
+  padding: 8px 20px;
+  min-height: 48px;
+}
+
+.tree-node-list li:last-child {
+  border-bottom: 0;
+}
+
+.tree-node-list li.on {
+  background: transparent;
+}
+
+.tree-node-list li > button {
+  flex: none;
+}
+
+.tree-node-list .tree-card-name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+/* A note said in words where a mark would not say which note it is
+   (RV-31). */
+button.hint-text {
+  font-size: var(--fs-meta);
+}
+
+/* ---- The item editor's head and line states (RV-06, RV-07) ------------- */
+.editor-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 12px 20px 16px;
+}
+
+.editor-head h1 {
+  font-size: var(--fs-title);
+}
+
+.editor-back {
+  align-self: flex-start;
+}
+
+/* What a line is beside its text (crafted, a variant, edited): quiet
+   words, not a pill. */
+.line-mark {
+  margin-left: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.line-state {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.line-state-dot {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-soft);
+  border-radius: 50%;
+}
+
+.line-state-matched .line-state-dot {
+  background: var(--c-soft);
+}
+
+.line-state-adapted .line-state-dot {
+  background: linear-gradient(90deg, var(--c-soft) 50%, transparent 50%);
+}
+
+.line-state-warning .line-state-dot {
+  border-color: var(--c-warn);
+}
+
+/* The AI connection page's states: quiet text, the server's with a dot. */
+.ai-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.ai-dot {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-soft);
+  border-radius: 50%;
+}
+
+.ai-dot.on {
+  border-color: var(--c-ok);
+  background: var(--c-ok);
 }
