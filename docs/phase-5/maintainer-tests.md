@@ -63,3 +63,22 @@ On the same portable build, with the large build open:
 | C2 strict offline | refused, yes or no |
 | C3 update | offered, installed, version after (when the release exists) |
 | C4 (optional) | MSI, AppImage, `.deb` |
+
+## Results, 2026-11-24 (parts A and B1)
+Run by an agent session on the maintainer's second workstation through the WebView2 debugging port, with synthetic mouse, wheel, and keys. The numbers and what they mean are in `performance.md`, "The maintainer's application test".
+
+| Item | Result |
+|---|---|
+| Workstation | i7-1255U (10 cores, 12 threads, Iris Xe), 15.7 GB, Windows 11 Home 26H2 build 26300, 1920×1080 at 150% |
+| Build under test | the portable package of PR #168's CI |
+| Game data | `game-data.loombundle` from the 0.9.0 release, installed from the file; the feed check had failed with `FEED_HTTP` |
+| A4 tree first paint | 305, 197, 168 ms (budget 500) |
+| A5 pan | 27 typical, 23 lowest (budget 50); fixed in PR #168, to measure again |
+| A5 zoom | 52 typical, 42 lowest at 10 ticks a second; 28 and 13 at 20; fixed in PR #168, to measure again |
+| A6 memory | application 321 MB; WebView2 295 MB; total 616 MB; highest 650 MB |
+| A, anything odd | the wheel also scrolled the page and the node card stayed up while dragging (both fixed); a drag seemed to move the tree about twice as far as the pointer (to check by hand) |
+| B1 keyboard on the tree | works through the List view (Tab, typing, Enter, Ctrl+Z); not on the canvas; six problems, `performance.md`, "Accessibility" |
+| B2 screen reader | not done (needs a person) |
+| C2, C3, C4 | not done (after the next release) |
+
+**Next run of part A:** on PR #168's next CI build, A5 again (pan and zoom), and by hand: does the tree follow the pointer exactly when dragged?

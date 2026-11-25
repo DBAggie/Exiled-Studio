@@ -280,22 +280,60 @@ function TreeCanvas({
     [],
   )
 
-  // Draw.
+  // Draw, at most once per frame: pointer and wheel events can come faster
+  // than the display, and each would otherwise draw the whole tree.
+  const frame = useRef(0)
   useEffect(() => {
     const el = canvas.current
     if (el === null || camera === null) return
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(() => draw(el, camera))
+    return () => cancelAnimationFrame(frame.current)
+    // `draw` (below) is rebuilt each render; these are what it reads.
+  }, [
+    allocated,
+    byId,
+    camera,
+    diff,
+    found,
+    groupsOn,
+    layout,
+    path,
+    placed,
+    removed,
+    sprites,
+    toScreen,
+  ])
+
+  const draw = (el: HTMLCanvasElement, camera: Camera) => {
     const ctx = el.getContext('2d')
     if (ctx === null) return
     const dpr = window.devicePixelRatio || 1
-    el.width = Math.round(el.clientWidth * dpr)
-    el.height = Math.round(el.clientHeight * dpr)
+    // Setting the size clears and reallocates the buffer: only on a change.
+    const w = Math.round(el.clientWidth * dpr)
+    const h = Math.round(el.clientHeight * dpr)
+    if (el.width !== w) el.width = w
+    if (el.height !== h) el.height = h
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     const c = colours(el)
     ctx.fillStyle = c.bg
     ctx.fillRect(0, 0, el.clientWidth, el.clientHeight)
     const at = (n: TreeNodeView) =>
       toScreen(n.position?.x ?? 0, n.position?.y ?? 0, el, camera)
+    // What lies outside the canvas (with a margin for the art) is skipped.
+    const margin = 200 * camera.scale + 40
+    const shown = (p: { x: number; y: number }) =>
+      p.x > -margin &&
+      p.y > -margin &&
+      p.x < el.clientWidth + margin &&
+      p.y < el.clientHeight + margin
     // Links: an arc when both ends share a group and an orbit, else a line.
+    // They are gathered into one path per look and stroked once each: a
+    // stroke per link was most of a frame's time.
+    const links = new Map<
+      string,
+      { path: Path2D; style: string; width: number; alpha: number }
+    >()
     for (const a of placed) {
       if (a.kind === 'mastery') continue
       for (const id of a.links) {
@@ -315,18 +353,25 @@ function TreeCanvas({
           (path.has(b.id) || allocated.has(b.id)) &&
           (path.has(a.id) || path.has(b.id))
         const gone = removed.has(a.id) || removed.has(b.id)
-        ctx.strokeStyle = gone
+        const pa = at(a)
+        const pb = at(b)
+        if (!shown(pa) && !shown(pb)) continue
+        const style = gone
           ? c.removed
           : onPath
             ? c.path
             : on
               ? c.linkOn
               : c.link
-        ctx.lineWidth = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
-        ctx.globalAlpha = a.modelled && b.modelled ? 1 : 0.35
-        ctx.beginPath()
-        const pa = at(a)
-        const pb = at(b)
+        const width = Math.max(1, (on || onPath ? 10 : 5) * camera.scale)
+        const alpha = a.modelled && b.modelled ? 1 : 0.35
+        const key = `${style}|${width}|${alpha}`
+        let bucket = links.get(key)
+        if (bucket === undefined) {
+          bucket = { path: new Path2D(), style, width, alpha }
+          links.set(key, bucket)
+        }
+        const line = bucket.path
         const g = layout.groups[a.group]
         if (
           a.group === b.group &&
@@ -343,17 +388,26 @@ function TreeCanvas({
           while (d > Math.PI) d -= 2 * Math.PI
           while (d < -Math.PI) d += 2 * Math.PI
           if (d < 0) [s, e] = [e, s]
-          ctx.arc(centre.x, centre.y, r, s, e)
+          // Start a new piece at the arc's start, or the path would join it
+          // to the last link with a line.
+          line.moveTo(centre.x + r * Math.cos(s), centre.y + r * Math.sin(s))
+          line.arc(centre.x, centre.y, r, s, e)
         } else {
-          ctx.moveTo(pa.x, pa.y)
-          ctx.lineTo(pb.x, pb.y)
+          line.moveTo(pa.x, pa.y)
+          line.lineTo(pb.x, pb.y)
         }
-        ctx.stroke()
       }
+    }
+    for (const { path: p, style, width, alpha } of links.values()) {
+      ctx.strokeStyle = style
+      ctx.lineWidth = width
+      ctx.globalAlpha = alpha
+      ctx.stroke(p)
     }
     ctx.globalAlpha = 1
     for (const n of placed) {
       const p = at(n)
+      if (!shown(p)) continue
       // A class start keeps a readable size when the whole tree shows.
       const r = Math.max(
         n.kind === 'class-start' ? 8 : 2,
@@ -458,20 +512,7 @@ function TreeCanvas({
       }
       ctx.setLineDash([])
     }
-  }, [
-    allocated,
-    byId,
-    camera,
-    diff,
-    found,
-    groupsOn,
-    layout,
-    path,
-    placed,
-    removed,
-    sprites,
-    toScreen,
-  ])
+  }
 
   const hit = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const el = canvas.current
@@ -496,19 +537,44 @@ function TreeCanvas({
     return best
   }
 
-  const zoom = (factor: number, cx?: number, cy?: number) => {
+  // Camera changes build on the latest camera, not the one this render
+  // saw: several wheel or pointer events can arrive before React renders,
+  // and each must count once.
+  const zoom = useCallback((factor: number, cx?: number, cy?: number) => {
     const el = canvas.current
-    if (el === null || camera === null) return
-    const scale = Math.min(2, Math.max(0.01, camera.scale * factor))
-    // Keep the point under the pointer still.
-    const px = (cx ?? el.clientWidth / 2) - el.clientWidth / 2
-    const py = (cy ?? el.clientHeight / 2) - el.clientHeight / 2
-    setCamera({
-      scale,
-      x: camera.x + px / camera.scale - px / scale,
-      y: camera.y + py / camera.scale - py / scale,
+    if (el === null) return
+    setCamera((camera) => {
+      if (camera === null) return camera
+      const scale = Math.min(2, Math.max(0.01, camera.scale * factor))
+      // Keep the point under the pointer still.
+      const px = (cx ?? el.clientWidth / 2) - el.clientWidth / 2
+      const py = (cy ?? el.clientHeight / 2) - el.clientHeight / 2
+      return {
+        scale,
+        x: camera.x + px / camera.scale - px / scale,
+        y: camera.y + py / camera.scale - py / scale,
+      }
     })
-  }
+  }, [])
+
+  // The wheel zooms the tree and never scrolls the page: React's wheel
+  // handler is passive and cannot stop the scroll, so the listener is the
+  // element's own.
+  useEffect(() => {
+    const el = canvas.current
+    if (el === null) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      zoom(
+        e.deltaY < 0 ? 1.2 : 1 / 1.2,
+        e.clientX - rect.left,
+        e.clientY - rect.top,
+      )
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [zoom])
 
   return (
     <div className="tree-canvas-wrap">
@@ -517,14 +583,6 @@ function TreeCanvas({
         className="tree-canvas"
         // The list view is the accessible equivalent (ADR-008).
         aria-hidden="true"
-        onWheel={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          zoom(
-            e.deltaY < 0 ? 1.2 : 1 / 1.2,
-            e.clientX - rect.left,
-            e.clientY - rect.top,
-          )
-        }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY, moved: false }
           e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -535,14 +593,20 @@ function TreeCanvas({
             const dx = e.clientX - d.x
             const dy = e.clientY - d.y
             if (d.moved || Math.hypot(dx, dy) > 4) {
+              // The node card would hide what is being dragged to.
+              if (!d.moved) onHover(null, { x: 0, y: 0 })
               d.moved = true
               d.x = e.clientX
               d.y = e.clientY
-              setCamera({
-                ...camera,
-                x: camera.x - dx / camera.scale,
-                y: camera.y - dy / camera.scale,
-              })
+              setCamera((cam) =>
+                cam === null
+                  ? cam
+                  : {
+                      ...cam,
+                      x: cam.x - dx / cam.scale,
+                      y: cam.y - dy / cam.scale,
+                    },
+              )
               return
             }
           }

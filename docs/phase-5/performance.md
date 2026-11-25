@@ -52,9 +52,9 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 | Import and first calculation ≤ 1.5 s | import 28.8 ms + calculate 6.7 ms (medians; slowest 31.0 + 7.8 ms) | yes |
 | Item-edit preview ≤ 300 ms | one calculation, 6.7 ms (the preview applies the edit and calculates the edited build; the current result is reused) | yes |
 | Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms | yes |
-| Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | not measured here: a webview measurement | exception: maintainer-run (below) |
+| Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | first paint 305, 197, 168 ms; pan 27 fps typical, 23 lowest; zoom 52 typical, 42 lowest (measured 2026-11-24 on a laptop, "The maintainer's application test", below) | first paint yes; pan and zoom no before the fix (remeasure) |
 | Version conversion preview ≤ 300 ms | 0.01 to 0.41 ms: `loom_app::tree::converted` on four public builds saved on 3_27 and 3_28, with the real bundle and its packs (release build, 21 runs each; measured 2026-11-16 on `feat/tree-remaining`) | yes |
-| Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); the WebView2 processes are not counted | yes, for the application's process |
+| Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); 2026-11-24 on a laptop with the largest build and the tree open: the application 321 MB, with its WebView2 processes 616 MB, 650 MB after a minute of use | yes for the application's process; no if the budget counts WebView2 (the maintainer's call, exception 5) |
 | Installer ≤ 40 MB without the bundle | the MSI, the AppImage, the `.deb`, the portable zip: measured by the release workflow's run (gate 6); the NSIS setup with the WebView2 bootstrapper was 5.8 MB locally (P1) | exception: the NSIS setup |
 
 **The core paths with the real bundle (`loom-bench wall`):**
@@ -110,13 +110,49 @@ The maintainer asked for the recommended fixes (2026-11-15). All three are in:
    - The MSI and the portable zip use the WebView2 runtime Windows already has.
    - Proposed: accept. The budget excludes the bundle, and the WebView2 runtime is Microsoft's, not this project's.
    - **Accepted by the maintainer, 2026-11-24.**
-3. **Tree first paint and pan and zoom are not measured yet.**
-   - They are the webview's. The core part, the tree's layout, is in `load`.
-   - Proposed: the maintainer measures them in the release app with the browser tools (WebView2 DevTools, Performance panel) on the real bundle and records them here.
-   - Planned (maintainer 2026-11-24), with peak memory (5): `docs/phase-5/maintainer-tests.md`.
-   - The CI e2e on the synthetic bundle checks the tree renders.
+3. **Tree first paint, pan, and zoom: measured 2026-11-24** ("The maintainer's application test", below). First paint is inside budget; pan and zoom were not, and are fixed in PR #168, to be measured again on its next build.
 4. **Version conversion** is measured since T5b (2026-11-16): inside budget by three orders of magnitude.
-5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. The maintainer can add them from Task Manager's process tree if the budget means the whole tree.
+5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. Measured 2026-11-24 with them: 616 MB with the tree open, 650 MB at most after a minute of use, over 600 MB. For the maintainer: whether the budget means the application's process (met) or the whole process tree (not met).
+
+### The maintainer's application test (2026-11-24)
+`docs/phase-5/maintainer-tests.md`, part A and B1, run by an agent session on the maintainer's second workstation, through the WebView2 debugging port (synthetic input; the tree's sprites from the signed 0.9 data).
+- **Workstation:** Intel Core i7-1255U (10 cores, 12 threads, Iris Xe graphics), 15.7 GB, Windows 11 Home 26H2 (build 26300), 1920×1080 at 150%, 60 Hz. A laptop, slower than the reference tier.
+- **The build:** the portable package of PR #168's CI, with `forged-frostbearer-spectre-necromancer.xml` open.
+
+**First paint** (the click on Passive tree to the first screenshot with the tree): 305, 197, 168 ms. The click's handler took 206, 119, and 94 ms of it; long frames after the click were at most 135 ms. The maintainer's own recording earlier the same day showed two frames of 1,015 and 867 ms when opening the tree; the three runs here did not repeat them (the first open of a session, not profiled).
+
+**Pan and zoom** (frame times in the page; the DevTools FPS meter agreed):
+
+| Action | Input | Typical | Lowest | Worst frame |
+|---|---|---|---|---|
+| Idle | none | 60 | 60 | 17 ms |
+| Pan, from Fit | a 300×200 px circle each second, 5 s | 27 | 23 | 166 ms |
+| Zoom, from Fit | 10 wheel ticks a second at the centre | 52 | 42 | 135 ms |
+| Zoom, from Fit | 20 wheel ticks a second | 28 | 13 | 367 ms |
+
+Also seen: the wheel scrolled the page as well as zooming the tree; the node card stayed up while dragging; a 200 px drag seemed to move the tree about 380 px (not isolated; to check by hand).
+
+**The fix** (`ui/src/screens/Tree.tsx`, `TreeCanvas`, PR #168): every frame drew the whole tree with one `stroke()` per link (thousands) and reset the canvas's size, which reallocates its buffer; each pointer or wheel event drew again; and pan and zoom built on the camera of the last render, so events between two renders were lost (zoom ticks dropped).
+- The links are gathered into one `Path2D` per look and stroked once each.
+- The buffer is resized only when the canvas's size changes.
+- Nodes and links outside the canvas are skipped.
+- Drawing waits for the next animation frame, at most once a frame.
+- Pan and zoom update the latest camera.
+- The wheel listener is the canvas's own and not passive, so the page no longer scrolls.
+- The node card closes when a drag starts.
+
+Not measured here (no WebView2 run on this workstation in this session): the pan and zoom rates after the fix are for the next run of part A on PR #168's next build.
+
+**Memory** (private working set, Task Manager's figure):
+
+| Process | Tree open | After a minute of switching screens |
+|---|---|---|
+| Exiled Studio | 321.3 MB | 321.3 MB |
+| WebView2 GPU | 130.9 MB | 157.0 MB |
+| WebView2 renderer | 112.5 MB | 117.1 MB |
+| WebView2 browser | 36.0 MB | 38.5 MB |
+| WebView2 others (network, storage, crash reporting, the recording's tracing) | 15.7 MB | 15.6 MB |
+| Total | 616.4 MB | 649.5 MB |
 
 ## The calculation profile (2026-11-24)
 
@@ -126,12 +162,12 @@ The re-baselines above asked for a profile before Phase 7 (the maintainer asked 
 
 - **One `calculate` was four calculations:** the build's own and three nested ones for the full DPS (`poe1::full_dps`, one per included skill). The phases themselves took about 12 ms in all; the rest was collecting.
 - **Data lookups were linear scans.** `CalcData for Bundle` found a row with `iter().find` over the whole table: per `calculate` about 12,000 `granted_effect` lookups over 12,829 rows, and about 11,000 each of `skill_gem` (847 rows) and `gem_effect` (1,292 rows), plus `passive_stats`, `passive_kind` (5,706 rows), `active_skill`, and `stat_set`: on the order of 100 million string comparisons.
-- **The settled conditions were settled three times per calculation** (`super::states::states(input)` in `collect` for the buffs and for the exposure, and the engine'"'"'s `rules.states` after collecting), each resolving the main skill and the active skills again.
-- **Not the cause:** the store'"'"'s queries. They scan all effects (no index by quantity), but per `calculate` that was about 2,750 queries over about a million effects in all, a few milliseconds. The re-baselines'"'"' candidate is not the bottleneck.
+- **The settled conditions were settled three times per calculation** (`super::states::states(input)` in `collect` for the buffs and for the exposure, and the engine's `rules.states` after collecting), each resolving the main skill and the active skills again.
+- **Not the cause:** the store's queries. They scan all effects (no index by quantity), but per `calculate` that was about 2,750 queries over about a million effects in all, a few milliseconds. The re-baselines' candidate is not the bottleneck.
 
 **Changed** (no result changes: every public and corpus calc-run document is byte-identical to the run before, `local/p6/s2` against `local/p6/perf-pub` and `perf-cor`):
 
-- `loom_data::bundle::Bundle` keeps a key index per table (`granted_effect`, `gem_effect`, `skill_gem`, `active_skill`, `stat_set`, `passive`), built on first use. Each lookup checks the row it finds and falls back to the scan on a miss or when the table'"'"'s length changed (the tables are public), so its answer is always the scan'"'"'s. One `calculate`: about 44,000 hits, 84 misses.
+- `loom_data::bundle::Bundle` keeps a key index per table (`granted_effect`, `gem_effect`, `skill_gem`, `active_skill`, `stat_set`, `passive`), built on first use. Each lookup checks the row it finds and falls back to the scan on a miss or when the table's length changed (the tables are public), so its answer is always the scan's. One `calculate`: about 44,000 hits, 84 misses.
 - The engine settles the conditions once, before collecting, and hands them to the rules through `Ingest::with_states`; `poe1::collect` reads them there.
 
 **Result:**
@@ -141,9 +177,9 @@ The re-baselines above asked for a profile before Phase 7 (the maintainer asked 
 | `calculate`, the largest fixture, `b-ct` (median of 30) | 231 ms | 106 to 112 ms |
 | The public calc-run, 535 builds (calculation time) | 5.14 s | 2.38 s |
 
-Both stay inside the item-edit preview'"'"'s 300 ms; at 231 ms the largest builds were close to it on this workstation.
+Both stay inside the item-edit preview's 300 ms; at 231 ms the largest builds were close to it on this workstation.
 
-**Next levers** (for Phase 7, not done here): the main skill and the active skills are still resolved many times per calculation (`states`, `settle`'"'"'s checks, the curses, the gems, the costs): a per-calculation cache of the resolved skills would cut most of what is left; the full DPS pass recollects the whole build per included skill, where the items, tree, and config are the same each time; and the store could index its effects by quantity once queries grow.
+**Next levers** (for Phase 7, not done here): the main skill and the active skills are still resolved many times per calculation (`states`, `settle`'s checks, the curses, the gems, the costs): a per-calculation cache of the resolved skills would cut most of what is left; the full DPS pass recollects the whole build per included skill, where the items, tree, and config are the same each time; and the store could index its effects by quantity once queries grow.
 
 ## Accessibility (WCAG 2.2 AA)
 - **axe** (`expectAccessible`, `ui/src/test/render.tsx`) runs the WCAG 2.0, 2.1, and 2.2 A and AA rules.
@@ -157,3 +193,11 @@ Both stay inside the item-edit preview'"'"'s 300 ms; at 231 ms the largest build
   - a screen reader pass (NVDA or Narrator).
 
   Both are exceptions for the maintainer to check by hand.
+- **Keyboard allocation, checked 2026-11-24** (`maintainer-tests.md` B1, synthetic keys): it works through the List view only. Passive tree by Tab and Enter from the sidebar; Tab to "Search nodes", type a name, and the list shows the results; Enter on "Allocate …" allocates the node and its path, Enter again on "Remove …" removes it; Ctrl+Z undoes. Problems found (agent work, `dev/active/open-items/maintainer-follow-ups.md`):
+  - the canvas takes no focus, so nodes cannot be picked or the tree panned by keyboard (only the zoom buttons and Fit);
+  - Allocate added six nodes (the path) without saying so first, and Remove took off only the one node;
+  - several buttons share one name ("Allocate Minion Life") and cannot be told apart;
+  - every row of a list is a Tab stop with no way past (60 Tabs did not leave the Notables list);
+  - the Delete tree confirmation does not close on Escape, and after Cancel the focus falls to the page;
+  - Enter on the screen already shown does not move the focus to its heading.
+- **The screen reader pass** is still the maintainer's (it needs a person listening).
