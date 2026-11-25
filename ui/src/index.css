@@ -2819,6 +2819,35 @@ button.inv-slot:focus-visible {
   font-size: var(--fs-meta);
 }
 
+/* Details, open in the card under that line (RV-22). It scrolls in
+   itself, so one card's long list does not stretch its whole row. */
+.reason-inline {
+  margin-top: 8px;
+  max-height: 16rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: var(--fs-meta);
+}
+
+.reason-inline > p {
+  margin: 0;
+}
+
+.reason-inline .reason-groups {
+  margin-top: 8px;
+}
+
+/* In a narrow card a thing's place goes under its name. */
+.reason-inline .reason-group li {
+  flex-wrap: wrap;
+  gap: 2px 16px;
+}
+
+.reason-inline .reason-group li > .link {
+  max-width: none;
+  text-align: start;
+}
+
 .stat-tile-head {
   display: flex;
   align-items: center;

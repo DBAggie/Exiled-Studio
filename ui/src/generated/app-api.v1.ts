@@ -761,6 +761,13 @@ export interface DashboardComponent {
    */
   kind: string
   /**
+   * Whether the component is two rows tall: the cards after it
+   * stack beside it, one under another, when the row has room
+   * left (a tall table beside two short cards). Left out when
+   * false.
+   */
+  tall?: boolean
+  /**
    * The life a fight timeline deals damage to.
    */
   target?: number | null

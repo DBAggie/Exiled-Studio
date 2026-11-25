@@ -126,9 +126,11 @@ describe('UX High fixes', () => {
         name: 'Details: what Energy shield does not count yet',
       }),
     )
-    const dialog = await screen.findByRole('dialog', {
+    // In the card, not over it (RV-22).
+    const dialog = await within(tile).findByRole('region', {
       name: 'Energy shield · 4 things not counted yet',
     })
+    expect(screen.queryByRole('dialog')).toBeNull()
     // Grouped and counted, each thing by the game's text with its place.
     const group = (name: string) =>
       within(dialog).getByText(name).closest('details') as HTMLElement
@@ -148,7 +150,7 @@ describe('UX High fixes', () => {
     expect(
       within(codes).getByText('unmapped-stat: some_internal_stat_id'),
     ).toBeTruthy()
-    // A thing's link leads to it and closes the dialog.
+    // A thing's link leads to it.
     await user.click(
       within(lines).getByRole('button', { name: 'Loom Test Band' }),
     )

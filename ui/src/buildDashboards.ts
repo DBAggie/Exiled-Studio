@@ -55,6 +55,7 @@ function written(c: DashComponent) {
       ? {}
       : { target: Math.max(1, Math.round(c.target)) }),
     ...(c.break === true ? { break: true } : {}),
+    ...(c.tall === true ? { tall: true } : {}),
   }
 }
 

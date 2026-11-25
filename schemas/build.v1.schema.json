@@ -690,6 +690,10 @@
           "description": "The component's kind (`stat`, `progression`, `timeline`, ...):\nopen text, so the UI adds kinds without a schema change and an\nolder application still opens the document.",
           "type": "string"
         },
+        "tall": {
+          "description": "Whether the component is two rows tall: the cards after it\nstack beside it, one under another, when the row has room\nleft (a tall table beside two short cards). Left out when\nfalse.",
+          "type": "boolean"
+        },
         "target": {
           "description": "The life a fight timeline deals damage to.",
           "type": [

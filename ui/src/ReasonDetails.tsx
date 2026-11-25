@@ -5,8 +5,7 @@
 // stat ID) with a link to where it is, and keeps the calculation's codes
 // behind "Show technical detail". The breakdown page shows the same
 // groups.
-import { Dialog } from 'radix-ui'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
 import type { BuildView, FieldResult, PassiveLines } from './api/types'
 import { plain } from './colourCodes'
@@ -264,9 +263,12 @@ export function ReasonGroups({
   )
 }
 
-/** A card's one line about what its value leaves out, with Details. */
+/** A card's one line about what its value leaves out, with Details: a
+ * panel that opens in the card, under the line (RV-22; it was a dialog,
+ * which hid the card it was about). */
 export function ReasonSummary({ field }: { field: FieldResult }) {
   const [open, setOpen] = useState(false)
+  const id = useId()
   const entries = useMemo(() => entriesOf(field), [field])
   const first = entries[0]
   if (first === undefined) return null
@@ -276,41 +278,35 @@ export function ReasonSummary({ field }: { field: FieldResult }) {
   }
   const label = fieldLabel(field.field)
   return (
-    <p className="reason-summary">
-      {countText(entries.length)}
-      {' · '}
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger asChild>
-          <button
-            type="button"
-            className="link"
-            aria-label={t('reasons.detailsFor', { field: label })}
-          >
-            {t('reasons.details')}
-          </button>
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content className="dialog-content dialog-wide">
-            <div className="panel-head">
-              <Dialog.Title>
-                {t('reasons.title', {
-                  field: label,
-                  count: countText(entries.length),
-                })}
-              </Dialog.Title>
-              <span className="spacer" />
-              <Dialog.Close asChild>
-                <button type="button">{t('dialog.close')}</button>
-              </Dialog.Close>
-            </div>
-            <Dialog.Description className="muted">
-              {t('reasons.help')}
-            </Dialog.Description>
-            <ReasonGroups entries={entries} onLeave={() => setOpen(false)} />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </p>
+    <>
+      <p className="reason-summary">
+        {countText(entries.length)}
+        {' · '}
+        <button
+          type="button"
+          className="link"
+          aria-expanded={open}
+          aria-controls={open ? id : undefined}
+          aria-label={t('reasons.detailsFor', { field: label })}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? t('reasons.hide') : t('reasons.details')}
+        </button>
+      </p>
+      {open && (
+        <div
+          id={id}
+          className="reason-inline"
+          role="region"
+          aria-label={t('reasons.title', {
+            field: label,
+            count: countText(entries.length),
+          })}
+        >
+          <p className="muted small-text">{t('reasons.help')}</p>
+          <ReasonGroups entries={entries} />
+        </div>
+      )}
+    </>
   )
 }

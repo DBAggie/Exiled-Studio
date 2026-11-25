@@ -695,6 +695,23 @@ function ComponentTools({
             >
               {t('dashboard.newRow')}
             </DropdownMenu.CheckboxItem>
+            <DropdownMenu.CheckboxItem
+              className="menu-item menu-radio"
+              checked={c.tall === true}
+              // A full-width card has no room beside it.
+              disabled={c.width === 'full'}
+              onCheckedChange={(on) =>
+                onChange((l) =>
+                  l.map((x) => {
+                    if (x.id !== c.id) return x
+                    const { tall: _, ...rest } = x
+                    return on ? { ...rest, tall: true } : rest
+                  }),
+                )
+              }
+            >
+              {t('dashboard.tall')}
+            </DropdownMenu.CheckboxItem>
             <DropdownMenu.Separator className="menu-separator" />
             <DropdownMenu.Item
               className="menu-item"
@@ -1381,7 +1398,7 @@ export function Dashboard() {
             data-cell={c.id}
             className={`dash-cell dash-${c.width}${
               c.break === true ? ' dash-new-row' : ''
-            }${drag?.id === c.id ? ' dragging' : ''}${
+            }${c.tall === true ? ' dash-tall' : ''}${drag?.id === c.id ? ' dragging' : ''}${
               drag?.target?.id === c.id
                 ? drag.target.after
                   ? ' drop-after'

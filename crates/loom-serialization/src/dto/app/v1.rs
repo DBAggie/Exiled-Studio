@@ -554,6 +554,12 @@ dto! {
         /// left out when false.
         #[serde(default, rename = "break", skip_serializing_if = "std::ops::Not::not")]
         pub new_row: bool,
+        /// Whether the component is two rows tall: the cards after it
+        /// stack beside it, one under another, when the row has room
+        /// left (a tall table beside two short cards). Left out when
+        /// false.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        pub tall: bool,
     }
 
     /// The active passive spec as the tree editor sees it.
@@ -2231,6 +2237,7 @@ mod tests {
             input: None,
             target: None,
             new_row: false,
+            tall: false,
         };
         let dashboards = Dashboards {
             active: "overview".to_owned(),

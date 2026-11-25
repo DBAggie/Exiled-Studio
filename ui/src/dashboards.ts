@@ -97,6 +97,9 @@ export interface DashComponent {
   /** A row break before it: it starts a new row, whatever room the row
    * before it has left. */
   break?: boolean
+  /** Two rows tall: the cards after it stack beside it, one under
+   * another, when the row has room left (RV-03). */
+  tall?: boolean
 }
 
 export interface DashboardDef {
@@ -154,11 +157,13 @@ export function defaultPrefs(): Prefs {
           { id: 'c7', kind: 'stat', field: 'life', width: 'quarter' },
           { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'quarter' },
           { id: 'c9', kind: 'stat', field: 'mana', width: 'quarter' },
-          { id: 'c2', kind: 'defence', width: 'two-thirds' },
+          // The tall Defence table with the main skill over the lines
+          // to review beside it (RV-03).
+          { id: 'c2', kind: 'defence', width: 'two-thirds', tall: true },
           { id: 'c3', kind: 'main-skill', width: 'third' },
+          { id: 'c5', kind: 'warnings', width: 'third' },
           { id: 'c1', kind: 'offence', width: 'half' },
           { id: 'c4', kind: 'equipment', width: 'half' },
-          { id: 'c5', kind: 'warnings', width: 'full' },
         ],
       },
       {
@@ -221,7 +226,8 @@ function isComponent(x: unknown): x is DashComponent {
     (c.input === undefined || typeof c.input === 'string') &&
     (c.target === undefined ||
       (typeof c.target === 'number' && Number.isFinite(c.target))) &&
-    (c.break === undefined || typeof c.break === 'boolean')
+    (c.break === undefined || typeof c.break === 'boolean') &&
+    (c.tall === undefined || typeof c.tall === 'boolean')
   )
 }
 

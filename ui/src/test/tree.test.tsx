@@ -355,4 +355,37 @@ describe('passive tree', () => {
       expect(points()).toBe('Passive points: 5 of 2 · Ascendancy points: 0'),
     )
   })
+
+  it('moves along the links with the arrow keys and allocates (RV-20)', async () => {
+    const ctx = await renderApp()
+    const { user, api } = ctx
+    await user.click(screen.getByRole('button', { name: 'Open a file…' }))
+    await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
+    await user.click(screen.getByRole('button', { name: 'Passive tree' }))
+    const canvas = await screen.findByRole('application', {
+      name: 'Passive tree',
+    })
+    expect(canvas.getAttribute('tabindex')).toBe('0')
+    canvas.focus()
+    // Home is the class start; then right along the links.
+    await user.keyboard('{Home}')
+    await screen.findByText('Witch, Class start, allocated')
+    await user.keyboard('{ArrowRight}')
+    await screen.findByText('Intelligence, Passive, allocated')
+    await user.keyboard('{ArrowRight}{ArrowRight}')
+    await screen.findByText('Heart of Frost, Notable, not allocated')
+    // Nothing is linked upward from here but the mastery: the keys stay.
+    await user.keyboard('{ArrowUp}')
+    expect(
+      screen.getByText('Heart of Frost, Notable, not allocated'),
+    ).toBeTruthy()
+    await user.keyboard('{Enter}')
+    await waitFor(() =>
+      expect(api.executed).toContainEqual({
+        'allocate-node': { spec: 1, node: 12 },
+      }),
+    )
+    await screen.findByText('Heart of Frost, Notable, allocated')
+    await expectAccessible()
+  })
 })

@@ -334,6 +334,7 @@ export const en = {
   'dashboard.remove': 'Remove',
   'dashboard.cardMenu': '{name}: card menu',
   'dashboard.newRow': 'Start a new row',
+  'dashboard.tall': 'Two rows tall',
   'dashboard.moveTop': 'Move to top',
   'dashboard.moveBottom': 'Move to bottom',
   'dashboard.editBar': 'Edit the dashboard',
@@ -879,6 +880,11 @@ export const en = {
   'tree.ascendancy': 'Ascendancy',
   'tree.noAscendancy': 'None',
   'tree.points': 'Passive points: {n} · Ascendancy points: {a}',
+  'tree.canvasLabel': 'Passive tree',
+  'tree.canvasKeys':
+    'Arrow keys move between linked nodes. Enter allocates or removes the node. Home goes to the class start, End to the ascendancy. Plus and minus zoom, 0 fits the tree. The List view names every node.',
+  'tree.keyedAllocated': '{name}, {kind}, allocated',
+  'tree.keyedNot': '{name}, {kind}, not allocated',
   'tree.pointsOf': 'Passive points: {n} of {of} · Ascendancy points: {a}',
   'tree.pointsOfHelp':
     'A character of this level has {of} passive points: one a level, the quests’ by this level, and one for helping no bandit. Below level 67 this is an estimate.',
@@ -1363,6 +1369,7 @@ export const en = {
   'reasons.one': '1 thing not counted yet',
   'reasons.count': '{n} things not counted yet',
   'reasons.details': 'Details',
+  'reasons.hide': 'Hide details',
   'reasons.detailsFor': 'Details: what {field} does not count yet',
   'reasons.title': '{field} · {count}',
   'reasons.help':

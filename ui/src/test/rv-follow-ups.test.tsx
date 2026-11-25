@@ -46,3 +46,18 @@ describe('Discard all for unsaved work (RV-05)', () => {
     expect(screen.queryByRole('button', { name: 'Discard all' })).toBeNull()
   })
 })
+
+describe('a card two rows tall (RV-03)', () => {
+  it('should be the default Defence table, with two cards beside it', async () => {
+    const { user } = await renderApp()
+    await user.click(screen.getByRole('button', { name: 'Open a file…' }))
+    await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
+    const tall = document.querySelectorAll('.dash-cell.dash-tall')
+    expect(tall).toHaveLength(1)
+    const cells = [...document.querySelectorAll('.dash-grid > .dash-cell')]
+    const i = cells.indexOf(tall[0]!)
+    expect(tall[0]!.className).toContain('dash-two-thirds')
+    expect(cells[i + 1]!.className).toContain('dash-third')
+    expect(cells[i + 2]!.className).toContain('dash-third')
+  })
+})

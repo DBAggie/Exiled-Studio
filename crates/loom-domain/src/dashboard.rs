@@ -52,4 +52,7 @@ pub struct DashboardComponent {
     /// Whether the component starts a new row, whatever room the row
     /// before it has left.
     pub new_row: bool,
+    /// Whether the component is two rows tall: the cards after it stack
+    /// beside it, one under another, when the row has room left.
+    pub tall: bool,
 }

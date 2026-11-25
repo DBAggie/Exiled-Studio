@@ -68,6 +68,24 @@
   }
 }
 
+/* A card two rows tall (the card menu's "Two rows tall", RV-03): the
+   cards after it stack in the room beside it. Only where it has room
+   beside it: a two-thirds card is the whole row from 1,100 px down, and
+   every card but a quarter from 1,000 px down. */
+@media (min-width: 1001px) {
+  .dash-tall.dash-quarter,
+  .dash-tall.dash-third,
+  .dash-tall.dash-half {
+    grid-row: span 2;
+  }
+}
+
+@media (min-width: 1101px) {
+  .dash-tall.dash-two-thirds {
+    grid-row: span 2;
+  }
+}
+
 /* A narrow window: every card takes the row, but the lead figures stay
    two a row while the page has the room (RV-28: at 1,000 px the page is
    about 760 px wide beside the menu, and four figures one a row were

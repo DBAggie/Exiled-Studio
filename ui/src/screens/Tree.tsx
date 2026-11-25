@@ -20,6 +20,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
@@ -49,6 +50,8 @@ import {
   type SpriteRect,
   clusterSize,
   fits,
+  linksOf,
+  nodeToward,
   pointsOf,
   useTreeLayout,
   useTreeSprites,
@@ -126,6 +129,7 @@ function colours(el: Element) {
     match: c('--c-tree-match', 'yellow'),
     kept: c('--c-tree-kept', 'dimgray'),
     ring: c('--c-tree-ring', 'white'),
+    focus: c('--c-focus', 'dodgerblue'),
   }
 }
 
@@ -134,6 +138,27 @@ interface StageNodes {
   added: Set<number>
   removed: Set<number>
 }
+
+/** The arrow keys' directions, y down as the canvas draws. */
+const KEY_STEPS: Record<string, [number, number] | undefined> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+}
+
+/** Whether `el` got its focus from the keyboard (a browser without the
+ * selector is taken to have). */
+function keyboardFocus(el: Element): boolean {
+  try {
+    return el.matches(':focus-visible')
+  } catch {
+    return true
+  }
+}
+
+/** The nearest the keys' node is shown from: nodes can be told apart. */
+const KEY_SCALE = 0.3
 
 interface Camera {
   x: number
@@ -237,6 +262,7 @@ function TreeCanvas({
   onActivate: (node: TreeNodeView) => void
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
+  const keysId = useId()
   const [camera, setCamera] = useState<Camera | null>(null)
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
   const placed = useMemo(
@@ -263,6 +289,11 @@ function TreeCanvas({
   )
   const path = useMemo(() => new Set(preview?.path ?? []), [preview])
   const removed = useMemo(() => new Set(preview?.removed ?? []), [preview])
+  // The node the keys are on, while the canvas has the keyboard focus
+  // (RV-20): the arrow keys move it along the links.
+  const [cursor, setCursor] = useState<number | null>(null)
+  const [focused, setFocused] = useState(false)
+  const links = useMemo(() => linksOf(layout), [layout])
 
   // Whether the view is still the fitted one: a resize then fits again;
   // after a move or a zoom the view is the user's and is kept.
@@ -545,6 +576,21 @@ function TreeCanvas({
         )
         ctx.stroke()
       }
+      // The node the keys are on: the focus ring, two lines so it shows
+      // on art of any colour.
+      const keyed = focused && cursor !== null ? byId.get(cursor) : undefined
+      if (keyed?.position != null) {
+        const p = at(keyed)
+        const r = Math.max(6, RADIUS[keyed.kind] * camera.scale) + 7
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+        ctx.lineWidth = 5
+        ctx.strokeStyle = c.bg
+        ctx.stroke()
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = c.focus
+        ctx.stroke()
+      }
       // The stage compared with: a dashed ring on a node only it has, a
       // solid ring on a node only this stage has (the line, not the colour
       // alone, tells them apart).
@@ -567,7 +613,9 @@ function TreeCanvas({
     [
       allocated,
       byId,
+      cursor,
       diff,
+      focused,
       found,
       groupsOn,
       hovered,
@@ -652,13 +700,124 @@ function TreeCanvas({
     return () => el.removeEventListener('wheel', onWheel)
   }, [zoom])
 
+  // The keys' node shown: brought into view (and near enough to tell it
+  // from its neighbours), with its card beside it.
+  const keyTo = (n: TreeNodeView) => {
+    const el = canvas.current
+    if (el === null || camera === null || n.position == null) return
+    let cam = camera
+    if (cam.scale < KEY_SCALE) cam = { ...cam, scale: KEY_SCALE }
+    const p = toScreen(n.position.x, n.position.y, el, cam)
+    const edge = 90
+    if (
+      cam !== camera ||
+      p.x < edge ||
+      p.y < edge ||
+      p.x > el.clientWidth - edge ||
+      p.y > el.clientHeight - edge
+    ) {
+      cam = { ...cam, x: n.position.x, y: n.position.y }
+      fitted.current = false
+      setCamera(cam)
+    }
+    const q = toScreen(n.position.x, n.position.y, el, cam)
+    const rect = el.getBoundingClientRect()
+    setCursor(n.id)
+    onHover(n, {
+      x: rect.left + q.x + RADIUS[n.kind] * cam.scale + 12,
+      y: rect.top + q.y,
+    })
+  }
+  // Where the keys start: the last node they were on, else the class's
+  // start.
+  const keyStart = () =>
+    (cursor === null ? undefined : byId.get(cursor)) ??
+    placed.find((n) => n.kind === 'class-start' && allocated.has(n.id)) ??
+    placed.find((n) => allocated.has(n.id)) ??
+    placed[0]
+  const onKey = (e: ReactKeyboardEvent<HTMLCanvasElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return
+    setFocused(true)
+    const step = KEY_STEPS[e.key]
+    if (step !== undefined) {
+      e.preventDefault()
+      const from = keyStart()
+      if (from === undefined) return
+      if (cursor === null) return keyTo(from)
+      const next = nodeToward(layout, links, from.id, step[0], step[1])
+      const to = next === null ? undefined : byId.get(next)
+      keyTo(to ?? from)
+      return
+    }
+    switch (e.key) {
+      case 'Enter':
+      case ' ': {
+        e.preventDefault()
+        const n = cursor === null ? undefined : byId.get(cursor)
+        if (n !== undefined) onActivate(n)
+        break
+      }
+      case 'Home': {
+        e.preventDefault()
+        const start = placed.find(
+          (n) => n.kind === 'class-start' && allocated.has(n.id),
+        )
+        if (start !== undefined) keyTo(start)
+        break
+      }
+      case 'End': {
+        // The ascendancy has no link to the tree to move along.
+        e.preventDefault()
+        const start = placed.find(
+          (n) => n.kind === 'ascendancy-start' && allocated.has(n.id),
+        )
+        if (start !== undefined) keyTo(start)
+        break
+      }
+      case '+':
+      case '=':
+        e.preventDefault()
+        zoom(1.25)
+        break
+      case '-':
+        e.preventDefault()
+        zoom(0.8)
+        break
+      case '0':
+        e.preventDefault()
+        fit()
+        break
+      case 'Escape':
+        onHover(null, { x: 0, y: 0 })
+        break
+      default:
+    }
+  }
+  const keyed = cursor === null ? undefined : byId.get(cursor)
+
   return (
     <div className="tree-canvas-wrap">
       <canvas
         ref={canvas}
         className="tree-canvas"
-        // The list view is the accessible equivalent (ADR-008).
-        aria-hidden="true"
+        // The keys move along the links (RV-20); the list view stays the
+        // equivalent for a screen reader (ADR-008), and says more.
+        tabIndex={0}
+        role="application"
+        aria-label={t('tree.canvasLabel')}
+        aria-describedby={keysId}
+        onKeyDown={onKey}
+        onFocus={(e) => {
+          // Only the keyboard's focus shows the ring and the card.
+          if (!keyboardFocus(e.currentTarget)) return
+          setFocused(true)
+          const n = keyStart()
+          if (n !== undefined) keyTo(n)
+        }}
+        onBlur={() => {
+          setFocused(false)
+          onHover(null, { x: 0, y: 0 })
+        }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY, moved: false }
           e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -701,6 +860,18 @@ function TreeCanvas({
         }}
         onPointerLeave={() => onHover(null, { x: 0, y: 0 })}
       />
+      <p id={keysId} className="visually-hidden">
+        {t('tree.canvasKeys')}
+      </p>
+      {/* The node the keys are on, said as they move. */}
+      <p className="visually-hidden" aria-live="polite">
+        {focused && keyed !== undefined
+          ? t(
+              allocated.has(keyed.id) ? 'tree.keyedAllocated' : 'tree.keyedNot',
+              { name: plain(keyed.name), kind: kindText(keyed) },
+            )
+          : ''}
+      </p>
       <div className="tree-zoom" role="group" aria-label={t('tree.zoom')}>
         <button
           type="button"
