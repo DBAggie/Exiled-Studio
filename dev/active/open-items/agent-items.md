@@ -8,7 +8,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 
 ## Found to need no data run (2026-11-24)
 - [x] **Skitterbots** (done: `docs/phase-6/gems.md`, "Summon Skitterbots"; `local/p6/sk`) (`SummonSkitterbots`, `Skitterbots`; 5 public, 7 corpus builds): the bundle `b-ct` has the monster varieties (`Metadata/Monsters/Skitterbot/SkitterbotCold`, `SkitterbotLightning`, ...) in `poe1/minions.json`; model the skill and its auras (PoB's `Data/Minions.lua` 1038, 1079).
-- [ ] **The Holy Relic's Nova** (`docs/phase-6/triggers.md`, "The Holy Relic's Nova"): data schema 5 carries skills' level requirements (`EffectLevel::level_requirement`); port PoB's minion skill level (`CalcActiveSkill.lua` 895 to 902) and the kept fixture.
+- [ ] **The Holy Relic's Nova** (`docs/phase-6/triggers.md`, "The Holy Relic's Nova"): data schema 5 carries skills' level requirements (`EffectLevel::level_requirement`); port PoB's minion skill level (`CalcActiveSkill.lua` 895 to 902) and the kept fixture. Looked at 2026-11-26 and left: no public or corpus build uses it, and it needs PoB's `nova` trigger with the minion as its actor and the gem's boon too (`docs/phase-6/skill-data.md`, "The agent list").
 - [ ] **Vaal souls**: already in `b-ct` (2,268 skill levels carry `vaal_souls`); any reason still waiting on it is agent work.
 - [ ] **The 3_29 ascendancy auras** (Ramako, Void Beacon, Augury of Penitence, Unwavering Crusade: no stats in `PassiveSkills`): look for their buffs in the game files on this workstation (the 26530219 depot in `local/b2/steam-26530219`) before calling it a data gap.
 
@@ -24,7 +24,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [ ] `unmodelled-passive`: `unresolved-tree-line` (284 / 600), `unconnected-node` (454 / 304), `cluster-jewel-node` (462), `timeless-jewel` (136 / 151), `unknown-node-kind`; `unread-line`.
 
 ## S1: skills
-- [ ] The other `pob-skill-data` skills, most builds first: Cyclone, Fire Trap (corpus 3), Thrown Shield, Frenzy, Rain of Spores, Vaal Detonate Dead, Poison Arrow, Freezing Pulse, Boneshatter (Trarthus), Elemental Hit (Spectrum), Kinetic Blast, Kinetic Fusillade, Shock Nova, Blood Spears, Lacerate, Lightning Trap, Frost Bolt Nova, Winter Orb, Ice Spear, Vaal Blight, Tornado, Essence Drain, Scorching Ray, Ground Slam, Arc.
+- [ ] The other `pob-skill-data` skills, most builds first (2026-11-26: S3 part 7's Molten Burst, Rain of Arrows, Unseen Strike, and Bone Nova vetted by `hit::TRIGGER_OWN_STATS` and `READ_BASE_FLAGS`, `docs/phase-6/skill-data.md`, "The agent list"; Icicle Burst's `showAverage` and Spark's function and parts left): Cyclone, Fire Trap (corpus 3), Thrown Shield, Frenzy, Rain of Spores, Vaal Detonate Dead, Poison Arrow, Freezing Pulse, Boneshatter (Trarthus), Elemental Hit (Spectrum), Kinetic Blast, Kinetic Fusillade, Shock Nova, Blood Spears, Lacerate, Lightning Trap, Frost Bolt Nova, Winter Orb, Ice Spear, Vaal Blight, Tornado, Essence Drain, Scorching Ray, Ground Slam, Arc.
 - [ ] `socket-colour-quality` (275 / 77), `sigil-of-power-stages` (78 / 161), `skill-chill-effect` (155), `minion-buffs`, `minion-modifier`, `aura-debuff-effect`, `requires-shield`, `rallying-cry-allies`, `wave-of-conviction-exposure`, `full-dps-skill`.
 - [ ] The close-out's `C-unmodelled-skill` stats owned by the skills above (101 at S0).
 

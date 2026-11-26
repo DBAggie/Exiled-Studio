@@ -145,3 +145,41 @@ Two other reasons, narrowed the same way:
 **Totems** (S1 part 2): `totem-data` narrowed to what PoB reads and the engine does not (`docs/phase-6/totems.md`, "Open items S1"); public `Complete` 38,869 to 38,922, the Ballista fixtures' Q11 entries DIV-0684 to DIV-0693.
 
 **Not reached in S1** (open items follow-ups, "Planned for the session, may not be reached"): Static Strike's part 1, the trigger builds (S3).
+
+
+## The agent list (2026-11-26): the item-triggered skills' PoB data
+
+After S7, `pob-skill-data` was the reason that blocked the most fields in the public set (172 fields in 27 builds). It was the only reason on the fields of six of S3 part 7's item-triggered skills, each equal to PoB's (`local/p6/tools/skill_data_skills.py` names the skills). What failed the vetting rule in each:
+- Molten Burst: the base mod `CannotSplit`.
+- Rain of Arrows: the base mod `OneShotProj`.
+- Unseen Strike: the stat map entry `skill_has_trigger_from_unique_item`.
+- Bone Nova and Icicle Burst: the stat map entry `spell_uncastable_if_triggerable`.
+- Icicle Burst also has the base mod `showAverage`.
+- Spark has a skill function and parts.
+
+Two generic lists in `poe1::hit` now name what the engine reads of that data:
+
+- **`TRIGGER_OWN_STATS`:** `spell_uncastable_if_triggerable` and `skill_has_trigger_from_unique_item` only set `skillData.triggered` and `triggeredByUnique` (`SkillStatMap.lua` 191 to 203). PoB reads these as a triggered skill:
+  - its rate comes from the trigger (`CalcOffence.lua` 2205 to 2227);
+  - it does not set "attacked recently" or "cast a spell recently" (`CalcPerform.lua` 240);
+  - it is never a trigger's source (`CalcTriggers.lua` 41).
+
+  The engine computes such a skill through `poe1::triggers`, and `conditions::main_skill_recently` already reads the trigger kind.
+- **`READ_BASE_FLAGS`:**
+  - `CannotSplit` is read only for the split count (`CalcOffence.lua` 1069), which no slice field holds.
+  - `OneShotProj` is read only with `SequentialProjectiles` (769). Its one mapped source, Barrage's `projectiles_barrage`, already guards the projectile count (`mapping::NO_EFFECT_DEPENDS_ON`).
+
+Icicle Burst stays partial. PoB turns `showAverage` off only when a trigger sets the rate (2227), and the vetting does not know the trigger; the attack path does not read the flag. Spark stays partial for its function and parts.
+
+The test `read_lists_should_vet_only_what_the_engine_reads` checks that each listed entry is in PoB's data, that the four skills are vetted, and that Icicle Burst is not.
+
+**Evidence** (`local/p6/ag1`, `b-ct`, against S7 part 9's run):
+- **Public:** 0 unexpected; `Complete` 48,804 to 48,837: 33 fields of four fixtures (`trigger-ngamahus-flame-molten-burst-templar.xml`, `trigger-lioneyes-paws-rain-of-arrows-ranger.xml`, `trigger-hidden-blade-unseen-strike-ranger.xml`, `trigger-uul-netols-bone-nova-templar.xml`). No value moved, and no other document changed.
+- **Bone Nova:** the fixture's rate is S3 part 7's Q11 difference (0.21499 against PoB's 0.21505; Smite's attack rate in floored ms fed to PoB's rotation gives each side's value to the bit). Its fields are now `Complete`, so they are registered: DIV-0761 to DIV-0765, Q11.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check pass.
+
+**The Holy Relic's Nova** (the agent list's first item) was looked at and left. No public or corpus build uses Summon Holy Relic, so it would clear only its own fixture. It needs:
+- the minion skill's level picked by level requirement (`CalcActiveSkill.lua` 895 to 902; the engine builds a minion skill at level 1);
+- the gem's Holy Relic's Boon, a buff behind the config check `summonHolyRelicEnableHolyRelicBoon`;
+- PoB's `nova` trigger with the minion as its actor (`CalcTriggers.lua` 1167): the character's fastest attack, times its chance to hit, capped by the Nova's cooldown, gives the minion's rate (the kept fixture: 0.2806, Smite's 1.275 at a 22% chance to hit).

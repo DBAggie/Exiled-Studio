@@ -370,6 +370,31 @@ pub const READ_PART_BASE_MODS: [(&str, &str, usize); 1] = [("ShieldCrush", "dpsM
 ///   reads only when set. Vortex's levels have no cooldown.
 pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 
+/// Stat map entries of any skill that only mark it triggered, which the
+/// engine reads as the skill's trigger kind ([`super::triggers::kind`];
+/// open items, agent list): `spell_uncastable_if_triggerable` and
+/// `skill_has_trigger_from_unique_item` set `skillData.triggered` and
+/// `triggeredByUnique` (`SkillStatMap.lua` 191 to 203). PoB reads them as
+/// a triggered skill: its rate from the trigger (`CalcOffence.lua` 2205 to
+/// 2227), no "attacked or cast a spell recently" from it
+/// (`CalcPerform.lua` 240, [`super::conditions::main_skill_recently`]),
+/// never a trigger's source (`CalcTriggers.lua` 41). The engine computes
+/// such a skill through [`super::triggers`] alike.
+pub const TRIGGER_OWN_STATS: [&str; 2] = [
+    "skill_has_trigger_from_unique_item",
+    "spell_uncastable_if_triggerable",
+];
+
+/// Untagged `FLAG` base mods that reach no slice field outside a guard
+/// (open items, agent list):
+/// - `CannotSplit` (Molten Burst's): read only for the split count
+///   (`CalcOffence.lua` 1069), which no slice field holds;
+/// - `OneShotProj` (Rain of Arrows'): read only with
+///   `SequentialProjectiles` (769), whose one mapped source, Barrage's
+///   `projectiles_barrage`, guards the projectile count
+///   (`mapping::NO_EFFECT_DEPENDS_ON`).
+pub const READ_BASE_FLAGS: [&str; 2] = ["CannotSplit", "OneShotProj"];
+
 /// [`pob_vetted`], where `no_cooldown` says the main skill's level has no
 /// cooldown: only then a function of [`READ_FUNCTIONS`] counts as read.
 #[must_use]
@@ -384,7 +409,7 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
     if !pob
         .own_stats
         .iter()
-        .all(|s| READ_OWN_STATS.contains(&(id, *s)))
+        .all(|s| READ_OWN_STATS.contains(&(id, *s)) || TRIGGER_OWN_STATS.contains(s))
     {
         return false;
     }
@@ -414,7 +439,15 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
                     .any(|&(s, key, part)| s == id && key == k && part != index)
             })
     };
-    if !pob.base_mods.iter().all(|m| display(m) || other_part(m)) {
+    // A flag no slice field reads ([`READ_BASE_FLAGS`]).
+    let read_flag = |m: &super::pob_skill::PobBaseMod| {
+        m.kind == "FLAG" && !m.tagged && READ_BASE_FLAGS.contains(&m.name)
+    };
+    if !pob
+        .base_mods
+        .iter()
+        .all(|m| display(m) || other_part(m) || read_flag(m))
+    {
         return false;
     }
     match index.checked_sub(1).and_then(|i| pob.parts.get(i)) {
@@ -5373,6 +5406,31 @@ mod tests {
             let s = super::super::pob_skill::skill(id).unwrap();
             assert!(s.functions.contains(&f), "{id} {f}");
         }
+        // The generic lists name data some skill has, and vet the item
+        // triggered skills they were made for.
+        let skills = super::super::pob_skills::SKILLS;
+        for stat in TRIGGER_OWN_STATS {
+            assert!(skills.iter().any(|s| s.own_stats.contains(&stat)), "{stat}");
+        }
+        for flag in READ_BASE_FLAGS {
+            assert!(
+                skills.iter().any(|s| s
+                    .base_mods
+                    .iter()
+                    .any(|m| m.kind == "FLAG" && m.name == flag)),
+                "{flag}"
+            );
+        }
+        for id in [
+            "TriggeredMoltenStrike",
+            "UnseenStrike",
+            "RainOfArrows",
+            "BoneNova",
+        ] {
+            assert!(pob_vetted(id, 0), "{id}");
+        }
+        // Icicle Burst's `showAverage` is not read on the attack path.
+        assert!(!pob_vetted("IcicleBurst", 0));
     }
 
     /// PoB's weapon rule (P6-6c review): a melee weapon keeps melee, a bow
