@@ -113,3 +113,49 @@ A triggered skill's rate is PoB v2.67.2's (`Modules/CalcTriggers.lua`), in `loom
 - **Corpus and the minion sweep:** unchanged; 0 unexpected.
 - **Skill sweep:** unchanged.
 - **Tests:** the state row's expected list; the workspace's 1,763 tests and clippy pass.
+
+## Part 3: Spellslinger, and cooldown recovery in every trigger (open items S3)
+
+Built on PR #187 (2026-11-26), the first S3 step toward version 1.0 (`docs/plan/ACTION-PLAN.md`, "Version 1.0").
+
+**Spellslinger** (`CalcTriggers.lua` 1200 to 1212), `triggers::Config::Spellslinger`:
+- **The source** is any projectile attack with the wand flag (the main hand holds a wand), in any group, not only the spell's. It is not triggered, not disabled, and not the main skill.
+- **On use** (`triggerOnUse`): the source's hit chance is not a factor.
+- **The cooldown** is the support's level cooldown (0.6 s).
+- **The rotation** is the main spell alone: PoB's config has no `triggeredSkillCond`, so each supported spell is simulated on its own.
+
+**Cooldown recovery in every trigger.** PoB divides both cooldowns by the triggered skill's `calcLib.mod(CooldownRecovery)`, in the cap (575 to 576) and in the rotation (`packageSkillDataForSimulation`, 64 and 69). The engine did not; P6-8a listed it as not modelled.
+- `triggers::rate` now reads the factor from the store, `(1 + inc / 100) x more`, over the character's untagged and typed terms and the skill's own. These are the quantities a self-cast spell's cooldown reads (`hit::cooldown_limit`).
+- **The main skill's own `base_cooldown_speed_+%`** (its gem's or a support's, Spellslinger's 38%) was unmapped on the main skill. `SkillMapping` now maps it to `TypedCooldownRecovery` without a type: only the skill's cooldown and its trigger read it, and no other skill's totals do.
+
+**The damage:**
+- **Wand damage:** `hit::wand_damage_to_spells` adds the share of the wand's base damage (`gain_%_of_base_wand_damage_as_added_spell_damage`, 174% at level 20). It reads each type's weapon data after local modifiers, takes the mean of two wands, floors, and adds the result as added damage BASE with `ModFlag.Spell` (`CalcOffence.lua` 879 to 897).
+- `support_spellslinger_damage_+%_final`: `Damage` MORE with `KeywordFlag.Hit` or `Ailment` (`HIT_ROWS`).
+- **`showAverage` from base mods:** PoB sets it from a gem's hand-written base mods (Spellslinger's support has one) and clears it when a trigger sets the rate (2227). `hit::spell_hit` settles `hit::SHOW_AVERAGE` for a self-cast spell whose active gem or supports set it, and `combined::combine` then takes the average damage as its base, as it does for traps and mines. A trap's or mine's rule is unchanged.
+
+**Reservation:**
+- The supported spell reserves the support's level share, as Blasphemy's does. This needed only the support's table entry (`gems::SUPPORTS`, `SupportSpellslinger`).
+- "#% increased Mana Reservation Efficiency of Skills Supported by Spellslinger" (`spellslinger_mana_reservation_efficiency_+%` and its `-2%_per_1` form; `ModParser.lua` 1596) is `Poe1Quantity::SpellslingerManaReservationEfficiency`. It is added for skills the support supports (`Totals::reservation_for_skill`).
+
+**Rows and tables:**
+- `NoEffect` (read elsewhere): `gain_%_of_base_wand_damage_as_added_spell_damage`, `spellslinger_trigger_on_wand_attack_%`, `quality_display_wand_damage_as_added_spell_damage_is_gem`.
+- Inert skills (no global effect in PoB's data): Fireball, Kinetic Blast, Power Siphon.
+- **`data-parity`:** `gem_effects` allows Spellslinger's `SkillData` keys, its `Triggered` and `HasReservation` types, and its level reservation (`RESERVING_SUPPORTS`). The result is 753 differences, `uncategorized` 0, the same as `dev`.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219).
+
+- **Fixtures** (new, all original; each run three times by PoB, identical):
+  - `trigger-spellslinger-ice-nova-witch.xml`: Ice Nova with Spellslinger, Kinetic Blast on a Carved Wand in another group. Every compared field equals PoB's: the rate (the source's 1.84 under the cap of 2.1645), the average damage with the wand's share, the less damage, and the reserved mana (472 unreserved).
+  - `trigger-spellslinger-two-spells-witch.xml`: Ice Nova and Fireball, each reserving (354 unreserved), both in full DPS. Every compared field equals PoB's.
+  - `trigger-spellslinger-no-attack-witch.xml`: no wand attack, so self-cast. The combined DPS is the average damage (592.93), PoB's `showAverage`. Every compared field equals PoB's.
+  - In all three, 231 fields are `Complete`, none partial; hit chance is not computed for a spell, as before.
+- **The rotation with cooldown recovery** reproduces PoB's 1.197 for a 2.25 source rate, a 0.6 s cooldown, and 1.38 recovery. That is PoB's `SkillTriggerRate` on a first version of the fixture with Power Siphon as the source; Power Siphon's own stats are unmapped, so its fixture would carry their reasons, and Kinetic Blast replaced it. The test is `the_cooldown_recovery_should_divide_the_cooldowns_in_the_rotation`.
+- **Public `calc-parity`** (539 builds, the calc scope): 0 unexpected, as before. `Complete` fields went from 39,309 to 39,540, the new fixtures' 231.
+  - 8 fields of `kinetic-blast-of-clustering-necromancer.xml` moved, all now equal to PoB's: block and spell block chance, unreserved mana (2,923 to 267), mana regeneration, and the EHP fields. Spellslinger's gem and its reservation efficiency now count.
+  - Nothing moved away from PoB.
+- **Corpus** (21 builds, local): 2 builds changed, 3 fields moved, 4 reasons gone (3 `unmodelled-gem`, 1 `unmapped-stat`). There is no oracle run of the corpus here.
+- **Tests:** the workspace's 1,859 tests, clippy, fmt, and the wasm32 check pass.
+
+**Left for S3:** Mark on Hit, Hextouch, Arcanist Brand, Cast on Death, Mirage Archer, Manaforged Arrows, the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it).

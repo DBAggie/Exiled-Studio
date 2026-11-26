@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 34] = [
+const TEXTS: [(&str, &str); 36] = [
     // Close-out M6.
     (
         "anger_aura_effect_+%",
@@ -90,6 +90,15 @@ const TEXTS: [(&str, &str); 34] = [
     (
         "skill_effect_duration_+%",
         "{0}% increased Skill Effect Duration",
+    ),
+    // Open items S3.
+    (
+        "spellslinger_mana_reservation_efficiency_+%",
+        "{0}% increased Mana Reservation Efficiency of Skills Supported by Spellslinger",
+    ),
+    (
+        "spellslinger_mana_reservation_efficiency_-2%_per_1",
+        "{0}% reduced Mana Reservation Efficiency of Skills Supported by Spellslinger",
     ),
     (
         "warcry_cooldown_speed_+%",

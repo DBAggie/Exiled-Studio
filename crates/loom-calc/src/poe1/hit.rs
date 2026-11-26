@@ -1164,13 +1164,6 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// A self-cast spell's hit.
 pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
-    // The trigger first (P6-8a): whether PoB turns the skill's
-    // `TriggeredDamage` into `Damage` is settled before the damage.
-    let trigger = super::triggers::rate(calc, &spell.skill, &spell.source());
-    calc.settle_state(
-        ConditionKey::new(super::triggers::TRIGGERED_DAMAGE),
-        matches!(trigger, super::triggers::Outcome::Rate(_, _, true)),
-    );
     let enemy = enemy::enemy(input.build, input.data);
     // PoB's spell flags (P6-11hp; `CalcActiveSkill.lua` 353 to 359, 427):
     // `ModFlag.Spell` with the base flag `spell`, the spell keyword for a
@@ -1194,11 +1187,31 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     } else if spell.projectile {
         flags = flags | Flags::PROJECTILE;
     }
+    // The trigger before the damage (P6-8a): whether PoB turns the skill's
+    // `TriggeredDamage` into `Damage` is settled first. Its cooldown
+    // recovery reads the skill's context (open items S3).
+    let trigger = super::triggers::rate(calc, &spell.skill, &spell.source(), flags);
+    calc.settle_state(
+        ConditionKey::new(super::triggers::TRIGGERED_DAMAGE),
+        matches!(trigger, super::triggers::Outcome::Rate(_, _, true)),
+    );
+    // PoB's `showAverage` from a gem's base mods (Spellslinger's support,
+    // open items S3; `CalcOffence.lua` 333), unless a trigger sets the
+    // rate (2227): the combined DPS's base is then the average damage
+    // (`combined::combine`).
+    calc.settle_state(
+        ConditionKey::new(SHOW_AVERAGE),
+        matches!(trigger, super::triggers::Outcome::SelfCast)
+            && base_mod_show_average(&spell.skill),
+    );
     let cx = calc.context(flags);
+    // Spellslinger's share of the wand's base damage (open items S3).
+    let mut wand_reasons = Reasons::new();
+    wand_damage_to_spells(calc, spell, &mut wand_reasons)?;
     // A spell PoB's oracle has not checked: PoB computes it from its own
     // skill data too (parts, cast time overrides, skill functions, flags),
     // which the game data does not carry.
-    let mut unvetted = Reasons::new();
+    let mut unvetted = wand_reasons;
     // The repeats, before the damage and the rate (P6-11aj).
     super::repeats::apply(calc, &spell.skill.types, &cx, &mut unvetted);
     if !spell.vetted {
@@ -1280,6 +1293,101 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         skill: super::pob_skill::skill(&spell.skill.effect().id).map(|p| (p, spell.source())),
     };
     set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)
+}
+
+/// The state of PoB's `showAverage` a gem's base mods set on a self-cast
+/// spell ([`spell_hit`]; read by `combined::combine`).
+pub(super) const SHOW_AVERAGE: &str = "ShowAverage";
+
+/// Whether PoB's hand-written base mods of the skill's active gem or of a
+/// support set `skillData.showAverage` (an untagged `SkillData` mod; not a
+/// trap's or a mine's, which `combined` reads by its stat and cooldown).
+fn base_mod_show_average(skill: &MainSkill<'_>) -> bool {
+    if [skill::TRAP_TYPE, skill::MINE_TYPE]
+        .iter()
+        .any(|t| skill.types.contains(*t))
+    {
+        return false;
+    }
+    std::iter::once(skill.effect())
+        .chain(skill.supports.iter().map(|s| s.effect))
+        .filter_map(|e| super::pob_skill::skill(&e.id))
+        .flat_map(|p| p.base_mods.iter())
+        .any(|m| {
+            m.name == "SkillData"
+                && m.key == Some("showAverage")
+                && !m.tagged
+                && m.value == Some(super::pob_skill::Value::Bool(true))
+        })
+}
+
+/// The stat of Spellslinger's support part that gives a spell a share of
+/// the wand's base damage (PoB's `gainPercentBaseWandDamageToSpells`).
+pub(super) const WAND_DAMAGE_STAT: &str = "gain_%_of_base_wand_damage_as_added_spell_damage";
+
+/// Spellslinger's added spell damage (open items S3; `CalcOffence.lua` 879
+/// to 897): when a support of the spell has [`WAND_DAMAGE_STAT`], each
+/// damage type's minimum and maximum of the wand (its weapon data, after
+/// local modifiers) times the stat over 100, floored, added as `<Type>Min`
+/// and `<Type>Max` BASE with `ModFlag.Spell`; with a wand in each hand, the
+/// mean of the two before the floor. Without a wand it adds nothing.
+fn wand_damage_to_spells(
+    calc: &mut Calc<'_>,
+    spell: &SpellSkill<'_>,
+    reasons: &mut Reasons,
+) -> Result<(), CalcError> {
+    let input = *calc.input();
+    let Some((gem, percent)) = spell.skill.supports.iter().find_map(|s| {
+        skill::instance(s.effect, s.level, s.quality, input.data)
+            .stats
+            .iter()
+            .find(|(id, _)| id == WAND_DAMAGE_STAT)
+            .map(|(_, v)| (s.gem, *v))
+    }) else {
+        return Ok(());
+    };
+    #[expect(clippy::cast_precision_loss, reason = "a percent, exact as f64")]
+    let mult = percent as f64 / 100.0;
+    let hands = collect::hands(&input);
+    let wand = |held: &collect::Held| matches!(held, collect::Held::Weapon(c) if c == "Wand");
+    let mut wands = Vec::new();
+    for (held, item, hand) in [
+        (&hands.main_hand, hands.main.as_ref(), Hand::Main),
+        (&hands.off_hand, hands.off.as_ref(), Hand::Off),
+    ] {
+        if let (true, Some((id, _))) = (wand(held), item) {
+            wands.push(weapon_data(calc, *id, hand, reasons)?);
+        }
+    }
+    if wands.is_empty() {
+        return Ok(());
+    }
+    #[expect(clippy::cast_precision_loss, reason = "one or two wands")]
+    let count = wands.len() as f64;
+    let source = Source::Gem {
+        group: spell.group,
+        gem,
+    };
+    for (i, t) in TYPES.iter().enumerate() {
+        for (b, bound) in Bound::ALL.into_iter().enumerate() {
+            let sum: f64 = wands
+                .iter()
+                .filter_map(|w| w.damage.get(i).copied().flatten())
+                .map(|range| range[b].value)
+                .sum();
+            let value = crate::math::floor(sum / count * mult);
+            if value != 0.0 {
+                calc.add_effect(Effect {
+                    quantity: Quantity::AddedDamage(*t, bound),
+                    op: Op::Base,
+                    value,
+                    conditions: crate::condition::Conditions::none().with_all(Flags::SPELL),
+                    source: source.clone(),
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
 /// The main skill's ignite from one hit pass (Phase 6, [`super::ailment`]):

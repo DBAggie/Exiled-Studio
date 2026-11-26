@@ -2033,6 +2033,36 @@
       "description": "P6-8a part 2: Cast while Channelling with the channelling Cyclone check on: Cyclone's unscalable movement speed buff (MovementSpeedMod 0.8) and the triggered Ice Nova."
     },
     {
+      "id": "trigger-spellslinger-ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-spellslinger-ice-nova-witch.xml",
+      "sha256": "6874f3f0ebf94ee436d8ac3cd2d35c31f007391870aa8dcb93bb98f57229726b",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Open items S3: Ice Nova with Spellslinger, triggered by Kinetic Blast (a wand projectile attack in another group): the trigger on use (no hit chance), Spellslinger's 0.6 s cooldown over its own 38% cooldown recovery, the wand's base damage added to the spell, the support's less damage, and its mana reservation."
+    },
+    {
+      "id": "trigger-spellslinger-two-spells-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-spellslinger-two-spells-witch.xml",
+      "sha256": "ccdcb460d21bc0784317cc1e38b8b007712c2bf48ccd82f00465acce4e064ddf",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Open items S3: Ice Nova and Fireball with Spellslinger, triggered by Kinetic Blast: each spell triggered on its own (no shared rotation in PoB's config), each reserving mana, both in full DPS."
+    },
+    {
+      "id": "trigger-spellslinger-no-attack-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/trigger-spellslinger-no-attack-witch.xml",
+      "sha256": "aee2c52835a543091394dc96b3702ea08381a979efc0f86912e93670dd88edd1",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CombinedDPS", "CritChance", "CritMultiplier", "Dex", "EffectiveMovementSpeedMod", "EnergyShield", "EnergyShieldRecharge", "EnergyShieldRechargeDelay", "EnergyShieldRegen", "Evasion", "FireResist", "Int", "Life", "LifeRegen", "LifeUnreserved", "LightningResist", "Mana", "ManaCost", "ManaRegen", "ManaUnreserved", "MovementSpeedMod", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Open items S3: Spellslinger with a wand and no wand attack: no source, so the spell is self-cast, and Spellslinger's showAverage makes the combined DPS the average damage."
+    },
+    {
       "id": "mirage-archer-burning-arrow-templar.xml",
       "tier": "mechanic",
       "source": "local",

@@ -1120,6 +1120,8 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("EssenceDrain", Kind::Inert),
     ("FireTrap", Kind::Inert),
+    // Open items S3: no global effect in PoB's data (`act_int.lua` 5795).
+    ("Fireball", Kind::Inert),
     ("FlameDash", Kind::Inert),
     // P6-11ga: Flame Surge's buff (`act_int.lua` 6620): the share of the
     // ignite's damage per second dealt as burning ground
@@ -1779,6 +1781,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3: a wand attack with no global effect in PoB's data
+    // (`act_int.lua`, `KineticBlast`).
+    ("KineticBlast", Kind::Inert),
     ("LeapSlam", Kind::Inert),
     (
         "Malevolence",
@@ -1953,6 +1958,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("PoisonousConcoctionAltX", Kind::Inert),
     ("Portal", Kind::Inert),
+    // Open items S3: Power Siphon's stats are its own (crit per power
+    // charge); no global effect in PoB's data (`act_int.lua` 14102).
+    ("PowerSiphon", Kind::Inert),
     (
         "Precision",
         Kind::Buff {
@@ -3321,6 +3329,10 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportShockwave", &[]),
     ("SupportSpellCascade", &[]),
     ("SupportSpellEcho", &[]),
+    // Open items S3: Spellslinger's support part: no global stat; the
+    // spell it supports reserves its level's share of mana (the support's
+    // level row, as Blasphemy's) and is triggered (`poe1::triggers`).
+    ("SupportSpellslinger", &[]),
     (
         "SupportSummonPhantasm",
         &[
@@ -6094,6 +6106,10 @@ fn socket_reasons(g: usize, s: &GroupSkill<'_>, ingest: &mut Ingest<'_>) {
 
 /// Whether a skill with these types reserves (PoB: `HasReservation` and
 /// not `ReservationBecomesCost`, `CalcPerform.lua` 1940).
+/// Spellslinger's support part: a skill it supports takes "of Skills
+/// Supported by Spellslinger" reservation efficiency (open items S3).
+const SPELLSLINGER_SUPPORT: &str = "SupportSpellslinger";
+
 fn reserves(types: &BTreeSet<String>) -> bool {
     types.contains("HasReservation") && !types.contains("ReservationBecomesCost")
 }
@@ -6444,7 +6460,12 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mu
                 continue;
             }
         };
-        let terms = totals.reservation_for(pool, &s.types, &s.active_gem.effect.id);
+        let spellslinger = s
+            .supports
+            .iter()
+            .any(|sup| sup.effect.id == SPELLSLINGER_SUPPORT);
+        let terms =
+            totals.reservation_for_skill(pool, &s.types, &s.active_gem.effect.id, spellslinger);
         let amounts = if r.percent {
             skill_modifiers::reserved(0, r.amount, mult, terms)
         } else {
@@ -6609,7 +6630,7 @@ mod tests {
             Some(true)
         );
         assert_eq!(kind("GroundSlam"), Some(Kind::Inert));
-        assert_eq!(kind("Fireball"), None);
+        assert_eq!(kind("LoomNoSuchSkill"), None);
         assert!(support("SupportFasterAttacks").is_some_and(<[_]>::is_empty));
         assert!(support("SupportArcaneSurge").is_some_and(|t| !t.is_empty()));
         assert_eq!(support("SupportFireDamage"), None);

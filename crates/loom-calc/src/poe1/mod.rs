@@ -1073,13 +1073,20 @@ pub enum Poe1Quantity {
     SkillTiming(skill_modifiers::SkillTiming),
     /// Cooldown recovery of a skill type (PoB's `CooldownRecovery` INC with
     /// a `SkillType` tag; P6-11ex: travel skills): `Increased`, with the
-    /// type's flag, read by the main skill's cooldown ([`hit`]) alone.
+    /// type's flag, read by the main skill's cooldown ([`hit`]) and its
+    /// trigger ([`triggers`]) alone. Without a flag it is the main skill's
+    /// own (its gems' `base_cooldown_speed_+%`, open items S3).
     TypedCooldownRecovery,
     /// Mana reservation efficiency of skills that throw mines (PoB's
     /// `ManaReservationEfficiency` INC with `KeywordFlag.Mine`; P6-11ey):
     /// `Increased`, read by [`skill_modifiers::Totals`] for `RemoteMined`
     /// skills.
     MineManaReservationEfficiency,
+    /// Mana reservation efficiency of skills Spellslinger supports (PoB's
+    /// `ManaReservationEfficiency` INC with
+    /// `Condition:SupportedBySpellslinger`; open items S3): `Increased`,
+    /// read by [`skill_modifiers::Totals`] for those skills.
+    SpellslingerManaReservationEfficiency,
     /// Mines thrown at once (PoB's `MineThrowCount` BASE, its base 1 in
     /// [`hit`]; P6-11fa).
     MineThrowCount,
@@ -1793,6 +1800,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::MineThrowCount => f.write_str("mine-throw-count"),
             Self::TrapThrowCount => f.write_str("trap-throw-count"),
             Self::MineManaReservationEfficiency => f.write_str("mine-mana-reservation-efficiency"),
+            Self::SpellslingerManaReservationEfficiency => {
+                f.write_str("spellslinger-mana-reservation-efficiency")
+            }
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::MarkCurseEffect => f.write_str("mark-curse-effect"),

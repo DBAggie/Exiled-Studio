@@ -489,6 +489,10 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     ("WhirlingBlades", "doubleHitsWhenDualWielding"),
     // A Vaal skill's soul gain prevention duration (P6-9e): no slice field.
     ("VaalMoltenShell", "skillEffectAppliesToSoulGainPrevention"),
+    // Open items S3: Spellslinger's support part: `hit::wand_damage_to_spells`
+    // reads the wand damage share, `poe1::triggers` the trigger mark.
+    ("SupportSpellslinger", "gainPercentBaseWandDamageToSpells"),
+    ("SupportSpellslinger", "triggeredBySpellSlinger"),
     // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
     // their stats (the chance on crit, the threshold, the triggered marks).
     (
@@ -678,6 +682,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportCurseOnHitCurse", "Triggered"),
     // P6-9g: Mark On Hit triggers its mark (see `ALLOWED_BLOCKED`).
     ("SupportMarkOnHit", "Triggered"),
+    // Open items S3: Spellslinger triggers the spell it supports
+    // (`poe1::triggers`), which reserves its level's share
+    // (`RESERVING_SUPPORTS`).
+    ("SupportSpellslinger", "Triggered"),
+    ("SupportSpellslinger", "HasReservation"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
@@ -689,6 +698,8 @@ const RESERVING_SUPPORTS: &[&str] = &[
     "SupportAutoexertion",
     "SupportBlasphemy",
     "SupportEldritchBlasphemy",
+    // Open items S3: the spell Spellslinger supports reserves its share.
+    "SupportSpellslinger",
 ];
 
 /// Supports that add a minion to the skill they support, and the minion:
