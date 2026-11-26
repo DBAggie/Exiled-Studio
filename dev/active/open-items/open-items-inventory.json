@@ -5356,9 +5356,9 @@
     }
    },
    "class": "A",
-   "step": "S7",
+   "step": "S9",
    "effort": "M",
-   "note": "a dual wielder's block"
+   "note": "an ambiguous base in a hand leaves DualWielding unsettled (unmodelled-item ambiguous-base); found in S7, 2026-11-26"
   },
   {
    "key": "unmodelled-skill | skitterbots-supports",

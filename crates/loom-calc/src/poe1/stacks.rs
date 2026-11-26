@@ -150,6 +150,9 @@ pub enum StackKind {
     /// enemy's `Multiplier:EnemyPresenceSeconds`, the config's
     /// `enemyMultiplierEnemyPresenceSeconds`).
     EnemyPresenceSeconds,
+    /// Defiance (open items S7; PoB's `Multiplier:Defiance`, the config's
+    /// `multiplierDefiance`, at most 10).
+    Defiance,
 }
 
 impl StackKind {
@@ -182,6 +185,7 @@ impl StackKind {
             Self::WarcriesUsedRecently => "warcries-used-recently",
             Self::CorpsesConsumedRecently => "corpses-consumed-recently",
             Self::EnemyPresenceSeconds => "enemy-presence-seconds",
+            Self::Defiance => "defiance",
         }
     }
 }
@@ -277,6 +281,9 @@ pub enum PerStack {
     /// BASE per second, the stat per minute), its total at most 2% per
     /// second (`limit` 2, `limitTotal`; P6-11ev).
     EnergyShieldRegenPercentPerMinuteUpTo2,
+    /// Missing unreserved life gained before each enemy hit, percent
+    /// (`MissingLifeBeforeEnemyHit` BASE; open items S7).
+    MissingLifeBeforeHit,
     /// The enemy's increased damage taken (`DamageTaken` INC on the enemy;
     /// P6-11ew).
     EnemyDamageTaken,
@@ -348,6 +355,7 @@ impl PerStack {
             Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
                 "per.energy-shield-regen-percent-per-minute-up-to-2"
             }
+            Self::MissingLifeBeforeHit => "per.missing-life-before-hit",
         }
     }
 
@@ -466,6 +474,12 @@ impl PerStack {
                 Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(
                     super::Pool::EnergyShield,
                 )),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::MissingLifeBeforeHit => (
+                Quantity::Poe1(Poe1Quantity::MissingLifeBeforeHit),
                 Op::Base,
                 Flags::NONE,
                 Flags::NONE,
@@ -748,6 +762,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackValue::Maximum,
     ),
     ("maximum_rage", StackKind::Rage, StackValue::Maximum),
+    // Open items S7: "Gain #% of Missing Unreserved Life before being Hit by
+    // an Enemy Per Defiance" (`MissingLifeBeforeEnemyHit` BASE per
+    // `Multiplier:Defiance`; its `ModCache` parse).
+    (
+        "missing_unreserved_life_%_gained_as_life_before_hit_per_defiance",
+        StackKind::Defiance,
+        StackValue::Per(PerStack::MissingLifeBeforeHit),
+    ),
     (
         "movement_speed_+%_per_nearby_enemy",
         StackKind::NearbyEnemies,
@@ -917,8 +939,16 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 /// `limit = 5`, `limitTotal`, from the text "up to a maximum of 5%").
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
+/// The config's Defiance (`ConfigOptions.lua` 1059:
+/// `Multiplier:Defiance` BASE `min(count, 10)` in combat; open items S7).
+pub const DEFIANCE_INPUT: &str = "multiplierDefiance";
+
+/// The most Defiance the config counts (`ConfigOptions.lua` 1060).
+const DEFIANCE_MAX: f64 = 10.0;
+
 /// The inputs this module reads.
-pub const INPUTS: [&str; 15] = [
+pub const INPUTS: [&str; 16] = [
+    DEFIANCE_INPUT,
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -1308,6 +1338,9 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Some(50.0),
         ),
         (StackKind::EnemyPresenceSeconds, PRESENCE_INPUT, Some(100.0)),
+        // Defiance (open items S7): the config's count, at most 10
+        // (`ConfigOptions.lua` 1059 to 1060).
+        (StackKind::Defiance, DEFIANCE_INPUT, Some(DEFIANCE_MAX)),
     ] {
         let effects = per(ingest, kind);
         if effects.is_empty() {

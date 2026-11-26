@@ -84,7 +84,7 @@ Measured on PR #167 CI run 45112521852 at 4dd449a4 (461 fixtures): oracle window
 | `unmodelled-skill \| minion-modifier` | A | S1 | M |  | 9/1 |  |
 | `unmodelled-skill \| full-dps-vaal` | A | S1 | M | 4/4 | 1/1 |  |
 | `unmodelled-item \| no-physical-damage` | A | S9 | M | 4/1 |  |  |
-| `unmodelled-condition \| {"condition": "DualWielding", "quantity": "block-chance"}` | A | S7 | M |  | 1/1 | a dual wielder's block |
+| `unmodelled-condition \| {"condition": "DualWielding", "quantity": "block-chance"}` | A | S9 | M |  | 1/1 | an ambiguous base in a hand leaves DualWielding unsettled (S7, 2026-11-26) |
 | `unmodelled-skill \| skitterbots-supports` | A | S2 | S |  |  | Summon Skitterbots with a support whose shock, chill, or non-damaging ailment effect, or Bonechill's flag, PoB's override reads (added after S0) |
 
 ### `unmodelled-gem` by gem

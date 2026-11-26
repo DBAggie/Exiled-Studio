@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S7): ice-nova-missing-life-before-hit-witch.xml with 3% of missing
+     unreserved life gained before a hit per Defiance and 2 Defiance: 6%.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyLevel" number="40"/>
+			<Input name="enemyIsBoss" string="None"/>
+			<Input name="multiplierDefiance" number="2"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Gain 3% of Missing Unreserved Life before being Hit by an Enemy Per Defiance
+				+1000 to maximum Life
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

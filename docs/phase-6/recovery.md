@@ -667,3 +667,19 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 42,026 to 42,105 (the fixture). No other document changed.
 - **Corpus:** 0 unexpected; documents byte-identical.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 5: missing life gained before a hit per Defiance
+
+**What PoB does:** "Gain #% of Missing Unreserved Life before being Hit by an Enemy Per Defiance" is `MissingLifeBeforeEnemyHit` BASE per `Multiplier:Defiance` (its `ModCache` parse); the multiplier is the config's `multiplierDefiance`, at most 10, in combat (`ConfigOptions.lua` 1059 to 1060). The EHP estimate reads the sum as P6-11hm's line.
+
+**The engine:** `StackKind::Defiance` and `PerStack::MissingLifeBeforeHit` in `poe1::stacks`, the count from `multiplierDefiance` at most 10 in the loop of config-counted stacks. The reservation guard test (`skill_modifiers.rs`) allows the row, as it does P6-11hm's.
+
+**Fixtures:** `ice-nova-defiance-missing-life-witch.xml` (1 Defiance, 3%) and `ice-nova-defiance-two-witch.xml` (2, 6%): every field equals PoB's, the mitigated hits 17.98 and 57 among them. From 3 Defiance on this build's estimate reaches PoB's iteration bound (58 hits), so the cap at 10 is not shown by a fixture; it is PoB's config line, in the same loop as the other capped counts.
+
+**Also found:** the corpus build's `unmodelled-condition` `DualWielding` on block chance comes from an ambiguous base in a hand, not a defence gap: moved to S9 in the inventory.
+
+**Evidence** (`local/p6/s7e`, `b-ct`, against part 4's run):
+- **Public:** 0 unexpected; `Complete` 42,105 to 42,259 (the fixtures). `Generals Perforate Zerker.xml` loses the stat's reason on its 80 fields (they keep other reasons); no value moved.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
