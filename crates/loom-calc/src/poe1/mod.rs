@@ -2114,6 +2114,14 @@ pub enum Poe1Field {
     ConfiguredNotHitChance,
     /// The effective health pool (PoB's `TotalEHP`).
     TotalEhp,
+    /// A type's total pool: recoverable life, mana through mind over
+    /// matter, and energy shield unless the type bypasses it (PoB's
+    /// `<Type>TotalPool`; open items S7).
+    TotalPool(DamageType),
+    /// The effective health pool against a type's damage over time (PoB's
+    /// `<Type>DotEHP`: the total pool over `<Type>TakenDotMult`; open items
+    /// S7).
+    DotEhp(DamageType),
 }
 
 impl Poe1Field {
@@ -2172,6 +2180,20 @@ impl Poe1Field {
             Self::ConfiguredDamageChance => "configured-damage-chance",
             Self::ConfiguredNotHitChance => "configured-not-hit-chance",
             Self::TotalEhp => "total-ehp",
+            Self::TotalPool(t) => match t {
+                DamageType::Physical => "physical-total-pool",
+                DamageType::Fire => "fire-total-pool",
+                DamageType::Cold => "cold-total-pool",
+                DamageType::Lightning => "lightning-total-pool",
+                DamageType::Chaos => "chaos-total-pool",
+            },
+            Self::DotEhp(t) => match t {
+                DamageType::Physical => "physical-dot-ehp",
+                DamageType::Fire => "fire-dot-ehp",
+                DamageType::Cold => "cold-dot-ehp",
+                DamageType::Lightning => "lightning-dot-ehp",
+                DamageType::Chaos => "chaos-dot-ehp",
+            },
             Self::DamageReduction(t) => match t {
                 DamageType::Physical => "physical-damage-reduction",
                 DamageType::Fire => "fire-damage-reduction",

@@ -702,3 +702,21 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 42,259 to 42,512: the fixtures, and `ice-nova-tailwind-adrenaline-witch.xml`'s 21 estimate fields (category `Spell`), now equal to PoB's. `holy-flame-totem-hierophant.xml`'s reason is now the boss preset alone (its category is set by the preset). No value moved.
 - **Corpus:** 0 unexpected; one build's 21 estimate fields computed (indeterminate with its other reasons).
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+## Open items S7, part 7: the total pools and effective HP against damage over time
+
+**What PoB does** (`CalcDefence.lua` 2307 to 2377, 2535 to 2553, 3327 to 3337):
+- `<Type>ManaEffectiveLife` is `calcMoMEBPool` on `LifeRecoverable` (the hit pool's mind over matter, on recoverable life rather than the hit pool), with the type's share and energy shield bypass;
+- `<Type>TotalPool` adds `EnergyShieldRecoveryCap` unless the type bypasses energy shield (chaos, or every type with "Damage taken from Unblocked hits always bypasses Energy Shield") or Eldritch Battery puts the shield in the mind over matter pool. A bypass between 0 and 100 has no modelled source.
+- `<Type>DotEHP = <Type>TotalPool / <Type>TakenDotMult`.
+
+**The engine:** `Poe1Field::TotalPool` and `Poe1Field::DotEhp`, set by `enemy_hit::total_pools` from the values `maximum_hit` already reads. Their reasons are what they read: the life, energy shield, and mind over matter reads, not the hit pools' guard, allies, recoup, or life loss prevented. **Slice revision 24** compares the ten fields (`applies: present`).
+
+`LifeRecoverable` on low life now follows PoB's order, `Life x (100 x threshold) / 100` (`CalcPerform.lua` 75), not `Life x threshold`. The two differ by one unit in the last place on `pools-low-life-threshold-ice-nova-witch.xml` (927.7500000000001 against 927.75). Its maximum hit fields round, so they did not show it.
+
+**Fixtures:** none new. The fields appear in every build with the maximum hit's pools, including the existing pool fixtures, and all of them equal PoB's: mind over matter (`mom-ice-nova-witch.xml`, `mom-physical-`), Eldritch Battery with and without it (`eldritch-battery-ice-nova-witch.xml`, `eldritch-battery-mom-`), Emperor's Vigilance (`ice-nova-emperors-vigilance-witch.xml`, `-disabled-`), Zealot's Oath, and low life with and without a threshold (`pools-low-life-ice-nova-witch.xml`, `pools-low-life-threshold-`).
+
+**Evidence** (`local/p6/s7g`, `b-ct`, against part 6's run):
+- **Public:** 0 unexpected; `Complete` 42,512 to 47,992. Of the new fields, 5,480 match PoB, 160 are partial and 89 indeterminate on their builds' other reasons, and 40 are not computed: four builds whose maximum hit is not computed (`holy-flame-totem-hierophant.xml`'s boss preset, three on a field they depend on). No existing value or state moved.
+- **Corpus:** 0 unexpected; 110 new fields partial and 100 indeterminate on the builds' other reasons.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.

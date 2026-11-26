@@ -767,9 +767,16 @@ fn maximum_hit(
 ) -> Result<(), CalcError> {
     let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
     let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
+    let total_fields = TYPES.map(|t| Field::Poe1(Poe1Field::TotalPool(t)));
+    let dot_fields = TYPES.map(|t| Field::Poe1(Poe1Field::DotEhp(t)));
     for name in POOL_INPUTS {
         if super::conditions::check(set, name).is_none() {
-            for f in fields.into_iter().chain([second]) {
+            for f in fields
+                .into_iter()
+                .chain([second])
+                .chain(total_fields)
+                .chain(dot_fields)
+            {
                 calc.set_unsupported(
                     f,
                     UnsupportedReason::UnmodelledConfig {
@@ -810,7 +817,9 @@ fn maximum_hit(
         } else {
             LOW_POOL_THRESHOLD
         };
-        (life * threshold).min(unreserved)
+        // PoB's order: `Life x LowLifePercentage / 100`, the percentage
+        // `100 x` the threshold (`CalcPerform.lua` 75).
+        (life * (100.0 * threshold) / 100.0).min(unreserved)
     } else {
         unreserved
     }
@@ -866,6 +875,9 @@ fn maximum_hit(
     } else {
         es
     };
+    // The total pools' reasons (open items S7): what they read, not the hit
+    // pools' guard, allies, recoup, or loss prevented.
+    let mut total_reasons = pool_reasons.clone();
     // Any recoup (PoB's `anyRecoup`, `CalcDefence.lua` 1385 to 1465):
     // Divine Shield's pseudo recoup, and mana (P6-11as) and life (P6-10a)
     // recoup times their recovery rates (read only when present).
@@ -993,12 +1005,13 @@ fn maximum_hit(
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
+    let mut mom_reasons = Reasons::new();
     let shared = sum(
         calc,
         Poe1Quantity::ManaBeforeLife(TakenOf::All),
         Op::Base,
         &cx,
-        &mut pool_reasons,
+        &mut mom_reasons,
     )?
     .min(100.0);
     let mut mom = [0.0; 5];
@@ -1008,11 +1021,25 @@ fn maximum_hit(
             Poe1Quantity::ManaBeforeLife(TakenOf::Type(ty)),
             Op::Base,
             &cx,
-            &mut pool_reasons,
+            &mut mom_reasons,
         )?
         .min(100.0 - shared);
         mom[i] = (shared + own) / 100.0;
     }
+    pool_reasons.extend(&mom_reasons);
+    total_reasons.extend(&mom_reasons);
+    total_pools(
+        calc,
+        TotalPools {
+            recoverable,
+            mana,
+            es,
+            mom,
+            eb,
+            all_bypass,
+        },
+        &total_reasons,
+    )?;
     let mut pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
         // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291),
@@ -1507,6 +1534,78 @@ fn mom_hit_pool(life_pool: f64, share: f64, mana: f64, es: Option<f64>) -> f64 {
     });
     let used = crate::math::floor((max_pool - shield).min(usable));
     life_pool + used + shield
+}
+
+/// What a type's total pool reads ([`total_pools`]).
+struct TotalPools {
+    /// `LifeRecoverable`.
+    recoverable: f64,
+    /// `ManaUnreserved`, at least 0.
+    mana: f64,
+    /// `EnergyShieldRecoveryCap`.
+    es: f64,
+    /// Each type's mind over matter share, a fraction.
+    mom: [f64; 5],
+    /// Eldritch Battery (`EnergyShieldProtectsMana`).
+    eb: bool,
+    /// Every type bypasses energy shield (`UnblockedDamageDoesBypassES`).
+    all_bypass: bool,
+}
+
+/// Each type's total pool and its effective health pool against damage
+/// over time (open items S7): PoB's `<Type>TotalPool` (`CalcDefence.lua`
+/// 2307 to 2377, 2535 to 2553) and `<Type>DotEHP` (3327 to 3337).
+///
+/// - `<Type>ManaEffectiveLife`: `calcMoMEBPool` on `LifeRecoverable` with
+///   the type's mind over matter share and bypass (the same as the hit
+///   pool's [`mom_hit_pool`], on recoverable life);
+/// - `<Type>TotalPool`: that, plus `EnergyShieldRecoveryCap` unless the type
+///   bypasses energy shield (chaos, or every type with Emperor's
+///   Vigilance) or Eldritch Battery puts the shield in the mind over matter
+///   pool; a bypass between 0 and 100 has no modelled source;
+/// - `<Type>DotEHP = <Type>TotalPool / <Type>TakenDotMult`.
+fn total_pools(calc: &mut Calc<'_>, p: TotalPools, reasons: &Reasons) -> Result<(), CalcError> {
+    for (i, ty) in TYPES.into_iter().enumerate() {
+        let bypasses = ty == DamageType::Chaos || p.all_bypass;
+        let with_mana = mom_hit_pool(
+            p.recoverable,
+            p.mom[i],
+            p.mana,
+            (p.eb && !bypasses).then_some(p.es),
+        );
+        let total = if !bypasses && !p.eb {
+            with_mana + p.es
+        } else {
+            with_mana
+        };
+        let field = Field::Poe1(Poe1Field::TotalPool(ty));
+        let node = phases::constant(calc, "total-pool", total)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(
+            field,
+            phases::query(result, reasons.clone()),
+            &[
+                Field::LifeUnreserved,
+                Field::ManaUnreserved,
+                Field::EnergyShield,
+            ],
+        );
+        let dot_mult = Field::Poe1(Poe1Field::TakenDotMult(ty));
+        let Some(mult) = calc.field(dot_mult).and_then(|r| r.value) else {
+            continue;
+        };
+        if mult == 0.0 {
+            continue;
+        }
+        let node = phases::constant(calc, "dot-ehp", total / mult)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(
+            Field::Poe1(Poe1Field::DotEhp(ty)),
+            phases::query(result, reasons.clone()),
+            &[field, dot_mult],
+        );
+    }
+    Ok(())
 }
 
 /// PoB's `data.misc.AvoidChanceCap`.
