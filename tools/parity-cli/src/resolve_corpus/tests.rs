@@ -769,3 +769,118 @@ fn run_should_not_case_fold_a_line_that_resolves_exactly_or_matches_nothing() {
         .collect();
     assert_eq!(lines, [("resolved", None), ("excluded/author-note", None)]);
 }
+
+#[test]
+fn distinct_should_count_by_group() {
+    let mut d = Distinct::default();
+    d.count(true);
+    d.count(false);
+    d.count(false);
+    assert_eq!((d.unique, d.non_unique), (1, 2));
+}
+
+#[test]
+fn count_backed_should_split_backed_and_template_lines() {
+    let mut m = ModBacked::default();
+    let line = |backed: &str, filter: Option<&str>| LineRecord {
+        text: "t".to_owned(),
+        detail: vec!["s=1".to_owned()],
+        filter: filter.map(str::to_owned),
+        backed: Some(backed.to_owned()),
+        ..LineRecord::default()
+    };
+    for (backed, filter) in [
+        ("equal", None),
+        ("hybrid", Some("resolved/x")),
+        ("not/no-row", None),
+    ] {
+        count_backed(&mut m, &line(backed, filter), backed);
+    }
+    assert_eq!((m.resolved, m.backed, m.equal, m.hybrid), (3, 2, 1, 1));
+    assert_eq!((m.template_resolved, m.template_backed), (2, 1));
+    assert_eq!(m.not_backed.get("no-row"), Some(&1));
+    let text = &m.not_backed_texts["t"];
+    assert_eq!(text.non_unique, 1);
+    assert!(text.reasons.contains("no-row") && text.detail.contains("s=1"));
+}
+
+#[test]
+fn count_filter_should_count_decisions_notes_and_resolved_texts() {
+    let mut f = FilterCounts::default();
+    let record = LineRecord {
+        text: "t".to_owned(),
+        detail: vec!["a=1".to_owned()],
+        filter_notes: vec!["note"],
+        ..LineRecord::default()
+    };
+    count_filter(&mut f, &record, "resolved/spawn", true);
+    count_filter(&mut f, &record, "ambiguous/tie", false);
+    assert_eq!(f.unique.get("resolved/spawn"), Some(&1));
+    assert_eq!(f.non_unique.get("ambiguous/tie"), Some(&1));
+    assert_eq!(f.notes.get("unique/note"), Some(&1));
+    assert_eq!(f.notes.get("non_unique/note"), Some(&1));
+    let resolved = &f.resolved["t"];
+    assert_eq!((resolved.unique, resolved.non_unique), (1, 0));
+    assert!(resolved.detail.contains("spawn: a=1"));
+}
+
+#[test]
+fn inputs_recorded_should_need_every_input() {
+    let recorded = || {
+        let mut i = RunInputs::default();
+        i.extract.manifest_sha256 = "m".to_owned();
+        i.extract.steam_build_id = Some("1".to_owned());
+        i.builds.push("b".to_owned());
+        i.tool.commit = Some("c".to_owned());
+        i.tool.dirty = Some(false);
+        i.pob.push(categorize::PobSource::default());
+        i
+    };
+    assert!(inputs_recorded(&recorded()));
+    let mut dirty = recorded();
+    dirty.tool.dirty = Some(true);
+    assert!(!inputs_recorded(&dirty));
+    let mut unknown = recorded();
+    unknown.tool.dirty = None;
+    assert!(!inputs_recorded(&unknown));
+    let mut no_pob = recorded();
+    no_pob.pob.clear();
+    assert!(!inputs_recorded(&no_pob));
+    let mut no_build = recorded();
+    no_build.builds.clear();
+    assert!(!inputs_recorded(&no_build));
+}
+
+#[test]
+fn class_requirements_should_keep_the_class_name() {
+    // `Implicits: 0` puts the lines in the explicit section, where PoB
+    // reads a class requirement.
+    let pob = pob_item::read(
+        "Rarity: RARE\nN\nCoral Ring\nImplicits: 0\nRequires Class Witch\n+1 to maximum Life",
+    );
+    let item = pob_item::to_domain(&pob);
+    assert_eq!(class_requirements(&item), ["Witch"]);
+}
+
+#[test]
+fn parse_build_should_name_why_a_build_does_not_read() {
+    assert_eq!(
+        parse_build(&Build::new(vec![0xff, 0xfe])).unwrap_err(),
+        "not UTF-8"
+    );
+    assert!(parse_build(&Build::new(b"<a>".to_vec())).is_err());
+    assert!(parse_build(&Build::new(b"<a/>".to_vec())).is_ok());
+}
+
+#[test]
+fn distinct_builds_should_keep_one_build_per_hash() {
+    let mut s = Summary::default();
+    let builds = [
+        Build::new(b"<b/>".to_vec()),
+        Build::new(b"<a/>".to_vec()),
+        Build::new(b"<a/>".to_vec()),
+    ];
+    let kept = distinct_builds(&mut s, &builds);
+    assert_eq!((kept.len(), s.duplicate_builds), (2, 1));
+    assert!(kept.windows(2).all(|w| w[0].hash < w[1].hash));
+}
