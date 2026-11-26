@@ -20,6 +20,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
@@ -49,6 +50,9 @@ import {
   type SpriteRect,
   clusterSize,
   fits,
+  linksOf,
+  nodeToward,
+  pointsOf,
   useTreeLayout,
   useTreeSprites,
   withClusterNodes,
@@ -97,6 +101,13 @@ const RADIUS: Record<TreeNodeView['kind'], number> = {
   'ascendancy-start': 30,
 }
 
+/** A node's name as a card shows it: the game names a class start in
+ * capitals ("WITCH"); it is shown as the name it is (RV-31). */
+const shownName = (n: TreeNodeView) =>
+  n.kind === 'class-start'
+    ? n.name.charAt(0) + n.name.slice(1).toLowerCase()
+    : n.name
+
 const kindText = (n: TreeNodeView) =>
   tDynamic(`tree.kind.${n.kind}`, 'tree.kind.normal')
 
@@ -125,6 +136,7 @@ function colours(el: Element) {
     match: c('--c-tree-match', 'yellow'),
     kept: c('--c-tree-kept', 'dimgray'),
     ring: c('--c-tree-ring', 'white'),
+    focus: c('--c-focus', 'dodgerblue'),
   }
 }
 
@@ -133,6 +145,27 @@ interface StageNodes {
   added: Set<number>
   removed: Set<number>
 }
+
+/** The arrow keys' directions, y down as the canvas draws. */
+const KEY_STEPS: Record<string, [number, number] | undefined> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+}
+
+/** Whether `el` got its focus from the keyboard (a browser without the
+ * selector is taken to have). */
+function keyboardFocus(el: Element): boolean {
+  try {
+    return el.matches(':focus-visible')
+  } catch {
+    return true
+  }
+}
+
+/** The nearest the keys' node is shown from: nodes can be told apart. */
+const KEY_SCALE = 0.3
 
 interface Camera {
   x: number
@@ -236,6 +269,7 @@ function TreeCanvas({
   onActivate: (node: TreeNodeView) => void
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
+  const keysId = useId()
   const [camera, setCamera] = useState<Camera | null>(null)
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
   const placed = useMemo(
@@ -262,6 +296,11 @@ function TreeCanvas({
   )
   const path = useMemo(() => new Set(preview?.path ?? []), [preview])
   const removed = useMemo(() => new Set(preview?.removed ?? []), [preview])
+  // The node the keys are on, while the canvas has the keyboard focus
+  // (RV-20): the arrow keys move it along the links.
+  const [cursor, setCursor] = useState<number | null>(null)
+  const [focused, setFocused] = useState(false)
+  const links = useMemo(() => linksOf(layout), [layout])
 
   // Whether the view is still the fitted one: a resize then fits again;
   // after a move or a zoom the view is the user's and is kept.
@@ -544,6 +583,21 @@ function TreeCanvas({
         )
         ctx.stroke()
       }
+      // The node the keys are on: the focus ring, two lines so it shows
+      // on art of any colour.
+      const keyed = focused && cursor !== null ? byId.get(cursor) : undefined
+      if (keyed?.position != null) {
+        const p = at(keyed)
+        const r = Math.max(6, RADIUS[keyed.kind] * camera.scale) + 7
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, r, 0, 2 * Math.PI)
+        ctx.lineWidth = 5
+        ctx.strokeStyle = c.bg
+        ctx.stroke()
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = c.focus
+        ctx.stroke()
+      }
       // The stage compared with: a dashed ring on a node only it has, a
       // solid ring on a node only this stage has (the line, not the colour
       // alone, tells them apart).
@@ -566,7 +620,9 @@ function TreeCanvas({
     [
       allocated,
       byId,
+      cursor,
       diff,
+      focused,
       found,
       groupsOn,
       hovered,
@@ -651,13 +707,124 @@ function TreeCanvas({
     return () => el.removeEventListener('wheel', onWheel)
   }, [zoom])
 
+  // The keys' node shown: brought into view (and near enough to tell it
+  // from its neighbours), with its card beside it.
+  const keyTo = (n: TreeNodeView) => {
+    const el = canvas.current
+    if (el === null || camera === null || n.position == null) return
+    let cam = camera
+    if (cam.scale < KEY_SCALE) cam = { ...cam, scale: KEY_SCALE }
+    const p = toScreen(n.position.x, n.position.y, el, cam)
+    const edge = 90
+    if (
+      cam !== camera ||
+      p.x < edge ||
+      p.y < edge ||
+      p.x > el.clientWidth - edge ||
+      p.y > el.clientHeight - edge
+    ) {
+      cam = { ...cam, x: n.position.x, y: n.position.y }
+      fitted.current = false
+      setCamera(cam)
+    }
+    const q = toScreen(n.position.x, n.position.y, el, cam)
+    const rect = el.getBoundingClientRect()
+    setCursor(n.id)
+    onHover(n, {
+      x: rect.left + q.x + RADIUS[n.kind] * cam.scale + 12,
+      y: rect.top + q.y,
+    })
+  }
+  // Where the keys start: the last node they were on, else the class's
+  // start.
+  const keyStart = () =>
+    (cursor === null ? undefined : byId.get(cursor)) ??
+    placed.find((n) => n.kind === 'class-start' && allocated.has(n.id)) ??
+    placed.find((n) => allocated.has(n.id)) ??
+    placed[0]
+  const onKey = (e: ReactKeyboardEvent<HTMLCanvasElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return
+    setFocused(true)
+    const step = KEY_STEPS[e.key]
+    if (step !== undefined) {
+      e.preventDefault()
+      const from = keyStart()
+      if (from === undefined) return
+      if (cursor === null) return keyTo(from)
+      const next = nodeToward(layout, links, from.id, step[0], step[1])
+      const to = next === null ? undefined : byId.get(next)
+      keyTo(to ?? from)
+      return
+    }
+    switch (e.key) {
+      case 'Enter':
+      case ' ': {
+        e.preventDefault()
+        const n = cursor === null ? undefined : byId.get(cursor)
+        if (n !== undefined) onActivate(n)
+        break
+      }
+      case 'Home': {
+        e.preventDefault()
+        const start = placed.find(
+          (n) => n.kind === 'class-start' && allocated.has(n.id),
+        )
+        if (start !== undefined) keyTo(start)
+        break
+      }
+      case 'End': {
+        // The ascendancy has no link to the tree to move along.
+        e.preventDefault()
+        const start = placed.find(
+          (n) => n.kind === 'ascendancy-start' && allocated.has(n.id),
+        )
+        if (start !== undefined) keyTo(start)
+        break
+      }
+      case '+':
+      case '=':
+        e.preventDefault()
+        zoom(1.25)
+        break
+      case '-':
+        e.preventDefault()
+        zoom(0.8)
+        break
+      case '0':
+        e.preventDefault()
+        fit()
+        break
+      case 'Escape':
+        onHover(null, { x: 0, y: 0 })
+        break
+      default:
+    }
+  }
+  const keyed = cursor === null ? undefined : byId.get(cursor)
+
   return (
     <div className="tree-canvas-wrap">
       <canvas
         ref={canvas}
         className="tree-canvas"
-        // The list view is the accessible equivalent (ADR-008).
-        aria-hidden="true"
+        // The keys move along the links (RV-20); the list view stays the
+        // equivalent for a screen reader (ADR-008), and says more.
+        tabIndex={0}
+        role="application"
+        aria-label={t('tree.canvasLabel')}
+        aria-describedby={keysId}
+        onKeyDown={onKey}
+        onFocus={(e) => {
+          // Only the keyboard's focus shows the ring and the card.
+          if (!keyboardFocus(e.currentTarget)) return
+          setFocused(true)
+          const n = keyStart()
+          if (n !== undefined) keyTo(n)
+        }}
+        onBlur={() => {
+          setFocused(false)
+          onHover(null, { x: 0, y: 0 })
+        }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY, moved: false }
           e.currentTarget.setPointerCapture?.(e.pointerId)
@@ -700,6 +867,18 @@ function TreeCanvas({
         }}
         onPointerLeave={() => onHover(null, { x: 0, y: 0 })}
       />
+      <p id={keysId} className="visually-hidden">
+        {t('tree.canvasKeys')}
+      </p>
+      {/* The node the keys are on, said as they move. */}
+      <p className="visually-hidden" aria-live="polite">
+        {focused && keyed !== undefined
+          ? t(
+              allocated.has(keyed.id) ? 'tree.keyedAllocated' : 'tree.keyedNot',
+              { name: plain(shownName(keyed)), kind: kindText(keyed) },
+            )
+          : ''}
+      </p>
       <div className="tree-zoom" role="group" aria-label={t('tree.zoom')}>
         <button
           type="button"
@@ -811,6 +990,41 @@ function Flavour({ text }: { text: string }) {
   )
 }
 
+/** The passive points a character of the build's level would have left
+ * after the change (RV-04): what it has, less what is spent, less the
+ * passive points `nodes` cost (`sign` -1) or plus the ones they give back
+ * (`sign` 1). Nothing when the build names no level, or the change costs
+ * no passive point (ascendancy nodes have their own). */
+function PointsLeft({
+  tree,
+  layout,
+  nodes,
+  sign,
+}: {
+  tree: TreeView
+  layout: TreeLayout
+  nodes: number[]
+  sign: 1 | -1
+}) {
+  const level = useAppSelector((s) => s.session.snapshot?.build?.level ?? null)
+  const has = tree['points-available']
+  if (has == null) return null
+  const cost = pointsOf(nodes, layout, tree)
+  if (cost === 0) return null
+  const left = has - tree.points + sign * cost
+  return (
+    <p className={left < 0 ? 'small-text warn-text' : 'muted small-text'}>
+      {left < 0
+        ? left === -1
+          ? t('tree.pointsOverOne', { level: level ?? '' })
+          : t('tree.pointsOver', { n: -left, level: level ?? '' })
+        : left === 1
+          ? t('tree.pointsLeftOne')
+          : t('tree.pointsLeft', { n: left })}
+    </p>
+  )
+}
+
 /** What a node is and what clicking it would do. */
 function NodeCard({
   node,
@@ -849,7 +1063,7 @@ function NodeCard({
   )
   return (
     <>
-      <p className="tree-card-name">{node.name}</p>
+      <p className="tree-card-name">{shownName(node)}</p>
       <p className="muted small-text">
         {kindText(node)}
         {node.ascendancy != null && ` · ${node.ascendancy}`}
@@ -894,6 +1108,12 @@ function NodeCard({
                 ? t('tree.allocatesOne')
                 : t('tree.allocates', { n: preview.path.length })}
           </p>
+          <PointsLeft
+            tree={tree}
+            layout={layout}
+            nodes={allocated ? preview.removed : preview.path}
+            sign={allocated ? 1 : -1}
+          />
           {partial ? (
             <p className="muted small-text">{t('tree.calculating')}</p>
           ) : (
@@ -1250,7 +1470,11 @@ function TreeList({
   ]
   return (
     <div className="tree-list">
-      <div className="segmented" role="group" aria-label={t('tree.listLabel')}>
+      <div
+        className="dash-tabs tree-sections"
+        role="group"
+        aria-label={t('tree.listLabel')}
+      >
         {sections.map((s) => (
           <button
             key={s}
@@ -1302,6 +1526,20 @@ function TreeList({
                   <button
                     type="button"
                     data-row
+                    // One short word in one column; the node's name is in
+                    // the button's own name, for a screen reader (RV-32).
+                    className={on ? 'link quiet' : undefined}
+                    aria-label={
+                      n.kind === 'mastery'
+                        ? t('tree.chooseEffectFor', { node: n.name })
+                        : on &&
+                            (n.kind === 'jewel-socket' ||
+                              n.kind === 'cluster-socket')
+                          ? t('tree.chooseJewelFor', { node: n.name })
+                          : on
+                            ? t('tree.deallocate', { node: n.name })
+                            : t('tree.allocate', { node: n.name })
+                    }
                     tabIndex={i === Math.min(active, shown.length - 1) ? 0 : -1}
                     // Same-named nodes are told apart by their lines, and
                     // the count of nodes it changes once known.
@@ -1320,14 +1558,14 @@ function TreeList({
                     onClick={() => onActivate(n)}
                   >
                     {n.kind === 'mastery'
-                      ? t('tree.chooseEffectFor', { node: n.name })
+                      ? t('tree.chooseEffectShort')
                       : on &&
                           (n.kind === 'jewel-socket' ||
                             n.kind === 'cluster-socket')
-                        ? t('tree.chooseJewelFor', { node: n.name })
+                        ? t('tree.chooseJewelShort')
                         : on
-                          ? t('tree.deallocate', { node: n.name })
-                          : t('tree.allocate', { node: n.name })}
+                          ? t('tree.deallocateShort')
+                          : t('tree.allocateShort')}
                   </button>
                 )}
               </li>
@@ -1711,12 +1949,22 @@ export function Tree() {
         {/* Notices are one press away, not rows above the tree. */}
         <Hint>{t('tree.canvasHelp')}</Hint>
         {quote != null && (
-          <Hint label={t('tree.flavourLabel', { name: ascName ?? '' })}>
+          <Hint
+            label={t('tree.flavourLabel', { name: ascName ?? '' })}
+            text={t('tree.flavourLabel', { name: ascName ?? '' })}
+          >
             {quote}
           </Hint>
         )}
         {tree.kept.length > 0 && (
-          <Hint label={t('tree.keptLabel', { n: tree.kept.length })}>
+          <Hint
+            label={t('tree.keptLabel', { n: tree.kept.length })}
+            text={
+              tree.kept.length === 1
+                ? t('tree.keptShort1')
+                : t('tree.keptShort', { n: tree.kept.length })
+            }
+          >
             {t('tree.keptCount', { n: tree.kept.length })}
           </Hint>
         )}
@@ -1764,11 +2012,25 @@ export function Tree() {
         </button>
       </div>
       <div className="tree-float tree-bl">
-        <p className="tree-points" aria-live="polite">
-          {t('tree.points', {
-            n: tree.points,
-            a: tree['ascendancy-points'],
-          })}
+        <p
+          className="tree-points"
+          aria-live="polite"
+          title={
+            tree['points-available'] != null
+              ? t('tree.pointsOfHelp', { of: tree['points-available'] })
+              : undefined
+          }
+        >
+          {tree['points-available'] != null
+            ? t('tree.pointsOf', {
+                n: tree.points,
+                of: tree['points-available'],
+                a: tree['ascendancy-points'],
+              })
+            : t('tree.points', {
+                n: tree.points,
+                a: tree['ascendancy-points'],
+              })}
         </p>
         {attributes.str != null &&
           attributes.dex != null &&

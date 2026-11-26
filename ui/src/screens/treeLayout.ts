@@ -25,6 +25,92 @@ export function withClusterNodes(
   }
 }
 
+/** The nodes each node of the canvas links to, both ways (a layout names
+ * a link at one of its ends): the ones a key can move to. As the canvas
+ * draws them: no mastery (it has no link drawn), no node of a cluster
+ * jewel's empty area, and no link between the tree and an ascendancy
+ * (every ascendancy of the class hangs off its start, far away). */
+export function linksOf(layout: TreeLayout): Map<number, number[]> {
+  const on = new Map(
+    layout.nodes
+      .filter(
+        (n) =>
+          n.position != null &&
+          n['cluster-area'] !== true &&
+          n.kind !== 'mastery',
+      )
+      .map((n) => [n.id, n]),
+  )
+  const out = new Map<number, number[]>()
+  const add = (a: number, b: number) => {
+    const list = out.get(a) ?? []
+    if (!list.includes(b)) list.push(b)
+    out.set(a, list)
+  }
+  for (const a of on.values()) {
+    for (const b of a.links) {
+      const other = on.get(b)
+      if (other === undefined || b === a.id) continue
+      if ((a.ascendancy ?? null) !== (other.ascendancy ?? null)) continue
+      add(a.id, b)
+      add(b, a.id)
+    }
+  }
+  return out
+}
+
+/** The node an arrow key moves to from `from` (RV-20): of the nodes it
+ * links to, the one most nearly in the key's direction (`dx`, `dy`: a
+ * unit step, y down as the canvas draws), and none when every link
+ * leads more away than toward it. */
+export function nodeToward(
+  layout: TreeLayout,
+  links: Map<number, number[]>,
+  from: number,
+  dx: number,
+  dy: number,
+): number | null {
+  const at = (id: number) => layout.nodes.find((n) => n.id === id)?.position
+  const a = at(from)
+  if (a == null) return null
+  let best: number | null = null
+  // Within about 72 degrees of the key's direction.
+  let bestCos = 0.3
+  for (const id of links.get(from) ?? []) {
+    const b = at(id)
+    if (b == null) continue
+    const len = Math.hypot(b.x - a.x, b.y - a.y)
+    if (len === 0) continue
+    const cos = ((b.x - a.x) * dx + (b.y - a.y) * dy) / len
+    if (cos > bestCos) {
+      best = id
+      bestCos = cos
+    }
+  }
+  return best
+}
+
+/** The passive points `nodes` cost: one each, but none for a start or an
+ * ascendancy's node (those have their own points). A node the layout
+ * lacks counts, as it does in the points spent. */
+export function pointsOf(
+  nodes: readonly number[],
+  layout: TreeLayout,
+  tree: TreeView,
+): number {
+  const added = tree['cluster-nodes'] ?? []
+  return nodes.filter((id) => {
+    const n =
+      added.find((x) => x.id === id) ?? layout.nodes.find((x) => x.id === id)
+    return (
+      n === undefined ||
+      (n.ascendancy == null &&
+        n.kind !== 'class-start' &&
+        n.kind !== 'ascendancy-start')
+    )
+  }).length
+}
+
 /** The size of a cluster jewel base (`Large Cluster Jewel`), if it is
  * one: the base's first word, as the game names them. */
 export function clusterSize(base: string): 'small' | 'medium' | 'large' | null {

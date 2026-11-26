@@ -25,6 +25,12 @@ export function ImportReview() {
   const c = build.lines
   const { used, unused } = splitWarnings(build)
   const name = build.name === '' ? t('app.untitled') : build.name
+  // Every count on the page is in rows as the lists show them (the same
+  // line on several items is one row), so the sentence, the card, and
+  // the list agree (RV-08).
+  const usedRows = warningRows(used).length
+  const unusedRows = warningRows(unused).length
+  const rows = usedRows + unusedRows
   // Of the lines that apply (not other variants or notes), the share the
   // calculation reads (UX-16).
   const applies = c.modifiers - c.excluded
@@ -48,14 +54,14 @@ export function ImportReview() {
           <p className="muted">
             {build.warnings.length === 0
               ? t('import.summaryClean')
-              : build.warnings.length === 1
+              : rows === 1
                 ? t('import.summaryWarnings1')
-                : t('import.summaryWarnings', { n: build.warnings.length })}
+                : t('import.summaryWarnings', { n: rows })}
             {unused.length > 0 &&
               ` ${
                 used.length === 0
                   ? t('import.summaryUnusedAll')
-                  : t('import.summaryUnused', { n: unused.length })
+                  : t('import.summaryUnused', { n: unusedRows })
               }`}
           </p>
         </div>
@@ -89,11 +95,11 @@ export function ImportReview() {
           {/* What touches the numbers: the lines on items in use. Those
               on other items are said beside it. */}
           <dd className={used.length > 0 ? 'tone-warn' : undefined}>
-            {formatNumber(warningRows(used).length)}
+            {formatNumber(usedRows)}
           </dd>
           <dd className="sub">
             {unused.length > 0
-              ? t('import.reviewMore', { n: warningRows(unused).length })
+              ? t('import.reviewMore', { n: unusedRows })
               : t('import.warningsSub')}
           </dd>
         </div>
@@ -116,9 +122,7 @@ export function ImportReview() {
               {unused.length > 0 && (
                 <details className="unused-review">
                   <summary>
-                    {t('import.reviewUnused', {
-                      n: warningRows(unused).length,
-                    })}
+                    {t('import.reviewUnused', { n: unusedRows })}
                   </summary>
                   <ReviewList warnings={unused} />
                 </details>

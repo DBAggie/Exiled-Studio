@@ -126,9 +126,11 @@ describe('UX High fixes', () => {
         name: 'Details: what Energy shield does not count yet',
       }),
     )
-    const dialog = await screen.findByRole('dialog', {
+    // In the card, not over it (RV-22).
+    const dialog = await within(tile).findByRole('region', {
       name: 'Energy shield · 4 things not counted yet',
     })
+    expect(screen.queryByRole('dialog')).toBeNull()
     // Grouped and counted, each thing by the game's text with its place.
     const group = (name: string) =>
       within(dialog).getByText(name).closest('details') as HTMLElement
@@ -148,7 +150,7 @@ describe('UX High fixes', () => {
     expect(
       within(codes).getByText('unmapped-stat: some_internal_stat_id'),
     ).toBeTruthy()
-    // A thing's link leads to it and closes the dialog.
+    // A thing's link leads to it.
     await user.click(
       within(lines).getByRole('button', { name: 'Loom Test Band' }),
     )
@@ -315,7 +317,7 @@ describe('UX High fixes', () => {
       screen.getByRole('button', { name: 'Remove witch from recent builds' }),
     )
     expect(api.executed).toContainEqual({ 'forget-recent': { id: 'a1' } })
-    expect(await screen.findByText('No recent builds.')).toBeTruthy()
+    expect(await screen.findByText('No recent builds')).toBeTruthy()
     await expectAccessible()
   })
 
@@ -683,7 +685,7 @@ describe('UX High fixes', () => {
     expect(await screen.findByText('+15 to maximum Life')).toBeTruthy()
     expect(screen.queryByText(/\{variant:1\}/)).toBeNull()
     expect(
-      screen.getByText('Variant: Pre 3.7.0', { selector: '.badge' }),
+      screen.getByText('Variant: Pre 3.7.0', { selector: '.line-mark' }),
     ).toBeTruthy()
     expect(screen.getByText('Crafted')).toBeTruthy()
     // The file fields are folded away, kept as written.

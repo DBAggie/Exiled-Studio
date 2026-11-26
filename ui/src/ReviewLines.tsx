@@ -49,7 +49,7 @@ function ReviewRow({ w, items }: WarningRow) {
       </div>
       <button
         type="button"
-        className="link review-item"
+        className="link plain review-item"
         aria-label={t('import.openItemName', { item, line: w.line + 1 })}
         onClick={() => dispatch(actions.editItem(w.item))}
       >

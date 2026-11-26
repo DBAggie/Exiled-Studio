@@ -4,7 +4,14 @@
 import { describe, expect, it } from 'vitest'
 
 import type { TreeLayout, TreeNodeView, TreeView } from '../api/types'
-import { clusterSize, fits, withClusterNodes } from '../screens/treeLayout'
+import {
+  clusterSize,
+  fits,
+  linksOf,
+  nodeToward,
+  pointsOf,
+  withClusterNodes,
+} from '../screens/treeLayout'
 
 const node = (id: number, name: string): TreeNodeView => ({
   id,
@@ -69,5 +76,65 @@ describe('cluster jewel nodes', () => {
     expect(fits('small', 'large')).toBe(true)
     expect(fits('medium', 'medium')).toBe(true)
     expect(fits('large', 'medium')).toBe(false)
+  })
+})
+
+describe('the passive points nodes cost (RV-04)', () => {
+  it('counts one each, but none for a start or an ascendancy node', () => {
+    const l: TreeLayout = {
+      ...layout,
+      nodes: [
+        node(1, 'One'),
+        { ...node(2, 'WITCH'), kind: 'class-start' },
+        { ...node(3, 'Mistress of Sacrifice'), ascendancy: 'Necromancer' },
+        { ...node(4, 'Necromancer'), kind: 'ascendancy-start' },
+      ],
+    }
+    expect(pointsOf([1, 2, 3, 4], l, view([]))).toBe(1)
+    // A cluster jewel's node, and one the layout lacks, each cost a point.
+    expect(pointsOf([1, 65537, 999], l, view([node(65537, 'Added')]))).toBe(3)
+    expect(pointsOf([], l, view([]))).toBe(0)
+  })
+})
+
+describe('the arrow keys on the tree (RV-20)', () => {
+  const at = (id: number, x: number, y: number, links: number[] = []) => ({
+    ...node(id, `n${id}`),
+    position: { x, y },
+    links,
+  })
+  const l: TreeLayout = {
+    ...layout,
+    nodes: [
+      at(1, 0, 0, [2, 3, 5]),
+      at(2, 100, 10),
+      at(3, 0, -100, [4]),
+      at(4, 100, -100),
+      { ...at(5, -100, 0), kind: 'mastery' },
+      { ...at(6, 0, 100, [1]), 'cluster-area': true },
+      { ...at(7, 0, 200, [1]), ascendancy: 'Necromancer' },
+    ],
+  }
+  const links = linksOf(l)
+
+  it('links both ways, without masteries and empty cluster areas', () => {
+    expect(links.get(1)).toEqual([2, 3])
+    expect(links.get(2)).toEqual([1])
+    expect(links.get(4)).toEqual([3])
+    expect(links.get(5)).toBeUndefined()
+    expect(links.get(6)).toBeUndefined()
+    // The tree and an ascendancy are not linked for the keys.
+    expect(links.get(7)).toBeUndefined()
+  })
+
+  it('move to the linked node most nearly that way, or stay', () => {
+    expect(nodeToward(l, links, 1, 1, 0)).toBe(2)
+    expect(nodeToward(l, links, 1, 0, -1)).toBe(3)
+    // Nothing is linked below or to the left.
+    expect(nodeToward(l, links, 1, 0, 1)).toBeNull()
+    expect(nodeToward(l, links, 1, -1, 0)).toBeNull()
+    // 4 is up and right of 1 but not linked to it.
+    expect(nodeToward(l, links, 3, 1, 0)).toBe(4)
+    expect(nodeToward(l, links, 99, 1, 0)).toBeNull()
   })
 })

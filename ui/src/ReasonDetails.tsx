@@ -5,10 +5,9 @@
 // stat ID) with a link to where it is, and keeps the calculation's codes
 // behind "Show technical detail". The breakdown page shows the same
 // groups.
-import { Dialog } from 'radix-ui'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
-import type { BuildView, FieldResult } from './api/types'
+import type { BuildView, FieldResult, PassiveLines } from './api/types'
 import { plain } from './colourCodes'
 import { optionOf } from './configOptions'
 import { fieldLabel, t, tDynamic, type MessageKey } from './i18n'
@@ -16,6 +15,7 @@ import {
   byGroup,
   codeCounts,
   entriesOf,
+  passiveLine,
   type ReasonEntry,
   type ReasonGroup,
 } from './reasons'
@@ -80,12 +80,45 @@ function useItemLines(entries: ReasonEntry[]): Lines {
   return lines
 }
 
+/** The lines of the passives the entries name a stat of, each with the
+ * stats it prints (asked once per set of passives and data). */
+function usePassiveLines(entries: ReasonEntry[]): PassiveLines[] {
+  const dispatch = useAppDispatch()
+  const data = useAppSelector(
+    (s) => s.session.snapshot?.build?.['data-version'],
+  )
+  const [passives, setPassives] = useState<PassiveLines[]>([])
+  const nodes = [
+    ...new Set(
+      entries.flatMap((e) =>
+        e.target.kind === 'passive' && e.detail !== null ? [e.target.node] : [],
+      ),
+    ),
+  ]
+    .sort((a, b) => a - b)
+    .join(',')
+  useEffect(() => {
+    if (nodes === '') return
+    let live = true
+    void dispatch(
+      query((api) => api.passiveLines(nodes.split(',').map(Number))),
+    ).then((v) => {
+      if (live && v !== null) setPassives(v)
+    })
+    return () => {
+      live = false
+    }
+  }, [dispatch, nodes, data])
+  return passives
+}
+
 /** The rows of a group: each entry named and placed, the same ones
  * together. */
 function rowsOf(
   entries: ReasonEntry[],
   build: BuildView | null | undefined,
   lines: Lines,
+  passives: PassiveLines[],
   go: (to: () => void) => () => void,
   dispatch: ReturnType<typeof useAppDispatch>,
 ): Row[] {
@@ -107,13 +140,22 @@ function rowsOf(
             : tDynamic(`reasons.what.${e.detail ?? ''}`, 'reasons.whatItem')
         break
       }
-      case 'passive':
+      case 'passive': {
+        const passive = build?.['passive-names'].find(
+          (p) => p.node === target.node,
+        )?.name
+        // A modifier of a passive is named by its own line, with the
+        // passive as its place (RV-11); until the lines are known, or for
+        // a reason about the whole passive, by the passive.
+        const line = passiveLine(passives, target.node, e.detail)
         name =
-          build?.['passive-names'].find((p) => p.node === target.node)?.name ??
+          line?.text ??
+          passive ??
           tDynamic(`reasons.what.${e.detail ?? ''}`, 'reasons.passive')
-        where = t('nav.tree')
+        where = line === null ? t('nav.tree') : line.passive
         to = () => dispatch(actions.go('tree'))
         break
+      }
       case 'gem': {
         const group = build?.['skill-groups'][target.group]
         name =
@@ -160,6 +202,7 @@ export function ReasonGroups({
   const dispatch = useAppDispatch()
   const build = useAppSelector((s) => s.session.snapshot?.build)
   const lines = useItemLines(entries)
+  const passives = usePassiveLines(entries)
   const groups = useMemo(() => byGroup(entries), [entries])
   const go = (to: () => void) => () => {
     onLeave?.()
@@ -174,24 +217,26 @@ export function ReasonGroups({
             <span className="reason-count">{g.entries.length}</span>
           </summary>
           <ul>
-            {rowsOf(g.entries, build, lines, go, dispatch).map((row) => (
-              <li key={row.key}>
-                <span className="reason-name">
-                  {row.name}
-                  {row.n > 1 && (
-                    <span className="muted">
-                      {' '}
-                      {t('reasons.times', { n: row.n })}
-                    </span>
+            {rowsOf(g.entries, build, lines, passives, go, dispatch).map(
+              (row) => (
+                <li key={row.key}>
+                  <span className="reason-name">
+                    {row.name}
+                    {row.n > 1 && (
+                      <span className="muted">
+                        {' '}
+                        {t('reasons.times', { n: row.n })}
+                      </span>
+                    )}
+                  </span>
+                  {row.go !== null && (
+                    <button type="button" className="link" onClick={row.go}>
+                      {row.where}
+                    </button>
                   )}
-                </span>
-                {row.go !== null && (
-                  <button type="button" className="link" onClick={row.go}>
-                    {row.where}
-                  </button>
-                )}
-              </li>
-            ))}
+                </li>
+              ),
+            )}
           </ul>
         </details>
       ))}
@@ -218,9 +263,12 @@ export function ReasonGroups({
   )
 }
 
-/** A card's one line about what its value leaves out, with Details. */
+/** A card's one line about what its value leaves out, with Details: a
+ * panel that opens in the card, under the line (RV-22; it was a dialog,
+ * which hid the card it was about). */
 export function ReasonSummary({ field }: { field: FieldResult }) {
   const [open, setOpen] = useState(false)
+  const id = useId()
   const entries = useMemo(() => entriesOf(field), [field])
   const first = entries[0]
   if (first === undefined) return null
@@ -230,41 +278,35 @@ export function ReasonSummary({ field }: { field: FieldResult }) {
   }
   const label = fieldLabel(field.field)
   return (
-    <p className="reason-summary">
-      {countText(entries.length)}
-      {' · '}
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger asChild>
-          <button
-            type="button"
-            className="link"
-            aria-label={t('reasons.detailsFor', { field: label })}
-          >
-            {t('reasons.details')}
-          </button>
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content className="dialog-content dialog-wide">
-            <div className="panel-head">
-              <Dialog.Title>
-                {t('reasons.title', {
-                  field: label,
-                  count: countText(entries.length),
-                })}
-              </Dialog.Title>
-              <span className="spacer" />
-              <Dialog.Close asChild>
-                <button type="button">{t('dialog.close')}</button>
-              </Dialog.Close>
-            </div>
-            <Dialog.Description className="muted">
-              {t('reasons.help')}
-            </Dialog.Description>
-            <ReasonGroups entries={entries} onLeave={() => setOpen(false)} />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </p>
+    <>
+      <p className="reason-summary">
+        {countText(entries.length)}
+        {' · '}
+        <button
+          type="button"
+          className="link"
+          aria-expanded={open}
+          aria-controls={open ? id : undefined}
+          aria-label={t('reasons.detailsFor', { field: label })}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? t('reasons.hide') : t('reasons.details')}
+        </button>
+      </p>
+      {open && (
+        <div
+          id={id}
+          className="reason-inline"
+          role="region"
+          aria-label={t('reasons.title', {
+            field: label,
+            count: countText(entries.length),
+          })}
+        >
+          <p className="muted small-text">{t('reasons.help')}</p>
+          <ReasonGroups entries={entries} />
+        </div>
+      )}
+    </>
   )
 }

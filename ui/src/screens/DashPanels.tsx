@@ -473,7 +473,12 @@ export function ComparePanel({
     return (
       <Panel id={id} title={t('dashboard.kind.compare')}>
         <p className="muted small-text">{t('compare.empty')}</p>
-        <button type="button" onClick={pin} disabled={calc === null}>
+        <button
+          type="button"
+          className="top-gap"
+          onClick={pin}
+          disabled={calc === null}
+        >
           {t('compare.pin')}
         </button>
       </Panel>

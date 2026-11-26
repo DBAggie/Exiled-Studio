@@ -994,6 +994,7 @@ fn dashboards_view(dashboards: &Dashboards) -> api::Dashboards {
                         input: c.input.clone(),
                         target: c.target,
                         new_row: c.new_row,
+                        tall: c.tall,
                     })
                     .collect(),
             })

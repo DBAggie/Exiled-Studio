@@ -98,6 +98,38 @@ fn a_snapshot_should_keep_what_its_build_is_and_read_without_it() {
     assert_eq!(c.read(&store, "b-1").unwrap().0, header(8));
 }
 
+/// RV-13: a snapshot a later version wrote, with a header key this one
+/// does not know, is offered and restored, and the key is ignored. (The
+/// reader was strict up to 0.9.0: that version lists a snapshot that
+/// carries `summary` and refuses to restore it. This test failed before
+/// the reader was made lenient.)
+#[test]
+fn a_snapshot_with_a_header_key_from_a_newer_version_should_still_be_restored() {
+    let dir = Scratch::new("newer-key");
+    let store = Store::new();
+    let build = Build::new(Game::Poe1);
+    {
+        let a = Recovery::open(&dir.0, "a-1").unwrap();
+        a.write(&store, &header(9), &build).unwrap();
+    }
+    let path = dir.0.join("a-1.json");
+    let mut file: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    file.as_object_mut().unwrap().insert(
+        "from-a-newer-version".to_owned(),
+        serde_json::json!({ "level": 92 }),
+    );
+    std::fs::write(&path, file.to_string()).unwrap();
+
+    let b = Recovery::open(&dir.0, "b-1").unwrap();
+    let found = b.list(&store);
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].header, header(9));
+    let (h, restored) = b.read(&store, "a-1").unwrap();
+    assert_eq!(h, header(9));
+    assert_eq!(restored, build);
+}
+
 #[test]
 fn recovery_clear_should_leave_nothing_to_offer() {
     let dir = Scratch::new("clear");

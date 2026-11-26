@@ -177,6 +177,30 @@ input[type='checkbox'] {
   flex: none;
 }
 
+/* Radio buttons drawn by the application (RV-33): the system's own were
+   system blue beside the application's ticks. */
+input[type='radio'] {
+  appearance: none;
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  border: 1px solid var(--c-border-control);
+  border-radius: 50%;
+  background: var(--c-input);
+}
+
+input[type='radio']:checked {
+  border: 5px solid var(--c-accent);
+  background: var(--c-bg);
+}
+
+input[type='radio']:disabled {
+  opacity: 0.5;
+}
+
 svg {
   flex: none;
 }
@@ -385,6 +409,10 @@ th.right {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* Text kept for screen readers is placed out of the flow; with the
+     frame as its containing block it is clipped here and cannot make the
+     window itself scroll (RV-08: Configuration had a second scrollbar). */
+  position: relative;
 }
 
 .app.nav-rail {
@@ -762,6 +790,20 @@ button.link.quiet {
 
 button.link.quiet:hover:not(:disabled) {
   color: var(--c-text);
+}
+
+/* A link inside a table (an item's name on a line to review): the text's
+   own colour with a quiet underline, so a list of them is not a column
+   of the accent (RV-34). */
+button.link.plain {
+  color: var(--c-text);
+  font-weight: 400;
+  text-decoration-color: var(--c-border-strong);
+  text-underline-offset: 3px;
+}
+
+button.link.plain:hover:not(:disabled) {
+  text-decoration-color: var(--c-text);
 }
 
 @media (max-width: 720px) {
@@ -1798,7 +1840,7 @@ details > summary {
 
 .gem-number {
   width: 100%;
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 8px;
   font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
@@ -1852,6 +1894,7 @@ h1[tabindex='-1']:focus-visible {
   overflow: auto;
   white-space: pre-wrap;
   font-size: var(--fs-meta);
+  font-family: var(--font-mono);
 }
 
 .stats.stale {
@@ -2054,7 +2097,7 @@ button.danger {
 
 .config-value input:not([type='checkbox']) {
   width: 100%;
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .config-number {
@@ -2774,6 +2817,35 @@ button.inv-slot:focus-visible {
   margin: 8px 0 0;
   color: var(--c-soft);
   font-size: var(--fs-meta);
+}
+
+/* Details, open in the card under that line (RV-22). It scrolls in
+   itself, so one card's long list does not stretch its whole row. */
+.reason-inline {
+  margin-top: 8px;
+  max-height: 16rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: var(--fs-meta);
+}
+
+.reason-inline > p {
+  margin: 0;
+}
+
+.reason-inline .reason-groups {
+  margin-top: 8px;
+}
+
+/* In a narrow card a thing's place goes under its name. */
+.reason-inline .reason-group li {
+  flex-wrap: wrap;
+  gap: 2px 16px;
+}
+
+.reason-inline .reason-group li > .link {
+  max-width: none;
+  text-align: start;
 }
 
 .stat-tile-head {

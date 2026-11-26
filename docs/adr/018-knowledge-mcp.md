@@ -1,6 +1,6 @@
 # ADR-018: Knowledge MCP Server (Read-Only Game Data for Claude Sessions)
 
-- Status: Accepted (proposed 2026-11-15; accepted by the maintainer 2026-11-16 with its five defaults, "Not decided here"; implemented in the same PR, #123)
+- Status: Accepted (proposed 2026-11-15; accepted by the maintainer 2026-11-16 with its five defaults, "Not decided here"; implemented in the same PR, #123); Amendment 1 (no portable zip, proposed 2026-11-25 on PR #183)
 - Date: 2026-11-15
 
 ## Context
@@ -83,3 +83,18 @@ Built and signed with the application's release (ADR-010), shipped as a separate
 3. **Distribution** as a release asset beside the app. Alternative: users build it with `cargo install --path tools/knowledge-mcp`.
 4. **`get_price` input**: item name plus optional variant and links, as poe.ninja's overview rows have them.
 5. **The host crate** for the bundle scan (name and exact contents) is settled in its own PR (it became `loom-bundles`, in PR #123 itself). Alternative: do not ship the tool (`cargo install` only, option 3), so the existing "tools, never shipped" exception applies and it may use `loom-app` directly.
+
+## Amendment 1 (proposed 2026-11-25): no portable zip
+Written on PR #183 for follow-up task RV-14; the maintainer accepts the wording by merging it. It records a decision already made, and changes no code.
+
+### Context
+The maintainer decided on 2026-11-25 that there is no portable version: the release makes no portable zip (`docs/phase-5/packaging.md`). "Implementation" above still says the release ships the knowledge server "in the portable zip beside the app, where the `portable` marker makes it serve the zip's `data\` folder", and "Data folder" lists "the portable `data\` beside it" as a place the server looks.
+
+### Decision
+- **The knowledge server ships two ways:** as its own asset of the release (`exiled-studio-knowledge-mcp_<version>_x64.exe`, `..._amd64`), and beside the installed application as the installers' sidecar. Not in a portable zip: the release has none.
+- **The `portable` marker is not a way the product ships.** The code that reads it stays for now (`loom_tauri::release`, `tools/knowledge-mcp`): CI's `package` job zips the plain executable with the marker as the test build of a pull request, and the knowledge server beside it serves that zip's `data\` folder. Whether the test build stays a zip or becomes an installer, and so whether the marker code stays, is follow-up task RV-15 and the maintainer's.
+- "Distribution" above ("a separate release asset and beside the installed app") already says this and is unchanged.
+
+### Consequences
+- A user gets the knowledge server from an installer or from the release page, never from a zip.
+- Nothing in the contract (`schemas/knowledge-mcp-tools.v1.json`) or the server's behaviour changes.

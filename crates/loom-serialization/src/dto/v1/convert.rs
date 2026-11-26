@@ -229,6 +229,7 @@ fn dashboards_to(v: &d::Dashboards) -> Dashboards {
                         input: c.input.clone(),
                         target: c.target,
                         new_row: c.new_row,
+                        tall: c.tall,
                     })
                     .collect(),
             })
@@ -258,6 +259,7 @@ fn dashboards_from(v: Dashboards) -> d::Dashboards {
                         input: c.input,
                         target: c.target,
                         new_row: c.new_row,
+                        tall: c.tall,
                     })
                     .collect(),
             })

@@ -640,6 +640,7 @@ fn planner_settings_should_round_trip_and_be_left_out_when_absent() {
                 loom_domain::DashboardComponent {
                     target: Some(5_000_000),
                     new_row: true,
+                    tall: true,
                     ..component("c3", "timeline", "half")
                 },
                 loom_domain::DashboardComponent {
@@ -666,7 +667,7 @@ fn planner_settings_should_round_trip_and_be_left_out_when_absent() {
         serde_json::json!({"active": "overview", "list": [{"id": "overview", "name": "Überblick", "components": [
             {"id": "c1", "kind": "stat", "width": "third", "field": "hit-dps"},
             {"id": "c2", "kind": "progression", "width": "full", "fields": ["life", "hit-dps"]},
-            {"id": "c3", "kind": "timeline", "width": "half", "target": 5_000_000, "break": true},
+            {"id": "c3", "kind": "timeline", "width": "half", "target": 5_000_000, "break": true, "tall": true},
             {"id": "c4", "kind": "a-kind-of-later", "width": "wide", "field": "hit-dps", "vary": "config-number", "input": "enemyLevel"},
         ]}]})
     );

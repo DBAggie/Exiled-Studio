@@ -93,6 +93,7 @@ fn component(id: &str) -> api::DashboardComponent {
         input: None,
         target: None,
         new_row: false,
+        tall: false,
     }
 }
 
@@ -379,6 +380,7 @@ fn dashboards_outside_a_limit_should_be_refused_and_change_nothing() {
         input: Some(text),
         target: Some(u64::MAX),
         new_row: true,
+        tall: true,
     };
     full.list[3].components[0].kind = "a-kind-of-later".to_owned();
     s.set_dashboards(Some(full.clone())).unwrap().unwrap();

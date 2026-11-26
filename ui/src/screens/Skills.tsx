@@ -6,7 +6,7 @@
 // here; every change is one undoable command. Gems are marked by their
 // colour, never with game art (ADR-000).
 import { ImportedText } from '../ImportedText'
-import { plain } from '../colourCodes'
+import { dividerOf, plain } from '../colourCodes'
 import { Fragment, useId, useState, type ReactNode } from 'react'
 
 import type {
@@ -485,10 +485,66 @@ function GroupPanes({
       },
     )
   }
+  const slots = bySlot(groups, socketed)
+  // The groups in the list's order, for the narrow picker's steps.
+  const order = slots.flatMap(([, placed]) => placed.map((x) => x.index))
+  const at = order.indexOf(shown)
   return (
     <div className="skill-panes">
+      {/* In a narrow window the list is one picker over the group, so a
+          pick shows at once (RV-27); the list is hidden there. */}
+      <div className="group-pick">
+        <label htmlFor={`${id}-pick`}>{t('skills.group')}</label>
+        <select
+          id={`${id}-pick`}
+          value={shown}
+          onChange={(e) => setPicked(Number(e.target.value))}
+        >
+          {slots.map(([slot, placed]) => (
+            <optgroup key={slot ?? ''} label={slot ?? t('skills.other')}>
+              {placed.map(({ group: g, index }) => (
+                <option key={index} value={index}>
+                  {[
+                    groupName(g, index),
+                    g.gems.length === 1
+                      ? t('skills.gemCount1')
+                      : t('skills.gemCount', { n: g.gems.length }),
+                    ...(g.main ? [t('skills.main').toLowerCase()] : []),
+                    ...(g.enabled ? [] : [t('skills.groupOff')]),
+                  ].join(' · ')}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('skills.groupPrev')}
+          disabled={at <= 0}
+          onClick={() => setPicked(order[at - 1] ?? shown)}
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button
+          type="button"
+          className="icon"
+          aria-label={t('skills.groupNext')}
+          disabled={at < 0 || at >= order.length - 1}
+          onClick={() => setPicked(order[at + 1] ?? shown)}
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+        <button
+          type="button"
+          className="link quiet"
+          onClick={() => add(group?.slot ?? null)}
+        >
+          {t('skills.addGroup')}
+        </button>
+      </div>
       <nav className="panel group-list" aria-label={t('skills.groups')}>
-        {bySlot(groups, socketed).map(([slot, placed]) => (
+        {slots.map(([slot, placed]) => (
           <div key={slot ?? ''} className="group-list-slot">
             <span className="group-list-name">{slot ?? t('skills.other')}</span>
             {placed.map(({ group: g, index }) => (
@@ -665,7 +721,7 @@ function SkillTable({
           aria-hidden="true"
         />
         {g.main ? <strong>{g.name ?? '?'}</strong> : (g.name ?? '?')}{' '}
-        <span className="muted">{g.level}</span>
+        <span className="muted num">{g.level}</span>
       </span>
     ))
   return (
@@ -687,20 +743,80 @@ function SkillTable({
         </thead>
         <tbody>
           {groups.map((group, index) => {
+            // The author's label with its colour codes drawn, never
+            // printed; names read aloud use it plain (as the Groups view).
+            const label =
+              group.label != null && group.label !== '' ? group.label : null
             const title =
-              group.label != null && group.label !== ''
-                ? group.label
-                : t('skills.groupN', { n: index + 1 })
+              (label === null ? '' : plain(label)) ||
+              t('skills.groupN', { n: index + 1 })
             const actives = group.gems.filter((g) => g.support !== true)
             const supports = group.gems.filter((g) => g.support === true)
             const shown = open === index
+            const divider = dividerOf(label, group.gems.length)
+            const opener = (name: string) => (
+              <button
+                type="button"
+                className="icon quiet"
+                aria-expanded={shown}
+                aria-label={t(
+                  shown ? 'skills.table.close' : 'skills.table.open',
+                  { name },
+                )}
+                title={t(shown ? 'skills.table.close' : 'skills.table.open', {
+                  name,
+                })}
+                onClick={() => setOpen(shown ? null : index)}
+              >
+                <Icon name={shown ? 'close' : 'sliders'} size={16} />
+              </button>
+            )
+            // An author's divider is a heading over the rows after it,
+            // not a row of empty cells (RV-35).
+            if (divider !== null) {
+              return (
+                <Fragment key={index}>
+                  <tr className="skill-divider">
+                    <th scope="row" colSpan={4}>
+                      <span
+                        style={
+                          divider.colour === null
+                            ? undefined
+                            : { color: divider.colour }
+                        }
+                      >
+                        {divider.text}
+                      </span>
+                    </th>
+                    <td>{opener(divider.text)}</td>
+                  </tr>
+                  {shown && (
+                    <tr className="skill-table-editor">
+                      <td colSpan={5}>
+                        <GroupBlock
+                          group={group}
+                          index={index}
+                          item={inSlot(group.slot ?? null)}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            }
             return (
               <Fragment key={index}>
                 <tr
                   className={`${group.enabled ? '' : 'disabled'}${group.main ? ' main' : ''}`}
                 >
                   <th scope="row">
-                    <span className="skill-table-title">{title}</span>
+                    <span className="skill-table-title">
+                      {label !== null && plain(label) !== '' ? (
+                        <ImportedText text={label} />
+                      ) : (
+                        title
+                      )}
+                    </span>
                     <span className="muted small-text">
                       {group.slot ?? t('skills.other')}
                     </span>
@@ -745,24 +861,7 @@ function SkillTable({
                       }
                     />
                   </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="icon quiet"
-                      aria-expanded={shown}
-                      aria-label={t(
-                        shown ? 'skills.table.close' : 'skills.table.open',
-                        { name: title },
-                      )}
-                      title={t(
-                        shown ? 'skills.table.close' : 'skills.table.open',
-                        { name: title },
-                      )}
-                      onClick={() => setOpen(shown ? null : index)}
-                    >
-                      <Icon name={shown ? 'close' : 'sliders'} size={16} />
-                    </button>
-                  </td>
+                  <td>{opener(title)}</td>
                 </tr>
                 {shown && (
                   <tr className="skill-table-editor">

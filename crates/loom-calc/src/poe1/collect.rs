@@ -369,6 +369,25 @@ fn choices(build: &Build, data: &dyn crate::input::CalcData, ingest: &mut Ingest
     }
 }
 
+/// Whether the build helped no bandit, which gives one passive point (PoB
+/// v2.67.2, `Modules/CalcSetup.lua` 550 to 558: any choice but Alira,
+/// Kraityn, and Oak). Read where [`choices`] reads it: the active config
+/// set's last `bandit` input, or with no set at all the build's own.
+#[must_use]
+pub fn killed_all_bandits(build: &Build) -> bool {
+    let helped = |name: &str| matches!(name, "Alira" | "Kraityn" | "Oak");
+    match active_config(build) {
+        Some(set) => !matches!(
+            super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input),
+            Some(ConfigValue::String(s)) if helped(s)
+        ),
+        None => match build.game_specific() {
+            GameSpecific::Poe1(c) => !c.bandit.as_deref().is_some_and(helped),
+            _ => true,
+        },
+    }
+}
+
 /// The active set's bandit ([`choices`]): its last `bandit` input, "None"
 /// when it has none.
 fn bandit(set: &ConfigSet, ingest: &mut Ingest<'_>) {
@@ -2627,6 +2646,7 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)
         || super::gems::is_input(&input.name)
+        || super::minion_actor::is_input(&input.name, &input.value)
         || input.name == super::hit::PDR_MODE_INPUT
         || input.name == super::hit::RUTHLESS_MODE_INPUT
         // The throw counts (P6-11fa).

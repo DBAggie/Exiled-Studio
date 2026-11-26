@@ -719,5 +719,39 @@ pub fn points(tree: &Tree, spec: &Spec) -> Points {
     out
 }
 
+/// The level a character is expected to reach each act at, and the
+/// passive points its quests have given by then (PoB v2.67.2,
+/// `Modules/Build.lua` 711 to 746, `acts`).
+const QUEST_POINTS: [(u32, u32); 11] = [
+    (1, 0),
+    (12, 2),
+    (22, 4),
+    (32, 6),
+    (40, 7),
+    (44, 9),
+    (50, 12),
+    (54, 15),
+    (60, 18),
+    (64, 20),
+    (67, 23),
+];
+
+/// The passive points a character of `level` has: one a level after the
+/// first, its quests' by the act PoB expects that level in
+/// ([`QUEST_POINTS`]), and from the third act on one more when it helped
+/// no bandit (`bandits_killed`; PoB's `actExtra`). An estimate below level
+/// 67, where a character may be ahead of or behind its quests; at 67 and
+/// above it is the game's count for a character that did every quest.
+#[must_use]
+pub fn points_at(level: u32, bandits_killed: bool) -> u32 {
+    let level = level.clamp(1, 100);
+    let act = QUEST_POINTS
+        .iter()
+        .rposition(|(from, _)| *from <= level)
+        .unwrap_or(0);
+    let bandit = u32::from(bandits_killed && act >= 2);
+    level - 1 + QUEST_POINTS[act].1 + bandit
+}
+
 #[cfg(test)]
 mod tests;

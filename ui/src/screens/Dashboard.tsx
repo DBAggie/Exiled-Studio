@@ -6,11 +6,11 @@
 // label, value, and badge on one line; it opens the stat's breakdown.
 // A dashboard is short by default: lists show their first rows, charts
 // their plot, and the rest is one click away.
-import { DropdownMenu, Popover } from 'radix-ui'
+import { Dialog, DropdownMenu, Popover } from 'radix-ui'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 
 import type { BuildView, FieldResult } from '../api/types'
-import { Delta, Sparkline } from '../charts'
+import { Delta, Meter, Sparkline } from '../charts'
 import {
   Badge,
   FieldMark,
@@ -33,6 +33,7 @@ import {
   dropped,
   moved,
   newId,
+  defaultPrefs,
   stepWidth,
 } from '../dashboards'
 import { OFFENCE, fieldLabel, t } from '../i18n'
@@ -127,6 +128,19 @@ function headlineFirst(fields: FieldResult[]): FieldResult[] {
     .map((x) => x.f)
 }
 
+/** The game's base cap of a value that has one, and the scale its bar is
+ * drawn on (a build's own maximum is not a field yet; the Resistances
+ * card uses the same 75). */
+function capOf(
+  field: string,
+): { cap: number; low: number; high: number } | null {
+  if (field.startsWith('resistance.')) return { cap: 75, low: -60, high: 90 }
+  if (field === 'block-chance' || field === 'poe1.spell-block-chance') {
+    return { cap: 75, low: 0, high: 100 }
+  }
+  return null
+}
+
 function FieldPanel({
   id,
   title,
@@ -163,6 +177,8 @@ function FieldPanel({
             f.field.startsWith('resistance.') &&
             typeof f.value === 'number' &&
             f.value < 0
+          const capped = capOf(f.field)
+          const amount = numberOf(f)
           return (
             <li key={f.field}>
               <button
@@ -181,6 +197,18 @@ function FieldPanel({
                   {reason !== null && <span className="reason">{reason}</span>}
                 </span>
                 <span className="stat-end">
+                  {/* A value with a cap is drawn against it (RV-02). */}
+                  {capped !== null && amount !== null && (
+                    <span className="stat-meter">
+                      <Meter
+                        value={amount}
+                        low={capped.low}
+                        high={capped.high}
+                        cap={capped.cap}
+                        tone={amount >= capped.cap ? 'good' : 'series'}
+                      />
+                    </span>
+                  )}
                   {baseline !== null && (
                     <Delta
                       now={numberOf(f)}
@@ -339,7 +367,7 @@ function MainSkillPanel({ build, id }: { build: BuildView; id: string }) {
                       .join(', ')}
                   </span>{' '}
                   {supports > 0 && (
-                    <span className="muted small-text">
+                    <span className="muted small-text nowrap">
                       {supports === 1
                         ? t('dashboard.supports1')
                         : t('dashboard.supportsN', { n: supports })}
@@ -667,6 +695,23 @@ function ComponentTools({
             >
               {t('dashboard.newRow')}
             </DropdownMenu.CheckboxItem>
+            <DropdownMenu.CheckboxItem
+              className="menu-item menu-radio"
+              checked={c.tall === true}
+              // A full-width card has no room beside it.
+              disabled={c.width === 'full'}
+              onCheckedChange={(on) =>
+                onChange((l) =>
+                  l.map((x) => {
+                    if (x.id !== c.id) return x
+                    const { tall: _, ...rest } = x
+                    return on ? { ...rest, tall: true } : rest
+                  }),
+                )
+              }
+            >
+              {t('dashboard.tall')}
+            </DropdownMenu.CheckboxItem>
             <DropdownMenu.Separator className="menu-separator" />
             <DropdownMenu.Item
               className="menu-item"
@@ -866,6 +911,18 @@ function Snapshots() {
           align="end"
           sideOffset={6}
           collisionPadding={8}
+          // Focus goes to the name, not to the help mark: the mark's text
+          // opened over the form, and Escape then closed it first, not
+          // the panel (RV-38).
+          onOpenAutoFocus={(e) => {
+            const field = (e.currentTarget as HTMLElement).querySelector(
+              'input:not(:disabled)',
+            )
+            if (field instanceof HTMLElement) {
+              e.preventDefault()
+              field.focus()
+            }
+          }}
         >
           <div className="panel-head">
             <h2 className="small-text">{t('snapshots.title')}</h2>
@@ -997,6 +1054,59 @@ function BaselineControl() {
       </span>
       <Snapshots />
     </>
+  )
+}
+
+/** Puts the default layout in place of a dashboard the user changed,
+ * after asking (RV-01). Offered only for a dashboard that has a default
+ * (Overview, Defence, Trends, by its ID) and differs from it. */
+function ResetDashboard({
+  dash,
+  onReset,
+}: {
+  dash: DashboardDef
+  onReset: (components: DashComponent[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const standard = defaultPrefs().dashboards.find((d) => d.id === dash.id)
+  if (
+    standard === undefined ||
+    JSON.stringify(standard.components) === JSON.stringify(dash.components)
+  ) {
+    return null
+  }
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button type="button">{t('dashboard.reset')}</button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title>
+            {t('dashboard.resetTitle', { name: dash.name })}
+          </Dialog.Title>
+          <Dialog.Description className="muted">
+            {t('dashboard.resetHelp')}
+          </Dialog.Description>
+          <div className="row">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                onReset(standard.components)
+              }}
+            >
+              {t('dashboard.resetConfirm', { name: dash.name })}
+            </button>
+            <Dialog.Close asChild>
+              <button type="button" className="primary">
+                {t('close.cancel')}
+              </button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }
 
@@ -1231,6 +1341,10 @@ export function Dashboard() {
               {t('dashboard.deleteDashboard')}
             </button>
           )}
+          <ResetDashboard
+            dash={dash}
+            onReset={(components) => change(() => components)}
+          />
           <span className="spacer" />
           <span className="small-text muted" id="dash-scope">
             {t('dashboard.scope')}
@@ -1284,7 +1398,7 @@ export function Dashboard() {
             data-cell={c.id}
             className={`dash-cell dash-${c.width}${
               c.break === true ? ' dash-new-row' : ''
-            }${drag?.id === c.id ? ' dragging' : ''}${
+            }${c.tall === true ? ' dash-tall' : ''}${drag?.id === c.id ? ' dragging' : ''}${
               drag?.target?.id === c.id
                 ? drag.target.after
                   ? ' drop-after'

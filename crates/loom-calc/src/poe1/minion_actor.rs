@@ -9,8 +9,8 @@
 //! the first. PoB's name maps to a game variety through its template
 //! ([`super::pob_minion`]). Not computed, each with a reason on the minion
 //! fields:
-//! - a skill that makes minions without a list (Raise Spectre picks from
-//!   the build's spectre library, P6-7c): `minion-list`;
+//! - a skill that makes minions without a list, or Raise Spectre with an
+//!   empty spectre library: `minion-list`;
 //! - a minion PoB writes by hand (no variety) or one the data lacks:
 //!   `minion-data`;
 //! - a minion with items (`minionHasItemSet`, `minionUses`,
@@ -19,6 +19,16 @@
 //! - a hostile minion (`#hostile`): `hostile-minion`;
 //! - a level PoB takes from a support's level requirement, or from the
 //!   enemy when the enemy model has a problem: `minion-level`.
+//!
+//! **Spectres** (RV-12; `CalcActiveSkill.lua` 659 to 667, 717, 720): a
+//! skill whose `minionList` is empty in PoB's data (Raise Spectre and its
+//! transfigured form, [`SPECTRE_SKILLS`]) takes the build's spectre library
+//! in its place ([`spectre_library`]: the `Spectre` entries the build file
+//! keeps, each a monster variety). A spectre's life comes from the
+//! monsters' table (`monsterLifeTable`), not the allies', unless its type
+//! has an `AltLife` scaling, and its weapon damage from `monsterDamageTable`.
+//! Its level is the gem's `raised_spectre_level` ([`SPECTRE_LEVEL_STAT`],
+//! PoB's stat map: `skill("minionLevel", nil)`).
 //!
 //! **Level** (`CalcActiveSkill.lua` 706 to 711), clamped to 1 to 100: the
 //! enemy's level when the skill has `display_skill_minions_level_is_corpse_level`;
@@ -230,7 +240,13 @@ pub fn minion(
         gem: skill.active_gem.gem,
     };
     let pob = pob_skill::skill(&skill.effect().id);
-    let own: &[&str] = pob.map_or(&[], |p| p.minions);
+    let spectre = SPECTRE_SKILLS.contains(&skill.effect().id.as_str());
+    let library = spectre_library(build);
+    let own: &[&str] = if spectre {
+        &library
+    } else {
+        pob.map_or(&[], |p| p.minions)
+    };
     let mut list: Vec<&str> = own.to_vec();
     for support in &skill.supports {
         for name in pob_skill::skill(&support.effect.id).map_or(&[][..], |p| p.add_minions) {
@@ -257,9 +273,106 @@ pub fn minion(
         &skill,
         pob,
         &source,
-        name,
-        own.contains(&name),
+        Chosen {
+            name,
+            own: own.contains(&name),
+            spectre,
+        },
     ))
+}
+
+/// The minion picked ([`minion`]).
+#[derive(Debug, Clone, Copy)]
+struct Chosen<'a> {
+    /// PoB's name of it: a short name, or a spectre's variety ID.
+    name: &'a str,
+    /// Whether it is from the skill's own list (not one a support adds).
+    own: bool,
+    /// Whether it is a spectre.
+    spectre: bool,
+}
+
+/// The passive stats that give your auras' allies something beside the
+/// aura (Commander of Darkness: PoB's `ExtraAura` and `ExtraAuraEffect`
+/// lists, `CalcPerform.lua`, "Check for extra auras"): the minion takes
+/// them in PoB, and the engine gives them to the character only.
+const ALLY_AURA_STATS: [&str; 3] = [
+    "auras_grant_attack_and_cast_speed_+%_to_you_and_your_allies",
+    "damage_+%_for_you_and_allies_affected_by_your_auras",
+    "elemental_resistances_+%_for_you_and_allies_affected_by_your_auras",
+];
+
+/// A reason on the minion for each allocated passive with one of
+/// [`ALLY_AURA_STATS`] (RV-12: found on the spectre fixture, where PoB's
+/// minion has Commander of Darkness' 30% increased damage and 3%
+/// increased speed and the engine's had neither, without a word).
+fn ally_aura_stats(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let Some(spec) = super::collect::active_spec(input.build) else {
+        return;
+    };
+    for node in spec.nodes.value() {
+        let has = super::collect::node_stats(input, node.0).is_some_and(|stats| {
+            stats
+                .iter()
+                .any(|s| ALLY_AURA_STATS.contains(&s.stat.as_str()))
+        });
+        if has {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: Source::Passive { node: *node },
+                what: "minion-buffs",
+            });
+        }
+    }
+}
+
+/// The config check that puts the minions on full life.
+pub const FULL_LIFE_INPUT: &str = "minionsConditionFullLife";
+
+/// Whether the active config set has [`FULL_LIFE_INPUT`] on.
+fn full_life_input(build: &loom_domain::Build) -> bool {
+    super::collect::active_config(build).is_some_and(|set| {
+        matches!(
+            super::config::last_input(set, FULL_LIFE_INPUT, loom_domain::ConfigInputKind::Input),
+            Some(loom_domain::ConfigValue::Boolean(true))
+        )
+    })
+}
+
+/// Whether the minion model reads `input` ([`FULL_LIFE_INPUT`], a check).
+#[must_use]
+pub fn is_input(input: &str, value: &loom_domain::ConfigValue) -> bool {
+    input == FULL_LIFE_INPUT && matches!(value, loom_domain::ConfigValue::Boolean(_))
+}
+
+/// The skills that raise a spectre: every skill of PoB v2.67.2 whose
+/// `minionList` is there and empty (`Data/Skills/act_int.lua` 15008 and
+/// 15108), so the build's spectre library takes its place
+/// (`CalcActiveSkill.lua` 661 to 667). A test checks them against PoB's
+/// skill table.
+pub const SPECTRE_SKILLS: [&str; 2] = ["RaiseSpectre", "RaiseSpectreAltX"];
+
+/// The gem stat a spectre's level comes from (PoB's stat map of Raise
+/// Spectre, `Data/Skills/act_int.lua` 15011: `skill("minionLevel", nil)`).
+pub const SPECTRE_LEVEL_STAT: &str = "raised_spectre_level";
+
+/// The build's spectre library, in order (PoB's `build.spectreList`,
+/// `Modules/Build.lua`, `Load`: each `Spectre` child of the `Build`
+/// element with an `id`): the monster varieties the build's author picked
+/// spectres from. A build file keeps them among the character's untyped
+/// children.
+#[must_use]
+pub fn spectre_library(build: &loom_domain::Build) -> Vec<&str> {
+    build
+        .character
+        .children
+        .iter()
+        .filter_map(|c| match c {
+            loom_domain::OpaqueNode::Element {
+                name, attributes, ..
+            } if name == "Spectre" => skill::attribute(attributes, "id"),
+            _ => None,
+        })
+        .collect()
 }
 
 /// The minion `name`'s state (module docs).
@@ -269,9 +382,9 @@ fn collect(
     skill: &skill::MainSkill<'_>,
     pob: Option<&PobSkill>,
     source: &Source,
-    name: &str,
-    own: bool,
+    chosen: Chosen<'_>,
 ) -> Result<ActorState, UnsupportedReason> {
+    let Chosen { name, own, spectre } = chosen;
     let data = input.data;
     if ITEM_SKILLS
         .binary_search(&skill.effect().id.as_str())
@@ -332,8 +445,9 @@ fn collect(
         });
     }
     super::gems::minion_buffs(input, &levels_of(player), &totals, &mut ingest);
+    ally_aura_stats(input, &mut ingest);
     gem_modifiers(input, skill, &mut ingest);
-    base_values(input, variety, ty, level, &mut ingest)
+    base_values(input, variety, ty, level, spectre, &mut ingest)
         .ok_or_else(|| not_computed(source, "minion-data"))?;
     mod_list(input, minions, variety, &mut ingest);
     let mut states = std::collections::BTreeMap::new();
@@ -342,7 +456,7 @@ fn collect(
     // its monster weapon, and PoB's offence mods of `initMinionModDB`.
     let own_skill = minion_skill(input, skill, variety, template);
     if own_skill.is_some() {
-        weapon(input, variety, ty, level, &mut ingest);
+        weapon(input, variety, ty, level, spectre, &mut ingest);
         support_modifiers(input, skill, &mut ingest);
     }
     // A computed minion skill's own stats (P6-7c3).
@@ -365,6 +479,11 @@ fn collect(
         if key.as_str().starts_with(ENEMY_STATE) {
             states.insert(key, value);
         }
+    }
+    // "Are your Minions always on Full Life?" (`ConfigOptions.lua` 198:
+    // a `MinionModifier` of `Condition:FullLife`; RV-12).
+    if full_life_input(input.build) {
+        states.insert(ConditionKey::new(super::conditions::FULL_LIFE), true);
     }
     // The minion holds no weapon (PoB's `weaponData2` is empty without
     // items): it never dual wields.
@@ -843,6 +962,7 @@ fn weapon(
     variety: &MinionVariety,
     ty: &MinionType,
     level: i64,
+    spectre: bool,
     ingest: &mut Ingest<'_>,
 ) {
     use super::{Hand, WeaponValue};
@@ -854,7 +974,14 @@ fn weapon(
         conditions: Conditions::none().with_all(all),
         source: source.clone(),
     };
-    let Some(table) = input.data.monster_ally_damage(level) else {
+    // A spectre's damage is a monster's, not an ally's (`CalcActiveSkill.lua`
+    // 720).
+    let table = if spectre {
+        input.data.monster_damage(level)
+    } else {
+        input.data.monster_ally_damage(level)
+    };
+    let Some(table) = table else {
         ingest.reason(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),
             what: "minion-weapon",
@@ -1001,7 +1128,10 @@ fn level(
         .and_then(pob_skill::Value::num)
         .map(|n| n as i64);
     let requirement = (sources.requirement > 0).then_some(sources.requirement);
-    let level = from_data.or_else(|| get(LEVEL_STAT)).or(requirement)?;
+    let level = from_data
+        .or_else(|| get(SPECTRE_LEVEL_STAT))
+        .or_else(|| get(LEVEL_STAT))
+        .or(requirement)?;
     Some(level.clamp(1, 100))
 }
 
@@ -1035,6 +1165,7 @@ fn base_numbers(
     lives: crate::input::MonsterLife,
     armour: f64,
     evasion: i64,
+    spectre: bool,
 ) -> Option<BaseNumbers> {
     #[expect(clippy::cast_precision_loss, reason = "game integers, exact as f64")]
     let f = |v: i64| v as f64;
@@ -1042,6 +1173,8 @@ fn base_numbers(
     let table = match ty.life_scaling() {
         Some(LifeScaling::AltLife1) => lives.alt1?,
         Some(LifeScaling::AltLife2) => lives.alt2,
+        // A spectre is a monster (`CalcActiveSkill.lua` 717).
+        None if spectre => lives.life,
         None => lives.ally,
     };
     // The ally table even for an AltLife type (`initMinionModDB` 1127).
@@ -1070,6 +1203,7 @@ fn base_values(
     variety: &MinionVariety,
     ty: &MinionType,
     level: i64,
+    spectre: bool,
     ingest: &mut Ingest<'_>,
 ) -> Option<()> {
     let data = input.data;
@@ -1079,6 +1213,7 @@ fn base_values(
         data.monster_life(level)?,
         super::enemy::monster_armour(data, level)?,
         data.monster_level(level)?.evasion,
+        spectre,
     )?;
     ingest.effect(base(Quantity::Life, Op::Base, n.life));
     if let Some(es) = n.energy_shield {
@@ -1663,7 +1798,18 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (Defence::Armour, MinionField::Armour, Quantity::Armour),
         (Defence::Evasion, MinionField::Evasion, Quantity::Evasion),
     ] {
-        let (value, reasons) = phases::primary_defence(calc, defence, quantity, None, None)?;
+        // "Minions gain #% of Maximum Life as Extra Maximum Energy Shield"
+        // (RV-12; `CalcDefence.lua` 1023 to 1036, the character's row).
+        let mut life_reasons = Reasons::new();
+        let row = if matches!(defence, Defence::EnergyShield) {
+            phases::life_as_energy_shield(calc, None, false, &mut life_reasons)?
+        } else {
+            None
+        };
+        let (value, mut reasons) = phases::primary_defence(calc, defence, quantity, None, row)?;
+        if row.is_some() {
+            reasons.extend(&life_reasons);
+        }
         set(calc, field, value, reasons);
     }
     let block = phases::attack_block(calc, None, Reasons::new())?;
@@ -1843,27 +1989,35 @@ mod tests {
             alt2: 200,
         };
         // Life 1.05: floor(400 x 1.05) = 420; no ES; `or 1`.
-        let n = base_numbers(105, &ty(0, 0, 0, false, false), lives, 1001.0, 501).unwrap();
+        let n = base_numbers(105, &ty(0, 0, 0, false, false), lives, 1001.0, 501, false).unwrap();
         assert_eq!(n.life, 420.0);
         assert_eq!(n.energy_shield, None);
         assert_eq!((n.armour, n.evasion), (1001.0, 501.0));
         // ES 50 (0.2): floor(400 x 1.05 x 0.2) = 84; armour x 0.5 rounds
         // half up; evasion x 0.33.
-        let n = base_numbers(105, &ty(50, 50, 33, false, false), lives, 1001.0, 501).unwrap();
+        let n = base_numbers(
+            105,
+            &ty(50, 50, 33, false, false),
+            lives,
+            1001.0,
+            501,
+            false,
+        )
+        .unwrap();
         assert_eq!(n.energy_shield, Some(84.0));
         assert_eq!(n.armour, 501.0);
         assert_eq!(n.evasion, 165.0);
         // AltLife1 and AltLife2 (the second wins); ES stays on the ally table.
-        let n = base_numbers(100, &ty(50, 0, 0, true, false), lives, 1.0, 1).unwrap();
+        let n = base_numbers(100, &ty(50, 0, 0, true, false), lives, 1.0, 1, false).unwrap();
         assert_eq!((n.life, n.energy_shield), (300.0, Some(80.0)));
-        let n = base_numbers(100, &ty(0, 0, 0, true, true), lives, 1.0, 1).unwrap();
+        let n = base_numbers(100, &ty(0, 0, 0, true, true), lives, 1.0, 1, false).unwrap();
         assert_eq!(n.life, 200.0);
         let no_alt1 = crate::input::MonsterLife {
             alt1: None,
             ..lives
         };
         assert_eq!(
-            base_numbers(100, &ty(0, 0, 0, true, false), no_alt1, 1.0, 1),
+            base_numbers(100, &ty(0, 0, 0, true, false), no_alt1, 1.0, 1, false),
             None
         );
     }
@@ -1930,6 +2084,85 @@ mod tests {
 
     /// PoB's exporter's class map (`minions.lua` 76 to 93): a class it
     /// leaves out is an empty hand.
+    /// RV-12: the skills that raise a spectre are the ones whose minion
+    /// list PoB's data leaves empty though they make minions.
+    #[test]
+    fn spectre_skills_should_be_pobs_skills_with_an_empty_minion_list() {
+        for id in SPECTRE_SKILLS {
+            let pob = pob_skill::skill(id).expect(id);
+            assert!(pob.minions.is_empty(), "{id}");
+        }
+        // No other skill of PoB's table is named as a spectre skill by PoB
+        // (`CalcPerform.lua` 2161: `^RaiseSpectre`).
+        for skill in super::super::pob_skills::SKILLS {
+            assert_eq!(
+                skill.id.starts_with("RaiseSpectre"),
+                SPECTRE_SKILLS.contains(&skill.id),
+                "{}",
+                skill.id
+            );
+        }
+    }
+
+    /// RV-12: the spectre library is the build file's `Spectre` entries,
+    /// in order; anything else among the character's children is not one.
+    #[test]
+    fn the_spectre_library_should_be_the_builds_spectre_entries() {
+        use loom_domain::{Attribute, Build, Game, OpaqueNode};
+        let entry = |name: &str, id: &str| OpaqueNode::Element {
+            name: name.to_owned(),
+            attributes: vec![Attribute::new("id", id)],
+            children: Vec::new(),
+        };
+        let mut b = Build::new(Game::Poe1);
+        assert!(spectre_library(&b).is_empty());
+        b.character.children = vec![
+            entry("PlayerStat", "Life"),
+            entry("Spectre", "Metadata/Monsters/A"),
+            OpaqueNode::Text("x".to_owned()),
+            entry("Spectre", "Metadata/Monsters/B"),
+        ];
+        assert_eq!(
+            spectre_library(&b),
+            ["Metadata/Monsters/A", "Metadata/Monsters/B"]
+        );
+    }
+
+    /// RV-12: a spectre's life comes from the monsters' table, an `AltLife`
+    /// type's from its own as before; its energy shield from the allies'.
+    #[test]
+    fn a_spectres_life_should_come_from_the_monsters_table() {
+        let lives = crate::input::MonsterLife {
+            life: 3000,
+            ally: 1000,
+            alt1: Some(5000),
+            alt2: 7000,
+        };
+        let plain = ty(0, 0, 0, false, false);
+        let minion = base_numbers(100, &plain, lives, 1.0, 1, false).unwrap();
+        let spectre = base_numbers(100, &plain, lives, 1.0, 1, true).unwrap();
+        assert!((minion.life - 1000.0).abs() < f64::EPSILON);
+        assert!((spectre.life - 3000.0).abs() < f64::EPSILON);
+        let alt = ty(0, 0, 0, true, false);
+        let a = base_numbers(100, &alt, lives, 1.0, 1, false).unwrap();
+        let b = base_numbers(100, &alt, lives, 1.0, 1, true).unwrap();
+        assert!((a.life - b.life).abs() < f64::EPSILON);
+    }
+
+    /// RV-12: a spectre's level is the gem's `raised_spectre_level`.
+    #[test]
+    fn a_spectres_level_should_be_the_gems_stat() {
+        let sources = LevelSources {
+            character: 92,
+            enemy: Some(84),
+            requirement: 70,
+        };
+        let stats = vec![(SPECTRE_LEVEL_STAT.to_owned(), 79)];
+        assert_eq!(level(&stats, None, true, sources), Some(79));
+        // Not from the skill's own list (a support's minion): not known.
+        assert_eq!(level(&stats, None, false, sources), None);
+    }
+
     #[test]
     fn weapon_class_should_follow_pobs_class_map() {
         assert_eq!(

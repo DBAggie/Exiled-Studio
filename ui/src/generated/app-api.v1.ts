@@ -607,6 +607,11 @@ export interface ApplicationAPIV1 {
         }
       }
     | 'nothing'
+  /**
+   * Passives' lines with their stats (the `passive_lines` query;
+   * additive, 2026-11-25).
+   */
+  'passive-lines': PassiveLines[]
   preview: ItemEditPreview1
   /**
    * Recent builds.
@@ -755,6 +760,13 @@ export interface DashboardComponent {
    * older application still opens the build.
    */
   kind: string
+  /**
+   * Whether the component is two rows tall: the cards after it
+   * stack beside it, one under another, when the row has room
+   * left (a tall table beside two short cards). Left out when
+   * false.
+   */
+  tall?: boolean
   /**
    * The life a fight timeline deals damage to.
    */
@@ -1540,6 +1552,39 @@ export interface TreePreview {
   removed: number[]
 }
 /**
+ * A passive node's lines as the game prints them, each with the
+ * stats it prints (the `passive_lines` query): a calc result names a
+ * passive's stat by its ID, and this says which line that is.
+ */
+export interface PassiveLines {
+  /**
+   * Its lines, in the game's order.
+   */
+  lines: PassiveLine[]
+  /**
+   * Its name in the game data.
+   */
+  name: string
+  /**
+   * The node number.
+   */
+  node: number
+}
+/**
+ * One line of a passive node.
+ */
+export interface PassiveLine {
+  /**
+   * The IDs of the stats the line prints.
+   */
+  stats: string[]
+  /**
+   * The line as the game prints it; a stat the descriptions cannot
+   * print is its ID and value.
+   */
+  text: string
+}
+/**
  * An item edit's effect, calculated by the application (never by the
  * requester).
  */
@@ -2169,6 +2214,15 @@ export interface TreeView {
    * Passive points spent (PoB's count, never enforced).
    */
   points: number
+  /**
+   * The passive points a character of the build's level has: one a
+   * level after the first, and the quests' by the act that level
+   * is expected in (a quest's choice that gives a point counted
+   * from the act after it). An estimate while the character is
+   * still in the acts (it may be ahead of its quests or behind
+   * them). Absent when the build names no level.
+   */
+  'points-available'?: number | null
   /**
    * The spec's ID.
    */

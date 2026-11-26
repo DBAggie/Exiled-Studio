@@ -1878,15 +1878,13 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
-    for input in [
-        // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
-        // `poe1::config`).
-        "conditionEnemyBrittle",
-        // Alchemist's Genius and Unholy Might left this list in open items
-        // S8 (`poe1::config`, `poe1::buffs`; checked below).
-        "minionsConditionFullLife",
-        "feedingFrenzyFeedingFrenzyActive",
-    ] {
+    // Tailwind and Elusive moved out in P6-4a (`poe1::buffs`,
+    // `poe1::config`). Alchemist's Genius and Unholy Might left in open
+    // items S8 (`poe1::config`, `poe1::buffs`; checked below). The
+    // minions' full life and Feeding Frenzy left in RV-12
+    // (`poe1::minion_actor`, `poe1::buffs`; checked below).
+    {
+        let input = "conditionEnemyBrittle";
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{input}: not partial");
@@ -1896,6 +1894,18 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
         };
         assert_eq!(p.len(), 1, "{input}");
         assert!(p.contains(&config(input)), "{input}");
+    }
+    // RV-12: the minions' checks are the minions' modifiers; a character
+    // field takes no reason and no value from them.
+    for input in [
+        "minionsConditionFullLife",
+        "feedingFrenzyFeedingFrenzyActive",
+    ] {
+        let r = with(vec![(input, yes())]);
+        for field in [Field::Life, Field::Mana, FIRE, Field::Armour] {
+            assert_eq!(state(&r, field), StateKind::Complete, "{input}");
+            assert_eq!(value_of(&r, field), value_of(&bare, field), "{input}");
+        }
     }
     // Open items S8: Alchemist's Genius changes nothing without its
     // condition's stat, and Unholy Might is applied, not a reason.

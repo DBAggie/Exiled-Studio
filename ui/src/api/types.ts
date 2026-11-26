@@ -33,6 +33,7 @@ import type {
   LoadoutView,
   McpPermissions,
   McpStatus,
+  PassiveLines,
   RecentEntry,
   RecoveryEntry,
   SetView,
@@ -87,6 +88,7 @@ export type {
   McpPermissions,
   McpStatus,
   Node,
+  PassiveLines,
   RecentEntry,
   RecoveryEntry,
   SetView,
@@ -200,6 +202,10 @@ export interface LoomApi {
    * with the active one; never a change (`APP_LOADOUT` for no such
    * stage). */
   stageView(spec: number): Promise<StageView>
+  /** The lines of the passives named, each with the stats it prints: a
+   * calculation names a passive's stat by its ID, and this says which
+   * line that is. A node the game data lacks is left out. */
+  passiveLines(nodes: number[]): Promise<PassiveLines[]>
   /** The UI's own preferences document (the user's dashboards), `null`
    * before one is saved. */
   uiPrefs(): Promise<string | null>

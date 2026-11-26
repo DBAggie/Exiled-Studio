@@ -11,8 +11,8 @@ use loom_calc::poe1::Poe1Mapping;
 use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS, SOCKETED_STATS};
 use loom_calc::poe1::skill::{
     InstanceProblem, KEYWORD_TYPES, MINE_TYPE, RANGED_ATTACK_TYPE, SkillProblem, TOTEM_TYPE,
-    TRAP_TYPE, group_skills, instance, instances, keyword_flags, main_skill, type_expression,
-    unknown_gems,
+    TRAP_TYPE, active_skills, group_skills, instance, instances, keyword_flags, main_skill,
+    type_expression, unknown_gems, with_main_skill,
 };
 use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
@@ -893,4 +893,40 @@ fn real_item_support_rows_should_name_their_gems() {
             .collect();
         assert_eq!(effects.to_vec(), want, "{stat}");
     }
+}
+
+/// RV-21: `active_skills` no longer copies the build per active skill. Each
+/// skill is still the main skill of the copy with that skill chosen.
+#[test]
+fn every_active_skill_should_be_the_main_skill_of_the_build_that_picks_it() {
+    let data = bundle();
+    let mut second = group(vec![bolt(3, 0), support(), bolt(5, 10)]);
+    second.main_active_skill = Some(Sourced::new(2));
+    let mut off = group(vec![bolt(7, 0)]);
+    off.enabled = false;
+    let b = build(
+        vec![
+            group(vec![support(), bolt(2, 0)]),
+            second,
+            off,
+            group(vec![support()]),
+        ],
+        2,
+    );
+    let levels = GemLevels::default();
+    let all = active_skills(&b, &data, &levels);
+    assert_eq!(
+        all.iter().map(|(g, a, _)| (*g, *a)).collect::<Vec<_>>(),
+        [(1, 1), (2, 1), (2, 2)],
+        "enabled groups, each active skill in order"
+    );
+    for (g, a, skill) in &all {
+        let picked = main_skill(&with_main_skill(&b, *g, *a), &data, &levels).unwrap();
+        assert_eq!(format!("{skill:?}"), format!("{picked:?}"));
+    }
+    // The build's own pick is untouched.
+    assert_eq!(
+        format!("{:?}", main_skill(&b, &data, &levels).unwrap()),
+        format!("{:?}", all[2].2)
+    );
 }

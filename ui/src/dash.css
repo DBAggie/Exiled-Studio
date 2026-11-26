@@ -42,11 +42,13 @@
 
 /* A card set to start a new row leaves the room beside the card before
    it empty (the card menu's "Start a new row"). */
-@media (min-width: 1001px) {
+@media (min-width: 761px) {
   .dash-new-row.dash-quarter {
     grid-column: 1 / span 6;
   }
+}
 
+@media (min-width: 1001px) {
   .dash-new-row.dash-third {
     grid-column: 1 / span 4;
   }
@@ -66,16 +68,46 @@
   }
 }
 
+/* A card two rows tall (the card menu's "Two rows tall", RV-03): the
+   cards after it stack in the room beside it. Only where it has room
+   beside it: a two-thirds card is the whole row from 1,100 px down, and
+   every card but a quarter from 1,000 px down. */
+@media (min-width: 1001px) {
+  .dash-tall.dash-quarter,
+  .dash-tall.dash-third,
+  .dash-tall.dash-half {
+    grid-row: span 2;
+  }
+}
+
+@media (min-width: 1101px) {
+  .dash-tall.dash-two-thirds {
+    grid-row: span 2;
+  }
+}
+
+/* A narrow window: every card takes the row, but the lead figures stay
+   two a row while the page has the room (RV-28: at 1,000 px the page is
+   about 760 px wide beside the menu, and four figures one a row were
+   mostly empty). One column under 760 px. */
 @media (max-width: 1000px) {
+  .dash-third,
+  .dash-half,
+  .dash-two-thirds,
+  .dash-full,
+  .dash-new-row.dash-third,
+  .dash-new-row.dash-half {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
   .dash-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .dash-quarter,
-  .dash-third,
-  .dash-half,
-  .dash-two-thirds,
-  .dash-full {
+  .dash-new-row.dash-quarter {
     grid-column: 1 / -1;
   }
 }
@@ -157,7 +189,7 @@ button.icon.quiet:hover:not(:disabled) {
 }
 
 .panel-search {
-  min-height: 32px;
+  min-height: 36px;
   width: 12rem;
   max-width: 100%;
 }
@@ -187,6 +219,13 @@ button.icon.quiet:hover:not(:disabled) {
   justify-content: flex-end;
 }
 
+/* A capped value's bar inside a plain row (the Defence table, RV-02):
+   one width, so the bars of a table share a scale. */
+.stat-meter {
+  flex: none;
+  width: 96px;
+}
+
 .stat-columns {
   columns: 2 22rem;
   column-gap: 28px;
@@ -214,6 +253,12 @@ button.icon.quiet:hover:not(:disabled) {
 
 .main-skill-gems .gem-mark {
   align-self: center;
+}
+
+/* The main skill's name: the scale's strongest weight, not the
+   browser's bold (RV-38). */
+.main-skill-gems strong {
+  font-weight: 600;
 }
 
 .main-skill-gems .gem-mark.support {
@@ -596,7 +641,7 @@ button.hint:hover:not(:disabled) {
 }
 
 .dash-tools select {
-  min-height: 32px;
+  min-height: 36px;
   padding: 0 8px;
 }
 
@@ -838,8 +883,27 @@ button.hint:hover:not(:disabled) {
   color: var(--c-text);
 }
 
+/* Gem names are words, not figures: the text face, as everywhere else
+   (a data table's cells take the figure face; RV-08). Levels keep it. */
+table.skill-table td {
+  font-family: inherit;
+}
+
 .skill-table tbody th > * {
   margin-right: 8px;
+}
+
+/* An author's divider: a heading over the rows after it (RV-35). */
+.skill-table tr.skill-divider > th {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background: var(--c-bg);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+}
+
+.skill-table tr.skill-divider > td {
+  background: var(--c-bg);
 }
 
 .skill-table-title {

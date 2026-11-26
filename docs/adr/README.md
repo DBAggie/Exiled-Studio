@@ -16,13 +16,13 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [009](009-persistence-and-recovery.md) | Persistence, undo, and recovery | Accepted; Amendment 1 (a build keeps its own dashboards: a typed section, layout only; accepted 2026-11-16 with PR #128) |
 | [010](010-updates-security-and-offline.md) | Updates, signing, addons, offline | Revised |
 | [011](011-integrations-and-privacy.md) | Integrations, sharing, and privacy | Accepted |
-| [012](012-toolchain-and-repository.md) | Repository, toolchain, governance | Revised |
+| [012](012-toolchain-and-repository.md) | Repository, toolchain, governance | Revised; Amendment 1 (related work bundled into one PR; the maintainer's decision 2026-11-25, PR #183) |
 | [013](013-roadmap-and-release-quality.md) | Roadmap, release quality, first milestone | Revised |
 | [014](014-error-and-observability.md) | Errors, observability, diagnostics | Accepted |
 | [015](015-stat-id-modifier-model.md) | Stat-ID-first modifier model | Accepted (new); Amendment 1 (typed resolutions, adapted lines); Amendment 2 (custom modifier notes and patterns, proposed 2026-11-13, accepted on merge); Amendment 3 (reviewed rewordings for item lines, proposed 2026-11-24 in PR #168) |
 | [016](016-wasm-compatible-core.md) | WASM-compatible core | Accepted (new) |
 | [017](017-mcp-reference-addon.md) | Local MCP server as reference addon | Accepted (new); Amendment 1 (token kept between starts) accepted 2026-11-14 |
-| [018](018-knowledge-mcp.md) | Knowledge MCP server (read-only game data and economy snapshots for Claude sessions) | Accepted (new) 2026-11-16 |
+| [018](018-knowledge-mcp.md) | Knowledge MCP server (read-only game data and economy snapshots for Claude sessions) | Accepted (new) 2026-11-16; Amendment 1 (no portable zip; proposed 2026-11-25, PR #183) |
 
 New ADRs take the next number and use the same header format (Status, Date, Decision, Consequences).
 

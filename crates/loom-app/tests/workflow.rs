@@ -1320,6 +1320,17 @@ fn gem_names_should_fall_back_to_the_gem_item_and_skip_placeholders() {
         Some("Test Bolt")
     );
     assert!(loom_app::gems::new_gem(&bundle, "SupportTestDamage").is_none());
+
+    // "..." is the game's name for a gem it has not released (RV-37).
+    let skills = bundle.skills.as_mut().unwrap();
+    for effect in &mut skills.gem_effects {
+        if effect.id == "TestBolt" || effect.id == "TestBoltAltX" {
+            effect.name = "...".to_owned();
+        }
+    }
+    let catalog = loom_app::gems::catalog(&bundle, None);
+    assert!(catalog.iter().all(|e| e.name != "..."));
+    assert!(loom_app::gems::new_gem(&bundle, "TestBolt").is_none());
 }
 
 #[test]

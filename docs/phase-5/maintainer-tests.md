@@ -46,6 +46,14 @@ On the same portable build, with the large build open:
 3. **Wait for the next experimental release** (it needs PR #168 merged into `dev`, `dev` into `experimental`, and the `release` run; the agent can prepare the version change). Then start 0.9.0-1: with automatic checks it should offer the new version. Install it on approval, start it, and check the version in About.
 4. Optional, if you have the time: the same with the MSI of 0.9.0-1, and on Linux the AppImage (installs on approval) and the `.deb` (notifies only).
 
+## D. After the revamp (RV-09, RV-21, RV-20; prepared 2026-11-25)
+On the same laptop, with the test build of PR #183's CI run (the `package` job's zip) and the same build file as part A.
+
+1. **Pan and zoom again** (A5's steps): the revamp fades what is not taken when the tree is zoomed out, which no run has measured. Start from **Fit** (the fade is strongest there). Note the typical and the lowest FPS for the pan, and for the zoom at about 10 and 20 wheel ticks a second. Before the fade: pan 54 and 49, zoom 58 to 59 and 52 to 55.
+2. **The hover's numbers:** rest the pointer on five notables in turn and note the time until "Calculating the change…" is replaced by the numbers. Before: 369 to 494 ms. The calculation is now about 2.5 times faster on the workstation (`performance.md`, "The skills and the body armour check"), so about 150 ms is expected.
+3. **The keys on the tree:** press Tab until the tree has the focus (a blue ring on the class start), then use the arrow keys, Enter, Home, End, plus, minus, and 0. Note anything that does not move the way the key points, and whether the card stays readable.
+4. **With Narrator or NVDA on** (part B2 and RV-18): the tree says each node as the keys reach it ("Heart of Ice, Notable, not allocated"); a dashboard card's Details open in the card and are read as a region; the List view still names every node.
+
 ## Results to send back
 
 | Item | Result |

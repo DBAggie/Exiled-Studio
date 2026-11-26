@@ -403,6 +403,8 @@ export function view(spec: FakeSpec, id: number): TreeView {
     'ascendancy-points': counted.filter(
       (n) => byId.get(n)?.ascendancy != null && !kept(n),
     ).length,
+    // The sample character is level 3: two levels' points.
+    'points-available': 2,
   }
 }
 

@@ -26,6 +26,7 @@
   "what_if",
   "compare_file",
   "stage_view",
+  "passive_lines",
   "crashes",
   "dismiss_crash",
   "diagnostics",

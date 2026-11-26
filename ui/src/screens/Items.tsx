@@ -642,7 +642,17 @@ export function ItemEditor() {
   return (
     <div className="columns">
       <section className="panel table-panel" aria-labelledby="item-h">
-        <div className="item-head">
+        {/* The way back above the name, the name on one line (RV-07;
+            the head had shared the equipment list's column grid). */}
+        <div className="editor-head">
+          <button
+            type="button"
+            className="link quiet editor-back"
+            onClick={() => dispatch(actions.go('items'))}
+          >
+            <span aria-hidden="true">‹ </span>
+            {t('editor.back')}
+          </button>
           <div className="spacer">
             <p className="eyebrow">
               {[item.slot, item.rarity].filter((x) => x != null).join(' · ')}
@@ -664,9 +674,6 @@ export function ItemEditor() {
               </p>
             )}
           </div>
-          <button type="button" onClick={() => dispatch(actions.go('items'))}>
-            {t('editor.back')}
-          </button>
         </div>
         <p className="legend">
           <span>
@@ -742,26 +749,26 @@ export function ItemEditor() {
                           (line.shown ?? line.text)
                         )}
                         {line.marks.map((m) => (
-                          <Badge key={m} tone="info" className="line-mark">
+                          <span key={m} className="line-mark">
                             {tDynamic(`editor.mark.${m}`, 'editor.mark.other', {
                               mark: m,
                             })}
-                          </Badge>
+                          </span>
                         ))}
                         {line.variants.length > 0 &&
                           item.card.variants.length > 0 && (
-                            <Badge tone="neutral" className="line-mark">
+                            <span className="line-mark">
                               {t('editor.variantOf', {
                                 names: line.variants
                                   .map((v) => item.card.variants[v - 1] ?? v)
                                   .join(', '),
                               })}
-                            </Badge>
+                            </span>
                           )}
                         {editable && !removed && (
                           <button
                             type="button"
-                            className="link small-text line-edit"
+                            className="link quiet small-text line-edit"
                             aria-label={t('editor.editLine', { n })}
                             onClick={() =>
                               setEditing(new Set([...editing, line.index]))
@@ -797,9 +804,9 @@ export function ItemEditor() {
                   </div>
                   <span className="status">
                     {removed ? (
-                      <Badge tone="neutral">{t('editor.removed')}</Badge>
+                      <span className="line-mark">{t('editor.removed')}</span>
                     ) : text !== line.text ? (
-                      <Badge tone="neutral">{t('status.edited')}</Badge>
+                      <span className="line-mark">{t('status.edited')}</span>
                     ) : (
                       <LineBadge status={line.status} />
                     )}

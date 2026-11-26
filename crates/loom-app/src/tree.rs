@@ -809,6 +809,12 @@ pub fn view(
             .collect(),
         points: points.passive,
         ascendancy_points: points.ascendancy,
+        points_available: build.character.level.as_ref().map(|l| {
+            poe1::points_at(
+                *l.value(),
+                loom_calc::poe1::collect::killed_all_bandits(build),
+            )
+        }),
         convert: lock
             .as_ref()
             .and(data)
@@ -960,6 +966,86 @@ fn lines(
                 )
             })
             .map(|n| format!("{} {}", n.stat, input[&n.stat].min)),
+    );
+    out
+}
+
+/// The lines of the passives `nodes` names, each with the stats it prints
+/// (the `passive_lines` query), in the order asked. A node the data's
+/// passive table does not have (a cluster jewel's) is left out.
+#[must_use]
+pub fn passive_lines(bundle: &Bundle, nodes: &[u32]) -> Vec<api::PassiveLines> {
+    let Some(tables) = bundle.passives.as_ref() else {
+        return Vec::new();
+    };
+    let scope = bundle
+        .scope_root(PASSIVE_DESCRIPTIONS)
+        .ok()
+        .and_then(|root| bundle.stat_descriptions.scope(root).ok());
+    nodes
+        .iter()
+        .filter_map(|node| {
+            let passive = tables
+                .passives
+                .iter()
+                .find(|p| p.node == i64::from(*node))?;
+            Some(api::PassiveLines {
+                node: *node,
+                name: passive.name.clone(),
+                lines: lines_with_stats(bundle, scope.as_ref(), &passive.stats),
+            })
+        })
+        .collect()
+}
+
+/// As [`lines`], each line with the stats its description reads.
+fn lines_with_stats(
+    bundle: &Bundle,
+    scope: Option<&Scope<'_>>,
+    stats: &[loom_data::bundle::passives::StatAmount],
+) -> Vec<api::PassiveLine> {
+    let raw = |stat: &str, value: i64| api::PassiveLine {
+        text: format!("{stat} {value}"),
+        stats: vec![stat.to_owned()],
+    };
+    let Some(scope) = scope else {
+        return stats.iter().map(|s| raw(&s.stat, s.value)).collect();
+    };
+    let input: BTreeMap<String, StatValue> = stats
+        .iter()
+        .map(|s| (s.stat.clone(), StatValue::exact(s.value)))
+        .collect();
+    let rendered = scope.render(&input, bundle, VariantFilter::default());
+    let mut out: Vec<api::PassiveLine> = rendered
+        .lines
+        .into_iter()
+        .map(|l| api::PassiveLine {
+            stats: scope
+                .description(l.at)
+                .and_then(|(_, d)| d.stats_of(l.at.hand))
+                // Only the stats the node has: a description may read
+                // more than the node gives.
+                .map(|ids| {
+                    ids.iter()
+                        .filter(|id| input.contains_key(*id))
+                        .cloned()
+                        .collect()
+                })
+                .unwrap_or_default(),
+            text: l.text,
+        })
+        .collect();
+    out.extend(
+        rendered
+            .not_rendered
+            .iter()
+            .filter(|n| {
+                !matches!(
+                    n.reason,
+                    NotRenderedReason::Zero | NotRenderedReason::DeclaredNoDescription
+                )
+            })
+            .map(|n| raw(&n.stat, input[&n.stat].min)),
     );
     out
 }

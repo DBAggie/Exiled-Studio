@@ -101,3 +101,9 @@ Both are published (2026-11-16): `v0.9.0-1` on `experimental` at `050f327` (rele
   ```
 
   Check first that the branch's tree differs from `dev`'s only by the release commit (`git diff origin/main dev`). Done after 0.9 for both branches (`78ee81c`, `825b6ef`, `1424565`), so the next PRs from `dev` merge cleanly.
+
+## Going back to an older version
+
+- **Unsaved work kept by a newer version is not restored by 0.9.0** (RV-13, found 2026-11-25). The next release after 0.9.0 writes what a build is (class, level, main skill) into a recovery copy, the `summary` key. 0.9.0 and 0.9.0-1 list such a copy on the start page, and Restore fails with "not a build": their reader refuses a key it does not know. The copy stays on disk, and the newer version restores it. Say so in the notes of the first release that writes `summary`.
+- From that release on the reader ignores a header key it does not know (`loom_persistence::recovery`, test `a_snapshot_with_a_header_key_from_a_newer_version_should_still_be_restored`), so a later addition does not repeat this.
+- A saved build is not affected: its document has its own version and migrations (ADR-009).

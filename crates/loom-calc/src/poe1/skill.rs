@@ -802,7 +802,11 @@ fn group_effects<'d>(
         let Some((variant, effects)) = gem_variant(gem, data) else {
             continue;
         };
-        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot);
+        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot)
+            + gem
+                .gem
+                .as_ref()
+                .map_or(0, |id| levels.gem_bonus(id.as_str()));
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {
@@ -918,22 +922,49 @@ pub fn main_skill<'d>(
     levels: &GemLevels,
 ) -> Result<MainSkill<'d>, SkillProblem> {
     let groups = active_groups(build)?;
+    let all = socket_matches(build, &groups, data);
+    skill_at(build, data, levels, &groups, &all, None)
+}
+
+/// [`main_skill`] over the active set's `groups` with their socket
+/// matches `all`, for the build's own choice (`pick` `None`) or for the
+/// active skill `pick` (group and active skill, both 1-based) as if the
+/// build's main skill were that one: what [`main_skill`] gives for
+/// [`with_main_skill`]'s copy, without the copy ([`active_skills`] asks
+/// for every active skill, and a build is large).
+fn skill_at<'d>(
+    build: &Build,
+    data: &'d dyn CalcData,
+    levels: &GemLevels,
+    groups: &[&SocketGroup],
+    all: &[Vec<SocketMatch>],
+    pick: Option<(usize, usize)>,
+) -> Result<MainSkill<'d>, SkillProblem> {
     let count = groups.len().max(1);
-    let wanted = build
-        .character
-        .main_socket_group
-        .as_ref()
-        .map_or(1, |s| *s.value() as usize);
+    let wanted = pick.map_or_else(
+        || {
+            build
+                .character
+                .main_socket_group
+                .as_ref()
+                .map_or(1, |s| *s.value() as usize)
+        },
+        |(group, _)| group,
+    );
     let index = wanted.clamp(1, count);
     let group = *groups.get(index - 1).ok_or(SkillProblem::NoActiveSkill)?;
-    let all = socket_matches(build, &groups, data);
     let matches: &[SocketMatch] = all.get(index - 1).map_or(&[], Vec::as_slice);
 
     let (actives, group_supports) = group_effects(group, matches, data, levels);
-    let wanted = group
-        .main_active_skill
-        .as_ref()
-        .map_or(1, |s| *s.value() as usize);
+    let wanted = pick.map_or_else(
+        || {
+            group
+                .main_active_skill
+                .as_ref()
+                .map_or(1, |s| *s.value() as usize)
+        },
+        |(_, active)| active,
+    );
     // PoB's `activeEffect.gemData`: the skill comes from a gem, not from an
     // item (a gem entry without `gemId`). An effect both a gem and an item
     // entry grant counts as from a gem, as in PoB's per-id lookup.
@@ -1020,8 +1051,7 @@ pub fn active_skills<'d>(
         let matches: &[SocketMatch] = all.get(i).map_or(&[], Vec::as_slice);
         let (actives, _) = group_effects(group, matches, data, levels);
         for a in 1..=actives.len() {
-            let b = with_main_skill(build, i + 1, a);
-            if let Ok(skill) = main_skill(&b, data, levels) {
+            if let Ok(skill) = skill_at(build, data, levels, &groups, &all, Some((i + 1, a))) {
                 out.push((i + 1, a, skill));
             }
         }

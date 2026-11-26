@@ -64,7 +64,10 @@ export function Warnings() {
           {used.length === 0 ? (
             <p>{t('warnings.usedNone')}</p>
           ) : (
-            <section className="panel" aria-label={t('warnings.used')}>
+            <section
+              className="panel table-panel"
+              aria-label={t('warnings.used')}
+            >
               <ReviewList warnings={used} />
             </section>
           )}
@@ -324,9 +327,14 @@ export function AiConnection() {
         <section className="panel client" aria-labelledby="ai-server">
           <div className="panel-head">
             <h2 id="ai-server">{t('ai.server')}</h2>
-            <Badge tone={mcp.running ? 'ok' : 'neutral'}>
+            {/* States as quiet text, the server's with a dot (RV-06). */}
+            <span className="ai-state">
+              <span
+                className={`ai-dot${mcp.running ? ' on' : ''}`}
+                aria-hidden="true"
+              />
               {mcp.running ? t('ai.on') : t('ai.off')}
-            </Badge>
+            </span>
           </div>
           <p className="muted small-text">
             {mcp.running
@@ -341,7 +349,7 @@ export function AiConnection() {
                 <span>{t('ai.read')}</span>
                 <span className="sub">{t('ai.readHelp')}</span>
               </span>
-              <Badge tone="ok">{t('ai.allowed')}</Badge>
+              <span className="ai-state">{t('ai.allowed')}</span>
             </div>
             <div className="perm">
               <span className="check">
@@ -367,9 +375,9 @@ export function AiConnection() {
                   </span>
                 </span>
               </span>
-              <Badge tone={p.requests ? 'ok' : 'neutral'}>
+              <span className="ai-state">
                 {p.requests ? t('ai.allowed') : t('ai.notAllowed')}
-              </Badge>
+              </span>
             </div>
             <div className="perm">
               <span className="check">
@@ -395,9 +403,11 @@ export function AiConnection() {
                   </span>
                 </span>
               </span>
-              <Badge tone={p['standing-grant'] ? 'warn' : 'neutral'}>
+              <span
+                className={`ai-state${p['standing-grant'] ? ' tone-warn' : ''}`}
+              >
                 {p['standing-grant'] ? t('ai.withoutAsking') : t('ai.askEach')}
-              </Badge>
+              </span>
             </div>
           </fieldset>
 
@@ -794,7 +804,7 @@ function GameData() {
         </button>
         <button
           type="button"
-          className="link"
+          className="link quiet"
           onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
         >
           {t('data.chooseFolder')}

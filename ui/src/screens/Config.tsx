@@ -3,7 +3,7 @@
 // blocks, all editable. Each input says what the calculation does with
 // it: applied (no mark), no effect on any number, or not calculated yet
 // (the numbers are partial). Every change is one undoable command.
-import { useId, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 
 import type {
   ConfigInputView,
@@ -220,6 +220,45 @@ function helpLine(option: ConfigOption | undefined): string | null {
   return first != null && first !== '' ? first : null
 }
 
+/** An input's description: two lines, and when it is longer a "More"
+ * that shows the rest (RV-38: it was cut at two lines with the rest only
+ * in a hover title). */
+function ConfigHelp({ text, title }: { text: string; title?: string }) {
+  const el = useRef<HTMLSpanElement>(null)
+  const [open, setOpen] = useState(false)
+  const [cut, setCut] = useState(false)
+  useLayoutEffect(() => {
+    const span = el.current
+    if (span === null || open) return
+    const measure = () => setCut(span.scrollHeight > span.clientHeight + 1)
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(span)
+    return () => observer.disconnect()
+  }, [open, text])
+  return (
+    <span className="muted small-text">
+      <span ref={el} className={open ? undefined : 'config-help'} title={title}>
+        {text}
+      </span>
+      {(cut || open) && (
+        <>
+          {' '}
+          <button
+            type="button"
+            className="link plain"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? t('config.helpLess') : t('config.helpMore')}
+          </button>
+        </>
+      )}
+    </span>
+  )
+}
+
 function InputRow({
   input,
   detail,
@@ -236,14 +275,7 @@ function InputRow({
     <li className="config-row">
       <div className="config-name">
         <span>{label}</span>
-        {help !== null && (
-          <span
-            className="muted small-text config-help"
-            title={option?.tooltip}
-          >
-            {help}
-          </span>
-        )}
+        {help !== null && <ConfigHelp text={help} title={option?.tooltip} />}
         {(detail || input.placeholder) && (
           <span className="muted small-text">
             {detail && <span className="mono">{input.name}</span>}

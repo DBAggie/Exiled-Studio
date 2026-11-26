@@ -1428,7 +1428,7 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     // Life gained as energy shield (P6-11dd): one more row of energy
     // shield, which reads life's base and so strength.
     let mut life_reasons = Reasons::new();
-    let life_row = life_as_energy_shield(calc, int_bonus, &mut life_reasons)?;
+    let life_row = life_as_energy_shield(calc, int_bonus, true, &mut life_reasons)?;
     if life_row.is_some() {
         es_deps.push(Field::Strength);
     }
@@ -1475,10 +1475,16 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// energy shield's rounded more multipliers (PoB rounds per mod name).
 /// Life's base is its BASE effects and the strength bonus, as
 /// `life_mana`'s. `None` without the stat. With Chaos Inoculation the row
-/// is 1 (`CalcDefence.lua` 1027; P6-11ej).
-fn life_as_energy_shield(
+/// is 1 (`CalcDefence.lua` 1027; P6-11ej). `strength`: whether life's base
+/// has the strength bonus (the character's; a minion's life base is its
+/// monster life alone, RV-12).
+///
+/// # Errors
+/// A graph error.
+pub(super) fn life_as_energy_shield(
     calc: &mut Calc<'_>,
     es_inc: Option<Valued>,
+    strength: bool,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     let q = Quantity::Poe1(Poe1Quantity::LifeAsEnergyShield);
@@ -1504,7 +1510,11 @@ fn life_as_energy_shield(
         )?;
         return Ok(Some(row));
     }
-    let str_bonus = strength_life(calc, reasons)?;
+    let str_bonus = if strength {
+        strength_life(calc, reasons)?
+    } else {
+        None
+    };
     let life_effects = sum(
         calc,
         Quantity::Life,

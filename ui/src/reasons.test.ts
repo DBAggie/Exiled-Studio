@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { FieldResult } from './api/types'
-import { byGroup, codeCounts, entriesOf, readReason } from './reasons'
+import {
+  byGroup,
+  codeCounts,
+  entriesOf,
+  passiveLine,
+  readReason,
+} from './reasons'
 
 describe('reasons', () => {
   it('should read where a reason comes from', () => {
@@ -96,5 +102,33 @@ describe('reasons', () => {
       ['scaled-line', 1],
       ['unchecked-tree-version', 1],
     ])
+  })
+})
+
+describe('a passive\u2019s uncounted modifier (RV-11)', () => {
+  const passives = [
+    {
+      node: 7,
+      name: 'Bone Barrier',
+      lines: [
+        { text: '+1 to maximum number of Skeletons', stats: ['skeletons_+'] },
+        {
+          text: 'Minions have 20% increased maximum Life',
+          stats: ['minion_life_+%', 'minion_life_extra'],
+        },
+      ],
+    },
+  ]
+  it('should be named by the line that prints its stat', () => {
+    expect(passiveLine(passives, 7, 'minion_life_extra')).toEqual({
+      text: 'Minions have 20% increased maximum Life',
+      passive: 'Bone Barrier',
+    })
+  })
+  it('should fall back when the line is not known', () => {
+    expect(passiveLine(passives, 7, 'another_stat')).toBeNull()
+    expect(passiveLine(passives, 8, 'skeletons_+')).toBeNull()
+    expect(passiveLine(passives, 7, null)).toBeNull()
+    expect(passiveLine([], 7, 'skeletons_+')).toBeNull()
   })
 })

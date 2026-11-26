@@ -130,8 +130,10 @@ select {
   overflow: hidden;
   clip-path: none;
   max-width: 100%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* A long name takes a second line; none is cut (RV-08: "Lines to
+     review" ended in an ellipsis). */
+  white-space: normal;
+  text-align: center;
   font-size: var(--fs-meta);
   font-weight: 500;
   line-height: 1.2;
@@ -194,6 +196,13 @@ select {
 .panel {
   border-color: var(--c-row);
   padding: 16px 20px;
+}
+
+/* A card that holds a table has no inset of its own: its heading and its
+   cells carry the 20 px, as every other card's content does (RV-29: the
+   rule above had added a second 20 px). */
+.panel.table-panel {
+  padding: 0;
 }
 
 /* A panel's title is a label, not a headline: the numbers lead. */
@@ -493,6 +502,13 @@ select {
   margin: 0;
 }
 
+.recovery-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .recovery > .sub {
   display: block;
   margin: 4px 0 8px;
@@ -537,7 +553,7 @@ select {
 
 .config-find {
   width: 14rem;
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .config-group h3 {
@@ -605,7 +621,7 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 12rem) 3.5rem;
   gap: 4px 16px;
-  padding: 8px 16px;
+  padding: 8px 20px;
 }
 
 .review-head {
@@ -666,10 +682,27 @@ select {
 }
 
 .review-fold > summary {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 8px 16px;
+  padding: 8px 20px 8px 40px;
   cursor: pointer;
+}
+
+/* The mark that it opens (RV-36): the flex summary has no marker of its
+   own. It turns down when open. */
+.review-fold > summary::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 14px;
+  border-left: 6px solid var(--c-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+.review-fold[open] > summary::before {
+  transform: rotate(90deg);
 }
 
 .review-fold > summary .sub {
@@ -719,10 +752,12 @@ select {
 .item-head,
 .item-row {
   display: grid;
-  grid-template-columns: 7rem minmax(0, 1fr) 8.5rem 5rem;
+  /* The name gets what the slot and the note can spare (RV-30: names
+     broke over two lines at 1,280 px). */
+  grid-template-columns: 6.5rem minmax(0, 1fr) 8.5rem 4rem;
   gap: 12px;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .item-head {
@@ -831,9 +866,36 @@ select {
   align-items: start;
 }
 
+.group-pick {
+  display: none;
+}
+
 @media (max-width: 1000px) {
   .skill-panes {
     grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  /* The list becomes one picker over the group (RV-27). */
+  .skill-panes > .group-list {
+    display: none;
+  }
+
+  .group-pick {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-pick > label {
+    color: var(--c-muted);
+    font-size: var(--fs-meta);
+  }
+
+  .group-pick > select {
+    flex: 1 1 16rem;
+    min-width: 0;
   }
 }
 
@@ -1017,11 +1079,11 @@ select {
 .tree-full .tree-tr > button,
 .tree-full .tree-zoom button {
   border-color: var(--c-border-control);
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .tree-full .tree-float input[type='search'] {
-  min-height: 32px;
+  min-height: 36px;
   background: var(--c-input);
 }
 
@@ -1039,4 +1101,121 @@ select {
 
 .tree-card-name {
   font-size: var(--fs-section);
+}
+
+/* The passive tree's list (RV-32): a card like every other list, the
+   filter as a row of tabs, one short action a row in one column. */
+.tree-sections {
+  border-bottom: 1px solid var(--c-row);
+  margin-bottom: 12px;
+}
+
+.tree-node-list {
+  border: 1px solid var(--c-row);
+  border-radius: var(--radius-panel);
+  background: var(--c-panel);
+  overflow: hidden;
+}
+
+.tree-node-list li {
+  padding: 8px 20px;
+  min-height: 48px;
+}
+
+.tree-node-list li:last-child {
+  border-bottom: 0;
+}
+
+.tree-node-list li.on {
+  background: transparent;
+}
+
+.tree-node-list li > button {
+  flex: none;
+}
+
+.tree-node-list .tree-card-name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+/* A note said in words where a mark would not say which note it is
+   (RV-31). */
+button.hint-text {
+  font-size: var(--fs-meta);
+}
+
+/* ---- The item editor's head and line states (RV-06, RV-07) ------------- */
+.editor-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 12px 20px 16px;
+}
+
+.editor-head h1 {
+  font-size: var(--fs-title);
+}
+
+.editor-back {
+  align-self: flex-start;
+}
+
+/* What a line is beside its text (crafted, a variant, edited): quiet
+   words, not a pill. */
+.line-mark {
+  margin-left: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.line-state {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.line-state-dot {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-soft);
+  border-radius: 50%;
+}
+
+.line-state-matched .line-state-dot {
+  background: var(--c-soft);
+}
+
+.line-state-adapted .line-state-dot {
+  background: linear-gradient(90deg, var(--c-soft) 50%, transparent 50%);
+}
+
+.line-state-warning .line-state-dot {
+  border-color: var(--c-warn);
+}
+
+/* The AI connection page's states: quiet text, the server's with a dot. */
+.ai-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.ai-dot {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--c-soft);
+  border-radius: 50%;
+}
+
+.ai-dot.on {
+  border-color: var(--c-ok);
+  background: var(--c-ok);
 }

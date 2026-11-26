@@ -61,6 +61,13 @@
       "description": "A command's answer.",
       "$ref": "#/$defs/Outcome"
     },
+    "passive-lines": {
+      "description": "Passives' lines with their stats (the `passive_lines` query;\nadditive, 2026-11-25).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PassiveLines"
+      }
+    },
     "preview": {
       "description": "An item edit's preview.",
       "$ref": "#/$defs/ItemEditPreview"
@@ -136,7 +143,8 @@
     "what-if",
     "what-if-series",
     "build-fields",
-    "stage-view"
+    "stage-view",
+    "passive-lines"
   ],
   "$defs": {
     "AffixKind": {
@@ -2311,6 +2319,10 @@
           "description": "The component's kind (`stat`, `progression`, `timeline`, ...):\nopen text, so the UI adds kinds without a schema change and an\nolder application still opens the build.",
           "type": "string"
         },
+        "tall": {
+          "description": "Whether the component is two rows tall: the cards after it\nstack beside it, one under another, when the row has room\nleft (a tall table beside two short cards). Left out when\nfalse.",
+          "type": "boolean"
+        },
         "target": {
           "description": "The life a fight timeline deals damage to.",
           "type": [
@@ -4100,6 +4112,57 @@
         }
       ]
     },
+    "PassiveLine": {
+      "description": "One line of a passive node.",
+      "type": "object",
+      "properties": {
+        "stats": {
+          "description": "The IDs of the stats the line prints.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "text": {
+          "description": "The line as the game prints it; a stat the descriptions cannot\nprint is its ID and value.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "stats"
+      ]
+    },
+    "PassiveLines": {
+      "description": "A passive node's lines as the game prints them, each with the\nstats it prints (the `passive_lines` query): a calc result names a\npassive's stat by its ID, and this says which line that is.",
+      "type": "object",
+      "properties": {
+        "lines": {
+          "description": "Its lines, in the game's order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PassiveLine"
+          }
+        },
+        "name": {
+          "description": "Its name in the game data.",
+          "type": "string"
+        },
+        "node": {
+          "description": "The node number.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "name",
+        "lines"
+      ]
+    },
     "QuarantinedBundle": {
       "description": "An installed bundle that does not load (Phase 5, P-e).",
       "type": "object",
@@ -5371,6 +5434,16 @@
           "description": "Passive points spent (PoB's count, never enforced).",
           "type": "integer",
           "format": "uint32",
+          "minimum": 0
+        },
+        "points-available": {
+          "description": "The passive points a character of the build's level has: one a\nlevel after the first, and the quests' by the act that level\nis expected in (a quest's choice that gives a point counted\nfrom the act after it). An estimate while the character is\nstill in the acts (it may be ahead of its quests or behind\nthem). Absent when the build names no level.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
           "minimum": 0
         },
         "spec": {
