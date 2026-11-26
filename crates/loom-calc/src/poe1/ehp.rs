@@ -2,7 +2,8 @@
 //! `NumberOfDamagingHits`, `NumberOfMitigatedDamagingHits`,
 //! `TotalNumberOfHits`, `ConfiguredDamageChance`, `ConfiguredNotHitChance`,
 //! and `TotalEHP` (`Modules/CalcDefence.lua` 188 to 427, 1645 to 1667,
-//! 2568 to 2913), for the default `Average` estimate.
+//! 2568 to 2913), for the config's damage category (`Average` and the
+//! four hit categories since open items S7, `enemy_hit::Category`).
 //!
 //! What PoB does:
 //! - **Hits to die** (`numberOfHitsToDie`): with the pools full (life
@@ -508,6 +509,8 @@ fn hits_to_die(
 
 /// The block, suppression, and avoidance the estimate reads.
 pub(super) struct Mitigation {
+    /// The enemy's damage category (open items S7).
+    pub(super) category: super::enemy_hit::Category,
     /// The effective attack and spell block chances (projectile ones are
     /// the same without their own lines).
     pub(super) block: f64,
@@ -564,11 +567,26 @@ pub(super) fn estimate(
         false,
     );
     // Block, suppression, avoidance (`Average`).
-    let block_chance = (m.block + m.block + m.spell_block + m.spell_block) / 4.0 / 100.0;
+    // The category's block chance (2748 to 2751; open items S7): a
+    // projectile's is the attack's and a spell projectile's the spell's
+    // (no own lines); `Average` the four's mean.
+    use super::enemy_hit::Category;
+    let block_chance = match m.category {
+        Category::Average => (m.block + m.block + m.spell_block + m.spell_block) / 4.0,
+        Category::Melee | Category::Projectile => m.block,
+        Category::Spell | Category::SpellProjectile => m.spell_block,
+    } / 100.0;
     let block_effect = 1.0 - block_chance * m.block_effect / 100.0;
-    let mut suppress = m.suppression / 100.0;
+    // Suppression against a spell or `Average` (halved), none against an
+    // attack (2771 to 2779).
+    let mut suppress = match m.category {
+        Category::Melee | Category::Projectile => 0.0,
+        _ => m.suppression / 100.0,
+    };
     let suppression_effect = if suppress < 1.0 {
-        suppress /= 2.0;
+        if m.category == Category::Average {
+            suppress /= 2.0;
+        }
         1.0 - suppress * (SUPPRESSION_EFFECT + m.suppression_effect).max(0.0) / 100.0
     } else {
         1.0
@@ -585,8 +603,14 @@ pub(super) fn estimate(
         Gains {
             life: m.life_on_block * block_chance,
             mana: 0.0,
+            // Spell block's energy shield: all of it against a spell, half
+            // for `Average`, none against an attack (2764 to 2768).
             energy_shield: m.energy_shield_on_block * block_chance
-                + m.energy_shield_on_spell_block / 2.0 * block_chance,
+                + match m.category {
+                    Category::Spell | Category::SpellProjectile => m.energy_shield_on_spell_block,
+                    Category::Average => m.energy_shield_on_spell_block / 2.0,
+                    Category::Melee | Category::Projectile => 0.0,
+                } * block_chance,
             limit: false,
             missing_life: ch.missing_life,
         }
@@ -623,7 +647,14 @@ pub(super) fn estimate(
             * (1.0 - m.avoid_all / 100.0)
             * (1.0 - m.avoid_projectiles / 100.0)
             * 100.0;
-    let not_hit = (melee + projectile + spell + spell_projectile) / 4.0;
+    // `ConfiguredNotHitChance`: the category's (1655).
+    let not_hit = match m.category {
+        Category::Average => (melee + projectile + spell + spell_projectile) / 4.0,
+        Category::Melee => melee,
+        Category::Projectile => projectile,
+        Category::Spell => spell,
+        Category::SpellProjectile => spell_projectile,
+    };
     let total_hits = mitigated / (1.0 - not_hit / 100.0);
     let ehp = total_hits * enemy_damage_in;
     let deps = [

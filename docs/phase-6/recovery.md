@@ -683,3 +683,22 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 42,105 to 42,259 (the fixtures). `Generals Perforate Zerker.xml` loses the stat's reason on its 80 fields (they keep other reasons); no value moved.
 - **Corpus:** 0 unexpected; documents byte-identical.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 6: the enemy's damage category
+
+**What PoB does** (`CalcDefence.lua`, `damageCategoryConfig`, the config's `enemyDamageType`, `Average` when unset): the category picks
+- the evade chance that lowers the enemy's crit (`ConfiguredEvadeChance`, 1656): melee's, projectile's, none for a spell, `Average` the two's sum over four;
+- the flat damage taken (1976 to 1982): attacks' in full for `Melee` and `Projectile` (with the type's projectile attacks' for `Projectile`), spells' and the type's spell projectiles' for either spell category, `Average` the weighted mix;
+- the taken multiplier and suppression at 100% (2024 to 2030): the attack's or the spell's, suppression's whole effect against a spell, half for `Average`, none against an attack;
+- Summon Stone Golem of Safeguarding's share (2463): all for `Melee`, a quarter for `Average`, none otherwise;
+- in the estimate (2748 to 2790): the category's block chance, spell block's energy shield (all against a spell, half for `Average`), suppression (none against an attack, halved for `Average`), and the chance not to be hit (`ConfiguredNotHitChance`, 1655).
+
+**The engine:** `enemy_hit::Category` (`Average`, `Melee`, `Projectile`, `Spell`, `SpellProjectile`) read from `enemyDamageType`, threaded through `enemy_hit::phase`, `maximum_hit` (the golem's share), and `ehp::Mitigation`. `Untyped` and `DamageOverTime` change the estimate's flow (no hit, or no evade and block) and stay `unmodelled-config`. A melee attack's own flat damage taken (`<Type>DamageTakenFromMeleeAttacks`) has no modelled source.
+
+**Fixtures:** `ice-nova-enemy-damage-melee-witch.xml`, `-projectile-`, and `-spell-` (attack and spell block, evasion, flat damage taken from attacks and projectile attacks, gains on block, an armour with 40% suppression): every field equals PoB's, and the three give three different estimates (`TotalEHP` 5,943, 6,471, 3,494). A `SpellProjectile` copy equals `Spell` here (no projectile avoidance) and was not added.
+
+**Evidence** (`local/p6/s7f`, `b-ct`, against part 5's run):
+- **Public:** 0 unexpected; `Complete` 42,259 to 42,512: the fixtures, and `ice-nova-tailwind-adrenaline-witch.xml`'s 21 estimate fields (category `Spell`), now equal to PoB's. `holy-flame-totem-hierophant.xml`'s reason is now the boss preset alone (its category is set by the preset). No value moved.
+- **Corpus:** 0 unexpected; one build's 21 estimate fields computed (indeterminate with its other reasons).
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.

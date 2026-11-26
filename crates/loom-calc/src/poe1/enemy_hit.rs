@@ -1,7 +1,9 @@
 //! The enemy's hit on the character (Phase 6 P6-10b, part 12): PoB
 //! v2.67.2's `<Type>TakenHitMult` and `<Type>DamageReduction`
 //! (`Modules/CalcDefence.lua` 1635 to 2105, `calcs.buildDefenceEstimations`),
-//! for the config's default damage category, `Average`.
+//! for the config's damage category: `Average` (the default), or since
+//! open items S7 `Melee`, `Projectile`, `Spell`, or `SpellProjectile`
+//! ([`Category`]).
 //!
 //! What PoB does:
 //! - **The enemy's crit:** `EnemyCritChance = clamp(crit x (1 +
@@ -49,8 +51,8 @@
 //!   effective suppression chance of 100, else 1 (`SuppressionEffect` 40
 //!   plus `SpellSuppressionEffect` BASE).
 //!
-//! Not modelled, so reasons on these fields: another damage category, an
-//! unlucky estimate, a boss skill preset, the enemy's impale, armour based
+//! Not modelled, so reasons on these fields: the `Untyped` and
+//! `DamageOverTime` damage categories, an unlucky estimate, a boss skill preset, the enemy's impale, armour based
 //! on ward, ignored resistances or reductions, and the enemy's modifiers
 //! the engine does not carry (curses that lower its damage are a marker,
 //! [`super::gems::BuffStat::Defence`]).
@@ -94,23 +96,73 @@ const SUPPRESSION_EFFECT: f64 = 40.0;
 /// The character constant of the largest damage reduction.
 const MAX_STAT: &str = "maximum_physical_damage_reduction_%";
 
-/// The config inputs that change the estimate in a way not modelled: a
-/// damage category other than `Average`, an unlucky estimate, a boss skill
-/// preset (their default values aside).
-const UNMODELLED: [(&str, &str); 3] = [
-    ("enemyDamageType", "Average"),
-    ("EHPUnluckyWorstOf", "1"),
-    ("presetBossSkills", "None"),
-];
+/// The config inputs that change the estimate in a way not modelled: an
+/// unlucky estimate, a boss skill preset (their default values aside). The
+/// damage category is [`CATEGORY_INPUT`].
+const UNMODELLED: [(&str, &str); 2] = [("EHPUnluckyWorstOf", "1"), ("presetBossSkills", "None")];
+
+/// The config's damage category of the enemy's hit (`enemyDamageType`,
+/// `CalcDefence.lua` 1643: `Average` when unset).
+pub const CATEGORY_INPUT: &str = "enemyDamageType";
+
+/// The enemy's damage category (PoB's `damageCategoryConfig`; open items
+/// S7): `Average` and the four hit categories. `Untyped` and
+/// `DamageOverTime` change the estimate's flow and stay reasons.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Category {
+    Average,
+    Melee,
+    Projectile,
+    Spell,
+    SpellProjectile,
+}
+
+impl Category {
+    /// The category of the config's value; `None` for one not modelled.
+    fn of(value: Option<&ConfigValue>) -> Option<Self> {
+        match value {
+            None => Some(Self::Average),
+            Some(ConfigValue::String(s)) => match s.as_str() {
+                "Average" => Some(Self::Average),
+                "Melee" => Some(Self::Melee),
+                "Projectile" => Some(Self::Projectile),
+                "Spell" => Some(Self::Spell),
+                "SpellProjectile" => Some(Self::SpellProjectile),
+                _ => None,
+            },
+            Some(_) => None,
+        }
+    }
+
+    /// An attack category.
+    const fn attack(self) -> bool {
+        matches!(self, Self::Melee | Self::Projectile)
+    }
+
+    /// A spell category.
+    pub(super) const fn spell(self) -> bool {
+        matches!(self, Self::Spell | Self::SpellProjectile)
+    }
+}
 
 /// Summon Stone Golem of Safeguarding (P6-11ar): its granted effect, the
 /// config input that overrides its life (`ConfigOptions.lua` 809), and the
-/// share of its redirect under the `Average` damage category, the only one
-/// the engine computes (`CalcDefence.lua` 2463: melee only, so a quarter).
+/// share of its redirect by damage category (`CalcDefence.lua` 2463: melee
+/// only, all of it for `Melee`, a quarter for `Average`, none otherwise).
 const STONE_GOLEM: &str = "SummonStoneGolemAltY";
 /// The config input that overrides the golem's life.
 pub const STONE_GOLEM_LIFE_INPUT: &str = "TotalStoneGolemLife";
 const STONE_GOLEM_AVERAGE_SHARE: f64 = 0.25;
+
+/// The golem's share of its redirect for `category` (`CalcDefence.lua`
+/// 2463).
+const fn stone_golem_share(category: Category) -> f64 {
+    match category {
+        Category::Melee => 1.0,
+        Category::Average => STONE_GOLEM_AVERAGE_SHARE,
+        _ => 0.0,
+    }
+}
 
 /// The life of Summon Stone Golem of Safeguarding, the pool its redirect
 /// drains (P6-11ar; `CalcPerform.lua` 3597 to 3677): the config override
@@ -214,6 +266,21 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             return Ok(());
         }
     }
+    let Some(category) = Category::of(
+        set.and_then(|s| super::config::last_input(s, CATEGORY_INPUT, ConfigInputKind::Input)),
+    ) else {
+        for ty in TYPES {
+            for f in fields(ty) {
+                calc.set_unsupported(
+                    f,
+                    UnsupportedReason::UnmodelledConfig {
+                        input: CATEGORY_INPUT.to_owned(),
+                    },
+                );
+            }
+        }
+        return Ok(());
+    };
     let read = |calc: &Calc<'_>, f: Field| {
         calc.field(f).and_then(|r| {
             Some(Valued {
@@ -287,7 +354,14 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &cx,
         &mut reasons,
     )?;
-    let evade = (melee.value + projectile.value) / 4.0;
+    // `ConfiguredEvadeChance` (1656): the category's, `Average` PoB's sum of
+    // the two over four; a spell's none.
+    let evade = match category {
+        Category::Average => (melee.value + projectile.value) / 4.0,
+        Category::Melee => melee.value,
+        Category::Projectile => projectile.value,
+        Category::Spell | Category::SpellProjectile => 0.0,
+    };
     // The enemy's `NeverCrit` (Hexpass, P6-11fl): 0 (`CalcDefence.lua`
     // 1694).
     let never = {
@@ -406,7 +480,9 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let suppression =
         read(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)).map_or(0.0, |v| v.value);
     let suppression = effective_suppression(calc, suppression, &cx, &mut reasons)?;
-    let suppress_mult = if suppression >= 100.0 {
+    // At a 100% chance (2026 to 2030): all of the effect against a spell,
+    // half for `Average`, none against an attack.
+    let suppress_mult = if suppression >= 100.0 && !category.attack() {
         let effect = (SUPPRESSION_EFFECT
             + sum(
                 calc,
@@ -416,7 +492,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 &mut reasons,
             )?)
         .max(0.0);
-        1.0 - effect / 100.0 / 2.0
+        if category.spell() {
+            1.0 - effect / 100.0
+        } else {
+            1.0 - effect / 100.0 / 2.0
+        }
     } else {
         1.0
     };
@@ -496,20 +576,50 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         )?;
         let spell = ((1.0 + (hit_inc + spell_inc) / 100.0) * (hit_more * spell_more)).max(0.0);
         let attack = ((1.0 + (hit_inc + attack_inc) / 100.0) * (hit_more * attack_more)).max(0.0);
-        let taken_mult = (spell + attack) / 2.0;
-        // The flat damage taken.
+        // The category's multiplier (2024 to 2030): the attack's, the
+        // spell's, or their mean.
+        let taken_mult = match category {
+            Category::Average => (spell + attack) / 2.0,
+            Category::Melee | Category::Projectile => attack,
+            Category::Spell | Category::SpellProjectile => spell,
+        };
+        // The flat damage taken (1976 to 1982), by category: each source
+        // with its share and whether PoB sums the type's alone.
+        let flat_sources: &[(TakenWhen, f64, bool)] = match category {
+            Category::Average => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 0.5, false),
+                (TakenWhen::ProjectileAttack, 0.25, true),
+                (TakenWhen::Spell, 0.5, false),
+                (TakenWhen::SpellProjectile, 0.25, false),
+            ],
+            // A melee attack's own flat damage taken (the type's
+            // `DamageTakenFromMeleeAttacks`) has no modelled source.
+            Category::Melee => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 1.0, false),
+            ],
+            Category::Projectile => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 1.0, false),
+                (TakenWhen::ProjectileAttack, 1.0, true),
+            ],
+            // Both spell categories: the spells', and the type's spell
+            // projectiles' (PoB's sum for either).
+            Category::Spell | Category::SpellProjectile => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Spell, 1.0, false),
+                (TakenWhen::SpellProjectile, 1.0, true),
+            ],
+        };
         let mut flat = 0.0;
-        for (when, share) in [
-            (TakenWhen::Always, 1.0),
-            (TakenWhen::Hit, 1.0),
-            (TakenWhen::Attack, 0.5),
-            (TakenWhen::ProjectileAttack, 0.25),
-            (TakenWhen::Spell, 0.5),
-            (TakenWhen::SpellProjectile, 0.25),
-        ] {
+        for &(when, share, type_only) in flat_sources {
             let mut part = 0.0;
-            // PoB sums the type's projectile attack damage alone.
-            let names: &[TakenOf] = if when == TakenWhen::ProjectileAttack {
+            let names: &[TakenOf] = if type_only {
                 &[TakenOf::Type(ty)]
             } else {
                 &[TakenOf::All, TakenOf::Type(ty)]
@@ -561,7 +671,16 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             reasons: type_reasons,
         });
     }
-    maximum_hit(calc, set, &parts, &shares, max, damage_mult, damage_in)
+    maximum_hit(
+        calc,
+        set,
+        &parts,
+        &shares,
+        max,
+        damage_mult,
+        damage_in,
+        category,
+    )
 }
 
 /// One type's values of the hit that maximum hit reads (PoB's
@@ -632,6 +751,10 @@ fn frost_shield(
 ///   hit partly taken as another type with armour applied, PoB's smoothing
 ///   passes first ([`smoothed`]; open items S7);
 /// - `SecondMinimalMaximumHitTaken` the second smallest of the five.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the estimate's values the phase computed, in PoB's order"
+)]
 fn maximum_hit(
     calc: &mut Calc<'_>,
     set: Option<&loom_domain::ConfigSet>,
@@ -640,6 +763,7 @@ fn maximum_hit(
     max: f64,
     enemy_damage_mult: f64,
     damage_in: f64,
+    category: Category,
 ) -> Result<(), CalcError> {
     let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
     let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
@@ -831,7 +955,7 @@ fn maximum_hit(
         Op::Base,
         &cx,
         &mut pool_reasons,
-    )? * STONE_GOLEM_AVERAGE_SHARE;
+    )? * stone_golem_share(category);
     let (golem_rate, golem) = if golem_rate > 0.0 {
         match stone_golem_life(calc, set, &mut pool_reasons) {
             Some(l) if l > 0.0 => (golem_rate.min(100.0), l),
@@ -1159,6 +1283,7 @@ fn maximum_hit(
                 );
         let spell_dodge = spell_dodge(calc, &cx, &mut reasons)?;
         let mitigation = super::ehp::Mitigation {
+            category,
             life_on_block,
             energy_shield_on_block,
             energy_shield_on_spell_block,

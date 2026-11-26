@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S7): the enemy's damage category Spell:
+     block, spell block, spell suppression, evasion, flat damage taken from
+     attacks and projectile attacks, and gains on block, each read for the
+     category (PoB's damageCategoryConfig).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Fixture Coat
+Shabby Jerkin
+Implicits: 0
++40% chance to Suppress Spell Damage
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyLevel" number="40"/>
+			<Input name="enemyIsBoss" string="None"/>
+			<Input name="enemyDamageType" string="Spell"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				+20% Chance to Block Attack Damage
++15% Chance to Block Spell Damage
++1000 to Evasion Rating
+-10 Physical Damage taken from Attack Hits
+-10 Physical Damage taken from Projectile Attacks
+Recover 50 Life when you Block
+Recover 50 Energy Shield when you Block Spell Damage
++200 to maximum Energy Shield
+				+1000 to maximum Life
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
