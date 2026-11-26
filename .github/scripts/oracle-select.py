@@ -26,7 +26,8 @@ Any other event (a push to dev, experimental, or main; a manual run) runs
 every fixture.
 
 Shards: the chosen fixtures, in manifest order, are dealt round-robin, so
-shard k of n holds fixtures k-1, k-1+n, k-1+2n, ... The deal depends only on
+shard k of n holds fixtures k-1, k-1+n, k-1+2n, ...; a fixture and its
+`pair` are dealt together as one (`units`). The deal depends only on
 the chosen list, so shard k is the same set on Windows and Linux, and the
 compare job compares them shard by shard. A full run of 535 fixtures took
 about 132 minutes on Windows in one job; four shards take about a quarter.
@@ -118,6 +119,31 @@ def choose(event, base, labels, head):
     return smoke + new, lines
 
 
+def units(chosen):
+    """The chosen fixtures in dealing units: a fixture with its `pair` (a
+    discrepancy fixture names the fixture it changes one input of, and
+    oracle-run refuses a manifest without it), every other fixture alone;
+    in the chosen order."""
+    by_id = {f['id']: f for f in chosen}
+    partner = {}
+    for f in chosen:
+        p = f.get('pair')
+        if p in by_id:
+            partner[f['id']], partner[p] = p, f['id']
+    out, seen = [], set()
+    for f in chosen:
+        if f['id'] in seen:
+            continue
+        unit = [f]
+        seen.add(f['id'])
+        p = partner.get(f['id'])
+        if p and p not in seen:
+            unit.append(by_id[p])
+            seen.add(p)
+        out.append(unit)
+    return out
+
+
 def main():
     event, base, labels, out = sys.argv[1:5]
     shard, shards = (int(sys.argv[5]), int(sys.argv[6])) if len(sys.argv) > 6 else (1, 1)
@@ -125,7 +151,7 @@ def main():
         sys.exit(f'oracle-select: shard {shard} of {shards} is out of range')
     head = json.load(open(MANIFEST, encoding='utf-8'))
     chosen, lines = choose(event, base, labels, head)
-    mine = chosen[shard - 1::shards]
+    mine = [f for unit in units(chosen)[shard - 1::shards] for f in unit]
     if not mine:
         sys.exit(f'oracle-select: shard {shard} of {shards} has no fixtures '
                  f'({len(chosen)} chosen); use fewer shards')
