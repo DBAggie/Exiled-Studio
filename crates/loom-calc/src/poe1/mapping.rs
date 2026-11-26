@@ -9373,6 +9373,13 @@ pub const ROWS: &[Row] = &[
     // P6-11t: "Non-Channelling Skills have +# to Total Mana Cost"
     // (`ManaCost` BASE, `SkillType` `Channel` negated) and the channelling
     // one; [`super::costs`] reads them for a main skill of that kind.
+    // Open items S3, part 8: "+# to Total Mana Cost of Skills" (PoB's
+    // `ManaCost` BASE, `ModParser.lua` 190, untagged): every skill's total,
+    // read by [`super::costs`].
+    (
+        "skill_mana_cost_+",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Base, 1.0)],
+    ),
     (
         "skill_mana_cost_+_with_channelling_skills",
         &[(
@@ -10988,6 +10995,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_override_pvp_scaling_time_ms", "display"),
+    // Open items S3, part 8: Focus's and Kitava's Thirst's trigger supports'
+    // markers (PoB's chanceToTriggerOnFocus, no module reads it; triggeredByKitavaThirst),
+    // read by poe1::triggers through the support.
+    ("skill_triggered_when_you_focus_chance_%", "trigger"),
     // P6-11ht: Impact's area of effect per enemy killed recently (no slice field
     // reads area).
     (
@@ -11036,6 +11047,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Open items S3: Arcanist Brand's less area for the spells it triggers
     // (AreaOfEffect MORE): no slice field.
     ("support_brand_area_of_effect_+%_final", "area"),
+    ("support_cast_on_mana_spent", "trigger"),
     // P6-11gf: Concentrated Effect's less area of effect (`AreaOfEffect`
     // MORE, `sup_int.lua` 1101), as `active_skill_area_of_effect_+%_final`.
     (
@@ -11607,6 +11619,16 @@ impl StatMapping for Poe1Mapping {
         // Open items S3, part 7: a line that grants a skill and triggers it:
         // the skill acts through its group, and the trigger reads the
         // line's chance (`poe1::triggers`).
+        // Open items S3, part 8: Kitava's Thirst's chance.
+        if stat.as_str() == super::item_supports::KITAVA_CHANCE_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::KitavaTriggerChance),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
         if let Some(&(_, chance, _)) = super::triggers::granted_trigger(stat.as_str()) {
             let template = |quantity, op| EffectTemplate {
                 quantity: Quantity::Poe1(quantity),

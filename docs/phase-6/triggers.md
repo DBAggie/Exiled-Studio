@@ -337,3 +337,42 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **Public `calc-parity`** (561 builds): 0 unexpected. `Complete` fields went from 40,613 to 41,196, the new fixtures' 583. No other public document changed.
 - **Corpus** (21 builds, local): one document lost its `base_number_of_arrows` reason; no value or state changed.
 - **Tests:** `granted_triggers_should_be_found_by_line_and_unique`, `the_rotation_should_give_pobs_rate_for_limbsplit`; the workspace's tests, clippy, fmt, and the wasm32 check pass.
+
+## Part 8: Focus, Kitava's Thirst, Maloney's Mechanism, The Hidden Blade (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 7.
+
+**The crafted Focus line** ("Trigger Socketed Spells when you Focus, with a 0.25 second Cooldown", `trigger_socketed_spells_when_you_focus_%`, a chance row of `item_supports::TRIGGER_ROWS`; support `SupportTriggerSpellFromHelmet`). PoB's `helmetFocusHandler` (`CalcTriggers.lua` 135 to 217) assumes Focus is used as soon as its cooldown ends: the rate is `1 / (duration + cooldown / FocusCooldownRecovery)`, Focus's 4 s duration and 8 s cooldown from the bundle (`triggers::focus_period`), so 1/12 per second; the cap is shown, not applied; the triggered damage applies. No stat maps to `FocusCooldownRecovery`: "Focus has #% increased Cooldown Recovery Rate" stays a reason.
+
+**Kitava's Thirst** (1081; `ModParser.lua` 3166). Its two-stat line gives the support `SupportCastOnManaSpent` (`cast_socketed_spells_on_X_mana_spent`, which also carries the mana to spend, `Poe1Quantity::KitavaManaSpent`) and the chance (`cast_socketed_spells_on_mana_spent_%_chance`, `KitavaTriggerChance`), which PoB applies. The source is the fastest spell or attack, not triggered and not the main skill, whose mana cost reaches the amount (PoB's comparer, 1085 to 1089); a repeat spends no mana, so PoB divides the rate by the source's repeats (475 to 481): a source with any repeat modifier is not modelled (`kitava-repeats`). The main skill alone in the rotation, the support's 0.1 s cooldown.
+- **"+# to Total Mana Cost of Skills"** (`skill_mana_cost_+`, PoB's `ManaCost` BASE, `ModParser.lua` 190) is now mapped: it was unmapped, and the fixture needs it to reach Kitava's amount.
+
+**Maloney's Mechanism** (1018; `chance_to_trigger_socketed_bow_skill_on_bow_attack_%`, a chance row; support `SupportTriggerBowSkillOnBowAttack`): a bow attack on use; the rotation the ranged attacks of the quiver's slot; a triggered attack, through part 6's attack path. Its replica (spells, `useCastRate`) is not ported.
+
+**The Hidden Blade** (924; `local_display_grants_level_x_hidden_blade` in `triggers::GRANTED_TRIGGERS`): only while phasing (PoB disables the skill otherwise; the engine leaves it unsupported, `hidden-blade-phasing`); a global trigger at PoB's cap of 2 per second, or its cooldown's when it has one. `buffPhasing` is now a config check setting `Condition:Phasing` (`conditions::PHASING`, `ConfigOptions.lua` 1025), so other "while Phasing" lines are settled too.
+
+**A fix on the way:** a trigger on use, or from a spell, read the source's hit chance field before deciding not to use it; a spell has none, so the rate was unsupported. It now reads it only when it counts (part 7's damaging-skill sources and Kitava's spells).
+
+**Rows and tables:** `NoEffect` for `skill_triggered_when_you_focus_chance_%` (PoB's `chanceToTriggerOnFocus`, which no module reads) and `support_cast_on_mana_spent`; the three supports in `gems::SUPPORTS`, Unseen Strike in `gems::SKILLS`; `data-parity` allows their `Triggered` type and marks: 753 differences, `uncategorized` 0.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct`. The baseline is part 7's run (`local/p6/s3e`).
+
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/s3f_fixtures.py`). Every compared field equals PoB's:
+  - `trigger-focus-ice-nova-witch.xml`: the rate 1/12 (0.08333).
+  - `trigger-kitavas-thirst-ice-nova-witch.xml`: Fireball with +100 total mana cost (120) the source at 1.333 casts per second, the 50% chance: 0.6667; Ice Nova's own cost 123.
+  - `trigger-maloneys-mechanism-burning-arrow-ranger.xml`: 0.87588 from the bow attack's 0.875 under the 1 s cooldown.
+  - `trigger-hidden-blade-unseen-strike-ranger.xml`: 2 per second, no cost; Unseen Strike's damage stays partial for its PoB skill data (`pob-skill-data`), equal to PoB's.
+  - 302 fields are targets.
+- **Public `calc-parity`** (565 builds): 0 unexpected. `Complete` fields went from 41,196 to 41,498, the new fixtures' 302. One other document changed in its reasons only: `holy-flame-totem-hierophant.xml` lost its crafted Focus line's `unmapped-stat`.
+- **Corpus** (21 builds, local): no document changed.
+- **Tests:** the workspace's 1,863 tests, clippy, fmt, and the wasm32 check pass.
+
+## Where S3 stands
+
+Every trigger config PoB has that changes a slice field is ported, but these:
+- **The engine's data or model lacks something:** Seven Teachings (no unarmed attack), Duskblight (Stalking Pustule's level 1 row; maintainer follow-ups), the Holy Relic's Nova (skills' level requirements), Maloney's replica (spells by cast rate).
+- **PoB applies nothing, so they wait for an in-game check (the game-truth list):** Squirming Terror at 100% (`local_display_chance_to_trigger_socketed_spell_on_kill_%`), `trigger_socketed_spell_on_skill_use_%` (the crafted "Trigger a Socketed Spell on Using a Skill"), and `spellslinger_cooldown_duration_+%`, which no PoB file names.
+- **No slice field reads their rate:** the minions items trigger (Law of the Wilds, Rigwald's Crest, Jorrhast's Blacksteel, Ashcaller, Arakaali's Fang, Mark of the Shaper's anomaly), Shade Form, Contaminate, Mark On Hit, Hextouch, Vixen's Entrapment and the hex on trap (curses).
+- **Not item triggers, outside S3's list:** the skills' own triggers (Kinetic Instability, Battlemage's Cry, Autoexertion, General's Cry, Snipe, Shattershard, Doom Blast, and kin) stay `unmodelled` where builds use them.

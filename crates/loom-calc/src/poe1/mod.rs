@@ -156,6 +156,12 @@ pub enum Poe1Quantity {
     /// percent, for a line whose value is the chance; `Flag` for one whose
     /// value is the level (100%). Read by `poe1::triggers` by the item.
     GrantedTriggerChance,
+    /// Kitava's Thirst's mana to spend (open items S3, part 8; PoB's
+    /// `KitavaRequiredManaCost` BASE): read by `poe1::triggers`.
+    KitavaManaSpent,
+    /// Kitava's Thirst's chance to trigger (PoB's `KitavaTriggerChance`
+    /// BASE): read by `poe1::triggers`.
+    KitavaTriggerChance,
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
@@ -1494,6 +1500,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
             Self::DamageMorePerManaCost => f.write_str("damage-more-per-mana-cost"),
             Self::GrantedTriggerChance => f.write_str("granted-trigger-chance"),
+            Self::KitavaManaSpent => f.write_str("kitava-mana-spent"),
+            Self::KitavaTriggerChance => f.write_str("kitava-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::PerStaffSocket(life) => f.write_str(if *life {

@@ -370,6 +370,10 @@ pub const LIFETAP: &str = "Lifetap";
 /// movement speed buff, `poe1::gems`).
 pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
 
+/// PoB's `Condition:Phasing`, from its config check `buffPhasing`
+/// (`ConfigOptions.lua` 1025; open items S3, part 8: The Hidden Blade).
+pub const PHASING: &str = "Phasing";
+
 /// The check inputs and the condition each sets (module docs), sorted by
 /// input (a test checks); an input may set several, and several inputs
 /// one: the condition holds when any of its inputs is on (P6-11g).
@@ -380,6 +384,9 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("buffLifetap", LIFETAP),
     // P6-11gp: Magmatic Strikes.
     ("buffNgamahuFlamesAdvance", NGAMAHU_FLAMES_ADVANCE),
+    // Open items S3, part 8: phasing (The Hidden Blade's trigger,
+    // `poe1::triggers`, and the "while Phasing" lines).
+    ("buffPhasing", PHASING),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     // P6-11em: attacked recently; the main skill too (`settle`).

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Burning Arrow socketed in Maloney's Mechanism, a second Burning Arrow with the bow the source: a triggered bow attack on use under the support's 1 s cooldown.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Ranger" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="2" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Weapon 2">
+				<Gem nameSpec="Burning Arrow" skillId="BurningArrow" variantId="BurningArrow" gemId="Metadata/Items/Gems/SkillGemBurningArrow" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Burning Arrow" skillId="BurningArrow" variantId="BurningArrow" gemId="Metadata/Items/Gems/SkillGemBurningArrow" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Recurve Bow
+Quality: 0
+Implicits: 0
+		</Item>
+		<Item id="2">
+Rarity: UNIQUE
+Maloney's Mechanism
+Ornate Quiver
+Quality: 0
+Sockets: G
+Implicits: 0
+Trigger a Socketed Bow Skill when you Attack with a Bow, with a 1 second Cooldown
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Weapon 2" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config></Config>
+</PathOfBuilding>

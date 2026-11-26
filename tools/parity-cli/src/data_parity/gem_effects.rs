@@ -514,6 +514,13 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // `triggered` mark (`poe1::triggers` reads the item's line).
     ("BoneNova", "triggered"),
     ("IcicleBurst", "triggered"),
+    // Open items S3, part 8: Kitava's Thirst's, Maloney's Mechanism's, and
+    // the crafted Focus line's supports and The Hidden Blade's skill, their
+    // marks (`poe1::triggers` reads the support or the item's line).
+    ("SupportCastOnManaSpent", "triggeredByKitavaThirst"),
+    ("SupportTriggerBowSkillOnBowAttack", "triggeredByUnique"),
+    ("SupportTriggerSpellFromHelmet", "chanceToTriggerOnFocus"),
+    ("UnseenStrike", "triggeredByUnique"),
     ("SupportCastOnDeath", "triggeredOnDeath"),
     // Open items S3, part 5: the item trigger supports' marks, read by
     // the support's ID (`poe1::triggers`: the rotation, the crit chance).
@@ -760,6 +767,10 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ),
     ("SupportUniqueMjolnerLightningSpellsCastOnHit", "Triggered"),
     ("SupportUniqueVirulenceSpellsCastOnBlock", "Triggered"),
+    // Open items S3, part 8.
+    ("SupportCastOnManaSpent", "Triggered"),
+    ("SupportTriggerBowSkillOnBowAttack", "Triggered"),
+    ("SupportTriggerSpellFromHelmet", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];

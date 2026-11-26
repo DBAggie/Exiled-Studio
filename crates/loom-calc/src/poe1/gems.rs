@@ -2733,6 +2733,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("UniqueMirageWarriors", Kind::Inert),
+    // Open items S3, part 8: The Hidden Blade's skill (PoB's export: no global
+    // effect).
+    ("UnseenStrike", Kind::Inert),
     // P6-11fr: Vaal Blight's Hinder (`act_int.lua`, `VaalBlight`): the
     // enemy's `ChaosDamageTaken` INC, a `Debuff` named "Hinder". Its damage
     // over time acts on Vaal Blight alone.
@@ -3171,6 +3174,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // Open items S3: Cast on Death: no global stat; the spell it supports
     // takes PoB's stand-in time (`poe1::triggers`).
     ("SupportCastOnDeath", &[]),
+    // Open items S3, part 8: Kitava's Thirst's support.
+    ("SupportCastOnManaSpent", &[]),
     ("SupportCastOnMeleeKill", &[]),
     ("SupportCastOnMeleeKillTriggered", &[]),
     ("SupportCastOnWardBreak", &[]),
@@ -3375,8 +3380,12 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // Open items S3, part 5: the supports an item's trigger line gives its
     // socketed spells (`item_supports::TRIGGER_ROWS`): no global stat; the
     // spell is triggered (`poe1::triggers`).
+    // Open items S3, part 8: Maloney's Mechanism's and the crafted Focus
+    // line's supports.
+    ("SupportTriggerBowSkillOnBowAttack", &[]),
     ("SupportTriggerElementalSpellOnBlock", &[]),
     ("SupportTriggerFireSpellOnHit", &[]),
+    ("SupportTriggerSpellFromHelmet", &[]),
     ("SupportTriggerSpellOnAttack", &[]),
     ("SupportTriggerSpellOnBowAttack", &[]),
     ("SupportTriggerSpellOnBowAttackFreezeHit", &[]),

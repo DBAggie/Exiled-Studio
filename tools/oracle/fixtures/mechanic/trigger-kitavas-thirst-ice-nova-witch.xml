@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Ice Nova socketed in Kitava's Thirst, Fireball with +100 to its total mana cost the source: the fastest skill whose mana cost reaches 100, the line's 50% chance, the support's cooldown.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Helmet">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Fireball" skillId="Fireball" variantId="Fireball" gemId="Metadata/Items/Gems/SkillGemFireball" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: UNIQUE
+Kitava's Thirst
+Zealot Helmet
+Quality: 0
+Sockets: B
+Implicits: 0
+50% chance to Trigger Socketed Spells when you Spend at least 100 Mana on an
+Upfront Cost to Use or Trigger a Skill, with a 0.1 second Cooldown
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Fixture
+Iron Ring
+Quality: 0
+Implicits: 0
++100 to Total Mana Cost of Skills
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Helmet" itemId="1"/>
+			<Slot name="Ring 1" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config></Config>
+</PathOfBuilding>

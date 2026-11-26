@@ -103,6 +103,14 @@
 //! ([`granted_and_triggered`]). The configs whose skill no field reads
 //! (minions, Shade Form, Contaminate) are not listed.
 //!
+//! **Part 8** (open items S3): the crafted Focus line (`helmetFocusHandler`,
+//! 135 to 217: `1 / (Focus's duration + cooldown)`, the cap not applied),
+//! Kitava's Thirst (1081: the fastest spell or attack whose mana cost
+//! reaches the line's amount, the line's chance; a source with a repeat
+//! modifier is not modelled), Maloney's Mechanism (1018: a bow attack on
+//! use, the slot's ranged attacks), and The Hidden Blade (924: while
+//! phasing, a global trigger at 2 per second).
+//!
 //! **Triggered attacks** (open items S3, part 6): the attack path takes a
 //! ported trigger's rate as every pass's speed (`CalcOffence.lua` 2223 to
 //! 2227). **Manaforged Arrows** (1378) is the first: a bow attack, on use,
@@ -203,6 +211,20 @@ pub enum Config {
     UniqueDamageOrAttack,
     /// Lioneye's Paws (956): a bow attack, on use, PoB's cooldown of 1 s.
     LioneyesPaws,
+    /// The crafted Focus line (open items S3, part 8; `helmetFocusHandler`,
+    /// 135 to 217): the rate `1 / (Focus's duration + its cooldown)`, a
+    /// global trigger.
+    Focus,
+    /// Kitava's Thirst (1081): the fastest skill whose mana cost reaches the
+    /// line's amount, the line's chance, the rate over the source's repeats.
+    KitavasThirst,
+    /// Maloney's Mechanism (1018): a bow attack, on use; the rotation the
+    /// ranged attacks of the item's slot.
+    MaloneysMechanism,
+    /// The Hidden Blade (924): while phasing, a global trigger at PoB's cap
+    /// of 2 per second (its cooldown's when it has one); otherwise PoB
+    /// disables the skill.
+    HiddenBlade,
 }
 
 impl Config {
@@ -220,6 +242,9 @@ impl Config {
                 | Self::SevenTeachings
                 | Self::CastOnBlock
                 | Self::FireSpellOnHit
+                | Self::Focus
+                | Self::KitavasThirst
+                | Self::MaloneysMechanism
         )
     }
 
@@ -232,6 +257,7 @@ impl Config {
                 | Self::AsenathsChant
                 | Self::ManaforgedArrows
                 | Self::LioneyesPaws
+                | Self::MaloneysMechanism
         )
     }
 
@@ -245,6 +271,7 @@ impl Config {
                 | Self::MoonbendersWing
                 | Self::UniqueDamageOrAttack
                 | Self::LioneyesPaws
+                | Self::HiddenBlade
         )
     }
 
@@ -260,7 +287,10 @@ impl Config {
     /// The config has no `triggeredSkillCond`: PoB simulates the main
     /// skill alone (809).
     const fn main_alone(self) -> bool {
-        matches!(self, Self::Spellslinger | Self::ManaforgedArrows) || self.is_granted()
+        matches!(
+            self,
+            Self::Spellslinger | Self::ManaforgedArrows | Self::KitavasThirst
+        ) || self.is_granted()
     }
 
     /// PoB's `triggerOnCrit` (the support's `SkillData` or stat): the
@@ -277,7 +307,7 @@ impl Config {
     const fn rotation_by_slot(self) -> bool {
         matches!(
             self,
-            Self::PoetsPen | Self::AsenathsChant | Self::CosprisMalice
+            Self::PoetsPen | Self::AsenathsChant | Self::CosprisMalice | Self::MaloneysMechanism
         )
     }
 }
@@ -334,6 +364,12 @@ const SUPPORTS: &[(&str, Config)] = &[
         Config::CastOnBlock,
     ),
     ("SupportTriggerFireSpellOnHit", Config::FireSpellOnHit),
+    ("SupportTriggerSpellFromHelmet", Config::Focus),
+    ("SupportCastOnManaSpent", Config::KitavasThirst),
+    (
+        "SupportTriggerBowSkillOnBowAttack",
+        Config::MaloneysMechanism,
+    ),
 ];
 
 /// Arcanist Brand's active skill (`act_int.lua` 545): the source of the
@@ -379,12 +415,13 @@ pub fn targeting_branded_enemy(input: &crate::input::CalcInput<'_>) -> Option<bo
 /// the chance to trigger (PoB's `triggerChance`; 100 when the text has no
 /// "% chance"); else its value is the skill's level. The skill acts through
 /// the group PoB saves for it (`source` `Item:<id>:<Unique>, <base>`).
-pub const GRANTED_TRIGGERS: [(&str, bool, bool); 9] = [
+pub const GRANTED_TRIGGERS: [(&str, bool, bool); 10] = [
     (
         "local_display_attack_with_level_X_bone_nova_on_bleeding_enemy_kill",
         false,
         false,
     ),
+    ("local_display_grants_level_x_hidden_blade", false, false),
     ("local_display_molten_burst_on_melee_hit_%", true, false),
     ("local_display_starfall_on_melee_critical_hit_%", true, true),
     (
@@ -447,6 +484,7 @@ const GRANTED_BY_UNIQUE: &[(&str, Config)] = &[
     ("sporeguard", Config::UniqueDamageOrAttack),
     ("starcaller", Config::Starcaller),
     ("the cauteriser", Config::UniqueMeleeOrAttack),
+    ("the hidden blade", Config::HiddenBlade),
     ("uul-netol's embrace", Config::UniqueDamageOrAttack),
 ];
 
@@ -525,6 +563,7 @@ const CWC_TIME_STAT: &str = "cast_while_channelling_time_ms";
 const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportBrandSupport",
     "SupportCastOnCritTriggered",
+    "SupportCastOnManaSpent",
     "SupportCastOnCritTriggeredPlus",
     "SupportCastOnDeath",
     "SupportCastOnMeleeKillTriggered",
@@ -538,8 +577,10 @@ const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportManaforgedArrows",
     "SupportMarkOnHit",
     "SupportSpellslinger",
+    "SupportTriggerBowSkillOnBowAttack",
     "SupportTriggerElementalSpellOnBlock",
     "SupportTriggerFireSpellOnHit",
+    "SupportTriggerSpellFromHelmet",
     "SupportTriggerSpellOnAttack",
     "SupportTriggerSpellOnBowAttack",
     "SupportTriggerSpellOnBowAttackFreezeHit",
@@ -744,6 +785,33 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     } else {
         1.0 / action
     };
+    // The crafted Focus line (open items S3, part 8; `helmetFocusHandler`,
+    // 135 to 217): Focus is used as its cooldown ends, so the rate is `1 /
+    // (duration + cooldown / FocusCooldownRecovery)`; the cap is shown, not
+    // applied. No stat maps to `FocusCooldownRecovery` ("Focus has #%
+    // increased Cooldown Recovery Rate" stays a reason): 1.
+    if config == Config::Focus {
+        let Some(period) = focus_period(input.data) else {
+            return unsupported("focus-data");
+        };
+        return Outcome::Rate(1.0 / period, reasons, true);
+    }
+    // The Hidden Blade (924 to 938): only while phasing (PoB disables the
+    // skill otherwise); a global trigger whose cap is 2 per second unless
+    // the skill has a cooldown.
+    if config == Config::HiddenBlade {
+        match phasing(&input) {
+            Some(true) => {}
+            Some(false) => return unsupported("hidden-blade-phasing"),
+            None => return unsupported("phasing"),
+        }
+        let rate = if action == 0.0 {
+            HIDDEN_BLADE_RATE
+        } else {
+            1.0 / action
+        };
+        return Outcome::Rate(rate, reasons, true);
+    }
     let global = matches!(
         config,
         Config::CastWhenDamageTaken | Config::CastWhenStunned | Config::CastOnWardBreak
@@ -774,8 +842,14 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 } else {
                     *g == main_group
                 };
+                // Maloney's Mechanism triggers ranged attacks (1028).
+                let kind = if config == Config::MaloneysMechanism {
+                    "RangedAttack"
+                } else {
+                    "Spell"
+                };
                 together
-                    && s.types.contains("Spell")
+                    && s.types.contains(kind)
                     && s.supports.iter().any(|x| {
                         SUPPORTS
                             .iter()
@@ -908,7 +982,9 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         // A damaging skill too for some granted triggers (PoB's
         // `SkillType.Damage or SkillType.Attack`).
         let damage = config == Config::UniqueDamageOrAttack && s.types.contains("Damage");
-        let candidate = (attack || damage)
+        // Kitava's Thirst: any spell or attack, by its mana cost (below).
+        let any = config == Config::KitavasThirst && s.types.contains("Spell");
+        let candidate = (attack || damage || any)
             && !s.types.contains("Triggered")
             && !s.types.contains("InbuiltTrigger")
             && !s.types.contains("OtherThingUsesSkill")
@@ -934,13 +1010,17 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 | Config::MoonbendersWing
                 | Config::UniqueDamageOrAttack => true,
                 Config::LioneyesPaws => attack && weapon_has(Flags::BOW) == Some(true),
+                Config::KitavasThirst => true,
+                Config::MaloneysMechanism => attack && weapon_has(Flags::BOW) == Some(true),
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
                 | Config::CastWhileChannelling
                 | Config::ArcanistBrand
                 | Config::CastOnDeath
-                | Config::CastOnBlock => false,
+                | Config::CastOnBlock
+                | Config::Focus
+                | Config::HiddenBlade => false,
             };
         if !candidate || s.disabled_by_hands(&hands) != Ok(false) {
             continue;
@@ -964,6 +1044,22 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         let Some(rate) = speed.and_then(|f| f.value) else {
             return unsupported("trigger-source");
         };
+        // Kitava's Thirst's comparer (1085 to 1089): a source whose mana
+        // cost reaches the line's amount.
+        if config == Config::KitavasThirst {
+            let cost = result
+                .fields
+                .get(&Field::Poe1(super::Poe1Field::ManaCost))
+                .and_then(|f| f.value.map(|v| (v, f.state.clone())));
+            match cost {
+                Some((cost, state)) if carry(&state, &mut reasons) => {
+                    if cost < kitava_mana(calc) {
+                        continue;
+                    }
+                }
+                _ => return unsupported("trigger-source"),
+            }
+        }
         if best.as_ref().is_none_or(|b| rate > b.rate) {
             best = Some(Source3 {
                 rate,
@@ -993,10 +1089,13 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     // on use (`triggerOnUse`, 732) skips its hit chance.
     let on_use = config.on_use() || !src.attack;
     let mut chance = 100.0;
-    let (hit, hit_state) = src
-        .hit
-        .clone()
-        .unwrap_or((Some(100.0), FieldState::Complete));
+    let (hit, hit_state) = if on_use {
+        (Some(100.0), FieldState::Complete)
+    } else {
+        src.hit
+            .clone()
+            .unwrap_or((Some(100.0), FieldState::Complete))
+    };
     let Some(hit) = hit else {
         return unsupported("trigger-source");
     };
@@ -1015,6 +1114,13 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 return unsupported("trigger-source");
             }
             chance = chance * crit / 100.0;
+        }
+    }
+    // Kitava's Thirst's chance (PoB's `config.triggerChance`, 784 to 789).
+    if config == Config::KitavasThirst {
+        let line = kitava_chance(calc);
+        if line != 100.0 {
+            chance = chance * line / 100.0;
         }
     }
     // The line's chance of a skill an item grants (open items S3, part 7;
@@ -1041,6 +1147,12 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         return unsupported("trigger-rotation");
     }
     let mut effective = src.rate;
+    // Kitava's Thirst (475 to 481): a repeat spends no mana, so the rate is
+    // over the source's `1 + RepeatCount`. A source with any repeat
+    // modifier is not modelled.
+    if config == Config::KitavasThirst && source_has_repeats(calc, &skills, src.at) != Some(false) {
+        return unsupported("kitava-repeats");
+    }
     // An item's trigger from an attack while dual wielding, unless the
     // attack hits with both weapons: half the rate (441 to 449).
     if config.is_item_line() && !src.double_hits {
@@ -1298,6 +1410,89 @@ fn source_mana_cost_raw(
         }
     }
     Some(cost)
+}
+
+/// The Hidden Blade's rate cap (PoB's `triggerRateCapOverride = 2`, 926).
+const HIDDEN_BLADE_RATE: f64 = 2.0;
+
+/// The skill Focus (`Data/Skills/other.lua` 1985): its duration stat.
+const FOCUS_SKILL: &str = "Focus";
+
+/// Focus's period, seconds: its `base_skill_effect_duration` plus its
+/// level 1 cooldown (PoB's `focusTotalCD`, 154 to 157); `None` without its
+/// data.
+fn focus_period(data: &dyn crate::input::CalcData) -> Option<f64> {
+    let effect = data.granted_effect(FOCUS_SKILL)?;
+    let cooldown = skill::effect_level(effect, 1)?.cooldown;
+    let duration = effect
+        .stat_sets
+        .first()
+        .and_then(|id| data.stat_set(id))?
+        .constant_stats
+        .iter()
+        .find(|c| c.stat == "base_skill_effect_duration")?
+        .value;
+    #[expect(clippy::cast_precision_loss, reason = "milliseconds, exact as f64")]
+    let period = (duration + cooldown) as f64 / 1000.0;
+    Some(period)
+}
+
+/// PoB's `Condition:Phasing` from the config's `buffPhasing` check
+/// (`ConfigOptions.lua` 1025); `None` for a value of another type.
+fn phasing(input: &crate::input::CalcInput<'_>) -> Option<bool> {
+    super::conditions::check(super::collect::active_config(input.build), "buffPhasing")
+}
+
+/// Kitava's Thirst's mana to spend (the `Base` sum of
+/// [`Poe1Quantity::KitavaManaSpent`]).
+fn kitava_mana(calc: &Calc<'_>) -> f64 {
+    calc.store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::KitavaManaSpent))
+        .map(|e| e.value)
+        .sum()
+}
+
+/// Kitava's Thirst's chance, percent (the `Base` sum of
+/// [`Poe1Quantity::KitavaTriggerChance`]; PoB's `KitavaTriggerChance`).
+fn kitava_chance(calc: &Calc<'_>) -> f64 {
+    calc.store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::KitavaTriggerChance))
+        .map(|e| e.value)
+        .sum()
+}
+
+/// Whether the active skill `at` has any repeat modifier (PoB's
+/// `RepeatCount` BASE) in its own collected context; `None` when it
+/// cannot be read.
+fn source_has_repeats(
+    calc: &Calc<'_>,
+    skills: &[(usize, usize, MainSkill<'_>)],
+    at: (usize, usize),
+) -> Option<bool> {
+    let input = *calc.input();
+    skills.iter().find(|(g, a, _)| (*g, *a) == at)?;
+    let b = skill::with_main_skill(input.build, at.0, at.1);
+    let mut options = input.options.clone();
+    options.nested = true;
+    options.own_skill_context = true;
+    let sub = crate::input::CalcInput {
+        build: &b,
+        data: input.data,
+        options: &options,
+    };
+    let context = crate::engine::collected(&sub, &super::Poe1Rules).ok()?;
+    let q = Quantity::Poe1(Poe1Quantity::RepeatCount);
+    Some(
+        context
+            .store()
+            .effects()
+            .iter()
+            .any(|e| e.quantity == q && e.value != 0.0),
+    )
 }
 
 /// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:

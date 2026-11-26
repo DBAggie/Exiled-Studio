@@ -254,6 +254,28 @@ impl StatMapping for InSlot<'_> {
         } else {
             Op::Base
         };
+        // Kitava's Thirst's line (open items S3, part 8): its value is the
+        // mana to spend, read by the trigger.
+        if stat.as_str() == super::item_supports::KITAVA_MANA_STAT
+            && let Some(quantity) = support
+        {
+            return StatMap::Effects(vec![
+                EffectTemplate {
+                    quantity,
+                    op: Op::Flag,
+                    scale: 1.0,
+                    divisor: 1.0,
+                    conditions: Conditions::none(),
+                },
+                EffectTemplate {
+                    quantity: Quantity::Poe1(Poe1Quantity::KitavaManaSpent),
+                    op: Op::Base,
+                    scale: 1.0,
+                    divisor: 1.0,
+                    conditions: Conditions::none(),
+                },
+            ]);
+        }
         match socketed_quantity(stat.as_str(), self.slot).or(support) {
             Some(quantity) => StatMap::Effects(vec![EffectTemplate {
                 quantity,

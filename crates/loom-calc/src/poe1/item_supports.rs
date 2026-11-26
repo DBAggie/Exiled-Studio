@@ -1361,11 +1361,24 @@ pub const ROWS: [(&str, i64, &[&str]); 260] = [
 /// the game's text has no "% chance" prefix, which PoB's pattern (3160)
 /// needs, so PoB applies nothing; Focus, which PoB computes with its own
 /// handler; and the lines that trigger a bow skill or a curse.
-pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 9] = [
+pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 12] = [
     (
         "body_armour_trigger_socketed_spell_on_unarmed_melee_critical_hit_cooldown",
         1,
         &["SupportTriggerSpellOnUnarmedMeleeCriticalHit"],
+    ),
+    // Open items S3, part 8: Kitava's Thirst (its value is the mana to
+    // spend, `gem_levels` reads it too).
+    (
+        "cast_socketed_spells_on_X_mana_spent",
+        1,
+        &["SupportCastOnManaSpent"],
+    ),
+    // Open items S3, part 8: Maloney's Mechanism.
+    (
+        "chance_to_trigger_socketed_bow_skill_on_bow_attack_%",
+        1,
+        &["SupportTriggerBowSkillOnBowAttack"],
     ),
     (
         "chance_to_trigger_socketed_spell_on_bow_attack_%",
@@ -1407,14 +1420,31 @@ pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 9] = [
         1,
         &["SupportTriggerSpellOnAttack"],
     ),
+    // Open items S3, part 8: the crafted Focus line.
+    (
+        "trigger_socketed_spells_when_you_focus_%",
+        1,
+        &["SupportTriggerSpellFromHelmet"],
+    ),
 ];
 
 /// The [`TRIGGER_ROWS`] whose value is the chance to trigger.
-pub const TRIGGER_CHANCE_STATS: [&str; 3] = [
+pub const TRIGGER_CHANCE_STATS: [&str; 5] = [
+    "chance_to_trigger_socketed_bow_skill_on_bow_attack_%",
     "chance_to_trigger_socketed_spell_on_bow_attack_%",
     "local_unique_attacks_cast_socketed_lightning_spells_%",
     "trigger_socketed_spell_on_attack_%",
+    "trigger_socketed_spells_when_you_focus_%",
 ];
+
+/// Kitava's Thirst's mana to spend (open items S3, part 8; PoB's
+/// `KitavaRequiredManaCost`, `ModParser.lua` 3166): also
+/// [`super::Poe1Quantity::KitavaManaSpent`].
+pub const KITAVA_MANA_STAT: &str = "cast_socketed_spells_on_X_mana_spent";
+
+/// Kitava's Thirst's chance (PoB's `KitavaTriggerChance`):
+/// [`super::Poe1Quantity::KitavaTriggerChance`].
+pub const KITAVA_CHANCE_STAT: &str = "cast_socketed_spells_on_mana_spent_%_chance";
 
 /// The row of `stat`, in [`ROWS`] or [`TRIGGER_ROWS`].
 #[must_use]
