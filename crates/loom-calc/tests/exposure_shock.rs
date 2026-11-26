@@ -139,6 +139,12 @@ const OTHER_PART_ROWS: &[&str] = &[
 /// field's reason alone (`mapping::REGEN_REASONS`), never the enemy's.
 const REGEN_ROWS: &[&str] = &["mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently"];
 
+/// Item lines that grant and trigger a skill whose name has "Shock" in it
+/// (open items S3, part 7: `triggers::GRANTED_TRIGGERS`): the grant flag
+/// and the line's chance, never the enemy's shock.
+const GRANTED_SKILL_ROWS: &[&str] =
+    &["local_display_trigger_level_x_gore_shockwave_on_melee_hit_with_atleast_150_strength"];
+
 #[test]
 fn the_texts_should_name_the_rows() {
     let rows: Vec<&str> = STATS
@@ -227,6 +233,7 @@ fn real_exposure_and_shock_stats_should_be_covered() {
             loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
             loom_calc::StatMap::Effects(_) if OTHER_PART_ROWS.contains(&stat) => {}
             loom_calc::StatMap::Effects(_) if REGEN_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if GRANTED_SKILL_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

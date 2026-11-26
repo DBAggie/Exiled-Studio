@@ -14176,6 +14176,228 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-26",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0709",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.3769999999999998,
+      "successor_value": 1.376311844077961,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0710",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 127.66806100124998,
+      "successor_value": 127.60425887181408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0711",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 16.523999999999997,
+      "successor_value": 16.515742128935532,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0712",
+      "mechanic": "PoB's full DPS pass computes a skill with the player's base modifiers in a cached parent ModDB and the modifiers added during the calculation (buffs such as Blood and Sand's stance) in the pass's own ModDB; its main calculation holds both in one ModDB. ModDB:More rounds each level's product of more multipliers to 2 decimals, so the same skill's FullDPS differs from its own TotalDPS. The engine counts each included skill's own main calculation. The successor value also carries the registered Q11 attack rate (the fixture's Speed entry).",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 127.76325042937496,
+      "successor_value": 127.60425887181408,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcSetup.lua 488 to 587: without cached databases (the main calculation) the base and config modifiers go into env.modDB itself; with them (Calcs.lua 425 and 335, calcFullDPS) env.modDB.parent = cachedPlayerDB",
+        "PoB v2.67.2 Classes/ModDB.lua 157 to 194, MoreInternal: result = result * round(product of the level's MORE mods, 2), then times the parent's MoreInternal",
+        "Instrumented PoB run (open items S4; the probe and its output committed in docs/phase-6/full-dps-levels.md): every mod, condition, and config value the same in both passes; Damage MORE 1.096 in the main pass and 1.09728 in full DPS in Blood Stance (0.80 x round(1.27 x 1.08, 2) against 0.80 x 1.27 x 1.08), 0.824 and 0.8208 in Sand Stance; '4% more Damage per Frenzy Charge' (Base) in the stance's level in the main pass and in the cached parent in full DPS",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): PoB's TotalDPS 127.668, its FullDPS 127.763"
+      ],
+      "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0713",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 127.66806100124998,
+      "successor_value": 127.60425887181408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0714",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-blood-stance-smite-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "127.7",
+      "successor_value": "127.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-blood-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0715",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-sand-stance-smite-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.3769999999999998,
+      "successor_value": 1.376311844077961,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-sand-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0716",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-sand-stance-smite-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 96.008057206875,
+      "successor_value": 95.96007716829085,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-sand-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0717",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-sand-stance-smite-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 16.523999999999997,
+      "successor_value": 16.515742128935532,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-sand-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0718",
+      "mechanic": "PoB's full DPS pass computes a skill with the player's base modifiers in a cached parent ModDB and the modifiers added during the calculation (buffs such as Blood and Sand's stance) in the pass's own ModDB; its main calculation holds both in one ModDB. ModDB:More rounds each level's product of more multipliers to 2 decimals, so the same skill's FullDPS differs from its own TotalDPS. The engine counts each included skill's own main calculation. The successor value also carries the registered Q11 attack rate (the fixture's Speed entry).",
+      "fixture": "full-dps-sand-stance-smite-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 95.58922372312499,
+      "successor_value": 95.96007716829085,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcSetup.lua 488 to 587: without cached databases (the main calculation) the base and config modifiers go into env.modDB itself; with them (Calcs.lua 425 and 335, calcFullDPS) env.modDB.parent = cachedPlayerDB",
+        "PoB v2.67.2 Classes/ModDB.lua 157 to 194, MoreInternal: result = result * round(product of the level's MORE mods, 2), then times the parent's MoreInternal",
+        "Instrumented PoB run (open items S4; the probe and its output committed in docs/phase-6/full-dps-levels.md): every mod, condition, and config value the same in both passes; Damage MORE 1.096 in the main pass and 1.09728 in full DPS in Blood Stance (0.80 x round(1.27 x 1.08, 2) against 0.80 x 1.27 x 1.08), 0.824 and 0.8208 in Sand Stance; '4% more Damage per Frenzy Charge' (Base) in the stance's level in the main pass and in the cached parent in full DPS",
+        "Loom fixture full-dps-sand-stance-smite-templar.xml (open items S4): PoB's TotalDPS 96.008, its FullDPS 95.589"
+      ],
+      "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0719",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "full-dps-sand-stance-smite-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 96.008057206875,
+      "successor_value": 95.96007716829085,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture full-dps-sand-stance-smite-templar.xml (open items S4): Smite with Blood and Sand counted in full DPS; the hit carries the registered Q11 attack rate"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
     }
   ]
 }

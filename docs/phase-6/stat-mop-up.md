@@ -2913,6 +2913,7 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - `calcs.calcFullDPS` makes one environment and calls `calcs.perform` for each included skill without resetting `env.modDB`, so a later pass sees mods an earlier one added with `NewMod`.
 - Blood and Sand's stance buffs (`effectCond` `BloodStance`) are the likely carriers. Naming the mod needs an instrumented PoB run.
 - It stays open: no compared build has both.
+- **Corrected by open items S4** (`docs/phase-6/full-dps-levels.md`): nothing is carried over; the full DPS pass keeps the base modifiers in a cached parent ModDB, and PoB rounds each level's more multiplier to 2 decimals (`pob-bug` DIV-0712, DIV-0718).
 
 **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 

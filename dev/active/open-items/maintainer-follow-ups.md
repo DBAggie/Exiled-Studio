@@ -49,8 +49,6 @@ Still open:
 
 ## Planned for the session, may not be reached
 The largest steps, deferred by you on 2026-11-24, are stretch work for the open-items session. The session removes each from this list when it is done:
-- triggers (plan S3); Spellslinger done 2026-11-26 on PR #187 (`docs/phase-6/triggers.md`, "Part 3");
-- Blood and Sand, and PoB's full DPS pass (S4);
 - the defences: ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments and leech (S7).
 
 Not reached in the session of 2026-11-24 either (agent work, no decision needed; the next session can continue them from `open-items-tasks.md`):

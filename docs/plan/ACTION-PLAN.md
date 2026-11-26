@@ -85,7 +85,7 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); timele
 **Must be done:**
 1. **The gates.** Phase 5 (`docs/phase-5/phase-5-report.md`: gate 6's recorded release run, the release run without the portable zip, the tree's pan and zoom on the test laptop, the screen reader pass, a real update from 0.9, the offline copies of the signing keys); the passive tree (`docs/tree/tree-report.md`, "Maintainer-run" 1 to 5); Phase 6 (the private corpus with `Complete` fields).
 2. **Current, complete data in the signed bundle.** The data schema 5 tables (cluster jewels, timeless jewels, tattoos, flasks, minions) shipped, and a data run on the installed game's build.
-3. **The calculation gaps players notice most.** Older item wordings read under ADR-015 Amendment 3 (done on PR #187, `docs/phase-6/item-rewordings.md`); triggers and Spellslinger (open items S3); full DPS across skills and Blood and Sand (S4); the remaining defences: effective HP's other pools, effective HP against damage over time, degeneration (S7).
+3. **The calculation gaps players notice most.** Older item wordings read under ADR-015 Amendment 3 (done on PR #187, `docs/phase-6/item-rewordings.md`); triggers and Spellslinger (open items S3, done on PRs #187 and #188, `docs/phase-6/triggers.md`); full DPS across skills and Blood and Sand (S4, done on PR #188, `docs/phase-6/full-dps-levels.md`); the remaining defences: effective HP's other pools, effective HP against damage over time, degeneration (S7).
 
 **1.x:** mine, trap, and totem costs, warcries, Sacred Wisps (S5); the minion's damage over time and the rest of spectres (S6, RV-12); the agent list (RV-23); the game-truth list.
 

@@ -41,8 +41,8 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [ ] **S5:** mine, trap, and totem costs per second; warcry power and the cries that scale with it; General's Cry's mirage warriors; Sacred Wisps.
 - [ ] **S6:** the minion's own damage over time; spectres (**begun 2026-11-25, RV-12 on PR #183:** a spectre is calculated, `docs/phase-6/minions.md`, "Spectres"; open: the buffs a spectre gives, more spectre skills vetted, and what the section lists).
 - [ ] **S7:** ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments, leech, and block.
-- [ ] **S3:** triggers and Spellslinger (`CalcTriggers.lua` on the P6-8a model).
-- [ ] **S4:** Blood and Sand, and PoB's full DPS pass (an instrumented PoB copy).
+- [x] **S3:** triggers and Spellslinger (`CalcTriggers.lua` on the P6-8a model). Done 2026-11-26 on PRs #187 and #188 (`docs/phase-6/triggers.md`, "Where S3 stands").
+- [x] **S4:** Blood and Sand, and PoB's full DPS pass (an instrumented PoB copy). Done 2026-11-26 on PR #188 (`docs/phase-6/full-dps-levels.md`: PoB's ModDB levels' rounding, `pob-bug` DIV-0712 and DIV-0718).
 
 ## Performance (from the profile, `docs/phase-5/performance.md`)
 - [ ] A per-calculation cache of the resolved main skill and active skills.

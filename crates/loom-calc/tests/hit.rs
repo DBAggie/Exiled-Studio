@@ -3055,6 +3055,32 @@ fn blood_stance_should_raise_physical_damage_taken_unless_sand() {
     );
 }
 
+/// A skill counted in full DPS adds its own hit DPS, the value of its main
+/// calculation, with a buff present. PoB's full DPS pass keeps the base
+/// modifiers in a cached parent ModDB and rounds each level's more
+/// multiplier to 2 decimals, so its value can differ from its own
+/// `TotalDPS` (open items S4, `docs/phase-6/full-dps-levels.md`; a
+/// `pob-bug` entry); the engine has no such levels.
+#[test]
+fn full_dps_should_add_the_skills_own_hit_dps() {
+    let mut main = group(&["TestPhysicalNova"]);
+    main.attributes.push(loom_domain::Attribute {
+        name: "includeInFullDPS".to_owned(),
+        value: "true".to_owned(),
+    });
+    let r = groups_with(
+        vec![main, group(&["FleshAndStone"])],
+        &[],
+        &[("bloodSandStance", ConfigValue::String("SAND".to_owned()))],
+    );
+    let hit = value(&r, Field::HitDps);
+    assert!(hit > 0.0);
+    assert_eq!(
+        value(&r, Field::Poe1(loom_calc::poe1::Poe1Field::FullDps)).to_bits(),
+        hit.to_bits()
+    );
+}
+
 /// Herald of Ash's physical damage gained as extra fire is added to the
 /// hit as fire, against the enemy's fire resistance (PoB's
 /// `CalcOffence.lua` 1961 to 2010).
