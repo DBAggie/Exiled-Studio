@@ -1763,6 +1763,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cast_on_damage_taken_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
+    // Open items S3: Cast on Death's more damage (`Damage` MORE, no flag,
+    // `Data/Skills/sup_dex.lua` 764: PoB applies it unconditionally, the
+    // skill being computed as cast on death).
+    (
+        "cast_on_death_damage_+%_final_while_dead",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // PoB `Data/Skills/sup_dex.lua` 841 (Cast on Ward Break): `Damage`
     // MORE with `ModFlag.Spell` (P6-8a part 2).
     (
@@ -4253,6 +4260,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Damage by melee proximity (P6-11ht: Shield Crush's,
                     // Close Combat's), `Damage` once `collect` scales it.
                     | Poe1Quantity::MeleeProximityDamage
+                    // A brand's activation frequency (open items S3), read
+                    // in Arcanist Brand's own context by `poe1::triggers`.
+                    | Poe1Quantity::BrandActivationFrequency
             )
     )
 }
@@ -6320,6 +6330,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ARCANE_SURGE,
         )],
     ),
+    // Open items S3: Arcanist Brand's support part, `TriggeredDamage` MORE
+    // (`Data/Skills/act_int.lua` 635), which PoB turns into `Damage` MORE
+    // for the spells the brand triggers (`poe1::triggers`).
+    (
+        "support_brand_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            super::triggers::TRIGGERED_DAMAGE,
+        )],
+    ),
     // P6-8a part 2: Cast while Channelling's triggered part,
     // `TriggeredDamage` MORE with `SkillType.Triggered`
     // (`Data/Skills/sup_int.lua` 759), which PoB turns into `Damage` MORE
@@ -6361,6 +6383,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             states::DUAL_WIELDING,
+        )],
+    ),
+    // Open items S3: Arcanist Brand's more damage against the branded enemy
+    // (`TriggeredDamage` MORE with `Condition:TargetingBrandedEnemy`,
+    // `act_int.lua` 641; the config's `targetBrandedEnemy`, on by default),
+    // settled with the triggered damage (`poe1::triggers`).
+    (
+        "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            NONE,
+            super::triggers::TRIGGERED_DAMAGE_BRANDED,
         )],
     ),
     // P6-11en: "#% increased Area Damage while wielding a Two Handed Melee
@@ -9296,6 +9331,18 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Open items S3: "Brands have #% increased Activation Frequency" and
+    // Arcanist Brand's quality (`BrandActivationFrequency` INC,
+    // `SkillStatMap.lua` 2165), read by `poe1::triggers` in the brand's own
+    // context.
+    (
+        "sigil_repeat_frequency_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BrandActivationFrequency),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // Silver Flask's buff flag, "Onslaught" in PoB's base data (the line
     // PoB parses as the `Onslaught` condition, as the custom line); its
     // effect with flask effect is `poe1::flasks`' (P6-4b).
@@ -9604,6 +9651,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "additional_stun_threshold_based_on_%_of_energy_shield",
         "stun",
     ),
+    // Open items S3: Arcanist Brand's activation and trigger markers, read by
+    // poe1::triggers in the brand's own context.
+    (
+        "additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency",
+        "trigger",
+    ),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
     // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
@@ -9637,6 +9690,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`AreaOfEffect` INC per `EnduranceCharge`): area, as
     // `base_skill_area_of_effect_+%`.
     ("area_of_effect_+%_per_endurance_charge", "area"),
+    // Open items S3: Cast on Death's area while dead (AreaOfEffect INC): no
+    // slice field.
+    ("area_of_effect_+%_while_dead", "area"),
     // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
     // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
     ("area_of_effect_+%_while_wielding_bow", "area"),
@@ -9717,6 +9773,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: a chance not to consume a cooldown (PoB leaves the line
     // unparsed): no slice field reads a cooldown's use.
     ("base_cooldown_refresh_chance_%", "no-slice"),
+    // Open items S3: Arcanist Brand deals no damage of its own (its type has
+    // no Damage, so the hit path never computes it).
+    ("base_deal_no_damage", "skill type marker"),
     // Close-out M3: energy shield per enemy killed (`EnergyShieldOnKill`):
     // no recovery field reads a kill.
     ("base_energy_shield_gained_on_enemy_death", "recovery"),
@@ -9736,6 +9795,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
     ("base_number_of_projectiles", "projectile-count"),
+    // Open items S3: a brand's own attach limit (PoB's BrandsAttachedLimit BASE),
+    // read from the gems by gems::brand_attach_limit and poe1::triggers.
+    ("base_number_of_sigils_allowed_per_target", "brand"),
     // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count
     // no slice field reads, as the zombies' and skeletons'.
     ("base_number_of_spectres_allowed", "minion-count"),
@@ -9743,6 +9805,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11em: ignite duration on you and the chance to be frozen, shocked,
     // and ignited (PoB parses neither): no slice field.
     ("base_self_ignite_duration_-%", "ailment-on-self"),
+    ("base_sigil_repeat_frequency_ms", "trigger"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
     // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
     // own copy is read by PoB's skill stat map as the enemy's
@@ -9863,6 +9926,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("cast_on_damage_taken_%", "trigger"),
     // P6-8a: read by `poe1::triggers` (`triggeredByDamageTaken`).
     ("cast_on_damage_taken_threshold", "trigger"),
+    // Open items S3: Cast on Death's trigger and cost markers: poe1::triggers
+    // reads the support (PoB maps neither stat; the cost is its level's
+    // mana multiplier).
+    ("cast_on_death_%", "trigger"),
     // P6-8a: PoB's `triggeredByCoc` and `triggerOnCrit`, which
     // `poe1::triggers` reads from the support.
     ("cast_spell_on_linked_attack_crit", "trigger"),
@@ -10644,6 +10711,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11dl: "Projectile Barrages have no spread" (unparsed in PoB): the
     // projectiles' geometry, no slice field.
     ("no_barrage_projectile_spread", "projectile-spread"),
+    // Open items S3: Cast on Death's no-cost marker (PoB's empty map; the
+    // level's mana multiplier of -100 makes the cost 0).
+    ("no_cost", "cost"),
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
@@ -10727,6 +10797,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `CannotSplit`): no slice field.
     ("projectile_behaviour_only_explode", "no-slice"),
     ("projectile_chain_from_terrain_chance_%", "no-slice"),
+    // Open items S3: Arcanist Brand's projectile range for the spells it
+    // triggers: no slice field.
+    ("projectile_maximum_range_override", "targeting"),
     ("projectile_remove_default_spread", "no-slice"),
     ("projectile_spread_radius", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
@@ -10880,6 +10953,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
+    ("spell_only_castable_on_death", "trigger"),
     // Close-out M3: suppression applied to avoiding elemental ailments: no
     // slice field (a chill on you is the config's, guarded).
     (
@@ -10908,6 +10982,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
     ),
+    // Open items S3: Arcanist Brand's less area for the spells it triggers
+    // (AreaOfEffect MORE): no slice field.
+    ("support_brand_area_of_effect_+%_final", "area"),
     // P6-11gf: Concentrated Effect's less area of effect (`AreaOfEffect`
     // MORE, `sup_int.lua` 1101), as `active_skill_area_of_effect_+%_final`.
     (
@@ -11064,6 +11141,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
+    ("triggered_by_brand_support", "trigger"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
@@ -13046,6 +13124,9 @@ mod tests {
                         // P6-8a part 2: settled by the spell path from the
                         // trigger before the damage.
                         super::super::triggers::TRIGGERED_DAMAGE,
+                        // Open items S3: Arcanist Brand's, with the config's
+                        // `targetBrandedEnemy`.
+                        super::super::triggers::TRIGGERED_DAMAGE_BRANDED,
                         // P6-10b part 13: the negation of a check's.
                         conditions::NOT_HIT_RECENTLY,
                         // P6-11eg: the negation of the blocked checks.
@@ -13543,6 +13624,25 @@ mod tests {
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
+                )],
+            ),
+            // Open items S3: Arcanist Brand's triggered damage.
+            (
+                "support_brand_damage_+%_final",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    super::super::triggers::TRIGGERED_DAMAGE,
+                )],
+            ),
+            (
+                "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    super::super::triggers::TRIGGERED_DAMAGE_BRANDED,
                 )],
             ),
             // P6-11cc.

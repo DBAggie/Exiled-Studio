@@ -1187,22 +1187,45 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     } else if spell.projectile {
         flags = flags | Flags::PROJECTILE;
     }
+    // Arcanist Brand's support part adds the `brand` skill flag, so PoB's
+    // `KeywordFlag.Brand` (`act_int.lua` 631, `CalcActiveSkill.lua` 409; open
+    // items S3). The engine's `SKILL_BRAND` stands for the keyword and the
+    // `SkillType.Brand` tag; the one tag row (cast speed with brand skills)
+    // reaches only the cast rate, which a triggered spell does not read.
+    if super::triggers::brand_triggered(&spell.skill) {
+        flags = flags | Flags::SKILL_BRAND;
+    }
     // The trigger before the damage (P6-8a): whether PoB turns the skill's
     // `TriggeredDamage` into `Damage` is settled first. Its cooldown
     // recovery reads the skill's context (open items S3).
     let trigger = super::triggers::rate(calc, &spell.skill, &spell.source(), flags);
+    let triggered_damage = matches!(trigger, super::triggers::Outcome::Rate(_, _, true));
     calc.settle_state(
         ConditionKey::new(super::triggers::TRIGGERED_DAMAGE),
-        matches!(trigger, super::triggers::Outcome::Rate(_, _, true)),
+        triggered_damage,
     );
+    // Arcanist Brand's more damage against the branded enemy (open items
+    // S3): with the triggered damage and the config's check. A check of
+    // another type leaves it unsettled (the state row's reason).
+    if let Some(targeting) = super::triggers::targeting_branded_enemy(&input) {
+        calc.settle_state(
+            ConditionKey::new(super::triggers::TRIGGERED_DAMAGE_BRANDED),
+            triggered_damage && targeting,
+        );
+    }
     // PoB's `showAverage` from a gem's base mods (Spellslinger's support,
     // open items S3; `CalcOffence.lua` 333), unless a trigger sets the
     // rate (2227): the combined DPS's base is then the average damage
     // (`combined::combine`).
+    // Cast on Death keeps it too (open items S3): its support's stat sets
+    // it, and its stand-in time is not a trigger rate (`CalcOffence.lua`
+    // 2214).
+    let on_death = super::triggers::on_death(&spell.skill);
     calc.settle_state(
         ConditionKey::new(SHOW_AVERAGE),
-        matches!(trigger, super::triggers::Outcome::SelfCast)
-            && base_mod_show_average(&spell.skill),
+        on_death
+            || (matches!(trigger, super::triggers::Outcome::SelfCast)
+                && base_mod_show_average(&spell.skill)),
     );
     let cx = calc.context(flags);
     // Spellslinger's share of the wand's base damage (open items S3).
@@ -1292,7 +1315,29 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         rate: speed,
         skill: super::pob_skill::skill(&spell.skill.effect().id).map(|p| (p, spell.source())),
     };
-    set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)
+    set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)?;
+    // Cast on Death (open items S3): PoB counts an ignite's stacks without
+    // the rate (`CalcOffence.lua` 4909) and a poison or a bleed by its
+    // average (`showAverage`, 4767, 6032), which the ailments do not model:
+    // each damaging ailment the hit computed is not computed.
+    if on_death {
+        let fields = super::ailment::Ailment::ALL
+            .iter()
+            .map(|a| a.field())
+            .chain([Field::Poe1(super::Poe1Field::BurningGroundDps)]);
+        for field in fields {
+            if calc.field(field).is_some() {
+                calc.set_unsupported(
+                    field,
+                    UnsupportedReason::UnmodelledSkill {
+                        source: spell.source(),
+                        what: "cast-on-death-ailment",
+                    },
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 /// The state of PoB's `showAverage` a gem's base mods set on a self-cast

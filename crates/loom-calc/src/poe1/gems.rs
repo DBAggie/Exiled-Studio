@@ -796,6 +796,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3: Arcanist Brand: no global effect in PoB's data
+    // (`act_int.lua` 545, its base mod the skill's own `debuff`); the spells
+    // it triggers read its activation in its own context (`poe1::triggers`).
+    ("BrandSupport", Kind::Inert),
     ("BurningArrow", Kind::Inert),
     (
         "Clarity",
@@ -3140,6 +3144,9 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // ([`BONECHILL_SUPPORT`], `damage_taken`); its cold damage MORE is the
     // supported skill's own; no global stat.
     ("SupportBonechill", &[]),
+    // Open items S3: Arcanist Brand's support part: no global stat; the
+    // spell it supports is triggered by the brand (`poe1::triggers`).
+    ("SupportBrandSupport", &[]),
     ("SupportBrutality", &[]),
     ("SupportBurningDamage", &[]),
     // Cast On Critical Strike's two parts (P6-8a; the awakened gem's attack
@@ -3148,6 +3155,9 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCastOnCritTriggered", &[]),
     ("SupportCastOnCritTriggeredPlus", &[]),
     ("SupportCastOnCriticalStrike", &[]),
+    // Open items S3: Cast on Death: no global stat; the spell it supports
+    // takes PoB's stand-in time (`poe1::triggers`).
+    ("SupportCastOnDeath", &[]),
     ("SupportCastOnMeleeKill", &[]),
     ("SupportCastOnMeleeKillTriggered", &[]),
     ("SupportCastOnWardBreak", &[]),
@@ -6912,6 +6922,18 @@ mod tests {
                 .iter()
                 .any(|(s, aura)| *s == "non_curse_aura_effect_+%" && *aura)
         );
+    }
+
+    /// The skill and support tables are binary-searched by ID (open items
+    /// S3: an entry out of order hid Cast On Critical Strike).
+    #[test]
+    fn the_gem_tables_should_be_sorted_by_id() {
+        for w in SKILLS.windows(2) {
+            assert!(w[0].0 < w[1].0, "{} before {}", w[0].0, w[1].0);
+        }
+        for w in SUPPORTS.windows(2) {
+            assert!(w[0].0 < w[1].0, "{} before {}", w[0].0, w[1].0);
+        }
     }
 
     #[test]

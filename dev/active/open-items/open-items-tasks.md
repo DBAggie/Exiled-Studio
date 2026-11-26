@@ -21,7 +21,7 @@ Last Updated: 2026-11-24
 - [ ] S2: unmodelled support and active gems
   - [x] S2 part 1 (`local/p6/s2`): every candidate checked against PoB's export and calc modules, then `data-parity`; added `SupportAddedChaosDamage`, `SupportEclipse` (`uncategorized` 0); nine candidates refused by `data-parity` with their blockers recorded (`docs/phase-6/gems.md`, "Open items S2"); 0 unexpected, 3 values toward PoB
   - [ ] the rest: the buffs and auras with global rows (Arcane Cloak, Energy Blade, Petrified Blood, Mana Infused Staff, Aspect of the Cat, Raise Spiders, Convocation, Vaal Grace, Vaal Smite, Close Combat) as `Kind::Buff` with fixtures; Cold Snap and Unbound Ailments with their chill effect
-- [ ] S3: triggers and Spellslinger. **Spellslinger done 2026-11-26 on PR #187** (`docs/phase-6/triggers.md`, "Part 3"; with cooldown recovery in every trigger and `showAverage` from base mods). Left: Mark on Hit, Hextouch, Arcanist Brand, Cast on Death, Mirage Archer, Manaforged Arrows, the item triggers.
+- [ ] S3: triggers and Spellslinger. **Spellslinger done 2026-11-26 on PR #187** (`docs/phase-6/triggers.md`, "Part 3"; with cooldown recovery in every trigger and `showAverage` from base mods). **Arcanist Brand and Cast on Death done 2026-11-26 on branch `feat/s3-triggers`** (`docs/phase-6/triggers.md`, "Part 4"; Mark on Hit and Hextouch have nothing to port, Mirage Archer is P6-8b's). Left: Manaforged Arrows, the item triggers.
 - [ ] S4: Blood and Sand, and PoB's full DPS pass
 - [ ] S5: costs per second, warcry power, mirage warriors, Sacred Wisps
 - [ ] S6: minion damage over time (spectres if their data is in the bundle)

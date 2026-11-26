@@ -961,7 +961,7 @@ pub const MANA_SPENT_INPUT: &str = "multiplierManaSpentRecently";
 pub const BRANDS_INPUT: &str = "BrandsAttachedToEnemy";
 
 /// The active brand limit's base (`CalcSetup.lua` 529).
-const ACTIVE_BRAND_LIMIT: f64 = 3.0;
+pub(super) const ACTIVE_BRAND_LIMIT: f64 = 3.0;
 
 /// The config's count of nearby corpses (`ConfigOptions.lua` 1125:
 /// `Multiplier:NearbyCorpse` BASE in combat).
@@ -985,7 +985,11 @@ pub fn is_input(input: &str) -> bool {
 /// count applies when not 0, a `countAllowZero` also when 0): `Ok(None)`
 /// when it does not apply, `Err(())` for a value that is not a finite
 /// number.
-fn count(set: Option<&ConfigSet>, name: &str, allow_zero: bool) -> Result<Option<f64>, ()> {
+pub(super) fn count(
+    set: Option<&ConfigSet>,
+    name: &str,
+    allow_zero: bool,
+) -> Result<Option<f64>, ()> {
     let Some(set) = set else { return Ok(None) };
     let read = |kind| match last(set, name, kind) {
         None => Ok(None),

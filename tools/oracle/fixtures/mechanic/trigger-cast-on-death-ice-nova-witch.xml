@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Ice Nova supported by Cast on Death, Ice Nova the main skill: PoB computes the spell as self-cast with the support's average damage (showAverage), its more damage, and no cost.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+			<Gem nameSpec="Cast on Death" skillId="SupportCastOnDeath" variantId="SupportCastOnDeath" gemId="Metadata/Items/Gems/SupportGemCastOnDeath" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1"/>
+	</Items>
+	<Config/>
+</PathOfBuilding>

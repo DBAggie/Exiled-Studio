@@ -23,11 +23,20 @@
 //!   supports, its interval the part's `cast_while_channelling_time_ms`
 //!   (PoB's `triggerTime`); the rate is the rotation of the group's spells
 //!   it triggers at `1 / interval`, without a trigger cooldown or chance.
+//! - **Spellslinger** (1200, open items S3): from any wand projectile
+//!   attack, on use; the main spell alone in the rotation.
+//! - **Arcanist Brand** (1321, open items S3): the source is the brand's
+//!   activations, computed in its own context ([`arcanist_rate`]); the
+//!   rotation of the group's spells it supports, with no trigger cooldown.
+//! - **Cast on Death** (1342, open items S3): PoB's config returns none;
+//!   its `triggeredOnDeath` gives the skill a stand-in time of a minute
+//!   ([`ON_DEATH_TIME`]) and keeps its average damage as the combined DPS
+//!   (`showAverage`). Its damaging ailments, which PoB counts without the
+//!   rate (`CalcOffence.lua` 4909), are not computed.
 //!
-//! Cast on Death is not ported: PoB's config returns none, but the
-//! support's `triggeredOnDeath` changes the skill's own time and damage
-//! (`CalcOffence.lua` 2403, 4909), so a skill it supports stays not
-//! computed.
+//! Mark On Hit (1275) and Hextouch (1278) trigger a mark or a hex: their
+//! effects apply as any curse's ([`super::gems`]), and the engine computes
+//! no field from a curse's rate, so their configs have nothing to give.
 //!
 //! The Holy Relic's Nova (1167, a minion skill the character's attacks
 //! trigger) waits for the skills' level requirements in the bundle: PoB
@@ -61,8 +70,9 @@
 //!    `calcMultiSpellRotationImpact`, 87 to 133).
 //! 6. **`Speed`** is the trigger rate (`CalcOffence.lua` 2223 to 2227).
 //!
-//! **Not modelled:** cooldown recovery, added cooldown, and added cast
-//! time (each from a stat the mapping does not know, so a reason), dual
+//! **Not modelled:** added cooldown and added cast time (each from a stat
+//! the mapping does not know, so a reason; cooldown recovery is in since
+//! open items S3), dual
 //! wielding's halved rate (only for item triggers and item-granted
 //! supports, none ported), Unleash, projectiles that hit several times,
 //! and trigger-related damage (`TriggeredDamage`: unmapped stats).
@@ -104,7 +114,22 @@ pub enum Config {
     /// to 1212): the source is any wand projectile attack, the trigger on
     /// use (no hit chance), the rotation the main skill alone.
     Spellslinger,
+    /// Arcanist Brand's support part (open items S3; `CalcTriggers.lua`
+    /// 1321 to 1341): the source is the brand's activations, computed in
+    /// its own context ([`arcanist_rate`]).
+    ArcanistBrand,
+    /// Cast on Death (open items S3): PoB's config returns none
+    /// (`CalcTriggers.lua` 1342); its `triggeredOnDeath` sets the skill's
+    /// time to a stand-in minute ([`ON_DEATH_TIME`], `CalcPerform.lua` 1438
+    /// to 1447) and keeps `showAverage`.
+    CastOnDeath,
 }
+
+/// PoB's stand-in time of a skill Cast on Death triggers: `60 x 1000`
+/// (`CalcPerform.lua` 1447, "technically any large value would do"), read
+/// as seconds by `CalcOffence.lua` 2214 to 2221 over the skill's
+/// `CooldownRecovery` INC.
+const ON_DEATH_TIME: f64 = 60.0 * 1000.0;
 
 /// The trigger supports ported, by the granted effect PoB marks
 /// `isTrigger` (`Data/Skills/sup_*.lua`).
@@ -124,7 +149,46 @@ const SUPPORTS: &[(&str, Config)] = &[
         Config::CastWhileChannelling,
     ),
     ("SupportSpellslinger", Config::Spellslinger),
+    ("SupportBrandSupport", Config::ArcanistBrand),
+    ("SupportCastOnDeath", Config::CastOnDeath),
 ];
+
+/// Arcanist Brand's active skill (`act_int.lua` 545): the source of the
+/// spells its support part triggers.
+const ARCANIST_SKILL: &str = "BrandSupport";
+
+/// A brand's activation period, milliseconds (PoB's `repeatFrequency`,
+/// `div = 1000`, `SkillStatMap.lua` 2161).
+const REPEAT_STAT: &str = "base_sigil_repeat_frequency_ms";
+
+/// A brand's own attach limit (PoB's `BrandsAttachedLimit` BASE,
+/// `SkillStatMap.lua` 2155).
+const ATTACH_STAT: &str = "base_number_of_sigils_allowed_per_target";
+
+/// The state of Arcanist Brand's more damage against the branded enemy
+/// (`TriggeredDamage` MORE with `Condition:TargetingBrandedEnemy`): settled
+/// by the spell path with [`TRIGGERED_DAMAGE`] and the config's
+/// `targetBrandedEnemy` (on unless set off, `ConfigOptions.lua` 326).
+pub const TRIGGERED_DAMAGE_BRANDED: &str = "TriggeredDamage:TargetingBrandedEnemy";
+
+/// The config check that the skill targets the branded enemy, on by
+/// default ([`TRIGGERED_DAMAGE_BRANDED`]).
+const TARGET_BRANDED_INPUT: &str = "targetBrandedEnemy";
+
+/// Whether the config has the skill target the branded enemy: PoB's
+/// `defaultState = true` check, saved only when off; `None` for a value of
+/// another type.
+#[must_use]
+pub fn targeting_branded_enemy(input: &crate::input::CalcInput<'_>) -> Option<bool> {
+    let set = super::collect::active_config(input.build);
+    match set.and_then(|s| {
+        super::config::last_input(s, TARGET_BRANDED_INPUT, loom_domain::ConfigInputKind::Input)
+    }) {
+        None | Some(loom_domain::ConfigValue::Boolean(true)) => Some(true),
+        Some(loom_domain::ConfigValue::Boolean(false)) => Some(false),
+        Some(_) => None,
+    }
+}
 
 /// The first parts of the two-part trigger gems, on the source skill:
 /// Cast On Critical Strike's and Cast on Melee Kill's on the attack, Cast
@@ -147,6 +211,7 @@ const CWC_TIME_STAT: &str = "cast_while_channelling_time_ms";
 /// PoB's trigger supports (`isTrigger = true`, `Data/Skills/sup_*.lua`):
 /// a skill one of them supports is triggered.
 const TRIGGER_SUPPORTS: &[&str] = &[
+    "SupportBrandSupport",
     "SupportCastOnCritTriggered",
     "SupportCastOnCritTriggeredPlus",
     "SupportCastOnDeath",
@@ -247,6 +312,30 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             .find(|(id, _)| id == stat)
             .map(|(_, v)| *v)
     };
+    // Cast on Death (open items S3): PoB's stand-in time over the skill's
+    // cooldown recovery INC (`CalcOffence.lua` 2214 to 2221: no more, no
+    // action speed, no tick cap), its `TriggeredDamage` as `Damage`
+    // (`CalcPerform.lua` 1440 to 1445).
+    if config == Config::CastOnDeath {
+        let cx = calc.context(flags);
+        let mut reasons = Reasons::new();
+        let mut inc = 0.0;
+        for q in [
+            Quantity::Poe1(Poe1Quantity::SkillTiming(
+                super::skill_modifiers::SkillTiming::CooldownRecovery,
+            )),
+            Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery),
+        ] {
+            for e in super::repeats::applying(calc, q, Op::Increased, &cx, &mut reasons) {
+                inc += e.value;
+            }
+        }
+        let divisor = 1.0 + inc / 100.0;
+        if divisor <= 0.0 {
+            return unsupported("cooldown-recovery");
+        }
+        return Outcome::Rate(divisor / ON_DEATH_TIME, reasons, true);
+    }
     // Cast on Melee Kill applies only after a kill (its config, 1155).
     if config == Config::CastOnMeleeKill {
         match killed_recently(&input) {
@@ -346,6 +435,28 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             })
             .collect()
     };
+    if config == Config::ArcanistBrand {
+        // The brand's activations are the effective source rate. The
+        // config has `triggeredSkillCond`, so PoB always simulates the
+        // rotation of the group's spells the brand triggers (its charge
+        // branch, 792, compares two tables by identity), with no trigger
+        // cooldown and a chance of 100 (809); the cap is not read.
+        let Some(source_rate) = arcanist_rate(calc, &skills, &mut reasons) else {
+            return unsupported("trigger-source");
+        };
+        let rotation = rotation_of(Config::ArcanistBrand);
+        if !rotation.iter().any(|r| r.main) {
+            return unsupported("trigger-rotation");
+        }
+        if source_rate <= 0.0 {
+            return unsupported("trigger-source");
+        }
+        return Outcome::Rate(
+            rotation_rate(&rotation, source_rate, 0.0, 100.0),
+            reasons,
+            true,
+        );
+    }
     if config == Config::CastWhileChannelling {
         // `CWCHandler`: the first channelling skill of the group the
         // support's first part supports, not triggered (219 to 236).
@@ -401,7 +512,9 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
-                | Config::CastWhileChannelling => false,
+                | Config::CastWhileChannelling
+                | Config::ArcanistBrand
+                | Config::CastOnDeath => false,
             };
         if !candidate || s.disabled_by_hands(&hands) != Ok(false) {
             continue;
@@ -533,6 +646,112 @@ fn cooldown_recovery(calc: &Calc<'_>, flags: Flags, reasons: &mut Reasons) -> Op
     (icdr > 0.0).then_some(icdr)
 }
 
+/// Arcanist Brand's activations per second (open items S3; PoB's `trigRate`,
+/// `CalcTriggers.lua` 1321 to 1341), with the reasons its terms carry into
+/// `reasons`; `None` without the brand or when a term cannot be read.
+///
+/// - **The brand** is the first Arcanist Brand among the active skills, in
+///   any group (PoB's `activeSkillList` loop, 1324).
+/// - **Its own context:** the build calculated up to its modifiers with the
+///   brand as the main skill ([`crate::engine::collected`], as PoB's brand
+///   skill list), with the brand's flags: `ModFlag.Cast` and `Spell`, the
+///   spell keyword, and its types' keywords (`SkillType.Brand`).
+/// - **The rate** is `repeatFrequency x (1 + inc / 100) x more x attached`:
+///   `repeatFrequency` the brand's [`REPEAT_STAT`] over 1000 (a period,
+///   which PoB multiplies as it is; 1 s for the gem), `inc` the `Speed` and
+///   `BrandActivationFrequency` INC sums, `more` the
+///   `BrandActivationFrequency` MORE product, `attached` PoB's
+///   `attachedBrandCount` (`CalcPerform.lua` 1322 to 1326): the brand's
+///   attach limit (its gems' [`ATTACH_STAT`] and the character's) at most
+///   the active brand limit (3 and the additions), or the config's
+///   `BrandsAttachedToEnemy` at most that.
+fn arcanist_rate(
+    calc: &Calc<'_>,
+    skills: &[(usize, usize, MainSkill<'_>)],
+    reasons: &mut Reasons,
+) -> Option<f64> {
+    use super::stacks::{StackKind, StackValue};
+    let input = *calc.input();
+    let (g, a, brand) = skills
+        .iter()
+        .find(|(_, _, s)| s.effect().id == ARCANIST_SKILL)?;
+    let gem_stat = |stat: &str| -> f64 {
+        std::iter::once(&brand.active_gem)
+            .chain(&brand.supports)
+            .filter_map(|gem| {
+                skill::instance(gem.effect, gem.level, gem.quality, input.data)
+                    .stats
+                    .iter()
+                    .find(|(id, _)| id == stat)
+                    .map(|(_, v)| *v)
+            })
+            .map(|v| {
+                #[expect(clippy::cast_precision_loss, reason = "small integers, exact as f64")]
+                let v = v as f64;
+                v
+            })
+            .sum()
+    };
+    let repeat = gem_stat(REPEAT_STAT) / 1000.0;
+    let b = skill::with_main_skill(input.build, *g, *a);
+    let mut options = input.options.clone();
+    options.nested = true;
+    options.own_skill_context = true;
+    let sub = crate::input::CalcInput {
+        build: &b,
+        data: input.data,
+        options: &options,
+    };
+    let context = crate::engine::collected(&sub, &super::Poe1Rules).ok()?;
+    let flags = Flags::CAST | Flags::SPELL | Flags::KEYWORD_SPELL | brand.keyword_flags();
+    let cx = context.context(flags);
+    let frequency = Quantity::Poe1(Poe1Quantity::BrandActivationFrequency);
+    let mut inc = 0.0;
+    for q in [Quantity::Speed, frequency] {
+        for e in super::repeats::applying(&context, q, Op::Increased, &cx, reasons) {
+            inc += e.value;
+        }
+    }
+    let mut more = 1.0;
+    for e in super::repeats::applying(&context, frequency, Op::More, &cx, reasons) {
+        more *= 1.0 + e.value / 100.0;
+    }
+    let stack = |value| {
+        let q = Quantity::Poe1(Poe1Quantity::Stack(StackKind::BrandsAttached, value));
+        let mut r = Reasons::new();
+        let total: f64 = super::repeats::applying(&context, q, Op::Base, &cx, &mut r)
+            .iter()
+            .map(|e| e.value)
+            .sum();
+        (total, r)
+    };
+    let (attach_extra, r) = stack(StackValue::AttachMaximum);
+    reasons.extend(&r);
+    let (active_extra, r) = stack(StackValue::Maximum);
+    reasons.extend(&r);
+    let limit = (gem_stat(ATTACH_STAT) + attach_extra)
+        .min(super::stacks::ACTIVE_BRAND_LIMIT + active_extra);
+    let set = super::collect::active_config(input.build);
+    let attached = match super::stacks::count(set, super::stacks::BRANDS_INPUT, false) {
+        Ok(Some(c)) => c.min(limit),
+        Ok(None) => limit,
+        Err(()) => return None,
+    };
+    // The brand context's own reasons (its gems' and supports' unmapped
+    // stats) beyond the character's.
+    for r in &context.global().partial {
+        if !calc.global().partial.contains(r) {
+            reasons.partial.insert(r.clone());
+        }
+    }
+    for r in &context.global().indeterminate {
+        if !calc.global().indeterminate.contains(r) {
+            reasons.indeterminate.insert(r.clone());
+        }
+    }
+    Some(repeat * (1.0 + inc / 100.0) * more * attached)
+}
+
 /// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:
 /// the check, or a kill count above 0 through `multiplierKilledRecently`);
 /// `None` for a value of another type.
@@ -627,6 +846,27 @@ fn rotation_rate(rotation: &[Rotated], source_rate: f64, trigger_cd: f64, chance
         .map_or(0.0, |(_, c)| {
             1.0 / (sim_time / f64::from(*c) + (increment / chance * 100.0) - increment)
         })
+}
+
+/// Whether Cast on Death supports `skill` (PoB's `triggeredOnDeath`): its
+/// `showAverage` stays (`CalcOffence.lua` 2214, not cleared as a trigger
+/// rate's is, 2227).
+#[must_use]
+pub fn on_death(skill: &MainSkill<'_>) -> bool {
+    skill
+        .supports
+        .iter()
+        .any(|s| SUPPORTS.contains(&(s.effect.id.as_str(), Config::CastOnDeath)))
+}
+
+/// Whether Arcanist Brand's support part supports `skill` (PoB's
+/// `triggeredByBrand`; its `addFlags` `brand`).
+#[must_use]
+pub fn brand_triggered(skill: &MainSkill<'_>) -> bool {
+    skill
+        .supports
+        .iter()
+        .any(|s| SUPPORTS.contains(&(s.effect.id.as_str(), Config::ArcanistBrand)))
 }
 
 /// Whether the actor's main skill is computed through a trigger the

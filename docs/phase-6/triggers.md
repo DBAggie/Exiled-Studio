@@ -159,3 +159,51 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **Tests:** the workspace's 1,859 tests, clippy, fmt, and the wasm32 check pass.
 
 **Left for S3:** Mark on Hit, Hextouch, Arcanist Brand, Cast on Death, Mirage Archer, Manaforged Arrows, the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it).
+
+## Part 4: Arcanist Brand and Cast on Death (open items S3)
+
+Built on branch `feat/s3-triggers` (2026-11-26), after PR #187.
+
+**Arcanist Brand** (`CalcTriggers.lua` 1321 to 1341), `triggers::Config::ArcanistBrand`, `triggers::arcanist_rate`:
+- **The source** is the first Arcanist Brand among the active skills, in any group (PoB's `activeSkillList` loop). The triggered skills are the group's spells its support part supports.
+- **The brand's own context.** PoB sums the brand's modifiers in the brand's skill list. The engine collects the build with the brand as the main skill (`engine::collected`) and the new option `CalcOptions::own_skill_context`, so the brand's gems and supports act on it although the engine computes no hit for it. Its flags are `ModFlag.Cast` and `Spell`, the spell keyword, and `SkillType.Brand`.
+- **The activation rate** is `repeatFrequency x (1 + inc / 100) x more x attached`:
+  - `repeatFrequency` is the brand's `base_sigil_repeat_frequency_ms` over 1000. It is a period, and PoB multiplies it as it is; for the gem it is 1 s, so the value is the same as a frequency.
+  - `inc` is the `Speed` and `BrandActivationFrequency` INC sums: cast speed reaches the brand (`additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency`), and so does its quality, `sigil_repeat_frequency_+%` (the new `Poe1Quantity::BrandActivationFrequency`).
+  - `more` is the `BrandActivationFrequency` MORE product.
+  - `attached` is PoB's `attachedBrandCount` (`CalcPerform.lua` 1322 to 1326): the brand's attach limit (its gems' `base_number_of_sigils_allowed_per_target` and the character's) at most the active brand limit (3 and the additions), or the config's `BrandsAttachedToEnemy` at most that.
+- **The rotation.** The config has `triggeredSkillCond`, so PoB always simulates the rotation, with no trigger cooldown and a chance of 100 (809). Its charge branch (792) is never taken for such a config: it compares two tables by identity. The cap is not read.
+- **The spell:**
+  - PoB turns its `TriggeredDamage` into `Damage`: `support_brand_damage_+%_final` (`TRIGGERED_DAMAGE`), and `trigger_brand_support_hit_damage_+%_final_vs_branded_enemy` with the config's `targetBrandedEnemy`, on unless set off (the new state `TRIGGERED_DAMAGE_BRANDED`).
+  - The support adds the `brand` skill flag, so PoB's `KeywordFlag.Brand` reaches the spell ("Brand Damage"). The engine's `Flags::SKILL_BRAND` stands for both the keyword and the `SkillType.Brand` tag. The one tag row, cast speed with brand skills, reaches only the cast rate, which a triggered spell does not read.
+- **Rows:** `NoEffect` for the brand's markers (`triggered_by_brand_support`, `base_sigil_repeat_frequency_ms`, `additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency`, `base_number_of_sigils_allowed_per_target`, `base_deal_no_damage`), the support's less area and projectile range. Arcanist Brand is an inert skill (`BrandSupport`) and its support part a support without a global stat.
+
+**Cast on Death** (`CalcTriggers.lua` 1342, `CalcPerform.lua` 1438 to 1447), `triggers::Config::CastOnDeath`:
+- PoB's config returns none. The support's `triggeredOnDeath` sets the skill's `triggerTime` to `60 x 1000` ("technically any large value would do"), which `CalcOffence.lua` 2214 to 2221 reads as seconds over the skill's `CooldownRecovery` INC. The engine ports that stand-in: the rate is `(1 + inc / 100) / 60000`, without action speed or the tick cap.
+- `showAverage` stays: the support's `base_skill_show_average_damage_instead_of_dps`, not cleared as a trigger rate's is (2227). The combined DPS is the average damage.
+- `cast_on_death_damage_+%_final_while_dead` is `Damage` MORE (PoB applies it unconditionally). The other stats are markers or no slice field (`cast_on_death_%`, `spell_only_castable_on_death`, `no_cost`, the area while dead); the cost is 0 from the level's mana multiplier.
+- **Not modelled:** the damaging ailments. PoB counts an ignite's stacks without the rate (4909) and a poison or a bleed by its average (4767, 6032). Each such field of a Cast on Death spell is not computed (`cast-on-death-ailment`).
+
+**Mark On Hit and Hextouch** (1275, 1278) trigger a mark or a hex. Their effects apply as any curse's (P6-9g), and the engine computes no field from a curse's rate, so their configs give nothing to port.
+
+**Mirage Archer** is not a trigger config in PoB (`CalcMirages.lua`). It is in since P6-8b (`docs/phase-6/mirages.md`).
+
+**Full DPS with `showAverage`.** The full DPS inferred a skill's cull multiplier from its combined DPS over its parts. For a skill that shows its average damage, the combined DPS has no rate, so that ratio is not a cull. `full_dps` now skips the inference when the combined DPS is the average damage. PoB's full DPS takes such a skill's `TotalDPS` (`Calcs.lua` 287 to 289).
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is `dev` at `eb2e8c79`, built in a worktree and run the same way.
+
+- **Fixtures** (new, all original; each run three times by PoB, identical). Every compared field equals PoB's:
+  - `trigger-arcanist-ice-nova-witch.xml`: Ice Nova with Arcanist Brand. The rate 1, the average damage 429.27 (the support's less damage and its more damage against the branded enemy), the mana cost per second.
+  - `trigger-arcanist-two-spells-witch.xml`: Ice Nova and Arc with Arcanist Brand and Faster Casting, the brand at 20% quality. The activations 1.49 per second (the quality's 10% and Faster Casting's cast speed in the brand's context), Ice Nova's share 0.74649 from PoB's rotation. The full DPS is partial for Arc's own reasons.
+  - `trigger-cast-on-death-ice-nova-witch.xml`: Ice Nova with Cast on Death. The speed 1/60,000, the average damage 1,833.26 as the combined DPS, the mana cost 0, the full DPS 0.0306 (the hit's DPS).
+- **Public `calc-parity`** (539 builds, the calc scope): 0 unexpected, as on the baseline. `Complete` fields went from 39,540 to 39,769, the new fixtures' 229.
+  - 5 fields of `kinetic-fusillade-ballista-hierophant.xml` moved toward PoB (average damage, hit, ignite, combined, and full DPS). Its Arcanist Brand is now a known gem, no longer `unmodelled-gem`.
+  - Nothing moved away from PoB.
+- **A sorting bug caught on the way:** an out-of-order support entry hid Cast On Critical Strike from the binary search and moved the Cast On Critical Strike fixtures away from PoB. The new test `the_gem_tables_should_be_sorted_by_id` guards both gem tables.
+- **Corpus** (21 builds, local): 1 build changed, a Detonate Dead build with an Arcanist Brand in another group. Its `unmodelled-gem` reason is gone (76 fields). Five of its damage values moved (hit DPS 27,845 to 46,592) and its own reasons now show, all fields `indeterminate`. There is no oracle run of the corpus here.
+- **`data-parity`:** 753 differences, `uncategorized` 0, the same as `dev`. `gem_effects` allows Arcanist Brand's `Brand` type, its support's `Triggered` type and `triggeredByBrand`, and Cast on Death's `Triggered` type and marks.
+- **Tests:** the workspace's 1,860 tests, clippy, and fmt pass.
+
+**Left for S3:** Manaforged Arrows (a triggered bow attack: the attack path takes no triggered attack yet, and the rate needs both skills' raw mana costs), the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it).

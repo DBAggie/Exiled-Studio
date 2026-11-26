@@ -1087,6 +1087,10 @@ pub enum Poe1Quantity {
     /// `Condition:SupportedBySpellslinger`; open items S3): `Increased`,
     /// read by [`skill_modifiers::Totals`] for those skills.
     SpellslingerManaReservationEfficiency,
+    /// A brand's activation frequency (PoB's `BrandActivationFrequency`;
+    /// open items S3): `Increased` and `More`, read by [`triggers`] in
+    /// Arcanist Brand's own context for the spells it triggers.
+    BrandActivationFrequency,
     /// Mines thrown at once (PoB's `MineThrowCount` BASE, its base 1 in
     /// [`hit`]; P6-11fa).
     MineThrowCount,
@@ -1803,6 +1807,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellslingerManaReservationEfficiency => {
                 f.write_str("spellslinger-mana-reservation-efficiency")
             }
+            Self::BrandActivationFrequency => f.write_str("brand-activation-frequency"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::MarkCurseEffect => f.write_str("mark-curse-effect"),

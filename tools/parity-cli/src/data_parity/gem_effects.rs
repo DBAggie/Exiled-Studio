@@ -227,6 +227,9 @@ const ALLOWED_TYPES: &[(&str, &str)] = &[
     // brands attached are the config's, P6-11ed); Combust and the Frost
     // enchantment are triggered by their own rule.
     ("ArmageddonBrand", "Brand"),
+    // Open items S3: Arcanist Brand, the spells it triggers reading its
+    // activation in its own context (`poe1::triggers`).
+    ("BrandSupport", "Brand"),
     ("Combust", "Triggered"),
     ("EnchantmentOfFrostOnKill4", "Triggered"),
     ("PenanceBrand", "Brand"),
@@ -493,6 +496,13 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // reads the wand damage share, `poe1::triggers` the trigger mark.
     ("SupportSpellslinger", "gainPercentBaseWandDamageToSpells"),
     ("SupportSpellslinger", "triggeredBySpellSlinger"),
+    // Open items S3: Arcanist Brand's support part, the trigger mark
+    // (`poe1::triggers`).
+    ("SupportBrandSupport", "triggeredByBrand"),
+    // Open items S3: Cast on Death's marks, read by its support's ID
+    // (`poe1::triggers`: PoB's stand-in time and `showAverage`).
+    ("SupportCastOnDeath", "triggered"),
+    ("SupportCastOnDeath", "triggeredOnDeath"),
     // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
     // their stats (the chance on crit, the threshold, the triggered marks).
     (
@@ -687,6 +697,11 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // (`RESERVING_SUPPORTS`).
     ("SupportSpellslinger", "Triggered"),
     ("SupportSpellslinger", "HasReservation"),
+    // Open items S3: Arcanist Brand triggers the spells it supports
+    // (`poe1::triggers`).
+    ("SupportBrandSupport", "Triggered"),
+    // Open items S3: Cast on Death's spell (`poe1::triggers`).
+    ("SupportCastOnDeath", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];

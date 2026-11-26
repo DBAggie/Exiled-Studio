@@ -163,9 +163,18 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         parts.ground = parts.ground.max(ground);
         parts.bleed = parts.bleed.max(bleed).max(m_bleed);
         // The skill's cull multiplier, from its combined DPS over its parts
-        // (its Culling Strike: 10/9).
+        // (its Culling Strike: 10/9). A skill that shows its average damage
+        // (PoB's `showAverage`: its combined DPS is the average damage, open
+        // items S3) has no rate in its combined DPS to compare: PoB's full
+        // DPS still takes its `TotalDPS`.
+        let shows_average = result
+            .fields
+            .get(&Field::AverageDamage)
+            .and_then(|r| r.value)
+            .is_some_and(|avg| avg > 0.0 && (combined - avg).abs() <= avg * 1e-12)
+            && (combined - hit).abs() > combined * 1e-12;
         let base = hit + impale + (dot + poison + ignite + ground + bleed).min(DOT_DPS_CAP);
-        if base > 0.0 && combined > base * (1.0 + 1e-12) {
+        if !shows_average && base > 0.0 && combined > base * (1.0 + 1e-12) {
             parts.cull = parts.cull.max(combined / base);
         }
     }

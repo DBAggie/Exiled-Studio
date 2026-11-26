@@ -656,6 +656,12 @@ pub struct CalcOptions {
     /// mirage's copy, a skill of the full damage per second): it computes
     /// no full damage per second itself. A host leaves it `false`.
     pub nested: bool,
+    /// The main skill's own gems act on it even when the engine computes no
+    /// hit or damage over time for it (open items S3: a trigger's source
+    /// collected for its own modifiers, as PoB's skill list of Arcanist
+    /// Brand). The engine sets it on such a sub-calculation; a host leaves
+    /// it `false`.
+    pub own_skill_context: bool,
 }
 
 /// What a mirage changes in its copy of the main skill (P6-8b): Mirage

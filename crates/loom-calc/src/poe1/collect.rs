@@ -2455,9 +2455,19 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let levels = GemLevels::from_effects(ingest.effects());
     // The main skill whose gems act through a computed field: its hit, else
     // its own damage over time (Phase 6, `poe1::dot`).
+    // A trigger source's own context (open items S3): the main skill as
+    // the build picks it.
     let main = hit::hit_skill(input, &levels)
         .map(|h| (h.group(), h.skill().clone()))
-        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels));
+        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels))
+        .or_else(|| {
+            input
+                .options
+                .own_skill_context
+                .then(|| skill::main_skill(input.build, input.data, &levels).ok())
+                .flatten()
+                .and_then(|m| m.group.checked_sub(1).map(|g| (g, m)))
+        });
     let modelled: Vec<_> = main.as_ref().map_or_else(Vec::new, |(_, m)| {
         std::iter::once(&m.active_gem)
             .chain(&m.supports)
