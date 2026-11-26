@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 20] = [
+pub const PHASES: [Phase; 21] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -85,6 +85,14 @@ pub const PHASES: [Phase; 20] = [
         name: "minion",
         run: super::minion_actor::phase,
     },
+    // The costs before the hit, as PoB computes them before the passes'
+    // damage (open items S3: Manaforged Arrows' damage per mana spent);
+    // their costs per second after the hit's and the damage over time's
+    // speed.
+    Phase {
+        name: "costs",
+        run: super::costs::phase,
+    },
     Phase {
         name: "hit",
         run: super::hit::hit,
@@ -94,8 +102,8 @@ pub const PHASES: [Phase; 20] = [
         run: super::dot::dot,
     },
     Phase {
-        name: "costs",
-        run: super::costs::phase,
+        name: "cost-per-second",
+        run: super::costs::per_second_phase,
     },
     Phase {
         name: "combined",

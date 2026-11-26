@@ -3450,6 +3450,23 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // Open items S3: Manaforged Arrows' more damage (`Damage` MORE) and its
+    // more damage per mana spent (`PerStat` `ManaCost`): the attack path
+    // reads the cost field (`hit::attack_hit`).
+    (
+        "support_manaforged_arrows_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
+    (
+        "support_manaforged_arrows_damage_+%_final_per_mana_spent",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageMorePerManaCost),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "support_melee_physical_damage_+%_final",
         &[(
@@ -4263,6 +4280,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // A brand's activation frequency (open items S3), read
                     // in Arcanist Brand's own context by `poe1::triggers`.
                     | Poe1Quantity::BrandActivationFrequency
+                    // Manaforged Arrows' more damage per mana spent (open
+                    // items S3), read by the attack path.
+                    | Poe1Quantity::DamageMorePerManaCost
             )
     )
 }
@@ -11012,6 +11032,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("support_makes_skill_mine_pvp_damage_+%_final", "pvp"),
     ("support_makes_skill_trap_pvp_damage_+%_final", "pvp"),
+    // Open items S3: Manaforged Arrows' threshold (read by poe1::triggers) and
+    // its chance to trigger (100, no PoB stat map entry).
+    ("support_manaforged_arrows_mana_cost_%_threshold", "trigger"),
     // P6-8b: the mirage's less attack speed, read by `poe1::combined` for
     // the mirage's copy alone.
     ("support_mirage_archer_attack_speed_+%_final", "mirage"),
@@ -11153,6 +11176,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
     ("triggered_by_brand_support", "trigger"),
+    ("triggered_by_manaforged_arrows_support_%_chance", "trigger"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",

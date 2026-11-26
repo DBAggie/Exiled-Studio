@@ -91,8 +91,15 @@
 //! open items S3), Unleash, projectiles that hit several times, and
 //! trigger-related damage (`TriggeredDamage`: unmapped stats). Skills an
 //! item grants and triggers (`ExtraSkill` with `triggered`: Molten Burst,
-//! Starfall, and kin) are attacks, and the attack path takes no trigger
-//! rate yet.
+//! Starfall, and kin) have no config here yet.
+//!
+//! **Triggered attacks** (open items S3, part 6): the attack path takes a
+//! ported trigger's rate as every pass's speed (`CalcOffence.lua` 2223 to
+//! 2227). **Manaforged Arrows** (1378) is the first: a bow attack, on use,
+//! whose rate is divided by `ceil(threshold x triggered / source)`, each
+//! skill's `ManaCostRaw` ([`super::costs::mana_cost_raw`], the source's in
+//! its own context), 522 to 556; a source without a cost never triggers
+//! it.
 
 use super::Poe1Quantity;
 use super::skill::{self, GemEffectRef, MainSkill};
@@ -164,6 +171,11 @@ pub enum Config {
     /// The fire spell on hit enchantment (1521): a melee attack; the
     /// rotation the group's spells.
     FireSpellOnHit,
+    /// Manaforged Arrows (open items S3; 1378): a bow attack, on use; the
+    /// source's rate over the uses whose mana reaches the support's
+    /// threshold of the triggered attack's (522 to 556); the main skill
+    /// alone in the rotation.
+    ManaforgedArrows,
 }
 
 impl Config {
@@ -188,8 +200,14 @@ impl Config {
     const fn on_use(self) -> bool {
         matches!(
             self,
-            Self::Spellslinger | Self::PoetsPen | Self::AsenathsChant
+            Self::Spellslinger | Self::PoetsPen | Self::AsenathsChant | Self::ManaforgedArrows
         )
+    }
+
+    /// The config has no `triggeredSkillCond`: PoB simulates the main
+    /// skill alone (809).
+    const fn main_alone(self) -> bool {
+        matches!(self, Self::Spellslinger | Self::ManaforgedArrows)
     }
 
     /// PoB's `triggerOnCrit` (the support's `SkillData` or stat): the
@@ -237,6 +255,7 @@ const SUPPORTS: &[(&str, Config)] = &[
     ("SupportSpellslinger", Config::Spellslinger),
     ("SupportBrandSupport", Config::ArcanistBrand),
     ("SupportCastOnDeath", Config::CastOnDeath),
+    ("SupportManaforgedArrows", Config::ManaforgedArrows),
     // The item lines' supports (open items S3, part 5), by PoB's names.
     ("SupportTriggerSpellOnAttack", Config::PoetsPen),
     ("SupportTriggerSpellOnBowAttack", Config::AsenathsChant),
@@ -347,6 +366,11 @@ const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportUniqueMjolnerLightningSpellsCastOnHit",
     "SupportUniqueVirulenceSpellsCastOnBlock",
 ];
+
+/// Manaforged Arrows' threshold, percent of the triggered attack's mana
+/// cost (PoB's `ManaForgedArrowsPercentThreshold`, `div = 100`,
+/// `Data/Skills/sup_dex.lua` 2911).
+const MANAFORGED_THRESHOLD_STAT: &str = "support_manaforged_arrows_mana_cost_%_threshold";
 
 /// The stat that makes Cast when Damage Taken's config apply (PoB's
 /// `triggeredByDamageTaken`, `SkillStatMap.lua` 258).
@@ -672,6 +696,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             | Config::CosprisMalice
             | Config::WingOfTheWyvern
             | Config::SevenTeachings
+            | Config::ManaforgedArrows
     ) && weapon.is_none()
     {
         return unsupported("trigger-source");
@@ -699,6 +724,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 Config::WingOfTheWyvern => *g != main_group && weapon_has(Flags::BOW) == Some(true),
                 Config::SevenTeachings => melee && weapon_has(Flags::UNARMED) == Some(true),
                 Config::FireSpellOnHit => melee,
+                Config::ManaforgedArrows => weapon_has(Flags::BOW) == Some(true),
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
@@ -732,6 +758,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         if best.as_ref().is_none_or(|b| rate > b.rate) {
             best = Some(Source3 {
                 rate,
+                at: (*g, *a),
                 double_hits: super::hit::double_hits(s, input.data),
                 speed: speed.map(|f| f.state.clone()),
                 hit: result
@@ -784,7 +811,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     // (`triggeredByCoc`, `triggeredByMeleeKill`, and `slotMatch`); a
     // config without `triggeredSkillCond` (Spellslinger) simulates the main
     // skill alone (809).
-    let rotation = if config == Config::Spellslinger {
+    let rotation = if config.main_alone() {
         vec![Rotated {
             cooldown: triggered_cd,
             main: true,
@@ -804,6 +831,33 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             Some(true) => effective /= 2.0,
             Some(false) => {}
             None => return unsupported("trigger-source"),
+        }
+    }
+    // Manaforged Arrows (522 to 556): the source's uses until the mana they
+    // spend reaches the threshold of the triggered attack's, each raw
+    // (`ManaCostRaw`): the rate over `ceil(threshold x triggered /
+    // source)`; a source without a cost never triggers it.
+    if config == Config::ManaforgedArrows {
+        let Some(threshold) = support
+            .as_ref()
+            .and_then(|s| instance_stat(s, MANAFORGED_THRESHOLD_STAT))
+        else {
+            return unsupported("manaforged-threshold");
+        };
+        let Some(triggered) = super::costs::mana_cost_raw(calc, skill, &mut reasons) else {
+            return unsupported("manaforged-cost");
+        };
+        if triggered > 0.0 {
+            let Some(source_cost) = source_mana_cost_raw(calc, &skills, src.at, &mut reasons)
+            else {
+                return unsupported("manaforged-cost");
+            };
+            if source_cost <= 0.0 {
+                return Outcome::Rate(0.0, reasons, false);
+            }
+            #[expect(clippy::cast_precision_loss, reason = "a percentage, exact as f64")]
+            let threshold = threshold as f64 / 100.0;
+            effective /= crate::math::ceil(triggered * threshold / source_cost);
         }
     }
     let value = if ignores_tick && rotation.len() == 1 {
@@ -991,6 +1045,44 @@ fn item_line_chance(calc: &Calc<'_>, skill: &MainSkill<'_>, support: &str) -> Op
         .reduce(f64::min)
 }
 
+/// The `ManaCostRaw` of the active skill `at` (group and skill, 1-based)
+/// as PoB's `calcs.buildActiveSkill` computes it (open items S3:
+/// Manaforged Arrows' source): the build collected with it as the main
+/// skill ([`crate::engine::collected`]), then [`super::costs::mana_cost_raw`].
+/// Its reasons beyond the character's go into `reasons`. `None` when the
+/// skill is not found or the cost cannot be read.
+fn source_mana_cost_raw(
+    calc: &Calc<'_>,
+    skills: &[(usize, usize, MainSkill<'_>)],
+    at: (usize, usize),
+    reasons: &mut Reasons,
+) -> Option<f64> {
+    let input = *calc.input();
+    let (_, _, source) = skills.iter().find(|(g, a, _)| (*g, *a) == at)?;
+    let b = skill::with_main_skill(input.build, at.0, at.1);
+    let mut options = input.options.clone();
+    options.nested = true;
+    options.own_skill_context = true;
+    let sub = crate::input::CalcInput {
+        build: &b,
+        data: input.data,
+        options: &options,
+    };
+    let context = crate::engine::collected(&sub, &super::Poe1Rules).ok()?;
+    let cost = super::costs::mana_cost_raw(&context, source, reasons)?;
+    for r in &context.global().partial {
+        if !calc.global().partial.contains(r) {
+            reasons.partial.insert(r.clone());
+        }
+    }
+    for r in &context.global().indeterminate {
+        if !calc.global().indeterminate.contains(r) {
+            reasons.indeterminate.insert(r.clone());
+        }
+    }
+    Some(cost)
+}
+
 /// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:
 /// the check, or a kill count above 0 through `multiplierKilledRecently`);
 /// `None` for a value of another type.
@@ -1036,6 +1128,9 @@ pub(super) fn carry(state: &FieldState, reasons: &mut Reasons) -> bool {
 /// The source skill's fields a trigger reads.
 struct Source3 {
     rate: f64,
+    /// The source's group and active skill (1-based, as
+    /// [`skill::active_skills`] gives them).
+    at: (usize, usize),
     /// PoB's `doubleHitsWhenDualWielding` ([`super::hit::double_hits`]).
     double_hits: bool,
     speed: Option<FieldState>,

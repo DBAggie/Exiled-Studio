@@ -264,4 +264,34 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **Corpus** (21 builds, local): no document changed.
 - **Tests:** `trigger_rows_should_be_sorted_at_level_one`; the gem tables' sort test covers the new entries; the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
 
-**Left for S3:** Manaforged Arrows and the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, and kin), all attacks: the attack path takes no trigger rate yet. Then Focus, Squirming Terror (the game-truth list, with `trigger_socketed_spell_on_skill_use_%`), and `spellslinger_cooldown_duration_+%` (no build has it).
+**Left for S3:** Manaforged Arrows and the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, and kin), all attacks: the attack path takes no trigger rate yet. Then Focus, Squirming Terror (the game-truth list, with `trigger_socketed_spell_on_skill_use_%`), and `spellslinger_cooldown_duration_+%` (no build has it). Part 6 gives the attack path a trigger rate and ports Manaforged Arrows.
+
+## Part 6: a trigger rate in the attack path, and Manaforged Arrows (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 5.
+
+**The attack path** (`hit::attack_skill`, `hit::attack_hit`): a triggered attack is computed when the engine ports its trigger (`triggers::computable`), as a triggered spell is. PoB gives every pass the trigger rate as its speed (`CalcOffence.lua` 2223 to 2227), so the engine replaces each hand's speed with the rate, carrying the trigger's reasons; a dual wielder's combined speed is then the rate too. A rate that cannot be computed leaves the attack's fields not computed. The triggered damage state is settled from the trigger, as in the spell path.
+
+**The costs before the hit.** PoB computes a skill's costs before the passes' damage (1677 to 1800). The engine's cost phase ran after the hit, since the costs per second read its speed. It is now two phases: `costs` before `hit`, and `cost-per-second` after `dot` (`costs::per_second_phase`). Only the graph's node numbers change: on the public builds and the corpus, no document changed in a value, a state, or a reason (`local/p6/doc_cmp.py`, which ignores node numbers).
+
+**Manaforged Arrows** (`CalcTriggers.lua` 1378, the handler's 522 to 556), `triggers::Config::ManaforgedArrows`:
+- **The source** is any bow attack (the main hand's weapon flags), not triggered and not the main skill, on use (no hit chance).
+- **The rate:** the source's rate over `ceil(threshold x triggered / source)`, the threshold the support's `support_manaforged_arrows_mana_cost_%_threshold` over 100 (3), each cost PoB's `ManaCostRaw`, the cost before its roundings (`costs::mana_cost_raw`, read from the store; the source's in its own collected context, as Arcanist Brand's). A triggered attack without a cost keeps the source's rate; a source without a cost gives a rate of 0, as PoB's.
+- **The rotation:** PoB's config has no `triggeredSkillCond`, so the main skill alone, as Spellslinger's, with the support's 0.5 s cooldown.
+- **The damage:** `support_manaforged_arrows_damage_+%_final` is `Damage` MORE. `support_manaforged_arrows_damage_+%_final_per_mana_spent` (PoB's `Damage` MORE with `PerStat` `ManaCost`) is `Poe1Quantity::DamageMorePerManaCost`: the attack path adds a `Damage` MORE effect of its value times `floor(cost + 0.0001)`, from the cost field, before the damage (`Calc::add_effect`, PoB's mid-calculation mod).
+- **`NoEffect`:** the threshold (read by the trigger) and `triggered_by_manaforged_arrows_support_%_chance` (100, no PoB stat map entry).
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 5's run (`local/p6/s3c`).
+
+- **Fixtures** (new, all original; a Recurve Bow, whose attack time is a whole number of milliseconds; each run three times by PoB, identical). Every compared field equals PoB's:
+  - `trigger-manaforged-burning-arrow-ranger.xml`: Burning Arrow with Manaforged Arrows, a second Burning Arrow the source. The triggered attack's cost is 28 (the support's multiplier), the source's 14: `ceil(3 x 28 / 14) = 6` uses, the rate 0.14583 from the source's 0.875; the damage with the support's less damage and its 28% more per mana spent.
+  - `trigger-manaforged-low-level-source-ranger.xml`: a level 1 source with its lower cost, the rate 0.07955.
+  - 158 fields are targets.
+- **Public `calc-parity`** (553 builds, the calc scope): 0 unexpected. `Complete` fields went from 40,455 to 40,613, the new fixtures' 158. No other document changed apart from node numbers.
+- **Corpus** (21 builds, local): no document changed apart from node numbers.
+- **`data-parity`:** 753 differences, `uncategorized` 0.
+- **Tests:** the phase order test (`costs` before `hit`, `cost-per-second` after `dot`); the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
+
+**Left for S3:** the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, Icicle Burst, and kin): attacks with their own cooldowns, found by the unique's name in their saved group's source, each with its weapon data from the item; Focus; Squirming Terror and `trigger_socketed_spell_on_skill_use_%` (the game-truth list); `spellslinger_cooldown_duration_+%` (no build has it).

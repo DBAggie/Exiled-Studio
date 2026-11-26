@@ -146,6 +146,11 @@ pub enum Poe1Quantity {
     /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
     /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
     SpellDamagePer100Mana,
+    /// Manaforged Arrows' more damage per mana spent (open items S3; PoB's
+    /// `Damage` MORE with `PerStat` `ManaCost`, `sup_dex.lua` 2909): `Base`,
+    /// the value per point of the skill's mana cost, read by the attack
+    /// path from the cost field ([`hit::attack_hit`]).
+    DamageMorePerManaCost,
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
@@ -1482,6 +1487,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
+            Self::DamageMorePerManaCost => f.write_str("damage-more-per-mana-cost"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::PerStaffSocket(life) => f.write_str(if *life {
@@ -2363,9 +2369,10 @@ mod tests {
                 "leech",
                 "movement",
                 "minion",
+                "costs",
                 "hit",
                 "dot",
-                "costs",
+                "cost-per-second",
                 "combined",
                 "minion-hit",
                 "full-dps"

@@ -708,7 +708,14 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         return None;
     }
     let has = |t: &str| skill.types.contains(t);
-    if !has("Attack") || NOT_PLAIN_ATTACK.iter().any(|t| has(t)) {
+    // A triggered attack is computed when the engine ports its trigger
+    // (open items S3): its rate is the trigger's ([`attack_hit`]).
+    let triggered = super::triggers::computable(&skill);
+    if !has("Attack")
+        || NOT_PLAIN_ATTACK
+            .iter()
+            .any(|t| has(t) && !(*t == "Triggered" && triggered))
+    {
         return None;
     }
     let effect = skill.effect();
@@ -1753,13 +1760,73 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             what: "skill-crit-chance",
         });
     }
+    // Manaforged Arrows' more damage per mana spent (open items S3; PoB's
+    // `Damage` MORE with `PerStat` `ManaCost`, its value times `floor(cost
+    // + 0.0001)`): a `Damage` MORE effect per term, from the cost field,
+    // which the cost phase sets before the hit.
+    let per_cost = Quantity::Poe1(Poe1Quantity::DamageMorePerManaCost);
+    if phases::has(calc, per_cost) {
+        let terms = super::repeats::applying(calc, per_cost, Op::Base, &skill_cx, &mut unvetted);
+        let cost = calc
+            .field(Field::Poe1(super::Poe1Field::ManaCost))
+            .and_then(|f| f.value.map(|v| (v, f.state.clone())));
+        match cost {
+            Some((cost, state)) if super::triggers::carry(&state, &mut unvetted) => {
+                let steps = crate::math::floor(cost + 0.0001);
+                for e in terms {
+                    calc.add_effect(Effect {
+                        quantity: Quantity::Damage,
+                        op: Op::More,
+                        value: e.value * steps,
+                        conditions: e.conditions.clone(),
+                        source: e.source.clone(),
+                    });
+                }
+            }
+            _ => {
+                unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+                    source: attack.source(),
+                    what: "damage-per-mana-cost",
+                });
+            }
+        }
+    }
+    // A trigger's rate is every pass's speed (open items S3;
+    // `CalcOffence.lua` 2223 to 2227, `output.Speed =
+    // skillData.triggerRate`); without a source PoB reports the skill as
+    // used by hand. A rate that cannot be computed leaves the attack's
+    // fields not computed.
+    let trigger_speed = match super::triggers::rate(calc, &attack.skill, &attack.source(), flags) {
+        super::triggers::Outcome::SelfCast => None,
+        super::triggers::Outcome::Rate(value, reasons, triggered_damage) => {
+            calc.settle_state(
+                ConditionKey::new(super::triggers::TRIGGERED_DAMAGE),
+                triggered_damage,
+            );
+            Some((value, reasons))
+        }
+        super::triggers::Outcome::Unsupported(reason) => {
+            calc.set_unsupported(Field::Speed, reason);
+            return Ok(());
+        }
+    };
+    let triggered = |calc: &mut Calc<'_>, rate: &mut HandRate| -> Result<(), CalcError> {
+        if let Some((value, reasons)) = &trigger_speed {
+            let speed = phases::constant(calc, "skill-trigger-rate", *value)?;
+            let mut reasons = reasons.clone();
+            reasons.extend(&rate.unvetted);
+            rate.speed = (speed, reasons);
+        }
+        Ok(())
+    };
     // A shield attack hits with the off hand only (P6-11he).
     let hand = if attack.shield.is_some() {
         Hand::Off
     } else {
         Hand::Main
     };
-    let main_rate = hand_rate(calc, attack, hand, attack.weapon, flags, &unvetted)?;
+    let mut main_rate = hand_rate(calc, attack, hand, attack.weapon, flags, &unvetted)?;
+    triggered(calc, &mut main_rate)?;
     let Some(off_item) = attack.off_weapon else {
         let speed = main_rate.speed.0;
         let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
@@ -1807,7 +1874,8 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
-    let off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
+    let mut off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
+    triggered(calc, &mut off_rate)?;
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
     let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
     let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;

@@ -2,6 +2,13 @@
 //! `ManaCost`, `LifeCost`, and `ESCost` (`Modules/CalcOffence.lua` 1677
 //! to 1800) and their costs per second (5794 to 5825).
 //!
+//! The costs come before the hit ([`phase`]), as PoB computes them before
+//! the passes' damage (open items S3: Manaforged Arrows' more damage per
+//! mana spent reads the cost); the costs per second after the hit and the
+//! damage over time, whose `Speed` they read ([`per_second_phase`]).
+//! [`mana_cost_raw`] is PoB's `ManaCostRaw`, read from the store for a
+//! trigger.
+//!
 //! What PoB does, for the upfront costs in its order (mana, life, energy
 //! shield):
 //! - the base: the skill level's cost of the resource (the granted effect
@@ -266,13 +273,6 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let added = share_of(calc, mana, as_es)?;
         es = phases::total(calc, &[es, added], Term::Step("energy-shield-from-mana"))?;
     }
-    // Eldritch Battery (P6-11ap; `CalcOffence.lua` 5793 to 5825): the mana
-    // cost per second is paid with energy shield (`ESPerSecondCost`), and
-    // the energy shield cost's own is then skipped unless mana's cost is
-    // also moved to energy shield (a sum the engine leaves as a reason).
-    let eb = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsProtectsMana))
-        && flag(calc, Poe1Quantity::EsProtectsMana, flags, &mut reasons)?;
-    let mut es_from_mana = false;
     // The second pass: each resource's modifiers.
     for (r, final_base) in [
         (Resource::Mana, mana),
@@ -301,12 +301,71 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             cost = round(calc, scaled, false, Term::Result)?;
         }
         calc.set_derived(r.field(), phases::query(cost, reasons), &[]);
+    }
+    Ok(())
+}
+
+/// The costs per second (P6-10b parts 6 and 8), after the hit and the
+/// damage over time, whose `Speed` they read. The costs themselves come
+/// before the hit ([`phase`]), as in PoB (`CalcOffence.lua` 1677 to 1800
+/// before the passes' damage; open items S3: Manaforged Arrows' damage
+/// per mana spent reads the cost).
+///
+/// # Errors
+/// A graph error.
+pub fn per_second_phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
+    let input = *calc.input();
+    let levels = super::gem_levels::GemLevels::from_effects(calc.store().effects());
+    let Ok(skill) = super::skill::main_skill(input.build, input.data, &levels) else {
+        return Ok(());
+    };
+    let source = Source::Gem {
+        group: skill.group,
+        gem: skill.active_gem.gem,
+    };
+    let mut flags = skill.keyword_flags();
+    if skill.types.contains("Attack") {
+        flags = flags | Flags::ATTACK;
+    }
+    if skill.types.contains("Spell") {
+        flags = flags | Flags::SPELL;
+    }
+    let mut reasons = Reasons::new();
+    // Eldritch Battery (P6-11ap; `CalcOffence.lua` 5793 to 5825): the mana
+    // cost per second is paid with energy shield (`ESPerSecondCost`), and
+    // the energy shield cost's own is then skipped unless mana's cost is
+    // also moved to energy shield (a sum the engine leaves as a reason).
+    let eb = phases::has(calc, Quantity::Poe1(Poe1Quantity::EsProtectsMana))
+        && flag(calc, Poe1Quantity::EsProtectsMana, flags, &mut reasons)?;
+    let as_es = if eb {
+        sum(
+            calc,
+            Quantity::Poe1(Poe1Quantity::ManaCostAsEnergyShieldCost),
+            Op::Base,
+            flags,
+            &mut reasons,
+        )?
+        .value
+    } else {
+        0.0
+    };
+    let mut es_from_mana = false;
+    for r in Resource::ALL {
+        // A cost the cost phase did not compute has no cost per second.
+        let Some(cost) = calc.field(r.field()).and_then(|f| {
+            Some(Valued {
+                node: f.node?,
+                value: f.value?,
+            })
+        }) else {
+            continue;
+        };
         match r {
             Resource::Mana if eb => {
                 es_from_mana = per_second(calc, &skill, r, Resource::EnergyShield, cost, &source)?;
             }
             Resource::EnergyShield if es_from_mana => {
-                if as_es.value != 0.0 && cost.value > 0.0 {
+                if as_es != 0.0 && cost.value > 0.0 {
                     calc.set_unsupported(
                         r.per_second(),
                         UnsupportedReason::UnmodelledSkill {
@@ -322,6 +381,92 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         }
     }
     Ok(())
+}
+
+/// The main skill's `ManaCostRaw` in `calc` (open items S3: Manaforged
+/// Arrows reads it for its trigger, of the triggered skill and of the
+/// source; `CalcOffence.lua` 1705 and 1767): the cost before PoB's
+/// roundings, `max(0, max(0, (1 + inc / 100) x (base x mult + no-mult) x
+/// more x more / efficiency) + total)`, then the hybrid share kept; 0 when
+/// life or energy shield pays it. Read from the store, without the graph.
+/// `None` when the skill has no level or the efficiency is not above 0.
+pub(super) fn mana_cost_raw(
+    calc: &Calc<'_>,
+    skill: &super::skill::MainSkill<'_>,
+    reasons: &mut Reasons,
+) -> Option<f64> {
+    let level = super::skill::effect_level(skill.effect(), skill.active_gem.level)?;
+    let mut flags = skill.keyword_flags();
+    if skill.types.contains("Attack") {
+        flags = flags | Flags::ATTACK;
+    }
+    if skill.types.contains("Spell") {
+        flags = flags | Flags::SPELL;
+    }
+    let cx = calc.context(flags);
+    let total = |q: Poe1Quantity, op: Op, reasons: &mut Reasons| -> f64 {
+        super::repeats::applying(calc, Quantity::Poe1(q), op, &cx, reasons)
+            .iter()
+            .map(|e| e.value)
+            .sum()
+    };
+    let more = |q: Poe1Quantity, reasons: &mut Reasons| -> f64 {
+        let effects = super::repeats::applying(calc, Quantity::Poe1(q), Op::More, &cx, reasons);
+        if effects.is_empty() {
+            return 1.0;
+        }
+        let product: f64 = effects.iter().map(|e| 1.0 + e.value / 100.0).product();
+        crate::math::round_half_up(product * 100.0) / 100.0
+    };
+    let on = |q: Poe1Quantity, reasons: &mut Reasons| -> bool {
+        super::repeats::applying(calc, Quantity::Poe1(q), Op::Flag, &cx, reasons)
+            .iter()
+            .any(|e| e.value > 0.0)
+    };
+    if on(Poe1Quantity::CostLifeInsteadOfMana, reasons)
+        || on(Poe1Quantity::CostEnergyShieldInsteadOfManaOrLife, reasons)
+    {
+        return Some(0.0);
+    }
+    #[expect(clippy::cast_precision_loss, reason = "small integers, exact as f64")]
+    let base: f64 = level
+        .costs
+        .iter()
+        .filter(|c| c.resource == Resource::Mana.data_name())
+        .map(|c| c.amount as f64)
+        .sum();
+    let mult = super::gems::support_multiplier(&skill.supports, &skill.cost_mores);
+    let raw_base = base * mult + total(Poe1Quantity::ManaCostNoMult, Op::Base, reasons);
+    let inc = total(Poe1Quantity::ManaCost, Op::Increased, reasons)
+        + total(Poe1Quantity::Cost, Op::Increased, reasons);
+    let eff = (1.0
+        + (total(Poe1Quantity::ManaCostEfficiency, Op::Increased, reasons)
+            + total(Poe1Quantity::CostEfficiency, Op::Increased, reasons))
+            / 100.0)
+        * more(Poe1Quantity::ManaCostEfficiency, reasons)
+        * more(Poe1Quantity::CostEfficiency, reasons);
+    if eff <= 0.0 {
+        return None;
+    }
+    let mut sum_total = total(Poe1Quantity::ManaCost, Op::Base, reasons)
+        + total(Poe1Quantity::Cost, Op::Base, reasons);
+    let channelling = skill.types.contains("Channel");
+    sum_total += total(
+        Poe1Quantity::ManaCostChannelling(channelling),
+        Op::Base,
+        reasons,
+    );
+    let scaled = (1.0 + inc / 100.0)
+        * raw_base
+        * more(Poe1Quantity::ManaCost, reasons)
+        * more(Poe1Quantity::Cost, reasons)
+        / eff;
+    let mut raw = crate::math::max(0.0, crate::math::max(0.0, scaled) + sum_total);
+    let hybrid = total(Poe1Quantity::HybridLifeCost, Op::Base, reasons);
+    if hybrid > 0.0 {
+        raw = crate::math::max(0.0, (1.0 - hybrid / 100.0) * raw);
+    }
+    Some(raw)
 }
 
 /// PoB's `round(mana x share / 100)`, the cost moved from mana.
