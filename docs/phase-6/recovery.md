@@ -363,7 +363,7 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 **The engine** (`leech::rates`, from the hit phase; slice revision 17):
 - **The per-type values:** the hit's passes keep each type's value against the enemy (`HitSources::against`).
 - **Which hits:** a spell's or a one-handed attack's hit gets a rate for each pool it leeches (`life-leech-rate`, `energy-shield-leech-rate`, `mana-leech-rate`).
-  - A dual wielder's leech is `NotComputed`: PoB combines the hands (`combineStat`).
+  - A dual wielder's leech is `NotComputed`: PoB combines the hands (`combineStat`). Computed since open items S7 (below, "Open items S7, part 2").
   - A minion's hit sets none.
 - **The quantities:** `DamageLeech(pool, source)` (`LeechSource` is any damage, a type, or elemental), `LeechRate`, `InstantLeech`, and `CannotLeech`, all skill quantities.
 - **The rows:** 31 rows generated from PoB's own parse of each leech stat's line (`ModParser`, with its flags: attack or spell hits are hit rows), plus "#% of Leech is Instant".
@@ -501,7 +501,7 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **`SecondMinimalMaximumHitTaken`:** the second smallest of the five, in PoB's order.
 
 **The engine** (`enemy_hit::maximum_hit`; slice revision 21):
-- **The fields:** `<type>-maximum-hit-taken` and `second-minimal-maximum-hit-taken`. A split hit is `NotComputed`.
+- **The fields:** `<type>-maximum-hit-taken` and `second-minimal-maximum-hit-taken`. A split hit was `NotComputed`; open items S7 ports the smoothing passes (below, "Open items S7, part 1").
 - **Not modelled config:** `conditionLowLife` and `conditionLowEnergyShield` are `unmodelled-config`.
 - **The markers,** split by the fields they change:
   - **`EnemyHitReason`:** the hit's fields and maximum hit (Arctic Armour, Storm Barrier, Flesh and Stone, Enfeeble's damage, no extra crit damage if crit recently).
@@ -605,3 +605,35 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11cd's run):
 - **Public:** 0 unexpected; 28 values toward PoB (three builds' maximum hits and defence estimate), none away.
 - **Corpus:** unchanged.
+
+
+## Open items S7, part 1: maximum hit's smoothing passes
+
+**What PoB does** (`CalcDefence.lua` 3164 to 3258): for a hit of one type partly taken as others (`PhysicalDamageFromHitsTakenAsFire` and kin) with armour applied, each part's quadratic gives an approximate maximum hit; PoB takes the smallest and runs up to 8 smoothing passes (`data.misc.maxHitSmoothingPasses`):
+- each pass takes the hit from full pools: `calcs.takenHitFromDamage` (149 to 175: per type, the converted share times resistance and `1 - max(min(DRmax, min(DRmax, armourReductionF + base reduction) - overwhelm), 0) / 100`, plus the flat damage taken, times the multiplier after reduction, rounded), then `calcs.reducePoolsByDamage(nil, ...)` (188 to 421);
+- the pass's overkill is `OverkillDamage - hitPoolRemaining` (`hitPoolRemaining`: the life hit pool left, plus the smallest mind over matter pool and the smallest energy shield pool left over the hit's types);
+- the incoming damage moves by the overkill, scaled by a step from the previous pass's overkill, and is divided by the square root of the largest `(overkill + pool) / pool` over the parts; it stops when the overkill is within 1;
+- `<Type>MaximumHitTaken = round(incoming / enemy damage multiplier)`.
+
+**The engine:** `enemy_hit::smoothed` and `enemy_hit::taken_hit_from_damage`, with `ehp::overkill_from_full` (`ehp::reduce` now also gives `hitPoolRemaining`). The split hit's field is computed instead of `NotComputed`. Vaal Arctic Armour's mitigation stays out of maximum hit, as before.
+
+**Fixtures:** `max-hit-taken-as-armour-marauder.xml` (armour, 20% of physical taken as fire and 20% as cold) and `max-hit-taken-as-energy-shield-marauder.xml` (an energy shield helmet, 30% as lightning, 10% as chaos): every maximum hit, `SecondMinimalMaximumHitTaken`, and `TotalEHP` equal PoB's; 66 targets each.
+
+**Evidence** (`local/p6/s7a`, `b-ct`, against S4's run):
+- **Public:** 0 unexpected; `Complete` 41,654 to 41,786 (the fixtures). 20 fields in 10 builds computed for the first time (physical and the second smallest), partial with their builds' reasons; in two (`ice-nova-elementalist-mapping.xml`, `kinetic-blast-of-clustering-necromancer.xml`) they equal PoB's; in the other eight every type's maximum hit already differs from PoB's for those reasons (energy shield, armour, or the taken multipliers). No other value moved.
+- **Corpus:** 0 unexpected; 10 fields in 5 builds computed (partial or indeterminate); no value moved.
+- **Tests:** `ehp::tests::the_hit_pool_left_should_be_pobs`; the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 2: a dual wielder's leech
+
+**What PoB does:** each hand's pass computes its leech per hit, its instances (`duration x hitRate`), and its instant rate, with `hitRate = HitChance / 100 x globalOutput.Speed` (`CalcOffence.lua` 3211, 3632 to 3667): the hand's own chance to hit and the hands' combined speed. `combineStat` `DPS` then joins each value (3877 to 3891; 2099 to 2103): `(main + off) / 2`, or the sum for a skill that hits with both weapons (`doubleHitsWhenDualWielding`). The rate follows from the joined values as for one hand (3981 to 4005).
+
+**The engine:** `leech::rates` is split into the pass's part (`hand_leech`: the leech per hit, the instant share, the instances and instant rate) and the rate (`finish`); the one-hand path makes the same graph as before (its documents are byte-identical). `leech::rates_dual` runs each hand's part at the combined speed and joins them, a hand that does not leech adding 0; the instance rate is read in the main hand's context (PoB's `skillCfg`, which no modelled leech rate modifier tells from a hand's). A dual-wielding attack's leech fields were `NotComputed`.
+
+**Fixture:** `smite-dual-wield-leech-templar.xml` (the dual-wield lines fixture with 0.4% of attack damage leeched as life, 0.2% of physical attack damage as life, 0.3% of attack damage as mana, and 8% of leech instant). Its life and mana leech rates are PoB's times the attack rate's Q11 ratio exactly (0.999893497594129 for both and for `Speed`): DIV-0720 to DIV-0726, Q11. A Dual Strike copy (the sum) gives the same ratio, 0.999893497594129, but stays partial while Dual Strike's PoB skill data is not ported (S1), so it is not a fixture.
+
+**Evidence** (`local/p6/s7b`, `b-ct`, against part 1's run):
+- **Public:** 0 unexpected; `Complete` 41,786 to 41,866 (the fixture). No other value or state moved; the three dual-wield fixtures' documents changed in graph nodes only.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.

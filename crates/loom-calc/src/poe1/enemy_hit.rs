@@ -628,8 +628,9 @@ fn frost_shield(
 ///   with no armour applied, `max(pool / share / (resMult x (1 -
 ///   DamageReduction / 100)) - flat, 0) / takenMult`; with armour, PoB's
 ///   quadratic in the raw hit, `floor(max(min(RAW, maxDR), noDR))`;
-/// - `<Type>MaximumHitTaken = round(min / enemy damage multiplier)`; a hit
-///   that converts (PoB's smoothing passes) is not computed;
+/// - `<Type>MaximumHitTaken = round(min / enemy damage multiplier)`; for a
+///   hit partly taken as another type with armour applied, PoB's smoothing
+///   passes first ([`smoothed`]; open items S7);
 /// - `SecondMinimalMaximumHitTaken` the second smallest of the five.
 fn maximum_hit(
     calc: &mut Calc<'_>,
@@ -949,6 +950,28 @@ fn maximum_hit(
             }
         }
     }
+    // The full pools the smoothing passes take a hit from (PoB's
+    // `reducePoolsByDamage(nil, ...)`: the outputs' pools).
+    let full = super::ehp::Character {
+        life: recoverable,
+        max_life: life,
+        energy_shield: es,
+        mana,
+        mom,
+        guard_rate,
+        guard,
+        recoup,
+        eb,
+        all_bypass,
+        golem_rate,
+        golem,
+        prevented,
+        elemental_aegis,
+        missing_life: 0.0,
+        ward,
+        frost_rate,
+        frost,
+    };
     let mut results = [None; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
         let Some(part) = &parts[i] else { continue };
@@ -997,14 +1020,15 @@ fn maximum_hit(
             };
             part_min = part_min.min(hit);
         }
-        if smoothing {
-            calc.set_unsupported(fields[i], UnsupportedReason::NotComputed);
-            continue;
-        }
         if !part_min.is_finite() {
             continue;
         }
-        let max_hit = crate::math::round_half_up(part_min / enemy_damage_mult);
+        let incoming = if smoothing {
+            smoothed(part_min, i, parts, shares, max, &pools, &full)
+        } else {
+            part_min
+        };
+        let max_hit = crate::math::round_half_up(incoming / enemy_damage_mult);
         results[i] = Some(max_hit);
         let node = phases::constant(calc, "maximum-hit", max_hit)?;
         let result = phases::total(calc, &[node], Term::Result)?;
@@ -1196,6 +1220,106 @@ fn maximum_hit(
         )?;
     }
     Ok(())
+}
+
+/// PoB's `data.misc.maxHitSmoothingPasses` (`Data.lua` 289).
+const SMOOTHING_PASSES: u32 = 8;
+
+/// PoB's `calcs.takenHitFromDamage(raw, type, actor)` (`CalcDefence.lua`
+/// 149 to 175; open items S7): the damage each type takes of a raw hit of
+/// type `from`, after its conversion share, resistance, armour (PoB's
+/// unrounded `armourReductionF`), the base reduction, overwhelm, the flat
+/// damage taken, and the multiplier after reduction:
+/// `round(max(converted x mitigation + flat, 0) x after)`. A type is in the
+/// result when its share or its flat damage is not 0, and then when its
+/// damage is above 0 or its share is. Vaal Arctic Armour's mitigation is
+/// not modelled here, as in the rest of maximum hit.
+fn taken_hit_from_damage(
+    raw: f64,
+    from: usize,
+    parts: &[Option<TypeHit>; 5],
+    shares: &[[f64; 5]; 5],
+    max: f64,
+) -> [Option<f64>; 5] {
+    let mut damages = [None; 5];
+    for (c, part) in parts.iter().enumerate() {
+        let Some(conv) = part else { continue };
+        let percent = shares[from][c];
+        if !(percent > 0.0 || conv.flat != 0.0) {
+            continue;
+        }
+        let converted = raw * percent / 100.0;
+        let armour_dr = {
+            let after_res = converted * conv.res_mult;
+            if conv.effective_armour == 0.0 && after_res == 0.0 {
+                0.0
+            } else {
+                conv.effective_armour / (conv.effective_armour + after_res * 5.0) * 100.0
+            }
+        };
+        let total_dr = max.min(armour_dr + conv.flat_dr * 100.0);
+        let dr_multi = 1.0 - (max.min(total_dr - conv.overwhelm)).max(0.0) / 100.0;
+        let reduced = crate::math::round_half_up(
+            (converted * conv.res_mult * dr_multi + conv.flat).max(0.0) * conv.after,
+        );
+        if reduced > 0.0 || percent > 0.0 {
+            damages[c] = Some(reduced);
+        }
+    }
+    damages
+}
+
+/// PoB's smoothing passes for a hit that is partly taken as another type
+/// (`CalcDefence.lua` 3229 to 3258; open items S7): from the smallest of
+/// the parts' maximum hits, up to 8 passes each take the hit from full
+/// pools ([`taken_hit_from_damage`], [`super::ehp::overkill_from_full`])
+/// and move the incoming damage by the overkill left over the pool left,
+/// until it is within 1. Returns the incoming damage before the enemy's
+/// damage multiplier.
+fn smoothed(
+    start: f64,
+    from: usize,
+    parts: &[Option<TypeHit>; 5],
+    shares: &[[f64; 5]; 5],
+    max: f64,
+    pools: &[f64; 5],
+    full: &super::ehp::Character,
+) -> f64 {
+    let mut incoming = start;
+    let mut previous: Option<f64> = None;
+    for n in 1..=SMOOTHING_PASSES {
+        let damages = taken_hit_from_damage(incoming, from, parts, shares, max);
+        let (overkill, remaining) = super::ehp::overkill_from_full(&damages, full);
+        let pass_overkill = overkill - remaining;
+        // PoB iterates the damage table after `reducePoolsByDamage` has
+        // dropped its parts of 0 or less.
+        let mut ratio = 0.0_f64;
+        for (c, d) in damages.iter().enumerate() {
+            if d.is_some_and(|v| v > 0.0) && pools[c] > 0.0 {
+                ratio = ratio.max((pass_overkill + pools[c]) / pools[c]);
+            }
+        }
+        if ratio <= 0.0 {
+            ratio = 1.0;
+        }
+        let step_size = match previous {
+            Some(p) if n > 1 && p != 0.0 && !p.is_nan() => ((pass_overkill - p) / p).abs().min(2.0),
+            _ => 1.0,
+        };
+        let step_adjust = if step_size > 1.0 {
+            -pass_overkill / step_size
+        } else if n > 1 {
+            -pass_overkill * step_size
+        } else {
+            0.0
+        };
+        previous = Some(pass_overkill);
+        incoming = (incoming + step_adjust) / crate::math::sqrt(ratio);
+        if pass_overkill < 1.0 && pass_overkill > -1.0 {
+            break;
+        }
+    }
+    incoming
 }
 
 /// The fortification stacks (`CalcPerform.lua` 632 to 653), `None` when

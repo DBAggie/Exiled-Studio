@@ -179,6 +179,34 @@ pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64) -> f64 {
 /// `calcs.reducePoolsByDamage` for life and energy shield alone: the pools
 /// left and the overkill damage.
 fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f64) {
+    let (pools, overkill, _) = reduce_full(pools, damage, ch);
+    (pools, overkill)
+}
+
+/// PoB's `calcs.reducePoolsByDamage(nil, damage, actor)` (open items S7):
+/// the hit taken from full pools, as maximum hit's smoothing passes take
+/// it (`CalcDefence.lua` 3233 to 3235): its `OverkillDamage` and
+/// `hitPoolRemaining`.
+pub(super) fn overkill_from_full(damage: &[Option<f64>; 5], ch: &Character) -> (f64, f64) {
+    let pools = Pools {
+        life: ch.life,
+        energy_shield: ch.energy_shield,
+        mana: ch.mana,
+        guard: ch.guard,
+        golem: ch.golem,
+        elemental_aegis: ch.elemental_aegis,
+        ward: ch.ward,
+        frost: ch.frost,
+    };
+    let (_, overkill, remaining) = reduce_full(pools, damage, ch);
+    (overkill, remaining)
+}
+
+/// `reduce`, with PoB's `hitPoolRemaining` (`CalcDefence.lua` 396 to 403):
+/// the life hit pool left (0 below 1 life), plus the smallest mind over
+/// matter pool and the smallest energy shield pool left over the hit's
+/// types, floored.
+fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f64, f64) {
     let damage: [Option<f64>; 5] = damage.map(|d| d.filter(|&v| v > 0.0).map(crate::math::ceil));
     let mut energy_shield = pools.energy_shield.max(0.0);
     let mut mana = pools.mana.max(0.0);
@@ -322,6 +350,22 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         }
         overkill += remainder;
     }
+    let present = |pools: &[f64; 5]| {
+        pools
+            .iter()
+            .zip(&damage)
+            .filter(|(_, d)| d.is_some())
+            .map(|(p, _)| *p)
+            .fold(f64::INFINITY, f64::min)
+    };
+    let finite = |v: f64| if v.is_finite() { v } else { 0.0 };
+    let life_left = if life >= 1.0 {
+        life_hit_pool(life, ch.max_life, ch.prevented)
+    } else {
+        0.0
+    };
+    let remaining =
+        crate::math::floor(life_left + finite(present(&mom_pools)) + finite(present(&es_pools)));
     (
         Pools {
             life: crate::math::floor(life),
@@ -336,6 +380,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             frost,
         },
         crate::math::ceil(overkill),
+        remaining,
     )
 }
 
@@ -693,6 +738,43 @@ mod tests {
         assert_eq!((after.guard, after.life, overkill), (250.0, 1750.0, 0.0));
         let (after, _) = reduce(after, &hit, &ch);
         assert_eq!((after.guard, after.life), (0.0, 1000.0));
+    }
+
+    /// PoB's `hitPoolRemaining` (open items S7): the life left plus the
+    /// smallest energy shield pool left over the hit's types; chaos's pool
+    /// is none (its bypass is 100%), so a hit with a chaos part leaves the
+    /// shield out; overkill past every pool.
+    #[test]
+    fn the_hit_pool_left_should_be_pobs() {
+        let ch = Character {
+            life: 1000.0,
+            max_life: 1000.0,
+            energy_shield: 500.0,
+            mana: 0.0,
+            mom: [0.0; 5],
+            guard_rate: 0.0,
+            guard: 0.0,
+            recoup: false,
+            eb: false,
+            all_bypass: false,
+            golem_rate: 0.0,
+            golem: 0.0,
+            prevented: 0.0,
+            elemental_aegis: 0.0,
+            missing_life: 0.0,
+            ward: 0.0,
+            frost_rate: 0.0,
+            frost: 0.0,
+        };
+        // 300 physical: the shield takes it, 200 left, life 1000.
+        let (overkill, left) = overkill_from_full(&[Some(300.0), None, None, None, None], &ch);
+        assert_eq!((overkill, left), (0.0, 1200.0));
+        // With a chaos part, the smallest shield pool left is chaos's 0.
+        let (_, left) = overkill_from_full(&[Some(300.0), None, None, None, Some(100.0)], &ch);
+        assert_eq!(left, 900.0);
+        // 2,000 physical: 500 shield, 1,000 life, 500 over.
+        let (overkill, left) = overkill_from_full(&[Some(2000.0), None, None, None, None], &ch);
+        assert_eq!((overkill, left), (500.0, 0.0));
     }
 
     /// PoB's `reducePoolsByDamage` with an ally before you (P6-11ar): the

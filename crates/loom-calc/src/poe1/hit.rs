@@ -1919,21 +1919,25 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             }
         }
     }
-    // PoB combines a dual wielder's leech per hand (`combineStat`, 3877 to
-    // 3891): not modelled yet (P6-10b part 9).
+    // A dual wielder's leech, each hand's combined (`combineStat` `DPS`,
+    // 3877 to 3891; open items S7).
     if calc.actor() == crate::engine::Actor::Player {
-        for pool in super::leech::POOLS {
-            let mut leeches = false;
-            for (hand, flags) in [(&main, flags), (&off, off_flags)] {
-                leeches |= super::leech::leeches(calc, &hand.sources, flags, pool)?;
-            }
-            if leeches {
-                calc.set_unsupported(
-                    Field::Poe1(super::Poe1Field::LeechRate(pool)),
-                    UnsupportedReason::NotComputed,
-                );
-            }
-        }
+        let [main_hit, off_hit] =
+            [(&main, flags), (&off, off_flags)].map(|(hand, flags)| super::ailment::AilmentHit {
+                flags,
+                sources: &hand.sources,
+                crit: hand.crit.0,
+                hit_chance: hand.hit_chance.0,
+                rate: speed,
+                skill: None,
+            });
+        super::leech::rates_dual(
+            calc,
+            [&main_hit, &off_hit],
+            speed,
+            attack.double_hits,
+            &unvetted,
+        )?;
     }
     // PoB combines a dual wielder's impales per hand only for double hits:
     // not modelled yet (P6-2d).

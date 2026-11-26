@@ -24,7 +24,6 @@
 //! percent taken from a parent or party member (minions and the Mirror of
 //! Kalandra's flags).
 
-use super::hit::HitSources;
 use super::phases::{self, Valued};
 use super::{LeechSource, Poe1Field, Poe1Quantity, Pool};
 use crate::condition::{Flags, QueryContext};
@@ -220,29 +219,6 @@ fn percent_of(
     phases::total(calc, &terms, Term::Step("leech-percent-sum"))
 }
 
-/// Whether the hit's damage leeches `pool` at all (any type of either
-/// pass with a leech percent above 0).
-///
-/// # Errors
-/// A graph error.
-pub(super) fn leeches(
-    calc: &mut Calc<'_>,
-    sources: &HitSources,
-    flags: Flags,
-    pool: Pool,
-) -> Result<bool, CalcError> {
-    let cx = calc.context(flags);
-    let mut reasons = Reasons::new();
-    for pass in &sources.against {
-        for (ty, _) in pass {
-            if percent_of(calc, &cx, pool, *ty, &mut reasons)?.value > 0.0 {
-                return Ok(true);
-            }
-        }
-    }
-    Ok(false)
-}
-
 /// The main skill's leech rates (P6-10b part 9): PoB's `<Pool>LeechRate`
 /// (`CalcOffence.lua` 3296 to 3667 and 3981 to 4005), for a spell's or a
 /// one-handed attack's hit. For each pool the hit leeches:
@@ -272,167 +248,319 @@ pub(super) fn rates(
 ) -> Result<(), CalcError> {
     for pool in POOLS {
         let cx = calc.context(hit.flags);
-        let mut reasons = phases::marker_reasons(
-            calc,
-            |_| None,
-            |q| {
-                matches!(
-                    q,
-                    Quantity::Poe1(
-                        Poe1Quantity::DamageLeech(p, _)
-                            | Poe1Quantity::LeechRate(p)
-                            | Poe1Quantity::InstantLeech(p)
-                            | Poe1Quantity::CannotLeech(p)
-                    ) if p == pool
-                )
-            },
-        );
-        reasons.extend(unvetted);
-        let cannot = super::hit::flag_of(
-            calc,
-            Quantity::Poe1(Poe1Quantity::CannotLeech(pool)),
-            &cx,
-            &mut reasons,
-        )?
-        .is_some();
-        // Each pass's total, capped per instance.
-        let mut any = false;
-        let mut passes = Vec::with_capacity(2);
-        for (index, pass) in hit.sources.against.iter().enumerate() {
-            let mut terms = Vec::new();
-            for &(ty, against) in pass {
-                let percent = percent_of(calc, &cx, pool, ty, &mut reasons)?;
-                if percent.value > 0.0 && !cannot {
-                    any = true;
-                    let product =
-                        phases::product(calc, &[against, percent], Term::Step("leeched"))?;
-                    let hundred = phases::constant(calc, "percent", 100.0)?;
-                    terms.push(quotient(
-                        calc,
-                        product,
-                        hundred,
-                        Term::Step("leech-of-type"),
-                    )?);
-                }
-            }
-            passes.push((
-                index == 1,
-                phases::total(calc, &terms, Term::Step("leech-total"))?,
-            ));
-        }
-        if !any {
-            continue;
-        }
-        let field = Field::Poe1(Poe1Field::LeechRate(pool));
-        let read = |calc: &Calc<'_>, f: Field| {
-            calc.field(f).and_then(|r| {
-                Some(Valued {
-                    node: r.node?,
-                    value: r.value?,
-                })
-            })
-        };
-        let (Some(pool_value), Some(instance_cap), Some(rate_cap)) = (
-            read(calc, pool_field(pool)),
-            read(calc, Field::Poe1(Poe1Field::MaxLeechInstance(pool))),
-            read(calc, Field::Poe1(Poe1Field::MaxLeechRate(pool))),
-        ) else {
+        let mut reasons = pool_reasons(calc, pool, unvetted);
+        let Some(caps) = caps(calc, pool) else {
             continue;
         };
-        let one = phases::constant(calc, "one", 1.0)?;
-        let mut weighted = Vec::with_capacity(2);
-        for (crit, total) in passes {
-            let capped = phases::pair(
+        let cannot = cannot_leech(calc, pool, &cx, &mut reasons)?;
+        let Some(hand) = hand_leech(calc, hit, hit.rate, pool, &cx, cannot, &caps, &mut reasons)?
+        else {
+            continue;
+        };
+        finish(calc, pool, &cx, &caps, &hand, reasons)?;
+    }
+    Ok(())
+}
+
+/// A dual wielder's leech rates (open items S7): each hand's pass as
+/// [`rates`] up to its instances and instant rate, at PoB's `hitRate` of
+/// that hand's chance to hit and the hands' combined `speed`
+/// (`globalOutput.Speed`, `CalcOffence.lua` 3211); then PoB's `combineStat`
+/// `DPS` (3877 to 3891, 2099 to 2103): `(main + off) / 2`, the sum when the
+/// skill hits with both (`double`); then the rate as [`rates`], in the main
+/// hand's context (PoB's `skillCfg`, which no modelled leech rate modifier
+/// tells from a hand's). A hand that does not leech the pool adds 0.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn rates_dual(
+    calc: &mut Calc<'_>,
+    hands: [&super::ailment::AilmentHit<'_>; 2],
+    speed: Valued,
+    double: bool,
+    unvetted: &Reasons,
+) -> Result<(), CalcError> {
+    for pool in POOLS {
+        let cx = calc.context(hands[0].flags);
+        let mut reasons = pool_reasons(calc, pool, unvetted);
+        let Some(caps) = caps(calc, pool) else {
+            continue;
+        };
+        let mut each = Vec::with_capacity(2);
+        for hand in hands {
+            let hand_cx = calc.context(hand.flags);
+            let cannot = cannot_leech(calc, pool, &hand_cx, &mut reasons)?;
+            each.push(hand_leech(
                 calc,
-                total,
-                instance_cap,
-                Term::Step("leech-instance-capped"),
-                true,
-            )?;
-            let crit_share = super::hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
-            let portion = if crit {
-                crit_share
-            } else {
-                super::hit::minus(calc, one, crit_share, Term::Step("non-crit-share"))?
-            };
-            weighted.push(phases::product(
-                calc,
-                &[capped, portion],
-                Term::Step("leech-pass"),
+                hand,
+                speed,
+                pool,
+                &hand_cx,
+                cannot,
+                &caps,
+                &mut reasons,
             )?);
         }
-        let leech = phases::total(calc, &weighted, Term::Step("leech-per-hit"))?;
-        // The instant share, `max(min(sum, 100), 0) / 100`.
-        let instant_sum = super::hit::sum_of(
-            calc,
-            Quantity::Poe1(Poe1Quantity::InstantLeech(pool)),
-            Op::Base,
-            &cx,
-            Term::Step("instant-leech"),
-            &mut reasons,
-        )?;
-        let hundred = phases::constant(calc, "percent", 100.0)?;
+        if each.iter().all(Option::is_none) {
+            continue;
+        }
         let zero = phases::constant(calc, "zero", 0.0)?;
-        let at_most = phases::pair(
+        let two = phases::constant(calc, "two", 2.0)?;
+        let combine = |calc: &mut Calc<'_>, pick: fn(&HandLeech) -> Valued| {
+            let terms: Vec<Valued> = each.iter().map(|h| h.as_ref().map_or(zero, pick)).collect();
+            let sum = phases::total(calc, &terms, Term::Step("both-hands"))?;
+            if double {
+                Ok::<_, CalcError>(sum)
+            } else {
+                quotient(calc, sum, two, Term::Step("hands-average"))
+            }
+        };
+        let instances = combine(calc, |h| h.instances)?;
+        let instant_rate = combine(calc, |h| h.instant_rate)?;
+        let base = phases::constant(calc, "leech-rate-base", LEECH_RATE_BASE)?;
+        let combined = HandLeech {
+            instances,
+            instant_rate,
+            base,
+        };
+        finish(calc, pool, &cx, &caps, &combined, reasons)?;
+    }
+    Ok(())
+}
+
+/// The pool's leech reasons: the markers of its quantities, then the
+/// hit's.
+fn pool_reasons(calc: &Calc<'_>, pool: Pool, unvetted: &Reasons) -> Reasons {
+    let mut reasons = phases::marker_reasons(
+        calc,
+        |_| None,
+        |q| {
+            matches!(
+                q,
+                Quantity::Poe1(
+                    Poe1Quantity::DamageLeech(p, _)
+                        | Poe1Quantity::LeechRate(p)
+                        | Poe1Quantity::InstantLeech(p)
+                        | Poe1Quantity::CannotLeech(p)
+                ) if p == pool
+            )
+        },
+    );
+    reasons.extend(unvetted);
+    reasons
+}
+
+/// The pool and its two caps, the fields the rate reads.
+struct Caps {
+    pool_value: Valued,
+    instance_cap: Valued,
+    rate_cap: Valued,
+}
+
+fn caps(calc: &Calc<'_>, pool: Pool) -> Option<Caps> {
+    let read = |f: Field| {
+        calc.field(f).and_then(|r| {
+            Some(Valued {
+                node: r.node?,
+                value: r.value?,
+            })
+        })
+    };
+    Some(Caps {
+        pool_value: read(pool_field(pool))?,
+        instance_cap: read(Field::Poe1(Poe1Field::MaxLeechInstance(pool)))?,
+        rate_cap: read(Field::Poe1(Poe1Field::MaxLeechRate(pool)))?,
+    })
+}
+
+/// `CannotLeech<Pool>` in `cx`.
+fn cannot_leech(
+    calc: &mut Calc<'_>,
+    pool: Pool,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<bool, CalcError> {
+    Ok(super::hit::flag_of(
+        calc,
+        Quantity::Poe1(Poe1Quantity::CannotLeech(pool)),
+        cx,
+        reasons,
+    )?
+    .is_some())
+}
+
+/// One pass's leech instances and instant rate, and the leech rate base's
+/// node.
+struct HandLeech {
+    instances: Valued,
+    instant_rate: Valued,
+    base: Valued,
+}
+
+/// One hand's (or a spell's) leech up to its instances and instant rate
+/// ([`rates`]); `None` when it leeches nothing of the pool. `rate` is the
+/// speed of PoB's `hitRate`.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "one pass's inputs, shared by the one-hand and dual-wield paths"
+)]
+fn hand_leech(
+    calc: &mut Calc<'_>,
+    hit: &super::ailment::AilmentHit<'_>,
+    rate: Valued,
+    pool: Pool,
+    cx: &QueryContext,
+    cannot: bool,
+    caps: &Caps,
+    reasons: &mut Reasons,
+) -> Result<Option<HandLeech>, CalcError> {
+    // Each pass's total, capped per instance.
+    let mut any = false;
+    let mut passes = Vec::with_capacity(2);
+    for (index, pass) in hit.sources.against.iter().enumerate() {
+        let mut terms = Vec::new();
+        for &(ty, against) in pass {
+            let percent = percent_of(calc, cx, pool, ty, reasons)?;
+            if percent.value > 0.0 && !cannot {
+                any = true;
+                let product = phases::product(calc, &[against, percent], Term::Step("leeched"))?;
+                let hundred = phases::constant(calc, "percent", 100.0)?;
+                terms.push(quotient(
+                    calc,
+                    product,
+                    hundred,
+                    Term::Step("leech-of-type"),
+                )?);
+            }
+        }
+        passes.push((
+            index == 1,
+            phases::total(calc, &terms, Term::Step("leech-total"))?,
+        ));
+    }
+    if !any {
+        return Ok(None);
+    }
+    let one = phases::constant(calc, "one", 1.0)?;
+    let mut weighted = Vec::with_capacity(2);
+    for (crit, total) in passes {
+        let capped = phases::pair(
             calc,
-            instant_sum,
-            hundred,
-            Term::Step("instant-at-most"),
+            total,
+            caps.instance_cap,
+            Term::Step("leech-instance-capped"),
             true,
         )?;
-        let at_least = phases::pair(calc, at_most, zero, Term::Step("instant-at-least"), false)?;
-        let proportion = quotient(calc, at_least, hundred, Term::Step("instant-proportion"))?;
-        let (instant, leech) = if proportion.value > 0.0 {
-            let instant = phases::product(calc, &[leech, proportion], Term::Step("instant"))?;
-            let kept = super::hit::minus(calc, one, proportion, Term::Step("not-instant"))?;
-            (
-                instant,
-                phases::product(calc, &[leech, kept], Term::Step("leech-over-time"))?,
-            )
+        let crit_share = super::hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
+        let portion = if crit {
+            crit_share
         } else {
-            (zero, leech)
+            super::hit::minus(calc, one, crit_share, Term::Step("non-crit-share"))?
         };
-        // `hitRate = HitChance / 100 x Speed x dpsMultiplier` (1).
-        let chance = super::hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
-        let hit_rate = phases::product(calc, &[chance, hit.rate], Term::Step("hit-rate"))?;
-        let base = phases::constant(calc, "leech-rate-base", LEECH_RATE_BASE)?;
-        // `getLeechInstances`: 0 when the pool is 0.
-        let instances = if pool_value.value == 0.0 {
-            zero
-        } else {
-            let per_pool = quotient(calc, leech, pool_value, Term::Step("leech-of-pool"))?;
-            let duration = quotient(calc, per_pool, base, Term::Step("leech-duration"))?;
-            phases::product(calc, &[duration, hit_rate], Term::Step("leech-instances"))?
-        };
-        let instant_rate = phases::product(calc, &[instant, hit_rate], Term::Step("instant-rate"))?;
-        let (inc, more) = super::hit::modifiers_of(
+        weighted.push(phases::product(
             calc,
-            Quantity::Poe1(Poe1Quantity::LeechRate(pool)),
-            &cx,
-            &mut reasons,
-        )?;
-        let instance_rate = phases::product(
-            calc,
-            &[pool_value, base, inc, more],
-            Term::Step("leech-instance-rate"),
-        )?;
-        let rate = phases::product(calc, &[instances, instance_rate], Term::Step("leech-rate"))?;
-        let capped = phases::pair(calc, rate, rate_cap, Term::Step("leech-rate-capped"), true)?;
-        let recovery = super::regen::recovery_rate(calc, pool, &mut reasons)?;
-        let recovered = phases::product(calc, &[capped, recovery], Term::Step("leech-recovered"))?;
-        let value = phases::total(calc, &[instant_rate, recovered], Term::Result)?;
-        calc.set_derived(
-            field,
-            phases::query(value, reasons),
-            &[
-                pool_field(pool),
-                Field::Poe1(Poe1Field::MaxLeechInstance(pool)),
-                Field::Poe1(Poe1Field::MaxLeechRate(pool)),
-                Field::CritChance,
-                Field::Speed,
-            ],
-        );
+            &[capped, portion],
+            Term::Step("leech-pass"),
+        )?);
     }
+    let leech = phases::total(calc, &weighted, Term::Step("leech-per-hit"))?;
+    // The instant share, `max(min(sum, 100), 0) / 100`.
+    let instant_sum = super::hit::sum_of(
+        calc,
+        Quantity::Poe1(Poe1Quantity::InstantLeech(pool)),
+        Op::Base,
+        cx,
+        Term::Step("instant-leech"),
+        reasons,
+    )?;
+    let hundred = phases::constant(calc, "percent", 100.0)?;
+    let zero = phases::constant(calc, "zero", 0.0)?;
+    let at_most = phases::pair(
+        calc,
+        instant_sum,
+        hundred,
+        Term::Step("instant-at-most"),
+        true,
+    )?;
+    let at_least = phases::pair(calc, at_most, zero, Term::Step("instant-at-least"), false)?;
+    let proportion = quotient(calc, at_least, hundred, Term::Step("instant-proportion"))?;
+    let (instant, leech) = if proportion.value > 0.0 {
+        let instant = phases::product(calc, &[leech, proportion], Term::Step("instant"))?;
+        let kept = super::hit::minus(calc, one, proportion, Term::Step("not-instant"))?;
+        (
+            instant,
+            phases::product(calc, &[leech, kept], Term::Step("leech-over-time"))?,
+        )
+    } else {
+        (zero, leech)
+    };
+    // `hitRate = HitChance / 100 x Speed x dpsMultiplier` (1).
+    let chance = super::hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
+    let hit_rate = phases::product(calc, &[chance, rate], Term::Step("hit-rate"))?;
+    let base = phases::constant(calc, "leech-rate-base", LEECH_RATE_BASE)?;
+    // `getLeechInstances`: 0 when the pool is 0.
+    let instances = if caps.pool_value.value == 0.0 {
+        zero
+    } else {
+        let per_pool = quotient(calc, leech, caps.pool_value, Term::Step("leech-of-pool"))?;
+        let duration = quotient(calc, per_pool, base, Term::Step("leech-duration"))?;
+        phases::product(calc, &[duration, hit_rate], Term::Step("leech-instances"))?
+    };
+    let instant_rate = phases::product(calc, &[instant, hit_rate], Term::Step("instant-rate"))?;
+    Ok(Some(HandLeech {
+        instances,
+        instant_rate,
+        base,
+    }))
+}
+
+/// The rate from the instances and instant rate ([`rates`]), set as the
+/// pool's field.
+fn finish(
+    calc: &mut Calc<'_>,
+    pool: Pool,
+    cx: &QueryContext,
+    caps: &Caps,
+    hand: &HandLeech,
+    mut reasons: Reasons,
+) -> Result<(), CalcError> {
+    let (inc, more) = super::hit::modifiers_of(
+        calc,
+        Quantity::Poe1(Poe1Quantity::LeechRate(pool)),
+        cx,
+        &mut reasons,
+    )?;
+    let instance_rate = phases::product(
+        calc,
+        &[caps.pool_value, hand.base, inc, more],
+        Term::Step("leech-instance-rate"),
+    )?;
+    let rate = phases::product(
+        calc,
+        &[hand.instances, instance_rate],
+        Term::Step("leech-rate"),
+    )?;
+    let capped = phases::pair(
+        calc,
+        rate,
+        caps.rate_cap,
+        Term::Step("leech-rate-capped"),
+        true,
+    )?;
+    let recovery = super::regen::recovery_rate(calc, pool, &mut reasons)?;
+    let recovered = phases::product(calc, &[capped, recovery], Term::Step("leech-recovered"))?;
+    let value = phases::total(calc, &[hand.instant_rate, recovered], Term::Result)?;
+    calc.set_derived(
+        Field::Poe1(Poe1Field::LeechRate(pool)),
+        phases::query(value, reasons),
+        &[
+            pool_field(pool),
+            Field::Poe1(Poe1Field::MaxLeechInstance(pool)),
+            Field::Poe1(Poe1Field::MaxLeechRate(pool)),
+            Field::CritChance,
+            Field::Speed,
+        ],
+    );
     Ok(())
 }
 
