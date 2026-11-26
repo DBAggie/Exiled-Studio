@@ -242,10 +242,22 @@ impl StatMapping for InSlot<'_> {
         }
         let support = super::item_supports::row(stat.as_str())
             .map(|(id, _, _)| Quantity::Poe1(Poe1Quantity::ItemSupport(id, self.slot)));
+        // A trigger line whose value is not its chance (open items S3,
+        // part 5) is a flag: its value (a cooldown shown in seconds, read
+        // back as a range) is not read.
+        let op = if super::item_supports::TRIGGER_ROWS
+            .iter()
+            .any(|(s, _, _)| *s == stat.as_str())
+            && !super::item_supports::TRIGGER_CHANCE_STATS.contains(&stat.as_str())
+        {
+            Op::Flag
+        } else {
+            Op::Base
+        };
         match socketed_quantity(stat.as_str(), self.slot).or(support) {
             Some(quantity) => StatMap::Effects(vec![EffectTemplate {
                 quantity,
-                op: Op::Base,
+                op,
                 scale: 1.0,
                 divisor: 1.0,
                 conditions: Conditions::none(),
@@ -383,7 +395,10 @@ impl GemLevels {
         let mut supports = Vec::new();
         let mut cost = Vec::new();
         for e in effects {
-            if matches!(e.source, Source::Gem { .. }) || e.op != Op::Base {
+            // A trigger line's support is a flag (open items S3, part 5).
+            let flag_support = e.op == Op::Flag
+                && matches!(e.quantity, Quantity::Poe1(Poe1Quantity::ItemSupport(..)));
+            if matches!(e.source, Source::Gem { .. }) || (e.op != Op::Base && !flag_support) {
                 continue;
             }
             match e.quantity {

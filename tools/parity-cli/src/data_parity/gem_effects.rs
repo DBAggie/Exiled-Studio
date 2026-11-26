@@ -503,6 +503,38 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // (`poe1::triggers`: PoB's stand-in time and `showAverage`).
     ("SupportCastOnDeath", "triggered"),
     ("SupportCastOnDeath", "triggeredOnDeath"),
+    // Open items S3, part 5: the item trigger supports' marks, read by
+    // the support's ID (`poe1::triggers`: the rotation, the crit chance).
+    (
+        "SupportTriggerFireSpellOnHit",
+        "triggeredBySettlersEnchantTrigger",
+    ),
+    ("SupportTriggerSpellOnAttack", "triggeredByUnique"),
+    ("SupportTriggerSpellOnBowAttack", "triggeredByUnique"),
+    (
+        "SupportTriggerSpellOnBowAttackFreezeHit",
+        "triggeredByUnique",
+    ),
+    (
+        "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+        "triggerOnCrit",
+    ),
+    (
+        "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+        "triggeredBySevenTeachings",
+    ),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "triggerOnCrit",
+    ),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "triggeredByCospris",
+    ),
+    (
+        "SupportUniqueMjolnerLightningSpellsCastOnHit",
+        "triggeredByMjolner",
+    ),
     // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
     // their stats (the chance on crit, the threshold, the triggered marks).
     (
@@ -702,6 +734,20 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     ("SupportBrandSupport", "Triggered"),
     // Open items S3: Cast on Death's spell (`poe1::triggers`).
     ("SupportCastOnDeath", "Triggered"),
+    // Open items S3, part 5: the supports an item's trigger line gives
+    // its socketed spells (`poe1::triggers`).
+    ("SupportTriggerElementalSpellOnBlock", "Triggered"),
+    ("SupportTriggerFireSpellOnHit", "Triggered"),
+    ("SupportTriggerSpellOnAttack", "Triggered"),
+    ("SupportTriggerSpellOnBowAttack", "Triggered"),
+    ("SupportTriggerSpellOnBowAttackFreezeHit", "Triggered"),
+    ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", "Triggered"),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "Triggered",
+    ),
+    ("SupportUniqueMjolnerLightningSpellsCastOnHit", "Triggered"),
+    ("SupportUniqueVirulenceSpellsCastOnBlock", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];

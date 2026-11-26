@@ -428,6 +428,20 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
 /// [`attack_skill`], so the mapping gives it no effect.
 pub const DOUBLE_HITS_STAT: &str = "skill_double_hits_when_dual_wielding";
 
+/// PoB's `doubleHitsWhenDualWielding` for `skill`: the skill's data
+/// (Swordstorm's) or the stat [`DOUBLE_HITS_STAT`] of the skill or a
+/// support (`SkillStatMap.lua` 291).
+pub(super) fn double_hits(skill: &MainSkill<'_>, data: &dyn CalcData) -> bool {
+    super::pob_skill::skill(&skill.effect().id)
+        .and_then(|p| p.skill_data("doubleHitsWhenDualWielding"))
+        .is_some_and(super::pob_skill::Value::truthy)
+        || skill::instances(skill, data).iter().any(|i| {
+            i.stats
+                .iter()
+                .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
+        })
+}
+
 /// PoB's `skillFlag = "arrow"` (`SkillStatMap.lua` 1341): the skill's
 /// keyword `KeywordFlag.Arrow` (`CalcActiveSkill.lua` 412; P6-11c), from the
 /// active gem's own stats only (PoB reads `skillFlag` entries of the active
@@ -755,17 +769,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         None if hands.off_hand_weapon => return None,
         None => (None, Flags::NONE),
     };
-    // PoB's `doubleHitsWhenDualWielding`: the skill's data (Swordstorm's)
-    // or the stat `skill_double_hits_when_dual_wielding` of the skill or a
-    // support (`SkillStatMap.lua` 291).
-    let double_hits = super::pob_skill::skill(&effect.id)
-        .and_then(|p| p.skill_data("doubleHitsWhenDualWielding"))
-        .is_some_and(super::pob_skill::Value::truthy)
-        || skill::instances(&skill, data).iter().any(|i| {
-            i.stats
-                .iter()
-                .any(|(s, v)| s == DOUBLE_HITS_STAT && *v != 0)
-        });
+    let double_hits = double_hits(&skill, data);
     let arrow = skill::instance(effect, gem.level, gem.quality, data)
         .stats
         .iter()

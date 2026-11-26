@@ -10935,6 +10935,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_cannot_be_stunned_before_contact_point", "display"),
+    // Open items S3, part 5: the item trigger supports' markers (PoB's
+    // triggeredByUnique, triggeredByMjolner, triggeredByCospris, triggerOnCrit,
+    // the on-block and on-hit groups), read by poe1::triggers through the
+    // support itself, and PvP scaling.
+    ("skill_has_trigger_from_unique_item", "trigger"),
     // P6-11u: a skill effect duration (PoB `Duration`): read only by
     // skill functions, base mods, stages, brands, and ailments that are
     // skill effects, each a reason (`hit::pob_vetted`, `poe1::ailment`).
@@ -10949,7 +10954,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("smite_lightning_target_range", "targeting"),
+    (
+        "socketed_triggered_skills_use_weapon_attack_time_for_pvp_scaling",
+        "trigger",
+    ),
     ("spell_area_of_effect_+%", "area"),
+    ("spell_is_triggered_on_hit", "trigger"),
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
@@ -11138,6 +11148,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "travel_skills_cooldown_speed_+%_per_frenzy_charge",
         "no-slice",
     ),
+    ("trigger_effect_group_on_block", "trigger"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
@@ -11168,6 +11179,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "unaffected_by_vulnerability_while_affected_by_determination",
         "curse-on-self",
     ),
+    ("unique_cospris_malice_cold_spells_triggered", "trigger"),
+    ("unique_mjolner_lightning_spells_triggered", "trigger"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (

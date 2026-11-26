@@ -206,4 +206,62 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **`data-parity`:** 753 differences, `uncategorized` 0, the same as `dev`. `gem_effects` allows Arcanist Brand's `Brand` type, its support's `Triggered` type and `triggeredByBrand`, and Cast on Death's `Triggered` type and marks.
 - **Tests:** the workspace's 1,860 tests, clippy, and fmt pass.
 
-**Left for S3:** Manaforged Arrows (a triggered bow attack: the attack path takes no triggered attack yet, and the rate needs both skills' raw mana costs), the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it).
+**Left for S3:** Manaforged Arrows (a triggered bow attack: the attack path takes no triggered attack yet, and the rate needs both skills' raw mana costs), the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it). The item lines that trigger a socketed spell are part 5.
+
+## Part 5: the item lines that trigger a socketed spell (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 4.
+
+**What PoB does.** An item line such as Mjolner's "Trigger a Socketed Lightning Spell on Hit, with a 0.25 second Cooldown" is an `ExtraSupport` of a trigger support at level 1, for the item's slot (`ModParser.lua` 3148 to 3176 and 5276 to 5286). The support joins the socketed spell's group, makes it `Triggered`, and its name is the config (`calcs.triggers`, 1592 to 1617, `triggerNameLower`).
+
+**The lines** (`item_supports::TRIGGER_ROWS`, served by `item_supports::row` at level 1 like the "Supported by" rows):
+
+| Stat | Support | Config (`CalcTriggers.lua`) |
+|---|---|---|
+| `trigger_socketed_spell_on_attack_%` | `SupportTriggerSpellOnAttack` | Poet's Pen (1009): a wand attack, on use; the spells of the item's slot |
+| `chance_to_trigger_socketed_spell_on_bow_attack_%` | `SupportTriggerSpellOnBowAttack` | Asenath's Chant (1031): a bow attack, on use; the spells of the item's slot |
+| `local_unique_attacks_cast_socketed_lightning_spells_%` | `SupportUniqueMjolnerLightningSpellsCastOnHit` | Mjolner (1109): an attack with a mace or a one-handed weapon in another group; the group's lightning spells |
+| `local_unique_cast_socketed_cold_skills_on_melee_critical_strike` | `SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike` | Cospri's Malice (1125): a melee attack with a sword or a one-handed weapon, on crit; the cold spells of the item's slot |
+| `main_hand_trigger_socketed_spell_on_freezing_hit` | `SupportTriggerSpellOnBowAttackFreezeHit` | Wing of the Wyvern (1117): a bow attack in another group; the group's spells |
+| `body_armour_trigger_socketed_spell_on_unarmed_melee_critical_hit_cooldown` | `SupportTriggerSpellOnUnarmedMeleeCriticalHit` | Seven Teachings (1131): an unarmed melee attack, on crit; the group's spells |
+| `local_shield_trigger_socketed_elemental_spell_on_block_display_cooldown` | `SupportTriggerElementalSpellOnBlock` | Svalinn (1498): a global trigger; the group's spells |
+| `local_unique_cast_socketed_spell_on_block` | `SupportUniqueVirulenceSpellsCastOnBlock` | Festering Resentment (1505): the same |
+| `local_weapon_trigger_socketed_fire_spell_on_hit_display_cooldown` | `SupportTriggerFireSpellOnHit` | the enchantment (1521): a melee attack; the group's spells |
+
+- **A chance below 100.** The three `%` stats carry the chance to trigger. PoB ignores it (its `ExtraSupport` has no chance, and its patterns for "#% chance to" forms do not all match the game's text), so a line below 100% leaves the rate unsupported (`item-trigger-chance`).
+- **The other stats are flags.** Their value is a cooldown shown in seconds, which reads back as a range (`unsettled-value`); PoB does not read it, and neither does the engine (`gem_levels`: the row's `ItemSupport` is a flag).
+- **Left out:** "Trigger Socketed Spell on Kill" (Squirming Terror: at 100% the game's text has no "% chance" prefix, which PoB's pattern 3160 needs, so PoB applies nothing); Focus (`helmetFocusHandler`); the lines that trigger a bow skill or a curse; Seven Teachings is ported but finds no source, as the engine computes no unarmed attack.
+
+**The handler**, `triggers::Config` with the eight new configs:
+- **The source** is any active attack, not triggered and not the main skill, that meets the config's rule. Its weapon flags are the main hand's (PoB's `skillCfg.flags`, `CalcActiveSkill.lua` 293 to 309 and 455, from `hit::weapon_type_flags`; an empty hand is `Unarmed` without `Weapon1H`). The highest rate wins, as for the other configs.
+- **On use** (Poet's Pen, Asenath's Chant): the source's hit chance is not a factor. **On crit** (Cospri's Malice, Seven Teachings): its crit chance is.
+- **The trigger cooldown** is the support's level cooldown from the bundle (0.25 s; Asenath's Chant 0.3 s).
+- **Dual wielding** (441 to 449): an item's trigger from an attack halves the source rate, unless the attack hits with both weapons (`hit::double_hits`, lifted out of the attack path). A hand that is not known leaves the rate unsupported.
+- **The rotation** is the triggered spells PoB's `triggeredSkillCond` picks: of the main skill's group (`slotMatch`), or of its item's slot (Poet's Pen, Asenath's Chant, Cospri's Malice).
+- **Cast on block** is a global trigger with `triggeredSkillCond`: the effective rate is the cap, and PoB simulates the rotation at it (809), with PoB's `TriggeredDamage` as `Damage`.
+
+**Rows and tables:**
+- `NoEffect`: the supports' markers `skill_has_trigger_from_unique_item`, `socketed_triggered_skills_use_weapon_attack_time_for_pvp_scaling`, `unique_cospris_malice_cold_spells_triggered`, `unique_mjolner_lightning_spells_triggered`, `trigger_effect_group_on_block`, `spell_is_triggered_on_hit`.
+- `gems::SUPPORTS`: the nine supports, no global stat. `gems::SKILLS`: Spark as an inert skill (PoB's export: no global effect).
+- **`data-parity`, table `gem_effects`:** allows the supports' `Triggered` type and their `SkillData` marks. 753 differences, `uncategorized` 0, the same as `dev`.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 4's run.
+
+- **Fixtures** (new, all original; each run three times by PoB, identical; the bases have whole-millisecond attack times, so Q11 does not enter). Every compared field equals PoB's:
+  - `trigger-poets-pen-ice-nova-witch.xml`: the rate 1.84, Kinetic Blast's use rate under the 0.25 s cooldown.
+  - `trigger-poets-pen-dual-wield-witch.xml`: a second wand in the off hand, the rate 1.012, half the source rate (Kinetic Blast's 1.84 with dual wielding's 10% more attack speed, 2.024).
+  - `trigger-asenaths-chant-ice-nova-ranger.xml`: Ice Nova in the helmet, Burning Arrow with a bow, the rate 0.8759 from 0.875 under the 0.3 s cooldown.
+  - `trigger-wing-of-the-wyvern-ice-nova-ranger.xml`: the line PoB joins from two, the rate 0.2188 (the hit chance applies).
+  - `trigger-mjolner-spark-templar.xml`: Spark and Smite, the rate 0.23375, Spark's cost 0 from the support's cost multiplier. Spark's own fields stay partial for its PoB data (`pob-skill-data`), so 69 fields are targets; no lightning spell in the gem tables is free of its own reasons.
+  - `trigger-cospris-ice-nova-templar.xml`: Smite's hit and crit chance, the rate 0.00362.
+  - `trigger-svalinn-ice-nova-templar.xml` and `trigger-festering-resentment-ice-nova-witch.xml`: the rate 3.7803, PoB's rotation at the 3.7879 cap.
+  - `trigger-fire-spell-on-hit-fireball-templar.xml`: Fireball and Smite, the rate 0.23375, the ignite too.
+  - 686 fields are targets in all.
+- **Public `calc-parity`** (551 builds, the calc scope): 0 unexpected. `Complete` fields went from 39,769 to 40,455, the new fixtures' 686. No other value moved. One document changed in its reasons only: `poisonous-concoction-of-bouncing-pathfinder.xml` lost its Svalinn line's `unmapped-stat`.
+- **The evidence oracle** now holds the three Spellslinger fixtures' outputs (run again here), which part 3's run had added only on CI, so the local `calc-parity` no longer reports them missing.
+- **Corpus** (21 builds, local): no document changed.
+- **Tests:** `trigger_rows_should_be_sorted_at_level_one`; the gem tables' sort test covers the new entries; the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
+
+**Left for S3:** Manaforged Arrows and the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, and kin), all attacks: the attack path takes no trigger rate yet. Then Focus, Squirming Terror (the game-truth list, with `trigger_socketed_spell_on_skill_use_%`), and `spellslinger_cooldown_duration_+%` (no build has it).

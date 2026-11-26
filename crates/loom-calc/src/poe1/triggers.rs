@@ -33,6 +33,22 @@
 //!   ([`ON_DEATH_TIME`]) and keeps its average damage as the combined DPS
 //!   (`showAverage`). Its damaging ailments, which PoB counts without the
 //!   rate (`CalcOffence.lua` 4909), are not computed.
+//! - **The item lines that trigger a socketed spell** (open items S3, part
+//!   5; [`super::item_supports::TRIGGER_ROWS`]): PoB gives the item's slot
+//!   a trigger support and finds the config by the support's name. Poet's
+//!   Pen (1009, a wand attack) and Asenath's Chant (1031, a bow attack) on
+//!   use; Mjolner (1109, an attack with a mace or a one-handed weapon in
+//!   another group); Cospri's Malice (1125, a melee attack with a sword or
+//!   a one-handed weapon, on crit); Wing of the Wyvern (1117, a bow attack
+//!   in another group); Seven Teachings (1131, an unarmed melee attack, on
+//!   crit; the engine computes no unarmed attack, so its source is not
+//!   found); the fire spell on hit enchantment (1521, a melee attack); and
+//!   Svalinn's and Festering Resentment's trigger on block (1498, 1505), a
+//!   global trigger whose rotation runs at the cap. The source's weapon is
+//!   the main hand's (PoB's `skillCfg.flags`). The source rate is halved
+//!   while dual wielding unless the attack hits with both weapons
+//!   (441 to 449). A line below 100% leaves the rate unsupported: PoB
+//!   ignores the chance, the game does not.
 //!
 //! Mark On Hit (1275) and Hextouch (1278) trigger a mark or a hex: their
 //! effects apply as any curse's ([`super::gems`]), and the engine computes
@@ -72,10 +88,11 @@
 //!
 //! **Not modelled:** added cooldown and added cast time (each from a stat
 //! the mapping does not know, so a reason; cooldown recovery is in since
-//! open items S3), dual
-//! wielding's halved rate (only for item triggers and item-granted
-//! supports, none ported), Unleash, projectiles that hit several times,
-//! and trigger-related damage (`TriggeredDamage`: unmapped stats).
+//! open items S3), Unleash, projectiles that hit several times, and
+//! trigger-related damage (`TriggeredDamage`: unmapped stats). Skills an
+//! item grants and triggers (`ExtraSkill` with `triggered`: Molten Burst,
+//! Starfall, and kin) are attacks, and the attack path takes no trigger
+//! rate yet.
 
 use super::Poe1Quantity;
 use super::skill::{self, GemEffectRef, MainSkill};
@@ -123,6 +140,75 @@ pub enum Config {
     /// time to a stand-in minute ([`ON_DEATH_TIME`], `CalcPerform.lua` 1438
     /// to 1447) and keeps `showAverage`.
     CastOnDeath,
+    /// Poet's Pen (open items S3, part 5; 1009): a wand attack, on use; the
+    /// rotation the spells of the item's slot.
+    PoetsPen,
+    /// Asenath's Chant (1031): a bow attack, on use; the rotation the
+    /// spells of the item's slot.
+    AsenathsChant,
+    /// Mjolner (1109): an attack with a mace or a one-handed weapon in
+    /// another group; the rotation the group's lightning spells.
+    Mjolner,
+    /// Cospri's Malice (1125): a melee attack with a sword or a one-handed
+    /// weapon, on crit; the rotation the cold spells of the item's slot.
+    CosprisMalice,
+    /// Wing of the Wyvern (1117): a bow attack in another group; the
+    /// rotation the group's spells.
+    WingOfTheWyvern,
+    /// Seven Teachings (1131): an unarmed melee attack, on crit; the
+    /// rotation the group's spells.
+    SevenTeachings,
+    /// Svalinn's and Festering Resentment's trigger on block (1498, 1505):
+    /// a global trigger whose rotation is the group's spells at the cap.
+    CastOnBlock,
+    /// The fire spell on hit enchantment (1521): a melee attack; the
+    /// rotation the group's spells.
+    FireSpellOnHit,
+}
+
+impl Config {
+    /// A trigger an item's line gives ([`super::item_supports::TRIGGER_ROWS`]):
+    /// its source rate is halved while dual wielding (`CalcTriggers.lua`
+    /// 441 to 449, `itemSupportTrigger`).
+    const fn is_item_line(self) -> bool {
+        matches!(
+            self,
+            Self::PoetsPen
+                | Self::AsenathsChant
+                | Self::Mjolner
+                | Self::CosprisMalice
+                | Self::WingOfTheWyvern
+                | Self::SevenTeachings
+                | Self::CastOnBlock
+                | Self::FireSpellOnHit
+        )
+    }
+
+    /// PoB's `triggerOnUse`: the source's hit chance is not a factor.
+    const fn on_use(self) -> bool {
+        matches!(
+            self,
+            Self::Spellslinger | Self::PoetsPen | Self::AsenathsChant
+        )
+    }
+
+    /// PoB's `triggerOnCrit` (the support's `SkillData` or stat): the
+    /// source's crit chance is a factor.
+    const fn on_crit(self) -> bool {
+        matches!(
+            self,
+            Self::CastOnCrit | Self::CosprisMalice | Self::SevenTeachings
+        )
+    }
+
+    /// The rotation's skills share the main skill's slot (PoB's
+    /// `socketGroup.slot`) rather than its group (`slotMatch`, 32 to 38).
+    const fn rotation_by_slot(self) -> bool {
+        matches!(
+            self,
+            Self::PoetsPen | Self::AsenathsChant | Self::CosprisMalice
+        )
+    }
 }
 
 /// PoB's stand-in time of a skill Cast on Death triggers: `60 x 1000`
@@ -151,6 +237,31 @@ const SUPPORTS: &[(&str, Config)] = &[
     ("SupportSpellslinger", Config::Spellslinger),
     ("SupportBrandSupport", Config::ArcanistBrand),
     ("SupportCastOnDeath", Config::CastOnDeath),
+    // The item lines' supports (open items S3, part 5), by PoB's names.
+    ("SupportTriggerSpellOnAttack", Config::PoetsPen),
+    ("SupportTriggerSpellOnBowAttack", Config::AsenathsChant),
+    (
+        "SupportUniqueMjolnerLightningSpellsCastOnHit",
+        Config::Mjolner,
+    ),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        Config::CosprisMalice,
+    ),
+    (
+        "SupportTriggerSpellOnBowAttackFreezeHit",
+        Config::WingOfTheWyvern,
+    ),
+    (
+        "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+        Config::SevenTeachings,
+    ),
+    ("SupportTriggerElementalSpellOnBlock", Config::CastOnBlock),
+    (
+        "SupportUniqueVirulenceSpellsCastOnBlock",
+        Config::CastOnBlock,
+    ),
+    ("SupportTriggerFireSpellOnHit", Config::FireSpellOnHit),
 ];
 
 /// Arcanist Brand's active skill (`act_int.lua` 545): the source of the
@@ -226,6 +337,15 @@ const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportManaforgedArrows",
     "SupportMarkOnHit",
     "SupportSpellslinger",
+    "SupportTriggerElementalSpellOnBlock",
+    "SupportTriggerFireSpellOnHit",
+    "SupportTriggerSpellOnAttack",
+    "SupportTriggerSpellOnBowAttack",
+    "SupportTriggerSpellOnBowAttackFreezeHit",
+    "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+    "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+    "SupportUniqueMjolnerLightningSpellsCastOnHit",
+    "SupportUniqueVirulenceSpellsCastOnBlock",
 ];
 
 /// The stat that makes Cast when Damage Taken's config apply (PoB's
@@ -354,6 +474,14 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     {
         return Outcome::SelfCast;
     }
+    // An item line below 100%: PoB ignores its chance (open items S3,
+    // part 5), the game does not.
+    if config.is_item_line()
+        && let Some(s) = &support
+        && item_line_chance(calc, skill, s.effect.id.as_str()).is_some_and(|c| c < 100.0)
+    {
+        return unsupported("item-trigger-chance");
+    }
     let seconds = |ms: i64| {
         #[expect(clippy::cast_precision_loss, reason = "milliseconds, exact as f64")]
         let s = ms as f64 / 1000.0;
@@ -411,11 +539,19 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     let is_main = |s: &MainSkill<'_>| {
         s.active_gem.gem == skill.active_gem.gem && s.effect().id == skill.effect().id
     };
+    let main_slot = group_slot(input.build, main_group);
     let rotation_of = |config: Config| -> Vec<Rotated> {
         skills
             .iter()
             .filter(|(g, _, s)| {
-                *g == main_group
+                // PoB's `slotMatch` (the group, for a skill that is not an
+                // item's) or the item's slot (`socketGroup.slot`).
+                let together = if config.rotation_by_slot() {
+                    main_slot.is_some() && group_slot(input.build, *g) == main_slot
+                } else {
+                    *g == main_group
+                };
+                together
                     && s.types.contains("Spell")
                     && s.supports.iter().any(|x| {
                         SUPPORTS
@@ -435,6 +571,26 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             })
             .collect()
     };
+    if config == Config::CastOnBlock {
+        // A global trigger whose source is the skill (1498 to 1511): the
+        // effective rate is the cap (714 to 719); the config has
+        // `triggeredSkillCond`, so PoB simulates the rotation of the
+        // group's spells the support supports at it (809), with the
+        // trigger's cooldown and a chance of 100.
+        if !cap.is_finite() {
+            return unsupported("trigger-no-cooldown");
+        }
+        let rotation = rotation_of(Config::CastOnBlock);
+        if !rotation.iter().any(|r| r.main) {
+            return unsupported("trigger-rotation");
+        }
+        let trigger = if trigger_cd != 0.0 {
+            trigger_cd
+        } else {
+            triggered_cd
+        };
+        return Outcome::Rate(rotation_rate(&rotation, cap, trigger, 100.0), reasons, true);
+    }
     if config == Config::ArcanistBrand {
         // The brand's activations are the effective source rate. The
         // config has `triggeredSkillCond`, so PoB always simulates the
@@ -498,8 +654,31 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     // `ModFlag.Wand` in the attack's `skillCfg`: the main hand holds a
     // wand), in any group (1209 to 1210).
     let wand = matches!(&hands.main_hand, super::collect::Held::Weapon(c) if c == "Wand");
+    // The item configs' sources by the attack's weapon flags (open items
+    // S3, part 5): PoB's `skillCfg.flags` hold the main hand's
+    // (`CalcActiveSkill.lua` 293 to 309, 455; an empty hand is `Unarmed`
+    // without `Weapon1H`, 205 to 221). `None`: a hand not known.
+    let weapon = match &hands.main_hand {
+        super::collect::Held::Weapon(c) => super::hit::weapon_type_flags(c),
+        super::collect::Held::Empty => Some(Flags::UNARMED),
+        _ => None,
+    };
+    let weapon_has = |f: Flags| weapon.map(|w| w.intersects(f));
+    if matches!(
+        config,
+        Config::PoetsPen
+            | Config::AsenathsChant
+            | Config::Mjolner
+            | Config::CosprisMalice
+            | Config::WingOfTheWyvern
+            | Config::SevenTeachings
+    ) && weapon.is_none()
+    {
+        return unsupported("trigger-source");
+    }
     let mut best: Option<Source3> = None;
     for (g, a, s) in &skills {
+        let melee = s.types.contains("Melee");
         let candidate = s.types.contains("Attack")
             && !s.types.contains("Triggered")
             && !s.types.contains("InbuiltTrigger")
@@ -507,14 +686,26 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             && !is_player_main(*g, s)
             && match config {
                 Config::CastOnCrit => *g == main_group,
-                Config::CastOnMeleeKill => *g == main_group && s.types.contains("Melee"),
+                Config::CastOnMeleeKill => *g == main_group && melee,
                 Config::Spellslinger => wand && s.types.contains("Projectile"),
+                Config::PoetsPen => weapon_has(Flags::WAND) == Some(true),
+                Config::AsenathsChant => weapon_has(Flags::BOW) == Some(true),
+                Config::Mjolner => {
+                    *g != main_group && weapon_has(Flags::MACE | Flags::WEAPON_1H) == Some(true)
+                }
+                Config::CosprisMalice => {
+                    melee && weapon_has(Flags::SWORD | Flags::WEAPON_1H) == Some(true)
+                }
+                Config::WingOfTheWyvern => *g != main_group && weapon_has(Flags::BOW) == Some(true),
+                Config::SevenTeachings => melee && weapon_has(Flags::UNARMED) == Some(true),
+                Config::FireSpellOnHit => melee,
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
                 | Config::CastWhileChannelling
                 | Config::ArcanistBrand
-                | Config::CastOnDeath => false,
+                | Config::CastOnDeath
+                | Config::CastOnBlock => false,
             };
         if !candidate || s.disabled_by_hands(&hands) != Ok(false) {
             continue;
@@ -541,6 +732,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         if best.as_ref().is_none_or(|b| rate > b.rate) {
             best = Some(Source3 {
                 rate,
+                double_hits: super::hit::double_hits(s, input.data),
                 speed: speed.map(|f| f.state.clone()),
                 hit: result
                     .fields
@@ -561,8 +753,8 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         return unsupported("trigger-source");
     }
     // The trigger chance (727 to 790): the source is an attack; a trigger
-    // on use (Spellslinger's `triggerOnUse`, 732) skips its hit chance.
-    let on_use = config == Config::Spellslinger;
+    // on use (`triggerOnUse`, 732) skips its hit chance.
+    let on_use = config.on_use();
     let mut chance = 100.0;
     let (hit, hit_state) = src
         .hit
@@ -577,7 +769,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         }
         chance = chance * hit / 100.0;
     }
-    if config == Config::CastOnCrit {
+    if config.on_crit() {
         let Some((Some(crit), crit_state)) = src.crit.clone() else {
             return unsupported("trigger-source");
         };
@@ -604,7 +796,16 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     if !rotation.iter().any(|r| r.main) {
         return unsupported("trigger-rotation");
     }
-    let effective = src.rate;
+    let mut effective = src.rate;
+    // An item's trigger from an attack while dual wielding, unless the
+    // attack hits with both weapons: half the rate (441 to 449).
+    if config.is_item_line() && !src.double_hits {
+        match hands.dual_wielding() {
+            Some(true) => effective /= 2.0,
+            Some(false) => {}
+            None => return unsupported("trigger-source"),
+        }
+    }
     let value = if ignores_tick && rotation.len() == 1 {
         crate::math::min(cap, effective)
     } else {
@@ -752,6 +953,44 @@ fn arcanist_rate(
     Some(repeat * (1.0 + inc / 100.0) * more * attached)
 }
 
+/// The slot of active group `group` (1-based), as the item supports read
+/// it ([`super::gem_levels::GemSlot`]); `None` without one.
+fn group_slot(build: &loom_domain::Build, group: usize) -> Option<super::gem_levels::GemSlot> {
+    let groups = skill::active_groups(build).ok()?;
+    let g = groups.get(group.checked_sub(1)?)?;
+    super::gem_levels::GemSlot::of(g.slot.as_ref()?.as_str())
+}
+
+/// The chance, in percent, of the item line that gives `support` to the
+/// main skill's slot (open items S3, part 5): the line's value for a
+/// chance row ([`super::item_supports::TRIGGER_CHANCE_STATS`]), else 100;
+/// the lowest when several lines give it. `None` when no line does.
+fn item_line_chance(calc: &Calc<'_>, skill: &MainSkill<'_>, support: &str) -> Option<f64> {
+    let slot = group_slot(calc.input().build, skill.group)?;
+    calc.store()
+        .effects()
+        .iter()
+        .filter(|e| matches!(e.op, Op::Base | Op::Flag))
+        .filter_map(|e| match e.quantity {
+            Quantity::Poe1(Poe1Quantity::ItemSupport(stat, s)) if s == slot => {
+                Some((stat, e.value))
+            }
+            _ => None,
+        })
+        .filter(|(stat, _)| {
+            super::item_supports::row(stat)
+                .is_some_and(|(_, _, effects)| effects.contains(&support))
+        })
+        .map(|(stat, value)| {
+            if super::item_supports::TRIGGER_CHANCE_STATS.contains(&stat) {
+                value
+            } else {
+                100.0
+            }
+        })
+        .reduce(f64::min)
+}
+
 /// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:
 /// the check, or a kill count above 0 through `multiplierKilledRecently`);
 /// `None` for a value of another type.
@@ -797,6 +1036,8 @@ pub(super) fn carry(state: &FieldState, reasons: &mut Reasons) -> bool {
 /// The source skill's fields a trigger reads.
 struct Source3 {
     rate: f64,
+    /// PoB's `doubleHitsWhenDualWielding` ([`super::hit::double_hits`]).
+    double_hits: bool,
     speed: Option<FieldState>,
     hit: Option<(Option<f64>, FieldState)>,
     crit: Option<(Option<f64>, FieldState)>,

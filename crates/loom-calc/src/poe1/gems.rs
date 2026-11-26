@@ -2453,6 +2453,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3, part 5: the lightning spell of Mjolner's fixture
+    // (PoB's export: no global effect).
+    ("Spark", Kind::Inert),
     ("SpectralShieldThrow", Kind::Inert),
     ("Spellslinger", Kind::Inert),
     ("StaticStrike", Kind::Inert),
@@ -3359,7 +3362,22 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportSwiftAffliction", &[]),
     ("SupportSwiftAssembly", &[]),
     ("SupportTrapAndMineDamage", &[]),
+    // Open items S3, part 5: the supports an item's trigger line gives its
+    // socketed spells (`item_supports::TRIGGER_ROWS`): no global stat; the
+    // spell is triggered (`poe1::triggers`).
+    ("SupportTriggerElementalSpellOnBlock", &[]),
+    ("SupportTriggerFireSpellOnHit", &[]),
+    ("SupportTriggerSpellOnAttack", &[]),
+    ("SupportTriggerSpellOnBowAttack", &[]),
+    ("SupportTriggerSpellOnBowAttackFreezeHit", &[]),
+    ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", &[]),
     ("SupportTrinity", &[]),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        &[],
+    ),
+    ("SupportUniqueMjolnerLightningSpellsCastOnHit", &[]),
+    ("SupportUniqueVirulenceSpellsCastOnBlock", &[]),
     ("SupportUnleash", &[]),
     ("SupportUrgentOrders", &[]),
     ("SupportViciousProjectiles", &[]),
