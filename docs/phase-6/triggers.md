@@ -162,7 +162,7 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 
 ## Part 4: Arcanist Brand and Cast on Death (open items S3)
 
-Built on branch `feat/s3-triggers` (2026-11-26), after PR #187.
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after PR #187.
 
 **Arcanist Brand** (`CalcTriggers.lua` 1321 to 1341), `triggers::Config::ArcanistBrand`, `triggers::arcanist_rate`:
 - **The source** is the first Arcanist Brand among the active skills, in any group (PoB's `activeSkillList` loop). The triggered skills are the group's spells its support part supports.
