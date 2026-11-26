@@ -637,3 +637,33 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 41,786 to 41,866 (the fixture). No other value or state moved; the three dual-wield fixtures' documents changed in graph nodes only.
 - **Corpus:** 0 unexpected; documents byte-identical.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 3: a dual wielder's damaging ailments
+
+**What PoB does:** each hand's pass computes its ailments with its own crit and chance to hit, the stacks at the hands' combined speed (`globalOutput.Speed`, `CalcOffence.lua` 4323, 4607). `combineStat` then joins them (5528 to 5545; 2002 to 2104):
+- **Bleeding and ignite** (`CHANCE_AILMENT`): one hand's alone when only it inflicts the ailment; otherwise `max x r + min x (1 - r)`, `r = min(1, <Ailment>Stacks / <Ailment>StacksMax)` of the shared output. For bleeding that is the stacks of the last pass that bled, the off hand's (4476), over its maximum. Ignite's stacks are never written, so `r = 1` and the larger hand's ignite counts.
+- **Poison** (`TotalPoisonDPS`, `DPS`): `(main + off) / 2`, 0 for a hand without it, the sum for a skill that hits with both weapons.
+
+**The engine:** `ailment::damaging` returns a `Damaging` with its stacks; the dual-wield path runs it per hand at the combined speed (with the skill's PoB data, as one hand does) and joins the hands in `hit::combine_ailment`, the bleed maximum the 1 the engine models. A dual-wielding attack's ailment fields were `NotComputed`. Burning ground stays not computed for a dual wielder (PoB does not combine it), and so does impale (PoB combines its inputs, not its DPS).
+
+**Fixtures** (both from the dual-wield lines fixture): `smite-dual-wield-bleed-poison-templar.xml` (both hands bleed and poison) and `smite-dual-wield-ignite-sword-templar.xml` (fire on the off hand's sword only, so its ignite alone; both poison). Poison and ignite are PoB's times the attack rate's Q11 ratio exactly (0.9998934975941292). Bleeding is not linear in the rate (the off hand's stacks weight it); the engine's larger hand (9.7236), smaller hand (6.7177), and share (0.8572), each rescaled to PoB's rate, recombine to PoB's 9.29565303191029 exactly. Registered as Q11: DIV-0727 to DIV-0740.
+
+**Evidence** (`local/p6/s7c`, `b-ct`, against part 2's run):
+- **Public:** 0 unexpected; `Complete` 41,866 to 42,026 (the fixtures). No other document changed.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 4: a dual wielder's impale
+
+**What PoB does** (`CalcOffence.lua` 5472 to 5520 per pass, 5569 to 5571 and 3901 to combine, 6027 to 6047): each hand's pass computes its stored hit (`impaleStoredHitAvg`), `ImpaleChance` (`min(100, sum)`), and `ImpaleModifier`. For a skill that hits with both weapons, `ImpaleDPS` is the sum of each hand's `stored x (modifier - 1) x HitChance / 100`; otherwise it reads the combined values: the stored hit and the hit chance averaged, `ImpaleModifier` by `CHANCE` (each hand's weighted by `ImpaleChance x HitChance` over both). Then times the combined speed.
+
+**The engine:** `ailment::impale` is split into the pass's `impale_parts` and the DPS (one-hand documents unchanged); `hit::combine_impale` joins the hands as PoB. When only one hand impales, PoB still averages the other hand's stored hit in, which the parts do not carry: that case stays `NotComputed`. Mapped on the way: `impale_on_hit_%_chance_with_axes_swords` ("#% chance to Impale Enemies on Hit with Axes or Swords"), PoB's `ImpaleChance` BASE with `Hit` and Axe or Sword (`ModParser.lua` 917).
+
+**Fixture:** `smite-dual-wield-impale-templar.xml` (20% chance to impale with attacks, 10% more with axes or swords, so the two hands' chances weight the modifier): `ImpaleDPS` is PoB's times the attack rate's Q11 ratio exactly (0.999893497594129); DIV-0741 to DIV-0746, Q11. The summed branch (a skill that hits with both weapons) has no fixture: Cleave's and Viper Strike's PoB skill data are not ported (S1), so their fields stay partial or not computed; the same holds for parts 2 and 3's summed branches.
+
+**Evidence** (`local/p6/s7d`, `b-ct`, against part 3's run):
+- **Public:** 0 unexpected; `Complete` 42,026 to 42,105 (the fixture). No other document changed.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.

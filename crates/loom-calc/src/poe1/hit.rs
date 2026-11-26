@@ -1474,8 +1474,12 @@ fn set_ailments(
         super::leech::rates(calc, hit, unvetted)?;
     }
     for ailment in super::ailment::Ailment::ALL {
-        if let Some((dps, mut reasons, ground)) =
-            super::ailment::damaging(calc, hit, enemy, data, ailment)?
+        if let Some(super::ailment::Damaging {
+            dps,
+            mut reasons,
+            ground,
+            ..
+        }) = super::ailment::damaging(calc, hit, enemy, data, ailment)?
         {
             reasons.extend(unvetted);
             // A totem's bleed stacks per active totem ([`TOTEM_REASON`]).
@@ -1887,37 +1891,65 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
     let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;
     dual_wield(calc, attack, &main, &off, speed)?;
-    // PoB computes each hand's ailments and combines them (`combineStat`
-    // `CHANCE_AILMENT`, `CHANCE`): not modelled yet. A dual-wielding attack
-    // either of whose hands would inflict an ailment has its field, not
-    // computed (P6-2b, P6-2c).
+    // A dual wielder's damaging ailments (open items S7): each hand's pass
+    // with its own flags (`band(cfg.flags, ModFlag.WeaponMask)`, the hand's
+    // config; P6-11b review), its stacks at the hands' combined speed (PoB's
+    // `globalOutput.Speed`, 4323, 4607), then PoB's `combineStat`
+    // (5528 to 5545). Burning ground stays not computed: PoB does not
+    // combine it.
+    let mut hand_reasons = unvetted.clone();
+    hand_reasons.extend(&main.speed.1);
+    hand_reasons.extend(&off.speed.1);
     for ailment in super::ailment::Ailment::ALL {
-        let mut any = false;
-        // Each pass's own flags (`band(cfg.flags, ModFlag.WeaponMask)`, the
-        // hand's config; P6-11b review).
+        let mut each = Vec::with_capacity(2);
         for (hand, flags) in [(&main, flags), (&off, off_flags)] {
             let ailment_hit = super::ailment::AilmentHit {
                 flags,
                 sources: &hand.sources,
                 crit: hand.crit.0,
                 hit_chance: hand.hit_chance.0,
-                rate: hand.speed.0,
-                skill: None,
+                rate: speed,
+                skill: super::pob_skill::skill(id).map(|p| (p, attack.source())),
             };
-            any |= super::ailment::damaging(calc, &ailment_hit, &enemy, input.data, ailment)?
-                .is_some();
+            each.push(super::ailment::damaging(
+                calc,
+                &ailment_hit,
+                &enemy,
+                input.data,
+                ailment,
+            )?);
         }
-        if any {
-            calc.set_unsupported(ailment.field(), UnsupportedReason::NotComputed);
-            if ailment == super::ailment::Ailment::Ignite
-                && phases::has(calc, Quantity::Poe1(Poe1Quantity::IgniteDpsAsBurningGround))
-            {
-                calc.set_unsupported(
-                    Field::Poe1(super::Poe1Field::BurningGroundDps),
-                    UnsupportedReason::NotComputed,
-                );
-            }
+        let mut each = each.into_iter();
+        let main_ailment = each.next().flatten();
+        let off_ailment = each.next().flatten();
+        if main_ailment.is_none() && off_ailment.is_none() {
+            continue;
         }
+        if ailment == super::ailment::Ailment::Ignite
+            && (main_ailment.as_ref().is_some_and(|a| a.ground.is_some())
+                || off_ailment.as_ref().is_some_and(|a| a.ground.is_some()))
+        {
+            calc.set_unsupported(
+                Field::Poe1(super::Poe1Field::BurningGroundDps),
+                UnsupportedReason::NotComputed,
+            );
+        }
+        let mut reasons = hand_reasons.clone();
+        for a in [&main_ailment, &off_ailment].into_iter().flatten() {
+            reasons.extend(&a.reasons);
+        }
+        let value = combine_ailment(
+            calc,
+            ailment,
+            main_ailment.as_ref(),
+            off_ailment.as_ref(),
+            attack.double_hits,
+        )?;
+        calc.set_derived(
+            ailment.field(),
+            phases::query(value, reasons),
+            &[Field::CritChance, Field::Speed, Field::HitChance],
+        );
     }
     // A dual wielder's leech, each hand's combined (`combineStat` `DPS`,
     // 3877 to 3891; open items S7).
@@ -1939,27 +1971,170 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             &unvetted,
         )?;
     }
-    // PoB combines a dual wielder's impales per hand only for double hits:
-    // not modelled yet (P6-2d).
-    let mut impales = false;
+    // A dual wielder's impale (open items S7; `CalcOffence.lua` 5569 to
+    // 5571, 6027 to 6047): each hand's parts, then [`combine_impale`]. When
+    // only one hand impales, PoB still averages the other hand's stored hit
+    // in, which the parts do not give: not computed.
+    let mut parts = Vec::with_capacity(2);
     for (hand, flags) in [(&main, flags), (&off, off_flags)] {
         let ailment_hit = super::ailment::AilmentHit {
             flags,
             sources: &hand.sources,
             crit: hand.crit.0,
             hit_chance: hand.hit_chance.0,
-            rate: hand.speed.0,
+            rate: speed,
             skill: None,
         };
-        impales |= super::ailment::impale(calc, &ailment_hit, &enemy, input.data)?.is_some();
+        parts.push(super::ailment::impale_parts(
+            calc,
+            &ailment_hit,
+            &enemy,
+            input.data,
+        )?);
     }
-    if impales {
-        calc.set_unsupported(
+    let mut parts = parts.into_iter();
+    match (parts.next().flatten(), parts.next().flatten()) {
+        (None, None) => {}
+        (Some(m), Some(o)) => {
+            let value = combine_impale(
+                calc,
+                [(&m, main.hit_chance.0), (&o, off.hit_chance.0)],
+                speed,
+                attack.double_hits,
+            )?;
+            if value.value > 0.0 {
+                let mut reasons = hand_reasons.clone();
+                reasons.extend(&m.reasons);
+                reasons.extend(&o.reasons);
+                calc.set_derived(
+                    Field::Poe1(super::Poe1Field::ImpaleDps),
+                    phases::query(value, reasons),
+                    &[Field::CritChance, Field::Speed, Field::HitChance],
+                );
+            }
+        }
+        _ => calc.set_unsupported(
             Field::Poe1(super::Poe1Field::ImpaleDps),
             UnsupportedReason::NotComputed,
-        );
+        ),
     }
     Ok(())
+}
+
+/// A dual wielder's impale DPS from each hand's parts (`CalcOffence.lua`
+/// 6027 to 6047; open items S7), times the combined `speed`:
+/// - a skill that hits with both weapons: `sum over hands of stored hit x
+///   (modifier - 1) x hit chance / 100`;
+/// - otherwise PoB's combined values: the stored hit and the hit chance
+///   averaged (`DPS` halved, `AVERAGE`), and `ImpaleModifier` by `CHANCE`:
+///   each hand's weighted by `ImpaleChance x HitChance` over both; then
+///   `stored x (modifier - 1) x hit chance / 100`.
+fn combine_impale(
+    calc: &mut Calc<'_>,
+    hands: [(&super::ailment::ImpaleParts, Valued); 2],
+    speed: Valued,
+    double: bool,
+) -> Result<Valued, CalcError> {
+    let one = phases::constant(calc, "one", 1.0)?;
+    let two = phases::constant(calc, "two", 2.0)?;
+    let per_hit = if double {
+        let mut terms = Vec::with_capacity(2);
+        for (parts, hit_chance) in hands {
+            let share = percent_of(calc, hit_chance, Term::Step("hit-share"))?;
+            terms.push(phases::product(
+                calc,
+                &[parts.stored_hit, parts.gain, share],
+                Term::Step("impale-per-hit"),
+            )?);
+        }
+        phases::total(calc, &terms, Term::Step("both-hands"))?
+    } else {
+        let [(m, mh), (o, oh)] = hands;
+        let stored = phases::total(
+            calc,
+            &[m.stored_hit, o.stored_hit],
+            Term::Step("both-hands"),
+        )?;
+        let stored = quotient(calc, stored, two, Term::Step("impale-stored-hit-combined"))?;
+        let hit_sum = phases::total(calc, &[mh, oh], Term::Step("both-hands"))?;
+        let hit_chance = quotient(calc, hit_sum, two, Term::Step("hit-chance-combined"))?;
+        let main_weight = phases::product(calc, &[m.chance, mh], Term::Step("impale-main-chance"))?;
+        let off_weight = phases::product(calc, &[o.chance, oh], Term::Step("impale-off-chance"))?;
+        let weights = phases::total(
+            calc,
+            &[main_weight, off_weight],
+            Term::Step("impale-chances"),
+        )?;
+        let main_portion = quotient(
+            calc,
+            main_weight,
+            weights,
+            Term::Step("impale-main-portion"),
+        )?;
+        let off_portion = quotient(calc, off_weight, weights, Term::Step("impale-off-portion"))?;
+        let from_main = phases::product(
+            calc,
+            &[m.modifier, main_portion],
+            Term::Step("impale-main-part"),
+        )?;
+        let from_off = phases::product(
+            calc,
+            &[o.modifier, off_portion],
+            Term::Step("impale-off-part"),
+        )?;
+        let modifier = phases::total(calc, &[from_main, from_off], Term::Step("impale-modifier"))?;
+        let gain = minus(calc, modifier, one, Term::Step("impale-gain"))?;
+        let share = percent_of(calc, hit_chance, Term::Step("hit-share"))?;
+        phases::product(calc, &[stored, gain, share], Term::Step("impale-per-hit"))?
+    };
+    phases::product(calc, &[per_hit, speed], Term::Result)
+}
+
+/// PoB's `combineStat` of a dual wielder's ailment (`CalcOffence.lua` 2002
+/// to 2104, 5528 to 5545; open items S7):
+/// - bleeding and ignite (`CHANCE_AILMENT`): one hand's alone when only it
+///   inflicts it; otherwise `max x r + min x (1 - r)`, `r = min(1,
+///   <Ailment>Stacks / <Ailment>StacksMax)` of the shared output. For
+///   bleeding that is the stacks of the last pass that bled (the off
+///   hand's, 4476) over the maximum of 1 the engine models; ignite's stacks
+///   are never written (1), so `r` is 1 and the larger hand's ignite
+///   counts.
+/// - poison (`TotalPoisonDPS`, `DPS`): `(main + off) / 2`, a hand without it
+///   0, the sum for a skill that hits with both weapons.
+fn combine_ailment(
+    calc: &mut Calc<'_>,
+    ailment: super::ailment::Ailment,
+    main: Option<&super::ailment::Damaging>,
+    off: Option<&super::ailment::Damaging>,
+    double: bool,
+) -> Result<Valued, CalcError> {
+    use super::ailment::Ailment;
+    if ailment == Ailment::Poison {
+        let zero = phases::constant(calc, "zero", 0.0)?;
+        let terms = [main, off].map(|a| a.map_or(zero, |a| a.dps));
+        let sum = phases::total(calc, &terms, Term::Step("both-hands"))?;
+        if double {
+            return Ok(sum);
+        }
+        let two = phases::constant(calc, "two", 2.0)?;
+        return quotient(calc, sum, two, Term::Result);
+    }
+    let (m, o) = match (main, off) {
+        (Some(m), Some(o)) => (m, o),
+        (Some(a), None) | (None, Some(a)) => return Ok(a.dps),
+        (None, None) => return phases::constant(calc, "zero", 0.0),
+    };
+    let larger = phases::pair(calc, m.dps, o.dps, Term::Step("larger-hand"), false)?;
+    if ailment == Ailment::Ignite {
+        return Ok(larger);
+    }
+    let smaller = phases::pair(calc, m.dps, o.dps, Term::Step("smaller-hand"), true)?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let share = phases::pair(calc, o.stacks, one, Term::Step("larger-hand-share"), true)?;
+    let rest = minus(calc, one, share, Term::Step("smaller-hand-share"))?;
+    let from_larger = phases::product(calc, &[larger, share], Term::Step("larger-hand-part"))?;
+    let from_smaller = phases::product(calc, &[smaller, rest], Term::Step("smaller-hand-part"))?;
+    phases::total(calc, &[from_larger, from_smaller], Term::Result)
 }
 
 /// The hands' combined speed (PoB's `combineStat("Speed",

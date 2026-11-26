@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S7): smite-dual-wield-lines-templar.xml with a chance to impale: the
+     hands' stored hits and hit chances averaged and their impale modifiers
+     weighted by impale chance x hit chance (PoB's combineStat), then the
+     impale DPS.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Rusted Hatchet
+Quality: 0
+Implicits: 0
+		</Item>
+		<Item id="2">
+Rarity: NORMAL
+Rusted Sword
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Weapon 2" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				10% increased Attack Speed while Dual Wielding
++3% Chance to Block Attack Damage while Dual Wielding or holding a Shield
+20% increased Physical Damage with Swords
+15% increased Attack Speed with Axes
+30% increased Damage with Swords
++200 to Accuracy Rating with Swords
+15% increased Accuracy Rating with Swords
+25% increased Critical Strike Chance with Swords
+20% chance to Impale Enemies on Hit with Attacks
+10% chance to Impale Enemies on Hit with Axes or Swords
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

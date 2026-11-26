@@ -14538,6 +14538,406 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-26",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0727",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.6727625142567477,
+      "successor_value": 1.6725843610245288,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0728",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 189.7140903673965,
+      "successor_value": 189.69388536034475,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0729",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/BleedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 9.29565303191029,
+      "successor_value": 9.294388566995933,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0730",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/TotalPoisonDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.7892672569007646,
+      "successor_value": 0.7891831980390296,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0731",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 20.07315017108097,
+      "successor_value": 20.071012332294345,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0732",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 199.79901065620754,
+      "successor_value": 199.77745712537973,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0733",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-bleed-poison-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 199.79901065620754,
+      "successor_value": 199.77745712537973,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-bleed-poison-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0734",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.6727625142567477,
+      "successor_value": 1.6725843610245288,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0735",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 207.94786172988074,
+      "successor_value": 207.92571478231082,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0736",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/IgniteDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 23.185930891624103,
+      "successor_value": 23.18346153420179,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0737",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/TotalPoisonDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.7892672569007646,
+      "successor_value": 0.7891831980390296,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0738",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 20.07315017108097,
+      "successor_value": 20.071012332294345,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0739",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 231.9230598784056,
+      "successor_value": 231.89835951455163,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0740",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-ignite-sword-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 231.9230598784056,
+      "successor_value": 231.89835951455163,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-ignite-sword-templar.xml (open items S7, part 3): Smite dual wielding with damaging ailments; each hand's ailment stacks read the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0741",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.6727625142567477,
+      "successor_value": 1.6725843610245288,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0742",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 189.7140903673965,
+      "successor_value": 189.69388536034475,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0743",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/ImpaleDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.45873826285875735,
+      "successor_value": 0.45868940613009784,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0744",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 20.07315017108097,
+      "successor_value": 20.071012332294345,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0745",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 190.17282863025525,
+      "successor_value": 190.15257476647486,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0746",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-dual-wield-impale-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 190.17282863025525,
+      "successor_value": 190.15257476647486,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-dual-wield-impale-templar.xml (open items S7, part 4): Smite dual wielding with impale; the impale reads the registered Q11 attack rate through the combined speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
     }
   ]
 }

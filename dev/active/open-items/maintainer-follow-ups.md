@@ -49,7 +49,7 @@ Still open:
 
 ## Planned for the session, may not be reached
 The largest steps, deferred by you on 2026-11-24, are stretch work for the open-items session. The session removes each from this list when it is done:
-- the defences: ward's other lines, EHP's other pools, damage over time EHP, degeneration, a dual wielder's ailments (S7; conversion smoothing in maximum hit and a dual wielder's leech done 2026-11-26 on PR #188).
+- the defences: ward's other lines, EHP's other pools, damage over time EHP, degeneration (S7; conversion smoothing in maximum hit and a dual wielder's leech, ailments, and impale done 2026-11-26 on PR #188).
 
 **Needs a data run (found in S7, 2026-11-26):** the boss skill preset (`presetBossSkills`, 54 fields in `holy-flame-totem-hierophant.xml`) applies PoB's boss skill table (`Data/BossSkills.lua`, generated from GGG's data: each boss skill's damage multipliers, penetration, speed, and damage category). No bundle carries it; it needs an extraction of the boss skills (and the damage category other than `Average`, which the engine does not model yet). Until then it stays `unmodelled-config`.
 

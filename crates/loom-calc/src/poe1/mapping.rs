@@ -2324,6 +2324,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // Open items S7: "#% chance to Impale Enemies on Hit with Axes or
+    // Swords", PoB's `ImpaleChance` BASE with `ModFlag.Hit` and
+    // `ModFlagOr` Axe or Sword (`ModParser.lua` 917; its `ModCache`
+    // parse).
+    (
+        "impale_on_hit_%_chance_with_axes_swords",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::HIT,
+            Flags::AXE.union(Flags::SWORD),
+        )],
+    ),
     // PoB: `ImpaleStacksMax` BASE (the character template's stat, also on
     // items; P6-2d).
     (

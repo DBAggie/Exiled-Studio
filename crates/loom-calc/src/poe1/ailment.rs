@@ -39,8 +39,9 @@
 //!   their stats);
 //! - the enemy's ailment avoidance (no source modelled);
 //! - burning ground from ignite;
-//! - dual wielding's per-hand ailments (P6-2a: the field is `NotComputed`
-//!   for a dual-wielding attack).
+//! - a dual-wielding attack's burning ground (PoB does not combine it).
+//!   Its ailments are each hand's, combined (open items S7,
+//!   `hit::combine_ailment`).
 
 use super::enemy::Enemy;
 use super::hit::{self, HitSources};
@@ -353,7 +354,7 @@ pub(super) fn damaging(
     enemy: &Enemy,
     data: &dyn CalcData,
     ailment: Ailment,
-) -> Result<Option<(Valued, Reasons, Option<Valued>)>, CalcError> {
+) -> Result<Option<Damaging>, CalcError> {
     let spec = spec(ailment);
     let mut reasons = Reasons::new();
     if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
@@ -792,7 +793,25 @@ pub(super) fn damaging(
     } else {
         None
     };
-    Ok(Some((dps, reasons, ground)))
+    Ok(Some(Damaging {
+        dps,
+        reasons,
+        ground,
+        stacks,
+    }))
+}
+
+/// One damaging ailment of one hit pass ([`damaging`]).
+pub(super) struct Damaging {
+    /// The field's value (poison: every poison's).
+    pub(super) dps: Valued,
+    /// The reasons of what it read.
+    pub(super) reasons: Reasons,
+    /// The ignite's share as burning ground, when the skill has one.
+    pub(super) ground: Option<Valued>,
+    /// The ailments the pass keeps on the enemy (PoB's `bleedStacks`,
+    /// `PoisonStacks`, ignite's stacks), before any cap.
+    pub(super) stacks: Valued,
 }
 
 /// PoB's `data.misc.ImpaleStoredDamageBase` (`Modules/Data.lua` 262): an
@@ -812,16 +831,18 @@ pub const IMPALE_STACKS_STAT: &str = "impaled_debuff_number_of_reflected_hits";
 /// damage taken from hits: `stored hit x ((1 + modifier) - 1) x hit chance
 /// / 100 x rate`. A configured number of impales on the enemy is an
 /// unmodelled config input (a reason); so are the additional duration
-/// chance and the impale's own physical damage reduction stats.
+/// chance and the impale's own physical damage reduction stats. This part
+/// is the pass's, before its rate ([`ImpaleParts`]); [`impale`] and the
+/// dual-wield path finish it.
 ///
 /// # Errors
 /// A graph error.
-pub(super) fn impale(
+pub(super) fn impale_parts(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
-) -> Result<Option<(Valued, Reasons)>, CalcError> {
+) -> Result<Option<ImpaleParts>, CalcError> {
     let mut reasons = Reasons::new();
     let [Some(stored_hit), Some(stored_crit)] = hit.sources.physical else {
         return Ok(None);
@@ -959,17 +980,52 @@ pub(super) fn impale(
     }
     let damage_mod = phases::product(calc, &factors, Term::Step("impale-damage-modifier"))?;
     let modifier = phases::total(calc, &[one, damage_mod], Term::Step("impale-modifier"))?;
-    // `ImpaleDPS = stored hit x (modifier - 1) x hit chance / 100 x 1`, then
-    // `x rate`.
     let gain = hit::minus(calc, modifier, one, Term::Step("impale-gain"))?;
+    Ok(Some(ImpaleParts {
+        stored_hit,
+        modifier,
+        gain,
+        chance,
+        reasons,
+    }))
+}
+
+/// One pass's impale before its rate ([`impale`]; PoB's
+/// `impaleStoredHitAvg`, `ImpaleModifier`, `ImpaleChance`).
+pub(super) struct ImpaleParts {
+    /// The physical hit an impale stores (`impaleStoredHitAvg`).
+    pub(super) stored_hit: Valued,
+    /// `ImpaleModifier`, and it less 1.
+    pub(super) modifier: Valued,
+    pub(super) gain: Valued,
+    /// `ImpaleChance`, `min(100, sum)`.
+    pub(super) chance: Valued,
+    pub(super) reasons: Reasons,
+}
+
+/// The main skill's impale DPS from one pass ([`impale_parts`]): `stored
+/// hit x (modifier - 1) x hit chance / 100 x 1`, then `x rate`; `None`
+/// when the hit cannot impale or the DPS is 0.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+) -> Result<Option<(Valued, Reasons)>, CalcError> {
+    let Some(parts) = impale_parts(calc, hit, enemy, data)? else {
+        return Ok(None);
+    };
     let hit_share = hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
     let per_hit = phases::product(
         calc,
-        &[stored_hit, gain, hit_share],
+        &[parts.stored_hit, parts.gain, hit_share],
         Term::Step("impale-per-hit"),
     )?;
     let dps = phases::product(calc, &[per_hit, hit.rate], Term::Result)?;
-    Ok((dps.value > 0.0).then_some((dps, reasons)))
+    Ok((dps.value > 0.0).then_some((dps, parts.reasons)))
 }
 
 #[cfg(test)]
