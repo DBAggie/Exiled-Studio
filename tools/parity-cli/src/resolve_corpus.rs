@@ -411,6 +411,17 @@ pub struct Distinct {
     pub reasons: BTreeSet<String>,
 }
 
+impl Distinct {
+    /// Counts one occurrence, in a unique item or not.
+    fn count(&mut self, unique: bool) {
+        if unique {
+            self.unique += 1;
+        } else {
+            self.non_unique += 1;
+        }
+    }
+}
+
 /// The `Mods` filter's decisions (B4a), by group.
 #[derive(Debug, Default, Serialize)]
 pub struct FilterCounts {
@@ -784,73 +795,58 @@ impl<'i> Lines<'i, '_> {
             return;
         }
         let run = std::mem::take(&mut self.run);
-        let section = |i: usize| {
-            run.get(i)
-                .map(|(_, m)| mod_filter::section_name(&m.section))
-        };
         match (index, scope_err) {
-            (Some(index), None) => {
-                let texts: Vec<&str> = run.iter().map(|(_, m)| m.text.as_str()).collect();
-                let mut at = 0;
-                for composed in index.resolve_lines_composed(&texts, self.compositions) {
-                    let mut resolution = composed.resolution;
-                    let via = composed
-                        .composition
-                        .and_then(|n| self.compositions.get(n))
-                        .map(|c| c.id.clone());
-                    // A line game text holds in another letter case (B5e;
-                    // `loom_parser::import::tolerance`).
-                    let mut adapted = None;
-                    if let Some(folded) = texts
-                        .get(at)
-                        .and_then(|t| tolerance::case_folded(index, t, &resolution, via.is_some()))
-                    {
-                        resolution = folded;
-                        adapted = Some("case-folded");
-                    }
-                    let lines = resolution.lines;
-                    self.push_resolution(&run, at, &resolution, section(at), via);
-                    if let Some(a) = adapted
-                        && let Some((last, _)) = self.records.last_mut()
-                    {
-                        last.adapted = Some(a);
-                    }
-                    at += lines;
-                }
-                // `resolve_lines` covers every input line; if it ever does
-                // not, the uncovered lines are recorded, never lost.
-                for (n, (line, m)) in run.iter().enumerate().skip(at) {
-                    self.records.push((
-                        LineRecord {
-                            line: *line,
-                            section: section(n),
-                            outcome: "internal/not-covered".to_owned(),
-                            text: m.text.clone(),
-                            joined: 1,
-                            detail: Vec::new(),
-                            ..LineRecord::default()
-                        },
-                        false,
-                    ));
-                }
-            }
+            (Some(index), None) => self.resolve_run(index, &run),
             _ => {
                 let reason = scope_err.unwrap_or("no-index");
-                for (n, (line, m)) in run.iter().enumerate() {
-                    self.records.push((
-                        LineRecord {
-                            line: *line,
-                            section: section(n),
-                            outcome: format!("unknown-base/{reason}"),
-                            text: m.text.clone(),
-                            joined: 1,
-                            detail: Vec::new(),
-                            ..LineRecord::default()
-                        },
-                        false,
-                    ));
-                }
+                self.push_unread(&run, 0, &format!("unknown-base/{reason}"));
             }
+        }
+    }
+
+    /// Resolves a run of one section's lines with the scope's index.
+    fn resolve_run(&mut self, index: &Index<'_>, run: &[(usize, &Modifier)]) {
+        let texts: Vec<&str> = run.iter().map(|(_, m)| m.text.as_str()).collect();
+        let mut at = 0;
+        for composed in index.resolve_lines_composed(&texts, self.compositions) {
+            let via = composed
+                .composition
+                .and_then(|n| self.compositions.get(n))
+                .map(|c| c.id.clone());
+            let (resolution, adapted) = case_fold(
+                index,
+                texts.get(at).copied(),
+                composed.resolution,
+                via.is_some(),
+            );
+            self.push_resolution(run, at, &resolution, run_section(run, at), via);
+            if let Some(a) = adapted
+                && let Some((last, _)) = self.records.last_mut()
+            {
+                last.adapted = Some(a);
+            }
+            at += resolution.lines;
+        }
+        // `resolve_lines` covers every input line; if it ever does not, the
+        // uncovered lines are recorded, never lost.
+        self.push_unread(run, at, "internal/not-covered");
+    }
+
+    /// Records the run's lines from `from` on, not read, as `outcome`.
+    fn push_unread(&mut self, run: &[(usize, &Modifier)], from: usize, outcome: &str) {
+        for (n, (line, m)) in run.iter().enumerate().skip(from) {
+            self.records.push((
+                LineRecord {
+                    line: *line,
+                    section: run_section(run, n),
+                    outcome: outcome.to_owned(),
+                    text: m.text.clone(),
+                    joined: 1,
+                    detail: Vec::new(),
+                    ..LineRecord::default()
+                },
+                false,
+            ));
         }
     }
 
@@ -872,59 +868,95 @@ impl<'i> Lines<'i, '_> {
             ..LineRecord::default()
         };
         let line = run.get(at).map(|(_, m)| LineContext::of(m));
-        let mut resolved = match &resolution.outcome {
-            Outcome::Resolved(c) => Some(c),
+        let resolved = match (&resolution.outcome, self.ctx, line.as_ref()) {
+            (Outcome::Resolved(c), _, _) => Some(c),
+            (Outcome::Ambiguous(cs), Some(ctx), Some(line)) => {
+                filter_ambiguous(ctx, line, cs, &mut record)
+            }
             _ => None,
         };
-        if let (Some(ctx), Some(line), Outcome::Ambiguous(cs)) =
-            (self.ctx, line.as_ref(), &resolution.outcome)
-        {
-            let d = mod_filter::filter(ctx, line, cs);
-            record.filter = Some(d.name());
-            record.filter_notes = d.notes.iter().copied().collect();
-            record.dropped = cs
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| !d.kept.contains(i))
-                .map(|(_, c)| candidate_text(c))
-                .collect();
-            if let [one] = d.kept.as_slice() {
-                resolved = cs.get(*one);
-                if let Some(c) = resolved {
-                    record.outcome = "resolved".to_owned();
-                    record.detail = detail(&Outcome::Resolved(c.clone()));
-                }
-            } else {
-                record.detail = d
-                    .kept
-                    .iter()
-                    .filter_map(|i| cs.get(*i))
-                    .map(candidate_text)
-                    .collect();
-            }
-        }
         if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line.as_ref(), resolved)
             && !ctx.unique
         {
-            match mod_filter::backing(ctx, line, &c.stats) {
-                Ok((equal, id)) => {
-                    record.backed = Some(if equal { "equal" } else { "hybrid" }.to_owned());
-                    record.backed_by = Some(id.to_owned());
-                }
-                Err(reason) => record.backed = Some(format!("not/{reason}")),
-            }
+            record_backing(ctx, line, c, &mut record);
         }
-        for k in 0..resolution.lines {
-            if let Some((n, _)) = run.get(at + k) {
-                self.records.push((
-                    LineRecord {
-                        line: *n,
-                        ..record.clone()
-                    },
-                    !resolution.shadowed.is_empty(),
-                ));
-            }
+        let shadowed = !resolution.shadowed.is_empty();
+        for (n, _) in run.iter().skip(at).take(resolution.lines) {
+            self.records.push((
+                LineRecord {
+                    line: *n,
+                    ..record.clone()
+                },
+                shadowed,
+            ));
         }
+    }
+}
+
+/// The section name of the run's line `i`.
+fn run_section(run: &[(usize, &Modifier)], i: usize) -> Option<&'static str> {
+    run.get(i)
+        .map(|(_, m)| mod_filter::section_name(&m.section))
+}
+
+/// A line game text holds in another letter case (B5e;
+/// `loom_parser::import::tolerance`): its folded reading, `case-folded`.
+/// Any other line keeps its reading.
+fn case_fold(
+    index: &Index<'_>,
+    text: Option<&str>,
+    resolution: Resolution,
+    composed: bool,
+) -> (Resolution, Option<&'static str>) {
+    match text.and_then(|t| tolerance::case_folded(index, t, &resolution, composed)) {
+        Some(folded) => (folded, Some("case-folded")),
+        None => (resolution, None),
+    }
+}
+
+/// The `Mods` filter on an ambiguous line (B4a): records its decision and
+/// what it kept, and returns the candidate when it kept exactly one.
+fn filter_ambiguous<'r>(
+    ctx: &Context<'_>,
+    line: &LineContext,
+    cs: &'r [Candidate],
+    record: &mut LineRecord,
+) -> Option<&'r Candidate> {
+    let d = mod_filter::filter(ctx, line, cs);
+    record.filter = Some(d.name());
+    record.filter_notes = d.notes.iter().copied().collect();
+    record.dropped = cs
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !d.kept.contains(i))
+        .map(|(_, c)| candidate_text(c))
+        .collect();
+    if let [one] = d.kept.as_slice() {
+        let resolved = cs.get(*one);
+        if let Some(c) = resolved {
+            record.outcome = "resolved".to_owned();
+            record.detail = detail(&Outcome::Resolved(c.clone()));
+        }
+        return resolved;
+    }
+    record.detail = d
+        .kept
+        .iter()
+        .filter_map(|i| cs.get(*i))
+        .map(candidate_text)
+        .collect();
+    None
+}
+
+/// `mod-backed` of a resolved non-unique line (B4a): `equal` or `hybrid`
+/// with the backing row, or `not/<reason>`.
+fn record_backing(ctx: &Context<'_>, line: &LineContext, c: &Candidate, record: &mut LineRecord) {
+    match mod_filter::backing(ctx, line, &c.stats) {
+        Ok((equal, id)) => {
+            record.backed = Some(if equal { "equal" } else { "hybrid" }.to_owned());
+            record.backed_by = Some(id.to_owned());
+        }
+        Err(reason) => record.backed = Some(format!("not/{reason}")),
     }
 }
 
@@ -1105,8 +1137,57 @@ pub fn run(
         resolver: resolver.as_ref(),
     };
 
+    let mut s = new_summary(
+        lookup_report,
+        &indexes,
+        mods,
+        bases,
+        game,
+        &compositions,
+        compositions_missing,
+    );
+    let mut report = Report::default();
+    let mut distinct: BTreeMap<(String, String), BTreeSet<String>> = BTreeMap::new();
+    for build in distinct_builds(&mut s, builds) {
+        s.inputs.builds.push(build.hash.clone());
+        let doc = match parse_build(build) {
+            Ok(doc) => doc,
+            Err(e) => {
+                s.unreadable_builds.insert(build.hash.clone(), e);
+                continue;
+            }
+        };
+        let mut items = Vec::new();
+        for (n, node) in doc
+            .descendants()
+            .filter(|n| n.has_tag_name("Item"))
+            .enumerate()
+        {
+            let check = check.as_mut().map(|c| (c, build.hash.as_str()));
+            items.push(count_node(&mut s, &mut distinct, n, node, &corpus, check));
+        }
+        report.builds.insert(build.hash.clone(), items);
+    }
+    s.inputs.tool = tool;
+    s.inputs.extract = extract.inputs.clone();
+    s.inputs.bundle = bundle.map(bundle_record);
+    s.inputs.pob = game.pob_sources();
+    finish_rate(&mut s, &distinct);
+    Ok((s, report, check))
+}
+
+/// The summary's fields known before any build is read.
+fn new_summary(
+    lookup_report: LookupReport,
+    indexes: &BTreeMap<&str, Index<'_>>,
+    mods: &Mods,
+    bases: &Bases,
+    game: &GameText,
+    compositions: &[Composition],
+    compositions_missing: Vec<String>,
+) -> Summary {
     let (essence_rows_known, essence_rows_unknown) = mods.essence_rows();
-    let mut s = Summary {
+    Summary {
         lookup: lookup_report,
         scopes: indexes
             .iter()
@@ -1134,81 +1215,70 @@ pub fn run(
             .map(|c| (c.stat.clone(), mod_filter::eldritch_share(mods, &c.stat)))
             .collect(),
         ..Summary::default()
-    };
-    let mut report = Report::default();
-    // One build per content hash: a copied file counts once.
-    let mut unique_builds: BTreeMap<&str, &Build> = BTreeMap::new();
+    }
+}
+
+/// One build per content hash, in hash order: a copied file counts once
+/// (counted in `duplicate_builds`).
+fn distinct_builds<'b>(s: &mut Summary, builds: &'b [Build]) -> Vec<&'b Build> {
+    let mut unique: BTreeMap<&str, &Build> = BTreeMap::new();
     for build in builds {
-        if unique_builds.insert(&build.hash, build).is_some() {
+        if unique.insert(&build.hash, build).is_some() {
             s.duplicate_builds += 1;
         }
     }
-    let mut distinct: BTreeMap<(String, String), BTreeSet<String>> = BTreeMap::new();
+    unique.into_values().collect()
+}
 
-    for build in unique_builds.into_values() {
-        s.inputs.builds.push(build.hash.clone());
-        let Some(text) = &build.text else {
-            s.unreadable_builds
-                .insert(build.hash.clone(), "not UTF-8".to_owned());
-            continue;
-        };
-        let doc = match roxmltree::Document::parse(text) {
-            Ok(doc) => doc,
-            Err(e) => {
-                s.unreadable_builds
-                    .insert(build.hash.clone(), e.to_string());
-                continue;
-            }
-        };
-        let mut items = Vec::new();
-        for (n, node) in doc
-            .descendants()
-            .filter(|n| n.has_tag_name("Item"))
-            .enumerate()
-        {
-            let texts: Vec<&str> = node
-                .children()
-                .filter(roxmltree::Node::is_text)
-                .filter_map(|t| t.text())
-                .filter(|t| !t.trim().is_empty())
-                .collect();
-            if texts.len() > 1 {
-                s.items_with_several_texts += 1;
-            }
-            let text = texts.last().copied().unwrap_or("");
-            let ranges = node
-                .children()
-                .filter(|c| c.has_tag_name("ModRange"))
-                .count();
-            let pob = pob_item::read(text);
-            for (feature, n) in pob_item::unsupported_features(&pob) {
-                *s.unsupported_features.entry(feature).or_default() += n;
-            }
-            let item = pob_item::to_domain(&pob);
-            let record = count_item(
-                &mut s,
-                &mut distinct,
-                (n, &item, ranges),
-                &corpus,
-                check.as_mut().map(|c| (c, build.hash.as_str())),
-            );
-            items.push(record);
-        }
-        report.builds.insert(build.hash.clone(), items);
+/// The build's XML; the reason when it is not UTF-8 or not XML.
+fn parse_build(build: &Build) -> Result<roxmltree::Document<'_>, String> {
+    let text = build
+        .text
+        .as_deref()
+        .ok_or_else(|| "not UTF-8".to_owned())?;
+    roxmltree::Document::parse(text).map_err(|e| e.to_string())
+}
+
+/// Reads the `<Item>` element `node` (its last non-blank text) and counts
+/// it.
+fn count_node(
+    s: &mut Summary,
+    distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
+    n: usize,
+    node: roxmltree::Node<'_, '_>,
+    corpus: &Corpus<'_, '_>,
+    check: Option<(&mut BuildCheck, &str)>,
+) -> ItemRecord {
+    let texts: Vec<&str> = node
+        .children()
+        .filter(roxmltree::Node::is_text)
+        .filter_map(|t| t.text())
+        .filter(|t| !t.trim().is_empty())
+        .collect();
+    if texts.len() > 1 {
+        s.items_with_several_texts += 1;
     }
-    s.inputs.tool = tool;
-    s.inputs.extract = extract.inputs.clone();
-    s.inputs.bundle = bundle.map(|d| {
-        let m = &d.bundle().manifest;
-        BundleInputs {
-            game: m.game.clone(),
-            steam_build: m.source.steam_build,
-            index_sha256: m.source.index_sha256.clone(),
-        }
-    });
-    s.inputs.pob = game.pob_sources();
-    finish_rate(&mut s, &distinct);
-    Ok((s, report, check))
+    let text = texts.last().copied().unwrap_or("");
+    let ranges = node
+        .children()
+        .filter(|c| c.has_tag_name("ModRange"))
+        .count();
+    let pob = pob_item::read(text);
+    for (feature, lines) in pob_item::unsupported_features(&pob) {
+        *s.unsupported_features.entry(feature).or_default() += lines;
+    }
+    let item = pob_item::to_domain(&pob);
+    count_item(s, distinct, (n, &item, ranges), corpus, check)
+}
+
+/// The bundle's recorded inputs (`--bundle`).
+fn bundle_record(data: &BundleData<'_>) -> BundleInputs {
+    let m = &data.bundle().manifest;
+    BundleInputs {
+        game: m.game.clone(),
+        steam_build: m.source.steam_build,
+        index_sha256: m.source.index_sha256.clone(),
+    }
 }
 
 /// Scope name to index, scope name to its chain's sources, the
@@ -1382,7 +1452,40 @@ fn count_item(
     corpus: &Corpus<'_, '_>,
     check: Option<(&mut BuildCheck, &str)>,
 ) -> ItemRecord {
-    let (bases, mods, indexes) = (corpus.bases, corpus.mods, corpus.indexes);
+    let rarity = count_item_shape(s, item, ranges);
+    let found = corpus.bases.find(item);
+    let scope_name = count_scope(s, &found);
+    let unique = item.rarity.is_none_or(Rarity::is_unique);
+    let mut records = resolve_records(item, &found, unique, corpus);
+    if let (Some((check, build)), Some(resolver)) = (check, corpus.resolver) {
+        cross_check(check, (build, n), item, corpus.bases, resolver, &records);
+    }
+    let empty = BTreeSet::new();
+    let chain = found
+        .as_ref()
+        .ok()
+        .and_then(|f| corpus.chains.get(f.scope))
+        .unwrap_or(&empty);
+    for (record, _) in &mut records {
+        categorize_line(record, chain, corpus.game);
+    }
+    let class_requirement = class_requirements(item);
+    s.class_requirement_lines += class_requirement.len();
+    for (record, shadowed) in &records {
+        count_record(s, distinct, &scope_name, (record, *shadowed), unique);
+    }
+    ItemRecord {
+        item: n,
+        rarity,
+        scope: scope_name,
+        class_requirement,
+        lines: records.into_iter().map(|(r, _)| r).collect(),
+    }
+}
+
+/// Counts the item, its rarity, its `<ModRange>` children, and its lines'
+/// kinds, spec keys, and prefix keys; returns the rarity's name.
+fn count_item_shape(s: &mut Summary, item: &Item, ranges: usize) -> &'static str {
     s.items += 1;
     let rarity = item.rarity.map_or("none", Rarity::name);
     *s.items_by_rarity.entry(rarity).or_default() += 1;
@@ -1400,26 +1503,29 @@ fn count_item(
                     *s.unknown_spec_keys.entry(safe_key(key)).or_default() += 1;
                 }
             }
-            LineKind::Modifier(m) => {
-                for p in &m.prefixes {
-                    *s.prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
-                }
-                for p in m
-                    .prefixes
-                    .iter()
-                    .filter(|p| !pob_item::is_known_prefix(&p.key))
-                {
-                    *s.unknown_prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
-                }
-            }
+            LineKind::Modifier(m) => count_prefixes(s, m),
             _ => {}
         }
     }
     if catalyst {
         s.catalyst_items += 1;
     }
-    let found = bases.find(item);
-    let scope_name = match &found {
+    rarity
+}
+
+/// Counts a modifier line's prefix keys, and those PoB does not know.
+fn count_prefixes(s: &mut Summary, m: &Modifier) {
+    for p in &m.prefixes {
+        *s.prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
+        if !pob_item::is_known_prefix(&p.key) {
+            *s.unknown_prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
+        }
+    }
+}
+
+/// The item's scope, or `unknown-base/<reason>`, counted.
+fn count_scope(s: &mut Summary, found: &Result<FoundBase<'_>, String>) -> String {
+    let scope_name = match found {
         Ok(f) => {
             if f.fallback_used {
                 s.pob_base_suffix_removed += 1;
@@ -1429,22 +1535,26 @@ fn count_item(
         Err(reason) => format!("unknown-base/{reason}"),
     };
     *s.items_by_scope.entry(scope_name.clone()).or_default() += 1;
-    let unique = item.rarity.is_none_or(Rarity::is_unique);
-    let index = found.as_ref().ok().and_then(|f| indexes.get(f.scope));
-    let ctx = found.as_ref().ok().map(|f| Context {
-        rules: &bases.item_rules().mods,
-        mods,
-        bases: f.rows,
-        unique,
-        influences: item
-            .lines
-            .iter()
-            .filter_map(|l| match &l.kind {
-                LineKind::Influence(id) => bases.item_rules().mods.influence_value(id),
-                _ => None,
-            })
-            .collect(),
-    });
+    scope_name
+}
+
+/// Resolves the item's lines in its scope, then a graft's granted skill
+/// (B5g) and item properties (B5d).
+fn resolve_records(
+    item: &Item,
+    found: &Result<FoundBase<'_>, String>,
+    unique: bool,
+    corpus: &Corpus<'_, '_>,
+) -> Vec<(LineRecord, bool)> {
+    let bases = corpus.bases;
+    let index = found
+        .as_ref()
+        .ok()
+        .and_then(|f| corpus.indexes.get(f.scope));
+    let ctx = found
+        .as_ref()
+        .ok()
+        .map(|f| item_context(item, f.rows, unique, corpus));
     let mut records = item_lines(
         item,
         index,
@@ -1452,34 +1562,61 @@ fn count_item(
         ctx.as_ref(),
         corpus.compositions,
     );
-    if let Ok(f) = &found {
-        for (record, _) in &mut records {
+    for (record, _) in &mut records {
+        if let Ok(f) = found {
             granted_skill(record, &bases.grafts, f.name);
         }
-    }
-    for (record, _) in &mut records {
         item_property(record, &bases.properties);
     }
-    if let (Some((check, build)), Some(resolver)) = (check, corpus.resolver) {
-        let mut body = item.clone();
-        let base = pob_item::item_base(item, bases.base_names())
-            .map(|(name, fallback)| ItemBaseName { name, fallback })
-            .map_err(pob_item::NoBaseName::name);
-        resolver.resolve_item(&mut body, base.as_ref().map_err(|e| *e));
-        let lines: Vec<LineRecord> = records.iter().map(|(r, _)| r.clone()).collect();
-        check.compare(build, n, &body, &lines);
+    records
+}
+
+/// What the `Mods` filter needs about the item (B4a).
+fn item_context<'c>(
+    item: &Item,
+    rows: &'c [BaseRow],
+    unique: bool,
+    corpus: &Corpus<'c, '_>,
+) -> Context<'c> {
+    let rules = &corpus.bases.item_rules().mods;
+    Context {
+        rules,
+        mods: corpus.mods,
+        bases: rows,
+        unique,
+        influences: item
+            .lines
+            .iter()
+            .filter_map(|l| match &l.kind {
+                LineKind::Influence(id) => rules.influence_value(id),
+                _ => None,
+            })
+            .collect(),
     }
-    let empty = BTreeSet::new();
-    let chain = found
-        .as_ref()
-        .ok()
-        .and_then(|f| corpus.chains.get(f.scope))
-        .unwrap_or(&empty);
-    for (record, _) in &mut records {
-        categorize_line(record, chain, corpus.game);
-    }
-    let class_requirement: Vec<String> = item
-        .modifiers()
+}
+
+/// `--bundle`: the core's `resolve_item` on the item `n` of `build`,
+/// compared with the harness's lines.
+fn cross_check(
+    check: &mut BuildCheck,
+    (build, n): (&str, usize),
+    item: &Item,
+    bases: &Bases,
+    resolver: &Resolver<'_, '_>,
+    records: &[(LineRecord, bool)],
+) {
+    let mut body = item.clone();
+    let base = pob_item::item_base(item, bases.base_names())
+        .map(|(name, fallback)| ItemBaseName { name, fallback })
+        .map_err(pob_item::NoBaseName::name);
+    resolver.resolve_item(&mut body, base.as_ref().map_err(|e| *e));
+    let lines: Vec<LineRecord> = records.iter().map(|(r, _)| r.clone()).collect();
+    check.compare(build, n, &body, &lines);
+}
+
+/// The classes of the item's `Requires Class <class>` lines.
+fn class_requirements(item: &Item) -> Vec<String> {
+    item.modifiers()
         .map(|(_, m)| m)
         .filter(|m| mod_filter::section_name(&m.section) == "class-requirement")
         .map(|m| {
@@ -1489,56 +1626,58 @@ fn count_item(
                 .trim()
                 .to_owned()
         })
-        .collect();
-    s.class_requirement_lines += class_requirement.len();
+        .collect()
+}
+
+/// Counts one line of an item in a scope (with whether its resolution
+/// lists shadowed matches).
+fn count_record(
+    s: &mut Summary,
+    distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
+    scope_name: &str,
+    (record, shadowed): (&LineRecord, bool),
+    unique: bool,
+) {
     let group = if unique { "unique" } else { "non_unique" };
-    for (record, shadowed) in &records {
-        let counts = if unique {
-            &mut s.unique
-        } else {
-            &mut s.non_unique
-        };
-        counts.add(record, *shadowed);
-        let excluded = record.outcome.starts_with("excluded/");
-        if !unique && !excluded {
-            distinct
-                .entry((scope_name.clone(), record.text.clone()))
-                .or_default()
-                .insert(record.outcome.clone());
-        }
-        count_b4a(s, record, unique);
-        if let Some(kind) = record.kind {
-            *s.resolved_kinds
-                .entry(format!("{group}/{kind}"))
-                .or_default() += 1;
-        }
-        if let Some(a) = record.adapted
-            && record.outcome == "resolved"
-        {
-            *s.adapted.entry(format!("{group}/{a}")).or_default() += 1;
-        }
-        if record.outcome == "ambiguous" {
-            let entry = s.ambiguous.entry(record.text.clone()).or_default();
-            if unique {
-                entry.unique += 1;
-            } else {
-                entry.non_unique += 1;
-            }
-            entry.detail.extend(record.detail.iter().cloned());
-            entry.reasons.extend(record.filter.iter().cloned());
-            entry
-                .reasons
-                .extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
-        }
-        count_category(s, record, group);
+    let counts = if unique {
+        &mut s.unique
+    } else {
+        &mut s.non_unique
+    };
+    counts.add(record, shadowed);
+    if !unique && !record.outcome.starts_with("excluded/") {
+        distinct
+            .entry((scope_name.to_owned(), record.text.clone()))
+            .or_default()
+            .insert(record.outcome.clone());
     }
-    ItemRecord {
-        item: n,
-        rarity,
-        scope: scope_name,
-        class_requirement,
-        lines: records.into_iter().map(|(r, _)| r).collect(),
+    count_b4a(s, record, unique);
+    if let Some(kind) = record.kind {
+        *s.resolved_kinds
+            .entry(format!("{group}/{kind}"))
+            .or_default() += 1;
     }
+    if let Some(a) = record.adapted
+        && record.outcome == "resolved"
+    {
+        *s.adapted.entry(format!("{group}/{a}")).or_default() += 1;
+    }
+    if record.outcome == "ambiguous" {
+        count_ambiguous(s, record, unique);
+    }
+    count_category(s, record, group);
+}
+
+/// Counts an ambiguous line under its text, with its candidates and the
+/// filter's reasons.
+fn count_ambiguous(s: &mut Summary, record: &LineRecord, unique: bool) {
+    let entry = s.ambiguous.entry(record.text.clone()).or_default();
+    entry.count(unique);
+    entry.detail.extend(record.detail.iter().cloned());
+    entry.reasons.extend(record.filter.iter().cloned());
+    entry
+        .reasons
+        .extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
 }
 
 /// Counts the category of a line that is not resolved (B4b).
@@ -1566,47 +1705,49 @@ fn count_category(s: &mut Summary, record: &LineRecord, group: &'static str) {
         .or_default()
         .entry(text)
         .or_default();
-    if group == "unique" {
-        entry.unique += 1;
-    } else {
-        entry.non_unique += 1;
-    }
+    entry.count(group == "unique");
     entry.detail.extend(record.evidence.iter().cloned());
 }
 
 /// Counts the filter's decision and `mod-backed` of one line (B4a).
 fn count_b4a(s: &mut Summary, record: &LineRecord, unique: bool) {
-    let group = if unique { "unique" } else { "non_unique" };
     if let Some(decision) = &record.filter {
-        let counts = if unique {
-            &mut s.filter.unique
-        } else {
-            &mut s.filter.non_unique
-        };
-        *counts.entry(decision.clone()).or_default() += 1;
-        for note in &record.filter_notes {
-            *s.filter.notes.entry(format!("{group}/{note}")).or_default() += 1;
-        }
-        if let Some(steps) = decision.strip_prefix("resolved/") {
-            let entry = s.filter.resolved.entry(record.text.clone()).or_default();
-            if unique {
-                entry.unique += 1;
-            } else {
-                entry.non_unique += 1;
-            }
-            entry
-                .detail
-                .extend(record.detail.iter().map(|d| format!("{steps}: {d}")));
-        }
+        count_filter(&mut s.filter, record, decision, unique);
     }
-    let Some(backed) = &record.backed else {
-        return;
+    if let Some(backed) = &record.backed {
+        count_backed(&mut s.mod_backed, record, backed);
+    }
+}
+
+/// Counts the filter's decision on a line, its notes, and the texts it
+/// resolved.
+fn count_filter(f: &mut FilterCounts, record: &LineRecord, decision: &str, unique: bool) {
+    let group = if unique { "unique" } else { "non_unique" };
+    let counts = if unique {
+        &mut f.unique
+    } else {
+        &mut f.non_unique
     };
-    let m = &mut s.mod_backed;
+    *counts.entry(decision.to_owned()).or_default() += 1;
+    for note in &record.filter_notes {
+        *f.notes.entry(format!("{group}/{note}")).or_default() += 1;
+    }
+    if let Some(steps) = decision.strip_prefix("resolved/") {
+        let entry = f.resolved.entry(record.text.clone()).or_default();
+        entry.count(unique);
+        entry
+            .detail
+            .extend(record.detail.iter().map(|d| format!("{steps}: {d}")));
+    }
+}
+
+/// Counts `mod-backed` of a resolved non-unique line (`backed` is
+/// `equal`, `hybrid`, or `not/<reason>`).
+fn count_backed(m: &mut ModBacked, record: &LineRecord, backed: &str) {
     let template = record.filter.is_none();
     m.resolved += 1;
     m.template_resolved += usize::from(template);
-    match backed.as_str() {
+    match backed {
         "equal" | "hybrid" => {
             m.backed += 1;
             m.template_backed += usize::from(template);
@@ -1633,8 +1774,21 @@ fn ratio(a: usize, b: usize) -> f64 {
 }
 
 fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<String>>) {
-    let r = &mut s.rate;
-    for (outcome, n) in &s.non_unique.outcomes {
+    fill_rate(&mut s.rate, &s.non_unique, &s.resolved_kinds, distinct);
+    let m = &mut s.mod_backed;
+    m.share = ratio(m.backed, m.resolved);
+    m.template_share = ratio(m.template_backed, m.template_resolved);
+    fill_gate(s);
+}
+
+/// The first rate over non-unique lines, and the distinct texts.
+fn fill_rate(
+    r: &mut Rate,
+    non_unique: &LineCounts,
+    resolved_kinds: &BTreeMap<String, usize>,
+    distinct: &BTreeMap<(String, String), BTreeSet<String>>,
+) {
+    for (outcome, n) in &non_unique.outcomes {
         if outcome.starts_with("excluded/") {
             r.excluded += n;
         } else {
@@ -1645,8 +1799,7 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
         }
     }
     r.rate = ratio(r.resolved, r.denominator);
-    let kinds: usize = s
-        .resolved_kinds
+    let kinds: usize = resolved_kinds
         .iter()
         .filter(|(k, _)| k.starts_with("non_unique/"))
         .map(|(_, n)| n)
@@ -1664,10 +1817,10 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
     // Integer form of `rate >= 0.98`, the same test as the gate's
     // allowance: unresolved * 100 <= 2 * denominator.
     r.meets_rate = r.denominator > 0 && (r.denominator - r.resolved) * 100 <= 2 * r.denominator;
-    let m = &mut s.mod_backed;
-    m.share = ratio(m.backed, m.resolved);
-    m.template_share = ratio(m.template_backed, m.template_resolved);
-    let i = &s.inputs;
+}
+
+/// The Spike B gate, from the rate, the categories, and the inputs.
+fn fill_gate(s: &mut Summary) {
     let g = &mut s.gate;
     g.resolution = s.rate.meets_rate;
     g.unresolved = s.rate.denominator - s.rate.resolved;
@@ -1678,13 +1831,19 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
         .values()
         .filter_map(|c| c.get("uncategorized"))
         .sum();
-    g.inputs_recorded = !i.extract.manifest_sha256.is_empty()
+    g.inputs_recorded = inputs_recorded(&s.inputs);
+    g.met = g.resolution && g.uncategorized == 0 && g.inputs_recorded;
+}
+
+/// Gate item 4: the extract manifest hash, the Steam build, a hash per
+/// build, the tool commit, a clean tool tree, and a PoB source.
+fn inputs_recorded(i: &RunInputs) -> bool {
+    !i.extract.manifest_sha256.is_empty()
         && i.extract.steam_build_id.is_some()
         && !i.builds.is_empty()
         && i.tool.commit.is_some()
         && i.tool.dirty == Some(false)
-        && !i.pob.is_empty();
-    g.met = g.resolution && g.uncategorized == 0 && g.inputs_recorded;
+        && !i.pob.is_empty()
 }
 
 #[cfg(test)]

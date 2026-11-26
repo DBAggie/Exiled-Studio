@@ -476,17 +476,30 @@ function slotIn(set: number, item: number): string | null {
 }
 
 function life(items: ItemView[]): number {
-  let total = 50
-  for (const item of items) {
-    for (const l of item.lines) {
-      for (const s of l.stats) {
-        if (s.id === 'base_maximum_life') {
-          total += Number(s.value)
-        }
+  return items
+    .flatMap((item) => item.lines)
+    .flatMap((l) => l.stats)
+    .filter((s) => s.id === 'base_maximum_life')
+    .reduce((total, s) => total + Number(s.value), 50)
+}
+
+/** An item's lines after an edit (`texts`, `null` for a removed line): a
+ * line whose text did not change is kept, any other is a new life line;
+ * renumbered. */
+function editedLines(lines: LineView[], texts: (string | null)[]): LineView[] {
+  const kept = lines.length
+  return texts
+    .flatMap((text, i) => {
+      if (text === null) {
+        return []
       }
-    }
-  }
-  return total
+      const old = lines[i]
+      if (i < kept && old !== undefined && old.text === text) {
+        return [old]
+      }
+      return [lifeLine(0, text)]
+    })
+    .map((l, index) => ({ ...l, index }))
 }
 
 /** A small calc result document: one exact field with its breakdown, a
@@ -764,6 +777,190 @@ const fresh = (): State => ({
   stages: STAGES,
 })
 
+/** A command that is a word (`undo`). */
+type WordCommand = Extract<Command, string>
+/** A command that is an object with one key, its name. */
+type ObjectCommand = Exclude<Command, string>
+type KeysOf<T> = T extends unknown ? keyof T : never
+type CommandName = KeysOf<ObjectCommand>
+/** The body of the object command named `K`. */
+type CommandBody<K extends CommandName> = Extract<
+  ObjectCommand,
+  Record<K, unknown>
+>[K]
+/** Handlers of object commands, by name. */
+type Handlers = { [K in CommandName]?: (body: CommandBody<K>) => Outcome }
+
+/** The application's limits on a build's dashboards, in short: one to
+ * eight, each named, one of them shown. */
+function dashboardsValid(
+  d: NonNullable<CommandBody<'set-dashboards'>['dashboards']>,
+): boolean {
+  return !(
+    d.list.length === 0 ||
+    d.list.length > 8 ||
+    d.list.some((x) => x.name === '' || x.name.length > 40) ||
+    !d.list.some((x) => x.id === d.active)
+  )
+}
+
+/** A pasted item's line `i`: its rarity, its name, then life lines. */
+function pastedLine(i: number, text: string): LineView {
+  if (i === 0) {
+    return line(i, text, { kind: 'rarity', section: null, status: 'other' })
+  }
+  if (i === 1) {
+    return line(i, text, { kind: 'name', section: null, status: 'other' })
+  }
+  return lifeLine(i, text)
+}
+
+/** The snapshot's open build. */
+type BuildView = NonNullable<Snapshot['build']>
+
+/** Where a build's items are. */
+interface Places {
+  /** The item's slot in the active set: an added item's own slot first,
+   * then the set's, unless an added item took it. */
+  slotOf: (id: number) => string | null
+  /** The tree socket the item sits in. */
+  socketOf: (id: number) => number | null
+  /** Whether the item is in a slot or a socket. */
+  inUse: (id: number) => boolean
+}
+
+function placesOf(current: State): Places {
+  const placed = current.placed ?? {}
+  const socketOf = (id: number) =>
+    current.tree.jewels.find((j) => j.item === id)?.node ?? null
+  const slotOf = (id: number) => {
+    const own = Object.entries(placed).find(([, v]) => v === id)?.[0]
+    if (own !== undefined) return own
+    const fixed = slotIn(current.set, id)
+    return fixed !== null && placed[fixed] === undefined ? fixed : null
+  }
+  const inUse = (id: number) => slotOf(id) !== null || socketOf(id) !== null
+  return { slotOf, socketOf, inUse }
+}
+
+/** Every line of the items to review, with whether its item is in use. */
+function lineWarnings(
+  items: ItemView[],
+  places: Places,
+): BuildView['warnings'] {
+  return items.flatMap((item) =>
+    item.lines
+      .filter((l) => l.status === 'warning')
+      .map((l) => ({
+        item: item.id,
+        'item-name': item.name,
+        line: l.index,
+        text: l.text,
+        code: l.code ?? '',
+        'in-use': places.inUse(item.id),
+        shown: l.shown ?? null,
+        variants: l.variants,
+      })),
+  )
+}
+
+/** The items' modifier lines, counted by status. */
+function lineCounts(items: ItemView[]): BuildView['lines'] {
+  const all = items.flatMap((i) => i.lines).filter((l) => l.kind === 'modifier')
+  const count = (s: LineView['status']) =>
+    all.filter((l) => l.status === s).length
+  return {
+    modifiers: all.length,
+    matched: count('matched'),
+    adapted: count('adapted'),
+    warnings: count('warning'),
+    excluded: count('excluded'),
+  }
+}
+
+/** The sample's item classes: jewels and added items by their card, the
+ * sample's item 2 a wand, its others rings. */
+function itemClass(i: ItemView): BuildView['items'][number]['item-class'] {
+  if (i.card['item-class'] === 'Jewel') return 'Jewel'
+  if (i.id > 100) return i.card['item-class']
+  return i.id === 2 ? 'Wand' : 'Ring'
+}
+
+/** One item of the build's list. */
+function itemSummary(i: ItemView, places: Places): BuildView['items'][number] {
+  return {
+    id: i.id,
+    'item-class': itemClass(i),
+    name: i.name,
+    base: i.base,
+    rarity: i.rarity,
+    slot: places.slotOf(i.id),
+    warnings: i.lines.filter((l) => l.status === 'warning').length,
+    'in-use': places.inUse(i.id),
+    sets: SETS.filter((s) => Object.values(s.slots).includes(i.id)).map(
+      (s) => s.id,
+    ),
+    'tree-socket': places.socketOf(i.id),
+    legacy:
+      i.card['variant-eras'][(i.card['selected-variant'] ?? 0) - 1] ===
+      'legacy',
+    // The wand: Ice Nova and its support linked, one socket free.
+    sockets: i.id === 2 ? ['BG', 'R'] : [],
+    requirements: i.card.requirements ?? null,
+  }
+}
+
+/** The item, skill, spec, and config sets, and the loadouts, each marked
+ * active or not. */
+function setViews(
+  current: State,
+): Pick<
+  BuildView,
+  'item-sets' | 'skill-sets' | 'specs' | 'config-sets' | 'loadouts'
+> {
+  return {
+    'item-sets': SETS.map((s) => ({
+      id: s.id,
+      title: s.title,
+      active: s.id === current.set,
+    })),
+    'skill-sets': STAGES.map((s) => ({
+      id: s.skillSet,
+      title: `^4${s.title} {${s.spec}}`,
+      active: s.skillSet === current.skillSet,
+    })),
+    specs: current.stages.map((s) => ({
+      id: s.spec,
+      title: `${s.title} {${s.spec}}`,
+      active: s.spec === current.spec,
+    })),
+    'config-sets': [{ id: 1, title: 'Default', active: true }],
+    loadouts: current.stages.map((s) => ({
+      spec: s.spec,
+      title: s.title,
+      'item-set': s.set,
+      'skill-set': s.skillSet,
+      'config-set': 1,
+      active:
+        s.spec === current.spec &&
+        s.set === current.set &&
+        s.skillSet === current.skillSet,
+    })),
+  }
+}
+
+/** The active skill set's groups, the main group and gem marked. */
+function skillGroups(current: State): BuildView['skill-groups'] {
+  return (current.skills[current.skillSet] ?? []).map((g, i) => ({
+    ...g,
+    main: i === current.main,
+    gems: g.gems.map((x, j) => ({
+      ...x,
+      main: i === current.main && j === current.mainGem,
+    })),
+  }))
+}
+
 export class FakeApi implements LoomApi {
   version = 0
   private options: FakeOptions
@@ -891,211 +1088,132 @@ export class FakeApi implements LoomApi {
   }
 
   snapshot(): Promise<Snapshot> {
-    const items = this.current?.items ?? []
-    const set = this.current?.set ?? 1
-    const socketOf = (id: number) =>
-      this.current?.tree.jewels.find((j) => j.item === id)?.node ?? null
-    const placed = this.current?.placed ?? {}
-    const slotOf = (id: number) => {
-      const own = Object.entries(placed).find(([, v]) => v === id)?.[0]
-      if (own !== undefined) return own
-      const fixed = slotIn(set, id)
-      return fixed !== null && placed[fixed] === undefined ? fixed : null
-    }
-    const inUse = (id: number) => slotOf(id) !== null || socketOf(id) !== null
-    const warnings = items.flatMap((item) =>
-      item.lines
-        .filter((l) => l.status === 'warning')
-        .map((l) => ({
-          item: item.id,
-          'item-name': item.name,
-          line: l.index,
-          text: l.text,
-          code: l.code ?? '',
-          'in-use': inUse(item.id),
-          shown: l.shown ?? null,
-          variants: l.variants,
-        })),
-    )
-    const all = items
-      .flatMap((i) => i.lines)
-      .filter((l) => l.kind === 'modifier')
-    const count = (s: LineView['status']) =>
-      all.filter((l) => l.status === s).length
     return Promise.resolve({
       version: this.version,
-      build:
-        this.current === null
-          ? null
-          : {
-              name: this.path === null ? '' : 'saved',
-              game: 'poe1',
-              class: 'Witch',
-              ascendancy: null,
-              level: 90,
-              'main-skill': 'Ice Nova',
-              'data-version': {
-                game: 'poe1',
-                'schema-version': 3,
-                'steam-build': 26530219,
-              },
-              completeness: warnings.length > 0 ? 'partial' : 'complete',
-              'in-use-completeness': warnings.some((w) => w['in-use'])
-                ? 'partial'
-                : 'complete',
-              lines: {
-                modifiers: all.length,
-                matched: count('matched'),
-                adapted: count('adapted'),
-                warnings: count('warning'),
-                excluded: count('excluded'),
-              },
-              items: items.map((i) => ({
-                id: i.id,
-                'item-class':
-                  i.card['item-class'] === 'Jewel'
-                    ? 'Jewel'
-                    : i.id > 100
-                      ? i.card['item-class']
-                      : i.id === 2
-                        ? 'Wand'
-                        : 'Ring',
-                name: i.name,
-                base: i.base,
-                rarity: i.rarity,
-                slot: slotOf(i.id),
-                warnings: i.lines.filter((l) => l.status === 'warning').length,
-                'in-use': inUse(i.id),
-                sets: SETS.filter((s) =>
-                  Object.values(s.slots).includes(i.id),
-                ).map((s) => s.id),
-                'tree-socket': socketOf(i.id),
-                legacy:
-                  i.card['variant-eras'][
-                    (i.card['selected-variant'] ?? 0) - 1
-                  ] === 'legacy',
-                // The wand: Ice Nova and its support linked, one socket free.
-                sockets: i.id === 2 ? ['BG', 'R'] : [],
-                requirements: i.card.requirements ?? null,
-              })),
-              warnings,
-              'item-sets': SETS.map((s) => ({
-                id: s.id,
-                title: s.title,
-                active: s.id === set,
-              })),
-              'skill-sets': STAGES.map((s) => ({
-                id: s.skillSet,
-                title: `^4${s.title} {${s.spec}}`,
-                active: s.skillSet === this.current?.skillSet,
-              })),
-              specs: (this.current?.stages ?? STAGES).map((s) => ({
-                id: s.spec,
-                title: `${s.title} {${s.spec}}`,
-                active: s.spec === this.current?.spec,
-              })),
-              'config-sets': [{ id: 1, title: 'Default', active: true }],
-              loadouts: (this.current?.stages ?? STAGES).map((s) => ({
-                spec: s.spec,
-                title: s.title,
-                'item-set': s.set,
-                'skill-set': s.skillSet,
-                'config-set': 1,
-                active:
-                  s.spec === this.current?.spec &&
-                  s.set === set &&
-                  s.skillSet === this.current?.skillSet,
-              })),
-              'skill-groups': (
-                this.current?.skills[this.current.skillSet] ?? []
-              ).map((g, i) => ({
-                ...g,
-                main: i === this.current?.main,
-                gems: g.gems.map((x, j) => ({
-                  ...x,
-                  main: i === this.current?.main && j === this.current.mainGem,
-                })),
-              })),
-              'passive-names': [{ node: 420, name: 'Heart of Ice' }],
-              tree:
-                this.options.data === true && this.current !== null
-                  ? {
-                      ...fakeTree.view(this.current.tree, this.current.spec),
-                      locked:
-                        this.current.tree.version === undefined
-                          ? (this.options.treeLocked ?? null)
-                          : null,
-                      convert:
-                        this.current.tree.version === undefined
-                          ? (this.options.treeConvert ?? null)
-                          : null,
-                    }
-                  : null,
-              config: this.current?.config ?? null,
-              league: this.current?.league ?? 'challenge',
-              dashboards: this.current?.dashboards ?? null,
-              'second-weapon-set': this.current?.secondWeaponSet ?? false,
-            },
+      build: this.current === null ? null : this.buildView(this.current),
       calc: this.calcState,
-      history: {
-        'can-undo': this.undoStack.length > 0,
-        'can-redo': this.redoStack.length > 0,
-        undo:
-          this.undoStack.length > 0 && this.current !== null
-            ? (this.made.get(this.current) ?? null)
-            : null,
-        redo: this.made.get(this.redoStack.at(-1) as State) ?? null,
-      },
+      history: this.historyView(),
       dirty: this.dirty,
       path: this.path,
       origin: this.origin,
-      data: {
-        bundle: this.options.data === true ? '/data/bundle' : null,
-        'data-version':
-          this.options.data === true
-            ? {
-                game: 'poe1',
-                'schema-version': 3,
-                'steam-build': this.activeBuild,
-              }
-            : null,
-        // The tree version is known for the real bundle's build only.
-        'tree-version':
-          this.options.data === true && this.activeBuild === 26530219
-            ? '3_29'
-            : null,
-        error: null,
-        installed: (this.options.installed ?? []).map((b) => ({
-          id: this.bundleId(b),
-          'data-version': {
-            game: 'poe1',
-            'schema-version': 4,
-            'steam-build': b,
-          },
-          'tree-version': b === 26530219 ? '3_29' : null,
-          'signed-by': this.acceptedBuilds.includes(b)
-            ? null
-            : 'ed25519:6e846054cb5c7102',
-          accepted: this.acceptedBuilds.includes(b),
-        })),
-        quarantined: structuredClone(this.options.quarantined ?? []),
-        loading: this.options.loading ?? false,
-        active:
-          this.options.data === true &&
-          (this.options.installed ?? []).includes(this.activeBuild)
-            ? this.bundleId(this.activeBuild)
-            : null,
-        notice: null,
-        pinned:
-          this.current !== null &&
-          this.options.pinned !== undefined &&
-          this.options.pinned !== this.activeBuild &&
-          (this.options.installed ?? []).includes(this.options.pinned)
-            ? this.bundleId(this.options.pinned)
-            : null,
-      },
+      data: this.dataView(),
       notices: [],
     })
+  }
+
+  /** The open build, as the snapshot shows it. */
+  private buildView(current: State): BuildView {
+    const places = placesOf(current)
+    const warnings = lineWarnings(current.items, places)
+    return {
+      name: this.path === null ? '' : 'saved',
+      game: 'poe1',
+      class: 'Witch',
+      ascendancy: null,
+      level: 90,
+      'main-skill': 'Ice Nova',
+      'data-version': {
+        game: 'poe1',
+        'schema-version': 3,
+        'steam-build': 26530219,
+      },
+      completeness: warnings.length > 0 ? 'partial' : 'complete',
+      'in-use-completeness': warnings.some((w) => w['in-use'])
+        ? 'partial'
+        : 'complete',
+      lines: lineCounts(current.items),
+      items: current.items.map((i) => itemSummary(i, places)),
+      warnings,
+      ...setViews(current),
+      'skill-groups': skillGroups(current),
+      'passive-names': [{ node: 420, name: 'Heart of Ice' }],
+      tree: this.options.data === true ? this.treeView(current) : null,
+      config: current.config,
+      league: current.league,
+      dashboards: current.dashboards ?? null,
+      'second-weapon-set': current.secondWeaponSet,
+    }
+  }
+
+  /** The active spec's tree, locked or offered a conversion while it has
+   * no version. */
+  private treeView(current: State): BuildView['tree'] {
+    const unversioned = current.tree.version === undefined
+    return {
+      ...fakeTree.view(current.tree, current.spec),
+      locked: unversioned ? (this.options.treeLocked ?? null) : null,
+      convert: unversioned ? (this.options.treeConvert ?? null) : null,
+    }
+  }
+
+  private historyView(): Snapshot['history'] {
+    return {
+      'can-undo': this.undoStack.length > 0,
+      'can-redo': this.redoStack.length > 0,
+      undo:
+        this.undoStack.length > 0 && this.current !== null
+          ? (this.made.get(this.current) ?? null)
+          : null,
+      redo: this.made.get(this.redoStack.at(-1) as State) ?? null,
+    }
+  }
+
+  /** The loaded game data and the installed bundles. */
+  private dataView(): Snapshot['data'] {
+    const data = this.options.data === true
+    const installed = this.options.installed ?? []
+    return {
+      bundle: data ? '/data/bundle' : null,
+      'data-version': data
+        ? {
+            game: 'poe1',
+            'schema-version': 3,
+            'steam-build': this.activeBuild,
+          }
+        : null,
+      // The tree version is known for the real bundle's build only.
+      'tree-version': data && this.activeBuild === 26530219 ? '3_29' : null,
+      error: null,
+      installed: installed.map((b) => this.installedView(b)),
+      quarantined: structuredClone(this.options.quarantined ?? []),
+      loading: this.options.loading ?? false,
+      active:
+        data && installed.includes(this.activeBuild)
+          ? this.bundleId(this.activeBuild)
+          : null,
+      notice: null,
+      pinned: this.pinnedBundle(installed),
+    }
+  }
+
+  /** An installed bundle of Steam build `b`. */
+  private installedView(
+    b: number,
+  ): NonNullable<Snapshot['data']['installed']>[number] {
+    const accepted = this.acceptedBuilds.includes(b)
+    return {
+      id: this.bundleId(b),
+      'data-version': {
+        game: 'poe1',
+        'schema-version': 4,
+        'steam-build': b,
+      },
+      'tree-version': b === 26530219 ? '3_29' : null,
+      'signed-by': accepted ? null : 'ed25519:6e846054cb5c7102',
+      accepted,
+    }
+  }
+
+  /** The installed bundle the open build is pinned to, when it is not the
+   * loaded one. */
+  private pinnedBundle(installed: number[]): string | null {
+    const pinned = this.options.pinned
+    return this.current !== null &&
+      pinned !== undefined &&
+      pinned !== this.activeBuild &&
+      installed.includes(pinned)
+      ? this.bundleId(pinned)
+      : null
   }
 
   calcDocument() {
@@ -1119,47 +1237,49 @@ export class FakeApi implements LoomApi {
     if (item === undefined) {
       this.fail('APP_EDIT_ITEM')
     }
-    for (const e of edit.expect) {
-      if (item.lines[e.line]?.text !== e.text) {
-        this.fail('APP_STALE_EDIT')
-      }
+    if (edit.expect.some((e) => item.lines[e.line]?.text !== e.text)) {
+      this.fail('APP_STALE_EDIT')
     }
     const texts: (string | null)[] = item.lines.map((l) => l.text)
     for (const op of edit.ops) {
-      if ('replace' in op) {
-        texts[op.replace.line] = op.replace.text
-      } else if ('remove' in op) {
-        texts[op.remove.line] = null
-      } else if ('add' in op) {
-        texts.push(op.add.text)
-      } else if ('select-variant' in op) {
-        const v = op['select-variant'].variant
-        if (v < 1 || v > item.card.variants.length) this.fail('APP_EDIT_LINE')
-        item.card['selected-variant'] = v
-        item.card['current-variant'] =
-          item.card['variant-eras'][v - 1] === 'legacy'
-            ? item.card['variant-eras'].indexOf('current') + 1 || null
-            : null
-        item.lines = item.lines.map((l) =>
-          l.variants.length === 0
-            ? l
-            : { ...l, status: l.variants.includes(v) ? 'matched' : 'excluded' },
-        )
-      }
+      this.applyOp(item, texts, op)
     }
-    const kept = item.lines.length
-    item.lines = texts.flatMap((text, i) => {
-      if (text === null) {
-        return []
-      }
-      const old = item.lines[i]
-      if (i < kept && old !== undefined && old.text === text) {
-        return [old]
-      }
-      return [lifeLine(0, text)]
-    })
-    item.lines = item.lines.map((l, index) => ({ ...l, index }))
+    item.lines = editedLines(item.lines, texts)
     return { ...this.current, items }
+  }
+
+  /** One operation of an edit: a line's new text in `texts` (`null` when
+   * removed), or the variant selected on `item`. */
+  private applyOp(
+    item: ItemView,
+    texts: (string | null)[],
+    op: ItemEdit['ops'][number],
+  ) {
+    if ('replace' in op) {
+      texts[op.replace.line] = op.replace.text
+    } else if ('remove' in op) {
+      texts[op.remove.line] = null
+    } else if ('add' in op) {
+      texts.push(op.add.text)
+    } else if ('select-variant' in op) {
+      this.selectVariant(item, op['select-variant'].variant)
+    }
+  }
+
+  /** Selects variant `v` of `item`: its card and each variant line's
+   * status. */
+  private selectVariant(item: ItemView, v: number) {
+    if (v < 1 || v > item.card.variants.length) this.fail('APP_EDIT_LINE')
+    item.card['selected-variant'] = v
+    item.card['current-variant'] =
+      item.card['variant-eras'][v - 1] === 'legacy'
+        ? item.card['variant-eras'].indexOf('current') + 1 || null
+        : null
+    item.lines = item.lines.map((l) =>
+      l.variants.length === 0
+        ? l
+        : { ...l, status: l.variants.includes(v) ? 'matched' : 'excluded' },
+    )
   }
 
   preview(edit: ItemEdit): Promise<ItemEditPreview> {
@@ -1199,219 +1319,320 @@ export class FakeApi implements LoomApi {
   }
 
   private run(command: Command): Outcome {
-    if (typeof command === 'string') {
-      switch (command) {
-        case 'undo': {
-          const prev = this.undoStack.pop()
-          if (prev === undefined || this.current === null) {
-            return 'nothing'
-          }
-          this.redoStack.push(this.current)
-          this.dirty = true
-          this.changed(prev)
-          return this.done()
-        }
-        case 'redo': {
-          const next = this.redoStack.pop()
-          if (next === undefined || this.current === null) {
-            return 'nothing'
-          }
-          this.undoStack.push(this.current)
-          this.dirty = true
-          this.changed(next)
-          return this.done()
-        }
-        case 'save':
-          if (this.path === null) {
-            this.fail('APP_NO_PATH')
-          }
-          this.dirty = false
-          this.version += 1
-          this.emit({ saved: { path: this.path } })
-          return this.done()
-        case 'export-share-code':
-          return { text: { version: this.version, text: 'eNrFAKESHARECODE' } }
-        case 'close':
-          this.undoStack = []
-          this.redoStack = []
-          this.path = null
-          this.origin = null
-          this.dirty = false
-          this.changed(null)
-          return this.done()
-      }
-    }
-    if (typeof command === 'object' && 'accept-bundle' in command) {
-      const { id, 'manifest-sha256': hash } = command['accept-bundle']
-      const q = (this.options.quarantined ?? []).find((b) => b.id === id)
-      if (q === undefined) this.fail('APP_NO_BUNDLE')
-      if (!q.acceptable || q['manifest-sha256'] !== hash) {
-        this.fail('APP_QUARANTINED')
-      }
-      const build = q['data-version']['steam-build'] ?? 0
-      this.options.quarantined = (this.options.quarantined ?? []).filter(
-        (b) => b.id !== id,
-      )
-      this.options.installed = [...(this.options.installed ?? []), build]
-      this.acceptedBuilds.push(build)
-      return this.done()
-    }
-    if (typeof command === 'object' && 'verify-bundle' in command) {
-      this.verified.push(command['verify-bundle'].id)
-      return this.done()
-    }
-    if (typeof command === 'object' && 'use-bundle' in command) {
-      const build = (this.options.installed ?? []).find(
-        (b) => this.bundleId(b) === command['use-bundle'].id,
-      )
-      if (build === undefined) this.fail('APP_NO_BUNDLE')
-      this.activeBuild = build
-      this.options.data = true
-      this.version += 1
-      this.emit('build-changed')
-      return this.done()
-    }
-    if (command === 'new-build') {
+    if (typeof command === 'string') return this.words[command]()
+    return (
+      this.dispatch(this.commands, command) ??
+      this.treeCommand(command) ??
+      'nothing'
+    )
+  }
+
+  /** Runs `command` with its handler in `table`; `null` when the table has
+   * none for it. */
+  private dispatch(table: Handlers, command: ObjectCommand): Outcome | null {
+    const name = Object.keys(command)[0] as CommandName
+    if (!Object.hasOwn(table, name)) return null
+    // The table pairs each name with its own body's handler.
+    const handler = table[name] as (body: unknown) => Outcome
+    return handler((command as Record<string, unknown>)[name])
+  }
+
+  /** The commands that are words. */
+  private readonly words: Record<WordCommand, () => Outcome> = {
+    undo: () => this.step(this.undoStack, this.redoStack),
+    redo: () => this.step(this.redoStack, this.undoStack),
+    save: () => this.saveFile(),
+    'export-share-code': () => ({
+      text: { version: this.version, text: 'eNrFAKESHARECODE' },
+    }),
+    close: () => this.resetTo(null),
+    'new-build': () => {
       if (this.options.data !== true) this.fail('APP_NO_DATA')
-      this.undoStack = []
-      this.redoStack = []
-      this.path = null
-      this.origin = null
-      this.dirty = false
-      this.changed({ ...fresh(), items: [], skills: {} })
+      return this.resetTo({ ...fresh(), items: [], skills: {} })
+    },
+  }
+
+  /** The object commands but the tree's, by name; a name not here does
+   * nothing. */
+  private readonly commands: Handlers = {
+    'accept-bundle': (c) => this.acceptBundle(c),
+    'verify-bundle': (c) => {
+      this.verified.push(c.id)
       return this.done()
-    }
-    if ('import-text' in command) {
-      return this.importText(command['import-text'].text)
-    }
-    if ('edit-item' in command) {
-      const next = this.applyEdit(command['edit-item'])
-      if (this.current !== null) {
-        this.undoStack.push(this.current)
-      }
-      this.redoStack = []
+    },
+    'use-bundle': (c) => this.useBundle(c.id),
+    'import-text': (c) => this.importText(c.text),
+    'edit-item': (c) => this.editItem(c),
+    'add-item': (c) => this.addItem(c),
+    'use-item-set': (c) => this.useItemSet(c.id),
+    'use-loadout': (c) => this.useLoadout(c.spec),
+    'use-skill-set': (c) => this.useSkillSet(c.id),
+    'edit-gem': (c) => this.editGem(c),
+    'edit-socket-group': (c) => this.editSocketGroup(c),
+    'add-gem': (c) => this.addGem(c),
+    'remove-gem': (c) => this.removeGem(c),
+    'add-socket-group': (c) => this.addSocketGroup(c),
+    'remove-socket-group': (c) => this.removeSocketGroup(c),
+    'use-weapon-set': (c) =>
+      this.commit(
+        { ...this.state(), secondWeaponSet: c.second },
+        { kind: 'weapon-set', item: 1 },
+      ),
+    'set-dashboards': (c) => this.setDashboards(c.dashboards ?? null),
+    'set-league': (c) =>
+      this.commit(
+        { ...this.state(), league: c.league },
+        { kind: 'league', item: 0 },
+      ),
+    'set-config-input': (c) => this.setConfigInput(c),
+    'remove-config-input': (c) =>
+      this.editConfig((config) => {
+        const at = config.inputs.findIndex((i) => i.name === c.name)
+        if (at < 0) this.fail('APP_CONFIG')
+        config.inputs.splice(at, 1)
+        return 0
+      }),
+    'edit-custom-block': (c) =>
+      this.editConfig((config) => {
+        const block = config.blocks[c.block]
+        if (block === undefined) this.fail('APP_CONFIG')
+        const next = fakeBlock(c.text ?? block.text, c.enabled ?? block.enabled)
+        config.blocks[c.block] = { ...next, title: block.title }
+        return c.block
+      }),
+    'add-custom-block': (c) =>
+      this.editConfig((config) => {
+        config.blocks.push(fakeBlock(c.text))
+        return config.blocks.length - 1
+      }),
+    'remove-custom-block': (c) =>
+      this.editConfig((config) => {
+        if (config.blocks[c.block] === undefined) this.fail('APP_CONFIG')
+        config.blocks.splice(c.block, 1)
+        return c.block
+      }),
+    'open-recent': (c) => this.openRecent(c.id),
+    restore: (c) => {
+      this.recoveryList = this.recoveryList.filter((r) => r.id !== c.id)
       this.dirty = true
-      this.changed(next)
+      this.changed(this.fresh())
       return this.done()
+    },
+    'forget-recent': (c) => {
+      if (!this.recentList.some((r) => r.id === c.id))
+        this.fail('APP_NOT_FOUND')
+      this.recentList = this.recentList.filter((r) => r.id !== c.id)
+      return 'nothing'
+    },
+    discard: (c) => {
+      this.recoveryList = this.recoveryList.filter((r) => r.id !== c.id)
+      return 'nothing'
+    },
+    approve: (c) => this.approve(c.id),
+    decline: (c) => {
+      this.request(c.id).status = 'declined'
+      this.emit('mcp-changed')
+      return 'nothing'
+    },
+  }
+
+  /** The open build; `APP_NO_BUILD` without one. */
+  private state(): State {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    return this.current
+  }
+
+  /** Undo or redo: the last state of `from` becomes current, the current
+   * one goes onto `to`. */
+  private step(from: State[], to: State[]): Outcome {
+    const state = from.pop()
+    if (state === undefined || this.current === null) {
+      return 'nothing'
     }
-    if ('add-item' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const { text, slot } = command['add-item']
-      const lines = text
-        .split('\n')
-        .map((l) => l.trim())
-        .filter(
-          (l) => l !== '' && l !== '--------' && !l.startsWith('Item Class:'),
-        )
-      const rarity = lines[0]?.match(/^Rarity: (\w+)$/)?.[1]?.toLowerCase()
-      if (
-        rarity === undefined ||
-        !['normal', 'magic', 'rare', 'unique'].includes(rarity)
-      ) {
-        this.fail('APP_ADD_ITEM')
-      }
-      const named = rarity === 'rare' || rarity === 'unique'
-      const id = Math.max(0, ...this.current.items.map((i) => i.id)) + 1
-      const item: ItemView = {
-        id,
-        name: lines[1] ?? null,
-        base: named ? (lines[2] ?? null) : null,
-        rarity,
-        slot: slot ?? null,
-        card: card(),
-        lines: lines.map((l, i) =>
-          i === 0
-            ? line(i, l, { kind: 'rarity', section: null, status: 'other' })
-            : i === 1
-              ? line(i, l, { kind: 'name', section: null, status: 'other' })
-              : lifeLine(i, l),
-        ),
-      }
-      const placed =
-        slot != null
-          ? { ...this.current.placed, [slot]: id }
-          : this.current.placed
-      return this.commit(
-        { ...this.current, items: [...this.current.items, item], placed },
-        { kind: 'item-added', item: id },
-      )
+    to.push(this.current)
+    this.dirty = true
+    this.changed(state)
+    return this.done()
+  }
+
+  private saveFile(): Outcome {
+    if (this.path === null) {
+      this.fail('APP_NO_PATH')
     }
-    if ('use-item-set' in command) {
-      const id = command['use-item-set'].id
-      if (this.current === null) {
-        this.fail('APP_NO_BUILD')
-      }
-      if (!SETS.some((s) => s.id === id)) {
-        this.fail('APP_ITEM_SET')
-      }
-      return this.commit(
-        { ...this.current, set: id },
-        { kind: 'item-set', item: id },
-      )
+    this.dirty = false
+    this.version += 1
+    this.emit({ saved: { path: this.path } })
+    return this.done()
+  }
+
+  /** Opens `state` (`null`: closes the build) with no history, no file,
+   * and nothing unsaved. */
+  private resetTo(state: State | null): Outcome {
+    this.undoStack = []
+    this.redoStack = []
+    this.path = null
+    this.origin = null
+    this.dirty = false
+    this.changed(state)
+    return this.done()
+  }
+
+  private acceptBundle(c: CommandBody<'accept-bundle'>): Outcome {
+    const { id, 'manifest-sha256': hash } = c
+    const q = (this.options.quarantined ?? []).find((b) => b.id === id)
+    if (q === undefined) this.fail('APP_NO_BUNDLE')
+    if (!q.acceptable || q['manifest-sha256'] !== hash) {
+      this.fail('APP_QUARANTINED')
     }
-    if ('use-loadout' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const stage = this.current.stages.find(
-        (s) => s.spec === command['use-loadout'].spec,
-      )
-      if (stage === undefined) this.fail('APP_LOADOUT')
-      return this.commit(
-        {
-          ...this.current,
-          spec: stage.spec,
-          set: stage.set,
-          skillSet: stage.skillSet,
-        },
-        { kind: 'loadout', item: stage.spec },
-      )
+    const build = q['data-version']['steam-build'] ?? 0
+    this.options.quarantined = (this.options.quarantined ?? []).filter(
+      (b) => b.id !== id,
+    )
+    this.options.installed = [...(this.options.installed ?? []), build]
+    this.acceptedBuilds.push(build)
+    return this.done()
+  }
+
+  private useBundle(id: string): Outcome {
+    const build = (this.options.installed ?? []).find(
+      (b) => this.bundleId(b) === id,
+    )
+    if (build === undefined) this.fail('APP_NO_BUNDLE')
+    this.activeBuild = build
+    this.options.data = true
+    this.version += 1
+    this.emit('build-changed')
+    return this.done()
+  }
+
+  /** An item edit: applied at once (no check that it changes anything). */
+  private editItem(edit: ItemEdit): Outcome {
+    const next = this.applyEdit(edit)
+    if (this.current !== null) {
+      this.undoStack.push(this.current)
     }
-    if ('use-skill-set' in command) {
-      const id = command['use-skill-set'].id
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      if (this.current.skills[id] === undefined) this.fail('APP_SKILL')
-      return this.commit(
-        { ...this.current, skillSet: id },
-        { kind: 'skill-set', item: id },
+    this.redoStack = []
+    this.dirty = true
+    this.changed(next)
+    return this.done()
+  }
+
+  /** A pasted item, added (and placed in `slot`, if given). */
+  private addItem(c: CommandBody<'add-item'>): Outcome {
+    const current = this.state()
+    const { text, slot } = c
+    const lines = text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(
+        (l) => l !== '' && l !== '--------' && !l.startsWith('Item Class:'),
       )
+    const rarity = lines[0]?.match(/^Rarity: (\w+)$/)?.[1]?.toLowerCase()
+    if (
+      rarity === undefined ||
+      !['normal', 'magic', 'rare', 'unique'].includes(rarity)
+    ) {
+      this.fail('APP_ADD_ITEM')
     }
-    if ('edit-gem' in command) {
-      const e = command['edit-gem']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const g = skills[this.current.skillSet]?.[e.group]?.gems[e.gem]
+    const named = rarity === 'rare' || rarity === 'unique'
+    const id = Math.max(0, ...current.items.map((i) => i.id)) + 1
+    const item: ItemView = {
+      id,
+      name: lines[1] ?? null,
+      base: named ? (lines[2] ?? null) : null,
+      rarity,
+      slot: slot ?? null,
+      card: card(),
+      lines: lines.map((l, i) => pastedLine(i, l)),
+    }
+    const placed =
+      slot != null ? { ...current.placed, [slot]: id } : current.placed
+    return this.commit(
+      { ...current, items: [...current.items, item], placed },
+      { kind: 'item-added', item: id },
+    )
+  }
+
+  private useItemSet(id: number): Outcome {
+    const current = this.state()
+    if (!SETS.some((s) => s.id === id)) {
+      this.fail('APP_ITEM_SET')
+    }
+    return this.commit({ ...current, set: id }, { kind: 'item-set', item: id })
+  }
+
+  private useLoadout(spec: number): Outcome {
+    const current = this.state()
+    const stage = current.stages.find((s) => s.spec === spec)
+    if (stage === undefined) this.fail('APP_LOADOUT')
+    return this.commit(
+      {
+        ...current,
+        spec: stage.spec,
+        set: stage.set,
+        skillSet: stage.skillSet,
+      },
+      { kind: 'loadout', item: stage.spec },
+    )
+  }
+
+  private useSkillSet(id: number): Outcome {
+    const current = this.state()
+    if (current.skills[id] === undefined) this.fail('APP_SKILL')
+    return this.commit(
+      { ...current, skillSet: id },
+      { kind: 'skill-set', item: id },
+    )
+  }
+
+  /** Commits what `f` changes in a copy of the skills (and of the other
+   * fields it returns), as an edit of the group it names. */
+  private editSkills(
+    f: (
+      skills: Record<number, Group[]>,
+      current: State,
+    ) => { item: number; also?: Partial<State> },
+  ): Outcome {
+    const current = this.state()
+    const skills = structuredClone(current.skills)
+    const { item, also } = f(skills, current)
+    return this.commit(
+      { ...current, skills, ...also },
+      { kind: 'skill-edit', item },
+    )
+  }
+
+  private editGem(e: CommandBody<'edit-gem'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const g = skills[current.skillSet]?.[e.group]?.gems[e.gem]
       if (g === undefined || e.level === 0) this.fail('APP_SKILL')
       if (e.level != null) g.level = e.level
       if (e.quality != null) g.quality = e.quality
       if (e.enabled != null) g.enabled = e.enabled
-      return this.commit(
-        { ...this.current, skills },
-        { kind: 'skill-edit', item: e.group },
-      )
-    }
-    if ('edit-socket-group' in command) {
-      const e = command['edit-socket-group']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const g = skills[this.current.skillSet]?.[e.group]
+      return { item: e.group }
+    })
+  }
+
+  private editSocketGroup(e: CommandBody<'edit-socket-group'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const g = skills[current.skillSet]?.[e.group]
       if (g === undefined) this.fail('APP_SKILL')
       if (e.enabled != null) g.enabled = e.enabled
       if (e.slot != null) g.slot = e.slot === '' ? null : e.slot
       if (e.label != null) g.label = e.label === '' ? null : e.label
-      return this.commit(
-        {
-          ...this.current,
-          skills,
-          main: e.main === true ? e.group : this.current.main,
-          mainGem: e['main-gem'] ?? this.current.mainGem,
+      return {
+        item: e.group,
+        also: {
+          main: e.main === true ? e.group : current.main,
+          mainGem: e['main-gem'] ?? current.mainGem,
         },
-        { kind: 'skill-edit', item: e.group },
-      )
-    }
-    if ('add-gem' in command) {
-      const e = command['add-gem']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const g = skills[this.current.skillSet]?.[e.group]
+      }
+    })
+  }
+
+  private addGem(e: CommandBody<'add-gem'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const g = skills[current.skillSet]?.[e.group]
       const entry = GEM_CATALOG.find((x) => x.id === e.gem)
       if (g === undefined || entry === undefined) this.fail('APP_SKILL')
       const at = Math.min(e.at ?? g.gems.length, g.gems.length)
@@ -1420,103 +1641,79 @@ export class FakeApi implements LoomApi {
         0,
         gem(entry.name, 20, entry.colour ?? 'white', entry.support, null, []),
       )
-      return this.commit(
-        { ...this.current, skills },
-        { kind: 'skill-edit', item: e.group },
-      )
-    }
-    if ('remove-gem' in command) {
-      const e = command['remove-gem']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const g = skills[this.current.skillSet]?.[e.group]
+      return { item: e.group }
+    })
+  }
+
+  private removeGem(e: CommandBody<'remove-gem'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const g = skills[current.skillSet]?.[e.group]
       if (g === undefined || g.gems[e.gem] === undefined) this.fail('APP_SKILL')
       g.gems.splice(e.gem, 1)
-      return this.commit(
-        { ...this.current, skills },
-        { kind: 'skill-edit', item: e.group },
-      )
-    }
-    if ('add-socket-group' in command) {
-      const e = command['add-socket-group']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const set = skills[this.current.skillSet] ?? []
+      return { item: e.group }
+    })
+  }
+
+  private addSocketGroup(e: CommandBody<'add-socket-group'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const set = skills[current.skillSet] ?? []
       set.push({
         label: e.label ?? null,
         slot: e.slot ?? null,
         enabled: true,
         gems: [],
       })
-      skills[this.current.skillSet] = set
-      return this.commit(
-        { ...this.current, skills },
-        { kind: 'skill-edit', item: set.length - 1 },
-      )
-    }
-    if ('remove-socket-group' in command) {
-      const e = command['remove-socket-group']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const skills = structuredClone(this.current.skills)
-      const set = skills[this.current.skillSet]
+      skills[current.skillSet] = set
+      return { item: set.length - 1 }
+    })
+  }
+
+  private removeSocketGroup(e: CommandBody<'remove-socket-group'>): Outcome {
+    return this.editSkills((skills, current) => {
+      const set = skills[current.skillSet]
       if (set?.[e.group] === undefined) this.fail('APP_SKILL')
       set.splice(e.group, 1)
-      const main = this.current.main
-      return this.commit(
-        {
-          ...this.current,
-          skills,
+      const main = current.main
+      return {
+        item: e.group,
+        also: {
           main: main > e.group ? main - 1 : Math.min(main, set.length - 1),
         },
-        { kind: 'skill-edit', item: e.group },
-      )
-    }
-    if ('use-weapon-set' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const second = command['use-weapon-set'].second
-      return this.commit(
-        { ...this.current, secondWeaponSet: second },
-        { kind: 'weapon-set', item: 1 },
-      )
-    }
-    if ('set-dashboards' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const dashboards = command['set-dashboards'].dashboards ?? null
-      // The application's limits, in short: a set has one to eight
-      // dashboards, each named, and shows one of them.
-      if (
-        dashboards !== null &&
-        (dashboards.list.length === 0 ||
-          dashboards.list.length > 8 ||
-          dashboards.list.some((d) => d.name === '' || d.name.length > 40) ||
-          !dashboards.list.some((d) => d.id === dashboards.active))
-      ) {
-        this.fail('APP_DASHBOARDS')
       }
-      if (
-        JSON.stringify(dashboards) ===
-        JSON.stringify(this.current.dashboards ?? null)
-      ) {
-        return 'nothing'
-      }
-      return this.commit(
-        { ...this.current, dashboards },
-        { kind: 'dashboards', item: 0 },
-      )
+    })
+  }
+
+  private setDashboards(
+    dashboards: CommandBody<'set-dashboards'>['dashboards'] | null,
+  ): Outcome {
+    const current = this.state()
+    if (dashboards != null && !dashboardsValid(dashboards)) {
+      this.fail('APP_DASHBOARDS')
     }
-    if ('set-league' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      return this.commit(
-        { ...this.current, league: command['set-league'].league },
-        { kind: 'league', item: 0 },
-      )
+    if (
+      JSON.stringify(dashboards) === JSON.stringify(current.dashboards ?? null)
+    ) {
+      return 'nothing'
     }
-    if ('set-config-input' in command) {
-      const e = command['set-config-input']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      if (e.name.trim() === '' || e.name === 'customMods')
-        this.fail('APP_CONFIG')
-      const config = structuredClone(this.current.config)
+    return this.commit(
+      { ...current, dashboards },
+      { kind: 'dashboards', item: 0 },
+    )
+  }
+
+  /** Commits what `f` changes in a copy of the config, as a config edit of
+   * the item it returns. */
+  private editConfig(f: (config: ConfigView) => number): Outcome {
+    const current = this.state()
+    const config = structuredClone(current.config)
+    const item = f(config)
+    return this.commit({ ...current, config }, { kind: 'config', item })
+  }
+
+  private setConfigInput(e: CommandBody<'set-config-input'>): Outcome {
+    this.state()
+    if (e.name.trim() === '' || e.name === 'customMods') this.fail('APP_CONFIG')
+    return this.editConfig((config) => {
       const input = config.inputs.find((i) => i.name === e.name)
       if (input === undefined) {
         config.inputs.push({
@@ -1529,268 +1726,195 @@ export class FakeApi implements LoomApi {
         input.value = e.value
         input.placeholder = false
       }
-      return this.commit(
-        { ...this.current, config },
-        { kind: 'config', item: 0 },
-      )
+      return 0
+    })
+  }
+
+  private openRecent(id: string): Outcome {
+    if (!this.recentList.some((r) => r.id === id)) {
+      this.fail('APP_NOT_FOUND')
     }
-    if ('remove-config-input' in command) {
-      const e = command['remove-config-input']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const config = structuredClone(this.current.config)
-      const at = config.inputs.findIndex((i) => i.name === e.name)
-      if (at < 0) this.fail('APP_CONFIG')
-      config.inputs.splice(at, 1)
-      return this.commit(
-        { ...this.current, config },
-        { kind: 'config', item: 0 },
-      )
-    }
-    if ('edit-custom-block' in command) {
-      const e = command['edit-custom-block']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const config = structuredClone(this.current.config)
-      const block = config.blocks[e.block]
-      if (block === undefined) this.fail('APP_CONFIG')
-      const next = fakeBlock(e.text ?? block.text, e.enabled ?? block.enabled)
-      config.blocks[e.block] = { ...next, title: block.title }
-      return this.commit(
-        { ...this.current, config },
-        { kind: 'config', item: e.block },
-      )
-    }
-    if ('add-custom-block' in command) {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const config = structuredClone(this.current.config)
-      config.blocks.push(fakeBlock(command['add-custom-block'].text))
-      return this.commit(
-        { ...this.current, config },
-        { kind: 'config', item: config.blocks.length - 1 },
-      )
-    }
-    if ('remove-custom-block' in command) {
-      const e = command['remove-custom-block']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const config = structuredClone(this.current.config)
-      if (config.blocks[e.block] === undefined) this.fail('APP_CONFIG')
-      config.blocks.splice(e.block, 1)
-      return this.commit(
-        { ...this.current, config },
-        { kind: 'config', item: e.block },
-      )
-    }
-    const tree = this.treeCommand(command)
-    if (tree !== null) return tree
-    if ('open-recent' in command) {
-      if (!this.recentList.some((r) => r.id === command['open-recent'].id)) {
-        this.fail('APP_NOT_FOUND')
-      }
-      this.path = 'recent.json'
-      this.origin = null
-      this.dirty = false
-      this.changed(this.fresh())
-      return this.done()
-    }
-    if ('restore' in command) {
-      this.recoveryList = this.recoveryList.filter(
-        (r) => r.id !== command.restore.id,
-      )
-      this.dirty = true
-      this.changed(this.fresh())
-      return this.done()
-    }
-    if ('forget-recent' in command) {
-      const id = command['forget-recent'].id
-      if (!this.recentList.some((r) => r.id === id)) this.fail('APP_NOT_FOUND')
-      this.recentList = this.recentList.filter((r) => r.id !== id)
-      return 'nothing'
-    }
-    if ('discard' in command) {
-      this.recoveryList = this.recoveryList.filter(
-        (r) => r.id !== command.discard.id,
-      )
-      return 'nothing'
-    }
-    if ('approve' in command) {
-      const r = this.request(command.approve.id)
-      if (r.tree != null) {
-        const outcome = this.treeCommand(r.tree as Command)
-        r.status = 'applied'
-        this.emit('mcp-changed')
-        return outcome ?? 'nothing'
-      }
-      if (r.edit == null) this.fail('APP_REQUEST')
-      const next = this.applyEdit(r.edit)
-      if (this.current !== null) {
-        this.undoStack.push(this.current)
-      }
+    this.path = 'recent.json'
+    this.origin = null
+    this.dirty = false
+    this.changed(this.fresh())
+    return this.done()
+  }
+
+  /** Applies an MCP change request: a tree change, or an item edit. */
+  private approve(id: number): Outcome {
+    const r = this.request(id)
+    if (r.tree != null) {
+      const outcome = this.treeCommand(r.tree as Command)
       r.status = 'applied'
-      this.dirty = true
-      this.changed(next)
       this.emit('mcp-changed')
-      return this.done()
+      return outcome ?? 'nothing'
     }
-    if ('decline' in command) {
-      this.request(command.decline.id).status = 'declined'
-      this.emit('mcp-changed')
-      return 'nothing'
+    if (r.edit == null) this.fail('APP_REQUEST')
+    const next = this.applyEdit(r.edit)
+    if (this.current !== null) {
+      this.undoStack.push(this.current)
     }
-    return 'nothing'
+    r.status = 'applied'
+    this.dirty = true
+    this.changed(next)
+    this.emit('mcp-changed')
+    return this.done()
   }
 
   /** A passive tree command, or `null` for another command. */
   private treeCommand(command: Command): Outcome | null {
     if (typeof command !== 'object') return null
-    const edit = (
-      spec: number,
-      f: (s: fakeTree.FakeSpec) => fakeTree.FakeSpec,
-    ): Outcome => {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      if (spec !== this.current.spec) this.fail('APP_TREE')
-      if (
-        this.options.treeLocked !== undefined &&
-        this.current.tree.version === undefined
-      )
-        this.fail('APP_TREE')
-      let next: fakeTree.FakeSpec
-      try {
-        next = f(this.current.tree)
-      } catch (e) {
-        if (e instanceof fakeTree.TreeRefused) this.fail('APP_TREE')
-        throw e
-      }
-      return this.commit(
-        { ...this.current, tree: next },
-        { kind: 'tree', item: spec },
-      )
+    return this.dispatch(this.treeCommands, command)
+  }
+
+  /** The passive tree's commands, by name. */
+  private readonly treeCommands: Handlers = {
+    'allocate-node': (c) =>
+      this.editTree(c.spec, (s) => fakeTree.allocate(s, c.node)),
+    'deallocate-node': (c) =>
+      this.editTree(c.spec, (s) => fakeTree.deallocate(s, c.node)),
+    'set-mastery-effect': (c) =>
+      this.editTree(c.spec, (s) => fakeTree.setMastery(s, c.node, c.effect)),
+    'select-class': (c) =>
+      this.editTree(c.spec, (s) => fakeTree.selectClass(s, c.class)),
+    'select-ascendancy': (c) =>
+      this.editTree(c.spec, (s) => fakeTree.selectAscendancy(s, c.ascendancy)),
+    'new-spec': (c) => this.newSpec(c),
+    'rename-spec': (c) => this.renameSpec(c),
+    'delete-spec': (c) => this.deleteSpec(c),
+    'socket-jewel': (c) => this.socketJewel(c),
+    'convert-tree-version': (c) => this.convertTree(c.spec),
+    'reset-tree': (c) => this.editTree(c.spec, (s) => fakeTree.reset(s)),
+  }
+
+  /** Commits `f`'s change to the tree of spec `spec`, the active one. */
+  private editTree(
+    spec: number,
+    f: (s: fakeTree.FakeSpec) => fakeTree.FakeSpec,
+  ): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    if (spec !== this.current.spec) this.fail('APP_TREE')
+    if (
+      this.options.treeLocked !== undefined &&
+      this.current.tree.version === undefined
+    )
+      this.fail('APP_TREE')
+    let next: fakeTree.FakeSpec
+    try {
+      next = f(this.current.tree)
+    } catch (e) {
+      if (e instanceof fakeTree.TreeRefused) this.fail('APP_TREE')
+      throw e
     }
-    if ('allocate-node' in command) {
-      const c = command['allocate-node']
-      return edit(c.spec, (s) => fakeTree.allocate(s, c.node))
-    }
-    if ('deallocate-node' in command) {
-      const c = command['deallocate-node']
-      return edit(c.spec, (s) => fakeTree.deallocate(s, c.node))
-    }
-    if ('set-mastery-effect' in command) {
-      const c = command['set-mastery-effect']
-      return edit(c.spec, (s) => fakeTree.setMastery(s, c.node, c.effect))
-    }
-    if ('select-class' in command) {
-      const c = command['select-class']
-      return edit(c.spec, (s) => fakeTree.selectClass(s, c.class))
-    }
-    if ('select-ascendancy' in command) {
-      const c = command['select-ascendancy']
-      return edit(c.spec, (s) => fakeTree.selectAscendancy(s, c.ascendancy))
-    }
-    const specs = (
-      next: Stage[],
-      item: number,
-      active = this.current?.spec ?? 1,
-    ): Outcome => {
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      return this.commit(
-        { ...this.current, stages: next, spec: active },
-        { kind: 'tree-specs', item },
-      )
-    }
-    const named = (title: string) => {
-      if (title.trim() === '') this.fail('APP_TREE')
-      return title.trim()
-    }
-    if ('new-spec' in command) {
-      const c = command['new-spec']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const stages = this.current.stages
-      const from =
-        c.copy == null ? undefined : stages.find((s) => s.spec === c.copy)
-      if (c.copy != null && from === undefined) this.fail('APP_TREE')
-      const spec = stages.length + 1
-      return specs(
-        [
-          ...stages,
-          {
-            spec,
-            title: named(c.title),
-            set: from?.set ?? this.current.set,
-            skillSet: from?.skillSet ?? this.current.skillSet,
-          },
-        ],
-        spec,
-      )
-    }
-    if ('rename-spec' in command) {
-      const c = command['rename-spec']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      if (!this.current.stages.some((s) => s.spec === c.spec))
-        this.fail('APP_TREE')
-      const title = named(c.title)
-      return specs(
-        this.current.stages.map((s) =>
-          s.spec === c.spec ? { ...s, title } : s,
-        ),
-        c.spec,
-      )
-    }
-    if ('delete-spec' in command) {
-      const c = command['delete-spec']
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      const stages = this.current.stages
-      if (stages.length <= 1 || !stages.some((s) => s.spec === c.spec))
-        this.fail('APP_TREE')
-      const active = this.current.spec
-      return specs(
-        stages
-          .filter((s) => s.spec !== c.spec)
-          .map((s, i) => ({ ...s, spec: i + 1 })),
-        c.spec,
-        active === c.spec
-          ? Math.max(1, c.spec - 1)
-          : active > c.spec
-            ? active - 1
-            : active,
-      )
-    }
-    if ('socket-jewel' in command) {
-      const c = command['socket-jewel']
-      const item = c.item ?? null
-      if (
-        item !== null &&
-        this.current?.items.find((i) => i.id === item)?.card['item-class'] !==
-          'Jewel'
-      )
-        this.fail('APP_TREE')
-      return edit(c.spec, (s) => fakeTree.socketJewel(s, c.node, item))
-    }
-    if ('convert-tree-version' in command) {
-      const c = command['convert-tree-version']
-      const to = this.options.treeConvert
-      if (this.current === null) this.fail('APP_NO_BUILD')
-      if (
-        c.spec !== this.current.spec ||
-        to === undefined ||
-        this.current.tree.version !== undefined
-      )
-        this.fail('APP_TREE')
-      const dropped = new Set(to.dropped)
-      return this.commit(
+    return this.commit(
+      { ...this.current, tree: next },
+      { kind: 'tree', item: spec },
+    )
+  }
+
+  /** Commits the stages `next`, with `active` the active spec. */
+  private commitSpecs(
+    next: Stage[],
+    item: number,
+    active = this.current?.spec ?? 1,
+  ): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    return this.commit(
+      { ...this.current, stages: next, spec: active },
+      { kind: 'tree-specs', item },
+    )
+  }
+
+  /** A spec's title, trimmed; `APP_TREE` when empty. */
+  private specTitle(title: string): string {
+    if (title.trim() === '') this.fail('APP_TREE')
+    return title.trim()
+  }
+
+  private newSpec(c: CommandBody<'new-spec'>): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    const stages = this.current.stages
+    const from =
+      c.copy == null ? undefined : stages.find((s) => s.spec === c.copy)
+    if (c.copy != null && from === undefined) this.fail('APP_TREE')
+    const spec = stages.length + 1
+    return this.commitSpecs(
+      [
+        ...stages,
         {
-          ...this.current,
-          tree: {
-            ...this.current.tree,
-            version: to.version,
-            nodes: this.current.tree.nodes.filter((n) => !dropped.has(n)),
-          },
+          spec,
+          title: this.specTitle(c.title),
+          set: from?.set ?? this.current.set,
+          skillSet: from?.skillSet ?? this.current.skillSet,
         },
-        { kind: 'tree-specs', item: c.spec },
-      )
-    }
-    if ('reset-tree' in command) {
-      const c = command['reset-tree']
-      return edit(c.spec, (s) => fakeTree.reset(s))
-    }
-    return null
+      ],
+      spec,
+    )
+  }
+
+  private renameSpec(c: CommandBody<'rename-spec'>): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    if (!this.current.stages.some((s) => s.spec === c.spec))
+      this.fail('APP_TREE')
+    const title = this.specTitle(c.title)
+    return this.commitSpecs(
+      this.current.stages.map((s) => (s.spec === c.spec ? { ...s, title } : s)),
+      c.spec,
+    )
+  }
+
+  private deleteSpec(c: CommandBody<'delete-spec'>): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    const stages = this.current.stages
+    if (stages.length <= 1 || !stages.some((s) => s.spec === c.spec))
+      this.fail('APP_TREE')
+    const active = this.current.spec
+    return this.commitSpecs(
+      stages
+        .filter((s) => s.spec !== c.spec)
+        .map((s, i) => ({ ...s, spec: i + 1 })),
+      c.spec,
+      active === c.spec
+        ? Math.max(1, c.spec - 1)
+        : active > c.spec
+          ? active - 1
+          : active,
+    )
+  }
+
+  private socketJewel(c: CommandBody<'socket-jewel'>): Outcome {
+    const item = c.item ?? null
+    if (
+      item !== null &&
+      this.current?.items.find((i) => i.id === item)?.card['item-class'] !==
+        'Jewel'
+    )
+      this.fail('APP_TREE')
+    return this.editTree(c.spec, (s) => fakeTree.socketJewel(s, c.node, item))
+  }
+
+  private convertTree(spec: number): Outcome {
+    const to = this.options.treeConvert
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    if (
+      spec !== this.current.spec ||
+      to === undefined ||
+      this.current.tree.version !== undefined
+    )
+      this.fail('APP_TREE')
+    const dropped = new Set(to.dropped)
+    return this.commit(
+      {
+        ...this.current,
+        tree: {
+          ...this.current.tree,
+          version: to.version,
+          nodes: this.current.tree.nodes.filter((n) => !dropped.has(n)),
+        },
+      },
+      { kind: 'tree-specs', item: spec },
+    )
   }
 
   treeLayout(): Promise<TreeLayout> {
