@@ -40,6 +40,11 @@
           "description": "Resolved with the next line of another section.",
           "type": "string",
           "const": "split-section"
+        },
+        {
+          "description": "An older wording read in its current wording through the\nreviewed rewording table (ADR-015 Amendment 3; additive).",
+          "type": "string",
+          "const": "reworded"
         }
       ]
     },

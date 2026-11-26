@@ -146,10 +146,10 @@
                     }
                   },
                   {
-                    "source": "Nothing like this",
+                    "source": "Nothing like this is read",
                     "kind": {
                       "modifier": {
-                        "text": "Nothing like this",
+                        "text": "Nothing like this is read",
                         "section": "explicit",
                         "selected": true,
                         "resolution": "pending"

@@ -1,0 +1,88 @@
+{
+  "format": 1,
+  "about": "Reviewed rewordings for PoE1 item lines (ADR-015 Amendment 3; docs/phase-6/item-rewordings.md). A line no stat description reads is tried here after the other tolerances: its template (each number, or each range written (a-b), as #) is looked up in `accepted`, and the line is read again in the current wording with the same numbers in the same order, carrying the tolerance `reworded`. A pair is accepted only when PoB v2.67.2 parses both wordings, at the same numbers, into identical mods with no text left over (`loom-parity-cli item-rewordings check`, maintainer-run with the oracle) and a review finds the change one of wording alone. `rejected` records the pairs looked at and why each was not accepted; a rejected or unlisted line stays `no-template`.",
+  "accepted": [
+    {
+      "old": "+# to Maximum Endurance Charge",
+      "current": "+# to Maximum Endurance Charges",
+      "why": "The game prints the plural for every value now (max_endurance_charges has one variant); PoB: EnduranceChargesMax BASE for both."
+    },
+    {
+      "old": "+# to Maximum Frenzy Charge",
+      "current": "+# to Maximum Frenzy Charges",
+      "why": "As above, max_frenzy_charges; PoB: FrenzyChargesMax BASE for both."
+    },
+    {
+      "old": "+# to Maximum Power Charge",
+      "current": "+# to Maximum Power Charges",
+      "why": "As above, max_power_charges; PoB: PowerChargesMax BASE for both."
+    },
+    {
+      "old": "#% increased Charges used",
+      "current": "#% increased Charges per use",
+      "why": "A flask's local_charges_used_+%; \"used\" became \"per use\". PoB: FlaskChargesUsed INC for both."
+    },
+    {
+      "old": "#% reduced Charges used",
+      "current": "#% reduced Charges per use",
+      "why": "As above, the negative form."
+    },
+    {
+      "old": "+#% to Critical Strike Multiplier for Spells",
+      "current": "+#% to Critical Strike Multiplier for Spell Damage",
+      "why": "base_spell_critical_strike_multiplier_+; \"Spells\" became \"Spell Damage\". PoB: CritMultiplier BASE with the Spell flag for both."
+    },
+    {
+      "old": "Chaos Damage does not bypass Energy Shield",
+      "current": "Chaos Damage taken does not bypass Energy Shield",
+      "why": "\"taken\" added to the wording. PoB: ChaosNotBypassEnergyShield FLAG for both. Two descriptions print the current text; the item's mods choose, as for any line."
+    },
+    {
+      "old": "#% increased Attack Speed during Flask effect",
+      "current": "#% increased Attack Speed during Effect",
+      "why": "A flask's local_flask_attack_speed_+%_while_healing; 3.15 shortened \"during Flask effect\" to \"during Effect\" on flasks. PoB: Speed INC, Attack, while UsingFlask for both."
+    },
+    {
+      "old": "#% reduced Attack Speed during Flask effect",
+      "current": "#% reduced Attack Speed during Effect",
+      "why": "As above, the negative form."
+    },
+    {
+      "old": "#% increased Stun Recovery",
+      "current": "#% increased Stun and Block Recovery",
+      "why": "stun_recovery_+%: one stat for stun and block recovery, \"and Block\" added to the wording. PoB: StunRecovery INC for both."
+    },
+    {
+      "old": "#% reduced Stun Recovery",
+      "current": "#% reduced Stun and Block Recovery",
+      "why": "As above, the negative form."
+    }
+  ],
+  "rejected": [
+    {
+      "old": "#% reduced Mana Reserved",
+      "current": "#% increased Mana Reservation Efficiency of Skills",
+      "why": "A mechanic change, not a wording (3.16: reservation became reservation efficiency); PoB parses them into different mods (ManaReserved against ManaReservationEfficiency)."
+    },
+    {
+      "old": "#% increased Mana Cost Efficiency of Attacks",
+      "current": "#% increased Cost Efficiency of Attacks",
+      "why": "A mechanic change: the current stat covers every cost, not mana only; PoB parses them into different mods (ManaCostEfficiency against CostEfficiency)."
+    },
+    {
+      "old": "Projectiles cannot collide with Enemies at Close Range",
+      "current": "Projectiles cannot collide with Enemies in Close Range",
+      "why": "PoB parses neither wording, so its parse is no evidence for the pair."
+    },
+    {
+      "old": "#% of Damage from Hits is taken from your Spectres' Life before you",
+      "current": "#% of Damage from Hits is taken from your Raised Spectres' Life before you",
+      "why": "PoB parses only the old wording (takenFromSpectresBeforeYou); the current one it does not read, so the two parses differ."
+    },
+    {
+      "old": "Wave of Conviction's Exposure applies -#% Elemental Resistance",
+      "current": "Wave of Conviction's Exposure applies an extra -#% to Elemental Resistance",
+      "why": "PoB reads both as the same skill stat (purge_expose_resist_%_matching_highest_element_damage), but the game's current line is another stat (purge_additional_enemy_resistance_%, \"an extra\"): same numbers, not shown to be the same mechanic."
+    }
+  ]
+}

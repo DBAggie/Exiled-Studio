@@ -203,6 +203,12 @@ cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.j
 # (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a
 # pattern differs from PoB's mod:
 cargo run --release -p loom-parity-cli -- custom-lines <bundle-dir> docs/phase-3/custom-lines/pob-parse.json --out <dir>
+# Item rewording table against PoB's parse (ADR-015 Amendment 3; maintainer-run, not in CI; docs/phase-6/item-rewordings.md):
+# `lines` writes each pair at sample numbers plus further item lines; pob_parse_lines.lua parses them; `check` exits 1 when an
+# accepted pair's wordings parse differently in PoB, its current wording reads through no description, or an item note is a
+# line PoB applies. A change to tools/rewordings/items.json reruns it:
+cargo run --release -p loom-parity-cli -- item-rewordings lines tools/rewordings/items.json --out <lines.txt> [<item-lines.txt>...]
+cargo run --release -p loom-parity-cli -- item-rewordings check <bundle-dir> tools/rewordings/items.json <pob-parse.json> --out <dir>
 # Calc scope survey (P3-3; maintainer-run, not in CI): main skill, archetype rules, tree version, excluded mechanics
 # (docs/phase-3/calc-scope-poe1.json), and mechanic inventory per build; writes summary.json and report.json
 # (<dir> must not exist; --anonymous for the corpus); exit 0 when every chosen skill has the minimum of in-scope

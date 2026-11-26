@@ -1,0 +1,624 @@
+{
+  "counts": {
+    "accepted": 10,
+    "accepted-ambiguous": 1,
+    "note": 4,
+    "rejected-pob-agrees": 1,
+    "rejected-pob-differs": 4,
+    "reworded": 1,
+    "unread": 21
+  },
+  "pairs": [
+    {
+      "old": "+# to Maximum Endurance Charge",
+      "current": "+# to Maximum Endurance Charges",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "EnduranceChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "EnduranceChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "+# to Maximum Frenzy Charge",
+      "current": "+# to Maximum Frenzy Charges",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "FrenzyChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "FrenzyChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "+# to Maximum Power Charge",
+      "current": "+# to Maximum Power Charges",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "PowerChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "PowerChargesMax",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% increased Charges used",
+      "current": "#% increased Charges per use",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "FlaskChargesUsed",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "FlaskChargesUsed",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% reduced Charges used",
+      "current": "#% reduced Charges per use",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "FlaskChargesUsed",
+          "type": "INC",
+          "value": -7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "FlaskChargesUsed",
+          "type": "INC",
+          "value": -7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "+#% to Critical Strike Multiplier for Spells",
+      "current": "+#% to Critical Strike Multiplier for Spell Damage",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "CritMultiplier",
+          "type": "BASE",
+          "value": 7,
+          "flags": 2,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "CritMultiplier",
+          "type": "BASE",
+          "value": 7,
+          "flags": 2,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "Chaos Damage does not bypass Energy Shield",
+      "current": "Chaos Damage taken does not bypass Energy Shield",
+      "category": "accepted-ambiguous",
+      "pob_old": [
+        {
+          "name": "ChaosNotBypassEnergyShield",
+          "type": "FLAG",
+          "value": true,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "ChaosNotBypassEnergyShield",
+          "type": "FLAG",
+          "value": true,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% increased Attack Speed during Flask effect",
+      "current": "#% increased Attack Speed during Effect",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "Speed",
+          "type": "INC",
+          "value": 7,
+          "flags": 1,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "type": "Condition",
+              "var": "UsingFlask"
+            }
+          ]
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "Speed",
+          "type": "INC",
+          "value": 7,
+          "flags": 1,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "type": "Condition",
+              "var": "UsingFlask"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "old": "#% reduced Attack Speed during Flask effect",
+      "current": "#% reduced Attack Speed during Effect",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "Speed",
+          "type": "INC",
+          "value": -7,
+          "flags": 1,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "type": "Condition",
+              "var": "UsingFlask"
+            }
+          ]
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "Speed",
+          "type": "INC",
+          "value": -7,
+          "flags": 1,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "type": "Condition",
+              "var": "UsingFlask"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "old": "#% increased Stun Recovery",
+      "current": "#% increased Stun and Block Recovery",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "StunRecovery",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "StunRecovery",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% reduced Stun Recovery",
+      "current": "#% reduced Stun and Block Recovery",
+      "category": "accepted",
+      "pob_old": [
+        {
+          "name": "StunRecovery",
+          "type": "INC",
+          "value": -7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "StunRecovery",
+          "type": "INC",
+          "value": -7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% reduced Mana Reserved",
+      "current": "#% increased Mana Reservation Efficiency of Skills",
+      "category": "rejected-pob-differs",
+      "pob_old": [
+        {
+          "name": "ManaReserved",
+          "type": "INC",
+          "value": -7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "ManaReservationEfficiency",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "old": "#% increased Mana Cost Efficiency of Attacks",
+      "current": "#% increased Cost Efficiency of Attacks",
+      "category": "rejected-pob-differs",
+      "pob_old": [
+        {
+          "name": "ManaCostEfficiency",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "skillType": 1,
+              "type": "SkillType"
+            }
+          ]
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "CostEfficiency",
+          "type": "INC",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "skillType": 1,
+              "type": "SkillType"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "old": "Projectiles cannot collide with Enemies at Close Range",
+      "current": "Projectiles cannot collide with Enemies in Close Range",
+      "category": "rejected-pob-differs",
+      "pob_old": null,
+      "pob_current": null
+    },
+    {
+      "old": "#% of Damage from Hits is taken from your Spectres' Life before you",
+      "current": "#% of Damage from Hits is taken from your Raised Spectres' Life before you",
+      "category": "rejected-pob-differs",
+      "pob_old": [
+        {
+          "name": "takenFromSpectresBeforeYou",
+          "type": "BASE",
+          "value": 7,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ],
+      "pob_current": null
+    },
+    {
+      "old": "Wave of Conviction's Exposure applies -#% Elemental Resistance",
+      "current": "Wave of Conviction's Exposure applies an extra -#% to Elemental Resistance",
+      "category": "rejected-pob-agrees",
+      "pob_old": [
+        {
+          "name": "ExtraSkillStat",
+          "type": "LIST",
+          "value": {
+            "key": "purge_expose_resist_%_matching_highest_element_damage",
+            "value": -7
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "skillName": "Wave of Conviction",
+              "type": "SkillName"
+            }
+          ]
+        }
+      ],
+      "pob_current": [
+        {
+          "name": "ExtraSkillStat",
+          "type": "LIST",
+          "value": {
+            "key": "purge_expose_resist_%_matching_highest_element_damage",
+            "value": -7
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": [
+            {
+              "skillName": "Wave of Conviction",
+              "type": "SkillName"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lines": [
+    {
+      "line": "(30-40)% increased Elemental Damage with Hits and Ailments for each type of Elemental Ailment on Enemy",
+      "category": "unread"
+    },
+    {
+      "line": "(38-40)% increased Mana Cost Efficiency of Attacks",
+      "category": "unread"
+    },
+    {
+      "line": "+1 to Maximum Endurance Charge",
+      "category": "reworded",
+      "reworded": "+1 to Maximum Endurance Charges",
+      "pob": [
+        {
+          "name": "EnduranceChargesMax",
+          "type": "BASE",
+          "value": 1,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "+1 to Maximum number of Sacred Wisps",
+      "category": "unread",
+      "pob": [
+        {
+          "name": "SacredWispsMaxCount",
+          "type": "BASE",
+          "value": 1,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "+1 to number of Sacred Wisps Summoned",
+      "category": "unread"
+    },
+    {
+      "line": "10% of Damage from Hits is taken from your Spectres' Life before you",
+      "category": "unread",
+      "pob": [
+        {
+          "name": "takenFromSpectresBeforeYou",
+          "type": "BASE",
+          "value": 10,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "Adds (100-145) to (160-200) Cold Damage to Bow Attacks",
+      "category": "unread"
+    },
+    {
+      "line": "Essence of Envy",
+      "category": "note"
+    },
+    {
+      "line": "Intangibility: 14%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 19%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 2%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 20%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 3%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 38%",
+      "category": "unread"
+    },
+    {
+      "line": "Intangibility: 8%",
+      "category": "unread"
+    },
+    {
+      "line": "Minions have (6-8)% increased Area of Effect of Area Skills",
+      "category": "unread"
+    },
+    {
+      "line": "Modifiers to number of Projectiles instead apply to the number of targets Projectiles Split towards",
+      "category": "unread",
+      "pob": [
+        {
+          "name": "NoAdditionalProjectiles",
+          "type": "FLAG",
+          "value": true,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        },
+        {
+          "name": "AdditionalProjectilesAddSplitsInstead",
+          "type": "FLAG",
+          "value": true,
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "Passives in Radius can be Allocated without being connected to your tree",
+      "category": "unread",
+      "pob": [
+        {
+          "name": "JewelData",
+          "type": "LIST",
+          "value": {
+            "key": "intuitiveLeapLike",
+            "value": true
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "Passives in radius of Perfect Agony can be allocated without being connected to your tree",
+      "category": "unread",
+      "pob": [
+        {
+          "name": "JewelData",
+          "type": "LIST",
+          "value": {
+            "key": "impossibleEscapeKeystone",
+            "value": "perfect agony"
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        },
+        {
+          "name": "ImpossibleEscapeKeystones",
+          "type": "LIST",
+          "value": {
+            "key": "perfect agony",
+            "value": true
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "tags": {}
+        }
+      ]
+    },
+    {
+      "line": "Projectiles Return to you at end of flight",
+      "category": "unread"
+    },
+    {
+      "line": "Recovers 374 Mana over 6.50 Seconds",
+      "category": "unread"
+    },
+    {
+      "line": "Rune Dagger",
+      "category": "note"
+    },
+    {
+      "line": "Vendor Recipe.  Higher Rarity Sash = Higher % Phys",
+      "category": "note"
+    },
+    {
+      "line": "Weapon +Rustic Sash + Whetstone = High % Phys Weapon.",
+      "category": "note"
+    },
+    {
+      "line": "simple ethos: why make the effort, when",
+      "category": "unread"
+    },
+    {
+      "line": "you can simply mimic what others have?",
+      "category": "unread"
+    }
+  ]
+}

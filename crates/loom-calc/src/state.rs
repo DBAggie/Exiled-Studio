@@ -216,8 +216,9 @@ impl IndeterminateReason {
 /// result (ADR-015 Amendment 2); it changes no state.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Note {
-    /// A custom modifier line that is a label or a comment
-    /// (`TypedResolution::CustomNote`).
+    /// A custom modifier line that is a label or a comment, or an item
+    /// line that is a label (`TypedResolution::CustomNote`; ADR-015
+    /// Amendments 2 and 3).
     CustomNote {
         /// The line.
         source: Source,

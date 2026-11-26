@@ -3709,7 +3709,7 @@
       "type": "object",
       "properties": {
         "adapted": {
-          "description": "The tolerance it needed (`case-folded`, `split-section`).",
+          "description": "The tolerance it needed (`case-folded`, `split-section`,\n`reworded`).",
           "type": [
             "string",
             "null"

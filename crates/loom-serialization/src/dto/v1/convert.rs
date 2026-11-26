@@ -804,6 +804,7 @@ fn resolution_to(r: &d::LineResolution) -> LineResolution {
             adapted: adapted.map(|a| match a {
                 d::Adapted::CaseFolded => Adapted::CaseFolded,
                 d::Adapted::SplitSection => Adapted::SplitSection,
+                d::Adapted::Reworded => Adapted::Reworded,
             }),
         },
         d::LineResolution::Continues { line } => LineResolution::Continues {
@@ -876,6 +877,7 @@ fn resolution_from(r: LineResolution) -> Result<d::LineResolution, DtoError> {
             adapted: adapted.map(|a| match a {
                 Adapted::CaseFolded => d::Adapted::CaseFolded,
                 Adapted::SplitSection => d::Adapted::SplitSection,
+                Adapted::Reworded => d::Adapted::Reworded,
             }),
         },
         LineResolution::Continues { line } => d::LineResolution::Continues {

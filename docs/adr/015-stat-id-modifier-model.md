@@ -98,3 +98,5 @@ For PoE1 item lines (custom modifier lines keep Amendment 2):
 The maintainer accepted the amendment and answered both questions:
 1. **Removed mechanics: option (a).** They stay reasons. No stat-ID reading exists for them, and a current item cannot have them.
 2. **Non-modifier lines in items: option (b).** Amendment 2's `custom-note` rule extends to item lines that PoB parses into nothing and that have no digit and no modifier's word. They are shown and kept for export, and are never a reason. Item properties stay a resolver gap under `item-property`.
+
+Implemented on PR #187 (2026-11-26): `tools/rewordings/items.json`, `loom_parser::import::poe1::reword`, `loom-parity-cli item-rewordings`; evidence in `docs/phase-6/item-rewordings.md`. The item note rule is checked against PoB's parse of every no-template item line of the public fixtures and the corpus (no note is a line PoB applies); the modifier words gained "apply", "applies", and "instead" for it.

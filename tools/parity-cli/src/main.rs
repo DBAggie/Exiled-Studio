@@ -25,6 +25,7 @@ mod extract;
 mod flasks;
 mod flavour;
 mod grafts;
+mod item_rewordings;
 mod item_tags;
 mod jewel_radii;
 mod load_statdesc;
@@ -197,6 +198,18 @@ const USAGE: &str = "usage:
       with PoB's parse; write report.json to <dir>, which must not exist
       (docs/phase-3/custom-lines.md). Exit 1 when a note is a line PoB
       applies, or a pattern's effect differs from PoB's mods.
+  loom-parity-cli item-rewordings lines <table.json> --out <lines.txt> [<extra.txt>...]
+      Write, one per line, each pair of the item rewording table
+      (tools/rewordings/items.json) in its old and current wording at
+      sample numbers, then the lines of each <extra.txt> ({...} prefixes
+      removed, each once), for tools/oracle/data/pob_parse_lines.lua
+      (ADR-015 Amendment 3; docs/phase-6/item-rewordings.md).
+  loom-parity-cli item-rewordings check <bundle-dir> <table.json> <pob-parse.json> --out <dir>
+      Compare the table and the further lines with PoB v2.67.2's parse;
+      write report.json to <dir>, which must not exist. Exit 1 when an
+      accepted pair's two wordings parse differently in PoB, its current
+      wording reads through no description, or an item note is a line PoB
+      applies.
   loom-parity-cli data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>
       Compare the values a calculation reads (skills and their levels,
       gems, item bases, classes, character and monster constants, game
@@ -573,6 +586,63 @@ fn custom_lines_cmd(bundle_dir: &Path, pob: &Path, out: &Path) -> Result<bool, S
     let data = loom_parser::import::BundleData::new(&bundle);
     let resolver = loom_parser::import::Resolver::new(&data).map_err(|e| e.to_string())?;
     let report = custom_lines::compare(&resolver, &lines);
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())? + "\n";
+    std::fs::write(out.join("report.json"), json).map_err(|e| e.to_string())?;
+    println!(
+        "{}",
+        serde_json::to_string(&report.counts).map_err(|e| e.to_string())?
+    );
+    Ok(report.passed())
+}
+
+/// The item rewording table at `path`.
+fn rewording_table(path: &Path) -> Result<loom_parser::import::poe1::reword::Table, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    loom_parser::import::poe1::reword::Table::parse(&text)
+        .map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// `item-rewordings lines` ([`item_rewordings`]).
+fn item_rewordings_lines(table: &Path, out: &Path, extra: &[String]) -> Result<bool, String> {
+    let table = rewording_table(table)?;
+    let mut more = Vec::new();
+    for path in extra {
+        let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+        more.extend(text.lines().map(str::to_owned));
+    }
+    let lines = item_rewordings::lines(&table, &more);
+    let text: String = lines.iter().map(|l| format!("{l}\n")).collect();
+    std::fs::write(out, text).map_err(|e| format!("{}: {e}", out.display()))?;
+    println!("{} lines", lines.len());
+    Ok(true)
+}
+
+/// `item-rewordings check` ([`item_rewordings`]).
+fn item_rewordings_check(
+    bundle_dir: &Path,
+    table: &Path,
+    pob: &Path,
+    out: &Path,
+) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let table = rewording_table(table)?;
+    let bytes = std::fs::read(pob).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let lines: Vec<custom_lines::PobLine> =
+        serde_json::from_slice(&bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let bundle = load_bundle(bundle_dir)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data).map_err(|e| e.to_string())?;
+    let keystone = |t: &str| {
+        bundle.passives.as_ref().is_some_and(|p| {
+            p.passives
+                .iter()
+                .any(|n| n.keystone && n.name.eq_ignore_ascii_case(t))
+        })
+    };
+    let report = item_rewordings::check(&resolver, &table, &lines, keystone);
     std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())? + "\n";
     std::fs::write(out.join("report.json"), json).map_err(|e| e.to_string())?;
@@ -1801,6 +1871,20 @@ const COMMANDS: &[(&str, Command)] = &[
             Path::new(pob),
             Path::new(out),
         )),
+        _ => usage(),
+    }),
+    ("item-rewordings", |args| match args {
+        [step, table, flag, out, extra @ ..] if step == "lines" && flag == "--out" => finish(
+            item_rewordings_lines(Path::new(table), Path::new(out), extra),
+        ),
+        [step, bundle, table, pob, flag, out] if step == "check" && flag == "--out" => {
+            finish(item_rewordings_check(
+                Path::new(bundle),
+                Path::new(table),
+                Path::new(pob),
+                Path::new(out),
+            ))
+        }
         _ => usage(),
     }),
     ("data-parity", data_parity_cmd),

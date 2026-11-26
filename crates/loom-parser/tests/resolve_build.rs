@@ -170,7 +170,9 @@ fn ring() -> Item {
             explicit("+12 to Evasion"),
             explicit("+50 to Strength"),
             explicit("+5 to Shadowed Text"),
-            explicit("Nothing like this"),
+            // A sentence ("is"), so not a label: it stays without a
+            // template (ADR-015 Amendment 3's note rule).
+            explicit("Nothing like this is read"),
             explicit("+1 first half"),
             explicit("+2 second half"),
             explicit("While a Test Enemy is near, +15 to maximum Life"),
@@ -331,6 +333,48 @@ fn poe2_should_give_each_outcome_its_data_has() {
             unresolved(UnresolvedReason::NoTemplate),
             stats(vec![exact("test_maximum_life", 15)], None),
         ]
+    );
+}
+
+/// A ring with a label, a line with a digit, and a sentence, none of
+/// which a description reads.
+fn labelled_ring() -> Item {
+    item(
+        1,
+        Some(RING),
+        vec![
+            explicit("Essence of Envy"),
+            explicit("Nothing like this 7"),
+            explicit("Nothing like this is read"),
+        ],
+    )
+}
+
+#[test]
+fn poe1_should_read_an_item_label_as_a_note() {
+    let b = bundle("bundle-poe1");
+    let mut build = build(Game::Poe1, vec![labelled_ring()]);
+    resolve_build(&mut build, &BundleData::new(&b), base_line).unwrap();
+    // ADR-015 Amendment 3 (decided 2026-11-26): a label is a note; a
+    // digit or a modifier's word keeps a line a reason.
+    assert_eq!(
+        resolutions(&build, 1),
+        vec![
+            typed(TypedResolution::CustomNote),
+            unresolved(UnresolvedReason::NoTemplate),
+            unresolved(UnresolvedReason::NoTemplate),
+        ]
+    );
+}
+
+#[test]
+fn poe2_should_keep_an_item_label_a_reason() {
+    let b = bundle("bundle-poe2");
+    let mut build = build(Game::Poe2, vec![labelled_ring()]);
+    resolve_build(&mut build, &BundleData::new(&b), base_line).unwrap();
+    assert_eq!(
+        resolutions(&build, 1),
+        vec![unresolved(UnresolvedReason::NoTemplate); 3]
     );
 }
 

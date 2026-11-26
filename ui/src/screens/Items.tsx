@@ -807,6 +807,10 @@ export function ItemEditor() {
                       <span className="line-mark">{t('editor.removed')}</span>
                     ) : text !== line.text ? (
                       <span className="line-mark">{t('status.edited')}</span>
+                    ) : line.typed === 'custom-note' ? (
+                      // An author's note or a name: kept, no effect
+                      // (ADR-015 Amendment 3).
+                      <span className="line-mark">{t('editor.lineNote')}</span>
                     ) : (
                       <LineBadge status={line.status} />
                     )}

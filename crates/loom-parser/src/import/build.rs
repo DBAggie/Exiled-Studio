@@ -499,6 +499,10 @@ impl<'d, 'b> Resolver<'d, 'b> {
         }
         out.pair_split_sections(index, body);
         self.typed_kinds(found.name, &mut out);
+        if self.data.bundle().manifest.game() == Some(Game::Poe1) {
+            self.reworded(&ctx, index, body, &mut out);
+            self.item_notes(&mut out);
+        }
         out.finish()
     }
 
@@ -596,6 +600,72 @@ impl<'d, 'b> Resolver<'d, 'b> {
         for (n, t) in typed {
             out.no_template.remove(&n);
             out.resolved(&[n], Resolved::Typed(t), None);
+        }
+    }
+
+    /// Step 6 (PoE1; ADR-015 Amendment 3): a line still without a template
+    /// whose template the reviewed table accepts is read again in its
+    /// current wording, with the same numbers, alone; it resolves only as
+    /// a one-line description, through the same mod filter as any line.
+    fn reworded(&self, ctx: &Context<'_>, index: &Index<'_>, body: &ItemBody, out: &mut Lines) {
+        let compositions = self.data.compositions();
+        let found: Vec<(usize, Vec<ResolvedStat>)> = out
+            .no_template
+            .iter()
+            .filter_map(|(&n, text)| {
+                let current = super::poe1::reword::reword(text)?;
+                let composed = index
+                    .resolve_lines_composed(&[current.as_str()], compositions)
+                    .into_iter()
+                    .next()?;
+                if composed.resolution.lines != 1 {
+                    return None;
+                }
+                let read = match composed.resolution.outcome {
+                    Outcome::Resolved(c) => c.stats,
+                    Outcome::Ambiguous(cs) => {
+                        let LineKind::Modifier(m) = &body.lines.get(n)?.kind else {
+                            return None;
+                        };
+                        let kept = mods::filter(ctx, &LineContext::of(m), &cs).kept;
+                        match kept.as_slice() {
+                            [one] => cs.into_iter().nth(*one)?.stats,
+                            _ => return None,
+                        }
+                    }
+                    Outcome::Unresolved(_) => return None,
+                };
+                Some((n, read))
+            })
+            .collect();
+        for (n, read) in found {
+            out.no_template.remove(&n);
+            out.resolved_stats(&[n], &read, Some(Adapted::Reworded));
+        }
+    }
+
+    /// Step 7 (PoE1; ADR-015 Amendment 3, "Decided 2026-11-26"): a line
+    /// still without a template that is a label, not a modifier (no
+    /// digit, none of the modifier words, not a keystone's name: an
+    /// author's note, a name), is a note with no effect, shown and kept
+    /// for export, never a reason ([`super::poe1::custom::is_label`]).
+    fn item_notes(&self, out: &mut Lines) {
+        let keystone = |t: &str| {
+            self.data.bundle().passives.as_ref().is_some_and(|p| {
+                p.passives
+                    .iter()
+                    .any(|n| n.keystone && n.name.eq_ignore_ascii_case(t))
+            })
+        };
+        let notes: Vec<usize> = out
+            .no_template
+            .iter()
+            .filter(|(_, text)| super::poe1::custom::is_label(text, keystone))
+            .map(|(&n, _)| n)
+            .collect();
+        for n in notes {
+            out.no_template.remove(&n);
+            out.resolved(&[n], Resolved::Typed(TypedResolution::CustomNote), None);
         }
     }
 }

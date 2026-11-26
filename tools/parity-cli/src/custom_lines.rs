@@ -62,7 +62,7 @@ pub struct PobMod {
 
 impl PobLine {
     /// PoB's mods when it applies the line, else `None`.
-    fn applied(&self) -> Option<Vec<PobMod>> {
+    pub fn applied(&self) -> Option<Vec<PobMod>> {
         let extra = !matches!(self.extra, serde_json::Value::Bool(false));
         if extra {
             return None;

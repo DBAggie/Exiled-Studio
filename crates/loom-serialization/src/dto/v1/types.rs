@@ -685,6 +685,9 @@ dto! {
         CaseFolded,
         /// Resolved with the next line of another section.
         SplitSection,
+        /// An older wording read in its current wording through the
+        /// reviewed rewording table (ADR-015 Amendment 3; additive).
+        Reworded,
     }
 
     /// A resolution result.
