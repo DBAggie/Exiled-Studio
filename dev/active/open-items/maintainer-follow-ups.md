@@ -1,4 +1,4 @@
-Last Updated: 2026-11-24
+Last Updated: 2026-11-26
 
 # Maintainer follow-ups
 
@@ -31,14 +31,20 @@ The evidence bundles on the workstation (`local/p6/packs/b-ct` and kin) are from
 - **Vaal Summon Skeletons' full DPS (S1, cause not found):** PoB's `FullDPS` for `minion-vaal-summon-skeletons-witch.xml` is 416.996, while its minion's `TotalDPS` is 115.298 and the count 1 (`calcFullDPS`, `Calcs.lua` 204 to 240, adds `TotalDPS x count`). The engine gives 103.72 (the minion's DPS at the game's minion level, DIV-0124). The factor 3.617 has no source found yet; the full DPS pass may use another of the skill's minions. The field keeps `full-dps-vaal` for a Vaal skill that summons minions. Not game truth: an agent can trace it with an instrumented PoB copy later.
 
 ## Decisions
-- **PoE2:** calculations and `.build` import are the rest of "Phase 6+". Not planned yet; a plan needs your go-ahead.
-- **Deferred on purpose** (`docs/plan/ACTION-PLAN.md`): the public product name, a WASM addon runtime, hosted sharing, an in-app Claude panel, macOS as a release target.
+**Decided 2026-11-26** (the 1.0 review; `docs/plan/ACTION-PLAN.md`, "Version 1.0"):
+- **PoE2:** not in 1.0. Its calculations and `.build` import get their own plan after 1.0.
+- **The product name:** Exiled Studio is final (ADR-000; the maintainer's trademark register search and a web collision search found nothing).
+- **ADR-015 Amendment 3:** accepted; removed mechanics stay reasons, item lines that are not modifiers become notes. The older wordings are agent work now (below).
+- **ADR-018 Amendment 1:** accepted as written.
+- **The oracle CI jobs' time limit:** split the fixtures into shards (4 per OS).
+- **Performance:** the profile is done (`calculate` 231 to 44 ms in PR #168 and RV-21); the bench is re-baselined. The laptop's hover measurement stays yours, with RV-09.
+- **SmartScreen:** the installers stay unsigned for 1.0; the README and the download page explain the warning.
+
+Still open:
+- **Deferred on purpose** (`docs/plan/ACTION-PLAN.md`): a WASM addon runtime, hosted sharing, an in-app Claude panel, macOS as a release target.
 - **Releases:** merging `dev` into `experimental` and `main` for the next release.
 - Any calc result v2 variant an open item turns out to need (added by the session if found).
-- **Older item wordings (S0, the largest class C reason).** Most `unresolved-line` `no-template` lines (public 1,259 fields in 17 builds, 67 of them blocked by it alone; corpus 757 in 10) are item text in an older wording than build 26530219's descriptions: "+1 to Maximum Endurance Charge" (the game now says "Charges"), pre-3.15 flask lines ("Immunity to Freeze and Chill during Flask effect", "Removes Bleeding on use", "Flask Effect does not Queue"), "chance to Dodge Spell Hits". PoB reads them with its own parser. Reading them stat-ID first needs a reviewed rewording table for items, as the tree packs have (`docs/tree/tree-packs.md`), and a new `Adapted` kind (for example `reworded`) in build v1 and calc result v1: an ADR-015 amendment and an additive v1 change, both yours to decide. Until then they stay reasons. The rest are note or flavour lines in items ("Vendor Recipe...", "simple ethos: ..."), which PoB reads into nothing; they stay reasons by design. Lines: `local/p6/tools/line_texts.py` and `template_check.py` (inventory, `dev/active/open-items/open-items-inventory.md`).
-- **The oracle CI jobs' time limit.** It went from 45 to 90 to 150 minutes during Phase 6, each time marked "maintainer to review". The last green runs took 80 to 113 minutes, and every new fixture adds to them. The options: raise the limit again, split the fixtures across more oracle jobs, or run part of the fixtures on a schedule rather than on every PR.
-- **Performance:** a profile before Phase 7. The bench's `calculate` rose 119.6% over Phase 6 and was re-baselined (`docs/phase-5/performance.md`, "Re-baselined 2026-11-20").
-- **SmartScreen** (a note only): the installers are not code signed (`docs/phase-5/phase-5-report.md`, item 6).
+- **Older item wordings (S0, the largest class C reason). Decided 2026-11-26: ADR-015 Amendment 3 accepted; this is agent work now (a 1.0 item).** Most `unresolved-line` `no-template` lines (public 1,259 fields in 17 builds, 67 of them blocked by it alone; corpus 757 in 10) are item text in an older wording than build 26530219's descriptions: "+1 to Maximum Endurance Charge" (the game now says "Charges"), pre-3.15 flask lines ("Immunity to Freeze and Chill during Flask effect", "Removes Bleeding on use", "Flask Effect does not Queue"), "chance to Dodge Spell Hits". PoB reads them with its own parser. Reading them stat-ID first needs a reviewed rewording table for items, as the tree packs have (`docs/tree/tree-packs.md`), and a new `Adapted` kind (for example `reworded`) in build v1 and calc result v1: an ADR-015 amendment and an additive v1 change, both yours to decide. Until then they stay reasons. The rest are note or flavour lines in items ("Vendor Recipe...", "simple ethos: ..."), which PoB reads into nothing; they stay reasons by design. Lines: `local/p6/tools/line_texts.py` and `template_check.py` (inventory, `dev/active/open-items/open-items-inventory.md`).
 
 ## Planned for the session, may not be reached
 The largest steps, deferred by you on 2026-11-24, are stretch work for the open-items session. The session removes each from this list when it is done:

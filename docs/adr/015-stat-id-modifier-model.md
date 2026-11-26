@@ -1,6 +1,6 @@
 # ADR-015: Stat-ID-First Modifier Model
 
-- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR; Amendment 3, 2026-11-24: reviewed rewordings for item lines, proposed in PR #168)
+- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR; Amendment 3, 2026-11-24: reviewed rewordings for item lines, proposed in PR #168, accepted by the maintainer 2026-11-26 with its two open questions decided)
 - Date: 2026-11-08
 
 ## Context
@@ -60,8 +60,8 @@ For custom modifier lines of PoE1 config sets only (item lines are unchanged):
 - The patterns are text, the hybrid fallback this ADR allows per area: here the area is the player's custom lines, whose text no game data describes.
 - Build v1 gains the typed kinds `custom-note` and `custom-pattern`; calc result v1 gains `reasons.notes` (both additive).
 
-## Amendment 3 (2026-11-24, proposed): Reviewed rewordings for item lines
-Asked for by the maintainer on 2026-11-24 ("Draft the amendment"), from the open items survey (`dev/active/open-items/open-items-inventory.md`, S0; `dev/active/open-items/maintainer-follow-ups.md`, "Older item wordings"). Proposed in PR #168; accepted when the maintainer accepts it and merges the PR. Nothing here is implemented until then.
+## Amendment 3 (2026-11-24, accepted 2026-11-26): Reviewed rewordings for item lines
+Asked for by the maintainer on 2026-11-24 ("Draft the amendment"), from the open items survey (`dev/active/open-items/open-items-inventory.md`, S0; `dev/active/open-items/maintainer-follow-ups.md`, "Older item wordings"). Proposed in PR #168; **accepted by the maintainer on 2026-11-26**, with the two questions under "Not decided here" answered (see "Decided 2026-11-26" below). Implementation is agent work from then on.
 
 ### Context
 Item text in PoB builds is often older than the game data the bundle is built from (build 26530219). PoB reads it with its own parser; the resolver reads it only through the current stat descriptions, so a line in an older wording has no template. In the open items survey this is the largest reason that needs a decision: `unresolved-line` `no-template` blocks 1,259 public fields in 17 builds (67 fields by it alone) and 757 corpus fields in 10 builds. Its lines are of four kinds (75 distinct public lines and 60 corpus lines, each run through PoB's `modLib.parseMod` with `tools/oracle/data/pob_parse_lines.lua`):
@@ -93,3 +93,8 @@ For PoE1 item lines (custom modifier lines keep Amendment 2):
 ### Not decided here (for the maintainer)
 1. **Removed mechanics** (Dodge, the old flask immunities). Options: (a) stay reasons (default: no stat-ID reading exists, and a current item cannot have them); (b) a curated `legacy-pattern` typed kind, as Amendment 2's `custom-pattern`, each pattern naming PoB's mod with a test, for legacy items in Standard; (c) the same, but only for mechanics the engine models anyway.
 2. **Non-modifier lines in items** (notes, names). Options: (a) stay reasons (default); (b) extend Amendment 2's `custom-note` rule to item lines that PoB parses into nothing and that have no digit and no modifier's word, shown and kept for export, never a reason. Item properties ("Intangibility", a flask's recovery line) are a resolver gap under Amendment 1's `item-property` kind, agent work either way.
+
+### Decided 2026-11-26
+The maintainer accepted the amendment and answered both questions:
+1. **Removed mechanics: option (a).** They stay reasons. No stat-ID reading exists for them, and a current item cannot have them.
+2. **Non-modifier lines in items: option (b).** Amendment 2's `custom-note` rule extends to item lines that PoB parses into nothing and that have no digit and no modifier's word. They are shown and kept for export, and are never a reason. Item properties stay a resolver gap under `item-property`.
