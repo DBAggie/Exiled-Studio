@@ -80,6 +80,6 @@ Added by the pass to tasks above: RV-07 (the item editor's head is broken at 1,2
 One design canvas, "Follow-up mockups", eight boards: RV-01, RV-27, RV-28, RV-31, RV-32, RV-33 with RV-34, RV-35, and RV-06 with RV-07. The maintainer approved all eight ("approved"); they are built on PR #183 and checked in the running application (`docs/ui/ux-audit-pass-2.md`, "Built from the approved mockups").
 
 ## Order suggested
-**PR #183 was merged into `dev` on 2026-11-26 (`33420992`).** Its failed `e2e` job is fixed on PR #NUM (`fix/e2e-points-text`).
+**PR #183 was merged into `dev` on 2026-11-26 (`33420992`).** Its failed `e2e` job is fixed on PR #184 (`fix/e2e-points-text`).
 
 Done on PR #183: RV-08, RV-05, RV-02, RV-13, RV-29, RV-30, RV-36, RV-37, RV-38. The mockup tasks are done too (RV-01, RV-06, RV-07, RV-27, RV-28, RV-31 to RV-35), and RV-11. Then, at the maintainer's word on 2026-11-25 ("All RV tasks you will bundle into a single session and complete them in one go except for rv-10"): RV-04, RV-03, RV-22, RV-20, RV-21, RV-26, RV-14 (drafted), RV-17 and RV-24 (looked into), RV-09 (prepared), and RV-38's leftover. **Held by the maintainer: RV-10.** RV-12 is partly done (a spectre is calculated; see its row). Left: the rest of RV-12 and RV-23 (the calculation work, in the order of `dev/active/open-items/agent-items.md`; not reached in that session), and what only the maintainer can do (RV-15, RV-16, RV-18, RV-19, RV-25, the laptop run of RV-09).
