@@ -34,7 +34,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 
 ## S8: the close-out's closed reasons and config
 - [x] Item-granted skills (`C-item-skill`, 10 of 13 stats; Herald of the Breach 280 fields): the grant lines as `GrantsSkill`, the saved group checked (`docs/phase-6/stat-mop-up.md`, "Item-granted skills"); `local/p6/gs`
-- [ ] `C-engine-system` (69), `C-keystone` (6: Corrupted Defences, Crimson Dance, Precise Technique, Quiet Might, Tinctures' life drain, Wicked Ward), `C-gem-property` (7), `C-no-slice` (2).
+- [ ] `C-engine-system` (69), `C-keystone` (6: Corrupted Defences, Crimson Dance, Precise Technique, Quiet Might, Tinctures' life drain, Wicked Ward; Wicked Ward done in S7 part 9, `docs/phase-6/recovery.md`), `C-gem-property` (7), `C-no-slice` (2).
 - [ ] Config: brittle (an enemy-side crit that reaches minions), the minion inputs (`minionsConditionFullLife`, `minionBuffOnslaught`, the minion charges), Feeding Frenzy, Elemental Equilibrium (`enemyConditionHitByLightningDamage`, `EEIgnoreHitDamage`), `multiplierNearbyAlly`, `presetBossSkills`, `TotalSpectreLife`, `detonateDeadCorpseLife`, `multiplierManaBurnStacks`, `bandit` values, `NoLifeModifiersOnBodyArmour`.
 
 ## The larger steps

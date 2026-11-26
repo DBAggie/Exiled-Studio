@@ -931,23 +931,7 @@ pub(super) fn impale_parts(
     } else {
         stacks
     };
-    // The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
-    // (PoB adds the crit pass first, 3415 to 3420).
-    let from_crit_pass = phases::product(
-        calc,
-        &[stored_crit, crit],
-        Term::Step("impale-stored-from-crits"),
-    )?;
-    let from_hit_pass = phases::product(
-        calc,
-        &[stored_hit, non_crit],
-        Term::Step("impale-stored-from-hits"),
-    )?;
-    let stored_hit = phases::total(
-        calc,
-        &[from_crit_pass, from_hit_pass],
-        Term::Step("impale-stored-hit"),
-    )?;
+    let stored_hit = stored_from(calc, stored_hit, stored_crit, crit, non_crit)?;
     // `storedExpectedDamageModifier = (1 + inc / 100) x round(more, 2)`.
     let effect = Quantity::Poe1(Poe1Quantity::ImpaleEffect);
     let inc = hit::sum_of(
@@ -988,6 +972,52 @@ pub(super) fn impale_parts(
         chance,
         reasons,
     }))
+}
+
+/// The physical hit a pass stores for impale (PoB's `impaleStoredHitAvg`,
+/// `CalcOffence.lua` 3415 to 3420), whether or not the pass impales: a
+/// dual wielder's combined stored hit averages both hands' (3901; open
+/// items S7, part 9). `None` without a physical hit.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale_stored_hit(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+) -> Result<Option<Valued>, CalcError> {
+    let [Some(stored_hit), Some(stored_crit)] = hit.sources.physical else {
+        return Ok(None);
+    };
+    let one = phases::constant(calc, "one", 1.0)?;
+    let crit = hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
+    let non_crit = hit::minus(calc, one, crit, Term::Step("non-crit-share"))?;
+    stored_from(calc, stored_hit, stored_crit, crit, non_crit).map(Some)
+}
+
+/// The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
+/// (PoB adds the crit pass first, 3415 to 3420).
+fn stored_from(
+    calc: &mut Calc<'_>,
+    stored_hit: Valued,
+    stored_crit: Valued,
+    crit: Valued,
+    non_crit: Valued,
+) -> Result<Valued, CalcError> {
+    let from_crit_pass = phases::product(
+        calc,
+        &[stored_crit, crit],
+        Term::Step("impale-stored-from-crits"),
+    )?;
+    let from_hit_pass = phases::product(
+        calc,
+        &[stored_hit, non_crit],
+        Term::Step("impale-stored-from-hits"),
+    )?;
+    phases::total(
+        calc,
+        &[from_crit_pass, from_hit_pass],
+        Term::Step("impale-stored-hit"),
+    )
 }
 
 /// One pass's impale before its rate ([`impale`]; PoB's

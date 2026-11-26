@@ -453,6 +453,23 @@ pub const KEYSTONES: &[(&str, &[KeystoneEffect])] = &[
         "keystone_supreme_prodigy",
         &[flag(Poe1Quantity::NoAttributeBonuses)],
     ),
+    // Wicked Ward (open items S7, part 9): the game's node has this stat
+    // alone; PoB reads the tree's text (3_16 to 3_29 alike): "Energy
+    // Shield Recharge is not interrupted by Damage if Recharge began
+    // Recently" parses to nothing (`ModCache.lua` 8636), and "40% less
+    // Energy Shield Recharge Rate" is `EnergyShieldRecharge` MORE -40
+    // (5482). PoB's `Condition:HaveWickedWard` is read by no module.
+    (
+        "keystone_wicked_ward",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge),
+            Op::More,
+            -40.0,
+            Flags::NONE,
+            Flags::NONE,
+            None,
+        )],
+    ),
     (
         "resolute_technique",
         &[

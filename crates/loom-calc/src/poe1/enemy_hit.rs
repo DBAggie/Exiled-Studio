@@ -106,8 +106,9 @@ const UNMODELLED: [(&str, &str); 2] = [("EHPUnluckyWorstOf", "1"), ("presetBossS
 pub const CATEGORY_INPUT: &str = "enemyDamageType";
 
 /// The enemy's damage category (PoB's `damageCategoryConfig`; open items
-/// S7): `Average` and the four hit categories. `Untyped` and
-/// `DamageOverTime` change the estimate's flow and stay reasons.
+/// S7): `Average`, the four hit categories, and `Untyped` (part 9: a hit
+/// neither attack nor spell, which no evasion, suppression, or spell block
+/// meets). `DamageOverTime` has no hit estimate and stays a reason.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Category {
     Average,
@@ -115,6 +116,7 @@ pub(super) enum Category {
     Projectile,
     Spell,
     SpellProjectile,
+    Untyped,
 }
 
 impl Category {
@@ -128,15 +130,17 @@ impl Category {
                 "Projectile" => Some(Self::Projectile),
                 "Spell" => Some(Self::Spell),
                 "SpellProjectile" => Some(Self::SpellProjectile),
+                "Untyped" => Some(Self::Untyped),
                 _ => None,
             },
             Some(_) => None,
         }
     }
 
-    /// An attack category.
-    const fn attack(self) -> bool {
-        matches!(self, Self::Melee | Self::Projectile)
+    /// A category spell suppression meets (`CalcDefence.lua` 2026 to 2030,
+    /// 2771): the spells' and `Average`.
+    const fn suppressed(self) -> bool {
+        matches!(self, Self::Spell | Self::SpellProjectile | Self::Average)
     }
 
     /// A spell category.
@@ -355,12 +359,12 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &mut reasons,
     )?;
     // `ConfiguredEvadeChance` (1656): the category's, `Average` PoB's sum of
-    // the two over four; a spell's none.
+    // the two over four; a spell's and an untyped hit's none.
     let evade = match category {
         Category::Average => (melee.value + projectile.value) / 4.0,
         Category::Melee => melee.value,
         Category::Projectile => projectile.value,
-        Category::Spell | Category::SpellProjectile => 0.0,
+        Category::Spell | Category::SpellProjectile | Category::Untyped => 0.0,
     };
     // The enemy's `NeverCrit` (Hexpass, P6-11fl): 0 (`CalcDefence.lua`
     // 1694).
@@ -481,8 +485,8 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         read(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)).map_or(0.0, |v| v.value);
     let suppression = effective_suppression(calc, suppression, &cx, &mut reasons)?;
     // At a 100% chance (2026 to 2030): all of the effect against a spell,
-    // half for `Average`, none against an attack.
-    let suppress_mult = if suppression >= 100.0 && !category.attack() {
+    // half for `Average`, none against an attack or an untyped hit.
+    let suppress_mult = if suppression >= 100.0 && category.suppressed() {
         let effect = (SUPPRESSION_EFFECT
             + sum(
                 calc,
@@ -577,11 +581,13 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let spell = ((1.0 + (hit_inc + spell_inc) / 100.0) * (hit_more * spell_more)).max(0.0);
         let attack = ((1.0 + (hit_inc + attack_inc) / 100.0) * (hit_more * attack_more)).max(0.0);
         // The category's multiplier (2024 to 2030): the attack's, the
-        // spell's, or their mean.
+        // spell's, or their mean; an untyped hit's the type's own when hit
+        // (`<Type>TakenHitMult`, 1896).
         let taken_mult = match category {
             Category::Average => (spell + attack) / 2.0,
             Category::Melee | Category::Projectile => attack,
             Category::Spell | Category::SpellProjectile => spell,
+            Category::Untyped => ((1.0 + hit_inc / 100.0) * hit_more).max(0.0),
         };
         // The flat damage taken (1976 to 1982), by category: each source
         // with its share and whether PoB sums the type's alone.
@@ -614,6 +620,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 (TakenWhen::Hit, 1.0, false),
                 (TakenWhen::Spell, 1.0, false),
                 (TakenWhen::SpellProjectile, 1.0, true),
+            ],
+            // An untyped hit: the type's always and when hit alone (1976).
+            Category::Untyped => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
             ],
         };
         let mut flat = 0.0;

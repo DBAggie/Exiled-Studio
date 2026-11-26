@@ -1,4 +1,4 @@
-Last Updated: 2026-11-24
+Last Updated: 2026-11-26
 
 # Open items (tasks)
 
@@ -25,7 +25,7 @@ Last Updated: 2026-11-24
 - [x] S4: Blood and Sand, and PoB's full DPS pass. **Done 2026-11-26 on PR #188** (`docs/phase-6/full-dps-levels.md`): Blood and Sand was modelled in P6-11dw; the instrumented PoB run (a probe stage in a scratchpad copy of the adapter, committed in the doc) found no mod carried over: PoB's full DPS pass keeps the base modifiers in a cached parent ModDB and `ModDB:More` rounds each level's product to 2 decimals, so its `FullDPS` differs from its own `TotalDPS`. Registered `pob-bug` DIV-0712 and DIV-0718 (Q11 DIV-0709 to DIV-0719 otherwise); two fixtures, `Complete` 41,498 to 41,654; last evidence run `local/p6/s4`, fixtures by `local/p6/s4_fixtures.py`.
 - [ ] S5: costs per second, warcry power, mirage warriors, Sacred Wisps
 - [ ] S6: minion damage over time (spectres if their data is in the bundle)
-- [ ] S7: ward, EHP's other pools, maximum hit, degeneration, a dual wielder's leech
+- [x] S7: ward, EHP's other pools, maximum hit, degeneration, a dual wielder's leech (agent work done 2026-11-26, parts 1 to 9)
   - [x] S7 part 1 (2026-11-26, PR #188, `local/p6/s7a`): maximum hit's smoothing passes (`enemy_hit::smoothed`, `taken_hit_from_damage`, `ehp::overkill_from_full`); 2 fixtures; `Complete` 41,786; 20 public and 10 corpus fields computed (`docs/phase-6/recovery.md`, "Open items S7, part 1")
   - [x] S7 part 2 (2026-11-26, PR #188, `local/p6/s7b`): a dual wielder's leech (`leech::rates_dual`); 1 fixture, Q11 DIV-0720 to DIV-0726; `Complete` 41,866 ("Open items S7, part 2")
   - [x] S7 part 3 (2026-11-26, PR #188, `local/p6/s7c`): a dual wielder's damaging ailments (`hit::combine_ailment`, PoB's `CHANCE_AILMENT` and `DPS`); 2 fixtures, Q11 DIV-0727 to DIV-0740; `Complete` 42,026 ("Open items S7, part 3")
@@ -34,7 +34,8 @@ Last Updated: 2026-11-24
   - [x] S7 part 6 (2026-11-26, PR #188, `local/p6/s7f`): the enemy's damage category (`enemy_hit::Category`: `Melee`, `Projectile`, `Spell`, `SpellProjectile`); 3 fixtures; `Complete` 42,512 ("Open items S7, part 6")
   - [x] S7 part 7 (2026-11-26, PR #188, `local/p6/s7g`): each type's total pool and effective HP against damage over time (`enemy_hit::total_pools`, `Poe1Field::TotalPool`, `DotEhp`; slice revision 24); low life's `LifeRecoverable` in PoB's order; no new fixture (every pool fixture compares them); `Complete` 47,992 ("Open items S7, part 7")
   - [x] S7 part 8 (2026-11-26, PR #188, `local/p6/s7h`): degeneration and net regeneration (`poe1::degen`, `Poe1Quantity::Degen`, `NetRegenReason`, `gems::main_skill_degen`; slice revision 25); 4 fixtures; `Complete` 48,452 ("Open items S7, part 8")
-  - [ ] the rest: a dual wielder's impale from one hand and burning ground; ward's other lines; the `Untyped` and `DamageOverTime` categories. `presetBossSkills` needs PoB's boss skill table, which no bundle has (class B, follow-ups)
+  - [x] S7 part 9 (2026-11-26, PR #188, `local/p6/s7i`): Wicked Ward (`keystones::KEYSTONES`), a dual wielder's impale from one hand (`ailment::impale_stored_hit`, `hit::combine_impale`), the `Untyped` category (`enemy_hit::Category::Untyped`); 4 fixtures, Q11 DIV-0747 to DIV-0760; `Complete` 48,804 ("Open items S7, part 9")
+  - left, not agent work: `restore_ward_on_block_%` (game-truth list), burning ground for a dual wielder (PoB does not combine it: nothing to compare), `DamageOverTime` (no build uses it; stays `unmodelled-config`), `presetBossSkills` (PoB's boss skill table, which no bundle has; class B, follow-ups)
 - [ ] S8: config inputs; the close-out's closed reasons; repeats' `FINAL` and `FINAL_DPS`; the two guard-kept stats
   - [x] S8 part 1 (`local/p6/s8b`): `SKILL_DATA_ONLY` (Storm Rain, Toxic Rain overlaps), `ActiveBrands` and `buffAlchemistsGenius` in `NAMED_ONLY` with their stats in `DEPENDS_ON`, Unholy Might and the moving enemy's bleed modelled; 2 fixtures, Q11 DIV-0694 to DIV-0699; public `Complete` 39,078, 0 unexpected, 8 values toward PoB (`docs/phase-6/config-inputs.md`, "Open items S8")
   - [x] S8 part 2 (`local/p6/s8c`, `s8d`): scorch, sap, and crush from PoB's ailment table, the three grounds in `NAMED_ONLY`, the two guard-kept stats `NoEffect`; 1 fixture (3 of 75); public `Complete` 39,155, 0 unexpected (`docs/phase-6/config-inputs.md`, "Open items S8, part 2"). Brittle stays a reason (its enemy-side crit reaches minions too). Repeats' `FINAL` and `FINAL_DPS`: no build in either set uses them (`repeatMode` is in no run's reasons), so nothing to clear; left as the reason it is

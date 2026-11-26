@@ -659,7 +659,7 @@ What the engine does:
 
 **What PoB does** (`CalcOffence.lua` 5472 to 5520 per pass, 5569 to 5571 and 3901 to combine, 6027 to 6047): each hand's pass computes its stored hit (`impaleStoredHitAvg`), `ImpaleChance` (`min(100, sum)`), and `ImpaleModifier`. For a skill that hits with both weapons, `ImpaleDPS` is the sum of each hand's `stored x (modifier - 1) x HitChance / 100`; otherwise it reads the combined values: the stored hit and the hit chance averaged, `ImpaleModifier` by `CHANCE` (each hand's weighted by `ImpaleChance x HitChance` over both). Then times the combined speed.
 
-**The engine:** `ailment::impale` is split into the pass's `impale_parts` and the DPS (one-hand documents unchanged); `hit::combine_impale` joins the hands as PoB. When only one hand impales, PoB still averages the other hand's stored hit in, which the parts do not carry: that case stays `NotComputed`. Mapped on the way: `impale_on_hit_%_chance_with_axes_swords` ("#% chance to Impale Enemies on Hit with Axes or Swords"), PoB's `ImpaleChance` BASE with `Hit` and Axe or Sword (`ModParser.lua` 917).
+**The engine:** `ailment::impale` is split into the pass's `impale_parts` and the DPS (one-hand documents unchanged); `hit::combine_impale` joins the hands as PoB. When only one hand impales, PoB still averages the other hand's stored hit in, which the parts do not carry: that case stays `NotComputed` (computed since part 9). Mapped on the way: `impale_on_hit_%_chance_with_axes_swords` ("#% chance to Impale Enemies on Hit with Axes or Swords"), PoB's `ImpaleChance` BASE with `Hit` and Axe or Sword (`ModParser.lua` 917).
 
 **Fixture:** `smite-dual-wield-impale-templar.xml` (20% chance to impale with attacks, 10% more with axes or swords, so the two hands' chances weight the modifier): `ImpaleDPS` is PoB's times the attack rate's Q11 ratio exactly (0.999893497594129); DIV-0741 to DIV-0746, Q11. The summed branch (a skill that hits with both weapons) has no fixture: Cleave's and Viper Strike's PoB skill data are not ported (S1), so their fields stay partial or not computed; the same holds for parts 2 and 3's summed branches.
 
@@ -694,7 +694,7 @@ What the engine does:
 - Summon Stone Golem of Safeguarding's share (2463): all for `Melee`, a quarter for `Average`, none otherwise;
 - in the estimate (2748 to 2790): the category's block chance, spell block's energy shield (all against a spell, half for `Average`), suppression (none against an attack, halved for `Average`), and the chance not to be hit (`ConfiguredNotHitChance`, 1655).
 
-**The engine:** `enemy_hit::Category` (`Average`, `Melee`, `Projectile`, `Spell`, `SpellProjectile`) read from `enemyDamageType`, threaded through `enemy_hit::phase`, `maximum_hit` (the golem's share), and `ehp::Mitigation`. `Untyped` and `DamageOverTime` change the estimate's flow (no hit, or no evade and block) and stay `unmodelled-config`. A melee attack's own flat damage taken (`<Type>DamageTakenFromMeleeAttacks`) has no modelled source.
+**The engine:** `enemy_hit::Category` (`Average`, `Melee`, `Projectile`, `Spell`, `SpellProjectile`) read from `enemyDamageType`, threaded through `enemy_hit::phase`, `maximum_hit` (the golem's share), and `ehp::Mitigation`. `Untyped` and `DamageOverTime` change the estimate's flow (no hit, or no evade and block) and stay `unmodelled-config` (`Untyped` modelled since part 9). A melee attack's own flat damage taken (`<Type>DamageTakenFromMeleeAttacks`) has no modelled source.
 
 **Fixtures:** `ice-nova-enemy-damage-melee-witch.xml`, `-projectile-`, and `-spell-` (attack and spell block, evasion, flat damage taken from attacks and projectile attacks, gains on block, an armour with 40% suppression): every field equals PoB's, and the three give three different estimates (`TotalEHP` 5,943, 6,471, 3,494). A `SpellProjectile` copy equals `Spell` here (no projectile avoidance) and was not added.
 
@@ -753,3 +753,42 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 47,992 to 48,452: the fixtures' 368 fields, and 92 degeneration fields of existing builds (the Blood Rage Smite fixtures, both Righteous Fire marauders, the Inquisitor builds) equal to PoB's. Of the 165 new fields, 112 match, 32 are partial, and 21 indeterminate on their builds' other reasons. Some partial builds' values differ from PoB's, each with those reasons (`rf-chieftain-life-stack.xml`, `cyclone-shockwave-slayer.xml`, and others). No existing value or state moved.
 - **Corpus:** 0 unexpected; 35 new fields, partial or indeterminate on the builds' other reasons.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 9: Wicked Ward, impale from one hand, and untyped damage
+
+S7's last agent items. Of the rest its tasks line listed, ward's other line (`restore_ward_on_block_%`) is on the game-truth list (PoB applies nothing; the maintainer's check in game), burning ground is not combined by PoB for a dual wielder (no value to compare), and `DamageOverTime` stays a reason (below).
+
+**Wicked Ward** (`keystone_wicked_ward`):
+- **What PoB does:** the game's node carries this stat alone; PoB reads the tree's text, the same in every tree from 3_16 to 3_29. "Energy Shield Recharge is not interrupted by Damage if Recharge began Recently" parses to nothing (`ModCache.lua` 8636). "40% less Energy Shield Recharge Rate" is `EnergyShieldRecharge` MORE -40 (5482). The keystone's `Condition:HaveWickedWard` is read by no module.
+- **The engine:** a `keystones::KEYSTONES` row, `EnergyShieldRecharge` MORE -40, beside Eldritch Battery's -50. It was `unmapped-stat` (the close-out's `C-keystone`).
+
+**A dual wielder's impale from one hand** (part 4 left it not computed):
+- **What PoB does:** every pass sums its stored physical hit (`impaleStoredHitAvg`, `CalcOffence.lua` 3415 to 3420), whether or not it impales. `combineStat("impaleStoredHitAvg", "DPS")` averages both hands' (3901). `ImpaleModifier` by `CHANCE` takes the impaling hand's alone when the other's is nil (2061). In the summed branch, the other hand's term is `(nil or 1) - 1`, so 0 (6031, 6032).
+- **The engine:** `ailment::impale_stored_hit` gives a pass's stored hit without its impale. `hit::combine_impale` takes each hand's parts as an `Option`, its stored hit, and its chance to hit. With one hand's parts it uses that hand's gain over both hands' averaged stored hit and chance to hit; the summed branch skips the hand without parts. A build where both hands impale makes the same graph as before.
+
+**Untyped damage** (`enemyDamageType` `Untyped`; part 6 left it `unmodelled-config`):
+- **What PoB does** (`CalcDefence.lua`):
+  - The chance not to be hit is the chance to avoid all damage from hits alone (1652).
+  - No evasion lowers the enemy's crit (1656: `UntypedEvadeChance` is nil, so 0).
+  - The flat damage taken is the type's always and when hit, with no attack or spell lines (1976 to 1982).
+  - The taken multiplier is the type's own when hit, `<Type>TakenHitMult` (1896, 2024 to 2030).
+  - Spell suppression does not apply: neither the 100% rule (2026 to 2030) nor the chance (2771).
+  - The block chance is the attack's, `EffectiveBlockChance`, as for `Melee` (2748 to 2751).
+  - Spell block gives no energy shield (2764 to 2768).
+  - The stone golem takes no share (2463).
+- **The engine:** `enemy_hit::Category::Untyped`, read in each of those places in `enemy_hit` and `ehp::Mitigation`. `Category::suppressed` (the spells' and `Average`) takes the place of `!attack()`, which `Untyped` would have passed.
+- **`DamageOverTime`:** no hit estimate, and the enemy's own degeneration (`CalcDefence.lua` 3501 to 3530) added to the net regenerations. It stays `unmodelled-config`; no build in either set uses it.
+
+**Fixtures** (original; each run three times by PoB, identical):
+- `wicked-ward-energy-shield-recharge-witch.xml`: Wicked Ward with increased recharge rate. Every field equals PoB's.
+- `smite-dual-wield-impale-main-hand-templar.xml`: an axe in the main hand and a club in the off hand, with a chance to impale with axes or swords. Only the main hand impales.
+- `smite-dual-wield-impale-off-hand-templar.xml`: the same with the hands swapped, so only the off hand impales.
+- `ice-nova-enemy-damage-untyped-witch.xml`: part 6's category fixture with `Untyped`. Every field equals PoB's. Against the `Melee` fixture, the chance not to be hit is 0, the physical taken multiplier 1, and `TotalEHP` 2,869 against 5,943.
+
+The two impale fixtures equal PoB's except for the attack rate, which is Q11's floored milliseconds: `ImpaleDPS` and every other differing field is PoB's times the rate's ratio (0.9995002498750626). These are registered as DIV-0747 to DIV-0760, Q11.
+
+**Evidence** (`local/p6/s7i`, `b-ct`, against part 8's run):
+- **Public:** 0 unexpected; `Complete` 48,452 to 48,804 (the fixtures). The only existing document that changed is `animate-guardian-guardian.xml`: its `EnergyShieldRecharge` moved toward PoB's (604 to 362; PoB 412) and stays partial on the build's other reasons.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check pass.

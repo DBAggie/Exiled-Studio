@@ -1971,11 +1971,12 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             &unvetted,
         )?;
     }
-    // A dual wielder's impale (open items S7; `CalcOffence.lua` 5569 to
-    // 5571, 6027 to 6047): each hand's parts, then [`combine_impale`]. When
-    // only one hand impales, PoB still averages the other hand's stored hit
-    // in, which the parts do not give: not computed.
+    // A dual wielder's impale (open items S7, parts 4 and 9;
+    // `CalcOffence.lua` 5569 to 5571, 6027 to 6047): each hand's parts,
+    // then [`combine_impale`]. When only one hand impales, the other hand's
+    // stored hit is still averaged in (`impaleStoredHitAvg` is every pass's).
     let mut parts = Vec::with_capacity(2);
+    let mut hits = Vec::with_capacity(2);
     for (hand, flags) in [(&main, flags), (&off, off_flags)] {
         let ailment_hit = super::ailment::AilmentHit {
             flags,
@@ -1991,35 +1992,41 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             &enemy,
             input.data,
         )?);
+        hits.push(ailment_hit);
     }
-    let mut parts = parts.into_iter();
-    match (parts.next().flatten(), parts.next().flatten()) {
-        (None, None) => {}
-        (Some(m), Some(o)) => {
-            let value = combine_impale(
-                calc,
-                [(&m, main.hit_chance.0), (&o, off.hit_chance.0)],
-                speed,
-                attack.double_hits,
-            )?;
-            if value.value > 0.0 {
-                let mut reasons = hand_reasons.clone();
-                reasons.extend(&m.reasons);
-                reasons.extend(&o.reasons);
-                calc.set_derived(
-                    Field::Poe1(super::Poe1Field::ImpaleDps),
-                    phases::query(value, reasons),
-                    &[Field::CritChance, Field::Speed, Field::HitChance],
-                );
+    if parts.iter().all(Option::is_none) {
+        return Ok(());
+    }
+    let mut hands = Vec::with_capacity(2);
+    let mut reasons = hand_reasons.clone();
+    for ((part, hit), hand) in parts.iter().zip(&hits).zip([&main, &off]) {
+        let stored = match part {
+            Some(p) => {
+                reasons.extend(&p.reasons);
+                p.stored_hit
             }
-        }
-        _ => calc.set_unsupported(
+            None => match super::ailment::impale_stored_hit(calc, hit)? {
+                Some(s) => s,
+                None => phases::constant(calc, "impale-stored-hit-none", 0.0)?,
+            },
+        };
+        hands.push((part.as_ref(), stored, hand.hit_chance.0));
+    }
+    let [m, o] = [hands[0], hands[1]];
+    let value = combine_impale(calc, [m, o], speed, attack.double_hits)?;
+    if value.value > 0.0 {
+        calc.set_derived(
             Field::Poe1(super::Poe1Field::ImpaleDps),
-            UnsupportedReason::NotComputed,
-        ),
+            phases::query(value, reasons),
+            &[Field::CritChance, Field::Speed, Field::HitChance],
+        );
     }
     Ok(())
 }
+
+/// One hand for [`combine_impale`]: its parts when it impales, its stored
+/// hit (`impaleStoredHitAvg`, every pass's), and its chance to hit.
+type ImpaleHand<'a> = (Option<&'a super::ailment::ImpaleParts>, Valued, Valued);
 
 /// A dual wielder's impale DPS from each hand's parts (`CalcOffence.lua`
 /// 6027 to 6047; open items S7), times the combined `speed`:
@@ -2029,9 +2036,14 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
 ///   averaged (`DPS` halved, `AVERAGE`), and `ImpaleModifier` by `CHANCE`:
 ///   each hand's weighted by `ImpaleChance x HitChance` over both; then
 ///   `stored x (modifier - 1) x hit chance / 100`.
+///
+/// When only one hand impales (part 9), the other's `ImpaleModifier` is
+/// nil: the summed branch's term for it is 0 (`(nil or 1) - 1`), and
+/// `CHANCE` takes the impaling hand's modifier alone (2061); the stored
+/// hit and the hit chance are still both hands' averages.
 fn combine_impale(
     calc: &mut Calc<'_>,
-    hands: [(&super::ailment::ImpaleParts, Valued); 2],
+    hands: [ImpaleHand<'_>; 2],
     speed: Valued,
     double: bool,
 ) -> Result<Valued, CalcError> {
@@ -2039,25 +2051,35 @@ fn combine_impale(
     let two = phases::constant(calc, "two", 2.0)?;
     let per_hit = if double {
         let mut terms = Vec::with_capacity(2);
-        for (parts, hit_chance) in hands {
+        for (parts, stored, hit_chance) in hands {
+            let Some(parts) = parts else { continue };
             let share = percent_of(calc, hit_chance, Term::Step("hit-share"))?;
             terms.push(phases::product(
                 calc,
-                &[parts.stored_hit, parts.gain, share],
+                &[stored, parts.gain, share],
                 Term::Step("impale-per-hit"),
             )?);
         }
         phases::total(calc, &terms, Term::Step("both-hands"))?
     } else {
-        let [(m, mh), (o, oh)] = hands;
-        let stored = phases::total(
-            calc,
-            &[m.stored_hit, o.stored_hit],
-            Term::Step("both-hands"),
-        )?;
+        let [(m, ms, mh), (o, os, oh)] = hands;
+        let stored = phases::total(calc, &[ms, os], Term::Step("both-hands"))?;
         let stored = quotient(calc, stored, two, Term::Step("impale-stored-hit-combined"))?;
         let hit_sum = phases::total(calc, &[mh, oh], Term::Step("both-hands"))?;
         let hit_chance = quotient(calc, hit_sum, two, Term::Step("hit-chance-combined"))?;
+        let (m, o) = match (m, o) {
+            (Some(m), Some(o)) => (m, o),
+            (Some(one_hand), None) | (None, Some(one_hand)) => {
+                let share = percent_of(calc, hit_chance, Term::Step("hit-share"))?;
+                let per_hit = phases::product(
+                    calc,
+                    &[stored, one_hand.gain, share],
+                    Term::Step("impale-per-hit"),
+                )?;
+                return phases::product(calc, &[per_hit, speed], Term::Result);
+            }
+            (None, None) => return phases::constant(calc, "impale-none", 0.0),
+        };
         let main_weight = phases::product(calc, &[m.chance, mh], Term::Step("impale-main-chance"))?;
         let off_weight = phases::product(calc, &[o.chance, oh], Term::Step("impale-off-chance"))?;
         let weights = phases::total(

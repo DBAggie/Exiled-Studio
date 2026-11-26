@@ -569,18 +569,19 @@ pub(super) fn estimate(
     // Block, suppression, avoidance (`Average`).
     // The category's block chance (2748 to 2751; open items S7): a
     // projectile's is the attack's and a spell projectile's the spell's
-    // (no own lines); `Average` the four's mean.
+    // (no own lines); `Average` the four's mean; an untyped hit's the
+    // attack's (`EffectiveBlockChance`, as `Melee`).
     use super::enemy_hit::Category;
     let block_chance = match m.category {
         Category::Average => (m.block + m.block + m.spell_block + m.spell_block) / 4.0,
-        Category::Melee | Category::Projectile => m.block,
+        Category::Melee | Category::Projectile | Category::Untyped => m.block,
         Category::Spell | Category::SpellProjectile => m.spell_block,
     } / 100.0;
     let block_effect = 1.0 - block_chance * m.block_effect / 100.0;
     // Suppression against a spell or `Average` (halved), none against an
-    // attack (2771 to 2779).
+    // attack or an untyped hit (2771 to 2779).
     let mut suppress = match m.category {
-        Category::Melee | Category::Projectile => 0.0,
+        Category::Melee | Category::Projectile | Category::Untyped => 0.0,
         _ => m.suppression / 100.0,
     };
     let suppression_effect = if suppress < 1.0 {
@@ -609,7 +610,7 @@ pub(super) fn estimate(
                 + match m.category {
                     Category::Spell | Category::SpellProjectile => m.energy_shield_on_spell_block,
                     Category::Average => m.energy_shield_on_spell_block / 2.0,
-                    Category::Melee | Category::Projectile => 0.0,
+                    Category::Melee | Category::Projectile | Category::Untyped => 0.0,
                 } * block_chance,
             limit: false,
             missing_life: ch.missing_life,
@@ -647,13 +648,15 @@ pub(super) fn estimate(
             * (1.0 - m.avoid_all / 100.0)
             * (1.0 - m.avoid_projectiles / 100.0)
             * 100.0;
-    // `ConfiguredNotHitChance`: the category's (1655).
+    // `ConfiguredNotHitChance`: the category's (1655); an untyped hit's
+    // the chance to avoid all damage from hits alone (1652).
     let not_hit = match m.category {
         Category::Average => (melee + projectile + spell + spell_projectile) / 4.0,
         Category::Melee => melee,
         Category::Projectile => projectile,
         Category::Spell => spell,
         Category::SpellProjectile => spell_projectile,
+        Category::Untyped => 100.0 - (1.0 - m.avoid_all / 100.0) * 100.0,
     };
     let total_hits = mitigated / (1.0 - not_hit / 100.0);
     let ehp = total_hits * enemy_damage_in;
