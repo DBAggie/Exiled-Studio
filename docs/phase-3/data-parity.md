@@ -169,3 +169,7 @@ Listed in the summary's `not_compared`: interpolation kinds (level requirements 
 
 ## Tests
 19 tests in `tools/parity-cli/src/data_parity/tests.rs` run on the synthetic PoE1 bundle and a hand-written export equal to it. They cover: no difference on equal data; one difference per changed value in each table; rows and levels on one side; how levels are found; the crit-chance columns; absent against 0; rendering; base name matching; each rule check, the committed rules file included; categories and the overlay; exact counts and stale keys; first match; and refused inputs. Workspace: 874 tests; clippy, fmt.
+
+## Data schema 6: passives' buffs (2026-11-26)
+
+Data schema 6 carries each passive's buffs (`PassiveSkillBuffs` to `BuffTemplates` and `BuffDefinitions`: the template's ID, the definition's ID, the aura radius, the definition's stats paired with `Buff_StatValues`; `loom_data::bundle::passives::PassiveBuff`). PoB has no table of them: it reads its tree export's text, so `data-parity` compares nothing new. The engine reads the buffs of nodes without stats (`loom_calc::poe1::passive_buffs`; `docs/phase-6/stat-mop-up.md`, "The agent list (2026-11-26): the 3_29 ascendancy auras").

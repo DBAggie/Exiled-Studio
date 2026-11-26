@@ -16,8 +16,8 @@
 use std::collections::BTreeSet;
 
 use loom_data::bundle::passives::{
-    Ascendancy, Character, MasteryEffect, MasteryGroup, ObjectTemplate, Passive, PassiveTables,
-    PassiveTree, StatAmount, TemplateValue, TreeConnection, TreeGroup, TreeNode,
+    Ascendancy, Character, MasteryEffect, MasteryGroup, ObjectTemplate, Passive, PassiveBuff,
+    PassiveTables, PassiveTree, StatAmount, TemplateValue, TreeConnection, TreeGroup, TreeNode,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -101,6 +101,56 @@ fn stat_values(
         }
     }
     out
+}
+
+/// `BuffTemplates` by row, each with its `BuffDefinitions` row's ID and
+/// stats paired with the template's `Buff_StatValues` by position (data
+/// schema 6): what a passive's `PassiveSkillBuffs` names. A stat without a
+/// value is dropped and counted.
+fn buff_templates(
+    read: Read<'_>,
+    stats: &[String],
+    counts: &Counts,
+    summary: &mut PassiveSummary,
+) -> Result<Vec<PassiveBuff>, String> {
+    let defs = Table::require(read, "BuffDefinitions")?;
+    let (def_id, def_stats) = (defs.column("Id")?, column(&defs, &["StatsKeys", "Stats"])?);
+    let t = Table::require(read, "BuffTemplates")?;
+    let (id, def, values, radius) = (
+        t.column("Id")?,
+        column(&t, &["BuffDefinitionsKey", "BuffDefinition"])?,
+        t.column("Buff_StatValues")?,
+        t.column("AuraRadius")?,
+    );
+    let mut out = Vec::with_capacity(t.rows.len());
+    for r in &t.rows {
+        let row = Table::int(r, def)
+            .and_then(|n| usize::try_from(n).ok())
+            .and_then(|n| defs.rows.get(n));
+        if row.is_none() {
+            counts.dangling.set(counts.dangling.get() + 1);
+        }
+        let values = ints(r, values);
+        let mut amounts = Vec::new();
+        for (i, k) in row
+            .map(|d| ints(d, def_stats))
+            .unwrap_or_default()
+            .into_iter()
+            .enumerate()
+        {
+            match (at(stats, Some(k), counts), values.get(i)) {
+                (Some(stat), Some(&value)) => amounts.push(StatAmount { stat, value }),
+                _ => bump(&mut summary.dropped_stats),
+            }
+        }
+        out.push(PassiveBuff {
+            id: text(r, id),
+            definition: row.map(|d| text(d, def_id)).unwrap_or_default(),
+            radius: int_or_0(r, radius),
+            stats: amounts,
+        });
+    }
+    Ok(out)
 }
 
 /// Converts the character and passive tables (module docs).
@@ -281,8 +331,20 @@ fn passives(
     );
     let ascendancy = column(&t, &["AscendancyKey", "Ascendancy"])?;
     let (start, classes) = (c("IsAscendancyStartingNode")?, c("Characters")?);
+    let buff_col = c("PassiveSkillBuffs")?;
+    let templates = buff_templates(read, stats, counts, summary)?;
     let mut out = Vec::with_capacity(t.rows.len());
     for r in &t.rows {
+        let buffs = ints(r, buff_col)
+            .into_iter()
+            .filter_map(|n| {
+                let found = usize::try_from(n).ok().and_then(|n| templates.get(n));
+                if found.is_none() {
+                    counts.dangling.set(counts.dangling.get() + 1);
+                }
+                found.cloned()
+            })
+            .collect();
         out.push(Passive {
             id: text(r, id),
             node: required(&t, r, node, "node number")?,
@@ -300,6 +362,7 @@ fn passives(
             ascendancy: at(&ascendancies, Table::int(r, ascendancy), counts),
             ascendancy_start: flag(r, start),
             characters: ids(characters, r, classes, counts),
+            buffs,
         });
     }
     Ok(out)

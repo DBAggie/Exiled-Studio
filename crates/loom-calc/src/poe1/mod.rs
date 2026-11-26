@@ -45,6 +45,7 @@ pub mod minion_hit;
 pub mod minions;
 pub mod movement;
 pub mod pantheon;
+pub mod passive_buffs;
 pub mod pob_minion;
 pub mod reduction;
 pub mod regen;

@@ -4212,7 +4212,7 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - `Poe1Quantity::EnemyResistOverride(t)` (`Base`, the value) and `EnemyResistOverrideOn(t)` (`Flag`), both with `Flags::DOT` and `conditions::STATIONARY`, as one `STATE_ROWS` row.
 - `hit::enemy_resistance`: where the flag is on in the context, the override takes the sum's place (exposure included), before the maximum and the floor.
 
-**A data gap found** (for the maintainer): in build 26530219's `PassiveSkills`, Ramako has no stats, nor do Void Beacon, Augury of Penitence, and Unwavering Crusade (the "nearby enemies" ascendancy auras; the game probably grants them as buffs), while tree packs 3_25 to 3_28 and PoB's 3_29 export carry them. A build on 3_29 with these nodes keeps their lines out of the calculation. The fixtures use tree 3_28.
+**A data gap found** (for the maintainer): in build 26530219's `PassiveSkills`, Ramako has no stats, nor do Void Beacon, Augury of Penitence, and Unwavering Crusade (the "nearby enemies" ascendancy auras; the game probably grants them as buffs), while tree packs 3_25 to 3_28 and PoB's 3_29 export carry them. A build on 3_29 with these nodes keeps their lines out of the calculation. The fixtures use tree 3_28. (Found in the game files and read since data schema 6: "The agent list (2026-11-26): the 3_29 ascendancy auras", below.)
 
 **Evidence** (`b-ct`, against P6-11hb's run):
 - **Two new mechanic fixtures**, both matching PoB on every field:
@@ -5280,3 +5280,45 @@ The close-out left 13 `C-item-skill` stats. Ten are lines PoB reads as `ExtraSki
 So the lines themselves have no effect beyond their group: `mapping::GRANTS_SKILL_STATS` maps each to `Poe1Quantity::GrantsSkill` (a flag with the item as its source), and `collect::granted_skill_groups` checks that the active skill set has the group (`source` starting `Item:<id>:`). A build without it (written by another tool) gets `unmodelled-item` `granted-skill-group` on every field, never a silently missing skill. Still reasons: Barkskin's own two stats (`spell_damage_%_suppressed_per_bark_below_max`, `spell_damage_taken_+_per_barkskin_stack`, skill stats of a skill not modelled) and the flask's Vulnerability aura during its effect (an aura, not a group).
 
 **Evidence** (`local/p6/gs` against `local/p6/s2`): public 39,232 `Complete` (no change: Dual Savior's values all equal PoB but its 3.13 tree keeps them indeterminate), 0 unexpected, no value moved; corpus 0 unexpected; field-reason pairs: public 23,874 to 23,115, corpus 9,644 to 9,434; distinct reasons 328 to 318. Test: `mapping::tests::grant_stats_should_be_the_grant_flag`.
+
+
+## The agent list (2026-11-26): the 3_29 ascendancy auras (data schema 6)
+
+**Found** in the game files (P6-11hc had called it a data gap). Build 26530219's `PassiveSkills` gives Ramako, Sun's Light, Void Beacon, Augury of Penitence, and Unwavering Crusade no stats, but each names a buff (`PassiveSkillBuffs`, a `BuffTemplates` row). The buff's `BuffDefinitions` stats, paired with the template's `Buff_StatValues`, are the node's lines:
+- Void Beacon: `base_chaos_damage_resistance_%` -20, `base_cold_damage_resistance_%` -20, `life_regeneration_rate_+%` -100 (radius 60).
+- Augury of Penitence: `elemental_damage_taken_+%` 16, `inquisitor_aura_elemental_damage_+%_final` -8.
+- Ramako: `nearby_enemies_fire_dot_resistance_is_%_while_you_are_stationary` -20, and a "no fire resistance" flag at 0.
+- Unwavering Crusade: `can_trigger_summon_elemental_relic_on_nearby_ally_kill_or_on_hit_rare_or_unique` 25.
+
+The bundle read no buffs, so on a 3_29 tree (and any tree without a pack, 3_13 among them) these lines were lost with no reason: a silent drop, against ADR-015. PoB reads its own 3_29 text: "Nearby Enemies have -20% to Cold Resistance" and kin (`TreeData/3_29/tree.lua`, `ModCache.lua` 10362 to 10383). The tree packs 3_25 to 3_28 carry them as the game's display stats (`local_display_nearby_enemy_*`).
+
+**Data schema 6** (`loom_data::bundle::PASSIVE_BUFF_SCHEMA`): a passive's `buffs`, each with its template ID, definition ID, aura radius, and stats (`passives::PassiveBuff`), written by the bundle builder (`tools/parity-cli`, `bundle::passives::buff_templates`). 46 passives have buffs. Only eight have no stats of their own: the four above, and Energy Well, Black Thumb, Light of Divinity, and Elemental Valiance.
+
+**The engine** (`loom_calc::poe1::passive_buffs`, read by `collect::passives` on the game data's path):
+- A node with stats keeps them, and its buffs are not read: there the buff implements the node's display stats (Overwhelm's aura, Gathering Winds' Tailwind).
+- A stat-less node reads each buff through `PASSIVE_BUFFS`, each buff stat as the stat the tree's text resolves to:
+  - Void Beacon's resistances as the display stats; its enemy life regeneration reaches no slice field.
+  - Augury's lines as the display stat and its own stat, both unmapped, so reasons.
+  - Ramako's stat as itself, and the flag at 0 as nothing.
+  - Unwavering Crusade's stat as itself (unmapped, a reason, as on the 3_28 pack).
+- A buff not listed, or a stat a listed buff does not name, is `unmodelled-passive` (`passive-buff`).
+- On an older bundle (data schema below 6), the eight nodes (`BUFF_NODES`) are that reason, so a schema 5 bundle no longer drops them silently.
+
+`CalcData::passive_buffs` gives the buffs, empty below schema 6.
+
+**The evidence pack** `local/p6/packs/b-pb` is `b-ct` with schema 6's `passives.json`, rebuilt by the new builder from `local/b2card/f/extract-a` (the extract `b-ct` came from). The old builder reproduced `b-ct`'s file byte for byte, and the new one changes only the buffs (`local/p6/make_b_pb.py`). Evidence runs use `b-pb` from here.
+
+**Fixture** `ice-nova-void-beacon-occultist.xml` (original; tree 3_29, Void Beacon allocated, Ice Nova): every field equals PoB's on `b-pb`. On `b-ct` (schema 5) its average damage was 800 against PoB's 1,120 before this step: the silent drop. It is now partial there with the reason.
+
+**Evidence** (`local/p6/pb` on `b-pb`, `local/p6/pb-ct` on `b-ct`, against `local/p6/ag1`):
+- **Public on `b-pb`:** 0 unexpected; `Complete` 48,837 to 48,924 (the fixture).
+  - Seven values moved toward PoB, none away: OccVortex's (tree 3_13, Void Beacon) average damage, DPS, DoT, and combined DPS (21,469 to 27,485 of PoB's 79,335), and the Essence Drain Occultist's DoT, full DPS, and combined DPS. Both builds are indeterminate on their other reasons.
+  - The Guardian build (`animate-guardian-guardian.xml`) gains Unwavering Crusade's reason.
+- **Public on `b-ct`:** no value moved; the four builds gain `passive-buff`. The new fixture is partial there, so its targets are not met (it needs schema 6).
+- **Corpus:** 0 unexpected on both; documents byte-identical.
+- **Tests:**
+  - `passive_buffs` (its table sorted, Void Beacon's reading, what is a reason);
+  - the real-bundle test `tests/passive_buffs.rs` (`BUFF_NODES` is the bundle's list, on `b-pb`);
+  - the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+**For the maintainer:** shipping schema 6 is the next data run's (the signed bundle's `passives.json` gains the buffs; `dev/active/open-items/maintainer-follow-ups.md`).

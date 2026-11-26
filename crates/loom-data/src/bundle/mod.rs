@@ -116,6 +116,11 @@ pub const AFFIX_SCHEMA: u32 = 4;
 /// level data). Readers gate on the manifest's `data_schema`: 0 is also an
 /// older bundle's value.
 pub const GEM_LEVEL_SCHEMA: u32 = 5;
+/// The first data schema whose passives carry the buffs they grant
+/// (`passives::Passive::buffs`; open items, the 3_29 ascendancy auras).
+/// Readers gate on the manifest's `data_schema`: an older bundle's passives
+/// have no buffs listed even where the game grants some.
+pub const PASSIVE_BUFF_SCHEMA: u32 = 6;
 /// The folder of stat-description files.
 pub const STAT_DESCRIPTIONS_DIR: &str = "stat_descriptions/";
 

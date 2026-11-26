@@ -694,6 +694,8 @@ pub fn convert(
             ascendancy,
             ascendancy_start: flag(n, "isAscendancyStart"),
             characters,
+            // A pack's lines are the tree's text, a buff's lines with them.
+            buffs: Vec::new(),
         });
     }
     passives.sort_by_key(|p| p.node);

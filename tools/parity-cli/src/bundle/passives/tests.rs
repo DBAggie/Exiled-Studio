@@ -42,6 +42,8 @@ fn extract(poe1: bool) -> (BTreeMap<String, Vec<u8>>, Value) {
         "Characters",
     ];
     passive_cols.extend(values.iter().map(String::as_str));
+    // Data schema 6: the buffs, last (the rows' padding gives none).
+    passive_cols.push("PassiveSkillBuffs");
     let pad = |row: Vec<Value>| -> Value {
         let mut row = row;
         row.resize(passive_cols.len(), json!(0));
@@ -98,7 +100,26 @@ fn extract(poe1: bool) -> (BTreeMap<String, Vec<u8>>, Value) {
         ]),
         pad(vec![json!("many"), json!(13), json!("Many"), json!(many),]),
     ]);
+    // The life passive grants the one buff template.
+    let mut passives = passives;
+    let last = passive_cols.len() - 1;
+    passives[1][last] = json!([0]);
+    let (def_stats, def_key) = if poe1 {
+        ("StatsKeys", "BuffDefinitionsKey")
+    } else {
+        ("Stats", "BuffDefinition")
+    };
     let mut files: BTreeMap<String, Vec<u8>> = [
+        table(
+            "BuffDefinitions",
+            &["Id", def_stats],
+            &json!([["aura_def", [0, 1]]]),
+        ),
+        table(
+            "BuffTemplates",
+            &["Id", def_key, "Buff_StatValues", "AuraRadius"],
+            &json!([["Aura", 0, [-20, 5], 60]]),
+        ),
         table(
             "Stats",
             &["Id"],
@@ -230,6 +251,27 @@ fn poe1_shape_should_convert_with_class_templates() {
     let (files, manifest) = extract(true);
     let (t, s, dangling) = run(&files, &manifest).unwrap();
     let life = &t.passives[1];
+    // Data schema 6: the template's values paired with its definition's
+    // stats; the other passives grant none.
+    assert_eq!(
+        life.buffs,
+        vec![loom_data::bundle::passives::PassiveBuff {
+            id: "Aura".to_owned(),
+            definition: "aura_def".to_owned(),
+            radius: 60,
+            stats: vec![
+                loom_data::bundle::passives::StatAmount {
+                    stat: "s_a".to_owned(),
+                    value: -20
+                },
+                loom_data::bundle::passives::StatAmount {
+                    stat: "s_b".to_owned(),
+                    value: 5
+                },
+            ],
+        }]
+    );
+    assert!(t.passives[0].buffs.is_empty());
     assert_eq!(
         (
             t.characters[0].template.as_deref(),

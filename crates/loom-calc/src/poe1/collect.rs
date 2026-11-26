@@ -594,6 +594,30 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             *node,
             ingest,
         );
+        // A stat-less node of the game data whose effect is a buff (the
+        // 3_29 ascendancy auras; `passive_buffs`). A pack's node has the
+        // tree's text.
+        if stats.is_empty() && resolved.pack.is_none() {
+            let buffs = input.data.passive_buffs(node.0);
+            if input.data.data_version().schema_version < loom_data::bundle::PASSIVE_BUFF_SCHEMA
+                && super::passive_buffs::BUFF_NODES.contains(&node.0)
+            {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *node },
+                    what: "passive-buff",
+                });
+            } else if !buffs.is_empty() {
+                let source = Source::Passive { node: *node };
+                let (amounts, unread) = super::passive_buffs::stats(buffs);
+                ingest.stats(&source, &lines(&amounts));
+                if unread {
+                    ingest.reason(UnsupportedReason::UnmodelledPassive {
+                        source,
+                        what: "passive-buff",
+                    });
+                }
+            }
+        }
     }
     for m in masteries {
         // A mastery effect counts only on an allocated mastery (PoB keeps

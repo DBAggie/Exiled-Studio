@@ -431,6 +431,10 @@ impl CalcData for OverlayData<'_> {
         self.bundle.passive_kind(node)
     }
 
+    fn passive_buffs(&self, node: u32) -> &[loom_data::bundle::passives::PassiveBuff] {
+        self.bundle.passive_buffs(node)
+    }
+
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]> {
         self.bundle.mastery_effect_stats(effect)
     }

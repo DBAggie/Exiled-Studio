@@ -168,6 +168,13 @@ pub trait CalcData {
     fn passive_kind(&self, _node: u32) -> Option<PassiveKind> {
         None
     }
+
+    /// The buffs a passive node grants (data schema 6,
+    /// `loom_data::bundle::PASSIVE_BUFF_SCHEMA`; [`crate::poe1::passive_buffs`]).
+    /// Empty (the default) when the data does not carry them.
+    fn passive_buffs(&self, _node: u32) -> &[loom_data::bundle::passives::PassiveBuff] {
+        &[]
+    }
 }
 
 /// The name PoB counts Life Masteries by (`CalcSetup.lua` 689; P6-11l).
@@ -528,6 +535,13 @@ impl CalcData for Bundle {
 
     fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
         Some(self)
+    }
+
+    fn passive_buffs(&self, node: u32) -> &[loom_data::bundle::passives::PassiveBuff] {
+        if self.manifest.data_schema < loom_data::bundle::PASSIVE_BUFF_SCHEMA {
+            return &[];
+        }
+        Bundle::passive(self, i64::from(node)).map_or(&[], |p| p.buffs.as_slice())
     }
 
     fn passive_kind(&self, node: u32) -> Option<PassiveKind> {
