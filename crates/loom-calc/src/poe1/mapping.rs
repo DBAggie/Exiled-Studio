@@ -4424,6 +4424,7 @@ impl StatMapping for SkillMapping {
                                 | Poe1Quantity::EnemyHitReason(_)
                                 | Poe1Quantity::PoolReason(_)
                                 | Poe1Quantity::EhpReason(_)
+                                | Poe1Quantity::NetRegenReason(_)
                                 | Poe1Quantity::DotTakenReason(_)
                         )
                     )
@@ -10085,10 +10086,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("chilled_while_bleeding", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     ("cold_damage_to_return_to_melee_attacker", "no-slice"),
-    (
-        "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
-        "regeneration",
-    ),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (
@@ -10416,12 +10413,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11cz: life flask charges on suppressing a spell (PoB leaves the text unparsed; flask charges reach no slice field).
     ("life_flasks_gain_X_charges_on_suppressing_spell", "flask"),
-    // Close-out M2: life lost per second per rage (`LifeDegen` BASE): PoB
-    // shows it apart from regeneration; no slice field reads a degeneration.
-    (
-        "life_loss_%_per_minute_per_rage_while_not_losing_rage",
-        "no-slice",
-    ),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
@@ -11494,6 +11485,18 @@ pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 /// so applies none of it.
 pub const EHP_REASONS: &[&str] = &["restore_ward_on_block_%"];
 
+/// Stats that change a pool's net regeneration alone in a way the engine
+/// does not model (open items S7, part 8), sorted: each maps to
+/// [`Poe1Quantity::NetRegenReason`], read by [`super::degen`]'s net fields
+/// alone. PoB's text: Pious Path's life regeneration that also recovers
+/// energy shield on consecrated ground (`LifeRegenerationRecoversEnergyShield`,
+/// an `EnergyShieldRecovery`), and life lost per second per rage (`LifeDegen`
+/// BASE); both `NoEffect` rows until then (Close-out M2 for the rage).
+pub const NET_REGEN_REASONS: &[&str] = &[
+    "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
+    "life_loss_%_per_minute_per_rage_while_not_losing_rage",
+];
+
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to
 /// [`Poe1Quantity::DotTakenReason`]. None left: chaos damage taken over
@@ -11566,6 +11569,9 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
     }
     if let Ok(i) = EHP_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::EhpReason(EHP_REASONS[i]));
+    }
+    if let Ok(i) = NET_REGEN_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::NetRegenReason(NET_REGEN_REASONS[i]));
     }
     if let Ok(i) = POOL_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::PoolReason(POOL_REASONS[i]));
@@ -12270,6 +12276,15 @@ mod tests {
         assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(MOVEMENT_REASONS.windows(2).all(|w| w[0] < w[1]));
         assert!(COST_REASONS.windows(2).all(|w| w[0] < w[1]));
+        assert!(NET_REGEN_REASONS.windows(2).all(|w| w[0] < w[1]));
+        for stat in NET_REGEN_REASONS {
+            assert_eq!(
+                field_marker(stat),
+                Some(Poe1Quantity::NetRegenReason(stat)),
+                "{stat}"
+            );
+            assert!(NO_EFFECT.iter().all(|(s, _)| s != stat), "{stat}");
+        }
         // Each marker stat maps to its own field's marker, and to nothing
         // else: the three tables are disjoint (P6-10b review).
         for stat in COST_REASONS {

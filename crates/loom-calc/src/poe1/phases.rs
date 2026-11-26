@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 21] = [
+pub const PHASES: [Phase; 22] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -72,6 +72,12 @@ pub const PHASES: [Phase; 21] = [
     Phase {
         name: "regeneration",
         run: super::regen::phase,
+    },
+    // The build's degeneration and net regeneration (open items S7, part
+    // 8), after regeneration and the damage taken over time.
+    Phase {
+        name: "degeneration",
+        run: super::degen::phase,
     },
     Phase {
         name: "leech",

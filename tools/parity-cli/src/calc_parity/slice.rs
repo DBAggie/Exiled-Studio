@@ -35,8 +35,9 @@ pub const FORMAT: u32 = 1;
 /// part 13); revision 22 the effective health pool (P6-10b part 14);
 /// revision 23 the ignite's burning ground (P6-11ga); revision 24 each
 /// type's total pool and effective health pool against damage over time
-/// (open items S7).
-pub const REVISION: u32 = 24;
+/// (open items S7); revision 25 the build's degeneration and the net
+/// regenerations (open items S7, part 8).
+pub const REVISION: u32 = 25;
 
 /// The minion's fields (slice revisions 4 and 5; Phase 6 P6-7b2, P6-7c): our id, PoB's
 /// path under `main_output` (`output.Minion`), and our field name. Our
@@ -140,7 +141,7 @@ pub const MINION_PRESENT: [&str; 5] = [
 /// id to our field name. Our result has such a field only when it applies
 /// to the build; it is compared when our result has it or the oracle's
 /// value is a number other than 0 (`applies: present`).
-pub const PRESENT_NAMES: [(&str, &str); 76] = [
+pub const PRESENT_NAMES: [(&str, &str); 81] = [
     ("TotalDot", "dot-dps"),
     ("IgniteDPS", "ignite-dps"),
     ("BleedDPS", "bleed-dps"),
@@ -281,6 +282,13 @@ pub const PRESENT_NAMES: [(&str, &str); 76] = [
     ("ColdDotEHP", "poe1.cold-dot-ehp"),
     ("LightningDotEHP", "poe1.lightning-dot-ehp"),
     ("ChaosDotEHP", "poe1.chaos-dot-ehp"),
+    // Revision 25 (open items S7, part 8): the build's degeneration and
+    // the net regenerations, when the build degenerates.
+    ("TotalBuildDegen", "poe1.total-build-degen"),
+    ("NetLifeRegen", "poe1.net-life-regen"),
+    ("NetManaRegen", "poe1.net-mana-regen"),
+    ("NetEnergyShieldRegen", "poe1.net-energy-shield-regen"),
+    ("TotalNetRegen", "poe1.total-net-regen"),
 ];
 
 /// PoB's field id to our field name (`loom_calc::Field`'s `Display`),

@@ -22,6 +22,7 @@ pub mod conditions;
 pub mod config;
 pub mod costs;
 pub mod damage_taken;
+pub mod degen;
 pub mod devotion;
 pub mod dot;
 pub mod ehp;
@@ -955,6 +956,14 @@ pub enum Poe1Quantity {
     /// engine does not model (P6-10b part 14): a `Flag` only [`ehp`]'s
     /// fields read.
     EhpReason(&'static str),
+    /// A type's degeneration of the character per second (PoB's
+    /// `<Type>Degen` BASE; open items S7, part 8): flat, or per point of a
+    /// pool (`PerStat`), read by [`degen`].
+    Degen(DamageType, DegenOf),
+    /// A stat that changes a pool's net regeneration alone in a way the
+    /// engine does not model (open items S7, part 8: a pool's own
+    /// degeneration or recovery): a `Flag` only [`degen`]'s net fields read.
+    NetRegenReason(&'static str),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -1296,6 +1305,33 @@ impl TakenWhen {
     }
 }
 
+/// What a degeneration's amount is per (open items S7, part 8): PoB's
+/// `PerStat` tag on a `<Type>Degen` mod, or none.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DegenOf {
+    /// A flat amount per second.
+    Flat,
+    /// Per point of maximum life.
+    Life,
+    /// Per point of maximum energy shield.
+    EnergyShield,
+    /// Per point of maximum mana.
+    Mana,
+}
+
+impl DegenOf {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Life => "life",
+            Self::EnergyShield => "energy-shield",
+            Self::Mana => "mana",
+        }
+    }
+}
+
 /// What damage a damage taken modifier reads (P6-10b part 10).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TakenOf {
@@ -1612,6 +1648,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockEffect => f.write_str("block-effect"),
             Self::AvoidProjectiles => f.write_str("avoid-projectiles"),
             Self::EhpReason(stat) => write!(f, "ehp-reason.{stat}"),
+            Self::Degen(t, of) => write!(f, "degen.{}.{}", t.name(), of.name()),
+            Self::NetRegenReason(stat) => write!(f, "net-regen-reason.{stat}"),
             Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
@@ -2122,6 +2160,15 @@ pub enum Poe1Field {
     /// `<Type>DotEHP`: the total pool over `<Type>TakenDotMult`; open items
     /// S7).
     DotEhp(DamageType),
+    /// The build's degeneration per second, each type's times its damage
+    /// taken over time (PoB's `TotalBuildDegen`; open items S7, part 8).
+    /// Present only when above 0.
+    TotalBuildDegen,
+    /// A pool's regeneration less its share of the build's degeneration
+    /// (PoB's `Net<Pool>Regen`). Present with [`Self::TotalBuildDegen`].
+    NetRegen(Pool),
+    /// The three net regenerations' sum (PoB's `TotalNetRegen`).
+    TotalNetRegen,
 }
 
 impl Poe1Field {
@@ -2187,6 +2234,13 @@ impl Poe1Field {
                 DamageType::Lightning => "lightning-total-pool",
                 DamageType::Chaos => "chaos-total-pool",
             },
+            Self::TotalBuildDegen => "total-build-degen",
+            Self::NetRegen(p) => match p {
+                Pool::Life => "net-life-regen",
+                Pool::Mana => "net-mana-regen",
+                Pool::EnergyShield => "net-energy-shield-regen",
+            },
+            Self::TotalNetRegen => "total-net-regen",
             Self::DotEhp(t) => match t {
                 DamageType::Physical => "physical-dot-ehp",
                 DamageType::Fire => "fire-dot-ehp",
@@ -2402,6 +2456,7 @@ mod tests {
                 "damage-taken",
                 "enemy-hit",
                 "regeneration",
+                "degeneration",
                 "leech",
                 "movement",
                 "minion",

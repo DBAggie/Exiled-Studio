@@ -720,3 +720,36 @@ What the engine does:
 - **Public:** 0 unexpected; `Complete` 42,512 to 47,992. Of the new fields, 5,480 match PoB, 160 are partial and 89 indeterminate on their builds' other reasons, and 40 are not computed: four builds whose maximum hit is not computed (`holy-flame-totem-hierophant.xml`'s boss preset, three on a field they depend on). No existing value or state moved.
 - **Corpus:** 0 unexpected; 110 new fields partial and 100 indeterminate on the builds' other reasons.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+## Open items S7, part 8: degeneration and net regeneration
+
+**What PoB does** (`CalcDefence.lua` 1288 to 1294, 1802 to 1821, 3339 to 3486):
+- `<Type>Degen` BASE is the build's degeneration of a type. Blood Rage gives physical per point of life and of energy shield, the stat over 6000 (`act_dex.lua` 3315 to 3322). Righteous Fire gives fire per point of life and of energy shield while unreserved life is at least 2 (`act_int.lua` 15439 to 15446). Righteous Fire of Arcane Devotion gives fire per point of mana. All are `GlobalEffect` buffs, scaled by buff effect (`ScaleAddMod`), and PoB's `PerStat` reads `floor(stat + 0.0001)`.
+- Each type's amount is shifted over time by `damageOverTimeShiftTable` (the type's `DamageTakenAs` without the hits-only ones, the rest to itself). Each part is multiplied by its type's `<Type>TakenDotMult` and summed into `TotalBuildDegen`, which is absent when 0.
+- With a total, each pool's net regeneration is its `<Pool>RegenRecovery` less its share of each type's degeneration:
+  - mind over matter's share goes to mana;
+  - when energy shield regenerates above 0, the share that does not bypass energy shield goes to it (with Eldritch Battery, only mind over matter's share does);
+  - the rest goes to life.
+
+  `TotalNetRegen` is the three's sum.
+
+**The engine:** `poe1::degen`, a phase after regeneration:
+- **Fields:** `Poe1Field::TotalBuildDegen`, `NetRegen(pool)`, and `TotalNetRegen`; every net field depends on all three regenerations, since energy shield's picks the split.
+- **Quantities:** `Poe1Quantity::Degen(type, DegenOf)` rows on Blood Rage and both Righteous Fires, in place of `NoSlice("degeneration")`. A main skill's buff gives its degeneration rows through `gems::main_skill_degen` (PoB applies the main skill's buff to you; `righteous-fire-marauder.xml`).
+- **Threshold:** the phase settles Righteous Fire's life threshold state as the hit does.
+- **Reasons:** a pool's own degeneration or recovery is `Poe1Quantity::NetRegenReason`, a reason on the net fields alone (`mapping::NET_REGEN_REASONS`): rage's life loss and Pious Path's energy shield recovery, both `NoEffect` rows until now, and Frost Shield's energy shield drain, until now `NoSlice`.
+
+**Slice revision 25** compares `TotalBuildDegen`, `NetLifeRegen`, `NetManaRegen`, `NetEnergyShieldRegen`, and `TotalNetRegen` (`applies: present`, as PoB has them only with a degeneration).
+
+**Fixtures** (original; each run three times by PoB, identical; every compared field equals PoB's):
+- `degen-blood-rage-mom-witch.xml`: mana's share;
+- `degen-righteous-fire-energy-shield-witch.xml`: Righteous Fire on energy shield, which regenerates through Zealot's Oath;
+- `degen-blood-rage-taken-as-fire-witch.xml`: the shift over time;
+- `degen-blood-rage-eldritch-battery-witch.xml`: Eldritch Battery's split.
+
+"Regenerate # Life per second" and "Regenerate #% of Energy Shield per second" as config lines leave their stat's value unsettled, so the fixtures use the percent life line and Zealot's Oath.
+
+**Evidence** (`local/p6/s7h`, `b-ct`, against part 7's run):
+- **Public:** 0 unexpected; `Complete` 47,992 to 48,452: the fixtures' 368 fields, and 92 degeneration fields of existing builds (the Blood Rage Smite fixtures, both Righteous Fire marauders, the Inquisitor builds) equal to PoB's. Of the 165 new fields, 112 match, 32 are partial, and 21 indeterminate on their builds' other reasons. Some partial builds' values differ from PoB's, each with those reasons (`rf-chieftain-life-stack.xml`, `cyclone-shockwave-slayer.xml`, and others). No existing value or state moved.
+- **Corpus:** 0 unexpected; 35 new fields, partial or indeterminate on the builds' other reasons.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.

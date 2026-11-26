@@ -136,8 +136,9 @@ pub const DOT_SKILL_STATS: [&str; 16] = [
     PROJECTILE_DOT_STAT,
     // Righteous Fire's own buff and degeneration (PoB's `GlobalEffect`
     // buff on the character, and life and energy shield lost): when it is
-    // the main skill they change no field this engine computes (its burn is
-    // not a spell, PoB's `dotCfg`; the slice has no degeneration).
+    // the main skill the hit reads neither (its burn is not a spell, PoB's
+    // `dotCfg`); the degeneration acts as the buff's through
+    // `poe1::gems::main_skill_degen` (open items S7, part 8).
     "righteous_fire_spell_damage_+%_final",
     "vaal_righteous_fire_spell_damage_+%_final",
     "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",

@@ -116,7 +116,7 @@ use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
 use super::skill_modifiers::{self, Totals};
 use super::sockets;
-use super::{LeechSource, Poe1Quantity, Pool, ReservationKind, TakenOf, TakenWhen};
+use super::{DegenOf, LeechSource, Poe1Quantity, Pool, ReservationKind, TakenOf, TakenWhen};
 use crate::condition::{ConditionKey, Flags};
 use crate::ingest::Ingest;
 use crate::input::{CalcData, CalcInput, Resource};
@@ -746,13 +746,31 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "attack_speed_+%_granted_from_skill",
                     BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)]),
                 ),
+                // Open items S7, part 8: `PhysicalDegen` BASE per point of
+                // energy shield and of life, the stat over 6000
+                // (`act_dex.lua` 3315 to 3322), read by `poe1::degen`.
                 (
                     "base_physical_damage_%_of_maximum_energy_shield_to_deal_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(
+                            DamageType::Physical,
+                            DegenOf::EnergyShield,
+                        )),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "base_physical_damage_%_of_maximum_life_to_deal_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Physical, DegenOf::Life)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 // P6-10b part 9: `PhysicalDamageLifeLeech` BASE with attacks,
                 // the hit's leech (`poe1::leech`).
@@ -1356,7 +1374,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // the enemy in the area (the config's `conditionEnemyInFrostGlobe`),
     // else 60%. The energy shield drain (`EnergyShieldDegen` from one
     // stage) changes only the net regeneration (`CalcDefence.lua` 1288 to
-    // 1292, 3397), no slice field.
+    // 1292, 3397): a reason on those fields (open items S7, part 8).
     (
         "FrostShield",
         Kind::Buff {
@@ -1365,7 +1383,15 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "energy_shield_lost_per_minute",
-                    BuffStat::NoSlice("energy-shield-degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::NetRegenReason(
+                            "energy_shield_lost_per_minute",
+                        )),
+                        Op::Flag,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "frost_globe_absorb_damage_%_enemy_in_bubble",
@@ -2264,8 +2290,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     // PoB `Data/Skills/act_int.lua` `skills["RighteousFire"]`: its spell
-    // damage more is a buff while unreserved life is at least 2; the
-    // degeneration reaches no slice field (Phase 6, P6-1).
+    // damage more is a buff while unreserved life is at least 2; so is its
+    // degeneration, `FireDegen` BASE per point of energy shield and of
+    // life, the stat over 6000 (open items S7, part 8; `act_int.lua` 15439
+    // to 15446), read by `poe1::degen`.
     (
         "RighteousFire",
         Kind::Buff {
@@ -2274,11 +2302,26 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_energy_shield_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(
+                            DamageType::Fire,
+                            DegenOf::EnergyShield,
+                        )),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Fire, DegenOf::Life)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "righteous_fire_spell_damage_+%_final",
@@ -2299,9 +2342,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
             name: "Righteous Fire of Arcane Devotion",
             effect: EffectType::Buff,
             stats: &[
+                // Open items S7, part 8: `FireDegen` BASE per point of mana,
+                // the stat over 6000, while unreserved life is at least 2
+                // (`act_int.lua` 15539 to 15542; its threshold of 1 mana
+                // changes nothing: below it the amount per point is 0).
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_mana_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Fire, DegenOf::Mana)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "righteous_fire_cast_speed_+%_final",
@@ -4672,6 +4725,9 @@ pub fn gems(
                 // Its supports' global effects (Arcane Surge's buff) act
                 // as any skill's.
                 supports_global(input, g, s, totals, config, &mut collected, ingest);
+                // Its buff's degeneration acts on you as any buff's (open
+                // items S7, part 8); the rest of the buff the hit reads.
+                main_skill_degen(input, g, s, totals, config, &mut collected, ingest);
                 continue;
             }
             let place = GroupPlace { index: g, slot };
@@ -5216,6 +5272,62 @@ struct GroupPlace<'a> {
 }
 
 /// One active skill of the group at `place` (module docs).
+/// The main skill's buff rows of [`Poe1Quantity::Degen`] (open items S7,
+/// part 8): PoB applies the main skill's `GlobalEffect` buff to you as any
+/// skill's (Righteous Fire's degeneration as the main skill), scaled as
+/// [`one_skill`] scales a buff; the buff's other stats the hit reads.
+fn main_skill_degen(
+    input: &CalcInput<'_>,
+    g: usize,
+    s: &GroupSkill<'_>,
+    totals: &Totals,
+    config: Option<&ConfigSet>,
+    collected: &mut Collected,
+    ingest: &mut Ingest<'_>,
+) {
+    let Some(Kind::Buff {
+        name,
+        effect: EffectType::Buff,
+        stats,
+    }) = kind(&s.active_gem.effect.id)
+    else {
+        return;
+    };
+    if s.global_off {
+        return;
+    }
+    let on_you = totals.offering_on_you(&s.active_gem.effect.id);
+    let own = own_effect(input, s, false)
+        + named_golem(totals, s)
+        + named_aura(totals, s, false)
+        + totals.offering(&s.active_gem.effect.id, on_you);
+    let scale = if UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
+        1.0
+    } else {
+        totals.buff_scale(false, &s.types, own)
+    };
+    let mut rows = Merged::new();
+    add_rows(
+        input,
+        g,
+        &s.active_gem,
+        name,
+        stats,
+        (scale, scale),
+        config,
+        false,
+        on_you,
+        None,
+        &mut rows,
+        ingest,
+    );
+    for (key, row) in rows {
+        if matches!(row.2.0, Quantity::Poe1(Poe1Quantity::Degen(..))) {
+            collected.merged.entry(key).or_insert(row);
+        }
+    }
+}
+
 fn one_skill(
     input: &CalcInput<'_>,
     place: GroupPlace<'_>,

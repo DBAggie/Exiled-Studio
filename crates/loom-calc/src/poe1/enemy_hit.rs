@@ -1624,7 +1624,7 @@ const fn pob_type(ty: DamageType) -> &'static str {
 
 /// The names a type's damage taken as reads: the type's, and the
 /// elemental types' for fire, cold, and lightning.
-fn taken_as_sources(from: DamageType) -> Vec<TakenOf> {
+pub(super) fn taken_as_sources(from: DamageType) -> Vec<TakenOf> {
     let mut of = vec![TakenOf::Type(from)];
     if matches!(
         from,
