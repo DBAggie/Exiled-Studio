@@ -802,7 +802,11 @@ fn group_effects<'d>(
         let Some((variant, effects)) = gem_variant(gem, data) else {
             continue;
         };
-        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot);
+        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()), slot)
+            + gem
+                .gem
+                .as_ref()
+                .map_or(0, |id| levels.gem_bonus(id.as_str()));
         for (n, effect) in effects.into_iter().enumerate() {
             let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {

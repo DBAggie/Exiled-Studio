@@ -30,8 +30,14 @@
 //!
 //! Each row's keywords are the words of its English description between
 //! "Level of all" and "Gems", lower-cased, as PoB's pattern reads them (a
-//! real-bundle test checks every row). Gem level stats that name a gem
-//! stay unmapped: reasons.
+//! real-bundle test checks every row).
+//!
+//! **A gem by name (RV-12).** PoB reads "+N to Level of all Raise Spectre
+//! Gems" as a keyword that is the gem's name (`gemIsType`, `CalcTools.lua`
+//! 163 to 165: the name, or the same gem whatever its transfigured form).
+//! The engine names the gem by its base item, which every form of a gem
+//! shares ([`GEM_STATS`], [`GemLevels::gem_bonus`]). Any other gem level
+//! stat that names a gem stays unmapped: a reason.
 //!
 //! **Socketed gems (P6-11q).** PoB reads "+N to Level of Socketed <words>
 //! Gems" as a `GemProperty` LIST modifier `{ keyword = <the words>, key =
@@ -297,13 +303,28 @@ pub const LEVEL_STATS: [(&str, &[&str]); 23] = [
     ("strength_skill_gem_level_+", &["strength", "skill"]),
 ];
 
-/// The quantity of a gem level stat, if it is one of [`LEVEL_STATS`].
+/// The gem level stats that name one gem (module docs), and the gem's
+/// base item: "+# to Level of all Raise Spectre Gems".
+pub const GEM_STATS: [(&str, &str); 1] = [(
+    "raise_spectre_gem_level_+",
+    "Metadata/Items/Gems/SkillGemRaiseSpectre",
+)];
+
+/// The quantity of a gem level stat, if it is one of [`LEVEL_STATS`] or
+/// [`GEM_STATS`].
 #[must_use]
 pub fn quantity(stat: &str) -> Option<Quantity> {
     LEVEL_STATS
         .binary_search_by(|(id, _)| (*id).cmp(stat))
         .ok()
-        .map(|i| Quantity::Poe1(Poe1Quantity::GemLevel(LEVEL_STATS[i].0)))
+        .map(|i| LEVEL_STATS[i].0)
+        .or_else(|| {
+            GEM_STATS
+                .iter()
+                .find(|(id, _)| *id == stat)
+                .map(|(id, _)| *id)
+        })
+        .map(|id| Quantity::Poe1(Poe1Quantity::GemLevel(id)))
 }
 
 /// `calcLib.gemIsType(gem, keyword, true)` for a gem with `tags`, without
@@ -457,6 +478,23 @@ impl GemLevels {
         levels
     }
 
+    /// The levels the gem with the base item `base_item` gains from the
+    /// stats that name it ([`GEM_STATS`]).
+    #[must_use]
+    pub fn gem_bonus(&self, base_item: &str) -> i64 {
+        let sum: f64 = GEM_STATS
+            .iter()
+            .filter(|(_, gem)| *gem == base_item)
+            .filter_map(|(id, _)| self.totals.get(id))
+            .sum();
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "a sum of integer stat values, far inside i64"
+        )]
+        let levels = sum.round() as i64;
+        levels
+    }
+
     /// Whether the build has any gem level modifier.
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -528,6 +566,29 @@ mod tests {
         assert!(!levels.is_empty());
         assert!(GemLevels::none().is_empty());
         assert_eq!(GemLevels::none().bonus(Some(&ice_nova), None), 0);
+    }
+
+    #[test]
+    fn a_stat_that_names_a_gem_should_reach_only_that_gem() {
+        let stat = GEM_STATS[0].0;
+        assert_eq!(
+            quantity(stat),
+            Some(Quantity::Poe1(Poe1Quantity::GemLevel(stat)))
+        );
+        let levels = GemLevels::from_effects(&[level(stat, 1.0), level(stat, 2.0)]);
+        assert_eq!(levels.gem_bonus(GEM_STATS[0].1), 3);
+        assert_eq!(
+            levels.gem_bonus("Metadata/Items/Gems/SkillGemRaiseZombie"),
+            0
+        );
+        // It is no tag keyword: a minion spell gem gains nothing by its tags.
+        assert_eq!(
+            levels.bonus(
+                Some(&tags(&["grants_active_skill", "spell", "minion"])),
+                None
+            ),
+            0
+        );
     }
 
     #[test]

@@ -12,7 +12,7 @@ use loom_calc::quantity::{Bound, DamageType, Op};
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 50] = [
+const TEXTS: [(&str, &str); 51] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -175,6 +175,10 @@ const TEXTS: [(&str, &str); 50] = [
         "Minions have {0}% increased maximum Energy Shield",
     ),
     (
+        "minion_maximum_life_%_to_add_as_maximum_energy_shield",
+        "Minions gain {0}% of Maximum Life as Extra Maximum Energy Shield",
+    ),
+    (
         "minion_maximum_life_+%",
         "Minions have {0}% increased maximum Life",
     ),
@@ -275,6 +279,8 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
         vec![(MinionValue::CooldownRecovery, op)]
     } else if text.contains("of Life per second") {
         vec![(MinionValue::LifeRegen, op)]
+    } else if text.contains("as Extra Maximum Energy Shield") {
+        vec![(MinionValue::LifeAsEnergyShield, op)]
     } else if text.contains("Energy Shield") {
         vec![(MinionValue::EnergyShield, op)]
     } else if text.contains("aximum Life") {

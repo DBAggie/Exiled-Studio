@@ -122,6 +122,9 @@ pub enum MinionValue {
     /// The minion's increased critical strike chance (PoB's `CritChance`
     /// INC; close-out M4).
     CritChance,
+    /// The share of the minion's maximum life it gains as extra maximum
+    /// energy shield, percent (PoB's `LifeGainAsEnergyShield` BASE; RV-12).
+    LifeAsEnergyShield,
 }
 
 impl MinionValue {
@@ -173,6 +176,7 @@ impl MinionValue {
             Self::DoubleDamageChance => "double-damage-chance",
             Self::CritMultiplier => "crit-multiplier",
             Self::CritChance => "crit-chance",
+            Self::LifeAsEnergyShield => "life-as-energy-shield",
             Self::Penetration(t) => match t {
                 DamageType::Physical => "physical-penetration",
                 DamageType::Fire => "fire-penetration",
@@ -219,6 +223,7 @@ impl MinionValue {
             Self::DoubleDamageChance => Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
             Self::CritMultiplier => Quantity::CritMultiplier,
             Self::CritChance => Quantity::CritChance,
+            Self::LifeAsEnergyShield => Quantity::Poe1(Poe1Quantity::LifeAsEnergyShield),
             Self::Penetration(t) => Quantity::Penetration(t),
             // The bleed chance with attacks (`KeywordFlag.Attack`).
             Self::AilmentChance(a) => {
@@ -275,7 +280,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 50] = [
+pub const STATS: [MinionRow; 51] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -516,6 +521,12 @@ pub const STATS: [MinionRow; 50] = [
     (
         "minion_maximum_energy_shield_+%",
         &[(minion(MinionValue::EnergyShield), INC, 1.0)],
+    ),
+    // "Minions gain #% of Maximum Life as Extra Maximum Energy Shield"
+    // (PoB: `MinionModifier` of `LifeGainAsEnergyShield` BASE; RV-12).
+    (
+        "minion_maximum_life_%_to_add_as_maximum_energy_shield",
+        &[(minion(MinionValue::LifeAsEnergyShield), BASE, 1.0)],
     ),
     (
         "minion_maximum_life_+%",

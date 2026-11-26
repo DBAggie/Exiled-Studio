@@ -104,7 +104,11 @@ pub fn own_stat(skill: &str, stat: &str) -> Option<EffectTemplate> {
 /// `unmapped-stat`): the Flame Golem's Immolate (`Data/Skills/minion.lua`
 /// 104) and the Lightning Golem's Storm Orb (390; its cooldown caps its
 /// rate, P6-7c3b).
-pub const VETTED_SPELLS: &[&str] = &["FireElementalFlameRedSummoned", "LightningGolemArcSummoned"];
+pub const VETTED_SPELLS: &[&str] = &[
+    "FireElementalFlameRedSummoned",
+    "LightningGolemArcSummoned",
+    "MMSPyromaniacIceMortar",
+];
 
 /// The source of the minion skill's own stats (P6-7c3): its skill list,
 /// as the summoning skill's supports are ([`super::minion_actor`]).

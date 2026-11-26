@@ -602,3 +602,47 @@ Before, the first two were `minion-level` reasons, and a gem without the game's 
 - **Tests:** the workspace tests, the maintainer-run tests on `b-gl`, and clippy pass.
 
 **Soul costs:** no slice field holds a Vaal skill's soul cost, so the bundle's `vaal_souls` is compared with PoB's but read by no field yet.
+
+## Spectres (RV-12, 2026-11-25)
+
+Follow-up task RV-12 (`dev/active/ux-improvements/ui-revamp-follow-ups.md`): the Raise Spectre fixture's Hit DPS card said "Its numbers are not calculated yet". A spectre was the one minion the engine refused outright (`minion-list`).
+
+**What PoB v2.67.2 does** (`Modules/CalcActiveSkill.lua` 659 to 720):
+- A skill whose `minionList` is there and empty (Raise Spectre and its transfigured form) takes the build's spectre library in its place: `build.spectreList`, the `Spectre` entries of the build file. The gem's `skillMinion` picks one of them, else the first.
+- A spectre's life comes from `monsterLifeTable`, not the allies' table, unless its type has an `AltLife` scaling; its weapon damage from `monsterDamageTable`. Its energy shield still reads the allies' life table (`initMinionModDB` 1132).
+- Its level is the gem's `raised_spectre_level` (the skill's stat map: `skill("minionLevel", nil)`).
+
+**What the engine does now** (`loom_calc::poe1::minion_actor`):
+- `SPECTRE_SKILLS`, `spectre_library` (the library is read from the character's untyped children, where the import keeps it: no build schema change), `SPECTRE_LEVEL_STAT`, and the two tables.
+- The Forged Frostbearer's Ice Mortar (`MMSPyromaniacIceMortar`, `Data/Skills/spectre.lua` 6808) joins the vetted minion spells.
+- Four things found on the way, each as PoB has it:
+  - "+# to Level of all Raise Spectre Gems" (`raise_spectre_gem_level_+`): a gem level stat that names a gem. The engine names the gem by its base item (`gem_levels::GEM_STATS`, `GemLevels::gem_bonus`).
+  - "Minions gain #% of Maximum Life as Extra Maximum Energy Shield" (`MinionValue::LifeAsEnergyShield`; the minion's energy shield takes the character's life row, without a strength bonus).
+  - The config checks "Is Feeding Frenzy active?" (`buffs::FEEDING_FRENZY_INPUT`: 10% more minion damage, 10% increased minion attack, cast, and movement speed) and "Are your Minions always on Full Life?" (`minion_actor::FULL_LIFE_INPUT`).
+  - Commander of Darkness' part for allies (30% increased damage, 3% speed an aura) reached PoB's minion and not the engine's, without a reason. It is a `minion-buffs` reason now (`ALLY_AURA_STATS`); applying it is open.
+
+**Evidence** (bundle `b-ct`; `local/rv12/`):
+
+| Fixture | Field | Before | Now | PoB |
+|---|---|---|---|---|
+| The Raise Spectre fixture with Raise Spectre as its main skill (`local/rv12/fx/spectre-main.xml`) | Minion life | not computed | 36,214 | 36,214 |
+| | Minion energy shield | not computed | 14,486 | 14,486 |
+| | Minion armour, evasion | not computed | 28,203, 6,892 | 28,203, 6,892 |
+| | Minion crit chance, multiplier | not computed | 1, 1.3 | 1, 1.3 |
+| | Minion cast rate | not computed | 3.59 | 3.94 |
+| | Minion average damage | not computed | 86,321 | 90,901 |
+| | Minion hit DPS | not computed | 309,893 | 358,150 |
+| The fixture as it is (its main skill is Purity of Elements) | Full DPS | 36,121 | 7,791,812 | 9,126,200 |
+| `animate-guardian-guardian.xml` (its main skill raises a spectre) | Minion life, armour, evasion | not computed | 179,918, 26,117, 10,959 | the same |
+
+Every one of these fields is `Partial` or `Indeterminate` with its reasons, so none is compared as a match and no divergence entry is needed. calc-parity over the 536 public builds: 0 unexpected before and after, 38,579 matching fields both times, 8 fields from not computed to partial. Three public documents changed (the two above, and `arakaalis-raise-spider-occultist.xml`, which lost the full life check's reason and no value) and one corpus document (its full DPS, by Feeding Frenzy).
+
+**What still separates the fixture from PoB** (found with a probe of PoB's minion mod list, `local/p6/tools/pob_minion_tab.lua`; each is a reason on the fields):
+- two abyss jewels in the belt's abyssal sockets (`unmodelled-item` `abyssal-socket`): 20% of the cast speed;
+- Commander of Darkness for allies (`minion-buffs`): 3% speed and 30% increased damage;
+- Greater Volley's "Supported Skills deal #% less Projectile Damage" on the minion's skill (`support_greater_volley_projectile_damage_+%_final`, unmapped), and two stats with no effect on these fields that still need a `NoEffect` row (`support_parallel_projectile_number_of_points_per_side`, `use_scaled_contact_offset`);
+- the lines the fixture's other reasons name (a catalyst-scaled line, three custom lines, five item lines the resolver does not read).
+
+**Not done:**
+- The buffs and curse limit an active spectre gives (PoB's `AllyModifier`, `MinionModifier`, `PlayerModifier`, and `EnemyCurseLimit` mods in a spectre's list, `CalcPerform.lua` 2156 to 2215; 28 lines of `Data/Spectres.lua`). The fixture's active spectre has none. A spectre whose template carries one is a `minion-template-mod` reason on the minion; **the character's own fields take no reason for it yet** (open: a reason there too).
+- No fixture was added: the fields are not complete, so a fixture would assert nothing. `local/rv12/fx/spectre-main.xml` is the one to add when they are.

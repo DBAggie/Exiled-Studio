@@ -2646,6 +2646,7 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)
         || super::gems::is_input(&input.name)
+        || super::minion_actor::is_input(&input.name, &input.value)
         || input.name == super::hit::PDR_MODE_INPUT
         || input.name == super::hit::RUTHLESS_MODE_INPUT
         // The throw counts (P6-11fa).

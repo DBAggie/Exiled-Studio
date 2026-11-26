@@ -173,9 +173,20 @@ pub fn is_buff_input(input: &str) -> bool {
         CONSECRATED_INPUT,
         STATIONARY_INPUT,
         UNHOLY_MIGHT_INPUT,
+        FEEDING_FRENZY_INPUT,
     ]
     .contains(&input)
 }
+
+/// The check that Feeding Frenzy is active (`ConfigOptions.lua` 436 to
+/// 441): `MinionModifier`s of `Damage` MORE 10, `MovementSpeed` INC 10, and
+/// `Speed` INC 10 (attack and cast), whatever the build's gems (PoB's
+/// `ifSkill` only shows or hides the option). RV-12.
+pub const FEEDING_FRENZY_INPUT: &str = "feedingFrenzyFeedingFrenzyActive";
+
+/// Feeding Frenzy's more minion damage, and its increased minion attack,
+/// cast, and movement speed.
+pub const FEEDING_FRENZY: f64 = 10.0;
 
 /// The check that puts you on consecrated ground (`ConfigOptions.lua`
 /// 1137).
@@ -613,6 +624,44 @@ pub fn buffs(
             ),
         ],
     );
+    // Feeding Frenzy (RV-12): the minions' modifiers, which the minion
+    // takes from the character's store as any "Minions have ..." line.
+    {
+        use super::minions::MinionValue;
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        constant_buff(
+            set,
+            ingest,
+            FEEDING_FRENZY_INPUT,
+            None,
+            &[
+                (
+                    minion(MinionValue::Damage),
+                    Op::More,
+                    FEEDING_FRENZY,
+                    Flags::NONE,
+                ),
+                (
+                    minion(MinionValue::AttackSpeed),
+                    Op::Increased,
+                    FEEDING_FRENZY,
+                    Flags::NONE,
+                ),
+                (
+                    minion(MinionValue::CastSpeed),
+                    Op::Increased,
+                    FEEDING_FRENZY,
+                    Flags::NONE,
+                ),
+                (
+                    minion(MinionValue::MovementSpeed),
+                    Op::Increased,
+                    FEEDING_FRENZY,
+                    Flags::NONE,
+                ),
+            ],
+        );
+    }
     // Unholy Might (module docs): the conversion and `CanWither`, which
     // `super::damage_taken`'s Withered (run after the buffs) reads.
     constant_buff(
@@ -870,6 +919,37 @@ mod tests {
         assert_eq!(of(conversion, Op::Base), [UNHOLY_MIGHT_CONVERSION]);
         assert_eq!(of(Quantity::Poe1(Poe1Quantity::CanWither), Op::Flag), [1.0]);
         let off = set(&[(UNHOLY_MIGHT_INPUT, ConfigValue::Boolean(false))]);
+        let mut none = Ingest::new(&Poe1Mapping);
+        buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
+        assert!(none.effects().is_empty());
+    }
+
+    /// RV-12: Feeding Frenzy's check gives the minions 10% more damage and
+    /// 10% increased attack, cast, and movement speed; off, nothing.
+    #[test]
+    fn feeding_frenzy_should_give_the_minions_damage_and_speed() {
+        use crate::poe1::minions::MinionValue;
+        let minion = |v| Quantity::Poe1(Poe1Quantity::Minion(v));
+        let on = set(&[(FEEDING_FRENZY_INPUT, ConfigValue::Boolean(true))]);
+        let mut ingest = Ingest::new(&Poe1Mapping);
+        buffs(Some(&on), &std::collections::BTreeMap::new(), &mut ingest);
+        let of = |q: Quantity, op: Op| {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| e.quantity == q && e.op == op)
+                .map(|e| e.value)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(of(minion(MinionValue::Damage), Op::More), [10.0]);
+        assert_eq!(of(minion(MinionValue::AttackSpeed), Op::Increased), [10.0]);
+        assert_eq!(of(minion(MinionValue::CastSpeed), Op::Increased), [10.0]);
+        assert_eq!(
+            of(minion(MinionValue::MovementSpeed), Op::Increased),
+            [10.0]
+        );
+        assert!(is_buff_input(FEEDING_FRENZY_INPUT));
+        let off = set(&[(FEEDING_FRENZY_INPUT, ConfigValue::Boolean(false))]);
         let mut none = Ingest::new(&Poe1Mapping);
         buffs(Some(&off), &std::collections::BTreeMap::new(), &mut none);
         assert!(none.effects().is_empty());
