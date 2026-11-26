@@ -347,6 +347,129 @@ fn client_kind_should_not_take_other_item_display_ids() {
 }
 
 #[test]
+fn strip_braces_should_drop_closed_prefixes_only() {
+    assert_eq!(strip_braces("{variant:1}{tags:x}10% Block"), "10% Block");
+    assert_eq!(strip_braces("{variant:1}"), "");
+    assert_eq!(strip_braces("{open 10% Block"), "{open 10% Block");
+    assert_eq!(strip_braces("a {b} c"), "a {b} c");
+}
+
+#[test]
+fn block_lines_should_skip_name_base_specs_and_empty_lines() {
+    let block =
+        "\n  The Anvil \n Amber Amulet\n\nRequires Level 45\n{variant:1}\n  +1 to Strength \n";
+    let lines: Vec<String> = block_lines(block).collect();
+    assert_eq!(lines, ["+1 to Strength"]);
+}
+
+#[test]
+fn unique_lines_should_read_every_block_and_stop_at_an_unclosed_one() {
+    let text = "[[\nA\nB\nx1\n]] [[\nC\nD\nx2\n]] [[\nE\nF\nx3\n";
+    assert_eq!(unique_lines(text), ["x1", "x2"]);
+}
+
+#[test]
+fn file_lines_should_choose_the_reader_by_path() {
+    assert_eq!(
+        file_lines("Uniques/ring.lua", "[[\nN\nB\n+1 to Sockets\n]]"),
+        Some(vec!["+1 to Sockets".to_owned()])
+    );
+    assert_eq!(
+        file_lines("EnchantmentHelmet.lua", "\"Enchant line\""),
+        Some(vec!["Enchant line".to_owned()])
+    );
+    assert_eq!(
+        file_lines("ClusterJewels.lua", "\"Cluster line\""),
+        Some(vec!["Cluster line".to_owned()])
+    );
+    assert_eq!(file_lines("ModCache.lua", "c[\"x\"]={}"), None);
+    assert_eq!(file_lines("Gems.lua", "\"x\""), None);
+    // The `Uniques/` test is on the path, the others on the file name.
+    assert_eq!(file_lines("Other/Gems.lua", "\"x\""), None);
+}
+
+#[test]
+fn insert_keys_should_split_written_newlines_and_skip_empty_keys() {
+    let mut p = PobText::default();
+    p.insert_keys(&[
+        "+1 to Life\\n2% Block".to_owned(),
+        "12 %".to_owned(),
+        String::new(),
+    ]);
+    let keys: Vec<&str> = p.keys.iter().map(String::as_str).collect();
+    assert_eq!(keys, ["#", "# block", "# to life"]);
+}
+
+#[test]
+fn is_pattern_should_need_a_placeholder_and_a_word() {
+    assert!(is_pattern("grants level # skill"));
+    assert!(!is_pattern("#"));
+    assert!(!is_pattern("grants level skill"));
+}
+
+#[test]
+fn client_rule_should_take_named_ids_with_a_literal_word() {
+    let rule = client_rule("BrequelGraftSkillString", "Uses level {1} {0}").unwrap();
+    assert_eq!(rule.kind, ClientKind::Modifier);
+    assert_eq!(rule.words, ["uses", "level", "#"]);
+    assert!(client_rule("ItemDisplayHasEffect", "{0}").is_none());
+    assert!(client_rule("ItemPopupCorrupted", "Corrupted").is_none());
+}
+
+#[test]
+fn outcome_category_should_leave_only_no_template_lines_to_the_text_rules() {
+    let scope = BTreeSet::new();
+    let facts = |outcome| LineFacts {
+        outcome,
+        text: "x",
+        detail: &[],
+        scope: &scope,
+        split_with: None,
+    };
+    assert!(outcome_category(facts("unresolved/no-template")).is_none());
+    assert_eq!(
+        outcome_category(facts("unknown-base/tie")),
+        Some(Category::new("special-case/unknown-base", "tie"))
+    );
+    assert_eq!(
+        outcome_category(facts("unresolved/other")).map(|c| c.name),
+        Some("uncategorized")
+    );
+    // No rejection reason at all is not a handler gap.
+    assert_eq!(no_variant_category(&[]).name, "parser-gap/near-miss");
+}
+
+#[test]
+fn spec_helpers_should_read_colour_escapes_and_property_keys() {
+    assert!(starts_with_colour_code("^1x") && starts_with_colour_code("^xFF"));
+    assert!(!starts_with_colour_code("^") && !starts_with_colour_code("a^1"));
+    assert!(is_property_spec("Quality", "Quality: +20%"));
+    assert!(is_property_spec(
+        "Quality (Life Modifiers)",
+        "Quality (Life Modifiers): 10"
+    ));
+    assert!(!is_property_spec("Quality", "Quality: high"));
+    assert!(!is_property_spec("Unknown Key", "Unknown Key: 3"));
+}
+
+#[test]
+fn categorize_should_put_a_split_line_before_the_note_rule() {
+    let g = game(true);
+    let scope = BTreeSet::new();
+    let c = categorize(
+        &g,
+        LineFacts {
+            outcome: "unresolved/no-template",
+            text: "Note: x",
+            detail: &[],
+            scope: &scope,
+            split_with: Some(2),
+        },
+    );
+    assert_eq!(c.name, "parser-gap/split-section");
+}
+
+#[test]
 fn word_key_should_keep_a_dot_after_a_number_out_of_the_number() {
     assert_eq!(word_key("5.Foo"), "# foo");
     assert_eq!(word_key("Lasts 9.70 Seconds"), "lasts # seconds");
