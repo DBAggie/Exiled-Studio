@@ -403,6 +403,12 @@ impl<'m> Ingest<'m> {
                             self.stat_with(mapping, &source, s);
                         }
                     }
+                    // An item line that is a label, not a modifier (an
+                    // author's note, a name): no effect, shown as a note
+                    // (ADR-015 Amendment 3, decided 2026-11-26).
+                    Resolved::Typed(TypedResolution::CustomNote) => {
+                        self.reasons.notes.insert(Note::CustomNote { source });
+                    }
                     Resolved::Typed(t) => self.typed_with(mapping, &source, t),
                 }
             }

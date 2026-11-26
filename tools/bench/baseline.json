@@ -1,11 +1,11 @@
 {
   "$comment": "Instruction counts of loom-bench's scenarios under callgrind on CI's ubuntu-24.04 runner (tools/bench/count.sh; docs/phase-5/performance.md). CI fails on a count 10% over these.",
   "instructions": {
-    "validate": 18677539,
-    "load": 7770264,
-    "start": 9492209,
-    "import": 180993243,
-    "calculate": 44815968,
-    "allocate": 453177
+    "validate": 18667895,
+    "load": 7761101,
+    "start": 9481779,
+    "import": 180923261,
+    "calculate": 42433890,
+    "allocate": 453214
   }
 }

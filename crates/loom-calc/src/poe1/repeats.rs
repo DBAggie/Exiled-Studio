@@ -72,7 +72,7 @@ pub fn count(calc: &Calc<'_>) -> f64 {
 
 /// The effects of `quantity` and `op` that apply in `cx`; a condition the
 /// engine cannot settle is a reason, its effect left out.
-fn applying(
+pub(super) fn applying(
     calc: &Calc<'_>,
     quantity: Quantity,
     op: Op,

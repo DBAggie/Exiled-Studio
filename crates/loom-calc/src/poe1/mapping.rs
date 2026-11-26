@@ -3634,6 +3634,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_spell_totem_cast_speed_+%_final",
         &[(Quantity::Speed, Op::More, 1.0, Flags::CAST, NONE)],
     ),
+    // Open items S3: Spellslinger's support part (`act_int.lua` 17114):
+    // `Damage` MORE with `KeywordFlag.Hit` or `Ailment`.
+    (
+        "support_spellslinger_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            NONE,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
     // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
     (
@@ -4269,6 +4281,9 @@ pub const CYCLONE_MOVEMENT_STAT: &str = "cyclone_movement_speed_+%_final";
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SkillMapping;
 
+/// `base_cooldown_speed_+%` on the main skill's gems ([`SkillMapping`]).
+const OWN_COOLDOWN_RECOVERY_STAT: &str = "base_cooldown_speed_+%";
+
 impl StatMapping for SkillMapping {
     fn map(&self, stat: &StatId) -> StatMap {
         if SKILL_FLAGS.contains(&stat.as_str())
@@ -4297,6 +4312,19 @@ impl StatMapping for SkillMapping {
                 divisor: 1.0,
                 conditions: Conditions::none()
                     .with_state(ConditionKey::new(conditions::CHANNELLING_CYCLONE), true),
+            }]);
+        }
+        // Open items S3: the main skill's own cooldown recovery (its gem's
+        // or a support's, Spellslinger's) is the skill's `CooldownRecovery`
+        // INC: only its cooldown and its trigger read it, so it is the
+        // typed quantity without a type, which no other skill's totals read.
+        if stat.as_str() == OWN_COOLDOWN_RECOVERY_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery),
+                op: Op::Increased,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
             }]);
         }
         if stat.as_str() == ALWAYS_HIT_STAT {
@@ -10105,6 +10133,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // above" (`FullLifePercentage` BASE): PoB reads it only for the config
     // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).
     ("full_life_threshold_%_override", "life-threshold"),
+    // Open items S3: read by `hit::wand_damage_to_spells` (Spellslinger).
+    (
+        "gain_%_of_base_wand_damage_as_added_spell_damage",
+        "trigger",
+    ),
     // P6-11as: "Gain # Life when you Stun an Enemy": PoB leaves the line
     // unparsed (`ModCache.lua`), and a gain on stun reaches no slice field.
     ("gain_X_life_on_stun", "recovery"),
@@ -10711,6 +10744,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "quality_display_active_skill_area_damage_quality_negated_from_gem",
         "display",
     ),
+    // Open items S3: Spellslinger's display stat; PoB's map has no row.
+    (
+        "quality_display_wand_damage_as_added_spell_damage_is_gem",
+        "trigger",
+    ),
     // Close-out M3: rage lost faster (`InherentRageLoss` INC): rage's loss,
     // never its gain or effect.
     ("rage_decay_speed_+%", "no-slice"),
@@ -10851,6 +10889,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-8a: PoB's `skill("triggered")`, which `poe1::triggers` decides.
     ("spell_uncastable_if_triggerable", "trigger"),
     ("spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
+    // Open items S3: PoB's `triggeredBySpellSlinger`, which `poe1::triggers` decides.
+    ("spellslinger_trigger_on_wand_attack_%", "trigger"),
     // P6-11as: "#% increased Stun Duration on Enemies per Endurance
     // Charge" (`EnemyStunDuration` INC): no slice field.
     ("stun_duration_+%_per_endurance_charge", "stun"),

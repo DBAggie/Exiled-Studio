@@ -1,5 +1,6 @@
 """Pick the oracle fixtures a CI run needs (maintainer request, 2026-11-24:
-"only run what is necessary for a PR").
+"only run what is necessary for a PR"), and this job's shard of them
+(maintainer decision 2026-11-26: the oracle jobs split into shards).
 
 The oracle job runs PoB itself on each fixture (three runs per OS, then
 Windows against Linux). A fixture's PoB output changes only when the fixture
@@ -19,15 +20,23 @@ or the oracle does, never with the engine. So a pull request runs:
 
 This script is not one of FULL_PATHS: it picks fixtures and cannot change
 PoB's output for one, and a wrong pick is caught by the full run of the
-push to dev. While it was, every push of a pull request that edited it ran
-every fixture (about 132 minutes on Windows).
+push to dev.
 
 Any other event (a push to dev, experimental, or main; a manual run) runs
 every fixture.
 
-usage: python3 -I oracle-select.py <event> <base-ref> <labels-json> <out-manifest>
-Prints the manifest to pass to oracle-run and writes the choice to
-$GITHUB_STEP_SUMMARY when set.
+Shards: the chosen fixtures, in manifest order, are dealt round-robin, so
+shard k of n holds fixtures k-1, k-1+n, k-1+2n, ...; a fixture and its
+`pair` are dealt together as one (`units`). The deal depends only on
+the chosen list, so shard k is the same set on Windows and Linux, and the
+compare job compares them shard by shard. A full run of 535 fixtures took
+about 132 minutes on Windows in one job; four shards take about a quarter.
+The smoke set leads the chosen list, so with at most as many shards as smoke
+fixtures no shard is empty (oracle-run refuses an empty manifest).
+
+usage: python3 -I oracle-select.py <event> <base-ref> <labels-json> <out-manifest> [<shard> <shards>]
+Writes the shard's manifest to <out-manifest>, prints its path for
+oracle-run, and writes the choice to $GITHUB_STEP_SUMMARY when set.
 """
 import json
 import os
@@ -73,27 +82,26 @@ def summary(text):
             f.write(text + '\n')
 
 
-def main():
-    event, base, labels, out = sys.argv[1:5]
+def smoke_first(fixtures):
+    """The fixtures with the smoke set first, each part in manifest order."""
+    smoke = [f for f in fixtures if f.get('tier') in SMOKE_TIERS]
+    return smoke + [f for f in fixtures if f.get('tier') not in SMOKE_TIERS]
+
+
+def choose(event, base, labels, head):
+    """The chosen fixtures (smoke set first) and the summary's lines."""
+    everything = smoke_first(head['fixtures'])
     if event != 'pull_request':
-        summary(f'Oracle fixtures: all ({event}).')
-        print(MANIFEST)
-        return
+        return everything, [f'Oracle fixtures: all ({event}).']
     if 'oracle-full' in json.loads(labels or '[]'):
-        summary('Oracle fixtures: all (label `oracle-full`).')
-        print(MANIFEST)
-        return
+        return everything, ['Oracle fixtures: all (label `oracle-full`).']
     changed = changed_since(base)
     if changed is None:
-        summary(f'Oracle fixtures: all (the base `{base}` could not be compared with).')
-        print(MANIFEST)
-        return
+        return everything, [f'Oracle fixtures: all (the base `{base}` could not be compared with).']
     full = sorted({p for p in changed if p.startswith(FULL_PATHS)})
     if full:
-        summary('Oracle fixtures: all (the oracle changed: ' + ', '.join(f'`{p}`' for p in full) + ').')
-        print(MANIFEST)
-        return
-    head = json.load(open(MANIFEST, encoding='utf-8'))
+        return everything, ['Oracle fixtures: all (the oracle changed: '
+                            + ', '.join(f'`{p}`' for p in full) + ').']
     try:
         before = json.loads(git('show', f'origin/{base}:{MANIFEST}'))
     except subprocess.CalledProcessError:
@@ -105,13 +113,53 @@ def main():
             smoke.append(f)
         elif old.get(f['id']) != f:
             new.append(f)
-    picked = {'format': head['format'], 'fixtures': smoke + new}
-    with open(out, 'w', encoding='utf-8', newline='\n') as fh:
-        json.dump(picked, fh, indent=2)
-        fh.write('\n')
-    lines = [f'Oracle fixtures: {len(picked["fixtures"])} of {len(head["fixtures"])} '
+    lines = [f'Oracle fixtures: {len(smoke) + len(new)} of {len(head["fixtures"])} '
              f'(smoke set {len(smoke)}, added or changed by this pull request {len(new)}).']
     lines += [f'- `{f["id"]}`' for f in new]
+    return smoke + new, lines
+
+
+def units(chosen):
+    """The chosen fixtures in dealing units: a fixture with its `pair` (a
+    discrepancy fixture names the fixture it changes one input of, and
+    oracle-run refuses a manifest without it), every other fixture alone;
+    in the chosen order."""
+    by_id = {f['id']: f for f in chosen}
+    partner = {}
+    for f in chosen:
+        p = f.get('pair')
+        if p in by_id:
+            partner[f['id']], partner[p] = p, f['id']
+    out, seen = [], set()
+    for f in chosen:
+        if f['id'] in seen:
+            continue
+        unit = [f]
+        seen.add(f['id'])
+        p = partner.get(f['id'])
+        if p and p not in seen:
+            unit.append(by_id[p])
+            seen.add(p)
+        out.append(unit)
+    return out
+
+
+def main():
+    event, base, labels, out = sys.argv[1:5]
+    shard, shards = (int(sys.argv[5]), int(sys.argv[6])) if len(sys.argv) > 6 else (1, 1)
+    if not 1 <= shard <= shards:
+        sys.exit(f'oracle-select: shard {shard} of {shards} is out of range')
+    head = json.load(open(MANIFEST, encoding='utf-8'))
+    chosen, lines = choose(event, base, labels, head)
+    mine = [f for unit in units(chosen)[shard - 1::shards] for f in unit]
+    if not mine:
+        sys.exit(f'oracle-select: shard {shard} of {shards} has no fixtures '
+                 f'({len(chosen)} chosen); use fewer shards')
+    if shards > 1:
+        lines.append(f'This job: shard {shard} of {shards}, {len(mine)} fixtures.')
+    with open(out, 'w', encoding='utf-8', newline='\n') as fh:
+        json.dump({'format': head['format'], 'fixtures': mine}, fh, indent=2)
+        fh.write('\n')
     summary('\n'.join(lines))
     print(out)
 

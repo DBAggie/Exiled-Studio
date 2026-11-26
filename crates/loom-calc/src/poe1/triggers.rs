@@ -67,8 +67,11 @@
 //! supports, none ported), Unleash, projectiles that hit several times,
 //! and trigger-related damage (`TriggeredDamage`: unmapped stats).
 
+use super::Poe1Quantity;
 use super::skill::{self, GemEffectRef, MainSkill};
+use crate::condition::Flags;
 use crate::engine::Calc;
+use crate::quantity::{Op, Quantity};
 use crate::result::Field;
 use crate::source::Source;
 use crate::state::{FieldState, Reasons, UnsupportedReason};
@@ -97,6 +100,10 @@ pub enum Config {
     CastOnMeleeKill,
     /// Cast while Channelling (and its awakened gem).
     CastWhileChannelling,
+    /// Spellslinger's support part (open items S3; `CalcTriggers.lua` 1200
+    /// to 1212): the source is any wand projectile attack, the trigger on
+    /// use (no hit chance), the rotation the main skill alone.
+    Spellslinger,
 }
 
 /// The trigger supports ported, by the granted effect PoB marks
@@ -116,6 +123,7 @@ const SUPPORTS: &[(&str, Config)] = &[
         "SupportCastWhileChannellingTriggeredPlus",
         Config::CastWhileChannelling,
     ),
+    ("SupportSpellslinger", Config::Spellslinger),
 ];
 
 /// The first parts of the two-part trigger gems, on the source skill:
@@ -152,6 +160,7 @@ const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportCurseOnHitCursePlus",
     "SupportManaforgedArrows",
     "SupportMarkOnHit",
+    "SupportSpellslinger",
 ];
 
 /// The stat that makes Cast when Damage Taken's config apply (PoB's
@@ -212,12 +221,14 @@ struct Rotated {
     cooldown: f64,
     /// Whether it is the main skill.
     main: bool,
+    /// Its cooldown recovery factor (PoB's `icdr`).
+    icdr: f64,
 }
 
 /// The rate of the main skill `skill` when a ported trigger triggers it
 /// (module docs).
 #[must_use]
-pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome {
+pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flags) -> Outcome {
     let Kind::Ported(config, support) = kind(skill) else {
         return Outcome::SelfCast;
     };
@@ -266,6 +277,14 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         .as_ref()
         .and_then(|s| skill::effect_level(s.effect, s.level))
         .map_or(0.0, |l| seconds(l.cooldown));
+    let mut reasons = Reasons::new();
+    // The triggered skill's cooldown recovery (open items S3; PoB's
+    // `icdr = calcLib.mod(skillModList, skillCfg, "CooldownRecovery")`,
+    // 558): both cooldowns are divided by it (575 to 576), in the cap and
+    // in the rotation (`packageSkillDataForSimulation`, 64).
+    let Some(icdr) = cooldown_recovery(calc, flags, &mut reasons) else {
+        return unsupported("cooldown-recovery");
+    };
     // PoB's `ignoresTickRate`: more than one stored use.
     let ignores_tick = stored_uses > 1;
     let tick_rate = 1.0 / SERVER_TICK_TIME;
@@ -277,15 +296,14 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         }
     };
     let action = crate::math::max(
-        rounded(trigger_cd, false),
-        rounded(triggered_cd, ignores_tick),
+        rounded(trigger_cd / icdr, false),
+        rounded(triggered_cd / icdr, ignores_tick),
     );
     let cap = if action == 0.0 {
         f64::INFINITY
     } else {
         1.0 / action
     };
-    let mut reasons = Reasons::new();
     let global = matches!(
         config,
         Config::CastWhenDamageTaken | Config::CastWhenStunned | Config::CastOnWardBreak
@@ -320,6 +338,11 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
                 cooldown: skill::effect_level(s.effect(), s.active_gem.level)
                     .map_or(0.0, |l| seconds(l.cooldown)),
                 main: is_main(s),
+                // The main skill's factor for each: the engine computes
+                // the main skill's modifiers only. The rotations ported
+                // share one trigger support, whose recovery is the same
+                // on each.
+                icdr,
             })
             .collect()
     };
@@ -360,6 +383,10 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         })
     };
     let hands = super::collect::hands(&input);
+    // Spellslinger's source: a projectile attack with the wand flag (PoB's
+    // `ModFlag.Wand` in the attack's `skillCfg`: the main hand holds a
+    // wand), in any group (1209 to 1210).
+    let wand = matches!(&hands.main_hand, super::collect::Held::Weapon(c) if c == "Wand");
     let mut best: Option<Source3> = None;
     for (g, a, s) in &skills {
         let candidate = s.types.contains("Attack")
@@ -370,6 +397,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
             && match config {
                 Config::CastOnCrit => *g == main_group,
                 Config::CastOnMeleeKill => *g == main_group && s.types.contains("Melee"),
+                Config::Spellslinger => wand && s.types.contains("Projectile"),
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
@@ -419,7 +447,9 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
     if !carry(src.speed.as_ref()) {
         return unsupported("trigger-source");
     }
-    // The trigger chance (727 to 790): the source is an attack.
+    // The trigger chance (727 to 790): the source is an attack; a trigger
+    // on use (Spellslinger's `triggerOnUse`, 732) skips its hit chance.
+    let on_use = config == Config::Spellslinger;
     let mut chance = 100.0;
     let (hit, hit_state) = src
         .hit
@@ -428,7 +458,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
     let Some(hit) = hit else {
         return unsupported("trigger-source");
     };
-    if hit != 100.0 {
+    if hit != 100.0 && !on_use {
         if !carry(Some(&hit_state)) {
             return unsupported("trigger-source");
         }
@@ -446,8 +476,18 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         }
     }
     // The rotation: the group's spells the trigger supports
-    // (`triggeredByCoc`, `triggeredByMeleeKill`, and `slotMatch`).
-    let rotation = rotation_of(config);
+    // (`triggeredByCoc`, `triggeredByMeleeKill`, and `slotMatch`); a
+    // config without `triggeredSkillCond` (Spellslinger) simulates the main
+    // skill alone (809).
+    let rotation = if config == Config::Spellslinger {
+        vec![Rotated {
+            cooldown: triggered_cd,
+            main: true,
+            icdr,
+        }]
+    } else {
+        rotation_of(config)
+    };
     if !rotation.iter().any(|r| r.main) {
         return unsupported("trigger-rotation");
     }
@@ -463,6 +503,34 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source) -> Outcome 
         rotation_rate(&rotation, effective, trigger, chance)
     };
     Outcome::Rate(value, reasons, false)
+}
+
+/// The main skill's cooldown recovery factor in a context of `flags`: PoB's
+/// `calcLib.mod(skillModList, skillCfg, "CooldownRecovery")`, `(1 + inc /
+/// 100) x more`, over the character's untagged and typed terms and the
+/// skill's own (the quantities a self-cast spell's cooldown reads,
+/// `hit::cooldown_limit`); `None` when it is not above 0 (PoB would divide
+/// by it).
+fn cooldown_recovery(calc: &Calc<'_>, flags: Flags, reasons: &mut Reasons) -> Option<f64> {
+    let cx = calc.context(flags);
+    let quantities = [
+        Quantity::Poe1(Poe1Quantity::SkillTiming(
+            super::skill_modifiers::SkillTiming::CooldownRecovery,
+        )),
+        Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery),
+    ];
+    let mut inc = 0.0;
+    let mut more = 1.0;
+    for q in quantities {
+        for e in super::repeats::applying(calc, q, Op::Increased, &cx, reasons) {
+            inc += e.value;
+        }
+        for e in super::repeats::applying(calc, q, Op::More, &cx, reasons) {
+            more *= 1.0 + e.value / 100.0;
+        }
+    }
+    let icdr = (1.0 + inc / 100.0) * more;
+    (icdr > 0.0).then_some(icdr)
 }
 
 /// PoB's `Condition:KilledRecently` from the config (`ConfigOptions.lua`:
@@ -526,9 +594,10 @@ fn rotation_rate(rotation: &[Rotated], source_rate: f64, trigger_cd: f64, chance
     let sim_time = increment * 1000.0;
     let ceil_b = |x: f64| SERVER_TICK_TIME * crate::math::ceil(x / SERVER_TICK_TIME);
     let floor_b = |x: f64| SERVER_TICK_TIME * crate::math::floor(x / SERVER_TICK_TIME);
+    // Each skill's cooldown and the trigger's over its recovery (69).
     let cds: Vec<f64> = rotation
         .iter()
-        .map(|r| crate::math::max(r.cooldown, trigger_cd))
+        .map(|r| crate::math::max(r.cooldown / r.icdr, trigger_cd / r.icdr))
         .collect();
     let n = rotation.len();
     let mut next_trig = vec![0.0_f64; n];
@@ -579,12 +648,32 @@ mod tests {
             &[Rotated {
                 cooldown: 0.0,
                 main: true,
+                icdr: 1.0,
             }],
             2.0,
             0.0,
             100.0,
         );
         assert!((r - 2.0).abs() < 1e-9, "{r}");
+    }
+
+    /// Open items S3: Spellslinger's 0.6 s cooldown over its 38% cooldown
+    /// recovery and a 2.25 source rate give PoB's 1.197 (PoB v2.67.2's
+    /// `SkillTriggerRate` on the Spellslinger fixture with Power Siphon as
+    /// the source, `docs/phase-6/triggers.md`, "Part 3").
+    #[test]
+    fn the_cooldown_recovery_should_divide_the_cooldowns_in_the_rotation() {
+        let r = rotation_rate(
+            &[Rotated {
+                cooldown: 0.0,
+                main: true,
+                icdr: 1.38,
+            }],
+            2.25,
+            0.6,
+            100.0,
+        );
+        assert!((r - 1.197).abs() < 1e-9, "{r}");
     }
 
     /// A 0.15 s trigger cooldown caps a fast source near PoB's tick-rounded
@@ -595,6 +684,7 @@ mod tests {
             &[Rotated {
                 cooldown: 0.0,
                 main: true,
+                icdr: 1.0,
             }],
             20.0,
             0.15,
@@ -606,10 +696,12 @@ mod tests {
                 Rotated {
                     cooldown: 0.0,
                     main: true,
+                    icdr: 1.0,
                 },
                 Rotated {
                     cooldown: 0.0,
                     main: false,
+                    icdr: 1.0,
                 },
             ],
             1.0,

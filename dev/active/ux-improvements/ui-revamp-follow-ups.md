@@ -31,12 +31,12 @@ Created at the maintainer's request ("create follow up tasks for each open item"
 
 | ID | Task | Why it is open |
 |---|---|---|
-| RV-14 | **Drafted 2026-11-25 (PR #183):** ADR-018 Amendment 1, proposed; merging the PR accepts its wording. **ADR-018's text still says the knowledge server ships "in the portable zip".** Amend it (an accepted ADR is not edited without the maintainer). | The portable zip was dropped on 2026-11-25. |
+| RV-14 | **Done: accepted as written by the maintainer 2026-11-26.** Drafted 2026-11-25 (PR #183): ADR-018 Amendment 1, proposed; merging the PR accepts its wording. **ADR-018's text still says the knowledge server ships "in the portable zip".** Amend it (an accepted ADR is not edited without the maintainer). | The portable zip was dropped on 2026-11-25. |
 | RV-15 | **The PR test build:** keep CI's zip of the plain executable with its `portable` marker, or make the test build an installer and remove the marker code (`loom_tauri::release`, `tools/knowledge-mcp`). | The marker now serves only that zip. |
 | RV-16 | **Run the release workflow once without the portable zip** (it runs on a tag or by hand from `main`) and check the download page lists four packages. | #168 changed `release.yml`; it could not be run from a branch. |
 | RV-17 | **Found 2026-11-25: there is no 15-minute limit.** The workflow sets none on the `rust` job. GitHub cancelled both jobs itself after 15 and 17 minutes in the queue: "The job was not acquired by Runner of type hosted even after multiple attempts", with its notice that macOS arm64 runners are short. Nothing to raise; a rerun is the remedy, or the maintainer drops macOS from pull request runs (it is best-effort, ADR-012). **The macOS `rust` job's 15-minute limit:** it was cancelled at the limit on #171 and #173 and passed on a rerun in under 10 minutes. Raise the limit, or accept a rerun now and then. | Seen twice on 2026-11-25. |
 | RV-18 | **A screen-reader pass** over the revamped screens (the marks' names, the folded lists, the two-pane Skills page). | The automatic checks do not replace it. |
-| RV-19 | **The update test after the next experimental release**, and **ADR-015 Amendment 3** (proposed) to accept or change. | Open since before the revamp. |
+| RV-19 | **The update test after the next experimental release** (ADR-015 Amendment 3 accepted 2026-11-26). | Open since before the revamp. |
 
 ## Open since before the revamp
 

@@ -1244,7 +1244,8 @@ dto! {
         pub stats: Vec<StatView>,
         /// The typed kind (`granted-skill`, ...), if it resolved to one.
         pub typed: Option<String>,
-        /// The tolerance it needed (`case-folded`, `split-section`).
+        /// The tolerance it needed (`case-folded`, `split-section`,
+        /// `reworded`).
         pub adapted: Option<String>,
         /// The numbers in the text, in order, for roll edits.
         pub numbers: Vec<NumberSpan>,

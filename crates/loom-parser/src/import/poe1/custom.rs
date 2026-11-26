@@ -141,11 +141,14 @@ pub const COMMENT_MARKERS: &[&str] = &["//", "--", "=", "~"];
 /// (`ModParser.lua`'s flag and special forms), which no stat description
 /// may read. A numberless line with one of these words is never a note: it
 /// stays unresolved (a reason), so a line PoB applies cannot be hidden as a
-/// label. Compared per word, without case.
+/// label. Compared per word, without case. "apply", "applies", and
+/// "instead" since ADR-015 Amendment 3: PoB applies the item line
+/// "Modifiers to number of Projectiles instead apply to the number of
+/// targets Projectiles Split towards" (`loom-parity-cli item-rewordings`).
 pub const MODIFIER_WORDS: &[&str] = &[
-    "always", "are", "can", "cannot", "deal", "deals", "enemies", "enemy", "gain", "gains",
-    "grant", "grants", "has", "have", "immune", "is", "nearby", "never", "per", "recently", "take",
-    "takes", "when", "while", "you", "your",
+    "always", "applies", "apply", "are", "can", "cannot", "deal", "deals", "enemies", "enemy",
+    "gain", "gains", "grant", "grants", "has", "have", "immune", "instead", "is", "nearby",
+    "never", "per", "recently", "take", "takes", "when", "while", "you", "your",
 ];
 
 /// Whether `text`, a custom line no description or pattern reads, is a
@@ -160,6 +163,20 @@ pub fn is_note(text: &str, is_keystone: impl Fn(&str) -> bool) -> bool {
     }
     if COMMENT_MARKERS.iter().any(|m| text.starts_with(m)) {
         return true;
+    }
+    is_label(text, |_| false)
+}
+
+/// Whether `text` is a label, not a modifier's sentence: no digit, none of
+/// [`MODIFIER_WORDS`], and not a keystone's name. A custom line's note
+/// ([`is_note`]) and an item line's (ADR-015 Amendment 3, decided
+/// 2026-11-26: item lines no description reads and PoB parses into
+/// nothing, such as an author's notes or a name) use it; an item line
+/// starting with a comment marker is not a note by that alone.
+#[must_use]
+pub fn is_label(text: &str, is_keystone: impl Fn(&str) -> bool) -> bool {
+    if is_keystone(text) {
+        return false;
     }
     let sentence = text
         .split(|c: char| !c.is_ascii_alphabetic() && c != '\'')

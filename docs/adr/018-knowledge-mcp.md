@@ -1,6 +1,6 @@
 # ADR-018: Knowledge MCP Server (Read-Only Game Data for Claude Sessions)
 
-- Status: Accepted (proposed 2026-11-15; accepted by the maintainer 2026-11-16 with its five defaults, "Not decided here"; implemented in the same PR, #123); Amendment 1 (no portable zip, proposed 2026-11-25 on PR #183)
+- Status: Accepted (proposed 2026-11-15; accepted by the maintainer 2026-11-16 with its five defaults, "Not decided here"; implemented in the same PR, #123); Amendment 1 (no portable zip, proposed 2026-11-25 on PR #183, accepted as written by the maintainer 2026-11-26)
 - Date: 2026-11-15
 
 ## Context
@@ -84,7 +84,7 @@ Built and signed with the application's release (ADR-010), shipped as a separate
 4. **`get_price` input**: item name plus optional variant and links, as poe.ninja's overview rows have them.
 5. **The host crate** for the bundle scan (name and exact contents) is settled in its own PR (it became `loom-bundles`, in PR #123 itself). Alternative: do not ship the tool (`cargo install` only, option 3), so the existing "tools, never shipped" exception applies and it may use `loom-app` directly.
 
-## Amendment 1 (proposed 2026-11-25): no portable zip
+## Amendment 1 (proposed 2026-11-25, accepted 2026-11-26): no portable zip
 Written on PR #183 for follow-up task RV-14; the maintainer accepts the wording by merging it. It records a decision already made, and changes no code.
 
 ### Context

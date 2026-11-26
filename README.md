@@ -11,7 +11,7 @@ An independent, open-source build planner for Path of Exile, written in Rust wit
 - Modifiers are modelled on the game's stat IDs, not on English text.
 - Game data comes from the project's own extractor and ships as signed bundles of derived data only: no Grinding Gear Games art or audio.
 - Works offline. No account, no telemetry.
-- PoE1 first, with a core ready for PoE2. Windows and Linux are supported; macOS is best-effort.
+- PoE1 first, with a core ready for PoE2. Version 1.0 calculates PoE1 builds only; PoE2 calculations come later. Windows and Linux are supported; macOS is best-effort.
 - The calculation core compiles to WebAssembly.
 
 ## Installing

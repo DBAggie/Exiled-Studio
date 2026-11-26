@@ -11,7 +11,7 @@ The successor has independent governance, branding, releases, support policy, an
 
 ### Naming and license (2026-11-08)
 - The product uses a distinct name that does not imply it is the next official version of Path of Building.
-- **Working product name: Exiled Studio.** GitHub repository: `DBAggie/Exiled-Studio`, **public from day one**. The name gets a final trademark and name-collision check before the first public release.
+- **Product name: Exiled Studio** (final since 2026-11-26). GitHub repository: `DBAggie/Exiled-Studio`, **public from day one**. The name was a working name until its trademark and name-collision check, done on 2026-11-26: the maintainer found nothing in the USPTO and EUIPO trademark registers. A web search found no software or game tool of that name; the nearest are "Exiled Studios" (a blockchain racing game), "Exile Content Studio" (a media company), and indie developers on itch.io named "Exiled Games" and "Exiled Kiwi Games". No GGG policy on fan tool names was found; the name does not use GGG's PATH OF EXILE mark.
 - Crates and packages use the internal codename `loom` (e.g. `loom-domain`), so internals don't change if the public name does. "PathOfBuilding-V2" is a local folder name only.
 - The README and the application's About screen state that the project is not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.
 - The successor is licensed under MIT, matching Path of Building, so code and findings can flow in both directions.

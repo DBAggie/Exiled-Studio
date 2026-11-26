@@ -200,7 +200,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 34] = [
+pub const STATS: [ModifierRow; 36] = [
     // Close-out M6: "Anger has #% increased Aura Effect".
     (
         "anger_aura_effect_+%",
@@ -348,6 +348,20 @@ pub const STATS: [ModifierRow; 34] = [
         "skill_effect_duration_+%",
         Poe1Quantity::SkillTiming(SkillTiming::Duration),
         1.0,
+    ),
+    // Open items S3: "#% increased Mana Reservation Efficiency of Skills
+    // Supported by Spellslinger" (`ManaReservationEfficiency` INC with
+    // `Condition:SupportedBySpellslinger`, `ModParser.lua` 1596), and its
+    // older "-2% per 1" form.
+    (
+        "spellslinger_mana_reservation_efficiency_+%",
+        Poe1Quantity::SpellslingerManaReservationEfficiency,
+        1.0,
+    ),
+    (
+        "spellslinger_mana_reservation_efficiency_-2%_per_1",
+        Poe1Quantity::SpellslingerManaReservationEfficiency,
+        -2.0,
     ),
     // P6-11gn: "#% increased Vulnerability Curse Effect" (`CurseEffect` INC
     // with the `SkillName` Vulnerability).
@@ -547,6 +561,9 @@ pub struct Totals {
     pub herald_mana_efficiency: f64,
     /// `ManaReservationEfficiency` INC of skills that throw mines (P6-11ey).
     pub mine_mana_efficiency: f64,
+    /// `ManaReservationEfficiency` INC of skills Spellslinger supports
+    /// (open items S3).
+    pub spellslinger_mana_efficiency: f64,
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
@@ -687,6 +704,9 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
                 Poe1Quantity::HeraldManaReservationEfficiency => &mut t.herald_mana_efficiency,
                 Poe1Quantity::MineManaReservationEfficiency => &mut t.mine_mana_efficiency,
+                Poe1Quantity::SpellslingerManaReservationEfficiency => {
+                    &mut t.spellslinger_mana_efficiency
+                }
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
@@ -757,11 +777,28 @@ impl Totals {
         types: &BTreeSet<String>,
         id: &str,
     ) -> ReservationTerms {
+        self.reservation_for_skill(pool, types, id, false)
+    }
+
+    /// [`Self::reservation_for`], with whether Spellslinger supports the
+    /// skill (open items S3: its mana efficiency adds its own, PoB's
+    /// `Condition:SupportedBySpellslinger` that the support sets).
+    #[must_use]
+    pub fn reservation_for_skill(
+        &self,
+        pool: Pool,
+        types: &BTreeSet<String>,
+        id: &str,
+        spellslinger: bool,
+    ) -> ReservationTerms {
         let mut terms = self.reservation(pool);
         if pool != Pool::Mana {
             return terms;
         }
         let mut own = self.mana_efficiency;
+        if spellslinger {
+            own += self.spellslinger_mana_efficiency;
+        }
         // Close-out M6: the skill's named mana reservation efficiency.
         own += self.named_skill(id, NamedEffect::ManaReservationEfficiency);
         if types.contains("Herald") {
@@ -1057,9 +1094,19 @@ mod tests {
     fn a_gems_modifiers_should_be_reasons() {
         for (stat, q, _) in STATS {
             // A skill's own duration reaches no slice field through its
-            // hit (P6-11bs; it was a `NoEffect` row before).
+            // hit (P6-11bs; it was a `NoEffect` row before). Its own
+            // cooldown recovery is its cooldown's and its trigger's (open
+            // items S3: `TypedCooldownRecovery` without a type).
             let want = if q == Poe1Quantity::SkillTiming(SkillTiming::Duration) {
                 StatMap::NoEffect
+            } else if q == Poe1Quantity::SkillTiming(SkillTiming::CooldownRecovery) {
+                StatMap::Effects(vec![crate::ingest::EffectTemplate {
+                    quantity: crate::quantity::Quantity::Poe1(Poe1Quantity::TypedCooldownRecovery),
+                    op: crate::quantity::Op::Increased,
+                    scale: 1.0,
+                    divisor: 1.0,
+                    conditions: Conditions::none(),
+                }])
             } else {
                 StatMap::Unmapped
             };

@@ -63,6 +63,7 @@ fn source_to(s: &c::Source) -> Source {
             adapted: adapted.map(|a| match a {
                 d::Adapted::CaseFolded => Adapted::CaseFolded,
                 d::Adapted::SplitSection => Adapted::SplitSection,
+                d::Adapted::Reworded => Adapted::Reworded,
             }),
         },
         c::Source::ItemBase { item } => Source::ItemBase { item: item.0 },

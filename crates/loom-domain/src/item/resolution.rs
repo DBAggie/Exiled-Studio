@@ -137,6 +137,10 @@ pub enum Adapted {
     /// The line resolves together with the next line of another section;
     /// that line points back with [`LineResolution::Continues`].
     SplitSection,
+    /// The line is an older wording that a reviewed table maps to a
+    /// current description's text (ADR-015 Amendment 3); it resolved in
+    /// the current wording with the same numbers.
+    Reworded,
 }
 
 impl Adapted {
@@ -146,6 +150,7 @@ impl Adapted {
         match self {
             Self::CaseFolded => "case-folded",
             Self::SplitSection => "split-section",
+            Self::Reworded => "reworded",
         }
     }
 }

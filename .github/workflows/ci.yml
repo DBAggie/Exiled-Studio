@@ -234,21 +234,23 @@ jobs:
   # docs/spikes/spike-c-oracle.md, section 7). Every tier of the manifest
   # runs, the Phase 3 mechanic fixtures (tier mechanic, from P3-6) too.
   oracle:
-    name: oracle (${{ matrix.os }})
+    name: oracle (${{ matrix.os }}, shard ${{ matrix.shard }})
     runs-on: ${{ matrix.os }}
     # A cache miss fetches PoB and builds LuaJIT; a hang must not run for hours.
-    # 90 since Phase 6 (PR #167): over 250 fixtures, 3 runs each, took 44 to
-    # 46 minutes on the runners, past the former 45. 150 since P6-11hm: with
-    # the fixtures each step adds, successful runs took 49 to 84 minutes, and
-    # the Linux run of 698abc68 was cut at 90.
-    # Since 2026-11-24 a pull request runs only the fixtures it needs (the
-    # Select step); a full run (pushes, oracle changes) took about 132 minutes
-    # on Windows at 535 fixtures.
-    timeout-minutes: 150
+    # The limit went from 45 to 90 to 150 minutes during Phase 6; a full run
+    # in one job took about 132 minutes on Windows at 535 fixtures. Since
+    # 2026-11-26 (maintainer decision) the fixtures are dealt into 4 shards
+    # per OS (.github/scripts/oracle-select.py), so a full run's shard takes
+    # about a quarter of that; 60 leaves room for a cache miss and for growth.
+    # A pull request still runs only the fixtures it needs (since 2026-11-24),
+    # dealt into the same shards.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        # Keep in step with SHARDS in the oracle-compare job.
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         shell: bash
@@ -271,7 +273,8 @@ jobs:
           set -euo pipefail
           # Windows runners may resolve python3 to the Store stub.
           if [ "$RUNNER_OS" = Windows ]; then PY=python; else PY=python3; fi
-          manifest=$("$PY" -I .github/scripts/oracle-select.py "$EVENT" "$BASE" "$LABELS" tools/oracle/fixtures/selected.json)
+          manifest=$("$PY" -I .github/scripts/oracle-select.py "$EVENT" "$BASE" "$LABELS" \
+            tools/oracle/fixtures/selected-${{ matrix.shard }}.json ${{ matrix.shard }} 4)
           test -f "$manifest"
           echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
       - run: rustup toolchain install # reads rust-toolchain.toml
@@ -324,14 +327,15 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: oracle-${{ runner.os }}
+          name: oracle-${{ runner.os }}-${{ matrix.shard }}
           path: out/oracle
           if-no-files-found: ignore
 
-  # Windows and Linux outputs compared field by field (oracle-compare). PoB's
-  # own fixtures are checked out with CRLF on Windows, so they show
-  # input_differs. Runs when an oracle job failed too (and then fails itself:
-  # a run is missing), but not when the run was cancelled.
+  # Windows and Linux outputs compared field by field (oracle-compare), shard
+  # by shard: shard k holds the same fixtures on both. PoB's own fixtures are
+  # checked out with CRLF on Windows, so they show input_differs. Runs when an
+  # oracle job failed too (and then fails itself: a run is missing), but not
+  # when the run was cancelled.
   oracle-compare:
     name: oracle cross-platform
     needs: [oracle]
@@ -346,17 +350,31 @@ jobs:
           pattern: oracle-*
           path: out
       # ADR-006: an unregistered difference (exit 20) fails; only registered
-      # differences (exit 19) pass, and are listed in the step summary.
+      # differences (exit 19) pass, and are listed in the step summary. Every
+      # shard is compared; the step fails with the first failing shard's code.
       - name: Compare Windows with Linux
+        env:
+          SHARDS: 4 # keep in step with the oracle job's matrix
         run: |
-          [ -f out/oracle-Windows/report.json ] && [ -f out/oracle-Linux/report.json ] || { echo "an oracle run is missing" >&2; exit 1; }
-          set +e
-          cargo run --release --locked -p loom-parity-cli -- oracle-compare out/oracle-Windows out/oracle-Linux --out out/compare
-          code=$?
-          set -e
-          echo "oracle-compare exit $code (0 identical, 19 only registered differences, 20 unregistered differences)" >> "$GITHUB_STEP_SUMMARY"
-          [ -f out/compare/summary.md ] && cat out/compare/summary.md >> "$GITHUB_STEP_SUMMARY"
-          case $code in 0|19) exit 0 ;; *) exit "$code" ;; esac
+          cargo build --release --locked -p loom-parity-cli
+          worst=0
+          for k in $(seq 1 "$SHARDS"); do
+            win=out/oracle-Windows-$k lin=out/oracle-Linux-$k
+            echo "### Shard $k" >> "$GITHUB_STEP_SUMMARY"
+            if [ ! -f "$win/report.json" ] || [ ! -f "$lin/report.json" ]; then
+              echo "shard $k: an oracle run is missing" | tee -a "$GITHUB_STEP_SUMMARY" >&2
+              [ "$worst" -ne 0 ] || worst=1
+              continue
+            fi
+            set +e
+            target/release/loom-parity-cli oracle-compare "$win" "$lin" --out "out/compare/$k"
+            code=$?
+            set -e
+            echo "oracle-compare exit $code (0 identical, 19 only registered differences, 20 unregistered differences)" >> "$GITHUB_STEP_SUMMARY"
+            [ -f "out/compare/$k/summary.md" ] && cat "out/compare/$k/summary.md" >> "$GITHUB_STEP_SUMMARY"
+            case $code in 0|19) ;; *) [ "$worst" -ne 0 ] || worst=$code ;; esac
+          done
+          exit "$worst"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

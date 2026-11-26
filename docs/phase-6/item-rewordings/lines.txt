@@ -1,0 +1,58 @@
++7 to Maximum Endurance Charge
++7 to Maximum Endurance Charges
++7 to Maximum Frenzy Charge
++7 to Maximum Frenzy Charges
++7 to Maximum Power Charge
++7 to Maximum Power Charges
+7% increased Charges used
+7% increased Charges per use
+7% reduced Charges used
+7% reduced Charges per use
++7% to Critical Strike Multiplier for Spells
++7% to Critical Strike Multiplier for Spell Damage
+Chaos Damage does not bypass Energy Shield
+Chaos Damage taken does not bypass Energy Shield
+7% increased Attack Speed during Flask effect
+7% increased Attack Speed during Effect
+7% reduced Attack Speed during Flask effect
+7% reduced Attack Speed during Effect
+7% increased Stun Recovery
+7% increased Stun and Block Recovery
+7% reduced Stun Recovery
+7% reduced Stun and Block Recovery
+7% reduced Mana Reserved
+7% increased Mana Reservation Efficiency of Skills
+7% increased Mana Cost Efficiency of Attacks
+7% increased Cost Efficiency of Attacks
+Projectiles cannot collide with Enemies at Close Range
+Projectiles cannot collide with Enemies in Close Range
+7% of Damage from Hits is taken from your Spectres' Life before you
+7% of Damage from Hits is taken from your Raised Spectres' Life before you
+Wave of Conviction's Exposure applies -7% Elemental Resistance
+Wave of Conviction's Exposure applies an extra -7% to Elemental Resistance
+Projectiles Return to you at end of flight
++1 to Maximum Endurance Charge
++1 to Maximum number of Sacred Wisps
++1 to number of Sacred Wisps Summoned
+10% of Damage from Hits is taken from your Spectres' Life before you
+Essence of Envy
+Intangibility: 14%
+Intangibility: 19%
+Intangibility: 2%
+Intangibility: 20%
+Intangibility: 3%
+Intangibility: 38%
+Intangibility: 8%
+Modifiers to number of Projectiles instead apply to the number of targets Projectiles Split towards
+Passives in Radius can be Allocated without being connected to your tree
+Recovers 374 Mana over 6.50 Seconds
+Rune Dagger
+Vendor Recipe.  Higher Rarity Sash = Higher % Phys
+Weapon +Rustic Sash + Whetstone = High % Phys Weapon.
+simple ethos: why make the effort, when
+you can simply mimic what others have?
+(38-40)% increased Mana Cost Efficiency of Attacks
+(30-40)% increased Elemental Damage with Hits and Ailments for each type of Elemental Ailment on Enemy
+Minions have (6-8)% increased Area of Effect of Area Skills
+Passives in radius of Perfect Agony can be allocated without being connected to your tree
+Adds (100-145) to (160-200) Cold Damage to Bow Attacks

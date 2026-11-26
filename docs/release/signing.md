@@ -89,4 +89,4 @@ When `LOOM_DATA_KEY` is absent (before the first key exists, or in a fork), `too
 4. An installed version that predates the revocation still trusts the key until it updates; say so in the release notes.
 
 ## SmartScreen
-The installers are not code signed (MQ4). Windows shows "Windows protected your PC" on the first run of a downloaded setup; the user clicks **More info**, then **Run anyway**. The README's install section says this. Data and update signatures do not change it.
+The installers are not code signed (MQ4; confirmed for 1.0 by the maintainer 2026-11-26). Windows shows "Windows protected your PC" on the first run of a downloaded setup; the user clicks **More info**, then **Run anyway**. The README's install section says this. Data and update signatures do not change it.

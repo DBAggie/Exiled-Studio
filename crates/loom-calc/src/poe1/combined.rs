@@ -196,6 +196,18 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 /// (P6-11hp): its `base_skill_show_average_damage_instead_of_dps` (the
 /// marker [`Poe1Quantity::HitReason`]) and a cooldown.
 fn shows_average(calc: &Calc<'_>, skill: &super::skill::MainSkill<'_>) -> bool {
+    // A self-cast spell whose gems' base mods set it (open items S3,
+    // `hit::SHOW_AVERAGE`).
+    let settled = calc
+        .context(crate::condition::Flags::NONE)
+        .states
+        .get(&crate::condition::ConditionKey::new(
+            super::hit::SHOW_AVERAGE,
+        ))
+        .copied();
+    if settled == Some(true) {
+        return true;
+    }
     let trap_or_mine = [super::skill::TRAP_TYPE, super::skill::MINE_TYPE]
         .iter()
         .any(|t| skill.types.contains(*t));
