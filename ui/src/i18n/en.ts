@@ -853,6 +853,8 @@ export const en = {
   'config.kindNumber': 'Number',
   'config.kindText': 'Text',
   'config.add': 'Add',
+  'config.helpMore': 'More',
+  'config.helpLess': 'Less',
   'config.blocks': 'Custom modifiers',
   'config.blocksHelp':
     'One modifier per line, worded as on an item; each applies to the character when its block is on. Lines that match nothing are kept as warnings and not calculated.',

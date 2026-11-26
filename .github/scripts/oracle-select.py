@@ -12,7 +12,15 @@ or the oracle does, never with the engine. So a pull request runs:
 - every fixture the pull request adds, or whose manifest entry it changes
   (a changed file changes its sha256 or blob);
 - every fixture when the pull request touches the oracle itself
-  (FULL_PATHS) or carries the label `oracle-full`.
+  (FULL_PATHS) or carries the label `oracle-full`;
+- every fixture when the base branch cannot be compared with (RV-26: a
+  stacked pull request whose base the checkout has not fetched is fetched
+  once, and if that fails too the choice is the safe one).
+
+This script is not one of FULL_PATHS: it picks fixtures and cannot change
+PoB's output for one, and a wrong pick is caught by the full run of the
+push to dev. While it was, every push of a pull request that edited it ran
+every fixture (about 132 minutes on Windows).
 
 Any other event (a push to dev, experimental, or main; a manual run) runs
 every fixture.
@@ -36,12 +44,26 @@ FULL_PATHS = (
     'tools/oracle/schema/',
     'tools/parity-cli/src/oracle',
     'rust-toolchain.toml',
-    '.github/scripts/oracle-select.py',
 )
 
 
 def git(*args):
     return subprocess.run(['git', *args], check=True, capture_output=True, text=True).stdout
+
+
+def changed_since(base):
+    """The paths the pull request changes against `origin/<base>`, or None
+    when the base cannot be compared with, even after fetching it."""
+    diff = ('diff', '--name-only', f'origin/{base}...HEAD')
+    try:
+        return git(*diff).split()
+    except subprocess.CalledProcessError:
+        pass
+    try:
+        git('fetch', '--no-tags', 'origin', f'+refs/heads/{base}:refs/remotes/origin/{base}')
+        return git(*diff).split()
+    except subprocess.CalledProcessError:
+        return None
 
 
 def summary(text):
@@ -61,7 +83,11 @@ def main():
         summary('Oracle fixtures: all (label `oracle-full`).')
         print(MANIFEST)
         return
-    changed = git('diff', '--name-only', f'origin/{base}...HEAD').split()
+    changed = changed_since(base)
+    if changed is None:
+        summary(f'Oracle fixtures: all (the base `{base}` could not be compared with).')
+        print(MANIFEST)
+        return
     full = sorted({p for p in changed if p.startswith(FULL_PATHS)})
     if full:
         summary('Oracle fixtures: all (the oracle changed: ' + ', '.join(f'`{p}`' for p in full) + ').')
