@@ -101,6 +101,13 @@ const RADIUS: Record<TreeNodeView['kind'], number> = {
   'ascendancy-start': 30,
 }
 
+/** A node's name as a card shows it: the game names a class start in
+ * capitals ("WITCH"); it is shown as the name it is (RV-31). */
+const shownName = (n: TreeNodeView) =>
+  n.kind === 'class-start'
+    ? n.name.charAt(0) + n.name.slice(1).toLowerCase()
+    : n.name
+
 const kindText = (n: TreeNodeView) =>
   tDynamic(`tree.kind.${n.kind}`, 'tree.kind.normal')
 
@@ -868,7 +875,7 @@ function TreeCanvas({
         {focused && keyed !== undefined
           ? t(
               allocated.has(keyed.id) ? 'tree.keyedAllocated' : 'tree.keyedNot',
-              { name: plain(keyed.name), kind: kindText(keyed) },
+              { name: plain(shownName(keyed)), kind: kindText(keyed) },
             )
           : ''}
       </p>
@@ -1056,13 +1063,7 @@ function NodeCard({
   )
   return (
     <>
-      <p className="tree-card-name">
-        {/* The game names a class start in capitals ("WITCH"); a card
-            shows it as the name it is (RV-31). */}
-        {node.kind === 'class-start'
-          ? node.name.charAt(0) + node.name.slice(1).toLowerCase()
-          : node.name}
-      </p>
+      <p className="tree-card-name">{shownName(node)}</p>
       <p className="muted small-text">
         {kindText(node)}
         {node.ascendancy != null && ` · ${node.ascendancy}`}

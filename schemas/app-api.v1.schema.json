@@ -5437,7 +5437,7 @@
           "minimum": 0
         },
         "points-available": {
-          "description": "The passive points a character of the build's level has: one a\nlevel after the first, the quests' by the act that level is\nexpected in, and one more from the third act on when no bandit\nwas helped. An estimate below level 67 (a character may be\nahead of its quests or behind them). Absent when the build\nnames no level.",
+          "description": "The passive points a character of the build's level has: one a\nlevel after the first, and the quests' by the act that level\nis expected in (a quest's choice that gives a point counted\nfrom the act after it). An estimate while the character is\nstill in the acts (it may be ahead of its quests or behind\nthem). Absent when the build names no level.",
           "type": [
             "integer",
             "null"

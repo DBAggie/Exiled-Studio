@@ -91,6 +91,18 @@ The maintainer approved eight boards on 2026-11-25; each is built on PR #183 and
 
 Not as the mockup: the dashboard reset is not taken back by Undo when the dashboards are kept for every build (they are preferences, outside the build's history); the Dashboard follows the window's width, not the page's own (a container would have caught the item tooltip); the tree keeps one "i" for the page's help.
 
+## The rest of the list (2026-11-25)
+The maintainer: every follow-up but RV-10 in one go. Checked in the rebuilt application at 1,280 px on the same fixture.
+
+| Task | What was built | Seen |
+|---|---|---|
+| RV-03 | A card can be two rows tall; the default Overview has the Defence table tall, the main skill over the lines to review beside it. | ![The Overview](ux-audit-pass-2/after-dashboard-tall.png) The Defence card is 662 by 968 px; the two cards beside it are 323 px wide, 461 and 491 px tall. |
+| RV-22 | A card's Details open in the card. | ![Details in the Life card](ux-audit-pass-2/after-details-inline.png) No dialog. A quarter-width card is narrow for it, and its row grows to the list's height (at most 16 rem). |
+| RV-20, RV-04 | The tree by keys, and the points left. | ![The keys' node with its card](ux-audit-pass-2/after-tree-keys.png) Home, then the arrows along the links; End is the Necromancer's start; the card of a node not taken says "1 point more than a level 92 character has" (115 of 115 spent). |
+| RV-38 | A long Configuration description has "More". | One on the fixture's page. |
+
+Built without a new mockup at the maintainer's word: RV-20 and RV-22. Panning the tree from Fit for five seconds on this workstation: no frame over 16.6 ms.
+
 ## Not covered
 - The Export menu (its capture failed), the breakdown page, the paste form, an item's hover tooltip, the start page with recovery copies. Whether Escape closes the Snapshots panel was not settled.
 - The header at 1,000 px is two rows with Export and Save alone on the second; step 2 accepted that.

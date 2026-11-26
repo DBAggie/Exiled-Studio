@@ -583,11 +583,11 @@ dto! {
         /// Ascendancy points spent.
         pub ascendancy_points: u32,
         /// The passive points a character of the build's level has: one a
-        /// level after the first, the quests' by the act that level is
-        /// expected in, and one more from the third act on when no bandit
-        /// was helped. An estimate below level 67 (a character may be
-        /// ahead of its quests or behind them). Absent when the build
-        /// names no level.
+        /// level after the first, and the quests' by the act that level
+        /// is expected in (a quest's choice that gives a point counted
+        /// from the act after it). An estimate while the character is
+        /// still in the acts (it may be ahead of its quests or behind
+        /// them). Absent when the build names no level.
         #[serde(default)]
         pub points_available: Option<u32>,
         /// Why the spec cannot be edited, when it cannot: its tree version
