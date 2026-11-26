@@ -9732,6 +9732,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // map has no entry; the melee flag is its skill data's, which the
     // engine reads.
     ("attack_is_melee_override", "skill-flags"),
+    // Open items S3, part 7: the trigger markers of the skills items grant
+    // (read by poe1::triggers through the item's line and PoB's config).
+    ("attack_trigger_on_hitting_bleeding_enemy_%", "trigger"),
+    ("attack_trigger_on_kill_%", "trigger"),
+    ("attack_trigger_on_melee_critical_hit_%", "trigger"),
+    ("attack_trigger_on_melee_hit_%", "trigger"),
+    (
+        "attack_trigger_on_melee_hit_with_atleast_150_strength_%",
+        "trigger",
+    ),
+    ("attack_unusable_if_triggerable", "trigger"),
     // P6-11ba: chances to blind, taunt, or hinder on hit (yours and your
     // minions'), the Abyss jewels' additions: PoB parses none of these lines,
     // and the enemy is Blinded only by the config's condition.
@@ -9814,6 +9825,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11m: minion duration (`Duration` INC for minion skills): no slice
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
+    // Open items S3, part 7: Rain of Arrows' arrows (PoB's ProjectileCount BASE,
+    // base -1), as number_of_additional_arrows.
+    ("base_number_of_arrows", "projectile-count"),
     ("base_number_of_projectiles", "projectile-count"),
     // Open items S3: a brand's own attach limit (PoB's BrandsAttachedLimit BASE),
     // read from the gems by gems::brand_attach_limit and poe1::triggers.
@@ -10728,6 +10742,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "monster",
     ),
     ("multi_trap_and_mine_support_flags", "no-slice"),
+    // Open items S3, part 7: Icicle Burst's never_freeze (PoB's CannotFreeze;
+    // no slice field reads freeze).
+    ("never_freeze", "freeze"),
     // P6-11dl: "Projectile Barrages have no spread" (unparsed in PoB): the
     // projectiles' geometry, no slice field.
     ("no_barrage_projectile_spread", "projectile-spread"),
@@ -10826,6 +10843,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: "Projectiles Fork" (`ForkOnce`, `ForkCountMax`): no slice
     // field.
     ("projectiles_fork", "projectile-count"),
+    // Open items S3, part 7: the nova pattern of Icicle Burst's and Bone Nova's
+    // projectiles and Starfall's art variation: no PoB stat map entry.
+    ("projectiles_nova", "no-slice"),
     // Close-out M3: projectiles return (PoB leaves the line unparsed): no slice
     // field counts a second hit.
     ("projectiles_return", "no-slice"),
@@ -10944,6 +10964,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: brands are not computed (`hit`).
     ("sigil_duration_+%", "skill-duration"),
     ("skill_area_of_effect_+%_per_power_charge", "area"),
+    ("skill_art_variation", "no-slice"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -11172,6 +11193,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "no-slice",
     ),
     ("trigger_effect_group_on_block", "trigger"),
+    ("trigger_on_hit_vs_frozen_enemy_%", "trigger"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
@@ -11581,6 +11603,25 @@ impl StatMapping for Poe1Mapping {
                 divisor: 1.0,
                 conditions: Conditions::none(),
             }]);
+        }
+        // Open items S3, part 7: a line that grants a skill and triggers it:
+        // the skill acts through its group, and the trigger reads the
+        // line's chance (`poe1::triggers`).
+        if let Some(&(_, chance, _)) = super::triggers::granted_trigger(stat.as_str()) {
+            let template = |quantity, op| EffectTemplate {
+                quantity: Quantity::Poe1(quantity),
+                op,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            };
+            return StatMap::Effects(vec![
+                template(Poe1Quantity::GrantsSkill, Op::Flag),
+                template(
+                    Poe1Quantity::GrantedTriggerChance,
+                    if chance { Op::Base } else { Op::Flag },
+                ),
+            ]);
         }
         if NO_EFFECT
             .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))

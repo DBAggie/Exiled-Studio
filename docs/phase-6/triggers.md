@@ -294,4 +294,46 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **`data-parity`:** 753 differences, `uncategorized` 0.
 - **Tests:** the phase order test (`costs` before `hit`, `cost-per-second` after `dot`); the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
 
-**Left for S3:** the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, Icicle Burst, and kin): attacks with their own cooldowns, found by the unique's name in their saved group's source, each with its weapon data from the item; Focus; Squirming Terror and `trigger_socketed_spell_on_skill_use_%` (the game-truth list); `spellslinger_cooldown_duration_+%` (no build has it).
+**Left for S3:** the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, Icicle Burst, and kin): attacks with their own cooldowns, found by the unique's name in their saved group's source, each with its weapon data from the item; Focus; Squirming Terror and `trigger_socketed_spell_on_skill_use_%` (the game-truth list); `spellslinger_cooldown_duration_+%` (no build has it). The skills items grant and trigger are part 7.
+
+## Part 7: the skills items grant and trigger (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 6.
+
+**What PoB does.** A line such as Ngamahu's Flame's "20% chance to Trigger Level 16 Molten Burst on Melee Hit" is an `ExtraSkill` with `triggered` and the line's chance (`ModParser.lua` 2054 to 2071, 3278 to 3335). PoB builds a socket group for the skill and saves it in the build with its `source`, `Item:<id>:<Unique>, <base>`; the engine reads such groups since P6-11fe. The config is PoB's by the skill's ID (`TriggeredMoltenStrike`, 1566), else by the unique's name in the source (`getUniqueItemTriggerName`, 1575 to 1590).
+
+**The lines** (`triggers::GRANTED_TRIGGERS`, nine stats): each maps to `GrantsSkill` (the group must be there, as for the other granted skills) and to `Poe1Quantity::GrantedTriggerChance`, `Base` with the chance for the four `%` stats, else a flag (100%). A skill an item grants is triggered only with its item's line; without one it is used by hand, as in PoB.
+
+**The configs** (`triggers::Config`):
+
+| Config | Uniques (`CalcTriggers.lua`) | Source |
+|---|---|---|
+| `UniqueMeleeOrAttack` | Ngamahu's Flame (973) and Molten Burst by ID (1566), Limbsplit (947), The Cauteriser (950) | a melee or attack skill |
+| `Starcaller` | Starcaller (979) | the same, on crit (its line's `onCrit`) |
+| `MoonbendersWing` | Moonbender's Wing (968) | the same, PoB's cooldown of 1 s |
+| `UniqueDamageOrAttack` | Cameria's Avarice (976), Uul-Netol's Embrace (982), Duskblight (953), Mark of the Elder and of the Shaper (1003, 1006), Sporeguard (1000) | a damaging or attack skill |
+| `LioneyesPaws` | Lioneye's Paws (956) | a bow attack, on use, PoB's cooldown of 1 s |
+
+- No trigger support, so no trigger cooldown: the skill's own cooldown caps it, the main skill alone in the rotation, the line's chance with the source's hit chance (an attack's only, 732) and crit chance (Starcaller).
+- **The attack path** takes a triggered attack with its own cooldown when its trigger is ported (part 6 took the rate; the cooldown gate now lets it through).
+- **No cost:** PoB clears the cost of a skill an item grants and triggers (`SkillsTab.lua` 1161 to 1165); the game gives it none. `triggers::granted_and_triggered` zeroes the costs and the raw cost.
+- **Not listed:** the configs whose skill no slice field reads: the minions (Law of the Wilds, Rigwald's Crest, Jorrhast's Blacksteel, Ashcaller, Arakaali's Fang, Mark of the Shaper's anomaly), Shade Form (Replica Eternity Shroud, Shroud of the Lightless), Contaminate. Mark of the Shaper and Sporeguard are in the table, as PoB's config is the same as their kin's.
+
+**Rows and tables:**
+- `NoEffect`: the granted skills' trigger markers (`attack_trigger_on_*`, `trigger_on_hit_vs_frozen_enemy_%`, `attack_unusable_if_triggerable`), Icicle Burst's `never_freeze` (`freeze`), Rain of Arrows' `base_number_of_arrows` (`projectile-count`, as `number_of_additional_arrows`), `projectiles_nova` and `skill_art_variation` (no PoB entry).
+- `gems::SKILLS`: the eight granted skills as inert skills, so a source's own calculation does not count them as unknown gems.
+- **`data-parity`:** `gem_effects` allows their `Triggered` type and Bone Nova's and Icicle Burst's `triggered` mark: 753 differences, `uncategorized` 0.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 6's run (`local/p6/s3d`).
+
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/s3e_fixtures.py`; each item carries only its line). Every average damage equals PoB's, and the trigger rates:
+  - equal PoB's: Ngamahu's Flame (0.04675, the 20% chance), Starcaller (0.00257, on crit), Mark of the Elder (0.04298), Lioneye's Paws (0.87588, on use);
+  - Cameria's Avarice and Uul-Netol's Embrace (Gavel, Vaal Axe): PoB 0.21505, the engine 0.21499; Limbsplit (Woodsplitter): 0.19926 against 0.19947; Moonbender's Wing (Tomahawk): 0.23008 against 0.22997. Each is Q11: the same builds with Smite as the main skill have the same hit chance (22) on both sides, and Smite's attack rate differs only by Q11's floor (1.105 against 1.10533, 1.275 against 1.27436). PoB's rotation fed each side's rate (`local/p6/rotation_sim.py`, and the test `the_rotation_should_give_pobs_rate_for_limbsplit`) gives each side's value to the bit. Limbsplit's and Moonbender's fields are `Complete`, so their differences are registered: DIV-0700 to DIV-0708, `game-truth`, Q11. Cameria's Avarice's and Uul-Netol's Embrace's speed stays partial for their skills' PoB data (`pob-skill-data`), as does Icicle Burst's, Bone Nova's, Molten Burst's, and Rain of Arrows' damage; their values equal PoB's.
+  - Moonbender's Wing's Lightning Warp costs 0, as PoB's.
+  - 583 fields are targets.
+- **Duskblight** is left out: the game's mod grants Stalking Pustule at level 1, but the bundle's granted effect has only a level 15 row, so the engine reports `no-level`. Which level the game uses is a question for the data (`dev/active/open-items/maintainer-follow-ups.md`).
+- **Public `calc-parity`** (561 builds): 0 unexpected. `Complete` fields went from 40,613 to 41,196, the new fixtures' 583. No other public document changed.
+- **Corpus** (21 builds, local): one document lost its `base_number_of_arrows` reason; no value or state changed.
+- **Tests:** `granted_triggers_should_be_found_by_line_and_unique`, `the_rotation_should_give_pobs_rate_for_limbsplit`; the workspace's tests, clippy, fmt, and the wasm32 check pass.

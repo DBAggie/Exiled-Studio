@@ -131,6 +131,10 @@ pub struct MainSkill<'d> {
     pub active: Option<&'d ActiveSkill>,
     /// Whether the group is a skill an item grants (PoB's `source`).
     pub item_granted: bool,
+    /// The group's `source` as PoB saves it (`Item:<id>:<Unique>, <base>`
+    /// for an item's skill; open items S3: the trigger's config by the
+    /// unique's name, its line's chance by the item).
+    pub source: Option<String>,
     /// Supports that apply, in group order, with their gems.
     pub supports: Vec<GemEffectRef<'d>>,
     /// Supports in the group that do not apply.
@@ -1001,6 +1005,7 @@ fn skill_at<'d>(
         active_gem,
         active,
         item_granted: attribute(&group.attributes, "source").is_some(),
+        source: attribute(&group.attributes, "source").map(str::to_owned),
         supports: applied,
         unapplied,
         types,

@@ -772,6 +772,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3, part 7: a skill an item grants and triggers (PoB's
+    // export: no global effect).
+    ("BoneNova", Kind::Inert),
     // Bone Offering (P6-9e): its buff goes to minions alone (`buffNotPlayer`).
     (
         "BoneOffering",
@@ -1457,6 +1460,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("GoreShockwave", Kind::Inert),
     (
         "Grace",
         Kind::Buff {
@@ -1677,6 +1681,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("HolyStrike", Kind::Inert),
     ("IceNova", Kind::Inert),
     ("IceSpear", Kind::Inert),
+    ("IcicleBurst", Kind::Inert),
     // P6-11dv: Immortal Call (`act_str.lua` 6700 to 6716), a guard: less
     // elemental and physical damage taken (`ElementalDamageTaken`,
     // `PhysicalDamageTaken` MORE). Its less physical damage taken per
@@ -1789,6 +1794,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // (`act_int.lua`, `KineticBlast`).
     ("KineticBlast", Kind::Inert),
     ("LeapSlam", Kind::Inert),
+    ("LightningWarp", Kind::Inert),
     (
         "Malevolence",
         Kind::Buff {
@@ -2237,6 +2243,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("RainOfArrows", Kind::Inert),
     ("RaiseZombie", Kind::Inert),
     ("RaiseZombieAltX", Kind::Inert),
     ("RaiseZombieAltY", Kind::Inert),
@@ -2716,10 +2723,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("TentacleSmash", Kind::Inert),
     ("Tornado", Kind::Inert),
     ("ToxicRain", Kind::Inert),
     // P6-11fr: Bloodrend (an item's triggered spell): no stat map in PoB.
     ("TriggeredBloodrend", Kind::Inert),
+    ("TriggeredMoltenStrike", Kind::Inert),
+    ("TriggeredStarfall", Kind::Inert),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("UniqueMirageWarriors", Kind::Inert),

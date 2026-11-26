@@ -721,7 +721,14 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     let effect = skill.effect();
     let gem = skill.active_gem;
     let level_row = skill::effect_level(effect, gem.level)?;
-    if level_row.cooldown != 0 {
+    // A cooldown caps a used attack's rate (not modelled); a triggered
+    // attack's rate is its trigger's, which reads the cooldown (open items
+    // S3, part 7: the skills items grant and trigger).
+    let ported = matches!(
+        super::triggers::kind(&skill),
+        super::triggers::Kind::Ported(..)
+    );
+    if level_row.cooldown != 0 && !ported {
         return None;
     }
     let level = skill::stat_set_level(effect, gem.level, data)?;

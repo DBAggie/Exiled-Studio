@@ -166,7 +166,10 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         is_cost,
     );
     let mut amounts = [0; 3];
-    for c in &level.costs {
+    // A skill an item grants and triggers has no cost (open items S3,
+    // part 7; `triggers::granted_and_triggered`).
+    let free = super::triggers::granted_and_triggered(calc, &skill);
+    for c in level.costs.iter().filter(|_| !free) {
         match Resource::ALL
             .iter()
             .position(|r| r.data_name() == c.resource)
@@ -428,10 +431,12 @@ pub(super) fn mana_cost_raw(
     {
         return Some(0.0);
     }
+    let free = super::triggers::granted_and_triggered(calc, skill);
     #[expect(clippy::cast_precision_loss, reason = "small integers, exact as f64")]
     let base: f64 = level
         .costs
         .iter()
+        .filter(|_| !free)
         .filter(|c| c.resource == Resource::Mana.data_name())
         .map(|c| c.amount as f64)
         .sum();

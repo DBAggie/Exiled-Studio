@@ -89,9 +89,19 @@
 //! **Not modelled:** added cooldown and added cast time (each from a stat
 //! the mapping does not know, so a reason; cooldown recovery is in since
 //! open items S3), Unleash, projectiles that hit several times, and
-//! trigger-related damage (`TriggeredDamage`: unmapped stats). Skills an
-//! item grants and triggers (`ExtraSkill` with `triggered`: Molten Burst,
-//! Starfall, and kin) have no config here yet.
+//! trigger-related damage (`TriggeredDamage`: unmapped stats).
+//!
+//! **Skills an item grants and triggers** (open items S3, part 7; PoB's
+//! `triggerExtraSkill`): the item's line ([`GRANTED_TRIGGERS`]) and the
+//! group PoB saves for the skill (`Item:<id>:<Unique>, <base>`). The config
+//! is PoB's by the skill's ID, then the unique's name ([`GRANTED_BY_SKILL`],
+//! [`GRANTED_BY_UNIQUE`]); the source a melee or attack skill, or a
+//! damaging one for some, a bow attack on use for Lioneye's Paws; the
+//! line's chance a factor, Starcaller's on crit; the skill's own cooldown,
+//! 1 s for Moonbender's Wing and Lioneye's Paws; the main skill alone in
+//! the rotation. Such a skill has no cost, as PoB clears it
+//! ([`granted_and_triggered`]). The configs whose skill no field reads
+//! (minions, Shade Form, Contaminate) are not listed.
 //!
 //! **Triggered attacks** (open items S3, part 6): the attack path takes a
 //! ported trigger's rate as every pass's speed (`CalcOffence.lua` 2223 to
@@ -176,6 +186,23 @@ pub enum Config {
     /// threshold of the triggered attack's (522 to 556); the main skill
     /// alone in the rotation.
     ManaforgedArrows,
+    /// A skill an item grants and triggers from a melee or attack skill
+    /// (open items S3, part 7; Ngamahu's Flame 973 and its Molten Burst by
+    /// ID 1566, Limbsplit 947, The Cauteriser 950): the main skill alone in
+    /// the rotation, its own cooldown, the line's chance.
+    UniqueMeleeOrAttack,
+    /// Starcaller (979): as [`Self::UniqueMeleeOrAttack`], on crit (its
+    /// line's `onCrit`, `ModParser.lua` 3309).
+    Starcaller,
+    /// Moonbender's Wing (968): as [`Self::UniqueMeleeOrAttack`] with PoB's
+    /// cooldown of 1 s.
+    MoonbendersWing,
+    /// A skill an item grants and triggers from a damaging or attack skill
+    /// (Cameria's Avarice 976, Uul-Netol's Embrace 982, Duskblight 953,
+    /// Mark of the Elder and of the Shaper 1003, 1006, Sporeguard 1000).
+    UniqueDamageOrAttack,
+    /// Lioneye's Paws (956): a bow attack, on use, PoB's cooldown of 1 s.
+    LioneyesPaws,
 }
 
 impl Config {
@@ -200,14 +227,40 @@ impl Config {
     const fn on_use(self) -> bool {
         matches!(
             self,
-            Self::Spellslinger | Self::PoetsPen | Self::AsenathsChant | Self::ManaforgedArrows
+            Self::Spellslinger
+                | Self::PoetsPen
+                | Self::AsenathsChant
+                | Self::ManaforgedArrows
+                | Self::LioneyesPaws
         )
+    }
+
+    /// A skill an item grants and triggers (open items S3, part 7): its
+    /// chance is its line's ([`GRANTED_TRIGGERS`]).
+    const fn is_granted(self) -> bool {
+        matches!(
+            self,
+            Self::UniqueMeleeOrAttack
+                | Self::Starcaller
+                | Self::MoonbendersWing
+                | Self::UniqueDamageOrAttack
+                | Self::LioneyesPaws
+        )
+    }
+
+    /// PoB's `skillData.cooldown = 1` for the skill the item grants (959,
+    /// 970): the normal gem's, which has none.
+    const fn cooldown_override(self) -> Option<f64> {
+        match self {
+            Self::MoonbendersWing | Self::LioneyesPaws => Some(1.0),
+            _ => None,
+        }
     }
 
     /// The config has no `triggeredSkillCond`: PoB simulates the main
     /// skill alone (809).
     const fn main_alone(self) -> bool {
-        matches!(self, Self::Spellslinger | Self::ManaforgedArrows)
+        matches!(self, Self::Spellslinger | Self::ManaforgedArrows) || self.is_granted()
     }
 
     /// PoB's `triggerOnCrit` (the support's `SkillData` or stat): the
@@ -215,7 +268,7 @@ impl Config {
     const fn on_crit(self) -> bool {
         matches!(
             self,
-            Self::CastOnCrit | Self::CosprisMalice | Self::SevenTeachings
+            Self::CastOnCrit | Self::CosprisMalice | Self::SevenTeachings | Self::Starcaller
         )
     }
 
@@ -320,6 +373,135 @@ pub fn targeting_branded_enemy(input: &crate::input::CalcInput<'_>) -> Option<bo
     }
 }
 
+/// The item lines that grant a skill and trigger it (open items S3, part 7;
+/// PoB's `triggerExtraSkill`, `ModParser.lua` 2054 to 2071 and 3278 to
+/// 3335): `(stat, chance, on crit)`, sorted. `chance`: the stat's value is
+/// the chance to trigger (PoB's `triggerChance`; 100 when the text has no
+/// "% chance"); else its value is the skill's level. The skill acts through
+/// the group PoB saves for it (`source` `Item:<id>:<Unique>, <base>`).
+pub const GRANTED_TRIGGERS: [(&str, bool, bool); 9] = [
+    (
+        "local_display_attack_with_level_X_bone_nova_on_bleeding_enemy_kill",
+        false,
+        false,
+    ),
+    ("local_display_molten_burst_on_melee_hit_%", true, false),
+    ("local_display_starfall_on_melee_critical_hit_%", true, true),
+    (
+        "local_display_trigger_level_x_gore_shockwave_on_melee_hit_with_atleast_150_strength",
+        false,
+        false,
+    ),
+    (
+        "local_display_trigger_level_x_icicle_nova_on_hit_vs_frozen_enemy",
+        false,
+        false,
+    ),
+    (
+        "local_display_trigger_level_x_lightning_warp_on_hit_with_this_weapon",
+        false,
+        false,
+    ),
+    (
+        "local_display_trigger_level_x_rain_of_arrows_on_bow_attack",
+        false,
+        false,
+    ),
+    (
+        "local_display_trigger_level_x_stalking_pustule_on_kill",
+        false,
+        false,
+    ),
+    (
+        "local_display_trigger_tentacle_smash_on_kill_%_chance",
+        true,
+        false,
+    ),
+];
+
+/// The row of `stat` in [`GRANTED_TRIGGERS`].
+#[must_use]
+pub fn granted_trigger(stat: &str) -> Option<&'static (&'static str, bool, bool)> {
+    GRANTED_TRIGGERS
+        .binary_search_by(|(id, _, _)| (*id).cmp(stat))
+        .ok()
+        .map(|i| &GRANTED_TRIGGERS[i])
+}
+
+/// PoB's configs of the skills items grant and trigger, by the skill's ID
+/// first (`configTable[skillId]`, 1602), then by the unique's name in the
+/// group's source (`getUniqueItemTriggerName`, 1575 to 1590).
+const GRANTED_BY_SKILL: &[(&str, Config)] =
+    &[("TriggeredMoltenStrike", Config::UniqueMeleeOrAttack)];
+
+/// The unique configs, by PoB's lowercase name ([`GRANTED_BY_SKILL`]).
+const GRANTED_BY_UNIQUE: &[(&str, Config)] = &[
+    ("cameria's avarice", Config::UniqueDamageOrAttack),
+    ("duskblight", Config::UniqueDamageOrAttack),
+    ("limbsplit", Config::UniqueMeleeOrAttack),
+    ("lioneye's paws", Config::LioneyesPaws),
+    ("mark of the elder", Config::UniqueDamageOrAttack),
+    ("mark of the shaper", Config::UniqueDamageOrAttack),
+    ("moonbender's wing", Config::MoonbendersWing),
+    ("ngamahu's flame", Config::UniqueMeleeOrAttack),
+    ("sporeguard", Config::UniqueDamageOrAttack),
+    ("starcaller", Config::Starcaller),
+    ("the cauteriser", Config::UniqueMeleeOrAttack),
+    ("uul-netol's embrace", Config::UniqueDamageOrAttack),
+];
+
+/// The item and the unique's name of an item's group `source`
+/// (`Item:<id>:<Unique>, <base>`; PoB's `.*:.*:(.*),.*`).
+fn granted_source(source: &str) -> Option<(u64, &str)> {
+    let rest = source.strip_prefix("Item:")?;
+    let (id, rest) = rest.split_once(':')?;
+    let (name, _) = rest.rsplit_once(',')?;
+    Some((id.parse().ok()?, name))
+}
+
+/// The config of a skill an item grants (`skill.source`), if PoB has one.
+fn granted_config(skill: &MainSkill<'_>) -> Option<Config> {
+    if !skill.item_granted {
+        return None;
+    }
+    if let Some((_, c)) = GRANTED_BY_SKILL
+        .iter()
+        .find(|(id, _)| *id == skill.effect().id)
+    {
+        return Some(*c);
+    }
+    let (_, name) = granted_source(skill.source.as_deref()?)?;
+    let name = name.to_lowercase();
+    GRANTED_BY_UNIQUE
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, c)| *c)
+}
+
+/// The chance, percent, of the line on the main skill's item that grants
+/// and triggers it ([`GRANTED_TRIGGERS`]); `None` when the item has no
+/// such line (PoB: the skill is not triggered, `srcInstance.triggered`).
+fn granted_chance(calc: &Calc<'_>, skill: &MainSkill<'_>) -> Option<f64> {
+    let (item, _) = granted_source(skill.source.as_deref()?)?;
+    let q = Quantity::Poe1(Poe1Quantity::GrantedTriggerChance);
+    calc.store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q)
+        .filter(|e| matches!(&e.source, Source::Item { item: i, .. } if u64::from(i.0) == item))
+        .map(|e| if e.op == Op::Base { e.value } else { 100.0 })
+        .reduce(f64::min)
+}
+
+/// Whether `skill` is a skill an item grants and triggers (open items S3,
+/// part 7): an item's group with the item's line ([`GRANTED_TRIGGERS`]).
+/// PoB clears such a skill's cost (`SkillsTab.lua` 1161 to 1165), as the
+/// game gives it none.
+#[must_use]
+pub(super) fn granted_and_triggered(calc: &Calc<'_>, skill: &MainSkill<'_>) -> bool {
+    skill.item_granted && granted_chance(calc, skill).is_some()
+}
+
 /// The first parts of the two-part trigger gems, on the source skill:
 /// Cast On Critical Strike's and Cast on Melee Kill's on the attack, Cast
 /// while Channelling's on the channelling skill.
@@ -399,6 +581,11 @@ pub fn kind<'d>(skill: &MainSkill<'d>) -> Kind<'d> {
             .iter()
             .find(|(id, _)| *id == s.effect.id)
             .map_or(Kind::Unported, |(_, c)| Kind::Ported(*c, Some(*s)));
+    }
+    // A skill an item grants and triggers (open items S3, part 7): PoB's
+    // config by the skill's ID or the unique's name.
+    if let Some(config) = granted_config(skill) {
+        return Kind::Ported(config, None);
     }
     // A skill PoB marks triggered without a ported config. A skill with
     // only `InbuiltTrigger` and no PoB config is self-cast in PoB, as here.
@@ -506,6 +693,16 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     {
         return unsupported("item-trigger-chance");
     }
+    // A skill an item grants is triggered only with its line (open items
+    // S3, part 7); the line's chance is PoB's `triggerChance`.
+    let granted_line = if config.is_granted() {
+        match granted_chance(calc, skill) {
+            Some(c) => Some(c),
+            None => return Outcome::SelfCast,
+        }
+    } else {
+        None
+    };
     let seconds = |ms: i64| {
         #[expect(clippy::cast_precision_loss, reason = "milliseconds, exact as f64")]
         let s = ms as f64 / 1000.0;
@@ -513,7 +710,9 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     };
     let level_row = skill::effect_level(skill.effect(), skill.active_gem.level);
     let stored_uses = level_row.map_or(0, |l| l.stored_uses);
-    let triggered_cd = level_row.map_or(0.0, |l| seconds(l.cooldown));
+    let triggered_cd = config
+        .cooldown_override()
+        .unwrap_or_else(|| level_row.map_or(0.0, |l| seconds(l.cooldown)));
     let trigger_cd = support
         .as_ref()
         .and_then(|s| skill::effect_level(s.effect, s.level))
@@ -697,6 +896,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             | Config::WingOfTheWyvern
             | Config::SevenTeachings
             | Config::ManaforgedArrows
+            | Config::LioneyesPaws
     ) && weapon.is_none()
     {
         return unsupported("trigger-source");
@@ -704,7 +904,11 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     let mut best: Option<Source3> = None;
     for (g, a, s) in &skills {
         let melee = s.types.contains("Melee");
-        let candidate = s.types.contains("Attack")
+        let attack = s.types.contains("Attack");
+        // A damaging skill too for some granted triggers (PoB's
+        // `SkillType.Damage or SkillType.Attack`).
+        let damage = config == Config::UniqueDamageOrAttack && s.types.contains("Damage");
+        let candidate = (attack || damage)
             && !s.types.contains("Triggered")
             && !s.types.contains("InbuiltTrigger")
             && !s.types.contains("OtherThingUsesSkill")
@@ -725,6 +929,11 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 Config::SevenTeachings => melee && weapon_has(Flags::UNARMED) == Some(true),
                 Config::FireSpellOnHit => melee,
                 Config::ManaforgedArrows => weapon_has(Flags::BOW) == Some(true),
+                Config::UniqueMeleeOrAttack
+                | Config::Starcaller
+                | Config::MoonbendersWing
+                | Config::UniqueDamageOrAttack => true,
+                Config::LioneyesPaws => attack && weapon_has(Flags::BOW) == Some(true),
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
                 | Config::CastOnWardBreak
@@ -758,6 +967,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         if best.as_ref().is_none_or(|b| rate > b.rate) {
             best = Some(Source3 {
                 rate,
+                attack,
                 at: (*g, *a),
                 double_hits: super::hit::double_hits(s, input.data),
                 speed: speed.map(|f| f.state.clone()),
@@ -781,7 +991,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     }
     // The trigger chance (727 to 790): the source is an attack; a trigger
     // on use (`triggerOnUse`, 732) skips its hit chance.
-    let on_use = config.on_use();
+    let on_use = config.on_use() || !src.attack;
     let mut chance = 100.0;
     let (hit, hit_state) = src
         .hit
@@ -796,7 +1006,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         }
         chance = chance * hit / 100.0;
     }
-    if config.on_crit() {
+    if config.on_crit() && src.attack {
         let Some((Some(crit), crit_state)) = src.crit.clone() else {
             return unsupported("trigger-source");
         };
@@ -806,6 +1016,13 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
             }
             chance = chance * crit / 100.0;
         }
+    }
+    // The line's chance of a skill an item grants (open items S3, part 7;
+    // PoB's `srcInstance.triggerChance`, 784 to 789).
+    if let Some(line) = granted_line
+        && line != 100.0
+    {
+        chance = chance * line / 100.0;
     }
     // The rotation: the group's spells the trigger supports
     // (`triggeredByCoc`, `triggeredByMeleeKill`, and `slotMatch`); a
@@ -1128,6 +1345,9 @@ pub(super) fn carry(state: &FieldState, reasons: &mut Reasons) -> bool {
 /// The source skill's fields a trigger reads.
 struct Source3 {
     rate: f64,
+    /// Whether it is an attack: only an attack's hit and crit chances are
+    /// read (732).
+    attack: bool,
     /// The source's group and active skill (1-based, as
     /// [`skill::active_skills`] gives them).
     at: (usize, usize),
@@ -1250,6 +1470,46 @@ mod tests {
             100.0,
         );
         assert!((r - 1.197).abs() < 1e-9, "{r}");
+    }
+
+    /// Open items S3, part 7: the granted triggers' tables are sorted, and an
+    /// item group's source gives the item and the unique's name as PoB's
+    /// pattern (`.*:.*:(.*),.*`) does.
+    #[test]
+    fn granted_triggers_should_be_found_by_line_and_unique() {
+        assert!(GRANTED_TRIGGERS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(GRANTED_BY_UNIQUE.windows(2).all(|w| w[0].0 < w[1].0));
+        assert_eq!(
+            granted_trigger("local_display_molten_burst_on_melee_hit_%"),
+            Some(&("local_display_molten_burst_on_melee_hit_%", true, false))
+        );
+        assert_eq!(
+            granted_source("Item:12:Ngamahu's Flame, Abyssal Axe"),
+            Some((12, "Ngamahu's Flame"))
+        );
+        assert_eq!(granted_source("Tree:4494"), None);
+        // Moonbender's Wing and Lioneye's Paws: PoB's cooldown of 1 s.
+        assert_eq!(Config::MoonbendersWing.cooldown_override(), Some(1.0));
+        assert_eq!(Config::UniqueMeleeOrAttack.cooldown_override(), None);
+    }
+
+    /// PoB's rotation fed Smite's attack rate on Limbsplit's Woodsplitter
+    /// (PoB's 1.105, a 1 s cooldown, a 22% hit chance) gives PoB's trigger
+    /// rate to the bit (open items S3, part 7; DIV-0700 is the engine's
+    /// floored rate, Q11).
+    #[test]
+    fn the_rotation_should_give_pobs_rate_for_limbsplit() {
+        let r = rotation_rate(
+            &[Rotated {
+                cooldown: 1.0,
+                main: true,
+                icdr: 1.0,
+            }],
+            1.105,
+            1.0,
+            22.0,
+        );
+        assert!((r - 0.199_262_295_081_967_24).abs() < 1e-12, "{r}");
     }
 
     /// A 0.15 s trigger cooldown caps a fast source near PoB's tick-rounded

@@ -21,6 +21,7 @@ The evidence bundles on the workstation (`local/p6/packs/b-ct` and kin) are from
 - **The 3_29 data gap of four ascendancy auras** (`docs/phase-6/stat-mop-up.md`, "P6-11hc").
 - **A mine Assassin's remaining gaps** (`ethereal-knives-mines-assassin.xml`; Phase 6 tasks file): the session checks its 16 cluster nodes on `b-ct` first, and lists what remains here.
 - **Fated uniques without flavour text** (28; `dev/active/ux-improvements/ux-improvements-notes.md`, "Maintainer tasks").
+- **Duskblight's Stalking Pustule level** (open items S3, part 7; `docs/phase-6/triggers.md`, "Part 7"): the game's mods (`StalkingPustuleOnKillUnique__1`, `VillageStalkingPustuleOnKill`) grant it at level 1, but the bundle's `StalkingPustule` granted effect has only a level 15 row, so the engine reports `no-level`. A check in the game (the skill's tooltip on Duskblight) or a data run that carries its level 1 row settles it.
 
 ## In-game checks (game truth)
 - The game-truth list (class C in `open-items-inventory.md`, 68 stats, 69 C reasons with the older wordings above): 68 lines PoB applies nothing for that change a slice field in the game (`docs/phase-6/phase-6-report.md`, "The maintainer's game-truth list"). A check in the game for each lets an agent map it with a `game-truth` register entry.

@@ -151,6 +151,11 @@ pub enum Poe1Quantity {
     /// the value per point of the skill's mana cost, read by the attack
     /// path from the cost field ([`hit::attack_hit`]).
     DamageMorePerManaCost,
+    /// An item line that grants a skill and triggers it (open items S3,
+    /// part 7; `triggers::GRANTED_TRIGGERS`): `Base`, its chance to trigger,
+    /// percent, for a line whose value is the chance; `Flag` for one whose
+    /// value is the level (100%). Read by `poe1::triggers` by the item.
+    GrantedTriggerChance,
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
@@ -1488,6 +1493,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
             Self::DamageMorePerManaCost => f.write_str("damage-more-per-mana-cost"),
+            Self::GrantedTriggerChance => f.write_str("granted-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::PerStaffSocket(life) => f.write_str(if *life {

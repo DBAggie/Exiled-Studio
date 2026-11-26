@@ -223,6 +223,14 @@ const WARCRY_FORBIDDEN: &[&str] = &[
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // Open items S3, part 7: the skills items grant and trigger
+    // (`poe1::triggers`, their item's line and PoB's config).
+    ("BoneNova", "Triggered"),
+    ("GoreShockwave", "Triggered"),
+    ("IcicleBurst", "Triggered"),
+    ("TentacleSmash", "Triggered"),
+    ("TriggeredMoltenStrike", "Triggered"),
+    ("TriggeredStarfall", "Triggered"),
     // P6-11fs: a brand beside the main skill has no global effect (the
     // brands attached are the config's, P6-11ed); Combust and the Frost
     // enchantment are triggered by their own rule.
@@ -502,6 +510,10 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // Open items S3: Cast on Death's marks, read by its support's ID
     // (`poe1::triggers`: PoB's stand-in time and `showAverage`).
     ("SupportCastOnDeath", "triggered"),
+    // Open items S3, part 7: two skills items grant and trigger, PoB's
+    // `triggered` mark (`poe1::triggers` reads the item's line).
+    ("BoneNova", "triggered"),
+    ("IcicleBurst", "triggered"),
     ("SupportCastOnDeath", "triggeredOnDeath"),
     // Open items S3, part 5: the item trigger supports' marks, read by
     // the support's ID (`poe1::triggers`: the rotation, the crit chance).
