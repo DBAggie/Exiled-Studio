@@ -626,10 +626,41 @@ fn resolve_corpus(
         (None, None) => return Err("no mod rows".to_owned()),
     };
     let game = categorize::GameText::load(&loaded.set, &read, pob)?;
+    let builds = corpus_builds(builds_dir)?;
+    let (summary, report, check) = resolve_corpus::run(
+        &loaded,
+        &lookup,
+        lookup_report,
+        &bases,
+        mods,
+        &game,
+        &builds,
+        tool(),
+        data.as_ref(),
+    )?;
+    write_out(out, &summary, &report)?;
+    let json =
+        serde_json::to_string_pretty(&(&summary.rate, &summary.gate)).map_err(|e| e.to_string())?;
+    println!("{json}");
+    let check_equal = match &check {
+        Some(check) => write_build_check(out, check)?,
+        None => true,
+    };
+    Ok(summary.gate.met && summary.unreadable_builds.is_empty() && check_equal)
+}
+
+/// This tool's commit, and whether its source tree has changes.
+fn tool() -> resolve_corpus::Tool {
+    resolve_corpus::Tool {
+        commit: git(&["rev-parse", "HEAD"]),
+        dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+    }
+}
+
+/// Every `*.xml` build directly in `dir`.
+fn corpus_builds(dir: &Path) -> Result<Vec<resolve_corpus::Build>, String> {
     let mut builds = Vec::new();
-    for entry in
-        std::fs::read_dir(builds_dir).map_err(|e| format!("{}: {e}", builds_dir.display()))?
-    {
+    for entry in std::fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))? {
         let path = entry.map_err(|e| e.to_string())?.path();
         let is_xml = path
             .extension()
@@ -639,41 +670,21 @@ fn resolve_corpus(
             builds.push(resolve_corpus::Build::new(bytes));
         }
     }
-    let tool = resolve_corpus::Tool {
-        commit: git(&["rev-parse", "HEAD"]),
-        dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
-    };
-    let (summary, report, check) = resolve_corpus::run(
-        &loaded,
-        &lookup,
-        lookup_report,
-        &bases,
-        mods,
-        &game,
-        &builds,
-        tool,
-        data.as_ref(),
-    )?;
-    write_out(out, &summary, &report)?;
-    let json =
-        serde_json::to_string_pretty(&(&summary.rate, &summary.gate)).map_err(|e| e.to_string())?;
-    println!("{json}");
-    // `--bundle`: the core's `resolve_build` against the harness, per line.
-    let check_equal = match &check {
-        Some(c) => {
-            let path = out.join("resolve-build-check.json");
-            let mut text = serde_json::to_string_pretty(c).map_err(|e| e.to_string())?;
-            text.push('\n');
-            std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
-            println!(
-                "resolve_build: {} of {} modifier lines equal the harness",
-                c.equal, c.lines
-            );
-            c.differences.is_empty()
-        }
-        None => true,
-    };
-    Ok(summary.gate.met && summary.unreadable_builds.is_empty() && check_equal)
+    Ok(builds)
+}
+
+/// `--bundle`: the core's `resolve_build` against the harness, per line.
+/// Writes `resolve-build-check.json`; whether every line is equal.
+fn write_build_check(out: &Path, check: &resolve_corpus::BuildCheck) -> Result<bool, String> {
+    let path = out.join("resolve-build-check.json");
+    let mut text = serde_json::to_string_pretty(check).map_err(|e| e.to_string())?;
+    text.push('\n');
+    std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+    println!(
+        "resolve_build: {} of {} modifier lines equal the harness",
+        check.equal, check.lines
+    );
+    Ok(check.differences.is_empty())
 }
 
 fn oracle_verify(manifest: &Path, oracle_dir: &Path) -> ExitCode {
@@ -881,85 +892,86 @@ fn divergence_check(register: &Path) -> ExitCode {
 
 /// `data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>`.
 fn data_parity_cmd(args: &[String]) -> ExitCode {
-    let mut positional = Vec::new();
-    let (mut rules, mut out) = (None, None);
-    let mut rest = args;
-    while let [arg, tail @ ..] = rest {
-        match (arg.as_str(), tail) {
-            ("--rules", [value, tail @ ..]) if rules.is_none() => {
-                rules = Some(value.clone());
-                rest = tail;
-            }
-            ("--out", [value, tail @ ..]) if out.is_none() => {
-                out = Some(value.clone());
-                rest = tail;
-            }
-            (flag, _) if flag.starts_with("--") => {
-                eprintln!("{USAGE}");
-                return ExitCode::from(2);
-            }
-            (value, tail) => {
-                positional.push(value.to_owned());
-                rest = tail;
-            }
-        }
-    }
-    let ([bundle_dir, export], Some(rules), Some(out)) = (positional.as_slice(), rules, out) else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+    let Some((positional, values, _)) = options(args, &["--rules", "--out"], &[]) else {
+        return usage();
     };
-    let out = Path::new(&out);
-    let start = || -> Result<data_parity::Outputs, String> {
-        if out.exists() {
-            return Err(format!("{}: already exists", out.display()));
-        }
-        let bundle_dir = Path::new(bundle_dir);
-        let bundle = load_bundle(bundle_dir)?;
-        let read =
-            |path: &Path| std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()));
-        let manifest = read(&bundle_dir.join("bundle.json"))?;
-        let export = read(Path::new(export))?;
-        let rules = read(Path::new(&rules))?;
-        // Each timeless jewel results file's Adler-32 (P6-10a).
-        let mut timeless_adlers = std::collections::BTreeMap::new();
-        for f in bundle.manifest.files.iter().filter(|f| {
-            f.path
-                .starts_with(loom_data::bundle::timeless::TIMELESS_DIR)
-        }) {
-            let bytes = read(&bundle_dir.join(&f.path))?;
-            timeless_adlers.insert(f.path.clone(), data_parity::timeless::adler32(&bytes));
-        }
-        data_parity::run(&data_parity::Request {
-            timeless_adlers: &timeless_adlers,
-            bundle: &bundle,
-            bundle_manifest: &manifest,
-            export: &export,
-            rules: &rules,
-            passive_scope: data_parity::compare::PASSIVE_SCOPE,
-            bosses: &loom_calc::poe1::enemy::BOSSES,
-            tool: resolve_corpus::Tool {
-                commit: git(&["rev-parse", "HEAD"]),
-                dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
-            },
-        })
+    let ([bundle_dir, export], Some(rules), Some(out)) = (
+        positional.as_slice(),
+        values.get("--rules"),
+        values.get("--out"),
+    ) else {
+        return usage();
     };
-    let outputs = match start() {
+    let out = Path::new(out);
+    let outputs = data_parity_outputs(
+        Path::new(bundle_dir),
+        Path::new(export),
+        Path::new(rules),
+        out,
+    )
+    .and_then(|outputs| data_parity_write(out, &outputs).map(|()| outputs));
+    let outputs = match outputs {
         Ok(outputs) => outputs,
         Err(message) => {
             eprintln!("data-parity: {message}");
             return ExitCode::from(3);
         }
     };
-    let written = write_out(out, &outputs.summary, &outputs.report).and_then(|()| {
-        let mut text = serde_json::to_string_pretty(&outputs.overlay).map_err(|e| e.to_string())?;
-        text.push('\n');
-        let path = out.join("overlay.json");
-        std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))
-    });
-    if let Err(message) = written {
-        eprintln!("data-parity: {message}");
-        return ExitCode::from(3);
+    data_parity_print(&outputs);
+    if outputs.summary.pass {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
     }
+}
+
+/// Reads `data-parity`'s inputs and compares; `out` must not exist.
+fn data_parity_outputs(
+    bundle_dir: &Path,
+    export: &Path,
+    rules: &Path,
+    out: &Path,
+) -> Result<data_parity::Outputs, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let bundle = load_bundle(bundle_dir)?;
+    let read = |path: &Path| std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()));
+    let manifest = read(&bundle_dir.join("bundle.json"))?;
+    let export = read(export)?;
+    let rules = read(rules)?;
+    // Each timeless jewel results file's Adler-32 (P6-10a).
+    let mut timeless_adlers = std::collections::BTreeMap::new();
+    for f in bundle.manifest.files.iter().filter(|f| {
+        f.path
+            .starts_with(loom_data::bundle::timeless::TIMELESS_DIR)
+    }) {
+        let bytes = read(&bundle_dir.join(&f.path))?;
+        timeless_adlers.insert(f.path.clone(), data_parity::timeless::adler32(&bytes));
+    }
+    data_parity::run(&data_parity::Request {
+        timeless_adlers: &timeless_adlers,
+        bundle: &bundle,
+        bundle_manifest: &manifest,
+        export: &export,
+        rules: &rules,
+        passive_scope: data_parity::compare::PASSIVE_SCOPE,
+        bosses: &loom_calc::poe1::enemy::BOSSES,
+        tool: tool(),
+    })
+}
+
+/// Writes `summary.json`, `report.json`, and `overlay.json` to `out`.
+fn data_parity_write(out: &Path, outputs: &data_parity::Outputs) -> Result<(), String> {
+    write_out(out, &outputs.summary, &outputs.report)?;
+    let mut text = serde_json::to_string_pretty(&outputs.overlay).map_err(|e| e.to_string())?;
+    text.push('\n');
+    let path = out.join("overlay.json");
+    std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// Prints `data-parity`'s counts, and each failed rule on stderr.
+fn data_parity_print(outputs: &data_parity::Outputs) {
     let summary = &outputs.summary;
     println!(
         "data-parity: {} differences ({}), {} overlay rows, {} failed rules",
@@ -982,11 +994,6 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
             "failed rule {}: matched {} of {}, stale keys {:?}",
             rule.id, rule.matched, rule.expected, rule.stale_keys
         );
-    }
-    if summary.pass {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::FAILURE
     }
 }
 
@@ -1042,48 +1049,65 @@ fn round_trip_args(args: &[String]) -> Option<RoundTripArgs> {
 /// The inputs: each `*.xml` directly in a folder (in name order), or a
 /// file (`*.xml` or `*.json`).
 fn round_trip_inputs(args: &[String]) -> Result<Vec<build_round_trip::Input>, String> {
-    use build_round_trip::{Format, Input};
-    let format_of = |path: &Path| match path.extension().and_then(|e| e.to_str()) {
-        Some(e) if e.eq_ignore_ascii_case("xml") => Some(Format::PobXml),
-        Some(e) if e.eq_ignore_ascii_case("json") => Some(Format::BuildDocument),
-        _ => None,
-    };
     let mut inputs = Vec::new();
     for arg in args {
         let path = Path::new(arg);
-        let mut files = Vec::new();
-        if path.is_dir() {
-            for entry in std::fs::read_dir(path).map_err(|e| format!("{arg}: {e}"))? {
-                let p = entry.map_err(|e| format!("{arg}: {e}"))?.path();
-                if p.is_file() && format_of(&p) == Some(Format::PobXml) {
-                    files.push(p);
-                }
-            }
-            files.sort();
+        let folder = path.is_dir();
+        let files = if folder {
+            folder_builds(arg, path)?
         } else {
-            files.push(path.to_path_buf());
-        }
-        for p in files {
-            let format =
-                format_of(&p).ok_or_else(|| format!("{}: not *.xml or *.json", p.display()))?;
-            let file = p
-                .file_name()
-                .map(|n| n.to_string_lossy().into_owned())
-                .unwrap_or_default();
-            let shown = if path.is_dir() {
-                format!("{}/{file}", arg.trim_end_matches(['/', '\\']))
-            } else {
-                arg.clone()
-            };
-            inputs.push(Input {
-                path: shown.replace('\\', "/"),
-                file,
-                format,
-                bytes: std::fs::read(&p).map_err(|e| format!("{}: {e}", p.display()))?,
-            });
+            vec![path.to_path_buf()]
+        };
+        for file in &files {
+            inputs.push(read_input(arg, folder, file)?);
         }
     }
     Ok(inputs)
+}
+
+/// A build file's format, by its extension.
+fn format_of(path: &Path) -> Option<build_round_trip::Format> {
+    use build_round_trip::Format;
+    match path.extension().and_then(|e| e.to_str()) {
+        Some(e) if e.eq_ignore_ascii_case("xml") => Some(Format::PobXml),
+        Some(e) if e.eq_ignore_ascii_case("json") => Some(Format::BuildDocument),
+        _ => None,
+    }
+}
+
+/// Each `*.xml` directly in the folder `path` (given as `arg`), in name
+/// order.
+fn folder_builds(arg: &str, path: &Path) -> Result<Vec<std::path::PathBuf>, String> {
+    let mut files = Vec::new();
+    for entry in std::fs::read_dir(path).map_err(|e| format!("{arg}: {e}"))? {
+        let p = entry.map_err(|e| format!("{arg}: {e}"))?.path();
+        if p.is_file() && format_of(&p) == Some(build_round_trip::Format::PobXml) {
+            files.push(p);
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+/// Reads the input file `p`: the argument `arg` itself, or a file of the
+/// folder `arg` names (`folder`).
+fn read_input(arg: &str, folder: bool, p: &Path) -> Result<build_round_trip::Input, String> {
+    let format = format_of(p).ok_or_else(|| format!("{}: not *.xml or *.json", p.display()))?;
+    let file = p
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let shown = if folder {
+        format!("{}/{file}", arg.trim_end_matches(['/', '\\']))
+    } else {
+        arg.to_owned()
+    };
+    Ok(build_round_trip::Input {
+        path: shown.replace('\\', "/"),
+        file,
+        format,
+        bytes: std::fs::read(p).map_err(|e| format!("{}: {e}", p.display()))?,
+    })
 }
 
 /// `build-round-trip` (module `build_round_trip`). Exit 0 when every build
@@ -1092,8 +1116,7 @@ fn round_trip_inputs(args: &[String]) -> Result<Vec<build_round_trip::Input>, St
 /// exists).
 fn build_round_trip_cmd(args: &[String]) -> ExitCode {
     let Some(args) = round_trip_args(args) else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     };
     match build_round_trip_run(&args) {
         Ok(true) => ExitCode::SUCCESS,
@@ -1136,10 +1159,7 @@ fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
             .map(|(resolver, data)| build_round_trip::Data { resolver, data }),
         anonymous: args.anonymous,
         expect_import_error: &args.expect_import_error,
-        tool: resolve_corpus::Tool {
-            commit: git(&["rev-parse", "HEAD"]),
-            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
-        },
+        tool: tool(),
     };
     let (summary, report) = build_round_trip::run(&inputs, &options);
     write_out(out, &summary, &report)?;
@@ -1172,42 +1192,51 @@ fn survey_args(args: &[String]) -> Option<SurveyArgs> {
     let mut rest = args;
     while let [arg, tail @ ..] = rest {
         rest = tail;
-        let slot = match arg.as_str() {
-            "--anonymous" => {
-                out.anonymous = true;
-                continue;
+        if arg == "--anonymous" {
+            out.anonymous = true;
+        } else if let Some(slot) = out.slot(arg) {
+            let [value, tail @ ..] = rest else {
+                return None;
+            };
+            if slot.replace(value.clone()).is_some() {
+                return None;
             }
-            "--bundle" => &mut out.bundle,
-            "--scope" => &mut out.scope,
-            "--data-rules" => &mut out.data_rules,
-            "--out" => &mut out.out,
-            flag if flag.starts_with("--") => return None,
-            input => {
-                out.inputs.push(input.to_owned());
-                continue;
-            }
-        };
-        let [value, tail @ ..] = rest else {
+            rest = tail;
+        } else if arg.starts_with("--") {
             return None;
-        };
-        if slot.replace(value.clone()).is_some() {
-            return None;
+        } else {
+            out.inputs.push(arg.clone());
         }
-        rest = tail;
     }
-    let complete = !out.inputs.is_empty()
-        && out.bundle.is_some()
-        && out.scope.is_some()
-        && out.data_rules.is_some()
-        && out.out.is_some();
-    complete.then_some(out)
+    out.complete().then_some(out)
+}
+
+impl SurveyArgs {
+    /// The value a `--name <value>` option sets.
+    fn slot(&mut self, name: &str) -> Option<&mut Option<String>> {
+        match name {
+            "--bundle" => Some(&mut self.bundle),
+            "--scope" => Some(&mut self.scope),
+            "--data-rules" => Some(&mut self.data_rules),
+            "--out" => Some(&mut self.out),
+            _ => None,
+        }
+    }
+
+    /// Whether an input and every required option are given.
+    fn complete(&self) -> bool {
+        !self.inputs.is_empty()
+            && self.bundle.is_some()
+            && self.scope.is_some()
+            && self.data_rules.is_some()
+            && self.out.is_some()
+    }
 }
 
 /// `calc-survey` (module `calc_survey`).
 fn calc_survey_cmd(args: &[String]) -> ExitCode {
     let Some(args) = survey_args(args) else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     };
     match calc_survey_run(&args) {
         Ok(true) => ExitCode::SUCCESS,
@@ -1269,10 +1298,7 @@ fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
         not_carried: &not_carried,
         anonymous: args.anonymous,
         inputs: calc_survey::Inputs {
-            tool: resolve_corpus::Tool {
-                commit: git(&["rev-parse", "HEAD"]),
-                dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
-            },
+            tool: tool(),
             bundle: resolve_corpus::BundleInputs {
                 game: m.game.clone(),
                 steam_build: m.source.steam_build,
@@ -1285,6 +1311,13 @@ fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
     };
     let (summary, report) = calc_survey::run(&inputs, &request);
     write_out(&out, &summary, &report)?;
+    calc_survey_print(&summary);
+    Ok(summary.pass)
+}
+
+/// Prints `calc-survey`'s counts, the first candidates per kind, and the
+/// chosen skills.
+fn calc_survey_print(summary: &calc_survey::Summary) {
     println!(
         "calc-survey: {} builds, {} in scope ({} duplicates skipped)",
         summary.builds, summary.in_scope, summary.duplicates
@@ -1312,7 +1345,6 @@ fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
             }
         );
     }
-    Ok(summary.pass)
 }
 
 /// Positional arguments, `--name value` options, and flags.
@@ -1355,16 +1387,13 @@ fn calc_run_cmd(args: &[String]) -> ExitCode {
         &["--bundle", "--out", "--data-overlay", "--scope"],
         &["--anonymous"],
     ) else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     };
     let (Some(bundle), Some(out)) = (values.get("--bundle"), values.get("--out")) else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     };
     if inputs.is_empty() {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     }
     let run = calc_run_run(
         &inputs,
@@ -1404,52 +1433,18 @@ fn calc_run_run(
     let data = loom_parser::import::BundleData::new(&bundle);
     let resolver = loom_parser::import::Resolver::new(&data)
         .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
-    let overlay = match overlay {
-        Some(path) => {
-            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-            let data = calc_run::OverlayData::read(&bytes, &bundle, &manifest_sha256)
-                .map_err(|e| format!("{}: {e}", path.display()))?;
-            Some((data, oracle::sha256_hex(&bytes)))
-        }
-        None => None,
-    };
-    let scope = match scope {
-        Some(path) => {
-            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-            let file = calc_survey::rules::Scope::read(&bytes)
-                .map_err(|e| format!("{}: {e}", path.display()))?;
-            if file.game != bundle.game.name()
-                || Some(file.steam_build) != bundle.manifest.source.steam_build
-            {
-                return Err(format!(
-                    "{}: for {} Steam build {}, not this bundle",
-                    path.display(),
-                    file.game,
-                    file.steam_build
-                ));
-            }
-            Some(calc_run::ScopeRecord {
-                sha256: oracle::sha256_hex(&bytes),
-                tree_version: file.tree_version,
-            })
-        }
-        None => None,
-    };
+    let overlay = overlay
+        .map(|path| calc_run_overlay(path, &bundle, &manifest_sha256))
+        .transpose()?;
+    let scope = scope
+        .map(|path| calc_run_scope(path, &bundle))
+        .transpose()?;
     let tree = loom_tree::Tree::from_bundle(&bundle);
     let trees = tree
         .as_ref()
         .map(|t| loom_pipeline::pack_trees(&bundle, t))
         .unwrap_or_default();
-    // The Timeless jewels' results (P6-10a): every type, read once for
-    // every build (the app reads one type when a build needs it).
-    let mut timeless_results = std::collections::BTreeMap::new();
-    if let Some(luts) = bundle.poe1.as_ref().and_then(|p| p.timeless_luts.as_ref()) {
-        for j in &luts.jewels {
-            let path = bundle_dir.join(&j.file);
-            let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-            timeless_results.insert(j.jewel, bytes);
-        }
-    }
+    let timeless_results = timeless_results(bundle_dir, &bundle)?;
     let request = calc_run::Request {
         timeless_results: &timeless_results,
         scope,
@@ -1481,6 +1476,67 @@ fn calc_run_run(
     };
     let outputs = calc_run::run(&inputs, &request)?;
     calc_run::write(out, &outputs)?;
+    calc_run_print(&outputs);
+    let s = &outputs.summary;
+    Ok(s.failed == 0 && s.builds > 0)
+}
+
+/// `--data-overlay`: data-parity's overlay for this bundle, and the
+/// file's SHA-256.
+fn calc_run_overlay<'b>(
+    path: &Path,
+    bundle: &'b loom_data::bundle::Bundle,
+    manifest_sha256: &str,
+) -> Result<(calc_run::OverlayData<'b>, String), String> {
+    let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let data = calc_run::OverlayData::read(&bytes, bundle, manifest_sha256)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok((data, oracle::sha256_hex(&bytes)))
+}
+
+/// `--scope`: calc-survey's scope file, which must be for this bundle.
+fn calc_run_scope(
+    path: &Path,
+    bundle: &loom_data::bundle::Bundle,
+) -> Result<calc_run::ScopeRecord, String> {
+    let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let file =
+        calc_survey::rules::Scope::read(&bytes).map_err(|e| format!("{}: {e}", path.display()))?;
+    if file.game != bundle.game.name()
+        || Some(file.steam_build) != bundle.manifest.source.steam_build
+    {
+        return Err(format!(
+            "{}: for {} Steam build {}, not this bundle",
+            path.display(),
+            file.game,
+            file.steam_build
+        ));
+    }
+    Ok(calc_run::ScopeRecord {
+        sha256: oracle::sha256_hex(&bytes),
+        tree_version: file.tree_version,
+    })
+}
+
+/// The Timeless jewels' results (P6-10a): every type, read once for
+/// every build (the app reads one type when a build needs it).
+fn timeless_results(
+    bundle_dir: &Path,
+    bundle: &loom_data::bundle::Bundle,
+) -> Result<BTreeMap<u32, Vec<u8>>, String> {
+    let mut results = BTreeMap::new();
+    if let Some(luts) = bundle.poe1.as_ref().and_then(|p| p.timeless_luts.as_ref()) {
+        for j in &luts.jewels {
+            let path = bundle_dir.join(&j.file);
+            let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+            results.insert(j.jewel, bytes);
+        }
+    }
+    Ok(results)
+}
+
+/// Prints `calc-run`'s counts, and each failed build on stderr.
+fn calc_run_print(outputs: &calc_run::Outputs) {
     let s = &outputs.summary;
     println!(
         "calc-run: {} builds, {} ok, {} failed; fields {} complete, {} partial, {} unsupported, {} indeterminate; calculation {} us total",
@@ -1502,7 +1558,6 @@ fn calc_run_run(
                 .map_or_else(String::new, |step| calc_run::reason_kind(&step))
         );
     }
-    Ok(s.failed == 0 && s.builds > 0)
 }
 
 /// `calc-parity` (module `calc_parity`).
@@ -1533,8 +1588,7 @@ fn calc_parity_cmd(args: &[String]) -> ExitCode {
         })
     });
     let Some(request) = request else {
-        eprintln!("{USAGE}");
-        return ExitCode::from(2);
+        return usage();
     };
     match calc_parity::run(&request) {
         Ok(report) => {
@@ -1555,156 +1609,84 @@ fn print_record<T: Serialize>((record, ok): (T, bool)) -> Result<bool, String> {
     Ok(ok)
 }
 
-fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if let [cmd, rest @ ..] = args.as_slice()
-        && cmd == "calc-run"
-    {
-        return calc_run_cmd(rest);
-    }
-    if let [cmd, rest @ ..] = args.as_slice()
-        && cmd == "calc-parity"
-    {
-        return calc_parity_cmd(rest);
-    }
-    if let [cmd, rest @ ..] = args.as_slice()
-        && cmd == "calc-survey"
-    {
-        return calc_survey_cmd(rest);
-    }
-    if let [cmd, rest @ ..] = args.as_slice()
-        && cmd == "build-round-trip"
-    {
-        return build_round_trip_cmd(rest);
-    }
-    if let [cmd, manifest, oracle_dir] = args.as_slice()
-        && cmd == "oracle-verify"
-    {
-        return oracle_verify(Path::new(manifest), Path::new(oracle_dir));
-    }
-    if let [cmd, manifest, oracle_dir, rest @ ..] = args.as_slice()
-        && cmd == "oracle-run"
-    {
-        return oracle_run(Path::new(manifest), Path::new(oracle_dir), rest);
-    }
-    if let [cmd, left, right, rest @ ..] = args.as_slice()
-        && cmd == "oracle-compare"
-    {
-        return oracle_compare(Path::new(left), Path::new(right), rest);
-    }
-    if let [cmd, rest @ ..] = args.as_slice()
-        && cmd == "data-parity"
-    {
-        return data_parity_cmd(rest);
-    }
-    if let [cmd, register] = args.as_slice()
-        && cmd == "divergence-check"
-    {
-        return divergence_check(Path::new(register));
-    }
-    let result = match args.as_slice() {
-        [cmd, extract, flag, out] if cmd == "bundle" && flag == "--out" => {
-            bundle_cmd(Path::new(extract), Path::new(out))
-        }
-        [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
-        [cmd, pins, version, export, bundle, rest @ .., flag, out]
-            if cmd == "tree-pack"
-                && flag == "--out"
-                && (rest.is_empty() || rest == ["--accept-unread"]) =>
-        {
-            tree_pack::run(
-                Path::new(pins),
-                version,
-                Path::new(export),
-                Path::new(bundle),
-                Path::new(out),
-                !rest.is_empty(),
-            )
-            .and_then(|summary| {
-                let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
-                println!("{json}");
-                Ok(true)
-            })
-        }
-        [cmd, bundle, pob, version, flag, out] if cmd == "timeless-pack" && flag == "--out" => {
-            timeless::pack(Path::new(bundle), Path::new(pob), version, Path::new(out)).and_then(
-                |summary| {
-                    let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
-                    println!("{json}");
-                    Ok(true)
-                },
-            )
-        }
-        [cmd, pin, export, bundle, flag, out] if cmd == "tree-layout" && flag == "--out" => {
-            tree_layout::run(
-                Path::new(pin),
-                Path::new(export),
-                Path::new(bundle),
-                Path::new(out),
-            )
-            .and_then(|summary| {
-                let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
-                println!("{json}");
-                Ok(true)
-            })
-        }
-        [cmd, mode, pob, bundle] if cmd == "tree-parity" && mode == "layout" => {
+/// Prints a command's summary as JSON; the command passed.
+fn print_summary(summary: &impl Serialize) -> Result<bool, String> {
+    let json = serde_json::to_string_pretty(summary).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(true)
+}
+
+/// `tree-parity alloc-requests`: prints the seeded requests.
+fn alloc_requests(
+    bundle: &str,
+    count: &str,
+    seed: &str,
+    version: Option<&str>,
+) -> Result<bool, String> {
+    let count = count.parse().map_err(|e| format!("count: {e}"))?;
+    let seed = seed.parse().map_err(|e| format!("seed: {e}"))?;
+    let text = tree_parity::alloc_requests(Path::new(bundle), count, seed, version)?;
+    print!("{text}");
+    Ok(true)
+}
+
+/// `tree-parity <mode> ...` (module `tree_parity`).
+fn tree_parity_cmd(args: &[String]) -> ExitCode {
+    let [mode, rest @ ..] = args else {
+        return usage();
+    };
+    let result = match (mode.as_str(), rest) {
+        ("layout", [pob, bundle]) => {
             tree_parity::layout(Path::new(pob), Path::new(bundle)).and_then(print_record)
         }
-        [cmd, mode, bundle, count, seed, version @ ..]
-            if cmd == "tree-parity" && mode == "alloc-requests" && version.len() <= 1 =>
-        {
-            let count = count.parse().map_err(|e| format!("count: {e}"));
-            let seed = seed.parse().map_err(|e| format!("seed: {e}"));
-            let version = version.first().map(String::as_str);
-            count.and_then(|c| seed.map(|s| (c, s))).and_then(|(c, s)| {
-                tree_parity::alloc_requests(Path::new(bundle), c, s, version).map(|text| {
-                    print!("{text}");
-                    true
-                })
-            })
+        ("alloc-requests", [bundle, count, seed, version @ ..]) if version.len() <= 1 => {
+            alloc_requests(bundle, count, seed, version.first().map(String::as_str))
         }
-        [cmd, mode, requests, pob, bundle] if cmd == "tree-parity" && mode == "alloc" => {
+        ("alloc", [requests, pob, bundle]) => {
             tree_parity::alloc(Path::new(requests), Path::new(pob), Path::new(bundle))
                 .and_then(print_record)
         }
-        [cmd, mode, requests, pob, bundle, from] if cmd == "tree-parity" && mode == "convert" => {
+        ("convert", [requests, pob, bundle, from]) => {
             tree_parity::convert(Path::new(requests), Path::new(pob), Path::new(bundle), from)
                 .and_then(print_record)
         }
-        [cmd, mode, build, pob] if cmd == "tree-parity" && mode == "readback" => {
+        ("readback", [build, pob]) => {
             tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
         }
-        [cmd, export, flag, out] if cmd == "pob-skills" && flag == "--out" => {
-            pob_skills::run_skills(Path::new(export), Path::new(out))
-        }
-        [cmd, export, flag, out] if cmd == "pob-minions" && flag == "--out" => {
-            pob_skills::run_minions(Path::new(export), Path::new(out))
-        }
-        [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
-        [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
-        [cmd, bundle, pob, flag, out] if cmd == "custom-lines" && flag == "--out" => {
-            custom_lines_cmd(Path::new(bundle), Path::new(pob), Path::new(out))
-        }
-        [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
-            round_trip(Path::new(extract), Path::new(out))
-        }
-        [cmd, extract, pob, flag, out] if cmd == "render-check" && flag == "--out" => {
-            render_check(Path::new(extract), Path::new(pob), Path::new(out))
-        }
-        [cmd, extract, bundle] if cmd == "bundle-equal" => {
-            bundle_equal(Path::new(extract), Path::new(bundle))
-        }
-        [cmd, builds, extract, flag, out, pob @ ..]
-            if cmd == "resolve-corpus" && flag == "--out" =>
-        {
-            resolve_corpus(Path::new(builds), Path::new(extract), Path::new(out), pob)
-        }
-        _ => {
-            eprintln!("{USAGE}");
-            return ExitCode::from(2);
-        }
+        _ => return usage(),
     };
+    finish(result)
+}
+
+/// `tree-pack <manifest> <version> <export-dir> <bundle-dir>
+/// [--accept-unread] --out <dir>` (module `tree_pack`).
+fn tree_pack_cmd(args: &[String]) -> ExitCode {
+    let [pins, version, export, bundle, rest @ .., flag, out] = args else {
+        return usage();
+    };
+    if flag != "--out" || !(rest.is_empty() || rest == ["--accept-unread"]) {
+        return usage();
+    }
+    let summary = tree_pack::run(
+        Path::new(pins),
+        version,
+        Path::new(export),
+        Path::new(bundle),
+        Path::new(out),
+        !rest.is_empty(),
+    );
+    finish(summary.and_then(|summary| print_summary(&summary)))
+}
+
+/// The usage text on stderr; exit 2.
+fn usage() -> ExitCode {
+    eprintln!("{USAGE}");
+    ExitCode::from(2)
+}
+
+/// The exit code of a command that passed, failed, or stopped with a
+/// message.
+fn finish(result: Result<bool, String>) -> ExitCode {
     match result {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
@@ -1714,3 +1696,139 @@ fn main() -> ExitCode {
         }
     }
 }
+
+/// A subcommand: the arguments after its name to the exit code. Arguments
+/// of another shape are a usage error.
+type Command = fn(&[String]) -> ExitCode;
+
+/// Every subcommand by name, in [`USAGE`]'s order.
+const COMMANDS: &[(&str, Command)] = &[
+    ("tree-parity", tree_parity_cmd),
+    ("tree-pack", tree_pack_cmd),
+    ("timeless-pack", |args| match args {
+        [bundle, pob, version, flag, out] if flag == "--out" => finish(
+            timeless::pack(Path::new(bundle), Path::new(pob), version, Path::new(out))
+                .and_then(|summary| print_summary(&summary)),
+        ),
+        _ => usage(),
+    }),
+    ("tree-layout", |args| match args {
+        [pin, export, bundle, flag, out] if flag == "--out" => finish(
+            tree_layout::run(
+                Path::new(pin),
+                Path::new(export),
+                Path::new(bundle),
+                Path::new(out),
+            )
+            .and_then(|summary| print_summary(&summary)),
+        ),
+        _ => usage(),
+    }),
+    ("bundle", |args| match args {
+        [extract, flag, out] if flag == "--out" => {
+            finish(bundle_cmd(Path::new(extract), Path::new(out)))
+        }
+        _ => usage(),
+    }),
+    ("bundle-check", |args| match args {
+        [dir] => finish(bundle_check(Path::new(dir))),
+        _ => usage(),
+    }),
+    ("load-statdesc", |args| match args {
+        [extract] => finish(load_statdesc(Path::new(extract))),
+        _ => usage(),
+    }),
+    ("round-trip", |args| match args {
+        [extract, flag, out] if flag == "--out" => {
+            finish(round_trip(Path::new(extract), Path::new(out)))
+        }
+        _ => usage(),
+    }),
+    ("render-check", |args| match args {
+        [extract, pob, flag, out] if flag == "--out" => finish(render_check(
+            Path::new(extract),
+            Path::new(pob),
+            Path::new(out),
+        )),
+        _ => usage(),
+    }),
+    ("bundle-equal", |args| match args {
+        [extract, bundle] => finish(bundle_equal(Path::new(extract), Path::new(bundle))),
+        _ => usage(),
+    }),
+    ("resolve-corpus", |args| match args {
+        [builds, extract, flag, out, pob @ ..] if flag == "--out" => finish(resolve_corpus(
+            Path::new(builds),
+            Path::new(extract),
+            Path::new(out),
+            pob,
+        )),
+        _ => usage(),
+    }),
+    ("oracle-verify", |args| match args {
+        [manifest, oracle_dir] => oracle_verify(Path::new(manifest), Path::new(oracle_dir)),
+        _ => usage(),
+    }),
+    ("oracle-run", |args| match args {
+        [manifest, oracle_dir, rest @ ..] => {
+            oracle_run(Path::new(manifest), Path::new(oracle_dir), rest)
+        }
+        _ => usage(),
+    }),
+    ("oracle-compare", |args| match args {
+        [left, right, rest @ ..] => oracle_compare(Path::new(left), Path::new(right), rest),
+        _ => usage(),
+    }),
+    ("dto-hashes", |args| match args {
+        [] => usage(),
+        dirs => finish(dto_hashes(dirs)),
+    }),
+    ("pob-skills", |args| match args {
+        [export, flag, out] if flag == "--out" => {
+            finish(pob_skills::run_skills(Path::new(export), Path::new(out)))
+        }
+        _ => usage(),
+    }),
+    ("pob-minions", |args| match args {
+        [export, flag, out] if flag == "--out" => {
+            finish(pob_skills::run_minions(Path::new(export), Path::new(out)))
+        }
+        _ => usage(),
+    }),
+    ("custom-lines", |args| match args {
+        [bundle, pob, flag, out] if flag == "--out" => finish(custom_lines_cmd(
+            Path::new(bundle),
+            Path::new(pob),
+            Path::new(out),
+        )),
+        _ => usage(),
+    }),
+    ("data-parity", data_parity_cmd),
+    ("build-round-trip", build_round_trip_cmd),
+    ("calc-survey", calc_survey_cmd),
+    ("calc-run", calc_run_cmd),
+    ("calc-parity", calc_parity_cmd),
+    ("divergence-check", |args| match args {
+        [register] => divergence_check(Path::new(register)),
+        _ => usage(),
+    }),
+];
+
+/// The subcommand named `name`.
+fn command(name: &str) -> Option<Command> {
+    COMMANDS
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, run)| *run)
+}
+
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match args.split_first() {
+        Some((name, rest)) => command(name).map_or_else(usage, |run| run(rest)),
+        None => usage(),
+    }
+}
+
+#[cfg(test)]
+mod tests;
