@@ -137,7 +137,8 @@ try {
   // Test Brute with only its start (crates/loom-data/tests/fixtures/
   // bundle-poe1-tree, made by make_bundles.py).
   await click(button('Passive tree'), 'the tree screen')
-  await text('Passive points: 0 ·')
+  // "0 ·", or "0 of 2 ·" when the build names a level (RV-04).
+  await text('Passive points: 0 ')
   await click(button('List'), 'the list view')
   const search = await until('the node search', () =>
     find(`//input[@type='search']`),
@@ -149,7 +150,7 @@ try {
   await text('Remove Test Notable 0-2')
   await until('the points spent', async () => {
     const source = await wd('GET', `/session/${session}/source`)
-    return !source.includes('Passive points: 0 ·')
+    return !source.includes('Passive points: 0 ')
   })
   await text('Up to date')
 
