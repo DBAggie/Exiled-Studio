@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 36] = [
+const TEXTS: [(&str, &str); 37] = [
     // Close-out M6.
     (
         "anger_aura_effect_+%",
@@ -159,6 +159,11 @@ const TEXTS: [(&str, &str); 36] = [
     (
         "vulnerability_curse_effect_+%",
         "{0}% increased Vulnerability Curse Effect",
+    ),
+    // The agent list: Punishment's, as Vulnerability's.
+    (
+        "punishment_curse_effect_+%",
+        "{0}% increased Punishment Curse Effect",
     ),
     // Close-out M6.
     (
