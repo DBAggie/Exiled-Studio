@@ -29,7 +29,7 @@ The evidence bundles on the workstation (`local/p6/packs/b-ct` and kin) are from
 - Vaal Summon Skeletons' minion level, DIV-0111 to DIV-0113 and DIV-0174: the game's data says 68 at gem level 20; PoB uses 70 (`docs/phase-6/phase-6-report.md`, "The register").
 - Q12 (`docs/phase-3/attack-hits.md`): where global and skill attack speed enter. Open, not blocking.
 - Any new difference from PoB the session finds without Q11 or `pob-bug` evidence (added by the session).
-- **Vaal Summon Skeletons' full DPS (S1, cause not found):** PoB's `FullDPS` for `minion-vaal-summon-skeletons-witch.xml` is 416.996, while its minion's `TotalDPS` is 115.298 and the count 1 (`calcFullDPS`, `Calcs.lua` 204 to 240, adds `TotalDPS x count`). The engine gives 103.72 (the minion's DPS at the game's minion level, DIV-0124). The factor 3.617 has no source found yet; the full DPS pass may use another of the skill's minions. The field keeps `full-dps-vaal` for a Vaal skill that summons minions. Not game truth: an agent can trace it with an instrumented PoB copy later.
+- **Vaal Summon Skeletons' full DPS (S1): found 2026-11-26 by an agent, nothing left for the maintainer.** PoB's two effects of the gem share its saved instance, so its full DPS counts the Skeleton Caster that Summon Skeletons of Mages wrote there; registered `pob-bug` DIV-0783 (`docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS").
 
 ## Decisions
 **Decided 2026-11-26** (the 1.0 review; `docs/plan/ACTION-PLAN.md`, "Version 1.0"):

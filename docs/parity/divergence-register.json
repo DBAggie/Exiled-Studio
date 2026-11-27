@@ -15658,6 +15658,26 @@
       "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
       "added": "2026-11-26",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0783",
+      "mechanic": "PoB's two active effects of one gem (a Vaal gem's Vaal skill and its base variant) share the gem's saved instance, and each writes the minion it picked there; every later environment reads the second effect's choice for the first when the first's minion list has it. So PoB's full DPS of Vaal Summon Skeletons of Mages counts the Skeleton Caster (the base variant's only minion), while its main output (the Calcs view, skillMinionCalcs) counts the build's default, the melee skeleton. The engine counts the skill's own minion, as its main calculation does. The successor value also carries the registered minion level (DIV-0124, the minion's TotalDPS).",
+      "fixture": "minion-vaal-summon-skeletons-witch.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 416.99583333333334,
+      "successor_value": 103.72031249999999,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/Data.lua 1098 to 1118: a Vaal gem's AltX and AltY variants keep the Vaal skill (VaalSummonSkeletons: melee, caster, archer) as the first effect and the base variant (SummonSkeletonsAltY: the caster only) as the second",
+        "PoB v2.67.2 Modules/CalcActiveSkill.lua 682 to 692: each effect's minion is minionList[index of srcInstance.skillMinion or 1], written back to srcInstance.skillMinion (skillMinionCalcs for the main skill in the Calcs view); both effects' srcInstance is the gem",
+        "Instrumented PoB run (the agent list; the probe and its output committed in docs/phase-6/minions.md, \"Vaal Summon Skeletons' full DPS\"): after the first calculation the gem holds skillMinion=RaisedSkeletonCaster and skillMinionCalcs=RaisedSkeletonMeleeVaal, though the fixture saves neither; the MAIN and full DPS passes compute the Vaal skill with the caster, minion TotalDPS 416.996; the main output's minion TotalDPS is 115.298"
+      ],
+      "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
+      "added": "2026-11-26",
+      "status": "accepted"
     }
   ]
 }

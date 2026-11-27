@@ -14,7 +14,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 
 ## Small, existing fixtures
 - [x] **Static Strike part 1** (3 Smite builds' `FullDPS`): its function and beam damage act only in part 2; its zap stats `NoEffect` outside part 2, the read lists by part. Done 2026-11-26 as part 2: the builds count Static Strike's beams (`skillPart="2"`) and Shockwave Support's attack in full DPS; both ported (`docs/phase-6/triggers.md`, "Part 9"; the three `FullDPS` `Complete`; `pob-bug` DIV-0780 and DIV-0782, Q11 DIV-0781; evidence `local/p6/ss`).
-- [ ] **Vaal Summon Skeletons' full DPS** (417 against 115): trace with an instrumented PoB copy in the scratchpad.
+- [x] **Vaal Summon Skeletons' full DPS** (417 against 115): trace with an instrumented PoB copy in the scratchpad. Done 2026-11-26: the gem's two effects share its saved instance, so PoB's full DPS counts the caster the second effect picked; `pob-bug` DIV-0783, the engine counts the skill's own minion (`docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS"; evidence `local/p6/vss`).
 
 ## S9: resolver and item gaps
 - [ ] `ambiguous` (public 655 fields in 9 builds; corpus 470 in 6): local against global readings by the item's class (`docs/spikes/spike-b-resolution.md`, the Mods filter).

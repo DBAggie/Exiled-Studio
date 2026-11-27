@@ -133,7 +133,7 @@ The open items survey (S0, `dev/active/open-items/open-items-inventory.md`) foun
 Two other reasons, narrowed the same way:
 
 - **`reservation-becomes-cost`** (`poe1::costs`) only when a reservation reaches the cost: PoB adds the active level's flat or percent mana reservation, or a support level's `manaReservationPercent` (`CalcOffence.lua` 1693 to 1700, `CalcActiveSkill.lua` 516). Trap and totem supports add the type to skills that reserve nothing.
-- **`full-dps-vaal`** (`poe1::full_dps`): PoB's `getActiveSkillCount` (`Calcs.lua` 150 to 174) counts a Vaal gem's first effect when `enableGlobal1` is on (the default) and its second when `enableGlobal2` is (`skill::vaal_full_dps_enabled`; the game's `IsVaalGem`, the bundle's `gems.json` `vaal`). A Vaal skill that summons minions keeps the reason: PoB's full DPS of Vaal Summon Skeletons (417) is not its minion's `TotalDPS` (115) times the count, for a cause not found (open items follow-ups).
+- **`full-dps-vaal`** (`poe1::full_dps`): PoB's `getActiveSkillCount` (`Calcs.lua` 150 to 174) counts a Vaal gem's first effect when `enableGlobal1` is on (the default) and its second when `enableGlobal2` is (`skill::vaal_full_dps_enabled`; the game's `IsVaalGem`, the bundle's `gems.json` `vaal`). A Vaal skill that summons minions kept the reason until the agent list found the cause (2026-11-26): PoB's full DPS of Vaal Summon Skeletons of Mages counts another minion than its main output, a `pob-bug` (DIV-0783; `docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS"). It now counts its own minion.
 
 **Evidence** (`local/p6/s1c`, bundle `b-ct`, against `local/p6/n` at `dev` `6deeb5da`):
 

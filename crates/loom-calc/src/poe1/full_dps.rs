@@ -89,20 +89,24 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         // A Vaal gem's two effects: PoB counts each by the gem's
         // `enableGlobal1` and `enableGlobal2` (`getActiveSkillCount`, 159
         // to 164; open items, S1). A Vaal skill whose gem the engine cannot
-        // read that way keeps the reason, as does a Vaal skill that summons
-        // minions: PoB's full DPS of Vaal Summon Skeletons (417) is not its
-        // minion's `TotalDPS` (115) times the count, for a cause not found
-        // (`minion-vaal-summon-skeletons-witch.xml`; open items follow-ups).
+        // read that way keeps the reason.
+        //
+        // A Vaal skill that summons minions counts its own minion, the
+        // build's choice, as the main calculation does (agent list). PoB's
+        // two effects of one gem share its saved instance, and each writes
+        // the minion it picked there (`CalcActiveSkill.lua` 689 to 691): the
+        // second effect's (Summon Skeletons of Mages' caster) is the first's
+        // in every later environment when its list has it, so PoB's full DPS
+        // of Vaal Summon Skeletons of Mages counts the caster (417), its main
+        // output the melee skeleton (115). A `pob-bug` (DIV-0783,
+        // `minion-vaal-summon-skeletons-witch.xml`; instrumented run in
+        // `docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS").
         let gem = group.gems.typed().nth(skill.active_gem.gem);
-        let vaal_minions = skill.types.contains("Vaal")
-            && ["CreatesMinion", "Minion"]
-                .iter()
-                .any(|t| skill.types.contains(*t));
         match gem.and_then(|gem| {
             super::skill::vaal_full_dps_enabled(gem, &skill.active_gem.effect.id, input.data)
         }) {
             Some(false) => continue,
-            Some(true) if !vaal_minions => {}
+            Some(true) => {}
             None if !skill.types.contains("Vaal") => {}
             _ => {
                 reasons.partial.insert(unmodelled("full-dps-vaal"));
