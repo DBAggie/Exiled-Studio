@@ -16,7 +16,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 17] = [
+const TEXTS: [(&str, &str); 19] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -81,6 +81,15 @@ const TEXTS: [(&str, &str); 17] = [
         "{0}% increased Effect of Non-Damaging Ailments",
     ),
     ("shock_effect_+%", "{0}% increased Effect of Shock"),
+    // The agent list (2026-11-28): the shock's maximum.
+    (
+        "shock_maximum_magnitude_+",
+        "{0:+d}% to Maximum Effect of Shock",
+    ),
+    (
+        "raider_shock_maximum_effect_override_%",
+        "Maximum Effect of Shock is {0}% increased Damage taken",
+    ),
     (
         "shock_minimum_damage_taken_increase_%",
         "Shocks from your Hits always increase Damage taken by at least {0}%",

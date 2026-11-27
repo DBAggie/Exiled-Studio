@@ -313,8 +313,11 @@ type ShockRow = (&'static str, Poe1Quantity, Op);
 ///   taken come only from config inputs that stay reasons or from
 ///   guaranteed sources that are stats PoB reads otherwise (reasons);
 /// - "Shocks from your Hits always increase Damage taken by at least #%"
-///   (2768): `ShockMinimum` BASE.
-pub const SHOCK_STATS: [ShockRow; 4] = [
+///   (2768): `ShockMinimum` BASE;
+/// - "+#% to Maximum Effect of Shock" (3591) and "Maximum Effect of Shock
+///   is #% increased Damage taken" (3028): `ShockMax` BASE and OVERRIDE
+///   ([`shock_maximum`]; the agent list, 2026-11-28).
+pub const SHOCK_STATS: [ShockRow; 6] = [
     (
         "lightning_ailment_effect_+%",
         Poe1Quantity::ShockEffect,
@@ -325,7 +328,17 @@ pub const SHOCK_STATS: [ShockRow; 4] = [
         Poe1Quantity::ShockEffect,
         Op::Increased,
     ),
+    (
+        "raider_shock_maximum_effect_override_%",
+        Poe1Quantity::ShockMaximum,
+        Op::Override,
+    ),
     ("shock_effect_+%", Poe1Quantity::ShockEffect, Op::Increased),
+    (
+        "shock_maximum_magnitude_+",
+        Poe1Quantity::ShockMaximum,
+        Op::Base,
+    ),
     (
         "shock_minimum_damage_taken_increase_%",
         Poe1Quantity::ShockMinimum,
@@ -360,9 +373,7 @@ pub const SHOCK_DEPENDS_ON: &[&str] = &[
     "non_damaging_ailment_effect_+%_per_equipped_elder_item",
     "non_damaging_ailment_effect_+%_with_critical_strikes",
     "non_damaging_ailment_effect_+%_with_critical_strikes_per_100_max_player_life",
-    "raider_shock_maximum_effect_override_%",
     "raider_shocks_you_apply_can_stack_up_to_50_times",
-    "shock_maximum_magnitude_+",
 ];
 
 /// The check that chills the enemy.
@@ -825,6 +836,20 @@ fn conditions(
 /// order. Every row of [`SHOCK_STATS`] is unconditional (a test), so a
 /// condition can only come from a later row, which must bring its
 /// handling here.
+/// The shock's maximum (the agent list, 2026-11-28; `CalcPerform.lua` 3532
+/// to 3538): the `ShockMax` override (PoB's first), else [`SHOCK_MAX`] plus
+/// the character's `ShockMax` BASE (in every active skill's list; a skill's
+/// own `ShockMax` is a stat its mapping leaves a reason).
+fn shock_maximum(ingest: &Ingest<'_>) -> f64 {
+    if let Some(e) = unconditional(ingest, Poe1Quantity::ShockMaximum, Op::Override).next() {
+        return e.value;
+    }
+    SHOCK_MAX
+        + unconditional(ingest, Poe1Quantity::ShockMaximum, Op::Base)
+            .map(|e| e.value)
+            .sum::<f64>()
+}
+
 fn unconditional<'a>(
     ingest: &'a Ingest<'_>,
     quantity: Poe1Quantity,
@@ -856,7 +881,7 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     match last(set, SHOCKED_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => {
             return Ok(skill_override.and_then(|(v, source)| {
-                let shock = crate::math::floor(crate::math::min(v, SHOCK_MAX));
+                let shock = crate::math::floor(crate::math::min(v, shock_maximum(ingest)));
                 (shock > 0.0).then_some((shock, source))
             }));
         }
@@ -897,7 +922,7 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     }
     let shock = crate::math::floor(crate::math::min(
         crate::math::max(guaranteed, configured),
-        SHOCK_MAX,
+        shock_maximum(ingest),
     ));
     if shock <= 0.0 {
         return Ok(None);

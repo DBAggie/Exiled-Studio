@@ -1730,7 +1730,10 @@ fn a_guaranteed_shock_should_raise_the_shock_as_pob_does() {
     }
     // A stat that would change the shock otherwise stays a reason.
     let r = ice_nova_with(
-        &[minimum(25), ("shock_maximum_magnitude_+", 10)],
+        &[
+            minimum(25),
+            ("raider_shocks_you_apply_can_stack_up_to_50_times", 1),
+        ],
         &shocked(10.0),
     );
     assert!(matches!(

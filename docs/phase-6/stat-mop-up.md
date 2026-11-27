@@ -5901,3 +5901,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixture** (original): Ice Nova with an active Divine Life Flask with 50% (in use: "during any Flask Effect" applies). Every field equals PoB's. A line at 100% fits no variant of the game's mods, so no fixture has one.
 
 **Evidence** (`local/p6/d28fie` on `b-ig`, against `local/p6/d28cde`): public 0 unexpected, `Complete` 60,967 to 61,055 (the fixture's); no other value moved. Corpus 0 unexpected, no value moved.
+
+## The shock's maximum (the agent list, 2026-11-28)
+
+**The stats:** "+#% to Maximum Effect of Shock" (`shock_maximum_magnitude_+`) and "Maximum Effect of Shock is #% increased Damage taken" (`raider_shock_maximum_effect_override_%`), reasons on every shock until now (`damage_taken::SHOCK_DEPENDS_ON`).
+
+**PoB** (`CalcPerform.lua` 3532 to 3538): the shock's maximum is the `ShockMax` override, else 50 plus each active skill's `ShockMax` BASE (its `baseSkillModList`, which holds the character's), the largest.
+
+**The engine:** `Poe1Quantity::ShockMaximum` (`Base` and `Override`, two rows of `damage_taken::SHOCK_STATS`); `damage_taken::shock_maximum` gives the override, else 50 plus the character's BASE, for the configured, the guaranteed, and a skill's own shock. A skill's own `ShockMax` (Shock Nova's `shock_maximum_magnitude_+` in its gem data) stays its mapping's reason. The two stats leave `SHOCK_DEPENDS_ON`; its test now names the stacking shocks, and the maintainer-run shock coverage test lists their texts.
+
+**Fixtures** (original): Ice Nova against an enemy shocked for 70% with +10% to the maximum (the shock 60) and with the 30% override too (30). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28sme` on `b-ig`, against `local/p6/d28fie`): public 0 unexpected, `Complete` 61,055 to 61,229 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.

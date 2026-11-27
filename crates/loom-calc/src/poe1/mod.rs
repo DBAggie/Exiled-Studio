@@ -217,6 +217,9 @@ pub enum Poe1Quantity {
     /// "Critical Strikes have Culling Strike" (PoB's `CriticalCullPercent`
     /// MAX 10; the agent list, 2026-11-28): a `Flag`, read by [`hit`].
     CriticalCulling,
+    /// The shock's maximum (PoB's `ShockMax`; the agent list, 2026-11-28):
+    /// `Base`, added to 50, and `Override`, read by [`damage_taken`].
+    ShockMaximum,
     /// The critical cull percent the hit computes (`CalcOffence.lua` 3214
     /// to 3217): `Base`, read by [`combined`] beside the regular cull.
     CriticalCullPercent,
@@ -1732,6 +1735,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ManaAsEnergyShield => f.write_str("mana-as-energy-shield"),
             Self::EnergyShieldFromLife => f.write_str("energy-shield-from-life"),
             Self::CriticalCulling => f.write_str("critical-culling"),
+            Self::ShockMaximum => f.write_str("shock-maximum"),
             Self::CriticalCullPercent => f.write_str("critical-cull-percent"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
