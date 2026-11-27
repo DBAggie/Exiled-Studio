@@ -45,7 +45,10 @@
 //! - **Modifier magnitudes** ("... Modifier magnitudes", "... effect of
 //!   Prefixes/Suffixes"; `Item.lua` `modMagnitudeMods`): they scale other
 //!   lines of the item, so every modifier line of such an item is scaled
-//!   (`modifier-magnitude`).
+//!   (`modifier-magnitude`) when PoB applies them: on an advanced copy or a
+//!   crafted item (`Item.lua` 1377). Otherwise PoB reads the printed values,
+//!   which the game prints with the magnitudes applied, and so does the
+//!   engine.
 
 use std::collections::BTreeMap;
 
@@ -167,6 +170,7 @@ pub fn line_values_full(
     if modifiers
         .iter()
         .any(|(_, m)| m.selected && is_magnitude(&m.text))
+        && magnitudes_apply(item)
     {
         for (n, _) in &modifiers {
             out.insert(*n, LineValues::Scaled(Scaling::ModifierMagnitude));
@@ -380,6 +384,20 @@ fn has_value_then_range(text: &str) -> bool {
 
 /// PoB's `modMagnitudePattern`s: "... modifier magnitudes" and "...
 /// effect of prefixes/suffixes".
+/// Whether PoB scales the item's lines by its modifier magnitudes (the
+/// agent list, S9; `Item.lua` 1377, `if self.advancedCopy or
+/// self.crafted`): an advanced copy, which a line with a `{range:}` prefix
+/// (938 to 940), a `(a-b)` range (932 to 935), or the advanced `{ ` form
+/// (551 to 556) makes, or a `Crafted` item (768). Otherwise PoB reads each
+/// line's printed value, as the game prints it, magnitudes applied.
+fn magnitudes_apply(item: &Item) -> bool {
+    item.body.lines.iter().any(|line| match &line.kind {
+        LineKind::Modifier(m) => m.has("range") || has_range(&m.text),
+        LineKind::Spec { key, .. } => key == "Crafted",
+        _ => line.source.starts_with("{ "),
+    })
+}
+
 fn is_magnitude(text: &str) -> bool {
     let t = text.to_lowercase();
     t.contains("modifier magnitudes")
@@ -914,14 +932,26 @@ Implicits: 0
             Some(&LineValues::Scaled(Scaling::CorruptedRange))
         );
         assert_eq!(got.get(&lines[1]), None);
-        let text =
-            rare("Implicits: 0\n100% increased Explicit Modifier magnitudes\n+10 to Strength");
+        // An advanced copy (a `{range:}` line): PoB scales every line.
+        let text = rare(
+            "Implicits: 0\n100% increased Explicit Modifier magnitudes\n{range:0.5}+(10-20) to Strength",
+        );
         let got = line_values(&item(&text, &[]), &LineEnds::new());
         assert_eq!(got.len(), 2);
         assert!(
             got.values()
                 .all(|v| *v == LineValues::Scaled(Scaling::ModifierMagnitude))
         );
+        // A `Crafted` item too.
+        let text = rare(
+            "Crafted: true\nImplicits: 0\n100% increased Explicit Modifier magnitudes\n+10 to Strength",
+        );
+        assert_eq!(line_values(&item(&text, &[]), &LineEnds::new()).len(), 2);
+        // The agent list (S9): neither, so PoB reads the printed values, as
+        // the game prints them; no line is scaled.
+        let text =
+            rare("Implicits: 0\n100% increased Explicit Modifier magnitudes\n+10 to Strength");
+        assert!(line_values(&item(&text, &[]), &LineEnds::new()).is_empty());
     }
 
     #[test]
