@@ -223,6 +223,13 @@ pub enum Poe1Quantity {
     /// sources: `globalLimit` 100): a `Flag`, read by the body armour's
     /// armour row.
     BodyArmourArmourDoubled,
+    /// "Defences from Equipped Body Armour are doubled if it has no
+    /// Socketed Gems" (the agent list; PoB's `Defences` MORE 100 with the
+    /// `SlotName` Body Armour, at most once under its own limit key,
+    /// `ModParser.lua` 3039): a `Flag`; the body armour's armour, evasion,
+    /// energy shield, and ward times 2 ([`phases`]), apart from
+    /// [`Self::BodyArmourArmourDoubled`].
+    BodyArmourDefencesDoubled,
     /// The enemy's Blind effect (P6-11gq; "#% increased Blind Effect", an
     /// `EnemyModifier` of `BlindEffect` INC): `Increased`, read by
     /// [`damage_taken`]'s Blind.
@@ -1598,6 +1605,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::BodyArmourArmourDoubled => f.write_str("body-armour-armour-doubled"),
+            Self::BodyArmourDefencesDoubled => f.write_str("body-armour-defences-doubled"),
             Self::EnemyBlindEffect => f.write_str("enemy-blind-effect"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),

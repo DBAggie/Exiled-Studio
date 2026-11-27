@@ -1274,7 +1274,16 @@ pub(super) fn ward(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<f64, Ca
             } else {
                 0.0
             };
-            rows.push((base.value, own));
+            // The body armour's defences doubled (the agent list): PoB's
+            // `Defences` MORE in the slot's `calcLib.mod`.
+            let doubled = slot == ArmourSlot::BodyArmour
+                && flag_of(calc, Poe1Quantity::BodyArmourDefencesDoubled, reasons)?.is_some();
+            let base = if doubled {
+                base.value * 2.0
+            } else {
+                base.value
+            };
+            rows.push((base, own));
         }
     }
     let flat = sum(calc, q, Op::Base, Term::Step("ward-flat"), reasons)?.value;
@@ -1630,10 +1639,18 @@ pub(super) fn primary_defence(
     let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
     // "Armour from Equipped Body Armour is doubled" (P6-11gq): the body
     // armour's armour row times 2, once (PoB's `globalLimit` 100).
-    let doubled = if defence == Defence::Armour {
+    let armour_doubled = if defence == Defence::Armour {
         body_armour_doubled(calc, &mut reasons)?
     } else {
         None
+    };
+    // "Defences from Equipped Body Armour are doubled if it has no Socketed
+    // Gems" (the agent list): every defence of the body armour times 2,
+    // under its own limit, so with the armour's doubling too, 4.
+    let oath = body_armour_defences_doubled(calc, &mut reasons)?;
+    let doubled = match (armour_doubled, oath) {
+        (Some(a), Some(b)) => Some(product(calc, &[a, b], Term::Step("body-armour-doublings"))?),
+        (a, b) => a.or(b),
     };
     let mut rows = Vec::new();
     for slot in ArmourSlot::ALL {
@@ -1731,6 +1748,24 @@ fn body_armour_doubled(
         calc,
         &[flag, two],
         Term::Step("body-armour-armour-doubled"),
+    )?))
+}
+
+/// "Defences from Equipped Body Armour are doubled if it has no Socketed
+/// Gems" when on (the agent list; PoB's `Defences` MORE 100 with the
+/// `SlotName` Body Armour, at most once): the flag times 2.
+fn body_armour_defences_doubled(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let Some(flag) = flag_of(calc, Poe1Quantity::BodyArmourDefencesDoubled, reasons)? else {
+        return Ok(None);
+    };
+    let two = constant(calc, "body-armour-defences-doubled", 2.0)?;
+    Ok(Some(product(
+        calc,
+        &[flag, two],
+        Term::Step("body-armour-defences-doubled"),
     )?))
 }
 

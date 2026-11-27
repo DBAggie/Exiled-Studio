@@ -249,6 +249,65 @@ pub fn colour_count(build: &Build, slot: &str, colour: char) -> Option<u32> {
     }
 }
 
+/// Whether the item in `slot` (a slot's name) of the active item set is
+/// equipped and holds no socketed gem (the agent list; PoB's
+/// `Multiplier:SocketedGemsIn<slot>` at most 0 with `Condition:Using<slot>`,
+/// `CalcSetup.lua` 1206 to 1244): the count is `min(gem sockets, gems)`, the
+/// gem sockets the item's red, green, blue, and white ones, the gems the
+/// enabled known gems of the enabled groups in the slot that no item
+/// grants. With no gem the count is 0 whatever the sockets (PoB fills an
+/// item without a `Sockets` line with its base's socket limit, which the
+/// engine does not read). `Some(false)` with no item; `None` when the
+/// sockets (with gems in the slot) or a gem are not known.
+#[must_use]
+pub fn no_socketed_gems(build: &Build, data: &dyn CalcData, slot: &str) -> Option<bool> {
+    let Some(set) = active_item_set(build) else {
+        return Some(false);
+    };
+    let id = set
+        .slots
+        .typed()
+        .filter(|e| e.slot.as_str() == slot)
+        .last()
+        .and_then(|e| e.item);
+    let Some(id) = id.filter(|id| id.0 != 0) else {
+        return Some(false);
+    };
+    build.items.item(id)?;
+    let groups = match skill::active_groups(build) {
+        Ok(groups) => groups,
+        // No skill set: no gem anywhere.
+        Err(skill::SkillProblem::NoSkillSet) => Vec::new(),
+        Err(_) => return None,
+    };
+    let mut gems = 0usize;
+    for group in groups {
+        if !group.enabled
+            || group.slot.as_ref().map(|s| s.as_str()) != Some(slot)
+            || skill::attribute(&group.attributes, "source").is_some()
+        {
+            continue;
+        }
+        if group.gems.opaque().next().is_some() {
+            return None;
+        }
+        gems += group
+            .gems
+            .typed()
+            .filter(|g| g.enabled && skill::gem_effects(g, data).is_some())
+            .count();
+    }
+    if gems == 0 {
+        return Some(true);
+    }
+    let sockets = match sockets(build, slot) {
+        Sockets::Colours(c) => c.iter().filter(|x| "RGBW".contains(**x)).count(),
+        Sockets::None => 0,
+        Sockets::Always | Sockets::Unknown(_) => return None,
+    };
+    Some(sockets.min(gems) == 0)
+}
+
 /// The socket colour of a granted effect's `attribute` (PoB's `colours`).
 const fn colour(attribute: i64) -> Option<char> {
     match attribute {

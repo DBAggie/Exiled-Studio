@@ -2770,25 +2770,22 @@ fn life_regeneration_per_fortification_should_follow_the_stacks() {
     assert_eq!(state(&r, life_regen), StateKind::Complete);
 }
 
-/// A field's reason marker reaches that field alone (P6-10b review).
+/// "#% increased Movement Speed if you have Equipped Boots with no Socketed
+/// Gems" (the agent list; P6-10b's movement marker before): with no boots
+/// equipped the state is settled false, so the line gives nothing and
+/// every field stays `Complete`. (The marker lists keep their own test in
+/// `poe1::mapping`; no marker stat is left for this build's fields.)
 #[test]
-fn a_field_marker_should_be_that_fields_reason_only() {
+fn the_boots_line_should_follow_its_settled_state() {
     let r = witch_with(&[("movement_velocity_+%_while_no_gems_in_boots", 5)]);
-    for field in [
-        Poe1Field::MovementSpeedMod,
-        Poe1Field::EffectiveMovementSpeedMod,
-    ] {
-        assert_eq!(
-            state(&r, Field::Poe1(field)),
-            StateKind::Partial,
-            "{field:?}"
-        );
-    }
+    assert_eq!(value_of(&r, Field::Poe1(Poe1Field::MovementSpeedMod)), 1.0);
     for field in [
         Field::Life,
         Field::Mana,
         Field::Poe1(Poe1Field::LifeRegen),
         Field::Poe1(Poe1Field::ManaRegen),
+        Field::Poe1(Poe1Field::MovementSpeedMod),
+        Field::Poe1(Poe1Field::EffectiveMovementSpeedMod),
     ] {
         assert_eq!(state(&r, field), StateKind::Complete, "{field}");
     }

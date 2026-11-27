@@ -92,6 +92,25 @@ pub const SIX_LIFE_MASTERIES: &str = "SixLifeMasteries";
 /// computed, so the modifier acts when it is the main one.
 pub const MAIN_SKILL_TOXIC_RAIN: &str = "MainSkillToxicRain";
 
+/// An equipped helmet with no socketed gem (the agent list; PoB's
+/// `SocketedGemsInHelmet` at most 0 with `UsingHelmet`,
+/// [`super::sockets::no_socketed_gems`]).
+pub const NO_GEMS_IN_HELMET: &str = "NoSocketedGemsIn:Helmet";
+/// Equipped gloves with no socketed gem.
+pub const NO_GEMS_IN_GLOVES: &str = "NoSocketedGemsIn:Gloves";
+/// Equipped boots with no socketed gem.
+pub const NO_GEMS_IN_BOOTS: &str = "NoSocketedGemsIn:Boots";
+/// An equipped body armour with no socketed gem.
+pub const NO_GEMS_IN_BODY_ARMOUR: &str = "NoSocketedGemsIn:BodyArmour";
+
+/// Each armour slot's name and its no-socketed-gems state.
+const NO_GEMS: [(&str, &str); 4] = [
+    ("Helmet", NO_GEMS_IN_HELMET),
+    ("Gloves", NO_GEMS_IN_GLOVES),
+    ("Boots", NO_GEMS_IN_BOOTS),
+    ("Body Armour", NO_GEMS_IN_BODY_ARMOUR),
+];
+
 /// The skills a skill-named modifier names: each base active skill ID
 /// and its state.
 pub const NAMED_MAIN_SKILLS: [(&str, &str); 1] = [("toxic_rain", MAIN_SKILL_TOXIC_RAIN)];
@@ -178,6 +197,13 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
                 ConditionKey::new(key),
                 active.is_some_and(|a| is_skill(a, id)),
             );
+        }
+    }
+    // An armour slot with no socketed gem (the agent list): unsettled when
+    // its sockets or gems are not known.
+    for (slot, key) in NO_GEMS {
+        if let Some(v) = super::sockets::no_socketed_gems(input.build, input.data, slot) {
+            out.insert(ConditionKey::new(key), v);
         }
     }
     // The config's condition checks (P3-8n).

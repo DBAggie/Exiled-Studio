@@ -4818,6 +4818,18 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "block_chance_on_damage_taken_%",
         &[(BLOCK, Op::Base, NONE, conditions::BEEN_HIT_RECENTLY)],
+    ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "Defences
+    // from Equipped Body Armour are doubled if it has no Socketed Gems"
+    // (`Defences` MORE 100, the body armour's, at most once): `phases`.
+    (
+        "body_armour_defences_doubled_while_no_gems_in_body_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BodyArmourDefencesDoubled),
+            Op::Flag,
+            NONE,
+            states::NO_GEMS_IN_BODY_ARMOUR,
+        )],
     ), // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
     // ModParser.lua 1785), from the config (`poe1::conditions`).
@@ -5355,6 +5367,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::NOT_HIT_RECENTLY,
         )],
     ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "+#% to all
+    // Elemental Resistances if you have an Equipped Helmet with no Socketed
+    // Gems" (`ElementalResist` BASE, `SocketedGemsInHelmet` at most 0 with
+    // `UsingHelmet`).
+    (
+        "elemental_resistance_%_while_no_gems_in_helmet",
+        &[
+            (FIRE, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+            (COLD, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+            (LIGHTNING, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+        ],
+    ),
     // The agent list (a game-truth line PoB reads): the boots enchantment
     // "#% increased Attack and Cast Speed if you've Killed Recently"
     // (`Speed` INC for attacks and casts, `KilledRecently`).
@@ -5696,6 +5720,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
         )],
     ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "#%
+    // increased Maximum Life if you have Equipped Gloves with no Socketed
+    // Gems" (`Life` INC, `SocketedGemsInGloves` at most 0 with
+    // `UsingGloves`).
+    (
+        "maximum_life_+%_while_no_gems_in_gloves",
+        &[(
+            Quantity::Life,
+            Op::Increased,
+            NONE,
+            states::NO_GEMS_IN_GLOVES,
+        )],
+    ),
     // P3-8n: "Melee Damage with Hits at Close Range": `Damage` INC with
     // `ModFlag.Melee` (716) and `KeywordFlag.Hit` (990), `AtCloseRange` (1939).
     (
@@ -5835,6 +5872,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::IGNITED,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "#%
+    // increased Movement Speed if you have Equipped Boots with no Socketed
+    // Gems" (`MovementSpeed` INC, `SocketedGemsInBoots` at most 0 with
+    // `UsingBoots`); a movement reason since P6-10b.
+    (
+        "movement_velocity_+%_while_no_gems_in_boots",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            states::NO_GEMS_IN_BOOTS,
         )],
     ),
     // P6-11hc: "Nearby Enemy Monsters' Fire Resistance against Damage over
@@ -11696,8 +11746,9 @@ pub const COST_REASONS: &[&str] = &[
 /// since P6-11ie.) (The armour movement penalties ignored are a row since P6-11cp;
 /// during a flask's effect, on low life, and while ignited are
 /// [`STATE_ROWS`] since P6-11ei.) Momentum's Swiftness is
-/// `poe1::gems`'s (P6-11y).
-pub const MOVEMENT_REASONS: &[&str] = &["movement_velocity_+%_while_no_gems_in_boots"];
+/// `poe1::gems`'s (P6-11y). None left: with no gems in the boots is a
+/// [`STATE_ROWS`] row since the agent list.
+pub const MOVEMENT_REASONS: &[&str] = &[];
 
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
@@ -13447,8 +13498,13 @@ mod tests {
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
-                        // The agent list: the main skill by name.
+                        // The agent list: the main skill by name, and the
+                        // armour slots with no socketed gem.
                         states::MAIN_SKILL_TOXIC_RAIN,
+                        states::NO_GEMS_IN_HELMET,
+                        states::NO_GEMS_IN_GLOVES,
+                        states::NO_GEMS_IN_BOOTS,
+                        states::NO_GEMS_IN_BODY_ARMOUR,
                         // P6-8a part 2: settled by the spell path from the
                         // trigger before the damage.
                         super::super::triggers::TRIGGERED_DAMAGE,
@@ -15126,6 +15182,27 @@ mod tests {
             (
                 "enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
                 vec![config(Quantity::Speed, Op::Increased, NONE, conditions::KILLED_RECENTLY)],
+            ),
+            // The agent list: the Warden's lines with no socketed gems.
+            (
+                "body_armour_defences_doubled_while_no_gems_in_body_armour",
+                vec![config(Quantity::Poe1(Poe1Quantity::BodyArmourDefencesDoubled), Op::Flag, NONE, states::NO_GEMS_IN_BODY_ARMOUR)],
+            ),
+            (
+                "elemental_resistance_%_while_no_gems_in_helmet",
+                vec![
+                    config(FIRE, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                    config(COLD, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                    config(LIGHTNING, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                ],
+            ),
+            (
+                "maximum_life_+%_while_no_gems_in_gloves",
+                vec![config(Quantity::Life, Op::Increased, NONE, states::NO_GEMS_IN_GLOVES)],
+            ),
+            (
+                "movement_velocity_+%_while_no_gems_in_boots",
+                vec![config(Quantity::Poe1(Poe1Quantity::MovementSpeed), Op::Increased, NONE, states::NO_GEMS_IN_BOOTS)],
             ),
             (
                 "number_of_additional_curses_allowed_while_affected_by_malevolence",
