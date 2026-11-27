@@ -82,8 +82,8 @@ pub const DOT_SKILL_DATA_KEYS: [&str; 5] = [
     "dotIsSpell",
 ];
 
-/// The `FLAG` base mods of PoB's DoT this phase reads: the ground and
-/// stacking DoTs it leaves not computed.
+/// The `FLAG` base mods of PoB's DoT this phase reads: the ground DoTs it
+/// leaves not computed, and the stacking DoT, a reason (`stacking-dot`).
 pub const DOT_FLAGS: [&str; 5] = [
     "DotCanStack",
     "dotIsBurningGround",
@@ -405,11 +405,23 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let mut reasons = Reasons::new();
     // Ground DoTs and stacking DoTs go to outputs this phase does not
     // compute (module docs).
+    // A stacking DoT is in PoB's `TotalDot` (Toxic Rain's pods; the agent
+    // list, 2026-11-27): a reason, so the full and combined DPS that add it
+    // carry it.
+    if pob.is_some_and(|p| p.base_flag("DotCanStack")) {
+        calc.set_unsupported(
+            Field::DotDps,
+            UnsupportedReason::UnmodelledSkill {
+                source,
+                what: "stacking-dot",
+            },
+        );
+        return Ok(());
+    }
     let ground = pob.is_some_and(|p| {
         p.base_flag("dotIsBurningGround")
             || p.base_flag("dotIsCausticGround")
             || p.base_flag("dotIsCorruptingBlood")
-            || p.base_flag("DotCanStack")
             // PoB removes the skill's own increases from Herald of Ash's
             // DoT (`CalcOffence.lua` 5702): not modelled.
             || p.base_flag("dotIsHeraldOfAsh")

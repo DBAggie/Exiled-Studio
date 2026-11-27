@@ -809,9 +809,14 @@ mod tests {
                 let pob = super::super::pob_skill::skill(id).unwrap_or_else(|| panic!("{id}"));
                 let explodes = pob.base_mods.iter().any(|m| m.key == Some("explodeCorpse"));
                 assert!(!pob.functions.is_empty() || explodes, "{id}");
+                // Vetted only as a no-op without the input (the agent list,
+                // 2026-11-27: Toxic Rain), the attack's reason with it.
+                let config_noop = super::super::hit::CONFIG_NOOP_FUNCTIONS
+                    .iter()
+                    .any(|(s, _, name)| s == id && name == input);
                 for part in 0..=pob.parts.len() {
                     assert!(
-                        !super::super::hit::pob_vetted_with(id, part, true),
+                        config_noop || !super::super::hit::pob_vetted_with(id, part, true),
                         "{id} {part}"
                     );
                 }

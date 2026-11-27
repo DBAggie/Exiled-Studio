@@ -25,7 +25,9 @@
 //! own. Each field it reads carries its reasons; a skill's hit not computed
 //! is a reason (`full-dps-skill`), counted as nothing. Not modelled, each a
 //! reason: a skill's mirage (PoB adds the mirage's own output), damage over
-//! time of a skill with a count above 1 (`DotCanStack` is not known),
+//! time of a skill with a count above 1 (`DotCanStack` is not known), a
+//! skill's stacking damage over time (its DoT field's `stacking-dot`,
+//! carried; the agent list, 2026-11-27),
 //! a skill's own burning ground and caustic ground, corrupting blood, decay, and the skills
 //! PoB counts once by a config condition (Absolution, Dominating Blow,
 //! Holy Strike).
@@ -145,6 +147,14 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let hit = read(Field::HitDps, &mut reasons).max(0.0);
         let impale = read(Field::Poe1(Poe1Field::ImpaleDps), &mut reasons);
         let poison = read(Field::PoisonDps, &mut reasons);
+        // A DoT the engine does not compute but PoB adds (a stacking DoT,
+        // the agent list, 2026-11-27): its reasons, the DoT counted as 0.
+        if let Some(crate::state::FieldState::Unsupported(r)) =
+            result.fields.get(&Field::DotDps).map(|f| &f.state)
+            && *r != UnsupportedReason::NotComputed
+        {
+            reasons.partial.insert(r.clone());
+        }
         let dot = read(Field::DotDps, &mut reasons);
         let ignite = read(Field::IgniteDps, &mut reasons);
         let ground = read(Field::Poe1(Poe1Field::BurningGroundDps), &mut reasons);

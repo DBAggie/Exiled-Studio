@@ -455,7 +455,36 @@ pub const TRIGGER_OWN_STATS: [&str; 2] = [
 ///   `SequentialProjectiles` (769), whose one mapped source, Barrage's
 ///   `projectiles_barrage`, guards the projectile count
 ///   (`mapping::NO_EFFECT_DEPENDS_ON`).
-pub const READ_BASE_FLAGS: [&str; 2] = ["CannotSplit", "OneShotProj"];
+/// - `DotCanStack` (Toxic Rain's; the agent list, 2026-11-27): read only
+///   for the damage over time and the mirages' and full DPS's count of it
+///   (`CalcOffence.lua` 5737, 6117; `Calcs.lua` 271), never the hit; the
+///   DoT vets itself ([`super::dot::pob_dot_vetted`]).
+pub const READ_BASE_FLAGS: [&str; 3] = ["CannotSplit", "DotCanStack", "OneShotProj"];
+
+/// Skill functions that do nothing unless a config input sets the skill
+/// data they read (the agent list, 2026-11-27): (skill, function, input).
+/// Toxic Rain's `preDamageFunc` (`act_dex.lua`, `ToxicRain` and its
+/// transfigured gems) sets `dpsMultiplier = min(podOverlapMultiplier or
+/// 1, ProjectileCount)`, 1 without the config's `toxicRainPodOverlap`
+/// (`ConfigOptions.lua` 700 to 702). Vetted; the attack keeps
+/// `pob-skill-data` when the input is set ([`config_noop_set`]).
+pub const CONFIG_NOOP_FUNCTIONS: [(&str, &str, &str); 3] = [
+    ("ToxicRain", "preDamageFunc", "toxicRainPodOverlap"),
+    ("ToxicRainAltX", "preDamageFunc", "toxicRainPodOverlap"),
+    ("ToxicRainAltY", "preDamageFunc", "toxicRainPodOverlap"),
+];
+
+/// Whether the build sets the input of one of `id`'s
+/// [`CONFIG_NOOP_FUNCTIONS`].
+fn config_noop_set(input: &CalcInput<'_>, id: &str) -> bool {
+    let Some(set) = super::collect::active_config(input.build) else {
+        return false;
+    };
+    CONFIG_NOOP_FUNCTIONS.iter().any(|(s, _, name)| {
+        *s == id
+            && super::config::last_input(set, name, loom_domain::ConfigInputKind::Input).is_some()
+    })
+}
 
 /// [`pob_vetted`], where `no_cooldown` says the main skill's level has no
 /// cooldown: only then a function of [`READ_FUNCTIONS`] counts as read.
@@ -490,6 +519,9 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
             || READ_PART_FUNCTIONS.contains(&(id, *f))
             || NOOP_PART_FUNCTIONS.contains(&(id, *f, index))
             || NO_SLICE_FUNCTIONS.contains(&(id, *f))
+            || CONFIG_NOOP_FUNCTIONS
+                .iter()
+                .any(|(s, func, _)| *s == id && func == f)
     };
     if !pob.functions.iter().all(function_read) {
         return false;
@@ -2035,8 +2067,9 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     };
     // PoB's data of the skill, read in full ([`pob_vetted`]); a trigger's
     // rate clears its `showAverage` ([`pob_vetted_triggered`]).
-    let read = attack.known_parts
-        || (trigger_speed.is_some() && pob_vetted_triggered(id, attack.part_index, false));
+    let read = (attack.known_parts
+        || (trigger_speed.is_some() && pob_vetted_triggered(id, attack.part_index, false)))
+        && !config_noop_set(calc.input(), id);
     if !read {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),

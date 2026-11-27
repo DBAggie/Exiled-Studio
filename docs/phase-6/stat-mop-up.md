@@ -5610,3 +5610,16 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): `ice-nova-frost-shield-quality-chill-witch.xml` (Frost Shield at quality 20, with "Damage taken increased by Chill Effect": average damage 814.85) and `ice-nova-frost-shield-unbound-chill-witch.xml` (with Unbound Ailments and 20% increased Effect of Chill: 865.78). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27ch2e` on `b-ig`, against `local/p6/d27spe`): public 0 unexpected, `Complete` 55,598 to 55,772 (the fixtures' 174); 4 values moved, in `winter-orb-elementalist.xml`: its average damage toward PoB (24,727 to 25,559, PoB 37,942), its DPS away (242,329 to 250,475, PoB 219,115), because the engine multiplies by the cast rate (9.8) where PoB uses Winter Orb's own hit rate (5.775; Winter Orb's mechanics are not modelled, a reason on the build). Corpus 0 unexpected, no value moved.
+
+## Toxic Rain's hit vetted (the agent list, 2026-11-27)
+
+**The reason:** `pob-skill-data` on Toxic Rain (`toxic-rain-damage-templar.xml`, 8 fields, their only reason). PoB's `preDamageFunc` (`act_dex.lua`, `ToxicRain` and its two transfigured gems) sets `dpsMultiplier = min(podOverlapMultiplier or 1, ProjectileCount)`, which is 1 unless the config's `toxicRainPodOverlap` sets the overlap (`ConfigOptions.lua` 700 to 702); its base mods add `OneShotProj` (read only with sequential projectiles) and `DotCanStack` (read only for the DoT, the mirages, and full DPS).
+
+**The engine:**
+- `hit::CONFIG_NOOP_FUNCTIONS`: the three functions count as read; the attack keeps `pob-skill-data` when the build sets `toxicRainPodOverlap` (`config_noop_set`). `config::SKILL_DATA_ONLY`'s test allows a skill listed there.
+- `hit::READ_BASE_FLAGS` gains `DotCanStack`.
+- A stacking DoT (`DotCanStack`), which PoB adds to `TotalDot`, was left `NotComputed` by `poe1::dot`, so full DPS read it as 0 with no reason; it is now the DoT field's reason `stacking-dot`, which `full_dps` carries. Toxic Rain's full DPS (hits 3.19, PoB 551.56 with its pods) is now partial.
+
+**Fixture:** `toxic-rain-damage-templar.xml` (mechanic) retargeted: its hit, crit, and average damage now `Complete` and equal to PoB's; the attack rate is the Q11 floored-millisecond rate (1.6492 against PoB's 1.65), with its DPS and mana per second: `game-truth` DIV-1008 to DIV-1010.
+
+**Evidence** (`local/p6/d27tre` on `b-ig`, against `local/p6/d27ch2e`): public 0 unexpected, `Complete` 55,772 to 55,779 (Toxic Rain's 7 fields), no value moved; corpus 0 unexpected, no value moved.
