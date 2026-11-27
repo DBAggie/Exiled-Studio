@@ -347,8 +347,12 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   ramp `{1, 0}`, `act_str.lua` 9875 to 9877):
 ///   `collect::melee_proximity` (P6-11ht);
 /// - Static Strike's less beam damage (`Damage` MORE in part 2,
-///   `act_str.lua` 10679 to 10681): [`static_strike_beams`] (agent list).
-pub const READ_OWN_STATS: [(&str, &str); 4] = [
+///   `act_str.lua` 10679 to 10681): [`static_strike_beams`] (agent list);
+/// - Ground Slam's more damage to close targets (`Damage` MORE `Hit` with
+///   `Condition:AtCloseRange`, `act_str.lua` 2086 to 2088): the mapping's
+///   state row under the config's `conditionAtCloseRange` (open items, S1).
+pub const READ_OWN_STATS: [(&str, &str); 5] = [
+    ("GroundSlam", "groundslam_damage_to_close_targets_+%_final"),
     ("StaticStrike", BEAM_DAMAGE_STAT),
     (
         "ShieldCrush",
@@ -5628,6 +5632,8 @@ mod tests {
     #[test]
     fn cyclone_should_be_vetted_by_its_area_only_data() {
         assert!(pob_vetted("Cyclone", 0) && pob_vetted("VaalCyclone", 0));
+        // Ground Slam's close-range stat is the mapping's state row.
+        assert!(pob_vetted("GroundSlam", 0));
         assert!(!pob_vetted("CycloneAltX", 0));
         for (id, f) in NO_SLICE_FUNCTIONS {
             let pob = super::super::pob_skill::skill(id).expect(id);

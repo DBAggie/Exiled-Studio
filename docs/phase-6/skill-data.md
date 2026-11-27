@@ -216,3 +216,12 @@ Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted o
   - Cyclone's attack rate is the weapon's floored attack time: a copy of the fixture with Cyclone as the main skill gives `Speed` 4.4978 against PoB's 4.5, and `TotalDPS` 21.0882 against 21.0987, the whole difference.
 - **Unchanged:** no value moved; the other Cyclone builds (`Dual Wield Cospris CoC.xml`, `cyclone-shockwave-slayer.xml`) keep their other reasons.
 - **Corpus:** no document changed.
+
+**Ground Slam** (open items S1, 2026-11-26). Its own stat `groundslam_damage_to_close_targets_+%_final` is `Damage` MORE with `ModFlag.Hit` and `Condition:AtCloseRange` (`act_str.lua` 2086 to 2088).
+- It is now a state row of the mapping under `conditions::AT_CLOSE_RANGE`, which the config's `conditionAtCloseRange` settles (`ConfigOptions.lua` 1765), and is listed in `hit::READ_OWN_STATS`.
+- Two original fixtures, `ground-slam-close-range-templar.xml` (the check on) and `ground-slam-templar.xml` (off), each equal to PoB's but the Q11 attack rate (DIV-0857 to DIV-0866); 83 targets each.
+
+**Evidence** (`local/p6/s1-c`, against `local/p6/s1-b`):
+- **Public:** 0 unexpected; `Complete` 49,388 to 49,564 (the two fixtures).
+- **Unchanged:** no other value moved. The two builds with Ground Slam (`boneshatter-juggernaut.xml`, `smite-inquisitor-act1.xml`) keep their other reasons.
+- **Corpus:** no document changed.

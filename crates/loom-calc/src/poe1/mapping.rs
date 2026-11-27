@@ -5424,6 +5424,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ENEMY_BURNING,
         )],
     ),
+    // Open items S1: Ground Slam's more damage to close targets (its own stat
+    // map: `Damage` MORE with `ModFlag.Hit` and `Condition:AtCloseRange`,
+    // `act_str.lua` 2086 to 2088), at close range as the config says.
+    (
+        "groundslam_damage_to_close_targets_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::HIT,
+            conditions::AT_CLOSE_RANGE,
+        )],
+    ),
     // P6-11hu: "You have Onslaught if you've Summoned a Totem Recently"
     // (`Condition:Onslaught` FLAG, `Condition` `SummonedTotemRecently`):
     // Onslaught while the config or a totem main skill says so
@@ -13445,6 +13457,15 @@ mod tests {
                     Quantity::Damage,
                     Op::Increased,
                     Flags::MELEE.union(Flags::HIT),
+                    conditions::AT_CLOSE_RANGE,
+                )],
+            ),
+            (
+                "groundslam_damage_to_close_targets_+%_final",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    Flags::HIT,
                     conditions::AT_CLOSE_RANGE,
                 )],
             ),
