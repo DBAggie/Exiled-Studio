@@ -2294,6 +2294,13 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list: "Adds # to # Chaos Damage" (PoB `SkillStatMap.lua`
+    // 867 to 872: `ChaosMin` and `ChaosMax` BASE, no flag), as the cold and
+    // lightning rows.
+    (
+        "global_maximum_added_chaos_damage",
+        &[(added(CHAOS_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
     (
         "global_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -2301,6 +2308,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "global_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "global_minimum_added_chaos_damage",
+        &[(added(CHAOS_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
     (
         "global_minimum_added_cold_damage",

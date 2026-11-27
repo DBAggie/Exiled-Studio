@@ -5510,3 +5510,15 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Evidence** (`local/p6/d27lfe` on `b-pb`, against `local/p6/d27ele`): public 0 unexpected, `Complete` 54,300 to 54,387 (the fixture's 87); 34 values of `cyclone-shockwave-slayer.xml` moved, all toward PoB, 25 now equal (its taken multipliers, maximum hits, damage over time EHPs, regenerations); its DPS 21.6 to 23.9 million (PoB 31.0). Corpus 0 unexpected, no document changed.
 
 **Checked and left** (PoB's parse, 2026-11-27): "You take #% reduced Extra Damage from Critical Strikes per Endurance Charge": PoB parses only the line without "per Endurance Charge", so it applies nothing; the line was already on the maintainer's game-truth list. "#% increased Damage with Hits against Rare monsters" (`damage_+%_vs_rare_monsters`) is unparsed by PoB too and joins that list.
+
+## Global added chaos damage (the agent list, 2026-11-27)
+
+**The stats:** "Adds # to # Chaos Damage" (`global_minimum_added_chaos_damage`, `global_maximum_added_chaos_damage`; public 90 fields of 1 build, Impresence in `arakaalis-raise-spider-occultist.xml`).
+
+**PoB** (`SkillStatMap.lua` 867 to 872): `ChaosMin` and `ChaosMax` BASE with no flag, as its cold and lightning rows (855 to 866), which the engine maps already. (Its fire and physical global forms have no row, so they stay unmapped, as the mapping's test says.)
+
+**The engine:** two `HIT_ROWS` rows, as the cold and lightning ones.
+
+**Fixture** (original) `ice-nova-global-added-chaos-witch.xml`: Ice Nova with "Adds 18 to 28 Chaos Damage": average hit 1,309.6 to 1,351.3. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27che` on `b-pb`, against `local/p6/d27lfe`): public 0 unexpected; no value moved (the build is a minion build, whose fields keep other reasons); `Complete` 54,387 to 54,474 with the fixture. Corpus 0 unexpected, no document changed.
