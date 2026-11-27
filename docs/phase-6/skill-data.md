@@ -169,7 +169,7 @@ Two generic lists in `poe1::hit` now name what the engine reads of that data:
   - `CannotSplit` is read only for the split count (`CalcOffence.lua` 1069), which no slice field holds.
   - `OneShotProj` is read only with `SequentialProjectiles` (769). Its one mapped source, Barrage's `projectiles_barrage`, already guards the projectile count (`mapping::NO_EFFECT_DEPENDS_ON`).
 
-Icicle Burst stays partial. PoB turns `showAverage` off only when a trigger sets the rate (2227), and the vetting does not know the trigger; the attack path does not read the flag. Spark stays partial for its function and parts.
+Icicle Burst stays partial. PoB turns `showAverage` off only when a trigger sets the rate (2227), and the vetting does not know the trigger; the attack path does not read the flag. Spark stays partial for its function and parts. (Both cleared by open items S1, below.)
 
 The test `read_lists_should_vet_only_what_the_engine_reads` checks that each listed entry is in PoB's data, that the four skills are vetted, and that Icicle Burst is not.
 
@@ -183,3 +183,23 @@ The test `read_lists_should_vet_only_what_the_engine_reads` checks that each lis
 - the minion skill's level picked by level requirement (`CalcActiveSkill.lua` 895 to 902; the engine builds a minion skill at level 1);
 - the gem's Holy Relic's Boon, a buff behind the config check `summonHolyRelicEnableHolyRelicBoon`;
 - PoB's `nova` trigger with the minion as its actor (`CalcTriggers.lua` 1167): the character's fastest attack, times its chance to hit, capped by the Nova's cooldown, gives the minion's rate (the kept fixture: 0.2806, Smite's 1.275 at a 22% chance to hit).
+
+## Open items S1 (2026-11-26): Icicle Burst's `showAverage` and Spark's part 1
+
+The two skills S3 part 7 left partial (above), each the only reason on its fixture's fields:
+- **Icicle Burst's `showAverage`** (an untagged `SkillData` base mod). PoB clears it when a trigger sets the skill's rate (`CalcOffence.lua` 2223 to 2227: `skillData.showAverage = false`). Otherwise PoB reads it in many outputs: the combined DPS, leech, poison and bleed stacks, impale (333, 3926, 4014, 4767, 5535, 5983, 6131).
+  - `hit::pob_vetted_triggered` vets a skill with that base mod read (`SHOW_AVERAGE_KEY`).
+  - The attack path and the spell path use it only when a trigger's rate is set (`triggers::Outcome::Rate`), and never for Cast on Death, which keeps `showAverage`.
+  - A self-cast skill with its own `showAverage` keeps `pob-skill-data`, as before: Essence Drain, Hexblast, Earthquake, and the others in PoB's data.
+  - The attack path now adds the reason after the trigger's outcome; `SpellSkill::vetted_triggered` carries the spell's.
+- **Spark's `preDamageFunc`** (`act_int.lua` 16721 to 16727) multiplies the DPS by the hits per duration in part 2, "Maximum Hits", only. In part 1, "1 Hit", it changes nothing. `hit::NOOP_PART_FUNCTIONS` names (skill, function, part) entries a part does not run; Spark's part 2 keeps the reason.
+
+Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted only when triggered), `spark_should_be_vetted_in_its_first_part_only`.
+
+**Evidence** (`local/p6/s1-a`, `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,386; no value moved.
+  - `trigger-mjolner-spark-templar.xml`: seven fields `Complete`, each equal to PoB's.
+  - `trigger-camerias-icicle-burst-templar.xml`: eight fields `Complete`. Its trigger rate is S3 part 7's Q11 difference (Smite's attack rate in floored ms fed to PoB's rotation, as Bone Nova's), now registered: DIV-0850 to DIV-0854.
+  - Both fixtures retargeted: 86 and 83 targets.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check.

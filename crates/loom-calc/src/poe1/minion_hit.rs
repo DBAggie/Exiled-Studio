@@ -375,6 +375,7 @@ fn spell<'d>(
         projectile: part.projectile,
         melee: part.melee,
         vetted: true,
+        vetted_triggered: true,
     }))
 }
 

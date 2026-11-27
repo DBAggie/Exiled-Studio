@@ -384,6 +384,20 @@ pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 /// [`static_strike_beams`] reads; in part 1 it does nothing.
 pub const READ_PART_FUNCTIONS: [(&str, &str); 1] = [("StaticStrike", "preDamageFunc")];
 
+/// Skill functions that do nothing in one part (open items, S1): (skill,
+/// function, part). Spark's `preDamageFunc` (`act_int.lua` 16721 to 16727)
+/// multiplies the DPS by the hits per duration in part 2, "Maximum Hits",
+/// only; in part 1, "1 Hit", it changes nothing. Part 2 keeps
+/// `pob-skill-data`.
+pub const NOOP_PART_FUNCTIONS: [(&str, &str, usize); 1] = [("Spark", "preDamageFunc", 1)];
+
+/// The `SkillData` key PoB clears when a trigger sets the skill's rate
+/// (`CalcOffence.lua` 2223 to 2227: `skillData.showAverage = false`), and
+/// reads otherwise in many outputs (the combined DPS, leech, poison and
+/// bleed stacks, impale; 333, 3926, 4014, 4767, 5535, 5983, 6131). Read only
+/// for a triggered skill ([`pob_vetted_triggered`]; open items, S1).
+pub const SHOW_AVERAGE_KEY: &str = "showAverage";
+
 /// Static Strike's zap period, milliseconds (PoB's `repeatFrequency`, `div =
 /// 1000`, `act_str.lua` 10682 to 10685).
 pub const ZAP_FREQUENCY_STAT: &str = "static_strike_base_zap_frequency_ms";
@@ -422,12 +436,27 @@ pub const READ_BASE_FLAGS: [&str; 2] = ["CannotSplit", "OneShotProj"];
 /// cooldown: only then a function of [`READ_FUNCTIONS`] counts as read.
 #[must_use]
 pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
+    vetted(id, index, no_cooldown, false)
+}
+
+/// [`pob_vetted_with`] for a skill a trigger sets the rate of: PoB then
+/// clears its own `showAverage` ([`SHOW_AVERAGE_KEY`]), so that base mod
+/// counts as read (open items, S1; Icicle Burst, which Cameria's Avarice
+/// triggers).
+#[must_use]
+pub fn pob_vetted_triggered(id: &str, index: usize, no_cooldown: bool) -> bool {
+    vetted(id, index, no_cooldown, true)
+}
+
+/// The vetting ([`pob_vetted_with`]); `triggered`: [`pob_vetted_triggered`].
+fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
     let Some(pob) = super::pob_skill::skill(id) else {
         return false;
     };
     let function_read = |f: &&str| {
         (no_cooldown && READ_FUNCTIONS.contains(&(id, *f)))
             || READ_PART_FUNCTIONS.contains(&(id, *f))
+            || NOOP_PART_FUNCTIONS.contains(&(id, *f, index))
     };
     if !pob.functions.iter().all(function_read) {
         return false;
@@ -452,7 +481,9 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
         m.name == "SkillData"
             && !m.tagged
             && m.key.is_some_and(|k| {
-                DISPLAY_SKILL_DATA.contains(&k) || super::dot::DOT_SKILL_DATA_KEYS.contains(&k)
+                DISPLAY_SKILL_DATA.contains(&k)
+                    || super::dot::DOT_SKILL_DATA_KEYS.contains(&k)
+                    || (triggered && k == SHOW_AVERAGE_KEY)
             })
     };
     // A part's own base mod, in another part than this one.
@@ -575,6 +606,9 @@ pub struct SpellSkill<'d> {
     /// Whether the engine reads all of PoB's data of the skill
     /// ([`pob_vetted`]).
     pub vetted: bool,
+    /// Whether it does when a trigger sets its rate
+    /// ([`pob_vetted_triggered`]: its own `showAverage` read).
+    pub vetted_triggered: bool,
 }
 
 impl SpellSkill<'_> {
@@ -744,6 +778,8 @@ pub fn spell_skill<'d>(
         projectile: part.projectile,
         melee: part.melee,
         vetted: known && pob_vetted_with(&effect.id, part_index, level_row.cooldown == 0),
+        vetted_triggered: known
+            && pob_vetted_triggered(&effect.id, part_index, level_row.cooldown == 0),
     })
 }
 
@@ -1320,7 +1356,13 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     let mut unvetted = wand_reasons;
     // The repeats, before the damage and the rate (P6-11aj).
     super::repeats::apply(calc, &spell.skill.types, &cx, &mut unvetted);
-    if !spell.vetted {
+    // A trigger's rate clears the skill's own `showAverage` (open items,
+    // S1); Cast on Death's keeps it.
+    let read = spell.vetted
+        || (spell.vetted_triggered
+            && !on_death
+            && matches!(trigger, super::triggers::Outcome::Rate(..)));
+    if !read {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: spell.source(),
             what: "pob-skill-data",
@@ -1883,12 +1925,6 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let skill_cx = calc.context(flags);
     super::repeats::apply(calc, &attack.skill.types, &skill_cx, &mut unvetted);
     let id = attack.skill.effect().id.as_str();
-    if !attack.known_parts {
-        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
-            source: attack.source(),
-            what: "pob-skill-data",
-        });
-    }
     // A totem's attack ([`TOTEM_REASON`]): the character's keeps the reason
     // only for [`TOTEM_DATA_SKILLS`]; a minion's as before.
     if attack.skill.types.contains("SummonsTotem")
@@ -1964,6 +2000,16 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             return Ok(());
         }
     };
+    // PoB's data of the skill, read in full ([`pob_vetted`]); a trigger's
+    // rate clears its `showAverage` ([`pob_vetted_triggered`]).
+    let read = attack.known_parts
+        || (trigger_speed.is_some() && pob_vetted_triggered(id, attack.part_index, false));
+    if !read {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "pob-skill-data",
+        });
+    }
     let triggered = |calc: &mut Calc<'_>, rate: &mut HandRate| -> Result<(), CalcError> {
         if let Some((value, reasons)) = &trigger_speed {
             let speed = phases::constant(calc, "skill-trigger-rate", *value)?;
@@ -5546,8 +5592,25 @@ mod tests {
         ] {
             assert!(pob_vetted(id, 0), "{id}");
         }
-        // Icicle Burst's `showAverage` is not read on the attack path.
+        // Icicle Burst's `showAverage` is read only when a trigger sets the
+        // rate (open items, S1).
         assert!(!pob_vetted("IcicleBurst", 0));
+        assert!(pob_vetted_triggered("IcicleBurst", 0, false));
+        // A skill without `showAverage` that fails for another reason fails
+        // triggered too.
+        assert!(!pob_vetted_triggered("IceSpear", 1, true));
+    }
+
+    /// Open items, S1: Spark's function does nothing in part 1, "1 Hit";
+    /// part 2 multiplies the DPS by its hits and is not read.
+    #[test]
+    fn spark_should_be_vetted_in_its_first_part_only() {
+        assert!(pob_vetted("Spark", 1));
+        assert!(!pob_vetted("Spark", 2));
+        for (id, f, _) in NOOP_PART_FUNCTIONS {
+            let pob = super::super::pob_skill::skill(id).expect(id);
+            assert!(pob.functions.contains(&f), "{id} {f}");
+        }
     }
 
     /// Agent list: Static Strike's data is read in both parts (its function,
