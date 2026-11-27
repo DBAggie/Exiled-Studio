@@ -809,13 +809,26 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     out.insert(ConditionKey::new(AFFECTED_BY_HERALD), heralds > 0);
     // Using a life flask (P6-11cq): the active flasks; no config check
     // sets it.
-    if let Some(v) = super::flasks::using_life_flask(input) {
+    // A flask instant on low life (the agent list) reads the settled low
+    // life.
+    let low_life = out.get(&ConditionKey::new(LOW_LIFE)).copied();
+    if let Some(v) = super::flasks::using_life_flask(input, low_life) {
         out.insert(ConditionKey::new(USING_LIFE_FLASK), v);
     }
-    // Using any flask (P6-11dz): its check, or an active flask.
+    // Using any flask (P6-11dz): its check, or an active flask; unsettled
+    // when an active flask's instant recovery depends on an unsettled low
+    // life.
     let key = ConditionKey::new(USING_FLASK);
-    if out.get(&key).copied() == Some(false) && super::flasks::using_flask(input) {
-        out.insert(key, true);
+    if out.get(&key).copied() == Some(false) {
+        match super::flasks::using_flask(input, low_life) {
+            Some(true) => {
+                out.insert(key, true);
+            }
+            Some(false) => {}
+            None => {
+                out.remove(&key);
+            }
+        }
     }
     // A rare or unique enemy nearby (P6-10b): either condition; a count of
     // another type leaves it unsettled unless the enemy is rare or unique.

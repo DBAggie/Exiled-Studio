@@ -5355,6 +5355,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::NOT_HIT_RECENTLY,
         )],
     ),
+    // The agent list (a game-truth line PoB reads): the boots enchantment
+    // "#% increased Attack and Cast Speed if you've Killed Recently"
+    // (`Speed` INC for attacks and casts, `KilledRecently`).
+    (
+        "enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
     // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
     // Enemy is Nearby" (`EnergyShieldRegen` BASE, the stat per minute; PoB's
     // enemy `ActorCondition` on `NearbyRareOrUniqueEnemy` or `RareOrUnique`).
@@ -5614,6 +5626,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::ENEMY_ON_CONSECRATED_GROUND,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Mana Cost
+    // of Skills while on Full Energy Shield" (`ManaCost` INC,
+    // `FullEnergyShield`; a cost reason since P6-10b).
+    (
+        "mana_cost_+%_while_on_full_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCost),
+            Op::Increased,
+            NONE,
+            conditions::FULL_ENERGY_SHIELD,
         )],
     ),
     // P6-11fb: "#% increased Mana Regeneration Rate while moving" (`ManaRegen` INC,
@@ -9549,6 +9573,13 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (a game-truth line PoB reads): "You have Tailwind if
+    // you have dealt a Critical Strike Recently" (`Condition:Tailwind` FLAG
+    // with `CritRecently`; `poe1::buffs`).
+    (
+        "tailwind_if_have_crit_recently",
+        &[(Quantity::Poe1(Poe1Quantity::TailwindOnCrit), Op::Flag, 1.0)],
+    ),
     // P6-11hz: "Gain #% increased Armour per 5 Power for 8 seconds when you
     // Warcry, up to a maximum of 100%" (`ModParser.lua` 2566: `Armour` INC
     // per `Multiplier:WarcryPower`, `div` 5, `globalLimit` 100, while
@@ -11620,14 +11651,14 @@ pub const DOT_TAKEN_REASONS: &[&str] = &[];
 /// the mana cost field's reason alone. PoB's text for each
 /// (`ModParser.lua`): costs paid in life or energy shield instead
 /// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), socketed
-/// attacks' total mana cost (`SocketedIn`), Manaweave's base cost from
-/// unreserved mana, and a flask's or full energy shield's condition.
+/// attacks' total mana cost (`SocketedIn`), and Manaweave's base cost from
+/// unreserved mana. (Full energy shield's condition is a [`STATE_ROWS`]
+/// row since the agent list.)
 /// Channelling and non-channelling skills' total is
 /// [`Poe1Quantity::ManaCostChannelling`] (P6-11t).
 pub const COST_REASONS: &[&str] = &[
     "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
-    "mana_cost_+%_while_on_full_energy_shield",
     "manaweave_cost_equals_%_unreserved_mana",
     "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
 ];
@@ -15044,6 +15075,18 @@ mod tests {
                 vec![
                     config(Quantity::CritChance, Op::Increased, NONE, conditions::ENEMY_ON_CONSECRATED_GROUND),
                 ],
+            ),
+            // The agent list: a cost reason before.
+            (
+                "mana_cost_+%_while_on_full_energy_shield",
+                vec![
+                    config(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Increased, NONE, conditions::FULL_ENERGY_SHIELD),
+                ],
+            ),
+            // The agent list: the boots enchantment.
+            (
+                "enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
+                vec![config(Quantity::Speed, Op::Increased, NONE, conditions::KILLED_RECENTLY)],
             ),
             (
                 "number_of_additional_curses_allowed_while_affected_by_malevolence",

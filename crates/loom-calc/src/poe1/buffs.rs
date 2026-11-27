@@ -128,6 +128,10 @@ pub const CONVERGENCE_MORE: f64 = 30.0;
 /// The check that grants Tailwind.
 pub const TAILWIND_INPUT: &str = "buffTailwind";
 
+/// "You have Tailwind if you have dealt a Critical Strike Recently" (the
+/// agent list), mapped to [`Poe1Quantity::TailwindOnCrit`].
+pub const TAILWIND_ON_CRIT_STAT: &str = "tailwind_if_have_crit_recently";
+
 /// Tailwind's increased action speed (`CalcPerform.lua` 734).
 pub const TAILWIND_ACTION_SPEED: f64 = 8.0;
 
@@ -339,8 +343,14 @@ fn adrenaline_on_kill(
 /// `ModParser.lua` 2639, an `ExtraAura` of `Condition:Tailwind`; the game's
 /// data gives the node only the Gale Force stat), `ActionSpeed` INC
 /// `floor(8 x (1 + TailwindEffectOnSelf / 100))`, the increases summed so
-/// far (Gale Force's from `super::stacks`, which runs first).
-fn tailwind(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+/// far (Gale Force's from `super::stacks`, which runs first). Also (the
+/// agent list) from "You have Tailwind if you have dealt a Critical Strike
+/// Recently" while crit recently is settled true.
+fn tailwind(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     let source = match check(set, TAILWIND_INPUT) {
         Err(()) => {
             ingest.reason(UnsupportedReason::UnmodelledConfig {
@@ -351,7 +361,9 @@ fn tailwind(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         Ok(true) => Source::Config {
             input: TAILWIND_INPUT.to_owned(),
         },
-        Ok(false) => match super::stacks::grants_tailwind(ingest) {
+        Ok(false) => match super::stacks::grants_tailwind(ingest)
+            .or_else(|| tailwind_on_crit(settled, ingest))
+        {
             Some(source) => source,
             None => return,
         },
@@ -373,6 +385,31 @@ fn tailwind(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         conditions: Conditions::none(),
         source,
     });
+}
+
+/// "You have Tailwind if you have dealt a Critical Strike Recently" (the
+/// agent list): the stat's flag while crit recently is settled true, its
+/// source; PoB's `Condition:Tailwind` with `CritRecently`.
+fn tailwind_on_crit(
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &Ingest<'_>,
+) -> Option<Source> {
+    if settled.get(&crate::condition::ConditionKey::new(
+        super::conditions::CRIT_RECENTLY,
+    )) != Some(&true)
+    {
+        return None;
+    }
+    ingest
+        .effects()
+        .iter()
+        .find(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::TailwindOnCrit)
+                && e.op == Op::Flag
+                && e.value != 0.0
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.source.clone())
 }
 
 /// A check's value: `Ok(false)` when unset or off, `Err(())` for a value
@@ -580,7 +617,7 @@ pub fn buffs(
     arcane_surge(set, settled, ingest);
     convergence(set, ingest);
     consecrated_ground(set, ingest);
-    tailwind(set, ingest);
+    tailwind(set, settled, ingest);
     let on_kill = adrenaline_on_kill(settled, ingest);
     constant_buff(
         set,
@@ -765,7 +802,11 @@ mod tests {
                 // Silver Flask's buff flag: its flask effect is
                 // `poe1::flasks`' (P6-4b).
                 && id != crate::poe1::flasks::SILVER_STAT)
-                || (id.contains("tailwind") && !TAILWIND_EFFECT_STATS.contains(&id))
+                || (id.contains("tailwind")
+                    && !TAILWIND_EFFECT_STATS.contains(&id)
+                    // Tailwind on a crit recently is read here (the agent
+                    // list).
+                    && id != TAILWIND_ON_CRIT_STAT)
                 // Adrenaline on kill is read here (P6-11ih); Adrenaline when
                 // leech is removed is `NoEffect` (PoB applies no mod of its
                 // line; open items S8).

@@ -147,6 +147,13 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_flask_cast_speed_+%_while_healing",
         "base_cast_speed_+%",
     ),
+    // "#% chance to Freeze, Shock and Ignite during Effect" (the agent list;
+    // `EnemyFreezeChance`, `EnemyShockChance`, `EnemyIgniteChance` BASE,
+    // `UsingFlask`).
+    (
+        "local_flask_chance_to_freeze_shock_ignite_%_while_healing",
+        "chance_to_freeze_shock_ignite_%",
+    ),
     // "#% increased Critical Strike Chance during Effect".
     (
         "local_flask_critical_strike_chance_+%_during_flask_effect",
@@ -255,6 +262,7 @@ impl StatMapping for FlaskMapping {
             || NO_EFFECT_LOCAL.contains(&id)
             || DURATION_STATS.contains(&id)
             || id == INSTANT_STAT
+            || id == LOW_LIFE_INSTANT_STAT
         {
             return StatMap::NoEffect;
         }
@@ -431,49 +439,75 @@ fn base_of<'d>(
 /// itself reaches no slice field (its recovery is the `LifeRecovery` rate).
 pub const INSTANT_STAT: &str = "local_flask_recovers_instantly";
 
+/// "Instant Recovery when on Low Life" (the agent list; PoB's
+/// `FlaskLowLifeInstantRecovery` BASE 100, the flask's
+/// `instantLowLifePerc`, added to its instant share while
+/// `Condition:LowLife`, `CalcPerform.lua` 1603 to 1607): with low life
+/// settled true the flask recovers all at once, so sets no `Using`
+/// condition; unsettled, those conditions stay unsettled. The line itself
+/// reaches no slice field.
+pub const LOW_LIFE_INSTANT_STAT: &str = "local_flask_recover_instantly_when_on_low_life";
+
 /// Whether the item `id` recovers all at once ([`INSTANT_STAT`] on one of
-/// its selected lines).
-fn all_instant(input: &CalcInput<'_>, id: ItemId) -> bool {
-    input.build.items.item(id).is_some_and(|item| {
+/// its selected lines, or [`LOW_LIFE_INSTANT_STAT`] with `low_life`, the
+/// settled low life): `None` when that depends on an unsettled low life.
+fn all_instant(input: &CalcInput<'_>, id: ItemId, low_life: Option<bool>) -> Option<bool> {
+    let Some(item) = input.build.items.item(id) else {
+        return Some(false);
+    };
+    let has = |stat: &str| {
         item.body.lines.iter().any(|l| match &l.kind {
             loom_domain::LineKind::Modifier(m) if m.selected => match &m.resolution {
                 LineResolution::Resolved {
                     result: Resolved::Stats(stats),
                     ..
-                } => stats.iter().any(|s| s.stat.as_str() == INSTANT_STAT),
+                } => stats.iter().any(|s| s.stat.as_str() == stat),
                 _ => false,
             },
             _ => false,
         })
-    })
+    };
+    if has(INSTANT_STAT) {
+        return Some(true);
+    }
+    if has(LOW_LIFE_INSTANT_STAT) {
+        return low_life;
+    }
+    Some(false)
 }
 
 /// The active flasks that do not recover all at once (P6-11gw): the ones
-/// that set PoB's `Using` conditions.
-fn using_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
-    active_slots(input)
-        .into_iter()
-        .filter(|(id, _)| !all_instant(input, *id))
-        .collect()
+/// that set PoB's `Using` conditions; `None` when one depends on an
+/// unsettled low life.
+fn using_slots(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<Vec<(ItemId, String)>> {
+    let mut out = Vec::new();
+    for (id, slot) in active_slots(input) {
+        if !all_instant(input, id, low_life)? {
+            out.push((id, slot));
+        }
+    }
+    Some(out)
 }
 
 /// Whether the character is using a flask (PoB's `UsingFlask`; P6-11dz,
 /// `CalcPerform.lua` 1735): an active flask whose recovery is not all
-/// instant ([`INSTANT_STAT`], P6-11gw). PoB's global
-/// `LifeFlaskInstantRecovery` lines are unmapped stats, a reason wherever
-/// they appear.
+/// instant ([`INSTANT_STAT`], P6-11gw; [`LOW_LIFE_INSTANT_STAT`] by
+/// `low_life`, the settled low life). `None` when that depends on an
+/// unsettled low life. PoB's global `LifeFlaskInstantRecovery` lines are
+/// unmapped stats, a reason wherever they appear.
 #[must_use]
-pub fn using_flask(input: &CalcInput<'_>) -> bool {
-    !using_slots(input).is_empty()
+pub fn using_flask(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<bool> {
+    Some(!using_slots(input, low_life)?.is_empty())
 }
 
 /// Whether the character is using a life flask (PoB's `UsingLifeFlask`;
 /// P6-11cq, module docs): `Some(false)` with no active flask, `Some(true)`
 /// when an active flask's base recovers life, `None` when a flask's base
-/// is not known.
+/// is not known or its instant recovery depends on an unsettled low life
+/// (`low_life`).
 #[must_use]
-pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
-    let slots = using_slots(input);
+pub fn using_life_flask(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<bool> {
+    let slots = using_slots(input, low_life)?;
     if slots.is_empty() {
         return Some(false);
     }

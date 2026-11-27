@@ -481,6 +481,11 @@ pub enum Poe1Quantity {
     /// `Condition:Adrenaline` FLAG with `KilledRecently`): a `Flag`, read by
     /// [`buffs`]' Adrenaline while killed recently is settled true.
     AdrenalineOnKill,
+    /// "You have Tailwind if you have dealt a Critical Strike Recently"
+    /// (PoB's `Condition:Tailwind` FLAG with `CritRecently`; the agent
+    /// list): a `Flag`, read by [`buffs`]' Tailwind while crit recently is
+    /// settled true.
+    TailwindOnCrit,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -1630,6 +1635,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArcaneSurgeWhen(c) => write!(f, "arcane-surge-when.{c}"),
             Self::ReplaceShieldBlock => f.write_str("replace-shield-block"),
             Self::AdrenalineOnKill => f.write_str("adrenaline-on-kill"),
+            Self::TailwindOnCrit => f.write_str("tailwind-on-crit"),
             Self::CurseLimitIsMaximumPowerCharges => {
                 f.write_str("curse-limit-is-maximum-power-charges")
             }
