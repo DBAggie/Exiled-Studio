@@ -2826,6 +2826,27 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // P6-11fr: Vaal attacks with no global effect in PoB.
     ("VaalEarthquake", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
+    // Open items S2: Vaal Grace's aura (`act_dex.lua` 8998 to 9040): its one
+    // global stat, "+15% chance to Evade Attack Hits" (`EvadeChance` BASE,
+    // [`super::evade`]). Its "Damage taken from Suppressed Hits is Unlucky"
+    // has no row in PoB's stat map, so PoB applies nothing, nor the engine.
+    (
+        "VaalGrace",
+        Kind::Buff {
+            name: "Vaal Grace",
+            effect: EffectType::Aura,
+            stats: &[(
+                "chance_to_evade_attacks_%",
+                BuffStat::Rows(&[(
+                    Quantity::Poe1(Poe1Quantity::EvadeChance),
+                    Op::Base,
+                    1.0,
+                    NONE,
+                    NONE,
+                )]),
+            )],
+        },
+    ),
     // P6-11du: Vaal Haste's aura (`act_dex.lua` 9171), Haste's stats; PoB
     // merges buffs by name, so it stacks with Haste.
     (

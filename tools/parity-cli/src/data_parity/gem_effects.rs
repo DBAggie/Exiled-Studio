@@ -100,6 +100,10 @@ const DISPLAY_KEYS: &[&str] = &[
     "radiusSecondaryLabel",
     "radiusTertiary",
     "radiusTertiaryLabel",
+    // Open items S2: Vaal Grace's soul gain prevention, read for its own
+    // `SoulGainPreventionDuration` only (`CalcOffence.lua` 1577), which no
+    // slice field reads.
+    "skillEffectAppliesToSoulGainPrevention",
     // Righteous Fire's own burn (close-out).
     "RFManaMultiplier",
     "repeatFrequency",
@@ -1013,6 +1017,8 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
         Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
+        // Open items S2: Vaal Grace's.
+        Quantity::Poe1(Poe1Quantity::EvadeChance) => "EvadeChance".into(),
         // P6-10b parts 11 and 12: a curse's on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyAccuracy) => "Accuracy".into(),
         Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),

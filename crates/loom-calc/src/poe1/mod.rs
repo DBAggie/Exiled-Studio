@@ -897,6 +897,11 @@ pub enum Poe1Quantity {
     /// The character cannot evade (PoB's `CannotEvade`; P6-10b part 11): a
     /// `Flag` [`evade`] reads.
     CannotEvade,
+    /// The chance to evade attack hits (PoB's `EvadeChance`; open items
+    /// S2): `Base` is subtracted from the enemy's chance to hit, `Increased`
+    /// and `More` scale the melee and projectile chances, read by
+    /// [`evade`].
+    EvadeChance,
     /// A stat that changes the enemy's hit in a way the engine does not
     /// model (P6-10b part 12; a gem's [`gems::BuffStat::Defence`]): a
     /// `Flag` only [`enemy_hit`] reads, as its fields' reason.
@@ -1630,6 +1635,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
             Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
             Self::CannotEvade => f.write_str("cannot-evade"),
+            Self::EvadeChance => f.write_str("evade-chance"),
             Self::EnemyHitReason(stat) => write!(f, "enemy-hit-reason.{stat}"),
             Self::PoolReason(stat) => write!(f, "pool-reason.{stat}"),
             Self::DotTakenReason(stat) => write!(f, "dot-taken-reason.{stat}"),

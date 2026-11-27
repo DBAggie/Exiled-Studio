@@ -421,3 +421,27 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
 **Fixture:** `ice-nova-skitterbots-witch.xml`: Ice Nova with Skitterbots in another group and crit chance against shocked enemies; PoB's `CurrentShock` 17, `CurrentChill` 11; every computed field equals PoB.
 
 **Evidence** (`local/p6/sk` against `local/p6/gs`): public `Complete` 39,309 (+77, the fixture), 0 unexpected, 18 values toward PoB, none away; corpus 0 unexpected, 17 toward, 3 away: one build (by hash `b6098b68`) whose average damage, ignite, and hit DPS now overshoot PoB. PoB's own `CurrentShock` there is 18, the engine's too (a level 21 gem: 15 x 1.20); the build was near PoB before only through other missing terms (its fields keep their other reasons), as the close-out's batches recorded for such builds. Distinct reasons: 318 to 319 (`skitterbots-supports` new); field-reason pairs: corpus 9,434 to 9,272.
+
+
+## Vaal Grace and the chance to evade (open items S2, 2026-11-26)
+
+**PoB v2.67.2:** Vaal Grace's aura (`act_dex.lua` 8998 to 9040) has one global stat, `chance_to_evade_attacks_%` 15, `EvadeChance` BASE (an `Aura`). "+#% chance to Evade Attack Hits" on an item or a custom line is the same mod (`ModParser.lua` 254 to 258). `CalcDefence.lua` 1075 to 1096 subtracts `EvadeChance` BASE from the enemy's chance to hit: `<Kind>EvadeChance = max(0, min(95, (100 - (hitChance(evasion, accuracy) - EvadeChance BASE) x enemy hit chance mod) x calcLib.mod(EvadeChance, <Kind>EvadeChance)))`.
+
+**The engine:**
+- `Poe1Quantity::EvadeChance`: `Base`, `Increased`, and `More`. `evade` subtracts the base from the enemy's chance to hit and scales by the modifiers, as PoB does; no stat maps to `Increased` or `More` yet.
+- The mapping row `chance_to_evade_attacks_%` gives it `Base`.
+- `gems::SKILLS` has `VaalGrace` (`Kind::Buff`, an aura, that row), so its aura effect scales it as any aura's.
+- Its "Damage taken from Suppressed Hits is Unlucky" (`damage_taken_from_suppressed_hits_is_unlucky`) has no row in PoB's stat map, so PoB applies nothing, nor the engine. It changes the enemy's hit in the game: a game-truth item, not registered.
+- `data-parity`'s `gem_effects`: the row's name `EvadeChance`; Vaal Grace's `skillEffectAppliesToSoulGainPrevention` (read only for its own soul gain prevention, `CalcOffence.lua` 1577) is a skill-data key that does not block.
+
+**Fixtures** (original, made by `local/p6/s2-fx1.py`; each run three times by PoB, identical), a level 90 Ranger with 3,000 evasion:
+- `vaal-grace-evade-chance-ranger.xml`: Vaal Grace (level 20) in its own group; the evade chances 38 (23 without it);
+- `chance-to-evade-attack-hits-ranger.xml`: "+10% chance to Evade Attack Hits" as a custom line; 33.
+- Every compared field equals PoB's; 174 targets.
+
+**Evidence** (`local/p6/s2-e1` on `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,545 (the fixtures).
+  - `Mirage Archer Toxic Rain.xml` (Vaal Grace): its evade chances 67 to 82 (PoB 87) and its configured not-hit chance 37 to 44.5 (PoB 50.45), toward PoB.
+  - Four of its effective HP values moved away: `TotalEHP` 27,752 to 31,512 (PoB 29,271), and its hit counts. Its life (4,158, PoB 3,974) and maximum hits (physical 10,076, PoB 8,188) were already above PoB's, from its other reasons; the larger evade chance multiplies them. The build stays indeterminate.
+- **Corpus:** 0 unexpected; documents equal but for node numbers.
+- **Tests:** the mapping test of the row, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

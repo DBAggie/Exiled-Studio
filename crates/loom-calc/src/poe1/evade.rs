@@ -19,9 +19,13 @@
 //!   (hitChance(evasion, enemyAccuracy) - EvadeChance BASE) x hit chance
 //!   mod`, unclamped.
 //!
-//! The engine maps no stat of `MeleeEvasion`, `ProjectileEvasion`,
-//! `EvadeChance`, or the enemy's hit chance yet: each such stat is an
-//! unmapped one, so a reason, and their values are PoB's defaults (1, 0).
+//! `EvadeChance` BASE is read ([`Poe1Quantity::EvadeChance`]; open items
+//! S2: "+#% chance to Evade Attack Hits", `chance_to_evade_attacks_%`, and
+//! Vaal Grace's aura), and its `Increased` and `More`, which no stat maps
+//! to yet. The engine maps no stat of `MeleeEvasion`, `ProjectileEvasion`,
+//! `MeleeEvadeChance`, `ProjectileEvadeChance`, or the enemy's hit chance:
+//! each such stat is an unmapped one, so a reason, and their values are
+//! PoB's defaults (1, 0).
 
 use super::phases::{self, Valued};
 use super::{Poe1Field, Poe1Quantity, enemy};
@@ -125,9 +129,24 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let zero = phases::constant(calc, "no-negative-evasion", 0.0)?;
     let kind_evasion = phases::pair(calc, rounded, zero, Term::Step("kind-evasion"), false)?;
     let hit = super::hit::pob_hit_chance(calc, kind_evasion, accuracy, Term::Step("enemy-hit"))?;
-    // `100 - (hit - 0) x 1`, at most 95, at least 0.
+    // `(100 - (hit - EvadeChance BASE) x 1) x calcLib.mod(EvadeChance)`, at
+    // most 95, at least 0 (open items S2: Vaal Grace's aura, the stat
+    // `chance_to_evade_attacks_%`).
+    let q = Quantity::Poe1(Poe1Quantity::EvadeChance);
+    let base = {
+        let (store, graph) = calc.parts();
+        let s = store.sum(graph, q, Op::Base, &cx, Term::Step("evade-chance-base"))?;
+        reasons.extend(&s.reasons);
+        Valued {
+            node: s.node,
+            value: s.value,
+        }
+    };
+    let hit = super::hit::minus(calc, hit, base, Term::Step("enemy-hit-after-evade-chance"))?;
     let hundred = phases::constant(calc, "percent", 100.0)?;
     let evade = super::hit::minus(calc, hundred, hit, Term::Step("evade"))?;
+    let (inc, more) = super::hit::modifiers_of(calc, q, &cx, &mut reasons)?;
+    let evade = phases::product(calc, &[evade, inc, more], Term::Step("evade-modified"))?;
     let cap = phases::constant(calc, "evade-chance-cap", EVADE_CHANCE_CAP)?;
     let capped = phases::pair(calc, evade, cap, Term::Step("evade-capped"), true)?;
     let value = phases::pair(calc, capped, zero, Term::Result, false)?;

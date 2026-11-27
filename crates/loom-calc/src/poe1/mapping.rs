@@ -7373,6 +7373,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Open items S2: "+#% chance to Evade Attack Hits" (PoB's `EvadeChance`
+    // BASE, `ModParser.lua` 257; Vaal Grace's aura): `evade` reads it.
+    (
+        "chance_to_evade_attacks_%",
+        &[(Quantity::Poe1(Poe1Quantity::EvadeChance), Op::Base, 1.0)],
+    ),
     // P6-10b part 12: "+# Chaos Damage taken" (`ChaosDamageTaken` BASE).
     (
         "chaos_damage_taken_+",
@@ -12787,6 +12793,12 @@ mod tests {
         assert_eq!(
             effects("evasion_rating_+%"),
             [(evasion, Op::Increased, 1.0)]
+        );
+        // Open items S2: the chance to evade, which `evade` subtracts from
+        // the enemy's chance to hit.
+        assert_eq!(
+            effects("chance_to_evade_attacks_%"),
+            [(Quantity::Poe1(Poe1Quantity::EvadeChance), Op::Base, 1.0)]
         );
         assert_eq!(
             effects("evasion_and_physical_damage_reduction_rating_+%"),
