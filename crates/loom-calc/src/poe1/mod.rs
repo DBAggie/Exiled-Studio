@@ -1274,6 +1274,10 @@ pub enum Poe1Quantity {
     /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
     /// Phase 6): `Increased`.
     AilmentSlower,
+    /// A chance to inflict an additional poison on the same target, percent
+    /// (PoB's `AdditionalPoisonChance` BASE; the agent list, 2026-11-27):
+    /// read by the poison's stacks.
+    AdditionalPoisonChance,
     /// A chance to impale on hit, percent (PoB's `ImpaleChance`; Phase 6):
     /// `Base`, read by [`ailment::impale`].
     ImpaleChance,
@@ -2089,6 +2093,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
             Self::CanInflictWith(a, t) => write!(f, "can-inflict-with.{}.{}", a.name(), t.name()),
             Self::ImpaleChance => f.write_str("impale-chance"),
+            Self::AdditionalPoisonChance => f.write_str("additional-poison-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
             Self::SpellBlockPerOvercappedBlock => f.write_str("spell-block-per-overcapped-block"),

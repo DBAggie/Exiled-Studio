@@ -553,6 +553,36 @@ pub(super) fn damaging(
         &[hit_share, chance],
         Term::Step("ailment-applications"),
     )?;
+    // A poison's additional poisons (the agent list, 2026-11-27;
+    // `CalcOffence.lua` 4596 to 4599): `1 + min(AdditionalPoisonChance /
+    // 100, 1)` poisons per poisoning hit.
+    let additional = Quantity::Poe1(Poe1Quantity::AdditionalPoisonChance);
+    let stacks = if ailment == Ailment::Poison && phases::has(calc, additional) {
+        let chance = hit::sum_of(
+            calc,
+            additional,
+            Op::Base,
+            &hit_cx,
+            Term::Step("additional-poison-chance"),
+            &mut reasons,
+        )?;
+        let share = hit::percent_of(calc, chance, Term::Step("additional-poison-share"))?;
+        let share = phases::pair(
+            calc,
+            share,
+            one,
+            Term::Step("additional-poison-capped"),
+            true,
+        )?;
+        let poisons = phases::total(calc, &[one, share], Term::Step("poisons-per-hit"))?;
+        phases::product(
+            calc,
+            &[stacks, poisons],
+            Term::Step("ailment-applications-poisons"),
+        )?
+    } else {
+        stacks
+    };
     let stacks = phases::product(
         calc,
         &[stacks, duration, hit.rate],

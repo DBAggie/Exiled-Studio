@@ -5841,3 +5841,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Nova with 15% and +100 to maximum energy shield, which the override replaces (169). Every field and the breakdown equal PoB's.
 
 **Evidence** (`local/p6/d27eoe` on `b-ig`, against `local/p6/d27mee`): public 0 unexpected, `Complete` 59,996 to 60,083 (the fixture's); 23 values moved, 22 toward PoB (`flicker-strike-berserker.xml`'s EnergyShield 500 to 2,939, PoB 3,199, its pools, maximum hits, and EHP), 1 away: its EnergyShieldRecharge 167 to 980 (PoB 0, from Soul Tether, a keystone still unmapped here, on an indeterminate field). Corpus 0 unexpected, no value moved.
+
+## Additional poisons (the agent list, 2026-11-27)
+
+**The stat:** "#% chance to inflict an additional Poison on the same Target when you inflict Poison" (`additional_poison_chance_%_when_inflicting_poison`), unmapped in one public build.
+
+**PoB** (`CalcOffence.lua` 4596 to 4603): `AdditionalPoisonChance` BASE; the poisons per poisoning hit are `1 + min(AdditionalPoisonChance / 100, 1) + AdditionalPoisonStacks` (unless `CannotMultiplePoison`), a factor of `PoisonStacks`.
+
+**The engine:** `Poe1Quantity::AdditionalPoisonChance` (a hit row), and `ailment`'s stacks gain the factor `1 + min(chance / 100, 1)` for a poison, in PoB's order (after the applications, before duration and rate). `AdditionalPoisonStacks`, `CannotMultiplePoison`, the poison stack limit, and PoB's `NonPoisonedOnly` condition have no mapped stat here.
+
+**Fixtures** (original, the Smite poison build): 40% (1.4 poisons per poisoning hit) and 150% (held at 2). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the stacks read the rate): `game-truth` DIV-1174 to DIV-1185.
+
+**Evidence** (`local/p6/d27poe` on `b-ig`, against `local/p6/d27eoe`): public 0 unexpected, `Complete` 60,083 to 60,261 (the fixtures'); no other value moved (the public build is partial on other reasons). Corpus 0 unexpected, no value moved.

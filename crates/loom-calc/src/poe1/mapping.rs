@@ -274,6 +274,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-27): "#% chance to inflict an additional
+    // Poison on the same Target when you inflict Poison"
+    // (`AdditionalPoisonChance` BASE), read by the poison's stacks.
+    (
+        "additional_poison_chance_%_when_inflicting_poison",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AdditionalPoisonChance),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // The agent list (2026-11-27): "All Damage can Ignite" (Shaper of
     // Flames; PoB `ModParser.lua` 2800: `PhysicalCanIgnite`,
     // `ColdCanIgnite`, `LightningCanIgnite`, `ChaosCanIgnite` flags), each
@@ -4560,6 +4573,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::CannotInflict(..)
                     | Poe1Quantity::CanInflictWith(..)
                     | Poe1Quantity::ImpaleChance
+                    | Poe1Quantity::AdditionalPoisonChance
                     | Poe1Quantity::ImpaleEffect
                     | Poe1Quantity::ImpaleStacksMax
                     | Poe1Quantity::AilmentDuration
