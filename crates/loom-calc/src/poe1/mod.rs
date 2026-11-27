@@ -171,6 +171,10 @@ pub enum Poe1Quantity {
     /// with `PerStat` `Str` `div` 100): `Base`, read by [`hit`] from the
     /// strength field.
     DamagePer100Strength,
+    /// The damage over time increase per 100 maximum life (the agent list;
+    /// PoB's `Damage` INC with `ModFlag.Dot`, `PerStat` `Life` `div` 100):
+    /// `Base`, read by [`hit`] from the life field for damage over time.
+    DotDamagePer100Life,
     /// "Gain Accuracy Rating equal to twice your Strength" (P6-11gm; PoB's
     /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
     /// `Flag`, read by [`hit`]'s accuracy.
@@ -1153,6 +1157,11 @@ pub enum Poe1Quantity {
     /// `Condition:SupportedBySpellslinger`; open items S3): `Increased`,
     /// read by [`skill_modifiers::Totals`] for those skills.
     SpellslingerManaReservationEfficiency,
+    /// Mana reservation of skills Spellslinger supports (the agent list;
+    /// PoB's `ManaReserved` INC with `Condition:SupportedBySpellslinger`):
+    /// `Increased`, read by [`skill_modifiers::Totals`] into those skills'
+    /// reservation increase.
+    SpellslingerManaReserved,
     /// A brand's activation frequency (PoB's `BrandActivationFrequency`;
     /// open items S3): `Increased` and `More`, read by [`triggers`] in
     /// Arcanist Brand's own context for the spells it triggers.
@@ -1586,6 +1595,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::KitavaManaSpent => f.write_str("kitava-mana-spent"),
             Self::KitavaTriggerChance => f.write_str("kitava-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
+            Self::DotDamagePer100Life => f.write_str("dot-damage-per-100-life"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::AccuracyFromIntelligence => f.write_str("accuracy-from-intelligence"),
             Self::PerStaffSocket(life) => f.write_str(if *life {
@@ -1921,6 +1931,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellslingerManaReservationEfficiency => {
                 f.write_str("spellslinger-mana-reservation-efficiency")
             }
+            Self::SpellslingerManaReserved => f.write_str("spellslinger-mana-reserved"),
             Self::BrandActivationFrequency => f.write_str("brand-activation-frequency"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),

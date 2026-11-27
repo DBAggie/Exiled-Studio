@@ -297,6 +297,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
     ),
+    // The agent list (a game-truth line PoB reads): "#% increased Attack and
+    // Cast Speed with Physical Skills" (`Speed` INC, `KeywordFlag.Physical`,
+    // `ModParser.lua` 1053: the skill's `Physical` type, P3-8h's keyword).
+    (
+        "attack_and_cast_speed_+%_with_physical_skills",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::SKILL_PHYSICAL,
+            NONE,
+        )],
+    ),
     // P6-11n: "#% increased Critical Strike Chance with Attacks" (`CritChance`
     // INC, `ModFlag.Attack`).
     (
@@ -2045,6 +2058,20 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "damage_over_time_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
+    ),
+    // The agent list (a game-truth line PoB reads): "Deal #% increased Damage
+    // Over Time per 100 Player Maximum Life" (`Damage` INC, `ModFlag.Dot`,
+    // `PerStat` `Life` `div` 100 of the player): the computed term
+    // (`hit::DAMAGE_PER_STAT`).
+    (
+        "damage_over_time_+%_per_100_max_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DotDamagePer100Life),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P6-11b: "#% increased Damage Over Time with Bow Skills": `Damage` INC, `ModFlag.Dot`, `KeywordFlag.Bow`.
     (
@@ -11724,14 +11751,13 @@ pub const DOT_TAKEN_REASONS: &[&str] = &[];
 /// not model (P6-10b), sorted: each maps to [`Poe1Quantity::CostReason`],
 /// the mana cost field's reason alone. PoB's text for each
 /// (`ModParser.lua`): costs paid in life or energy shield instead
-/// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), socketed
-/// attacks' total mana cost (`SocketedIn`), and Manaweave's base cost from
-/// unreserved mana. (Full energy shield's condition is a [`STATE_ROWS`]
-/// row since the agent list.)
+/// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), and Manaweave's
+/// base cost from unreserved mana. (Full energy shield's condition is a
+/// [`STATE_ROWS`] row, and socketed attacks' total mana cost an
+/// [`super::gem_levels::InSlot`] row, since the agent list.)
 /// Channelling and non-channelling skills' total is
 /// [`Poe1Quantity::ManaCostChannelling`] (P6-11t).
 pub const COST_REASONS: &[&str] = &[
-    "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
     "manaweave_cost_equals_%_unreserved_mana",
     "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
@@ -11823,6 +11849,8 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
 /// group is there.
 pub const GRANTS_SKILL_STATS: &[&str] = &[
     "curse_on_hit_level_conductivity",
+    // The agent list (a game-truth line PoB reads, as the other three).
+    "curse_on_hit_level_despair",
     "curse_on_hit_level_frostbite",
     "curse_on_hit_level_vulnerability",
     "local_display_grants_skill_accuracy_crits_aura_level",

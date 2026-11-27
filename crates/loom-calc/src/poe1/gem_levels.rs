@@ -207,6 +207,10 @@ pub fn socketed_quantity(stat: &str, slot: GemSlot) -> Option<Quantity> {
 pub const SOCKETED_ELEMENTAL_DAMAGE_STAT: &str =
     "local_display_socketed_gems_elemental_damage_+%_final";
 
+/// "Socketed Attacks have +# to Total Mana Cost" (the agent list; a cost
+/// reason since P6-10b): an attack socketed in the item's slot.
+pub const SOCKETED_ATTACKS_MANA_COST_STAT: &str = "local_display_socketed_attacks_mana_cost_+";
+
 /// "Socketed Skill Gems get a #% Cost & Reservation Multiplier" (P6-11bi;
 /// the game's stat ID keeps its misspelling).
 pub const SOCKETED_COST_STAT: &str = "local_display_socketed_gems_get_mana_multplier_%";
@@ -234,6 +238,24 @@ impl StatMapping for InSlot<'_> {
                 divisor: 1.0,
                 conditions: Conditions::none()
                     .with_any(crate::condition::Flags::ELEMENTAL)
+                    .with_state(
+                        crate::condition::ConditionKey::new(self.slot.main_skill_state()),
+                        true,
+                    ),
+            }]);
+        }
+        // The agent list: "Socketed Attacks have +# to Total Mana Cost" (PoB's
+        // `ManaCost` BASE with `SocketedIn` the item's slot and the `attack`
+        // keyword, `ModParser.lua` 1241): the main skill's cost when it is an
+        // attack socketed here.
+        if stat.as_str() == SOCKETED_ATTACKS_MANA_COST_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::ManaCost),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none()
+                    .with_all(crate::condition::Flags::ATTACK)
                     .with_state(
                         crate::condition::ConditionKey::new(self.slot.main_skill_state()),
                         true,

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): a level 90 Witch casting Ice Nova (level 20) with added chaos
+     damage, and a rare Coral Ring with "Curse Enemies with Despair on Hit": the group PoB builds for the ring's skill
+     (an ExtraSkill of Despair, level 1, triggered, no supports; CalcSetup.lua 1362 to 1460), its curse on the enemy.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill enabled="true" mainActiveSkillCalcs="1" slot="Ring 1" source="Item:1:Loom Despair Band, Coral Ring" mainActiveSkill="1" includeInFullDPS="false" label="">
+				<Gem nameSpec="Despair" enableGlobal1="true" count="1" enableGlobal2="false" quality="0" level="1" enabled="true" skillId="Despair"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Despair Band
+Coral Ring
+Implicits: 1
++25 to maximum Life
+Curse Enemies with Despair on Hit
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Ring 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				Adds 40 to 80 Chaos Damage to Spells
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

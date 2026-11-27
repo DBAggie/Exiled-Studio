@@ -125,6 +125,9 @@ pub enum MinionValue {
     /// The share of the minion's maximum life it gains as extra maximum
     /// energy shield, percent (PoB's `LifeGainAsEnergyShield` BASE; RV-12).
     LifeAsEnergyShield,
+    /// The minion's physical damage (PoB's `PhysicalDamage`; the agent
+    /// list: Herald of Purity's more physical damage).
+    PhysicalDamage,
 }
 
 impl MinionValue {
@@ -177,6 +180,7 @@ impl MinionValue {
             Self::CritMultiplier => "crit-multiplier",
             Self::CritChance => "crit-chance",
             Self::LifeAsEnergyShield => "life-as-energy-shield",
+            Self::PhysicalDamage => "physical-damage",
             Self::Penetration(t) => match t {
                 DamageType::Physical => "physical-penetration",
                 DamageType::Fire => "fire-penetration",
@@ -234,6 +238,9 @@ impl MinionValue {
                 };
                 return Some((Quantity::Poe1(Poe1Quantity::AilmentChance(a)), flags));
             }
+            // The physical part's damage (PoB's `PhysicalDamage`, read for
+            // physical damage alone).
+            Self::PhysicalDamage => return Some((Quantity::Damage, Flags::PHYSICAL)),
             Self::Damage | Self::AttackSpeed | Self::CastSpeed => return self.target(),
             Self::LifeRegen | Self::MovementSpeed | Self::CooldownRecovery => return None,
         };
@@ -280,7 +287,7 @@ type MinionRow = (&'static str, &'static [(Poe1Quantity, Op, f64)]);
 ///   kin, each PoB's `MinionModifier` with the mod type as the op (module
 ///   docs). "Minions Regenerate #% of Life per second" is PoB's
 ///   `LifeRegenPercent` per minute over 60 (`SkillStatMap.lua` 1967).
-pub const STATS: [MinionRow; 51] = [
+pub const STATS: [MinionRow; 52] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         &[(minion(MinionValue::EnergyShield), MORE, 1.0)],
@@ -292,6 +299,13 @@ pub const STATS: [MinionRow; 51] = [
     (
         "active_skill_minion_movement_velocity_+%_final",
         &[(minion(MinionValue::MovementSpeed), MORE, 1.0)],
+    ),
+    // The agent list (a game-truth line PoB reads): Herald of Purity's
+    // "Sentinels of Purity deal #% more Physical Damage" (PoB's
+    // `MinionModifier` of `PhysicalDamage` MORE, `SkillStatMap.lua` 2043).
+    (
+        "active_skill_minion_physical_damage_+%_final",
+        &[(minion(MinionValue::PhysicalDamage), MORE, 1.0)],
     ),
     (
         "additive_minion_damage_modifiers_apply_to_you_at_150%_value",

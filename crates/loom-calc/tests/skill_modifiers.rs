@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 39] = [
+const TEXTS: [(&str, &str); 40] = [
     // Close-out M6.
     (
         "anger_aura_effect_+%",
@@ -97,6 +97,11 @@ const TEXTS: [(&str, &str); 39] = [
         "{0}% increased Skill Effect Duration",
     ),
     // Open items S3.
+    // The agent list: `ManaReserved` INC with the Spellslinger condition.
+    (
+        "spellslinger_mana_reservation_+%",
+        "Skills Supported by Spellslinger have {0}% increased Mana Reservation",
+    ),
     (
         "spellslinger_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Skills Supported by Spellslinger",

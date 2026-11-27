@@ -209,7 +209,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 39] = [
+pub const STATS: [ModifierRow; 40] = [
     // Close-out M6: "Anger has #% increased Aura Effect".
     (
         "anger_aura_effect_+%",
@@ -378,6 +378,14 @@ pub const STATS: [ModifierRow; 39] = [
     (
         "skill_effect_duration_+%",
         Poe1Quantity::SkillTiming(SkillTiming::Duration),
+        1.0,
+    ),
+    // The agent list (a game-truth line PoB reads): "Skills Supported by
+    // Spellslinger have #% increased Mana Reservation" (`ManaReserved` INC
+    // with `Condition:SupportedBySpellslinger`).
+    (
+        "spellslinger_mana_reservation_+%",
+        Poe1Quantity::SpellslingerManaReserved,
         1.0,
     ),
     // Open items S3: "#% increased Mana Reservation Efficiency of Skills
@@ -603,6 +611,9 @@ pub struct Totals {
     /// `ManaReservationEfficiency` INC of skills Spellslinger supports
     /// (open items S3).
     pub spellslinger_mana_efficiency: f64,
+    /// `ManaReserved` INC of the skills Spellslinger supports (the agent
+    /// list).
+    pub spellslinger_mana_reserved: f64,
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
@@ -748,6 +759,7 @@ impl Totals {
                 Poe1Quantity::SpellslingerManaReservationEfficiency => {
                     &mut t.spellslinger_mana_efficiency
                 }
+                Poe1Quantity::SpellslingerManaReserved => &mut t.spellslinger_mana_reserved,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
@@ -842,6 +854,9 @@ impl Totals {
         let mut own = self.mana_efficiency;
         if spellslinger {
             own += self.spellslinger_mana_efficiency;
+            // The agent list: its `ManaReserved` INC, PoB's `values.inc`
+            // with the pool's name.
+            terms.inc += self.spellslinger_mana_reserved;
         }
         // Close-out M6: the skill's named mana reservation efficiency.
         own += self.named_skill(id, NamedEffect::ManaReservationEfficiency);

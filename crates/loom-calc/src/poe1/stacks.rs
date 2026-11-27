@@ -893,6 +893,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::GaleForce,
         StackValue::Per(PerStack::TailwindEffect),
     ),
+    // The agent list (a game-truth line PoB reads): "Each Totem applies #%
+    // increased Damage taken to Enemies near it" (`ModParser.lua` 4367: the
+    // enemy's `DamageTaken` INC per `TotemsSummoned`).
+    (
+        "totems_nearby_enemies_damage_taken_+%",
+        StackKind::Totems,
+        StackValue::Per(PerStack::EnemyDamageTaken),
+    ),
     (
         "you_and_totem_life_regeneration_rate_per_minute_%_per_active_totem",
         StackKind::Totems,

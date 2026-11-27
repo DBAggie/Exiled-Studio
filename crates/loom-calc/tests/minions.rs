@@ -12,7 +12,7 @@ use loom_calc::quantity::{Bound, DamageType, Op};
 /// The English text of each row's stat, as PoB's patterns read it
 /// (`ModParser.lua` 3455 to 3462 and its "minions" and "golems" words;
 /// P6-7b3b's rows checked against PoB's parse of each text).
-const TEXTS: [(&str, &str); 51] = [
+const TEXTS: [(&str, &str); 52] = [
     (
         "active_skill_minion_energy_shield_+%_final",
         "Minions have {0}% more Energy Shield",
@@ -24,6 +24,11 @@ const TEXTS: [(&str, &str); 51] = [
     (
         "active_skill_minion_movement_velocity_+%_final",
         "{0}% more Minion Movement Speed",
+    ),
+    // The agent list: the minion skills' text (`minion_skill_stat_descriptions`).
+    (
+        "active_skill_minion_physical_damage_+%_final",
+        "Minions deal {0}% more Physical Damage",
     ),
     (
         "additive_minion_damage_modifiers_apply_to_you_at_150%_value",
@@ -256,6 +261,8 @@ fn kinds_of(stat: &str, text: &str) -> Vec<(MinionValue, Op)> {
         vec![(MinionValue::AilmentChance(Ailment::Ignite), op)]
     } else if text.contains("chance to Poison") {
         vec![(MinionValue::AilmentChance(Ailment::Poison), op)]
+    } else if text.contains("more Physical Damage") {
+        vec![(MinionValue::PhysicalDamage, op)]
     } else if text.contains("Double Damage") {
         vec![(MinionValue::DoubleDamageChance, op)]
     } else if text.contains("Critical Strike Multiplier") {
