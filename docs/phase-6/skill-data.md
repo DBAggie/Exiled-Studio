@@ -206,6 +206,7 @@ Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted o
 
 **Cyclone** (open items S1, 2026-11-26). Its `initialFunc` adds `Multiplier:AdditionalMeleeRange` (`act_dex.lua` 4701 to 4714). Only its own stat `cyclone_area_of_effect_+%_per_additional_melee_range` reads that multiplier (`AreaOfEffect` INC per it), and `AreaOfEffect` feeds only radius outputs, already a no-effect row (P6-11dl).
 - `hit::NO_SLICE_FUNCTIONS` and `NO_SLICE_OWN_STATS` name Cyclone's and Vaal Cyclone's.
+- The claim is checked for these two skills only: `AreaOfEffect` reaches damage for skills whose damage scales with their area, which Cyclone's does not. Another skill's area-only data goes on these lists only after the same check (review of S1).
 - Cyclone of Tumult's stage stats are not among them; it stays partial.
 - Test: `cyclone_should_be_vetted_by_its_area_only_data` (each entry in PoB's data, each stat a no-effect row).
 

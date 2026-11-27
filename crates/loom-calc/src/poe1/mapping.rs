@@ -3354,6 +3354,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_attack_totem_attack_speed_+%_final",
         &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
     ),
+    // Agent list, review of S9: Deadly Ailments' own `statMap`
+    // (`Data/Skills/sup_dex.lua` 1619 to 1626): less hit damage (`Damage`
+    // MORE with `ModFlag.Hit`) and more damage with damaging ailments
+    // (`Damage` MORE with `KeywordFlag.Bleed`, `Poison`, or `Ignite`).
+    (
+        "support_better_ailments_ailment_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, DAMAGING_AILMENTS)],
+    ),
+    (
+        "support_better_ailments_hit_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::HIT, NONE)],
+    ),
     // P6-7c2: Brutality's own `statMap` (`Data/Skills/sup_str.lua` 802):
     // `PhysicalDamage` MORE.
     (

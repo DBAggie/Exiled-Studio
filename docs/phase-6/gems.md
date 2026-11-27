@@ -431,7 +431,7 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
 - `Poe1Quantity::EvadeChance`: `Base`, `Increased`, and `More`. `evade` subtracts the base from the enemy's chance to hit and scales by the modifiers, as PoB does; no stat maps to `Increased` or `More` yet.
 - The mapping row `chance_to_evade_attacks_%` gives it `Base`.
 - `gems::SKILLS` has `VaalGrace` (`Kind::Buff`, an aura, that row), so its aura effect scales it as any aura's.
-- Its "Damage taken from Suppressed Hits is Unlucky" (`damage_taken_from_suppressed_hits_is_unlucky`) has no row in PoB's stat map, so PoB applies nothing, nor the engine. It changes the enemy's hit in the game: a game-truth item, not registered.
+- Its "Damage taken from Suppressed Hits is Unlucky" (`damage_taken_from_suppressed_hits_is_unlucky`) has no row in PoB's stat map, so PoB applies nothing. It changes the enemy's hit in the game, which the engine does not model, so it is a reason on the fields the enemy's hit reaches (`BuffStat::Defence`, review of S2): those fields are partial while Vaal Grace is up, not `Complete`.
 - `data-parity`'s `gem_effects`: the row's name `EvadeChance`; Vaal Grace's `skillEffectAppliesToSoulGainPrevention` (read only for its own soul gain prevention, `CalcOffence.lua` 1577) is a skill-data key that does not block.
 
 **Fixtures** (original, made by `local/p6/s2-fx1.py`; each run three times by PoB, identical), a level 90 Ranger with 3,000 evasion:

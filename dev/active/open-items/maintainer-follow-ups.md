@@ -87,3 +87,11 @@ Not reached in the session of 2026-11-24 either (agent work, no decision needed;
 ## Housekeeping
 - PR #167's oracle jobs were still running when it merged (2026-11-24 22:15 UTC). Check that the oracle jobs of `dev`'s run at `6deeb5da` passed (still running at 23:40 UTC, 85 minutes in; about 131 expected at 531 fixtures).
 - **The oracle jobs' time:** this PR adds 4 fixtures (535 in all); at about 14.8 s each the Windows job should take about 132 minutes of its 150.
+
+## From the four parallel agents and their review (2026-11-26, PR #188)
+
+- **Confirm one tree rewording (S9):** `tools/tree/rewordings.json` now accepts "#% to Global Critical Strike Multiplier while wielding a Staff" as "#% to Critical Strike Multiplier while wielding a Staff" (Counterweight's staff nodes, the same numbers; `docs/tree/tree-packs.md`). The table is a reviewed one: confirm or revert.
+- **The ignite and shock tree rewordings (S9):** "All Damage can Ignite" and "All Damage can Shock" were rejected by an earlier review; PoB parses both wordings alike and the current stat ID keeps the old wording. In the corpus, node 53123's unread line blocks 421 fields in 5 builds. Overturning the review is yours.
+- **Signless "+#%" item lines (S9, ADR-015):** Rumi's block lines, a suppression line, and a staff's block implicit fail because the current descriptions always print a sign. Accepting the older text needs a new tolerance or Amendment 3's table extended to these lines.
+- **The next data run's tree packs (S9):** rebuilt against the current bundle they read about 20 more nodes per version (the local packs `b-s9r` and `b-s9`).
+- **Keystones not in pinned PoB (S8, game truth):** Corrupted Defences, Soul Tether, Quiet Might, Nature's Presence: an in-game check each.

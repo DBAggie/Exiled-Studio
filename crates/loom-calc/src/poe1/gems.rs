@@ -2874,22 +2874,30 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // Open items S2: Vaal Grace's aura (`act_dex.lua` 8998 to 9040): its one
     // global stat, "+15% chance to Evade Attack Hits" (`EvadeChance` BASE,
     // [`super::evade`]). Its "Damage taken from Suppressed Hits is Unlucky"
-    // has no row in PoB's stat map, so PoB applies nothing, nor the engine.
+    // has no row in PoB's stat map, so PoB applies nothing; the game makes
+    // the enemy's suppressed hits unlucky, which the engine does not model:
+    // a reason on the fields the enemy's hit reaches (review of S2).
     (
         "VaalGrace",
         Kind::Buff {
             name: "Vaal Grace",
             effect: EffectType::Aura,
-            stats: &[(
-                "chance_to_evade_attacks_%",
-                BuffStat::Rows(&[(
-                    Quantity::Poe1(Poe1Quantity::EvadeChance),
-                    Op::Base,
-                    1.0,
-                    NONE,
-                    NONE,
-                )]),
-            )],
+            stats: &[
+                (
+                    "chance_to_evade_attacks_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EvadeChance),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "damage_taken_from_suppressed_hits_is_unlucky",
+                    BuffStat::Defence("spell-suppression"),
+                ),
+            ],
         },
     ),
     // P6-11du: Vaal Haste's aura (`act_dex.lua` 9171), Haste's stats; PoB

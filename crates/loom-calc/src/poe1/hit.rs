@@ -468,6 +468,13 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
 /// clears its own `showAverage` ([`SHOW_AVERAGE_KEY`]), so that base mod
 /// counts as read (open items, S1; Icicle Burst, which Cameria's Avarice
 /// triggers).
+///
+/// Only PoB's `triggerRate` branch clears it (`CalcOffence.lua` 2223 to
+/// 2227); its `triggerTime` branch just above (2214 to 2220) does not. The
+/// engine reaches `triggerTime` only for a skill Cast on Death triggers
+/// (`CalcPerform.lua` 1447), which the spell path excludes, and for Cast
+/// while Channelling's channelled source, which is never the triggered main
+/// skill; every other ported trigger gives a rate (review of S1).
 #[must_use]
 pub fn pob_vetted_triggered(id: &str, index: usize, no_cooldown: bool) -> bool {
     vetted(id, index, no_cooldown, true)

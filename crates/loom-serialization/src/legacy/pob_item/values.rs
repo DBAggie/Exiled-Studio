@@ -149,7 +149,12 @@ pub fn line_values_full(
     unique_tags: &dyn Fn(&[&str]) -> Option<Vec<String>>,
 ) -> BTreeMap<usize, LineValues> {
     let body = &item.body;
-    let unique = body.rarity.unwrap_or(loom_domain::Rarity::Unique) == loom_domain::Rarity::Unique;
+    // A unique or a relic (PoB reads a relic as a unique, `Item.lua` 1336);
+    // an item without a known rarity keeps the reason (review of S9).
+    let unique = matches!(
+        body.rarity,
+        Some(loom_domain::Rarity::Unique | loom_domain::Rarity::Relic)
+    );
     // An untagged line the game leaves unscaled: a unique's line whose rows
     // carry none of the catalyst's tags.
     let game_unscaled = |scaled: &[&str], m: &ModifierLine| {

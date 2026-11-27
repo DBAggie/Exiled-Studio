@@ -719,11 +719,6 @@ pub(super) fn estimate(
 mod tests {
     use super::*;
 
-    /// A bare level 90 Witch (1,125 life, no energy shield) against PoB's
-    /// default Pinnacle boss's physical hit of 1,113 (rounded up to 1,114
-    /// before the pools): one hit and a fraction, as PoB's
-    /// `NumberOfDamagingHits` for `ice-nova-witch.xml` (the hit there is
-    /// 14,885.9; 1,125 / 14,886 = 0.07557...).
     /// Open items S2: Petrified Blood's loss below half prevented, PoB's
     /// `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to 181).
     #[test]
@@ -740,6 +735,11 @@ mod tests {
         assert_eq!(life_hit_pool(400.0, 1000.0, 0.0, 0.0), 400.0);
     }
 
+    /// A bare level 90 Witch (1,125 life, no energy shield) against PoB's
+    /// default Pinnacle boss's physical hit of 1,113 (rounded up to 1,114
+    /// before the pools): one hit and a fraction, as PoB's
+    /// `NumberOfDamagingHits` for `ice-nova-witch.xml` (the hit there is
+    /// 14,885.9; 1,125 / 14,886 = 0.07557...).
     #[test]
     fn hits_to_die_should_be_pobs() {
         let ch = Character {
