@@ -12024,6 +12024,15 @@ pub const CUSTOM_PATTERNS: &[(&str, Quantity, Op)] = &[
         Quantity::Poe1(Poe1Quantity::SpellBlockChance),
         Op::More,
     ),
+    // The agent list: "Punishment has #% increased/reduced Curse Effect",
+    // PoB's `CurseEffect` INC with the `SkillName` Punishment (`ModParser.lua`
+    // 466 and its "<skill> has" prefix), the game's
+    // `punishment_curse_effect_+%` ([`super::skill_modifiers`]).
+    (
+        "punishment-curse-effect",
+        Quantity::Poe1(Poe1Quantity::NamedSkillEffect(6)),
+        Op::Increased,
+    ),
 ];
 
 /// What an armour piece's local stat changes on the piece: `(stat,

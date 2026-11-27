@@ -43,3 +43,25 @@ Result on P3-8n's bundle: **46 notes, all lines PoB ignores; 7 patterns, each eq
 ## Tests
 
 `loom_parser::import::poe1::custom` (patterns, their less forms, near misses, the note rule); `crates/loom-parser/tests/resolve_build.rs` (a note, a pattern, and a line with a digit that stays unresolved, in blocks and in `customMods`); `loom-parity-cli`'s `custom_lines` (PoB's applied rule, a pattern's one mod, and the three pattern lists being the same names).
+
+
+## A pattern with text before the number: Punishment's curse effect (the agent list, 2026-11-26)
+
+**The line.** `rf-chieftain-league-start.xml`'s `customMods` holds "Punishment has 50% reduced Curse Effect", the older wording of the game's "#% reduced Punishment Curse Effect" (`punishment_curse_effect_+%`). No stat description reads it, so it was a `no-template` reason. It was the only reason on 77 of the build's fields, the only sole blocker in the public run.
+
+**PoB** parses it whole: the "<skill> has" prefix gives the `SkillName` tag, and "curse effect" is `CurseEffect` (`ModParser.lua` 466). So it applies `CurseEffect` INC −50 to Punishment.
+
+**The rule** (`loom_parser::import::poe1::custom`):
+- A pattern may now have text before the number (`Pattern::prefix`; empty for the four earlier patterns).
+- New pattern `punishment-curse-effect`: "punishment has #% increased curse effect" and its "reduced" form (negated), unsigned.
+
+**The calculation:**
+- `mapping::CUSTOM_PATTERNS` maps the pattern to `Poe1Quantity::NamedSkillEffect(6)` INC.
+- That is the same named effect the game's stat maps to (`skill_modifiers::NAMED_SKILL_EFFECTS`, Punishment's curse, as Vulnerability's since P6-11gn). The item line in its current wording is read too.
+
+**Fixture** `ice-nova-punishment-curse-effect-witch.xml` (original; Ice Nova, Punishment, the enemy on low life, the line): every field equals PoB's. PoB's DPS is 1,340.76 with the line, against 1,642.18 without it (a copy without the line, also equal to PoB's in every field, not kept). In the RF Chieftain build Punishment changes no compared field: its damage taken applies only to an enemy on low life, which the build's config does not set.
+
+**Evidence** (`local/p6/pc` on `b-pb`, against `local/p6/rv`):
+- **Public:** 0 unexpected; `Complete` 51,025 to 51,189 (the RF Chieftain build's 77 fields, the fixture's 87); no value moved.
+- **Corpus:** 0 unexpected. Two RF builds carry the same line: one's average damage, ignite, and hit DPS now equal PoB's; both builds' `FullDPS` moved away (1.99 million to 1.65 million against PoB's 3.25 million, and 431 thousand to 360 thousand against 570 thousand), already far below PoB's from the skills and reasons they lack, indeterminate.
+- **Tests:** the pattern's cases in `custom::tests`, `skill_modifiers`' named effect, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32. The maintainer-run `custom-lines` check compares every fixture's custom lines with PoB's parse; this pattern is PoB's mod for the line (the fixture above is the evidence until that run).

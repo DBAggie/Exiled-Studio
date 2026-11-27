@@ -29,6 +29,8 @@ use loom_domain::TypedResolution;
 pub struct Pattern {
     /// The name the calculation maps (`more-damage`).
     pub name: &'static str,
+    /// The text before the number (lower case); empty for most patterns.
+    pub prefix: &'static str,
     /// The text after the number, for the "more" (or only) form.
     pub more: &'static str,
     /// The text after the number for the "less" form, if any.
@@ -45,30 +47,45 @@ pub struct Pattern {
 /// - `more-block-chance`: "#% more/less block chance", `BlockChance` MORE;
 /// - `more-damage`: "#% more/less damage", `Damage` MORE;
 /// - `more-spell-block-chance`: "#% more/less spell block chance",
-///   `SpellBlockChance` MORE.
+///   `SpellBlockChance` MORE;
+/// - `punishment-curse-effect`: "Punishment has #% increased/reduced Curse
+///   Effect", `CurseEffect` INC with the `SkillName` Punishment (its
+///   "<skill> has" prefix; the game's current wording is "#% increased
+///   Punishment Curse Effect", `punishment_curse_effect_+%`).
 pub const PATTERNS: &[Pattern] = &[
     Pattern {
         name: "base-critical-strike-chance",
+        prefix: "",
         more: "% to critical strike chance",
         less: None,
         signed: true,
     },
     Pattern {
         name: "more-block-chance",
+        prefix: "",
         more: "% more block chance",
         less: Some("% less block chance"),
         signed: false,
     },
     Pattern {
         name: "more-damage",
+        prefix: "",
         more: "% more damage",
         less: Some("% less damage"),
         signed: false,
     },
     Pattern {
         name: "more-spell-block-chance",
+        prefix: "",
         more: "% more spell block chance",
         less: Some("% less spell block chance"),
+        signed: false,
+    },
+    Pattern {
+        name: "punishment-curse-effect",
+        prefix: "punishment has ",
+        more: "% increased curse effect",
+        less: Some("% reduced curse effect"),
         signed: false,
     },
 ];
@@ -78,8 +95,13 @@ pub const PATTERNS: &[Pattern] = &[
 #[must_use]
 pub fn pattern(text: &str) -> Option<TypedResolution> {
     let lower = text.to_ascii_lowercase();
-    let (number, rest) = split_number(&lower)?;
     for p in PATTERNS {
+        let Some(after) = lower.strip_prefix(p.prefix) else {
+            continue;
+        };
+        let Some((number, rest)) = split_number(after) else {
+            continue;
+        };
         let signed_ok = p.signed || !(number.starts_with('+') || number.starts_with('-'));
         if !signed_ok {
             continue;
@@ -225,10 +247,22 @@ mod tests {
             pattern("-1% to critical strike chance"),
             p("base-critical-strike-chance", "-1")
         );
+        // The agent list: a pattern with text before the number.
+        assert_eq!(
+            pattern("Punishment has 50% reduced Curse Effect"),
+            p("punishment-curse-effect", "-50")
+        );
+        assert_eq!(
+            pattern("Punishment has 20% increased Curse Effect"),
+            p("punishment-curse-effect", "20")
+        );
     }
 
     #[test]
     fn a_line_beside_a_pattern_should_not_match() {
+        assert_eq!(pattern("Punishment has +50% reduced Curse Effect"), None);
+        assert_eq!(pattern("Vulnerability has 50% reduced Curse Effect"), None);
+        assert_eq!(pattern("50% reduced Curse Effect"), None);
         assert_eq!(pattern("+20% more damage"), None);
         assert_eq!(pattern("20% more damage with hits"), None);
         assert_eq!(pattern("20%more damage"), None);

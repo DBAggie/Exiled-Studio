@@ -200,7 +200,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 36] = [
+pub const STATS: [ModifierRow; 37] = [
     // Close-out M6: "Anger has #% increased Aura Effect".
     (
         "anger_aura_effect_+%",
@@ -331,6 +331,13 @@ pub const STATS: [ModifierRow; 36] = [
         Poe1Quantity::NamedSkillEffect(0),
         1.0,
     ),
+    // The agent list: "#% increased Punishment Curse Effect" (`CurseEffect`
+    // INC with the `SkillName` Punishment).
+    (
+        "punishment_curse_effect_+%",
+        Poe1Quantity::NamedSkillEffect(6),
+        1.0,
+    ),
     (
         "reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(None),
@@ -422,7 +429,7 @@ pub enum NamedEffect {
 /// #% increased aura effect" and "#% increased <skill> curse effect"):
 /// the stat, the skill's granted effect ID, and what it modifies, by
 /// [`Poe1Quantity::NamedSkillEffect`]'s index.
-pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
+pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 7] = [
     ("pride_aura_effect_+%", "Pride", NamedEffect::Aura),
     (
         "vulnerability_curse_effect_+%",
@@ -446,6 +453,14 @@ pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
         "zealotry_mana_reservation_efficiency_+%",
         "Zealotry",
         NamedEffect::ManaReservationEfficiency,
+    ),
+    // The agent list: "#% increased Punishment Curse Effect", and the older
+    // custom line "Punishment has #% reduced Curse Effect" (the custom
+    // pattern `punishment-curse-effect`).
+    (
+        "punishment_curse_effect_+%",
+        "Punishment",
+        NamedEffect::Curse,
     ),
 ];
 
@@ -596,7 +611,7 @@ pub struct Totals {
     pub offering_buff_effect: f64,
     /// Each named skill effect, by [`NAMED_SKILL_EFFECTS`]' index
     /// (P6-11gn).
-    pub named_skill_effect: [f64; 6],
+    pub named_skill_effect: [f64; 7],
     /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
     pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
@@ -1231,7 +1246,7 @@ mod tests {
         // Close-out M6: a named skill's own efficiency.
         let z = Totals {
             mana_efficiency: 10.0,
-            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0],
+            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0, 0.0],
             ..Totals::default()
         };
         assert_eq!(
@@ -1301,13 +1316,14 @@ mod tests {
         assert_eq!(n.named_golem(None), 0.0);
         // P6-11gn: a named skill's effect, for that skill and kind alone.
         let p = Totals {
-            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0],
+            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0, -50.0],
             ..Totals::default()
         };
         assert_eq!(p.named_skill("Pride", NamedEffect::Aura), 20.0);
         assert_eq!(p.named_skill("Pride", NamedEffect::Curse), 0.0);
         assert_eq!(p.named_skill("Vulnerability", NamedEffect::Curse), 15.0);
         assert_eq!(p.named_skill("Hatred", NamedEffect::Aura), 0.0);
+        assert_eq!(p.named_skill("Punishment", NamedEffect::Curse), -50.0);
         // P6-11gg: the offerings' effect, on you with the effect on you.
         let o = Totals {
             offering_buff_effect: 20.0,
