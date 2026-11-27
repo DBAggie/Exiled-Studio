@@ -190,11 +190,25 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_unique_flask_block_%_while_healing",
         "additional_block_%",
     ),
+    // "#% increased Damage Over Time during Effect" (a unique's; the old
+    // "during Flask Effect" is a reviewed rewording; PoB: `Damage` INC with
+    // `ModFlag.Dot`, `UsingFlask`).
+    (
+        "local_unique_flask_damage_over_time_+%_during_flask_effect",
+        "damage_over_time_+%",
+    ),
     // "Gain #% of Elemental Damage as Extra Chaos Damage during effect"
     // (close-out M1).
     (
         "local_unique_flask_elemental_damage_%_to_add_as_chaos_while_healing",
         "elemental_damage_%_to_add_as_chaos",
+    ),
+    // "#% of Chaos Damage Leeched as Life during Effect" (a unique's; the
+    // old "during Flask effect" is a reviewed rewording; PoB:
+    // `ChaosDamageLifeLeech` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_life_leech_from_chaos_damage_permyriad_while_healing",
+        "base_life_leech_from_chaos_damage_permyriad",
     ),
     // "Gain #% of Physical Damage as Extra Chaos Damage during effect"
     // (close-out M1).

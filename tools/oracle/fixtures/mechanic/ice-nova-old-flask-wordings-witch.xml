@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Ice Nova with fire and chaos damage and an ignite, and four active
+     flasks written in the old "during Flask effect" wording, each a reviewed rewording (tools/rewordings/items.json)
+     to "during Effect": a magic Quicksilver Flask's movement speed, Witchfire Brew's damage over time, Atziri's
+     Promise's chaos leech, Dying Sun's area of effect and projectiles (PoB: the same mods while UsingFlask).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: MAGIC
+Quicksilver Flask of the Loom
+Quicksilver Flask
+Quality: 0
+Implicits: 0
+24% increased Movement Speed during Flask effect
+		</Item>
+		<Item id="2">
+Rarity: UNIQUE
+Witchfire Brew
+Stibnite Flask
+Quality: 0
+Implicits: 1
+Creates a Smoke Cloud on Use
+50% increased Charges used
+35% increased Damage Over Time during Flask Effect
+		</Item>
+		<Item id="3">
+Rarity: UNIQUE
+Atziri's Promise
+Amethyst Flask
+Quality: 0
+Implicits: 0
+2% of Chaos Damage Leeched as Life during Flask effect
+Gain 20% of Physical Damage as Extra Chaos Damage during effect
+Gain 15% of Elemental Damage as Extra Chaos Damage during effect
+		</Item>
+		<Item id="4">
+Rarity: UNIQUE
+Dying Sun
+Ruby Flask
+Quality: 0
+Implicits: 0
+10% reduced Charges used
+Skills fire 2 additional Projectiles during Flask Effect
+20% increased Area of Effect during Flask Effect
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Flask 1" itemId="1" active="true"/>
+			<Slot name="Flask 2" itemId="2" active="true"/>
+			<Slot name="Flask 3" itemId="3" active="true"/>
+			<Slot name="Flask 4" itemId="4" active="true"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				Adds 40 to 80 Fire Damage to Spells
+30% chance to Ignite
++10% to Fire Damage over Time Multiplier
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
