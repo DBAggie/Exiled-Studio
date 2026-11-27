@@ -5703,3 +5703,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Smite hatchet build): Perforate in Blood Stance with 3 overlapping spikes, without the input, in Sand Stance with 3, and Perforate of Bloodshed with 3. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1059 to DIV-1082.
 
 **Evidence** (`local/p6/d27pfe` on `b-ig`, against `local/p6/d27fse`): public 0 unexpected, `Complete` 57,196 to 57,552; 6 values moved, 5 toward PoB (the Perforate build's DPS 340,006 to 2,720,046, PoB 22,360,013; the Lacerate of Haemorrhage build's bleeding with Bloodshed's row), 1 away: the Perforate build's bleeding, 13,624 to 16,880 (PoB 13,863), its stacks now with the overlap as PoB's, on a hit still about 3 times below PoB's (the 3.13 test build, partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## A weapon's double damage (the agent list, 2026-11-27)
+
+**The stat:** "Attacks with this Weapon deal Double Damage" (`local_double_damage_with_attacks`, Paradoxica's), unmapped.
+
+**PoB** (`ModParser.lua` 3117): `DoubleDamageChance` BASE 100 with `ModFlag.Hit`, the hand's `{Hand}Attack` condition, and `SkillType.Attack`: that hand's attack hits deal double damage.
+
+**The engine:** `WeaponValue::DoubleDamage` (a weapon row, so the main hand's `Weapon` or the off hand's `OffHandWeapon`); `hit::double_damage` adds 100 per line of the pass's hand to the chance, for an attack's pass only. The same text is also `local_double_damage_with_attacks_chance_%` at 100, so a rare's line stays `ambiguous` (the S9 rule settles a unique's by its own mod).
+
+**Fixtures** (original): `perforate-paradoxica-double-damage-templar.xml` (Perforate with Paradoxica: average damage 9.84, twice the hit) and `ice-nova-paradoxica-double-damage-templar.xml` (a spell: no double damage). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1083 to DIV-1088.
+
+**Evidence** (`local/p6/d27dde` on `b-ig`, against `local/p6/d27pfe`): public 0 unexpected, `Complete` 57,552 to 57,728; 4 values moved, all toward PoB, in the Perforate build with Paradoxica (average damage 206,879 to 423,529, PoB 604,979). Corpus 0 unexpected, no value moved.

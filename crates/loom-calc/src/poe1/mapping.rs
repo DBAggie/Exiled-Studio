@@ -12829,6 +12829,12 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
         "local_critical_strike_chance_+%_per_4%_quality",
         &[(weapon(WeaponValue::CritChancePer4Quality), Op::Base)],
     ),
+    // The agent list (2026-11-27): "Attacks with this Weapon deal Double
+    // Damage" (PoB: `DoubleDamageChance` BASE 100, the hand's attacks).
+    (
+        "local_double_damage_with_attacks",
+        &[(weapon(WeaponValue::DoubleDamage), Op::Base)],
+    ),
     // P3-8n: "Grants #% increased Elemental Damage per 2% Quality"
     // (`ElementalDamage` INC per `QualityOn{SlotName}`, `div` 2,
     // `ModParser.lua` 5759): `collect` scales it by the weapon's quality.

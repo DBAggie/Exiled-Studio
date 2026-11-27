@@ -1591,6 +1591,11 @@ pub enum WeaponValue {
     /// weapon's local critical strike chance, `floor(quality / 4 x sum)`
     /// (PoB's `AlternateQualityLocalCritChancePer4Quality`, `Item.lua` 2277).
     CritChancePer4Quality,
+    /// "Attacks with this Weapon deal Double Damage" (the agent list,
+    /// 2026-11-27; PoB's `DoubleDamageChance` BASE 100 with `ModFlag.Hit`,
+    /// the hand's `{Hand}Attack` condition, and `SkillType.Attack`,
+    /// `ModParser.lua` 3117): `Base` 1 per line, read by the hand's hit.
+    DoubleDamage,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -1605,6 +1610,7 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::DoubleDamage => f.write_str("double-damage"),
             Self::AttackSpeedPer8Quality => f.write_str("attack-speed-per-8-quality"),
             Self::CritChancePer4Quality => f.write_str("crit-chance-per-4-quality"),
             Self::Accuracy => f.write_str("accuracy"),

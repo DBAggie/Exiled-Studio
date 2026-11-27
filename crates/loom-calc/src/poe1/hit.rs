@@ -4008,10 +4008,12 @@ fn double_damage(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
     uptime: Option<Valued>,
+    weapon: Option<Quantity>,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     let quantity = Quantity::Poe1(Poe1Quantity::DoubleDamageChance);
-    let has = phases::has(calc, quantity);
+    let weapon = weapon.filter(|q| phases::has(calc, *q));
+    let has = phases::has(calc, quantity) || weapon.is_some();
     let triple_quantity = Quantity::Poe1(Poe1Quantity::TripleDamageChance);
     let has_triple = phases::has(calc, triple_quantity);
     if !has && uptime.is_none() && !has_triple {
@@ -4029,6 +4031,25 @@ fn double_damage(
     } else {
         phases::constant(calc, "no-double-damage-chance", 0.0)?
     };
+    // The weapon's own lines, 100 each (the agent list, 2026-11-27).
+    if let Some(q) = weapon {
+        let lines = sum_in(
+            calc,
+            q,
+            Op::Base,
+            cx,
+            Term::Step("weapon-double-damage-lines"),
+            reasons,
+        )?;
+        let hundred = phases::constant(calc, "hundred", 100.0)?;
+        let from_weapon =
+            phases::product(calc, &[lines, hundred], Term::Step("weapon-double-damage"))?;
+        chance = phases::total(
+            calc,
+            &[chance, from_weapon],
+            Term::Step("double-damage-with-weapon"),
+        )?;
+    }
     // `DoubleDamageChance + IntimidatingUpTimeRatio` (`CalcOffence.lua`
     // 3200 to 3201), capped below.
     if let Some(u) = uptime {
@@ -5646,7 +5667,16 @@ fn passes(
         ratio(shape.level.base_multiplier),
     )?;
     let conversion = conversion(calc, &cx, reasons)?;
-    let scaled = double_damage(calc, &cx, shape.exert_uptime, reasons)?;
+    // The hand's weapon's own double damage (the agent list, 2026-11-27):
+    // an attack's pass alone.
+    let weapon_double = shape.flags.contains(Flags::ATTACK).then(|| {
+        if shape.flags.contains(Flags::OFF_HAND_ATTACK) {
+            Hand::Off.weapon(WeaponValue::DoubleDamage)
+        } else {
+            Hand::Main.weapon(WeaponValue::DoubleDamage)
+        }
+    });
+    let scaled = double_damage(calc, &cx, shape.exert_uptime, weapon_double, reasons)?;
     // Ruthless's hit effect joins `allMult` after the scaled damage effect
     // (`CalcOffence.lua` 3352; P6-11bt).
     let scaled = match (
