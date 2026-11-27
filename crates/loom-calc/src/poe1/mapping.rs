@@ -5671,6 +5671,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ENEMY_SHOCKED,
         )],
     ),
+    // The agent list (2026-11-27): "Enemies Taunted by your Warcries are
+    // Intimidated" (`ModParser.lua` 5023: an `EnemyModifier` of
+    // `Condition:Intimidated` under the enemy's `Taunted`, itself under
+    // `UsedWarcryRecently`; `poe1::damage_taken` reads the flag as the
+    // config's).
+    (
+        "enemies_taunted_by_your_warcies_are_intimidated",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyIntimidated),
+            Op::Flag,
+            NONE,
+            conditions::ENEMY_TAUNTED_BY_WARCRY,
+        )],
+    ),
     // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
     // Enemy is Nearby" (`EnergyShieldRegen` BASE, the stat per minute; PoB's
     // enemy `ActorCondition` on `NearbyRareOrUniqueEnemy` or `RareOrUnique`).
@@ -15668,6 +15682,16 @@ mod tests {
                 vec![config(
                     Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
                     Op::Increased,
+                    NONE,
+                    conditions::ENEMY_TAUNTED_BY_WARCRY,
+                )],
+            ),
+            // The agent list (2026-11-27).
+            (
+                "enemies_taunted_by_your_warcies_are_intimidated",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyIntimidated),
+                    Op::Flag,
                     NONE,
                     conditions::ENEMY_TAUNTED_BY_WARCRY,
                 )],

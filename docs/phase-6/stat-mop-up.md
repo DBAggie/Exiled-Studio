@@ -5715,3 +5715,17 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): `perforate-paradoxica-double-damage-templar.xml` (Perforate with Paradoxica: average damage 9.84, twice the hit) and `ice-nova-paradoxica-double-damage-templar.xml` (a spell: no double damage). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1083 to DIV-1088.
 
 **Evidence** (`local/p6/d27dde` on `b-ig`, against `local/p6/d27pfe`): public 0 unexpected, `Complete` 57,552 to 57,728; 4 values moved, all toward PoB, in the Perforate build with Paradoxica (average damage 206,879 to 423,529, PoB 604,979). Corpus 0 unexpected, no value moved.
+
+## Enemies Taunted by your Warcries are Intimidated (the agent list, 2026-11-27)
+
+**The stat:** "Enemies Taunted by your Warcries are Intimidated" (`enemies_taunted_by_your_warcies_are_intimidated`), unmapped in one public build.
+
+**PoB** (`ModParser.lua` 5023): an `EnemyModifier` of `Condition:Intimidated` under the enemy's `Taunted`, itself under `UsedWarcryRecently`; Intimidate then gives the enemy 10% increased attack damage taken, as the config's check.
+
+**The engine:** a state row on `conditions::ENEMY_TAUNTED_BY_WARCRY` (the enemy taunted and a warcry used recently, settled by the close-out's M5) setting `Poe1Quantity::EnemyIntimidated`; `damage_taken`'s Intimidate reads that flag also under settled conditions that all hold, as Onslaught's reader does.
+
+**Found on the way, for the maintainer** (`dev/active/open-items/maintainer-follow-ups.md`): PoB's parser (`tools/oracle/data/pob_parse_lines.lua`) reads none of "You take #% increased (or reduced) Extra Damage from Critical Strikes per Endurance Charge" (a public build with 10 endurance charges has PoB's `CritExtraDamageReduction` 0), and leaves "against Rare monsters" and "on Non-Impaled Enemies" over in two other single-build lines, so it applies nothing for them. Each needs a check in the game before a `game-truth` mapping; they stay reasons.
+
+**Fixtures** (original, the Smite hatchet build): the line with a warcry used recently and the enemy Taunted (attack damage taken 10% higher), and with the enemy Taunted alone (nothing). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1089 to DIV-1099.
+
+**Evidence** (`local/p6/d27tie` on `b-ig`, against `local/p6/d27dde`): public 0 unexpected, `Complete` 57,728 to 57,904 (the fixtures'); no value moved (the public build with the line sets no taunt). Corpus 0 unexpected, no value moved.

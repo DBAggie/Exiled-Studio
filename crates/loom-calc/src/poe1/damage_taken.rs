@@ -729,7 +729,11 @@ fn check(set: &ConfigSet, name: &str) -> Result<bool, ()> {
 }
 
 /// Intimidate, Unnerve, and Blind (module docs).
-fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+fn conditions(
+    set: &ConfigSet,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     let checks = [
         (INTIMIDATED_INPUT, Flags::ATTACK),
         (UNNERVED_INPUT, Flags::SPELL),
@@ -738,7 +742,10 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
     // "Nearby Enemies are Intimidated while you have Rage" (P3-8n,
     // `poe1::stacks`): the same flag as the config's, so once.
     let rage = super::stacks::intimidates(Some(set), ingest);
-    // "Nearby Enemies are Intimidated" (close-out M5): the same flag.
+    // "Nearby Enemies are Intimidated" (close-out M5): the same flag;
+    // also under settled conditions that all hold (the agent list,
+    // 2026-11-27: "Enemies Taunted by your Warcries are Intimidated", PoB's
+    // `EnemyModifier` under `UsedWarcryRecently`).
     let rage = rage.or_else(|| {
         ingest
             .effects()
@@ -747,7 +754,12 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
                 e.quantity == Quantity::Poe1(Poe1Quantity::EnemyIntimidated)
                     && e.op == Op::Flag
                     && e.value != 0.0
-                    && e.conditions == Conditions::none()
+                    && e.conditions.all == Flags::NONE
+                    && e.conditions.any == Flags::NONE
+                    && e.conditions
+                        .states
+                        .iter()
+                        .all(|(k, want)| settled.get(k) == Some(want))
             })
             .map(|e| e.source.clone())
     });
@@ -1414,7 +1426,11 @@ pub fn damage_taken(
     chill_damage_taken(set, ingest);
     enemy_states(set, ingest);
     let Some(set) = set else { return };
-    conditions(set, ingest);
+    let settled = ingest
+        .states()
+        .cloned()
+        .unwrap_or_else(|| super::states::states(input));
+    conditions(set, &settled, ingest);
     covered(input, set, ingest);
     moving(set, ingest);
     alt_ailments(set, ingest);
