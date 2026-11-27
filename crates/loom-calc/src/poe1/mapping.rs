@@ -10570,6 +10570,60 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "has_avoid_shock_as_avoid_all_elemental_ailments",
         "ailment-on-self",
     ),
+    // Modifier magnitudes (the agent list): they scale the item's other
+    // lines, which the import adapter settles (`pob_item::values`: PoB
+    // scales them on an advanced copy or a crafted item, `Item.lua` 1377,
+    // and the lines are then `modifier-magnitude` reasons; otherwise the
+    // printed values carry them). The line itself is no mod in PoB
+    // (`ModParser.lua` 5874 to 5876).
+    (
+        "heist_enchantment_ailment_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_attribute_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_casterdamage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_chaos_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_cold_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_critical_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_damage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_defence_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_fire_mod_effect_+%", "modifier-magnitude"),
+    ("heist_enchantment_life_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_lightning_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_mana_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_physical_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_resistance_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_speed_mod_effect_+%",
+        "modifier-magnitude",
+    ),
     // Close-out M2: area of effect per 50 unreserved mana (`AreaOfEffect`
     // INC per `ManaUnreserved`): area, no slice field.
     (
@@ -10688,6 +10742,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "local_display_nearby_enemies_flask_charges_granted_+%",
         "flask",
     ),
+    ("local_enchant_stat_magnitude_+%", "modifier-magnitude"),
+    (
+        "local_explicit_elemental_damage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("local_explicit_minion_mod_effect_+%", "modifier-magnitude"),
+    ("local_explicit_mod_effect_+%", "modifier-magnitude"),
+    (
+        "local_explicit_physical_and_chaos_damage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
     // P6-11bz: the radius of a flask's consecrated ground (PoB does not parse it).
@@ -10741,6 +10806,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_sockets", "sockets"),
     // Close-out M3: "Has no Sockets" (`NoSockets`): no slice field.
     ("local_has_no_sockets", "sockets"),
+    (
+        "local_implicit_modifier_magnitudes_doubled",
+        "modifier-magnitude",
+    ),
+    (
+        "local_implicit_modifier_magnitudes_tripled",
+        "modifier-magnitude",
+    ),
+    ("local_implicit_stat_magnitude_+%", "modifier-magnitude"),
     ("local_intelligence_requirement_+", "no-slice"),
     ("local_item_allow_modification_while_corrupted", "display"),
     ("local_item_implicit_modifier_limit", "display"),
@@ -10766,6 +10840,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("local_maximum_quality_+", "no-slice"),
+    ("local_prefix_mod_effect_+%", "modifier-magnitude"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
     // P6-11ic: Kalandra's Touch's "Reflects your opposite Ring" (PoB: display only; `collect::items` copies the other ring).
@@ -10785,6 +10860,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11gi: the parent's "#% increased Effect of Socketed Abyss Jewels":
     // `collect` scales its abyss jewels' modifiers by it.
     ("local_socketed_abyss_jewel_effect_+%", "abyss-jewel-effect"),
+    ("local_suffix_mod_effect_+%", "modifier-magnitude"),
     // P6-8a: the gems a trigger support supports; PoB has no row.
     (
         "local_support_gem_max_skill_level_requirement_to_support",
@@ -11512,6 +11588,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "unique_spread_poison_to_nearby_enemies_during_flask_effect",
         "no-slice",
     ),
+    ("unveiled_mod_effect_+%", "modifier-magnitude"),
     // Close-out M3: Vaal souls: no slice field.
     ("vaal_skill_soul_gain_preventation_duration_+%", "no-slice"),
     ("vaal_skill_soul_refund_chance_%", "no-slice"),

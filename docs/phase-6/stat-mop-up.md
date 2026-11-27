@@ -5472,3 +5472,13 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixture** (original) `ice-nova-all-skill-gem-quality-witch.xml`: Ice Nova at quality 0 with Controlled Destruction and the line at 20%: Ice Nova at quality 20 (its area 30 to 33). Every field equals PoB's.
 
 **Evidence** (`local/p6/gqe` on `b-pb`, against `local/p6/cbe`): public 0 unexpected, `Complete` 54,126 to 54,213 (the fixture's 87); 6 values of `lacerate-bleed-gladiator.xml` moved, all toward PoB. Corpus 0 unexpected, no document changed.
+
+## Modifier magnitude lines (the agent list, 2026-11-27)
+
+**The stats** (public: Heist's "Explicit Defence Modifier magnitudes" in 169 fields of 2 builds, and three more in one build each): the 26 item stats whose line scales the item's other lines ("#% increased Explicit <tag> Modifier magnitudes", "Implicit Modifier magnitudes are doubled", "#% increased Prefix Modifier magnitudes", and kin).
+
+**PoB** reads the line itself as no mod (`ModParser.lua` 5874 to 5876). It scales the item's matching lines by it only on an advanced copy or a crafted item (`Item.lua` 1377 to 1432); otherwise it reads the printed values, which the game prints with the magnitudes applied.
+
+**The engine:** `NoEffect` rows (`modifier-magnitude`). The scaling of the other lines is the import adapter's (`pob_item::values`, the agent list's S9): where PoB applies the magnitudes, every modifier line of the item is a `modifier-magnitude` reason, so no value is guessed; otherwise the printed values are read, as PoB reads them. The real-bundle test `no_effect_stats_should_be_known_and_never_mapped` checks each stat is the game's.
+
+**Evidence** (`local/p6/d27mme` on `b-pb`, against `local/p6/gqe`): public 0 unexpected, `Complete` unchanged at 54,213 (each build with these lines has other reasons); no value moved; the four stats' reasons gone. Corpus 0 unexpected, no value moved (two documents lose the reason).
