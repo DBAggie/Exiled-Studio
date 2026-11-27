@@ -5877,3 +5877,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Smite with a Rusted Hatchet carrying the line, the enemy bleeding (the cull: combined DPS times 100 / 90) and not (nothing). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1198 to DIV-1209.
 
 **Evidence** (`local/p6/d28cbe` on `b-ig`, against `local/p6/d27afe`): public 0 unexpected, `Complete` 60,438 to 60,616 (the fixtures'); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.
+
+## Critical culling (the agent list, 2026-11-28)
+
+**The stat:** "Critical Strikes have Culling Strike" (`crits_have_culling_strike`), unmapped in one public build; the combined DPS listed critical culling as not modelled.
+
+**PoB** (`CalcOffence.lua` 3211 to 3221): `CriticalCullPercent` MAX 10; per pass `criticalCull = min(c, c x (1 - (1 - CritChance / 100) ^ hitRate))`, `hitRate = HitChance / 100 x (HitSpeed or Speed) x dpsMultiplier`; `CullPercent` is the larger of it and the regular cull, `CullMultiplier = 100 / (100 - CullPercent)`.
+
+**The engine:** `Poe1Quantity::CriticalCulling` (a flag row); `hit::critical_cull` computes the percent for a spell and a single-hand attack (a dual wielder's is a reason: PoB keeps its last pass's) as `Poe1Quantity::CriticalCullPercent`; `combined` takes the larger of it and the regular cull.
+
+**Fixtures** (original): Smite with a Siege Axe and the line, with 400% increased global crit chance, and with Culling Strike too (the regular 10%, the larger); Ice Nova with the line and 300% increased global crit chance. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the attack's hit rate reaches its critical cull): `game-truth` DIV-1210 to DIV-1227.
+
+**Evidence** (`local/p6/d28cde` on `b-ig`, against `local/p6/d28cbe`): public 0 unexpected, `Complete` 60,616 to 60,967 (the fixtures'); 2 values moved, toward PoB (`ethereal-knives-mines-assassin.xml`'s CombinedDPS and FullDPS). Corpus 0 unexpected, no value moved.

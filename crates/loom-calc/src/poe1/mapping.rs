@@ -8182,6 +8182,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (2026-11-28): "Critical Strikes have Culling Strike"
+    // (`CriticalCullPercent` MAX 10), read by `hit::critical_cull`.
+    (
+        "crits_have_culling_strike",
+        &[(Quantity::Poe1(Poe1Quantity::CriticalCulling), Op::Flag, 1.0)],
+    ),
     // P6-11bf: "#% increased Damage with Hits against Chilled Enemies"
     // (`Damage` INC, `KeywordFlag.Hit`, the enemy's `Chilled`):
     // `poe1::damage_taken` applies it while the enemy is chilled.

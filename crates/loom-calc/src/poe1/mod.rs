@@ -214,6 +214,12 @@ pub enum Poe1Quantity {
     /// list, 2026-11-27): `Base`, the percent, read by the energy shield
     /// phase in place of its rows.
     EnergyShieldFromLife,
+    /// "Critical Strikes have Culling Strike" (PoB's `CriticalCullPercent`
+    /// MAX 10; the agent list, 2026-11-28): a `Flag`, read by [`hit`].
+    CriticalCulling,
+    /// The critical cull percent the hit computes (`CalcOffence.lua` 3214
+    /// to 3217): `Base`, read by [`combined`] beside the regular cull.
+    CriticalCullPercent,
     /// Elemental resistances are capped by the highest maximum elemental
     /// resistance (PoB's `ElementalResistMaxIsHighestResistMax`, Melding of
     /// the Flesh; P6-11dh): a `Flag` the resistance phase reads.
@@ -1725,6 +1731,8 @@ impl core::fmt::Display for Poe1Quantity {
             }),
             Self::ManaAsEnergyShield => f.write_str("mana-as-energy-shield"),
             Self::EnergyShieldFromLife => f.write_str("energy-shield-from-life"),
+            Self::CriticalCulling => f.write_str("critical-culling"),
+            Self::CriticalCullPercent => f.write_str("critical-cull-percent"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),

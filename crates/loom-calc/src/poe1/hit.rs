@@ -1724,6 +1724,15 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
     hit_dps(calc, average, speed, spell.dps_multiplier)?;
     let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
+    critical_cull(
+        calc,
+        spell.source(),
+        flags,
+        crit,
+        spell_hit_chance,
+        speed,
+        spell.dps_multiplier,
+    )?;
     let ailment_rate = rate_with(calc, speed, spell.dps_multiplier)?;
     let ailment_hit = super::ailment::AilmentHit {
         flags,
@@ -2416,6 +2425,15 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             * perforate_dps_multiplier(&input, &attack.skill, &mut unvetted)
             * more_dps;
         hit_dps_with(calc, average.0, rate, dps, quantity)?;
+        critical_cull(
+            calc,
+            attack.source(),
+            flags,
+            crit.0,
+            hit_chance.0,
+            rate,
+            dps,
+        )?;
         let ailment_rate = rate_with(calc, rate, dps * quantity)?;
         let ailment_hit = super::ailment::AilmentHit {
             flags,
@@ -2440,6 +2458,13 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let mut off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
     triggered(calc, &mut off_rate)?;
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
+    // A dual wielder's critical cull (PoB keeps the last pass's): a reason.
+    if phases::has(calc, Quantity::Poe1(Poe1Quantity::CriticalCulling)) {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "dual-wield-critical-cull",
+        });
+    }
     // General's Cry forces the main hand (`forceMainHand`): a dual wielder's
     // mirage use is not modelled.
     let exert = if mirage_warriors {
@@ -2816,6 +2841,48 @@ fn dual_wield(
     // the hands' speeds did). With a hit rate (`rate`, PoB's `HitSpeed`),
     // that rate (agent list: Static Strike's beams).
     hit_dps(calc, average, rate, 1.0)
+}
+
+/// "Critical Strikes have Culling Strike" (the agent list, 2026-11-28;
+/// `CalcOffence.lua` 3211 to 3217): with the flag in the pass's context,
+/// `min(c, c x (1 - (1 - crit / 100) ^ hitRate))`, `c` PoB's 10, `hitRate =
+/// HitChance / 100 x (HitSpeed or Speed) x dpsMultiplier`, added as
+/// [`Poe1Quantity::CriticalCullPercent`] for [`super::combined`] (PoB's
+/// `CullPercent` is the larger of it and the regular cull). A spell's and a
+/// single-hand attack's: a dual wielder's is a reason (PoB keeps its last
+/// pass's).
+fn critical_cull(
+    calc: &mut Calc<'_>,
+    source: Source,
+    flags: Flags,
+    crit: Valued,
+    hit_chance: Valued,
+    rate: Valued,
+    dps: f64,
+) -> Result<(), CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::CriticalCulling);
+    if !phases::has(calc, q) {
+        return Ok(());
+    }
+    let cx = calc.context(flags);
+    let mut reasons = Reasons::new();
+    if flag_on(calc, q, &cx, &mut reasons)?.is_none() {
+        return Ok(());
+    }
+    let c = super::combined::CULL_PERCENT;
+    let hit_rate = hit_chance.value / 100.0 * rate.value * dps;
+    let value = crate::math::min(
+        c,
+        c * (1.0 - crate::math::pow(1.0 - crit.value / 100.0, hit_rate)),
+    );
+    calc.add_effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::CriticalCullPercent),
+        op: Op::Base,
+        value,
+        conditions: crate::condition::Conditions::none(),
+        source,
+    });
+    Ok(())
 }
 
 /// The support stat that makes General's Cry's mirage warriors use the
