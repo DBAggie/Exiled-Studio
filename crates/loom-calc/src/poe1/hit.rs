@@ -2100,13 +2100,12 @@ fn hand_rate(
 }
 
 /// One hand's pass (module docs, steps 4 to 9) after its rate:
-/// `global_speed` is PoB's `globalOutput.Speed` (the hands' combined speed
-/// when dual wielding), which Intimidating Cry's uptime reads.
+/// `exert_uptime` is Intimidating Cry's uptime ([`exerted_attacks`]).
 fn hand_hit(
     calc: &mut Calc<'_>,
     attack: &AttackSkill<'_>,
     rate: HandRate,
-    global_speed: Valued,
+    exert_uptime: Option<Valued>,
     enemy: &Enemy,
 ) -> Result<HandHit, CalcError> {
     let input = *calc.input();
@@ -2149,9 +2148,6 @@ fn hand_hit(
         "strength-per-melee-damage",
         "strength-bonus",
     )?;
-    // The rate came first, as PoB (`CalcOffence.lua`: speed before
-    // damage): Intimidating Cry's uptime reads the global speed.
-    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, global_speed, &mut reasons)?;
     let shape = HitShape {
         source: attack.source(),
         level: attack.level,
@@ -2318,8 +2314,11 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let mut main_rate = hand_rate(calc, attack, hand, attack.weapon, flags, &unvetted)?;
     triggered(calc, &mut main_rate)?;
     let Some(off_item) = attack.off_weapon else {
-        let speed = main_rate.speed.0;
-        let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
+        // The rate came first, as PoB (`CalcOffence.lua`: speed before
+        // damage): the exerted attacks read the global speed.
+        let exert = exerted_attacks(calc, attack, flags, main_rate.speed.0, &mut unvetted)?;
+        main_rate.unvetted.extend(&unvetted);
+        let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
         let HandHit {
             hit_chance,
             crit,
@@ -2381,8 +2380,11 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let mut off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
     triggered(calc, &mut off_rate)?;
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
-    let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
-    let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;
+    let exert = exerted_attacks(calc, attack, flags, speed, &mut unvetted)?;
+    main_rate.unvetted.extend(&unvetted);
+    off_rate.unvetted.extend(&unvetted);
+    let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
+    let off = hand_hit(calc, attack, off_rate, exert, &enemy)?;
     // The hit rate after the hands' speeds are combined (`CalcOffence.lua`
     // 2474 to 2476): the beams' when set, else the combined speed.
     let rate = hit_rate(calc, beam_rate, &unvetted, speed);
@@ -2746,21 +2748,32 @@ fn dual_wield(
     hit_dps(calc, average, rate, 1.0)
 }
 
-/// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
-/// 2592 to 2600; close-out): for a melee skill (PoB: the main skill's
-/// `Melee` type, not triggered, channelled, a totem's, or a retaliation)
-/// with a modelled Intimidating Cry, `min(100, min((exerts / speed) /
-/// (cooldown + cast time), 1) x 100 x stored uses)`, the cast time `1 /
-/// min(cast rate x action speed, tick rate)` (`calcWarcryCastTime`).
-/// `None` otherwise.
-fn intimidating_uptime(
+/// The main skill's exerted attacks (`CalcOffence.lua` 2539 to 2802;
+/// close-out for Intimidating Cry, the agent list for the others). For a
+/// skill PoB lets warcries exert (not `NeverExertable`, triggered,
+/// channelled, used by another thing, a retaliation, or a totem's), each
+/// modelled cry ([`super::gems::ExertCry`]) whose type the skill has gives
+/// its uptime, percent: `min(100, min((exerts / speed) / (cooldown + cast
+/// time), 1) x 100 x stored uses)`, `exerts` PoB's `Num<Cry>Exerts`,
+/// `floor((base + extra) x more)` with [`Poe1Quantity::ExtraExertedAttacks`]
+/// (`CalcPerform.lua` 2316 to 2320), the cast time `1 / min(cast rate x
+/// action speed, tick rate)` (`calcWarcryCastTime`). The exerted attacks'
+/// uptime is the largest of them, the warcries' the sum
+/// (`GlobalWarcryUptimeRatio`); with the first above 0 the skill gains, as
+/// PoB's `NewMod` (2783 to 2787), `Damage` INC and MORE of the summed
+/// [`Poe1Quantity::ExertDamage`] times that uptime over 100, and `Damage`
+/// MORE of the summed [`Poe1Quantity::ExertAverageDamage`] times the sum
+/// over 100. Returns Intimidating Cry's uptime, which the double damage
+/// reads (3200).
+fn exerted_attacks(
     calc: &mut Calc<'_>,
-    types: &std::collections::BTreeSet<String>,
+    attack: &AttackSkill<'_>,
+    flags: Flags,
     speed: Valued,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
-    use super::gems::WarcryValue;
-    let q = |v| Quantity::Poe1(Poe1Quantity::IntimidatingCry(v));
+    use super::gems::{ExertCry, WarcryValue};
+    let types = &attack.skill.types;
     let excluded = [
         "NeverExertable",
         "Triggered",
@@ -2769,39 +2782,117 @@ fn intimidating_uptime(
         "Retaliation",
         "SummonsTotem",
     ];
-    if !types.contains("Melee")
-        || excluded.iter().any(|t| types.contains(*t))
-        || !phases::has(calc, q(WarcryValue::Exerts))
-    {
+    if excluded.iter().any(|t| types.contains(*t)) {
+        return Ok(None);
+    }
+    let cries: Vec<ExertCry> = ExertCry::ALL
+        .into_iter()
+        .filter(|c| {
+            types.contains(c.skill_type())
+                && phases::has(
+                    calc,
+                    Quantity::Poe1(Poe1Quantity::ExertingCry(*c, WarcryValue::Exerts)),
+                )
+        })
+        .collect();
+    if cries.is_empty() {
         return Ok(None);
     }
     let cx = calc.context(Flags::NONE);
-    let term = |calc: &mut Calc<'_>, v: WarcryValue, reasons: &mut Reasons| {
-        sum_in(calc, q(v), Op::Base, &cx, Term::Step(v.name()), reasons)
-    };
-    let exerts = term(calc, WarcryValue::Exerts, reasons)?;
-    let cooldown = term(calc, WarcryValue::Cooldown, reasons)?;
-    let cast_rate = term(calc, WarcryValue::CastRate, reasons)?;
-    let stored = term(calc, WarcryValue::StoredUses, reasons)?;
-    let cast_rate = action_speed(calc, cast_rate, reasons)?;
-    let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
-    let cast_rate = phases::pair(calc, cast_rate, cap, Term::Step("warcry-cast-rate"), true)?;
-    let one = phases::constant(calc, "one", 1.0)?;
-    let cast_time = quotient(calc, one, cast_rate, Term::Step("warcry-cast-time"))?;
-    let per_attack = quotient(calc, exerts, speed, Term::Step("exerts-per-attack-rate"))?;
-    let window = phases::total(calc, &[cooldown, cast_time], Term::Step("warcry-window"))?;
-    let ratio = quotient(calc, per_attack, window, Term::Step("exert-ratio"))?;
-    let ratio = phases::pair(calc, ratio, one, Term::Step("exert-ratio-capped"), true)?;
-    let hundred = phases::constant(calc, "hundred", 100.0)?;
-    let base = phases::product(calc, &[ratio, hundred], Term::Step("exert-uptime-base"))?;
-    let uptime = phases::product(calc, &[base, stored], Term::Step("exert-uptime-stored"))?;
-    Ok(Some(phases::pair(
+    let extra = Quantity::Poe1(Poe1Quantity::ExtraExertedAttacks);
+    let extra_base = sum_in(
         calc,
-        uptime,
-        hundred,
-        Term::Step("exert-uptime"),
-        true,
-    )?))
+        extra,
+        Op::Base,
+        &cx,
+        Term::Step("extra-exerts"),
+        reasons,
+    )?;
+    let extra_more = more(calc, extra, &cx, reasons)?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+    let mut intimidating = None;
+    let mut uptimes = Vec::new();
+    for cry in cries {
+        let q = |v| Quantity::Poe1(Poe1Quantity::ExertingCry(cry, v));
+        let term = |calc: &mut Calc<'_>, v: WarcryValue, reasons: &mut Reasons| {
+            sum_in(calc, q(v), Op::Base, &cx, Term::Step(v.name()), reasons)
+        };
+        let base = term(calc, WarcryValue::Exerts, reasons)?;
+        let cooldown = term(calc, WarcryValue::Cooldown, reasons)?;
+        let cast_rate = term(calc, WarcryValue::CastRate, reasons)?;
+        let stored = term(calc, WarcryValue::StoredUses, reasons)?;
+        let exerts = phases::total(calc, &[base, extra_base], Term::Step("exerts-with-extra"))?;
+        let exerts = phases::product(calc, &[exerts, extra_more], Term::Step("exerts-more"))?;
+        let exerts = floor(calc, exerts, Term::Step("exerts"))?;
+        let cast_rate = action_speed(calc, cast_rate, reasons)?;
+        let cast_rate = phases::pair(calc, cast_rate, cap, Term::Step("warcry-cast-rate"), true)?;
+        let cast_time = quotient(calc, one, cast_rate, Term::Step("warcry-cast-time"))?;
+        let per_attack = quotient(calc, exerts, speed, Term::Step("exerts-per-attack-rate"))?;
+        let window = phases::total(calc, &[cooldown, cast_time], Term::Step("warcry-window"))?;
+        let ratio = quotient(calc, per_attack, window, Term::Step("exert-ratio"))?;
+        let ratio = phases::pair(calc, ratio, one, Term::Step("exert-ratio-capped"), true)?;
+        let base = phases::product(calc, &[ratio, hundred], Term::Step("exert-uptime-base"))?;
+        let uptime = phases::product(calc, &[base, stored], Term::Step("exert-uptime-stored"))?;
+        let uptime = phases::pair(calc, uptime, hundred, Term::Step("exert-uptime"), true)?;
+        if cry == ExertCry::Intimidating {
+            intimidating = Some(uptime);
+        }
+        uptimes.push(uptime);
+    }
+    let zero = phases::constant(calc, "zero", 0.0)?;
+    let mut exerted = zero;
+    for u in &uptimes {
+        exerted = phases::pair(calc, exerted, *u, Term::Step("exerted-uptime"), false)?;
+    }
+    if exerted.value > 0.0 {
+        let global = phases::total(calc, &uptimes, Term::Step("warcry-uptime"))?;
+        let hand = calc.context(flags);
+        let damage = Quantity::Poe1(Poe1Quantity::ExertDamage);
+        let average = Quantity::Poe1(Poe1Quantity::ExertAverageDamage);
+        let inc = sum_in(
+            calc,
+            damage,
+            Op::Increased,
+            &hand,
+            Term::Step("exert-inc"),
+            reasons,
+        )?;
+        let more = sum_in(
+            calc,
+            damage,
+            Op::More,
+            &hand,
+            Term::Step("exert-more"),
+            reasons,
+        )?;
+        let avg = sum_in(
+            calc,
+            average,
+            Op::More,
+            &hand,
+            Term::Step("exert-average"),
+            reasons,
+        )?;
+        for (op, v, u) in [
+            (Op::Increased, inc, exerted),
+            (Op::More, more, exerted),
+            (Op::More, avg, global),
+        ] {
+            let value = v.value * u.value / 100.0;
+            if value != 0.0 {
+                calc.add_effect(Effect {
+                    quantity: Quantity::Damage,
+                    op,
+                    value,
+                    conditions: crate::condition::Conditions::none(),
+                    source: attack.source(),
+                });
+            }
+        }
+    }
+    Ok(intimidating)
 }
 
 /// The weapon's values (module docs, step 8).
@@ -5218,7 +5309,7 @@ struct HitShape<'a> {
     /// (`CalcOffence.lua` 3184; [`keystones::CRIT_IN_PAST_8_SEC`], P3-8m).
     crit_recently: bool,
     /// Intimidating Cry's exerted attacks' uptime, percent, which PoB adds
-    /// to the double damage chance (close-out; [`intimidating_uptime`]).
+    /// to the double damage chance (close-out; [`exerted_attacks`]).
     exert_uptime: Option<Valued>,
 }
 

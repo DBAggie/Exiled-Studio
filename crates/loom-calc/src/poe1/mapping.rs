@@ -2349,6 +2349,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             ),
         ],
     ),
+    // The agent list (2026-11-27): "Exerted Attacks deal #% increased
+    // Damage" (`ModParser.lua` 2494: `ExertIncrease` INC, `ModFlag.Attack`;
+    // Overexertion's own, `sup_str.lua`, without the flag), read by
+    // `hit::exerted_attacks`.
+    (
+        "empowered_attack_damage_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     // The agent list (a game-truth line PoB reads): "Overwhelm #% Physical
     // Damage Reduction" (PoB `SkillStatMap.lua` 1273:
     // `EnemyPhysicalDamageReduction` BASE, `mult = -1`), read by a
@@ -3780,6 +3794,31 @@ pub const HIT_ROWS: &[HitRow] = &[
             ),
         ],
     ),
+    // The agent list (2026-11-27): Overexertion's "#% more Damage if
+    // Exerted" (`sup_str.lua`: `ExertIncrease` MORE).
+    (
+        "support_overexertion_damage_+%_final_if_exerted",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-27): Overexertion's more damage per warcry
+    // exerting the attack (`sup_str.lua`: `OverexertionExertAverageIncrease`
+    // MORE).
+    (
+        "support_overexertion_damage_+%_final_per_warcry_exerting_action",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertAverageDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11dn: Vicious Projectiles (PoB `sup_dex.lua` 4360 to 4372): chaos
     // damage over time MORE (`ChaosDamage` with `KeywordFlag.ChaosDot`).
     (
@@ -4426,6 +4465,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
+    // The agent list (2026-11-27): "Exerted Attacks deal #% increased
+    // Damage" from a warcry's stats (`SkillStatMap.lua` 2097:
+    // `ExertIncrease` INC, `ModFlag.Attack`).
+    (
+        "warcry_grant_damage_+%_to_exerted_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
 ];
 
 /// Whether `quantity` is read only by the main skill's hit: an effect of
@@ -4462,6 +4514,10 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     // Ruthless (P6-11bt).
                     | Poe1Quantity::Ruthless(_)
+                    // Exerted attacks (the agent list, 2026-11-27:
+                    // Overexertion's).
+                    | Poe1Quantity::ExertDamage
+                    | Poe1Quantity::ExertAverageDamage
                     // Bear Trap's debuff as the main skill (P6-11hp).
                     | Poe1Quantity::EnemyTrapMineDamageTaken
                     // Trap and mine speeds (P6-11cy).
@@ -10033,6 +10089,27 @@ pub const ROWS: &[Row] = &[
     (
         "tailwind_if_have_crit_recently",
         &[(Quantity::Poe1(Poe1Quantity::TailwindOnCrit), Op::Flag, 1.0)],
+    ),
+    // The agent list (2026-11-27): "Warcries Exert twice as many Attacks"
+    // (`ModParser.lua` 2577: `ExtraExertedAttacks` MORE 100).
+    (
+        "warcries_exert_twice_as_many_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExtraExertedAttacks),
+            Op::More,
+            100.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Warcries Exert # additional Attacks"
+    // (`ModParser.lua` 5235: `ExtraExertedAttacks` BASE), read by
+    // `hit::exerted_attacks`.
+    (
+        "warcry_empowers_next_x_melee_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExtraExertedAttacks),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11hz: "Gain #% increased Armour per 5 Power for 8 seconds when you
     // Warcry, up to a maximum of 100%" (`ModParser.lua` 2566: `Armour` INC

@@ -83,7 +83,10 @@
 //!   only 1 mark is possible"); a mark that loses its slot frees the rule.
 //! - [`Kind::Warcry`]: its buff rows (none reaches a slice field), and
 //!   Rallying Cry's exerted-attack effect only when no ally is configured
-//!   (`multiplierNearbyAlly`): otherwise a reason.
+//!   (`multiplierNearbyAlly`): otherwise a reason. The first gem of each
+//!   cry that exerts attacks ([`ExertCry`]) gives its uptime terms
+//!   ([`WarcryValue`]), from which the hit takes the exerted attacks'
+//!   uptime and damage (`hit::exerted_attacks`, the agent list).
 //! - Lightning Golem's Wrath ([`WRATH_INPUT`]): when the config enables it
 //!   and a Summon Lightning Golem is modelled, its aura rows at the golem's
 //!   level ([`wrath`]).
@@ -3816,15 +3819,84 @@ pub const WRATH_STATS: &[(&str, HitEffect)] = &[
     ),
 ];
 
-/// Intimidating Cry's terms of its exerted attacks' uptime
-/// (`CalcOffence.lua` 2592 to 2600), each a `Base` effect of
-/// [`Poe1Quantity::IntimidatingCry`] the hit reads.
+/// A warcry that exerts attacks (`CalcOffence.lua` 2540 to 2741, in PoB's
+/// order), each with the main skill's type its exerted attacks need.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ExertCry {
+    /// Ancestral Cry: a `MeleeSingleTarget` skill.
+    Ancestral,
+    /// Infernal Cry: a `Melee` skill.
+    Infernal,
+    /// Intimidating Cry: a `Melee` skill.
+    Intimidating,
+    /// Rallying Cry: a `Melee` skill.
+    Rallying,
+    /// Seismic Cry: a `Slam` skill.
+    Seismic,
+    /// Battlemage's Cry: a `Melee` skill.
+    Battlemage,
+}
+
+impl ExertCry {
+    /// Every cry, in PoB's order.
+    pub const ALL: [Self; 6] = [
+        Self::Ancestral,
+        Self::Infernal,
+        Self::Intimidating,
+        Self::Rallying,
+        Self::Seismic,
+        Self::Battlemage,
+    ];
+
+    /// The cry's stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Ancestral => "ancestral-cry",
+            Self::Infernal => "infernal-cry",
+            Self::Intimidating => "intimidating-cry",
+            Self::Rallying => "rallying-cry",
+            Self::Seismic => "seismic-cry",
+            Self::Battlemage => "battlemages-cry",
+        }
+    }
+
+    /// The cry of a warcry gem's buff name (PoB's skill name), if it
+    /// exerts attacks.
+    #[must_use]
+    pub fn of(name: &str) -> Option<Self> {
+        Some(match name {
+            "Ancestral Cry" => Self::Ancestral,
+            "Infernal Cry" => Self::Infernal,
+            "Intimidating Cry" => Self::Intimidating,
+            "Rallying Cry" => Self::Rallying,
+            "Seismic Cry" => Self::Seismic,
+            "Battlemage's Cry" => Self::Battlemage,
+            _ => return None,
+        })
+    }
+
+    /// The main skill's type the cry's exerted attacks need.
+    #[must_use]
+    pub const fn skill_type(self) -> &'static str {
+        match self {
+            Self::Ancestral => "MeleeSingleTarget",
+            Self::Seismic => "Slam",
+            Self::Infernal | Self::Intimidating | Self::Rallying | Self::Battlemage => "Melee",
+        }
+    }
+}
+
+/// A warcry's terms of its exerted attacks' uptime (`CalcOffence.lua`
+/// 2540 to 2741), each a `Base` effect of [`Poe1Quantity::ExertingCry`]
+/// the hit reads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WarcryValue {
-    /// Exerted attacks per cry: `floor((base + extra) x more)` (PoB's
-    /// `NumIntimidatingExerts`, `CalcPerform.lua` 2316 to 2320), the
-    /// base the gem's `skill_empowers_next_x_melee_attacks`; the extra
-    /// exerts are stats the mapping does not know (reasons).
+    /// Exerted attacks per cry before the extra exerts: the gem's
+    /// `skill_empowers_next_x_melee_attacks` (PoB's `<Cry>ExertedAttacks`);
+    /// the hit takes `floor((base + extra) x more)` (`Num<Cry>Exerts`,
+    /// `CalcPerform.lua` 2316 to 2320) with
+    /// [`Poe1Quantity::ExtraExertedAttacks`].
     Exerts,
     /// The cooldown, seconds (`calcSkillCooldown`, `CalcOffence.lua`
     /// 274 to 287): the level's over `1 + inc / 100`, `inc` the gems'
@@ -4007,9 +4079,9 @@ pub const WARCRY_CAST_TIME: f64 = 0.8;
 /// PoB's server tick rate (`Modules/Data.lua` 231: `1 / 0.033`).
 const SERVER_TICK_RATE: f64 = 1.0 / 0.033;
 
-/// Intimidating Cry's uptime terms (module docs) from its first modelled
-/// skill: `None` when the level is missing.
-fn intimidating_terms(
+/// A cry's uptime terms (module docs) from its first modelled skill:
+/// `None` when the level is missing.
+fn exert_terms(
     input: &CalcInput<'_>,
     s: &GroupSkill<'_>,
     totals: &Totals,
@@ -4068,7 +4140,7 @@ fn intimidating_terms(
     Some([
         (
             WarcryValue::Exerts,
-            crate::math::floor(stat("skill_empowers_next_x_melee_attacks")),
+            stat("skill_empowers_next_x_melee_attacks"),
         ),
         (WarcryValue::Cooldown, cooldown),
         (WarcryValue::CastRate, cast_rate),
@@ -4782,8 +4854,8 @@ struct Collected {
     lightning_golems: Vec<(Source, i64)>,
     /// Whether a modelled Rallying Cry is in the list.
     rallying_cry: Option<Source>,
-    /// Whether an Intimidating Cry's terms are in.
-    intimidating: bool,
+    /// The cries whose exert terms are in.
+    exerting: std::collections::BTreeSet<ExertCry>,
     /// The aura buffs that affect allies, by name, each with its first
     /// skill (P6-11er: `AurasAffectEnemies` puts them on the enemy too).
     ally_auras: BTreeMap<&'static str, Source>,
@@ -5637,22 +5709,18 @@ fn one_skill(
     {
         collected.rallying_cry = Some(active_source.clone());
     }
-    // Intimidating Cry's exerted attacks: the first one's terms (PoB
-    // computes it once, `IntimidatingCryCalculated`).
-    if matches!(
-        kind,
-        Kind::Warcry {
-            name: "Intimidating Cry",
-            ..
-        }
-    ) && !collected.intimidating
-    {
-        collected.intimidating = true;
-        match intimidating_terms(input, s, totals) {
+    // A cry's exerted attacks: the first one's terms (PoB computes each
+    // cry once, `<Cry>CryCalculated`).
+    let cry = match kind {
+        Kind::Warcry { name, .. } => ExertCry::of(name),
+        _ => None,
+    };
+    if let Some(cry) = cry.filter(|c| collected.exerting.insert(*c)) {
+        match exert_terms(input, s, totals) {
             Some(terms) => {
                 for (v, value) in terms {
                     ingest.effect(Effect {
-                        quantity: Quantity::Poe1(Poe1Quantity::IntimidatingCry(v)),
+                        quantity: Quantity::Poe1(Poe1Quantity::ExertingCry(cry, v)),
                         op: Op::Base,
                         value,
                         conditions: Conditions::none(),
@@ -7282,6 +7350,15 @@ mod tests {
             // Open items S8: Adrenaline when leech is removed by filling
             // unreserved life (`NoEffect`), not a reservation.
             "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+            // The agent list (2026-11-27): exerted attacks' damage, read by
+            // `hit::exerted_attacks` from the cries' uptimes this module
+            // gives; no buff's effect or reservation.
+            "support_overexertion_damage_+%_final_if_exerted",
+            "support_overexertion_damage_+%_final_per_warcry_exerting_action",
+            "warcry_grant_damage_+%_to_exerted_attacks",
+            // The same: the extra attacks the cries exert.
+            "warcry_empowers_next_x_melee_attacks",
+            "warcries_exert_twice_as_many_attacks",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

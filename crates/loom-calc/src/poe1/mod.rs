@@ -1294,9 +1294,24 @@ pub enum Poe1Quantity {
     /// The effect of the ailments you inflict (PoB's `AilmentEffect`, by
     /// conditions; Phase 6): `Increased` and `More`.
     AilmentEffect,
-    /// Intimidating Cry's terms for its exerted attacks' uptime
-    /// ([`gems::WarcryValue`]; close-out): `Base`, read by [`hit`].
-    IntimidatingCry(gems::WarcryValue),
+    /// A warcry's terms for its exerted attacks' uptime
+    /// ([`gems::ExertCry`], [`gems::WarcryValue`]; close-out for
+    /// Intimidating Cry, the agent list for the others): `Base`, read by
+    /// [`hit`].
+    ExertingCry(gems::ExertCry, gems::WarcryValue),
+    /// Extra attacks your warcries exert (PoB's `ExtraExertedAttacks`;
+    /// the agent list): `Base` (added to each cry's) and `More`, read by
+    /// [`hit`].
+    ExtraExertedAttacks,
+    /// The damage of exerted attacks (PoB's `ExertIncrease`; the agent
+    /// list): `Increased` and `More`, each summed and scaled by the
+    /// exerted attacks' uptime in [`hit`].
+    ExertDamage,
+    /// More damage per warcry exerting the attack (PoB's
+    /// `OverexertionExertAverageIncrease` and `EchoesExertAverageIncrease`;
+    /// the agent list): `More`, summed and scaled by the sum of the cries'
+    /// uptimes in [`hit`].
+    ExertAverageDamage,
 }
 
 /// A pool: one a skill reserves (life or mana), or one that regenerates
@@ -2015,7 +2030,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::MarkCurseEffect => f.write_str("mark-curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
-            Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
+            Self::ExertingCry(c, v) => write!(f, "{}.{}", c.name(), v.name()),
+            Self::ExtraExertedAttacks => f.write_str("extra-exerted-attacks"),
+            Self::ExertDamage => f.write_str("exert-damage"),
+            Self::ExertAverageDamage => f.write_str("exert-average-damage"),
             Self::AilmentChance(a) => write!(f, "ailment-chance.{}", a.name()),
             Self::AilmentDuration => f.write_str("ailment-duration"),
             Self::AilmentFaster => f.write_str("ailment-faster"),
