@@ -853,6 +853,16 @@ fn is_not_minion(t: &BTreeMap<String, Value>) -> bool {
         && t.len() == 3
 }
 
+/// PoB's minions' copy of a buff row (the agent list, 2026-11-27: Sigil of
+/// Power): a `Multiplier` read from the parent (`actor = "parent"`), the
+/// count the config sets on the character. The engine gives a buff's rows
+/// to minions through the minion actor with the character's count, so the
+/// copy is not a row of its own.
+fn is_parent_multiplier(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("Multiplier")
+        && t.get("actor").and_then(Value::as_str) == Some("parent")
+}
+
 /// A mod in a canonical form both sides share.
 fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     let flags = m.flags.unwrap_or(0);
@@ -1162,6 +1172,14 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             } else {
                 format!(" tags global {}", json!({ "unscalable": true }))
             },
+        ),
+        // The agent list (2026-11-27): Sigil of Power's less enemy damage.
+        BuffStat::AtCount { var, rows, .. } => (
+            rows,
+            format!(
+                " tags {}",
+                json!({ "actor": "enemy", "type": "MultiplierThreshold", "var": var })
+            ),
         ),
         BuffStat::PerCount { var, rows, .. } => (
             rows,
@@ -1606,6 +1624,7 @@ fn check_one(
             | BuffStat::PerCount { .. }
             | BuffStat::PerStack { .. }
             | BuffStat::AtMaxStages { .. }
+            | BuffStat::AtCount { .. }
             | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)
@@ -1630,6 +1649,7 @@ fn check_one(
                 s.mods
                     .iter()
                     .filter(|m| !POB_ROW_COMPANIONS.contains(&(*stat, m.name.as_str())))
+                    .filter(|m| !m.tags.iter().any(is_parent_multiplier))
                     .map(move |m| pob_form(m, s.div, s.mult))
             })
             .collect();

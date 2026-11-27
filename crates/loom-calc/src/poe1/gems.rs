@@ -229,6 +229,26 @@ pub enum BuffStat {
     /// `unmapped-stat` reason when the stat is not 0. As `NoSlice` for
     /// everything else.
     Defence(&'static str),
+    /// Rows applied only while the config count `input` (else its saved
+    /// placeholder, else `default`, as [`Self::PerCount`]) is at least
+    /// `at`, unscaled (the agent list, 2026-11-27: Sigil of Power's less
+    /// enemy damage at its maximum stages; PoB's `MultiplierThreshold` tag
+    /// with `actor = "enemy"`, which on the enemy reads the character's
+    /// stage multiplier, against `thresholdVar`).
+    AtCount {
+        /// The config count.
+        input: &'static str,
+        /// The count without the input.
+        default: u32,
+        /// The count from which the rows apply.
+        at: u32,
+        /// PoB's multiplier name.
+        var: &'static str,
+        /// PoB's threshold multiplier name.
+        threshold_var: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Reaches a slice field in a way the engine does not model: an
     /// `unmodelled-skill` reason with this name when the stat is not 0
     /// (P6-10b: Enduring Cry's regeneration per warcry power).
@@ -322,6 +342,12 @@ pub enum BuffStat {
         /// The count's limit, if any (PoB's `limitVar`: Frost Shield's
         /// stages at most its `FrostShieldMaxStages`; P6-11ho).
         limit: Option<u32>,
+        /// The count PoB applies without the input (the agent list,
+        /// 2026-11-27: an option's `defaultPlaceholderState`, which
+        /// `BuildModList` applies when the input is absent; the saved
+        /// placeholder first, `ConfigTab.lua` 1083 to 1092). `None`: no
+        /// input, no rows.
+        default: Option<u32>,
         /// The rows.
         rows: &'static [HitEffect],
     },
@@ -1429,6 +1455,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         input: FROST_SHIELD_STAGES_INPUT,
                         var: "FrostShieldStage",
                         limit: Some(FROST_SHIELD_MAX_STAGES),
+                        default: None,
                         rows: &[(Quantity::CritChance, Op::Base, 100.0, Flags::SPELL, NONE)],
                     },
                 ),
@@ -1438,6 +1465,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         input: FROST_SHIELD_STAGES_INPUT,
                         var: "FrostShieldStage",
                         limit: Some(FROST_SHIELD_MAX_STAGES),
+                        default: None,
                         rows: &[(
                             Quantity::Poe1(Poe1Quantity::FrostShieldLife),
                             Op::Base,
@@ -2467,10 +2495,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
     // P6-11fx: Sigil of Power (`act_int.lua`): added lightning damage per
-    // stage up to its maximum, and the enemy's less damage at the maximum;
-    // the stages are the config's `sigilOfPowerStages`, 1 by default (its
-    // placeholder), so it acts without any input: a reason (the stage
-    // multiplier not modelled).
+    // stage up to its maximum, and the enemy's less damage at the maximum.
+    // The agent list (2026-11-27): the stages are the config's
+    // `sigilOfPowerStages`, else its saved placeholder, else 1 (PoB's
+    // `defaultPlaceholderState`), at most the gem's constant
+    // `circle_of_power_max_stages` (4; PoB's `limitVar`). The less damage
+    // reads, on the enemy, the character's stage multiplier
+    // (`actor = "enemy"`): it applies at the maximum, unscaled.
     (
         "SigilOfPower",
         Kind::Buff {
@@ -2479,11 +2510,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "circle_of_power_enemy_damage_+%_final_at_max_stages",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::AtCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        default: 1,
+                        at: SIGIL_OF_POWER_MAX_STAGES,
+                        var: "SigilOfPowerStage",
+                        threshold_var: "SigilOfPowerMaxStages",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "circle_of_power_max_added_lightning_per_stage",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::PerCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        var: "SigilOfPowerStage",
+                        limit: Some(SIGIL_OF_POWER_MAX_STAGES),
+                        default: Some(1),
+                        rows: &[(
+                            added(DamageType::Lightning, Bound::Max),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "circle_of_power_max_stages",
@@ -2491,7 +2547,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "circle_of_power_min_added_lightning_per_stage",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::PerCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        var: "SigilOfPowerStage",
+                        limit: Some(SIGIL_OF_POWER_MAX_STAGES),
+                        default: Some(1),
+                        rows: &[(
+                            added(DamageType::Lightning, Bound::Min),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
             ],
         },
@@ -3501,6 +3569,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
                 input: MOMENTUM_REMOVED_INPUT,
                 var: "MomentumStacksRemoved",
                 limit: None,
+                default: None,
                 rows: &[(
                     Quantity::Poe1(Poe1Quantity::MovementSpeed),
                     Op::Increased,
@@ -4042,6 +4111,12 @@ const FROST_GLOBE_INPUT: &str = "conditionEnemyInFrostGlobe";
 /// constant).
 const FROST_SHIELD_MAX_STAGES: u32 = 4;
 
+/// The config count of Sigil of Power's stages (`ConfigOptions.lua` 620).
+pub const SIGIL_OF_POWER_STAGES_INPUT: &str = "sigilOfPowerStages";
+/// Sigil of Power's maximum stages (`circle_of_power_max_stages`, the
+/// gem's constant).
+const SIGIL_OF_POWER_MAX_STAGES: u32 = 4;
+
 /// The config inputs this module reads.
 #[must_use]
 pub fn is_input(name: &str) -> bool {
@@ -4062,6 +4137,8 @@ pub fn is_input(name: &str) -> bool {
         BANNER_PLANTED_INPUT,
         WAVE_OF_CONVICTION_INPUT,
         PLAGUE_BEARER_INPUT,
+        // The agent list (2026-11-27): Sigil of Power's stages.
+        SIGIL_OF_POWER_STAGES_INPUT,
     ]
     .contains(&name)
 }
@@ -6037,6 +6114,35 @@ fn add_rows(
                 }
                 continue;
             }
+            BuffStat::AtCount {
+                input: counted,
+                default,
+                at,
+                rows,
+                ..
+            } => {
+                let read = config
+                    .and_then(|set| last_input(set, counted, ConfigInputKind::Input))
+                    .or_else(|| {
+                        config
+                            .and_then(|set| last_input(set, counted, ConfigInputKind::Placeholder))
+                    });
+                let n = match read {
+                    Some(ConfigValue::Number(n)) => n.value().0,
+                    None => f64::from(default),
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: counted.to_owned(),
+                        });
+                        continue;
+                    }
+                };
+                if n < f64::from(at) {
+                    continue;
+                }
+                row_scale = 1.0;
+                (rows, None)
+            }
             BuffStat::Reason(what) => {
                 if *value != 0 {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
@@ -6112,26 +6218,37 @@ fn add_rows(
             BuffStat::PerCount {
                 input: counted,
                 limit,
+                default,
                 rows,
                 ..
             } => {
-                match config.and_then(|set| last_input(set, counted, ConfigInputKind::Input)) {
-                    Some(ConfigValue::Number(n))
-                        if n.value().0.is_finite() && n.value().0 != 0.0 =>
-                    {
-                        count = n.value().0;
-                        if let Some(limit) = limit {
-                            count = crate::math::min(count, f64::from(limit));
-                        }
-                    }
-                    Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => continue,
-                    None => continue,
+                // An absent input with a default: the saved placeholder,
+                // else the default (PoB's `BuildModList`).
+                let mut read =
+                    config.and_then(|set| last_input(set, counted, ConfigInputKind::Input));
+                if read.is_none() && default.is_some() {
+                    read = config
+                        .and_then(|set| last_input(set, counted, ConfigInputKind::Placeholder));
+                }
+                let raw = match read {
+                    Some(ConfigValue::Number(n)) if n.value().0.is_finite() => n.value().0,
+                    None => match default {
+                        Some(d) => f64::from(d),
+                        None => continue,
+                    },
                     Some(_) => {
                         ingest.reason(UnsupportedReason::UnmodelledConfig {
                             input: counted.to_owned(),
                         });
                         continue;
                     }
+                };
+                if raw == 0.0 {
+                    continue;
+                }
+                count = raw;
+                if let Some(limit) = limit {
+                    count = crate::math::min(count, f64::from(limit));
                 }
                 (rows, None)
             }
@@ -7003,6 +7120,7 @@ mod tests {
                 | BuffStat::PerCount { rows: e, .. }
                 | BuffStat::PerStack { rows: e, .. }
                 | BuffStat::AtMaxStages { rows: e, .. }
+                | BuffStat::AtCount { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }

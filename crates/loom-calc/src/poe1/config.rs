@@ -115,11 +115,12 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   (`ModParser.lua` 3045, 3047).
 /// - `aspectOfLunarisLunarProtection`, `aspectOfLunarisLunarResistance`,
 ///   `aspectOfSolarisSunscaldStacks`, `configSpectralTigerCount`,
-///   `multiplierHallowingFlameStacksRemovedByAlly`, `sigilOfPowerStages`:
+///   `multiplierHallowingFlameStacksRemovedByAlly`:
 ///   `Multiplier:LunarProtection`, `LunarResistance`, `SunscaldStack`,
 ///   `SpectralTigerConfig` and `SpectralTigerCount`,
-///   `HallowingFlameStacksRemovedByAlly`, `SigilOfPowerStage` (lines 262,
-///   265, 269, 644, 1994, 631); the calc modules never read them; the
+///   `HallowingFlameStacksRemovedByAlly` (lines 262, 265, 269, 644, 1994;
+///   `sigilOfPowerStages` is [`super::gems`]' since the agent list,
+///   2026-11-27); the calc modules never read them; the
 ///   skills' stat maps and modifiers do (`HallowingFlameStacksRemovedByAlly`:
 ///   extra lightning damage per flame removed, `ModParser.lua` 2898, its
 ///   stat in [`DEPENDS_ON`]).
@@ -484,7 +485,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "raiseSpidersSpiderCount",
         &["Multiplier:RaisedSpiderConfig", "Multiplier:RaisedSpider"],
     ),
-    ("sigilOfPowerStages", &["Multiplier:SigilOfPowerStage"]),
 ];
 
 /// The enemy's damage (PoB v2.67.2, `Modules/ConfigOptions.lua` 2352 to
