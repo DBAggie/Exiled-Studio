@@ -10770,6 +10770,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // reflected damage taken.
     ("cannot_take_reflected_elemental_damage", "no-slice"),
     ("cannot_take_reflected_physical_damage", "no-slice"),
+    // The agent list (2026-11-28): "Can't use Flask in Fifth Slot", read by
+    // `flasks::active_flasks`.
+    ("cannot_use_flask_in_fifth_slot", "flask"),
     // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
     ("cast_linked_spells_on_attack_crit_%", "trigger"),
     // P6-8a part 2: PoB's `chanceToTriggerOnMeleeKill`, which no module

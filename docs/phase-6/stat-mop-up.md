@@ -5925,3 +5925,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixture** (original): Burning Arrow with Mirage Archer and +1 (two mirages). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1228 to DIV-1233.
 
 **Evidence** (`local/p6/d28mae` on `b-ig`, against `local/p6/d28sme`): public 0 unexpected, `Complete` 61,229 to 61,318 (the fixture's); no other value moved (the public build's mirage is partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Can't use a flask in the fifth slot (the agent list, 2026-11-28)
+
+**The stat:** the Micro-Distillery Belt's "Can't use Flask in Fifth Slot" (`cannot_use_flask_in_fifth_slot`), unmapped in one public build.
+
+**PoB** (`CalcSetup.lua` 845 to 877): `CanNotUseItem` with a `DisablesItem` tag of `Flask 5` (a Tincture there excepted): the item in that slot is not used, unless the config's "Don't disable items" (`ignoreItemDisablers`, `ConfigOptions.lua` 248) is on.
+
+**The engine:** `flasks::FIFTH_SLOT_STAT`, a `NoEffect` row read by `active_flasks`: with it on an equipped item and the config check off, the fifth slot's flask is left out of the active flasks. `ignoreItemDisablers` is a read input. The engine models no tincture, and PoB's other item disablers ("Can't use Helmets" and kin) stay unmapped stats.
+
+**Fixtures** (original): Ice Nova with an active Divine Life Flask in the fifth slot and the belt (not used: "during any Flask Effect" does not apply), and with "Don't disable items" (used). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28f5e` on `b-ig`, against `local/p6/d28mae`): public 0 unexpected, `Complete` 61,318 to 61,494 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.

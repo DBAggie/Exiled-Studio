@@ -2971,6 +2971,10 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == super::hit::RUTHLESS_MODE_INPUT
         // Perforate's overlapping spikes (the agent list, 2026-11-27).
         || input.name == super::hit::PERFORATE_OVERLAP_INPUT
+        // "Don't disable items" (the agent list, 2026-11-28): read by the
+        // flasks; every other item disabler is an unmapped stat.
+        || (input.name == super::flasks::IGNORE_DISABLERS_INPUT
+            && matches!(input.value, ConfigValue::Boolean(_)))
         // The throw counts (P6-11fa).
         || input.name == super::hit::MINES_PER_THROW_INPUT
         || input.name == super::hit::TRAPS_PER_THROW_INPUT

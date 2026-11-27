@@ -436,6 +436,16 @@ pub const ALWAYS_APPLY_RIGHTMOST_STAT: &str = "num_magic_utility_flasks_always_a
 /// (`magic-utility-flask-cannot-be-used`).
 pub const CANNOT_BE_USED_STAT: &str = "magic_utility_flasks_cannot_be_used";
 
+/// "Can't use Flask in Fifth Slot" (the agent list, 2026-11-28; PoB's
+/// `CanNotUseItem` with `DisablesItem` `Flask 5`, `CalcSetup.lua` 845 to
+/// 877): the flask there is not used, unless the config's "Don't disable
+/// items" ([`IGNORE_DISABLERS_INPUT`]) is on. PoB keeps a Tincture there;
+/// the engine models no tincture.
+pub const FIFTH_SLOT_STAT: &str = "cannot_use_flask_in_fifth_slot";
+
+/// PoB's "Don't disable items" (`ConfigOptions.lua` 248).
+pub const IGNORE_DISABLERS_INPUT: &str = "ignoreItemDisablers";
+
 /// The active flasks (module docs, "Which flasks").
 struct ActiveFlasks {
     /// Their items and slots, in slot order.
@@ -588,7 +598,21 @@ fn active_flasks(input: &CalcInput<'_>) -> ActiveFlasks {
         .copied()
         .collect();
     let cannot_be_used = has_slot_item_stat(input, CANNOT_BE_USED_STAT);
+    let ignore = collect::active_config(input.build).is_some_and(|set| {
+        matches!(
+            super::config::last_input(
+                set,
+                IGNORE_DISABLERS_INPUT,
+                loom_domain::ConfigInputKind::Input
+            ),
+            Some(loom_domain::ConfigValue::Boolean(true))
+        )
+    });
+    let fifth_disabled = !ignore && has_slot_item_stat(input, FIFTH_SLOT_STAT);
     for (i, (id, slot, active)) in flasks.into_iter().enumerate() {
+        if fifth_disabled && slot == "Flask 5" {
+            continue;
+        }
         let applies = constant.contains(&i);
         if active && !applies && cannot_be_used && magic.contains(&i) {
             out.cannot_use.push((id, slot.clone()));
