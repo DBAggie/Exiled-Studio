@@ -264,6 +264,29 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   "while you have at least # nearby allies", "while there is at least
 ///   one nearby ally"), whose stats, found by "nearby Ally" in the
 ///   bundle's stat descriptions, are in [`DEPENDS_ON`].
+/// - Elemental Equilibrium's inputs (the agent list, S8):
+///   `enemyConditionHitByColdDamage`, `enemyConditionHitByFireDamage`, and
+///   `enemyConditionHitByLightningDamage` set the enemy's
+///   `Condition:HitBy<element>Damage` (lines 2022 to 2030), and
+///   `EEIgnoreHitDamage` (2034) has no `apply`. Only Elemental
+///   Equilibrium's lines read the conditions (`ModParser.lua` 2287 to
+///   2300: its resistances and exposure), and the calc modules read them
+///   and the check only under its `ElementalEquilibrium` flag
+///   (`CalcOffence.lua` 3605, `CalcPerform.lua` 3565 to 3570), which only
+///   those lines set. Their stats are unmapped and in
+///   [`super::exposure::DEPENDS_ON`] (`keystone_elemental_equilibrium`,
+///   `elemental_equilibrium_effect_+%`, the socketed gems' line).
+/// - `TotalSpectreLife` (the agent list, S8): the spectres' life pool as an
+///   `OVERRIDE` (line 797), not a name, but read only where a name would
+///   be: the calc modules read the pool only with its redirect,
+///   `takenFromSpectresBeforeYou` (`CalcDefence.lua` 2458 to 2470, the
+///   pool's life read when the redirect is not 0; `CalcPerform.lua` 3600 to
+///   3690, the pool built only with it, and shared with Companionship's
+///   only when both redirects are set), which only "#% of Damage from Hits
+///   is taken from your Raised Spectres' Life before you"
+///   (`ModParser.lua` 4992) sets: its stat,
+///   `damage_removed_from_spectres_before_life_or_es_%`, is unmapped and in
+///   [`DEPENDS_ON`].
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -279,9 +302,15 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "DetonatedMinesRecently",
         &["Condition:DetonatedMinesRecently"],
     ),
+    // No `apply`: `env.configInput`, read only under the
+    // `ElementalEquilibrium` flag.
+    ("EEIgnoreHitDamage", &["configInput.EEIgnoreHitDamage"]),
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
     ("ShockStacks", &["enemy Multiplier:ShockStacks"]),
+    // Not a condition: the spectre life pool's `OVERRIDE`, read only with the
+    // spectres' redirect (module docs of this table).
+    ("TotalSpectreLife", &["TotalSpectreLife OVERRIDE"]),
     (
         "arcaneCloakUsedRecentlyCheck",
         &["Condition:ArcaneCloakUsedRecently"],
@@ -358,6 +387,18 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "Multiplier:SpectralTigerConfig",
             "Multiplier:SpectralTigerCount",
         ],
+    ),
+    (
+        "enemyConditionHitByColdDamage",
+        &["enemy Condition:HitByColdDamage"],
+    ),
+    (
+        "enemyConditionHitByFireDamage",
+        &["enemy Condition:HitByFireDamage"],
+    ),
+    (
+        "enemyConditionHitByLightningDamage",
+        &["enemy Condition:HitByLightningDamage"],
     ),
     (
         "heraldOfTheHivePressure",
@@ -557,7 +598,9 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// lines (`guardian_damage_+%_final_to_you_and_nearby_allies_per_nearby_ally_up_to_15%`,
 /// `guardian_with_5_nearby_allies_you_and_allies_have_onslaught`,
 /// `guardian_with_nearby_ally_damage_+%_final_for_you_and_allies`), and
-/// Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`.
+/// Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`;
+/// `damage_removed_from_spectres_before_life_or_es_%`, the only source of
+/// the spectres' redirect (`TotalSpectreLife`).
 ///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
@@ -577,6 +620,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "cooldown_speed_+%_per_brand_up_to_40%",
     "critical_strike_chance_+%_per_brand",
     "damage_+%_final_with_at_least_1_nearby_ally",
+    "damage_removed_from_spectres_before_life_or_es_%",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
     "energy_shield_leech_does_not_stop_on_full_energy_shield",

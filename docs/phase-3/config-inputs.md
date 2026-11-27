@@ -696,3 +696,29 @@ Two changes follow:
   - `lacerate-bleed-gladiator.xml` ("Eramir") and `facebreaker-luminary.xml` (nearby allies) lose the reason; no value moved.
 - **Corpus:** 0 unexpected; the three Kraityn builds' movement speed rises by 0.08, each now equal to PoB's corpus oracle (1.19, 1.31, 1.21).
 - **Tests:** `the_bandit_should_be_the_config_sets_choice` (Kraityn's speed; unlisted values apply nothing), the attribute case in the test above it, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## The agent list (S8, 2026-11-26): Elemental Equilibrium's inputs and the spectres' life
+
+Five more inputs join `config::NAMED_ONLY`. Each is read only through lines the engine leaves unmapped, so it changes no computed field:
+- **Elemental Equilibrium's inputs:**
+  - `enemyConditionHitByColdDamage`, `enemyConditionHitByFireDamage`, and `enemyConditionHitByLightningDamage` set the enemy's `Condition:HitBy<element>Damage` (`ConfigOptions.lua` 2022 to 2030);
+  - `EEIgnoreHitDamage` (2034) has no `apply`;
+  - only Elemental Equilibrium's lines read the conditions (`ModParser.lua` 2287 to 2300: its resistances and exposure);
+  - the calc modules read the conditions and the check only under its `ElementalEquilibrium` flag (`CalcOffence.lua` 3605, `CalcPerform.lua` 3565 to 3570), which only those lines set;
+  - their stats are unmapped and already in `exposure::DEPENDS_ON`.
+- **`TotalSpectreLife`:**
+  - it is the spectres' life pool as an `OVERRIDE` (line 797);
+  - PoB reads the pool only with its redirect, `takenFromSpectresBeforeYou` (`CalcDefence.lua` 2458 to 2470; `CalcPerform.lua` 3600 to 3690, shared with Companionship's only when both are set);
+  - only "#% of Damage from Hits is taken from your Raised Spectres' Life before you" (`ModParser.lua` 4992) sets that redirect: its stat, `damage_removed_from_spectres_before_life_or_es_%`, is unmapped and now in `config::DEPENDS_ON`.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures3.py`):
+- `config-elemental-equilibrium-inputs-witch.xml`: the four inputs on, no Elemental Equilibrium;
+- `config-total-spectre-life-witch.xml`: `TotalSpectreLife` 5000, no spectre line.
+
+PoB's output for each is the bare build's (the same output hash). Every field equals PoB's; 174 fields are targets.
+
+**Evidence** (`local/p6/s8-3` on `b-pb`, against `local/p6/s8-2`):
+- **Public:** 0 unexpected; `Complete` 49,809 to 49,983 (the fixtures); no value moved. `OccVortex.xml` loses `EEIgnoreHitDamage` and `enemyConditionHitByLightningDamage`, and `forged-frostbearer-spectre-necromancer.xml` loses `TotalSpectreLife`.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the table tests in `poe1::config`, the workspace tests, the real-bundle tests (`DEPENDS_ON`'s stats in the bundle), clippy, rustfmt, and wasm32.
