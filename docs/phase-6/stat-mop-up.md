@@ -5781,3 +5781,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Burning Arrow Short Bow build): Burning Arrow with Volley and with Greater Volley (level 20, 20% quality). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1139 to DIV-1150.
 
 **Evidence** (`local/p6/d27voe` on `b-ig`, against `local/p6/d27gce`): public 0 unexpected, `Complete` 59,116 to 59,294 (the fixtures'); 5 values moved, all away from PoB in two builds partial and below PoB for other reasons, now with Volley's less damage that PoB applies too: `kinetic-fusillade-ballista-hierophant.xml`'s AverageDamage 97,765 to 78,208 (PoB 204,674; its skill data still unvetted), its TotalDPS, CombinedDPS, and FullDPS, and `forged-frostbearer-spectre-necromancer.xml`'s FullDPS 8.84 to 7.02 million (PoB 9.13 million). Corpus 0 unexpected, no value moved.
+
+## Fork's less damage and chaos and elemental penetration (the agent list, 2026-11-27)
+
+**The stats:** Fork's "#% less Projectile Damage" (`support_fork_projectile_damage_+%_final`), "Damage Penetrates #% Chaos Resistance" (`reduce_enemy_chaos_resistance_%`), and "Damage Penetrates #% Elemental Resistances" (`reduce_enemy_elemental_resistance_%`, PoB's own skill data's; no public build had it unmapped), unmapped.
+
+**PoB:** Fork's is `Damage` MORE with `ModFlag.Projectile` (`sup_dex.lua`); the others `ChaosPenetration` and `ElementalPenetration` BASE (`SkillStatMap.lua` 812 and 815).
+
+**The engine:** three hit rows: `Damage` MORE with `Flags::PROJECTILE`; `Penetration(Chaos)`; `Penetration` of fire, cold, and lightning (as `base_penetrate_elemental_resistances_%`).
+
+**Fixtures** (original): Burning Arrow with Fork (level 20, 20% quality); Smite with added chaos damage and 10% chaos penetration; Smite with 10% elemental penetration. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1151 to DIV-1167.
+
+**Evidence** (`local/p6/d27fke` on `b-ig`, against `local/p6/d27voe`): public 0 unexpected, `Complete` 59,294 to 59,559 (the fixtures'); 9 values moved, all toward PoB (`kinetic-blast-of-clustering-necromancer.xml`'s AverageDamage 43,598 to 52,270, PoB 56,682, its DPS fields and leech; `Dual Wield Cospris CoC.xml`'s AverageDamage and DPS). Corpus 0 unexpected, no value moved.

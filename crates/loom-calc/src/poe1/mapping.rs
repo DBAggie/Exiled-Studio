@@ -3115,6 +3115,28 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ), // P6-11b review: "Damage with Weapons Penetrates #% Elemental
+    // The agent list (2026-11-27): "Damage Penetrates #% Chaos Resistance"
+    // (`SkillStatMap.lua` 812: `ChaosPenetration` BASE).
+    (
+        "reduce_enemy_chaos_resistance_%",
+        &[(Quantity::Penetration(CHAOS_T), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // The same: "Damage Penetrates #% Elemental Resistances" (815:
+    // `ElementalPenetration` BASE).
+    (
+        "reduce_enemy_elemental_resistance_%",
+        &[
+            (Quantity::Penetration(FIRE_T), Op::Base, 1.0, NONE, NONE),
+            (Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
     // Resistances": `ElementalPenetration` BASE with `ModFlag.Weapon`
     // (each hand's weapon flag).
     (
@@ -3667,6 +3689,12 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_focused_ballista_totem_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
+    // The agent list (2026-11-27): Fork's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_fork_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
     ),
     // P6-11hq: Fortify Support's more damage with hits and ailments from
     // melee hits (`sup_str.lua` 2631 to 2636: `Damage` MORE with
