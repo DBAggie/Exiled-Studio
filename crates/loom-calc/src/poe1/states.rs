@@ -86,6 +86,26 @@ pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour"
 /// not give leaves it unsettled unless 6 are already counted.
 pub const SIX_LIFE_MASTERIES: &str = "SixLifeMasteries";
 
+/// The main skill is Toxic Rain or a transfigured one (the agent list;
+/// PoB's `SkillName` "Toxic Rain" with `includeTransfigured` on "Toxic
+/// Rain deals #% increased Damage"): only the main skill's damage is
+/// computed, so the modifier acts when it is the main one.
+pub const MAIN_SKILL_TOXIC_RAIN: &str = "MainSkillToxicRain";
+
+/// The skills a skill-named modifier names: each base active skill ID
+/// and its state.
+pub const NAMED_MAIN_SKILLS: [(&str, &str); 1] = [("toxic_rain", MAIN_SKILL_TOXIC_RAIN)];
+
+/// Whether the active skill `active` is `base` or a transfigured one
+/// (`_alt_x`, `_alt_y`; PoB's `includeTransfigured`).
+fn is_skill(active: &str, base: &str) -> bool {
+    active
+        .strip_suffix("_alt_x")
+        .or_else(|| active.strip_suffix("_alt_y"))
+        .unwrap_or(active)
+        == base
+}
+
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].
 pub const NO_LIFE_MODIFIERS_STAT: &str = "maximum_life_+%_if_no_life_tags_on_body_armour";
 
@@ -142,6 +162,22 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     if let Some(slot) = main_skill_slot(input) {
         for s in super::gem_levels::GemSlot::ALL {
             out.insert(ConditionKey::new(s.main_skill_state()), Some(s) == slot);
+        }
+    }
+    // The main skill by name (the agent list): each named skill's state,
+    // true when the main skill is it or a transfigured one; unsettled
+    // when the main skill is not known.
+    if let Ok(main) = super::skill::main_skill(
+        input.build,
+        input.data,
+        &super::gem_levels::GemLevels::default(),
+    ) {
+        let active = main.active.map(|a| a.id.as_str());
+        for (id, key) in NAMED_MAIN_SKILLS {
+            out.insert(
+                ConditionKey::new(key),
+                active.is_some_and(|a| is_skill(a, id)),
+            );
         }
     }
     // The config's condition checks (P3-8n).

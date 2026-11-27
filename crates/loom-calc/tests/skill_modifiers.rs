@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 37] = [
+const TEXTS: [(&str, &str); 39] = [
     // Close-out M6.
     (
         "anger_aura_effect_+%",
@@ -75,6 +75,11 @@ const TEXTS: [(&str, &str); 37] = [
         "herald_skills_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Herald Skills",
     ),
+    // The agent list: `CooldownRecovery` INC with Intimidating Cry's name.
+    (
+        "intimidating_cry_cooldown_speed_+%",
+        "Intimidating Cry has {0}% increased Cooldown Recovery Rate",
+    ),
     // P6-11ey: PoB's `ManaReservationEfficiency` with `KeywordFlag.Mine`.
     (
         "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
@@ -121,6 +126,10 @@ const TEXTS: [(&str, &str); 37] = [
         "{0}% increased Effect of your Marks",
     ),
     // P6-11gc: PoB's `BuffEffect` tagged with the golem skill's name.
+    (
+        "base_bone_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Carrion Golems",
+    ),
     (
         "base_chaos_golem_granted_buff_effect_+%",
         "{0}% increased Effect of the Buff granted by your Chaos Golems",

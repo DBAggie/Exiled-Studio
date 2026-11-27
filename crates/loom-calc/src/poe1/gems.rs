@@ -3920,7 +3920,8 @@ pub fn warcry_terms(
         + (stat("base_cooldown_speed_+%")
             + stat("warcry_cooldown_speed_+%")
             + totals.cooldown_recovery
-            + totals.warcry_cooldown_recovery)
+            + totals.warcry_cooldown_recovery
+            + totals.named_cooldown_recovery(s.active.map(|a| a.id.as_str())))
             / 100.0;
     let cooldown = cooldown_ms / 1000.0 / recovery;
     let uptime = crate::math::min(duration / cooldown, 1.0);
@@ -3975,10 +3976,17 @@ fn intimidating_terms(
     let (cooldown_ms, stored) = (level.cooldown as f64, level.stored_uses as f64);
     // `CooldownRecovery` INC: `base_cooldown_speed_+%` and, with the
     // warcry keyword, `warcry_cooldown_speed_+%` (`SkillStatMap.lua` 534,
-    // 547).
+    // 547), and the character's (PoB's `skillModList` holds them: the
+    // untagged, the warcries', and Intimidating Cry's by name; the agent
+    // list).
     let modifier = crate::math::max(
         0.0,
-        1.0 + (stat("base_cooldown_speed_+%") + stat("warcry_cooldown_speed_+%")) / 100.0,
+        1.0 + (stat("base_cooldown_speed_+%")
+            + stat("warcry_cooldown_speed_+%")
+            + totals.cooldown_recovery
+            + totals.warcry_cooldown_recovery
+            + totals.named_cooldown_recovery(s.active.map(|a| a.id.as_str())))
+            / 100.0,
     );
     let mut cooldown = cooldown_ms / 1000.0 / modifier;
     if stored <= 1.0 {

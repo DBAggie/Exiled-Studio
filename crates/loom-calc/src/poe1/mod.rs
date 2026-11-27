@@ -447,6 +447,13 @@ pub enum Poe1Quantity {
     /// armour reduction of a physical hit, and alone for physical damage
     /// over time ([`hit`]).
     EnemyPhysicalDamageReduction,
+    /// The character's change to the enemy's physical damage reduction
+    /// against its hits (PoB's `EnemyPhysicalDamageReduction` BASE on the
+    /// skill, "Overwhelm #% Physical Damage Reduction"; the agent list):
+    /// `Base`, added with [`Self::EnemyPhysicalDamageReduction`] to a
+    /// physical hit's armour reduction alone (`CalcOffence.lua` 3434; not
+    /// damage over time or impale, which read the enemy's alone).
+    HitEnemyPhysicalDamageReduction,
     /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
     /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
     CurseLimit,
@@ -1050,6 +1057,12 @@ pub enum Poe1Quantity {
     /// [`Poe1Quantity::RegenPercent`] by [`exposure`] when an exposure is on
     /// the enemy.
     RegenIfExposureApplied(Pool),
+    /// Critical strike chance against an enemy with an exposure of the
+    /// type (PoB's `CritChance` INC with the enemy's `Has<Type>Exposure`,
+    /// set when the exposure is applied, `CalcPerform.lua` 3583; the agent
+    /// list): `Base`, the increase, turned into `CritChance` `Increased` by
+    /// [`exposure`] when that exposure is on the enemy.
+    CritIfExposed(DamageType),
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
@@ -1688,6 +1701,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
             Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
+            Self::HitEnemyPhysicalDamageReduction => {
+                f.write_str("hit-enemy-physical-damage-reduction")
+            }
             Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
             Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
             Self::MinionToYou(value, percent) => {
@@ -1855,6 +1871,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenIfExposureApplied(p) => {
                 write!(f, "regen-if-exposure-applied.{}", p.name())
             }
+            Self::CritIfExposed(t) => write!(f, "crit-if-exposed.{}", t.name()),
             Self::GrantedPassive => f.write_str("granted-passive"),
             Self::ForbiddenNode(flesh) => {
                 write!(

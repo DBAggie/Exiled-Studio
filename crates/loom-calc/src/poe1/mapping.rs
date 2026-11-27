@@ -2159,6 +2159,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ELEMENTAL,
         )],
     ),
+    // The agent list (a game-truth line PoB reads): "Overwhelm #% Physical
+    // Damage Reduction" (PoB `SkillStatMap.lua` 1273:
+    // `EnemyPhysicalDamageReduction` BASE, `mult = -1`), read by a
+    // physical hit's armour reduction alone.
+    (
+        "enemy_phys_reduction_%_penalty_vs_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::HitEnemyPhysicalDamageReduction),
+            Op::Base,
+            -1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1011: `BleedFaster` INC (P6-2c).
     (
         "faster_bleed_%",
@@ -6455,6 +6469,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             states::DUAL_WIELDING,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "Toxic Rain deals #%
+    // increased Damage" (`Damage` INC, `SkillName` "Toxic Rain" with
+    // `includeTransfigured`): the main skill's, by its state.
+    (
+        "toxic_rain_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            states::MAIN_SKILL_TOXIC_RAIN,
         )],
     ),
     // Open items S3: Arcanist Brand's more damage against the branded enemy
@@ -13351,6 +13377,8 @@ mod tests {
                         conditions::STATIONARY,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
+                        // The agent list: the main skill by name.
+                        states::MAIN_SKILL_TOXIC_RAIN,
                         // P6-8a part 2: settled by the spell path from the
                         // trigger before the damage.
                         super::super::triggers::TRIGGERED_DAMAGE,
@@ -14532,6 +14560,16 @@ mod tests {
                     Op::Base,
                     NONE,
                     states::DUAL_WIELDING,
+                )],
+            ),
+            // The agent list: the main skill by name.
+            (
+                "toxic_rain_damage_+%",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    states::MAIN_SKILL_TOXIC_RAIN,
                 )],
             ),
             // P6-11ev: Onslaught for you and allies on a warcry.

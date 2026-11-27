@@ -4411,7 +4411,7 @@ pub(super) fn impale_armour_reduction(
     raw: Valued,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    armour_reduction(calc, enemy, data, raw, reasons)
+    armour_reduction(calc, enemy, data, raw, false, reasons)
 }
 
 /// The enemy's damage taken from hits of type `t` (impale's `impaleTaken`,
@@ -4495,12 +4495,16 @@ fn reduction_capped(
 /// The share of a physical hit the enemy's armour lets through (module
 /// docs, step 3): `1 - min(max(0, pdr + armourReductionF(armour,
 /// average)), cap) / 100`, `pdr` the enemy's physical damage reduction
-/// ([`enemy_physical_reduction`]).
+/// ([`enemy_physical_reduction`]); for a hit (`hit`), plus the
+/// character's change to it ([`Poe1Quantity::HitEnemyPhysicalDamageReduction`],
+/// PoB's `skillModList` `EnemyPhysicalDamageReduction`, `CalcOffence.lua`
+/// 3434; impale's reads it not, 5491).
 fn armour_reduction(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
     average: Valued,
+    hit: bool,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
     // `enemyArmour = m_max(calcLib.val(enemyDB, "Armour"), 0)`.
@@ -4528,6 +4532,21 @@ fn armour_reduction(
         Some(pdr) => phases::total(calc, &[pdr, reduction], Term::Step("with-enemy-reduction"))?,
         None => reduction,
     };
+    let penalty = Quantity::Poe1(Poe1Quantity::HitEnemyPhysicalDamageReduction);
+    let reduction = if hit && phases::has(calc, penalty) {
+        let cx = calc.context(Flags::NONE);
+        let change = sum_in(
+            calc,
+            penalty,
+            Op::Base,
+            &cx,
+            Term::Step("hit-enemy-physical-damage-reduction"),
+            reasons,
+        )?;
+        phases::total(calc, &[change, reduction], Term::Step("with-hit-reduction"))?
+    } else {
+        reduction
+    };
     let zero = phases::constant(calc, "no-negative-reduction", 0.0)?;
     let reduction = phases::pair(calc, zero, reduction, Term::Step("reduction"), false)?;
     reduction_capped(calc, data, reduction, reasons)
@@ -4541,7 +4560,7 @@ fn armour_effect(
     average: Valued,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let reduction = armour_reduction(calc, enemy, data, average, reasons)?;
+    let reduction = armour_reduction(calc, enemy, data, average, true, reasons)?;
     let reduction = ignore_reduction(calc, reduction, reasons)?;
     let share = percent(calc, reduction, Term::Step("reduction-share"))?;
     let one = phases::constant(calc, "one", 1.0)?;

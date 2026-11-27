@@ -85,6 +85,9 @@ pub enum SkillTiming {
     CooldownRecovery,
     /// `CooldownRecovery` INC of warcries.
     WarcryCooldownRecovery,
+    /// `CooldownRecovery` INC of Intimidating Cry (its `SkillName`; the
+    /// agent list).
+    IntimidatingCryCooldownRecovery,
     /// `BuffEffect` INC of warcries ("Warcry Buff Effect").
     WarcryBuffEffect,
     /// `WarcryPower` INC ("increased total Power counted by Warcries").
@@ -102,6 +105,7 @@ impl SkillTiming {
             Self::WarcryDuration => "warcry-duration",
             Self::CooldownRecovery => "cooldown-recovery",
             Self::WarcryCooldownRecovery => "warcry-cooldown-recovery",
+            Self::IntimidatingCryCooldownRecovery => "intimidating-cry-cooldown-recovery",
             Self::WarcryBuffEffect => "warcry-buff-effect",
             Self::WarcryPower => "warcry-power",
             Self::WarcrySpeed => "warcry-speed",
@@ -124,17 +128,20 @@ pub enum Golem {
     Lightning,
     /// Summon Stone Golem.
     Stone,
+    /// Summon Carrion Golem (the agent list).
+    Carrion,
 }
 
 impl Golem {
     /// Every golem, in [`Golem`]'s order (its index in
     /// [`Totals::named_golem_buff_effect`]).
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 6] = [
         Self::Chaos,
         Self::Flame,
         Self::Ice,
         Self::Lightning,
         Self::Stone,
+        Self::Carrion,
     ];
 
     /// Stable name.
@@ -146,6 +153,7 @@ impl Golem {
             Self::Ice => "ice",
             Self::Lightning => "lightning",
             Self::Stone => "stone",
+            Self::Carrion => "carrion",
         }
     }
 
@@ -159,6 +167,7 @@ impl Golem {
             Self::Ice => "summon_ice_golem",
             Self::Lightning => "summon_lightning_golem",
             Self::Stone => "summon_stone_golem",
+            Self::Carrion => "summon_carrion_golem",
         }
     }
 
@@ -200,7 +209,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 37] = [
+pub const STATS: [ModifierRow; 39] = [
     // Close-out M6: "Anger has #% increased Aura Effect".
     (
         "anger_aura_effect_+%",
@@ -212,6 +221,13 @@ pub const STATS: [ModifierRow; 37] = [
     (
         "aura_effect_on_self_from_your_skills_+%",
         Poe1Quantity::SkillAuraEffectOnSelf,
+        1.0,
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Effect of
+    // the Buff granted by your Carrion Golems" (the game's stat says bone).
+    (
+        "base_bone_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Carrion),
         1.0,
     ),
     // P6-11gc: "#% increased Effect of the Buff granted by your Chaos
@@ -284,6 +300,14 @@ pub const STATS: [ModifierRow; 37] = [
     (
         "herald_skills_mana_reservation_efficiency_+%",
         Poe1Quantity::HeraldManaReservationEfficiency,
+        1.0,
+    ),
+    // The agent list (a game-truth line PoB reads): "Intimidating Cry has
+    // #% increased Cooldown Recovery Rate" (`CooldownRecovery` INC, the
+    // skill's name with `includeTransfigured`, `ModParser.lua`).
+    (
+        "intimidating_cry_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::IntimidatingCryCooldownRecovery),
         1.0,
     ),
     // Close-out M6: Malevolence's mana reservation efficiency.
@@ -604,7 +628,7 @@ pub struct Totals {
     pub golem_buff_effect: f64,
     /// `BuffEffect` INC of each named golem skill, by [`Golem::ALL`]
     /// (P6-11gc).
-    pub named_golem_buff_effect: [f64; 5],
+    pub named_golem_buff_effect: [f64; 6],
     /// `BuffEffect` INC of herald skills (P6-11at).
     pub herald_buff_effect: f64,
     /// `BuffEffect` INC of the offering skills (P6-11gg).
@@ -626,6 +650,8 @@ pub struct Totals {
     pub cooldown_recovery: f64,
     /// `CooldownRecovery` INC of warcries.
     pub warcry_cooldown_recovery: f64,
+    /// `CooldownRecovery` INC of Intimidating Cry (the agent list).
+    pub intimidating_cry_cooldown_recovery: f64,
     /// `BuffEffect` INC of warcries.
     pub warcry_buff_effect: f64,
     /// `WarcryPower` INC.
@@ -738,6 +764,9 @@ impl Totals {
                     SkillTiming::WarcryDuration => &mut t.warcry_duration,
                     SkillTiming::CooldownRecovery => &mut t.cooldown_recovery,
                     SkillTiming::WarcryCooldownRecovery => &mut t.warcry_cooldown_recovery,
+                    SkillTiming::IntimidatingCryCooldownRecovery => {
+                        &mut t.intimidating_cry_cooldown_recovery
+                    }
                     SkillTiming::WarcryBuffEffect => &mut t.warcry_buff_effect,
                     SkillTiming::WarcryPower => &mut t.warcry_power,
                     SkillTiming::WarcrySpeed => &mut t.warcry_speed,
@@ -838,6 +867,23 @@ impl Totals {
             .iter()
             .find(|g| g.is(active))
             .map_or(0.0, |&g| self.named_golem_buff_effect[g as usize])
+    }
+
+    /// The `CooldownRecovery` INC a skill-named modifier gives the skill
+    /// whose active skill is `active` (the agent list): Intimidating
+    /// Cry's, a transfigured one too (`includeTransfigured`), else 0.
+    #[must_use]
+    pub fn named_cooldown_recovery(&self, active: Option<&str>) -> f64 {
+        let Some(active) = active else { return 0.0 };
+        let base = active
+            .strip_suffix("_alt_x")
+            .or_else(|| active.strip_suffix("_alt_y"))
+            .unwrap_or(active);
+        if base == "intimidating_cry" {
+            self.intimidating_cry_cooldown_recovery
+        } else {
+            0.0
+        }
     }
 
     /// The `BuffEffect` INC the offering modifiers give the skill of the

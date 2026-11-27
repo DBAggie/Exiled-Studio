@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Toxic Rain (level 20) in place of Burning Arrow, with the bow and lines
+     of burning-arrow-bow-lines-templar.xml and "Toxic Rain deals 40% increased Damage" (PoB's Damage INC with the
+     SkillName Toxic Rain).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Toxic Rain" skillId="ToxicRain" variantId="ToxicRain" gemId="Metadata/Items/Gems/SkillGemToxicRain" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Short Bow
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				Toxic Rain deals 40% increased Damage
+20% increased Damage with Bows
+10% increased Attack Speed with Bows
+30% increased Critical Strike Chance with Bows
++25% to Critical Strike Multiplier with Bows
+20% increased Accuracy Rating with Bows
+15% increased Damage with Bow Skills
+40% increased Damage Over Time with Bow Skills
+30% increased Damage with Wands
++40% to Melee Critical Strike Multiplier
+Attacks with Melee Weapons deal 20% increased Damage with Ailments
++30% to Critical Strike Multiplier with One Handed Melee Weapons
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

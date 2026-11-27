@@ -16,7 +16,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 16] = [
+const TEXTS: [(&str, &str); 17] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -28,6 +28,12 @@ const TEXTS: [(&str, &str); 16] = [
     (
         "cold_skill_chance_to_inflict_cold_exposure_%",
         "Cold Skills have a {0}% chance to apply Cold Exposure on Hit",
+    ),
+    // The agent list: `CritChance` INC with the enemy's
+    // `HasLightningExposure`.
+    (
+        "critical_strike_chance_+%_vs_enemies_with_lightning_exposure",
+        "{0}% increased Critical Strike Chance against enemies with Lightning Exposure",
     ),
     (
         "cold_exposure_on_hit_magnitude",
