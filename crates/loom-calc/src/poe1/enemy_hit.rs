@@ -1366,7 +1366,15 @@ fn maximum_hit(
             avoid_projectiles,
             attack_dodge: 0.0,
             spell_dodge,
-            avoid_all: 0.0,
+            // Elusive's chance (the agent list; `CalcDefence.lua` 1546).
+            avoid_all: sum(
+                calc,
+                Poe1Quantity::AvoidAllDamageFromHits,
+                Op::Base,
+                &cx,
+                &mut reasons,
+            )?
+            .min(AVOID_CHANCE_CAP),
         };
         let character = super::ehp::Character {
             life: recoverable,

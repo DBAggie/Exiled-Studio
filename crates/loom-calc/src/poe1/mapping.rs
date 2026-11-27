@@ -7901,6 +7901,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list: "#% increased Elusive Effect" (`ElusiveEffect` INC,
+    // `ModParser.lua` 684), read by `poe1::buffs`' Elusive.
+    (
+        "elusive_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ElusiveEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // P6-11ak: a recovery on block (`BlockGain`, read by `enemy_hit`).
     (
         "energy_shield_%_of_armour_rating_gained_on_block",
@@ -8184,6 +8194,17 @@ pub const ROWS: &[Row] = &[
             Op::Flag,
             1.0,
         )],
+    ),
+    // The agent list: "#% chance to gain Elusive on Critical Strike" and
+    // "on Kill" (`Condition:CanBeElusive` FLAG, `ModParser.lua` 2500 to
+    // 2507): with the `buffElusive` check, `poe1::buffs`' Elusive.
+    (
+        "gain_elusive_on_crit_%_chance",
+        &[(Quantity::Poe1(Poe1Quantity::CanBeElusive), Op::Flag, 1.0)],
+    ),
+    (
+        "gain_elusive_on_kill_chance_%",
+        &[(Quantity::Poe1(Poe1Quantity::CanBeElusive), Op::Flag, 1.0)],
     ),
     // P6-11gj: "Strength provides no bonus to Maximum Life"
     // (`NoStrBonusToLife` FLAG, `ModParser.lua` 5430).
@@ -10495,9 +10516,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_defiance_when_lose_life_to_hit_once_per_x_ms",
         "no-slice",
     ),
-    // Close-out M3: a support's chance to grant Elusive on crit (PoB leaves the
-    // line unparsed): Elusive's effect is the config's buff.
-    ("gain_elusive_on_crit_%_chance", "no-slice"),
     // P6-11m: endurance charges per second if hit recently (unparsed).
     (
         "gain_endurance_charge_per_second_if_have_been_hit_recently",

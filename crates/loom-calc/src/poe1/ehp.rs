@@ -571,7 +571,8 @@ pub(super) struct Mitigation {
     pub(super) energy_shield_on_block: f64,
     pub(super) energy_shield_on_spell_block: f64,
     /// `EffectiveAttackDodgeChance`, `EffectiveSpellDodgeChance`, and
-    /// `AvoidAllDamageFromHitsChance` (none of their stats is mapped: 0).
+    /// `AvoidAllDamageFromHitsChance` (the dodge stats are unmapped: 0;
+    /// the avoid chance is Elusive's, `buffs`, since the agent list).
     pub(super) attack_dodge: f64,
     pub(super) spell_dodge: f64,
     pub(super) avoid_all: f64,

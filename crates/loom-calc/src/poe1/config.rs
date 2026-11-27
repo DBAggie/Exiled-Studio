@@ -331,7 +331,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "buffAlchemistsGenius",
         &["Condition:AlchemistsGenius if Condition:CanHaveAlchemistGenius"],
     ),
-    ("buffElusive", &["Condition:Elusive", "Elusive"]),
     (
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],

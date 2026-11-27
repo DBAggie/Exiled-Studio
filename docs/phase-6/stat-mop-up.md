@@ -1085,7 +1085,7 @@ Both match PoB on every computed field.
   - **Bad stack values:** a stack count that is not a number is a reason only when a skill can wither.
 - **The input:** `multiplierWitheredStackCount` leaves `config::NAMED_ONLY`; `damage_taken` handles it.
 - **Withering Step:** now in `gems::SKILLS` as a buff whose two global effects are Elusive's (`Condition:CanBeElusive`, `ElusiveEffect`).
-  - Neither reaches a slice field: Elusive itself is the `buffElusive` named condition.
+  - Neither reaches a slice field: Elusive itself is the `buffElusive` named condition. (Corrected 2026-11-27: the check gives Elusive's buff with a source that lets you gain it; with the check on, Withering Step is a reason, `elusive-skill`; "Elusive" below.)
   - **Data parity:** the two names join `gem_effects`' `NO_SLICE_NAMES`; `uncategorized` stays 353.
 
 **New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
@@ -5482,3 +5482,17 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **The engine:** `NoEffect` rows (`modifier-magnitude`). The scaling of the other lines is the import adapter's (`pob_item::values`, the agent list's S9): where PoB applies the magnitudes, every modifier line of the item is a `modifier-magnitude` reason, so no value is guessed; otherwise the printed values are read, as PoB reads them. The real-bundle test `no_effect_stats_should_be_known_and_never_mapped` checks each stat is the game's.
 
 **Evidence** (`local/p6/d27mme` on `b-pb`, against `local/p6/gqe`): public 0 unexpected, `Complete` unchanged at 54,213 (each build with these lines has other reasons); no value moved; the four stats' reasons gone. Corpus 0 unexpected, no value moved (two documents lose the reason).
+
+## Elusive (the agent list, 2026-11-27)
+
+**The finding:** `buffElusive` was classified as setting named conditions only (`config::NAMED_ONLY`), and "#% chance to gain Elusive on Critical Strike" was `NoEffect`. In PoB (`ConfigOptions.lua` 1049 to 1052, `CalcPerform.lua` 779 to 810) the check, with a source that lets you gain Elusive (`Condition:CanBeElusive`), gives Elusive's buff: `AvoidAllDamageFromHitsChance` BASE `floor(15 x effect)` and `MovementSpeed` INC `floor(30 x effect)`. A build with both and nothing else missing would have been `Complete` with values PoB does not give. `Dual Wield Cospris CoC.xml` has both; `essence-drain-contagion-occultist.xml` has the check without a source, so PoB gives nothing there either.
+
+**The engine** (`loom_calc::poe1::buffs::elusive`, after the charges):
+- **The source:** `Poe1Quantity::CanBeElusive` flags: "#% chance to gain Elusive on Critical Strike" and "on Kill" (`ModParser.lua` 2500 to 2507), rows of the mapping; conditional ones are a reason (`elusive-condition`). Withering Step and Nightblade let you gain Elusive through their own data, which the engine does not read: with the check on, either in an enabled group is a reason (`elusive-skill`).
+- **The effect:** `(1 + inc / 100) x 100`, `inc` the `ElusiveEffect` INC sum ("#% increased Elusive Effect", a row; "#% increased Effect of Elusive on you per Power Charge", `charges`' `PerCharge::ElusiveEffect`), averaged over its decay to 0 (`/ 2`). The minimum threshold, the slower loss, the increase at first, `BuffEffectOnSelf`, and Nightblade's are unmapped stats, so reasons. `overrideBuffElusive` caps it at the full effect, as PoB's override.
+- **The buff:** `Poe1Quantity::AvoidAllDamageFromHits` BASE (read by `enemy_hit` into the defence estimate's `avoid_all`, capped at 75, `CalcDefence.lua` 1546) and movement speed INC.
+- `buffElusive` and `overrideBuffElusive` are `buffs`' inputs (`is_buff_input`), no longer named-only.
+
+**Fixture** (original) `ice-nova-elusive-witch.xml`: the check, the crit line, 9% increased Elusive Effect, 10% per power charge with three in use: effect 69.5, 10% chance to avoid all damage from hits, movement 1.2. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ele` on `b-pb`, against `local/p6/d27mme`): public 0 unexpected, `Complete` 54,213 to 54,300 (the fixture's 87); 5 values of `Dual Wield Cospris CoC.xml` moved, all toward PoB: its chance not to be hit 0 to 11 (PoB 12), movement speed 2.19 to 2.42 (PoB 3.34), total EHP 8,577 to 9,637 (PoB 16,095). The avoid chance's one short is the effect's: 11 and the movement's 23 fit an effect of 79.5, one power charge fewer than PoB's 6 (84.5). Corpus 0 unexpected, no value moved (the documents' graph numbers shift by the new node).

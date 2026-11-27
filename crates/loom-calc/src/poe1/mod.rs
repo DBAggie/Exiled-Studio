@@ -1133,6 +1133,17 @@ pub enum Poe1Quantity {
     /// agent list): a `Flag`; chaos's bypass is then 0, as every other
     /// type's, read by [`enemy_hit`], [`ehp`], and [`degen`].
     ChaosNotBypassEs,
+    /// A source that lets you gain Elusive (PoB's `Condition:CanBeElusive`;
+    /// the agent list): a `Flag`, which [`buffs`] reads with the
+    /// `buffElusive` check.
+    CanBeElusive,
+    /// Elusive's effect on you (PoB's `ElusiveEffect`; the agent list):
+    /// `Increased`, read by [`buffs`].
+    ElusiveEffect,
+    /// The chance to avoid all damage from hits (PoB's
+    /// `AvoidAllDamageFromHitsChance` BASE, capped at 75; the agent list:
+    /// Elusive's), read by [`enemy_hit`].
+    AvoidAllDamageFromHits,
     /// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry,
     /// up to a maximum of 100%" (P6-11hz): `Base`, which `collect` makes
     /// `Armour` INC per 5 warcry power, at most 100 in all, while
@@ -1929,6 +1940,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
             Self::ChaosNotBypassEs => f.write_str("chaos-not-bypass-es"),
+            Self::CanBeElusive => f.write_str("can-be-elusive"),
+            Self::ElusiveEffect => f.write_str("elusive-effect"),
+            Self::AvoidAllDamageFromHits => f.write_str("avoid-all-damage-from-hits"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
             Self::TailwindEffect => f.write_str("tailwind-effect"),
             Self::MaxElementalResistIfReservedLifeAndMana => {

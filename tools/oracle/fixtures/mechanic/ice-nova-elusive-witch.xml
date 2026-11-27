@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Elusive (CalcPerform.lua 779 to 810): the buffElusive check, "19% chance
+     to gain Elusive on Critical Strike" (Condition:CanBeElusive), "9% increased Elusive Effect", and "10% increased Effect of
+     Elusive on you per Power Charge" with the three power charges in use: the effect (1 + 39 / 100) x 100 / 2 = 69.5, 10%
+     chance to avoid all damage from hits and 20% increased movement speed.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="buffElusive" boolean="true"/>
+			<Input name="usePowerCharges" boolean="true"/>
+			<Input name="conditionEnemyColdExposure" boolean="true"/>
+			<Input name="conditionEnemyFireExposure" boolean="true"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				19% chance to gain Elusive on Critical Strike
+9% increased Elusive Effect
+10% increased Effect of Elusive on you per Power Charge
+10% Chance to Inflict Cold Exposure on Hit with Cold Damage
+Exposure you inflict applies an extra -25% to the affected Resistance
+Cold Exposure you inflict applies an extra -5% to Cold Resistance
+Fire Exposure you inflict applies an extra -7% to Fire Resistance
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

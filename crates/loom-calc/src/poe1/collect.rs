@@ -145,6 +145,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         .cloned()
         .unwrap_or_else(|| super::states::states(input));
     super::buffs::buffs(active_config(build), &settled, ingest);
+    // Elusive (the agent list): after the charges (its effect per power
+    // charge).
+    super::buffs::elusive(input, ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
@@ -2978,7 +2981,6 @@ mod tests {
             "enemyDamageType",
             "DisableEHPGainOnBlock",
             "conditionHitRecently",
-            "buffElusive",
         ] {
             for kind in [ConfigInputKind::Input, ConfigInputKind::Placeholder] {
                 let input = ConfigInput {

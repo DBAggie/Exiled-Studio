@@ -165,6 +165,129 @@ pub const UNHOLY_MIGHT_INPUT: &str = "buffUnholyMight";
 /// (`CalcPerform.lua` 720 to 724).
 pub const UNHOLY_MIGHT_CONVERSION: f64 = 100.0;
 
+/// The check that makes you Elusive (`ConfigOptions.lua` 1049 to 1052;
+/// the agent list).
+pub const ELUSIVE_INPUT: &str = "buffElusive";
+
+/// The override of Elusive's effect (`ConfigOptions.lua` 1053 to 1055:
+/// `ElusiveEffect` OVERRIDE).
+pub const ELUSIVE_OVERRIDE_INPUT: &str = "overrideBuffElusive";
+
+/// Elusive's chance to avoid all damage from hits and its increased
+/// movement speed at full effect (`CalcPerform.lua` 808, 809).
+pub const ELUSIVE_AVOID: f64 = 15.0;
+/// See [`ELUSIVE_AVOID`].
+pub const ELUSIVE_MOVEMENT: f64 = 30.0;
+
+/// Skills whose own data lets you gain Elusive (PoB's tagged base mod
+/// `Condition:CanBeElusive`) and changes its effect: Withering Step and
+/// Nightblade. With the check on, either is a reason (`elusive-skill`).
+pub const ELUSIVE_SKILLS: [&str; 2] = ["SupportNightblade", "WitheringStep"];
+
+/// Elusive (the agent list; `CalcPerform.lua` 779 to 810): with the
+/// `buffElusive` check and a source that lets you gain Elusive (PoB's
+/// `Condition:CanBeElusive`, [`Poe1Quantity::CanBeElusive`]), its effect
+/// is `(1 + inc / 100) x 100`, `inc` the `ElusiveEffect` INC sum, averaged
+/// over its decay to 0, `/ 2` (PoB's `(elusiveEffectMod +
+/// elusiveEffectMinThreshold) / 2`; the threshold, the slower loss, the
+/// increase at first, `BuffEffectOnSelf`, and Nightblade's are unmapped
+/// stats, reasons), or the override input at most the full effect; then
+/// `AvoidAllDamageFromHitsChance` BASE `floor(15 x effect)` and
+/// `MovementSpeed` INC `floor(30 x effect)`.
+pub fn elusive(input: &crate::input::CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let set = super::collect::active_config(input.build);
+    match check(set, ELUSIVE_INPUT) {
+        Ok(false) => return,
+        Err(()) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: ELUSIVE_INPUT.to_owned(),
+            });
+            return;
+        }
+        Ok(true) => {}
+    }
+    let source = Source::Config {
+        input: ELUSIVE_INPUT.to_owned(),
+    };
+    // A skill whose data the engine does not read for Elusive.
+    let skills = super::skill::active_groups(input.build)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|g| g.enabled)
+        .flat_map(|g| g.gems.typed())
+        .any(|gem| {
+            gem.enabled
+                && gem
+                    .skill
+                    .as_ref()
+                    .is_some_and(|s| ELUSIVE_SKILLS.contains(&s.as_str()))
+        });
+    if skills {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: source.clone(),
+            what: "elusive-skill",
+        });
+    }
+    let mut can = false;
+    let mut conditional = None;
+    let mut inc = 0.0;
+    for e in ingest.effects() {
+        let unconditional = e.conditions == Conditions::none();
+        match e.quantity {
+            Quantity::Poe1(Poe1Quantity::CanBeElusive) if e.op == Op::Flag && e.value != 0.0 => {
+                if unconditional {
+                    can = true;
+                } else {
+                    conditional = Some(e.source.clone());
+                }
+            }
+            Quantity::Poe1(Poe1Quantity::ElusiveEffect) if e.op == Op::Increased => {
+                if unconditional {
+                    inc += e.value;
+                } else {
+                    conditional = Some(e.source.clone());
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(s) = conditional {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: s,
+            what: "elusive-condition",
+        });
+    }
+    if !can {
+        return;
+    }
+    let full = (1.0 + inc / 100.0) * 100.0;
+    let mut effect = full / 2.0;
+    match set
+        .and_then(|s| super::config::last_input(s, ELUSIVE_OVERRIDE_INPUT, ConfigInputKind::Input))
+    {
+        None => {}
+        Some(ConfigValue::Number(n)) => effect = crate::math::min(n.value().0, full),
+        Some(_) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: ELUSIVE_OVERRIDE_INPUT.to_owned(),
+        }),
+    }
+    let effect = effect / 100.0;
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::AvoidAllDamageFromHits),
+        op: Op::Base,
+        value: crate::math::floor(ELUSIVE_AVOID * effect),
+        conditions: Conditions::none(),
+        source: source.clone(),
+    });
+    ingest.effect(Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::MovementSpeed),
+        op: Op::Increased,
+        value: crate::math::floor(ELUSIVE_MOVEMENT * effect),
+        conditions: Conditions::none(),
+        source,
+    });
+}
+
 /// Whether this module handles `input` (Arcane Surge's check is
 /// [`super::conditions`]').
 #[must_use]
@@ -178,6 +301,8 @@ pub fn is_buff_input(input: &str) -> bool {
         STATIONARY_INPUT,
         UNHOLY_MIGHT_INPUT,
         FEEDING_FRENZY_INPUT,
+        ELUSIVE_INPUT,
+        ELUSIVE_OVERRIDE_INPUT,
     ]
     .contains(&input)
 }

@@ -193,6 +193,9 @@ pub enum PerCharge {
     PoisonDotMultiplier,
     /// More accuracy rating (`Accuracy` MORE; close-out M2).
     MoreAccuracy,
+    /// Increased effect of Elusive on you (`ElusiveEffect` INC; the agent
+    /// list).
+    ElusiveEffect,
 }
 
 impl PerCharge {
@@ -225,6 +228,7 @@ impl PerCharge {
             Self::BleedDotMultiplier => "per.bleed-dot-multiplier",
             Self::PoisonDotMultiplier => "per.poison-dot-multiplier",
             Self::MoreAccuracy => "per.more-accuracy",
+            Self::ElusiveEffect => "per.elusive-effect",
         }
     }
 
@@ -286,6 +290,11 @@ impl PerCharge {
             Self::BleedDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::BLEED),
             Self::PoisonDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::POISON),
             Self::MoreAccuracy => (Quantity::Accuracy, Op::More, Flags::NONE),
+            Self::ElusiveEffect => (
+                Quantity::Poe1(super::Poe1Quantity::ElusiveEffect),
+                Op::Increased,
+                Flags::NONE,
+            ),
             Self::PhysicalDamageReduction => (
                 Quantity::Poe1(super::Poe1Quantity::DamageReduction(
                     crate::quantity::DamageType::Physical,
@@ -444,6 +453,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "elemental_damage_reduction_%_per_endurance_charge",
         ChargeKind::Endurance,
         ChargeValue::Per(PerCharge::ElementalDamageReduction),
+    ),
+    // "#% increased Effect of Elusive on you per Power Charge" (the agent
+    // list; `ElusiveEffect` INC per `Multiplier:PowerCharge`), read by
+    // `buffs`' Elusive.
+    (
+        "elusive_effect_on_self_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::ElusiveEffect),
     ),
     // P6-11dp: Endurance Charge on Melee Stun's more damage per endurance
     // charge (`sup_str.lua` 2005: `Damage` MORE per
