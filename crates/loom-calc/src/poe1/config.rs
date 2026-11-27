@@ -340,7 +340,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "carrionGolemNearbyMinion",
         &["Multiplier:NearbyNonGolemMinion"],
     ),
-    ("changedStance", &["Condition:ChangedStanceRecently"]),
     (
         "conditionCausedBleedingRecently",
         &["Condition:CausedBleedingRecently"],

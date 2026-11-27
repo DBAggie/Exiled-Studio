@@ -350,9 +350,20 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   `act_str.lua` 10679 to 10681): [`static_strike_beams`] (agent list);
 /// - Ground Slam's more damage to close targets (`Damage` MORE `Hit` with
 ///   `Condition:AtCloseRange`, `act_str.lua` 2086 to 2088): the mapping's
-///   state row under the config's `conditionAtCloseRange` (open items, S1).
-pub const READ_OWN_STATS: [(&str, &str); 5] = [
+///   state row under the config's `conditionAtCloseRange` (open items, S1);
+/// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
+///   state rows under the settled stance and the config's `changedStance`.
+pub const READ_OWN_STATS: [(&str, &str); 8] = [
     ("GroundSlam", "groundslam_damage_to_close_targets_+%_final"),
+    (
+        "Lacerate",
+        "active_skill_bleeding_damage_+%_final_in_blood_stance",
+    ),
+    ("Lacerate", "attack_speed_+%_if_changed_stance_recently"),
+    (
+        "Lacerate",
+        "chance_to_bleed_on_hit_%_chance_in_blood_stance",
+    ),
     ("StaticStrike", BEAM_DAMAGE_STAT),
     (
         "ShieldCrush",

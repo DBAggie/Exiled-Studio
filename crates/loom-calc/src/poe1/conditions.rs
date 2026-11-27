@@ -311,6 +311,19 @@ pub const LEECH_AT_FULL_ES_STATS: [&str; 2] = [
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
+/// Blood Stance (PoB's `Condition:BloodStance`, on unless Sand Stance,
+/// `CalcSetup.lua` 538; the agent list, 2026-11-27): settled from the
+/// config's `bloodSandStance` ([`super::gems::STANCE_INPUT`]), Blood unless
+/// it is `SAND`.
+pub const BLOOD_STANCE: &str = "BloodStance";
+/// Sand Stance (PoB's `Condition:SandStance` from `bloodSandStance` `SAND`,
+/// `ConfigOptions.lua` 643 to 646).
+pub const SAND_STANCE: &str = "SandStance";
+/// "if you've changed Stance recently" (PoB's `ChangedStanceRecently`,
+/// from the config's `changedStance`, `ConfigOptions.lua` 648; the agent
+/// list, 2026-11-27).
+pub const CHANGED_STANCE_RECENTLY: &str = "ChangedStanceRecently";
+
 /// "if you've been Hit Recently" (PoB's `BeenHitRecently`, from
 /// `conditionBeenHitRecently` or a `multiplierBeenHitRecently` above 0;
 /// P6-10b part 13).
@@ -406,6 +419,8 @@ pub const CHECKS: &[(&str, &str)] = &[
     // Open items S3, part 8: phasing (The Hidden Blade's trigger,
     // `poe1::triggers`, and the "while Phasing" lines).
     ("buffPhasing", PHASING),
+    // The agent list (2026-11-27): a stance changed recently.
+    ("changedStance", CHANGED_STANCE_RECENTLY),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     // P6-11em: attacked recently; the main skill too (`settle`).
@@ -644,6 +659,20 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         }
         Some(ConfigValue::Number(n)) => {
             out.insert(ConditionKey::new(STATIONARY), n.value().0 > 0.0);
+        }
+        Some(_) => {}
+    }
+    // The stance (the agent list, 2026-11-27): another value than a string
+    // leaves both unsettled.
+    match set.and_then(|s| last(s, super::gems::STANCE_INPUT, ConfigInputKind::Input)) {
+        None => {
+            out.insert(ConditionKey::new(BLOOD_STANCE), true);
+            out.insert(ConditionKey::new(SAND_STANCE), false);
+        }
+        Some(ConfigValue::String(s)) => {
+            let sand = s == "SAND";
+            out.insert(ConditionKey::new(BLOOD_STANCE), !sand);
+            out.insert(ConditionKey::new(SAND_STANCE), sand);
         }
         Some(_) => {}
     }

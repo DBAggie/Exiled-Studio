@@ -5633,3 +5633,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixture** (original): `shield-crush-overlapping-waves-templar.xml` (the Shield Crush defences build in part 2: DPS 130.10, twice part 1's); every field equals PoB's. Lacerate in part 1 and part 2 on the Smite bleeding build gives PoB's doubling exactly (TotalDPS both over one = 2.0); its fields are partial on Lacerate's Blood Stance stats, so not added.
 
 **Evidence** (`local/p6/d27dme` on `b-ig`, against `local/p6/d27tre`): public 0 unexpected, `Complete` 55,779 to 55,867; 6 values moved, all toward PoB, in `shock-nova-archmage-hierophant.xml` (its DPS doubled, its ignite and leech, the life leech now equal to PoB's). Corpus 0 unexpected; 9 values toward PoB, none away (three builds' DPS, impale, and bleeding).
+
+## Lacerate's stances (the agent list, 2026-11-27)
+
+**The stats:** Lacerate's own "#% more Damage with Bleeding while in Blood Stance" (`active_skill_bleeding_damage_+%_final_in_blood_stance`), "#% chance to cause Bleeding while in Blood Stance" (`chance_to_bleed_on_hit_%_chance_in_blood_stance`), and its quality's "#% increased Attack Speed if you've changed Stance recently" (`attack_speed_+%_if_changed_stance_recently`): unmapped, and own stats that kept Lacerate unvetted.
+
+**PoB:** `Damage` MORE `KeywordFlag.Bleed` and `BleedChance` BASE `ModFlag.Attack` under `Condition:BloodStance` (`SkillStatMap.lua` 1160, 1005), set unless Sand Stance (`CalcSetup.lua` 538; the config's `bloodSandStance`, `ConfigOptions.lua` 643); `Speed` INC `ModFlag.Attack` under `ChangedStanceRecently`, the config's `changedStance` check (648).
+
+**The engine:** `conditions::BLOOD_STANCE` and `SAND_STANCE` settled from `bloodSandStance` (Blood unless `SAND`); `CHANGED_STANCE_RECENTLY` from the `changedStance` check (moved from `config::NAMED_ONLY`); the three stats as state rows; Lacerate's three own stats in `hit::READ_OWN_STATS`.
+
+**Fixtures** (original, from the Smite bleeding build): `lacerate-both-slashes-bleed-templar.xml` (part 2, Blood Stance: bleeding 61.51), `lacerate-one-slash-bleed-templar.xml` (part 1: 44.55), `lacerate-sand-stance-bleed-templar.xml` (Sand Stance: 14.54), `lacerate-changed-stance-quality-templar.xml` (quality 20, stance changed: attack rate 1.0795). Every field equals PoB's but the Q11 floored-millisecond attack rate and what follows from it: `game-truth` DIV-1011 to DIV-1034.
+
+**Evidence** (`local/p6/d27lae` on `b-ig`, against `local/p6/d27dme`): public 0 unexpected, `Complete` 55,867 to 56,223 (the fixtures'), no value moved (the public Lacerate build is Lacerate of Haemorrhage, which keeps its other reasons); corpus 0 unexpected, no value moved.

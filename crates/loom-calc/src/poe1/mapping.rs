@@ -4657,6 +4657,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::BLOCKED_RECENTLY,
         )],
     ),
+    // The agent list (2026-11-27): Lacerate's "#% more Damage with Bleeding
+    // while in Blood Stance" (`Damage` MORE, `KeywordFlag.Bleed`,
+    // `SkillStatMap.lua` 1160) and "#% chance to cause Bleeding while in
+    // Blood Stance" (`BleedChance` BASE, `ModFlag.Attack`, 1005), in the
+    // settled stance (`conditions::BLOOD_STANCE`).
+    (
+        "active_skill_bleeding_damage_+%_final_in_blood_stance",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::BLEED,
+            conditions::BLOOD_STANCE,
+        )],
+    ),
     // P6-11ec: "+#% Chance to Block Attack Damage if you've dealt a Critical
     // Strike Recently" (`BlockChance` BASE, `CritRecently`).
     (
@@ -4814,6 +4828,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_SHIELD,
         )],
     ),
+    // The agent list (2026-11-27): Lacerate's quality "#% increased Attack
+    // Speed if you've changed Stance recently" (`Speed` INC, `ModFlag.Attack`,
+    // `ChangedStanceRecently`, the config's `changedStance`).
+    (
+        "attack_speed_+%_if_changed_stance_recently",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::CHANGED_STANCE_RECENTLY,
+        )],
+    ),
     // P6-11ec: "#% increased Attack Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC with `ModFlag.Attack`, `CritRecently`).
     (
@@ -4928,6 +4954,15 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::CAST,
             conditions::CRIT_RECENTLY,
+        )],
+    ),
+    (
+        "chance_to_bleed_on_hit_%_chance_in_blood_stance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            Flags::ATTACK,
+            conditions::BLOOD_STANCE,
         )],
     ),
     // P6-11em: "+#% Chance to Block Spell Damage if you've Cast a Spell
@@ -13780,6 +13815,9 @@ mod tests {
                         states::USING_ONE_HANDED_WEAPON,
                         states::USING_MELEE_WEAPON,
                         conditions::STATIONARY,
+                        // The agent list: the settled stance.
+                        conditions::BLOOD_STANCE,
+                        conditions::SAND_STANCE,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
                         // The agent list: the main skill by name, and the
@@ -13844,6 +13882,34 @@ mod tests {
             (
                 "life_mastery_count_maximum_life_+%_final",
                 vec![(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+            ),
+            // The agent list (2026-11-27): Lacerate's stance rows.
+            (
+                "attack_speed_+%_if_changed_stance_recently",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::CHANGED_STANCE_RECENTLY,
+                )],
+            ),
+            (
+                "active_skill_bleeding_damage_+%_final_in_blood_stance",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    Flags::BLEED,
+                    conditions::BLOOD_STANCE,
+                )],
+            ),
+            (
+                "chance_to_bleed_on_hit_%_chance_in_blood_stance",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+                    Op::Base,
+                    Flags::ATTACK,
+                    conditions::BLOOD_STANCE,
+                )],
             ),
             // The agent list (2026-11-27): the enemy's physical damage
             // converted while ignited, poisoned, or shocked.
