@@ -468,10 +468,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("overrideFortification", &["FortificationStacks"]),
     (
-        "perforateSpikeOverlap",
-        &["Multiplier:PerforateSpikeOverlap"],
-    ),
-    (
         "plagueBearerState",
         &[
             "Condition:PlagueBearerIncubating",

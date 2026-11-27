@@ -353,7 +353,7 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 10] = [
+pub const READ_OWN_STATS: [(&str, &str); 13] = [
     // The agent list (2026-11-27): Elemental Hit of the Spectrum's more
     // damage per the enemy's elemental ailments (`stacks::
     // enemy_elemental_ailments`).
@@ -362,6 +362,18 @@ pub const READ_OWN_STATS: [(&str, &str); 10] = [
         "elemental_hit_damage_+%_final_per_enemy_elemental_ailment",
     ),
     ("GroundSlam", "groundslam_damage_to_close_targets_+%_final"),
+    // Perforate's Blood Stance damage (the mapping's state row) and its
+    // Duality's extra spears ([`perforate_dps_multiplier`]; the agent list,
+    // 2026-11-27).
+    ("Perforate", "blood_spears_damage_+%_final_in_blood_stance"),
+    (
+        "PerforateAltX",
+        "blood_spears_additional_number_of_spears_if_changed_stance_recently",
+    ),
+    (
+        "PerforateAltX",
+        "blood_spears_damage_+%_final_in_blood_stance",
+    ),
     // The agent list (2026-11-27): Kinetic Blast of Clustering's added
     // physical damage per maximum mana (`mana_added`).
     (
@@ -400,8 +412,14 @@ pub const READ_OWN_STATS: [(&str, &str); 10] = [
 /// - Shock Nova's and its transfigured gem's 2 in part 1, "Ring + Nova";
 /// - Lacerate's and its two transfigured gems' and Eviscerate's 2 in part
 ///   2, both slashes.
-pub const READ_PART_BASE_MODS: [(&str, &str, usize); 8] = [
+pub const READ_PART_BASE_MODS: [(&str, &str, usize); 11] = [
     ("Eviscerate", "dpsMultiplier", 2),
+    // Perforate's spike overlap ([`perforate_dps_multiplier`]); its part
+    // index is 0 (no parts), where the base mod's 1 is that function's
+    // starting value.
+    ("Perforate", "dpsMultiplier", 0),
+    ("PerforateAltX", "dpsMultiplier", 0),
+    ("PerforateAltY", "dpsMultiplier", 0),
     ("Lacerate", "dpsMultiplier", 2),
     ("LacerateAltX", "dpsMultiplier", 2),
     ("LacerateAltY", "dpsMultiplier", 2),
@@ -447,7 +465,100 @@ pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 /// cooldown (agent list): Static Strike's `preDamageFunc` (`act_str.lua`
 /// 10663 to 10667) sets the hit time of part 2 only, which
 /// [`static_strike_beams`] reads; in part 1 it does nothing.
-pub const READ_PART_FUNCTIONS: [(&str, &str); 1] = [("StaticStrike", "preDamageFunc")];
+///
+/// Perforate's (the agent list, 2026-11-27; `act_str.lua`): `dpsMultiplier
+/// = max(dpsMultiplier or 1, 1)`, after its spike overlap
+/// ([`perforate_dps_multiplier`]).
+pub const READ_PART_FUNCTIONS: [(&str, &str); 4] = [
+    ("Perforate", "preDamageFunc"),
+    ("PerforateAltX", "preDamageFunc"),
+    ("PerforateAltY", "preDamageFunc"),
+    ("StaticStrike", "preDamageFunc"),
+];
+
+/// Perforate and its transfigured gems (the agent list, 2026-11-27): its
+/// base mod `skill("dpsMultiplier", 1, { Multiplier PerforateSpikeOverlap,
+/// limitVar <its spears> }, { Condition BloodStance })` (Perforate of
+/// Bloodshed's without the condition): `(skill, Blood Stance only)`.
+pub const PERFORATE: [(&str, bool); 3] = [
+    ("Perforate", true),
+    ("PerforateAltX", true),
+    ("PerforateAltY", false),
+];
+
+/// The config's overlapping spikes (`ConfigOptions.lua` 555:
+/// `Multiplier:PerforateSpikeOverlap` for Perforate and its transfigured
+/// gems).
+pub const PERFORATE_OVERLAP_INPUT: &str = "perforateSpikeOverlap";
+
+/// Perforate's spears (its `blood_spears_base_number_of_spears`, PoB's
+/// `Multiplier:<skill>MaxSpikes`).
+const PERFORATE_SPEARS_STAT: &str = "blood_spears_base_number_of_spears";
+/// Perforate of Duality's extra spears after a stance change (its
+/// `blood_spears_additional_number_of_spears_if_changed_stance_recently`).
+const PERFORATE_EXTRA_SPEARS_STAT: &str =
+    "blood_spears_additional_number_of_spears_if_changed_stance_recently";
+
+/// Perforate's `dpsMultiplier` ([`PERFORATE`]): `max(min(overlap, spears),
+/// 1)` while its condition holds, the overlap the config's count (input,
+/// else placeholder), the spears its own stats (Duality's extra with the
+/// config's `changedStance`); 1 otherwise and for any other skill. A count
+/// of another type is a reason.
+fn perforate_dps_multiplier(
+    input: &CalcInput<'_>,
+    skill: &MainSkill<'_>,
+    reasons: &mut Reasons,
+) -> f64 {
+    let id = skill.effect().id.as_str();
+    let Some(&(_, blood_only)) = PERFORATE.iter().find(|(s, _)| *s == id) else {
+        return 1.0;
+    };
+    let set = super::collect::active_config(input.build);
+    let read = |name: &str, kind| set.and_then(|s| super::config::last_input(s, name, kind));
+    if blood_only
+        && matches!(
+            read(super::gems::STANCE_INPUT, loom_domain::ConfigInputKind::Input),
+            Some(loom_domain::ConfigValue::String(s)) if s == "SAND"
+        )
+    {
+        return 1.0;
+    }
+    let overlap =
+        match read(PERFORATE_OVERLAP_INPUT, loom_domain::ConfigInputKind::Input).or_else(|| {
+            read(
+                PERFORATE_OVERLAP_INPUT,
+                loom_domain::ConfigInputKind::Placeholder,
+            )
+        }) {
+            None => 0.0,
+            Some(loom_domain::ConfigValue::Number(n)) => n.value().0,
+            Some(_) => {
+                reasons.partial.insert(UnsupportedReason::UnmodelledConfig {
+                    input: PERFORATE_OVERLAP_INPUT.to_owned(),
+                });
+                return 1.0;
+            }
+        };
+    let gem = skill.active_gem;
+    let stats = skill::instance(skill.effect(), gem.level, gem.quality, input.data).stats;
+    let stat = |name: &str| {
+        #[expect(clippy::cast_precision_loss, reason = "a small stat value")]
+        let v = stats
+            .iter()
+            .filter(|(s, _)| s == name)
+            .map(|(_, v)| *v as f64)
+            .sum::<f64>();
+        v
+    };
+    let mut spears = stat(PERFORATE_SPEARS_STAT);
+    if matches!(
+        read("changedStance", loom_domain::ConfigInputKind::Input),
+        Some(loom_domain::ConfigValue::Boolean(true))
+    ) {
+        spears += stat(PERFORATE_EXTRA_SPEARS_STAT);
+    }
+    crate::math::max(crate::math::min(overlap, spears), 1.0)
+}
 
 /// Skill functions that do nothing in one part (open items, S1): (skill,
 /// function, part). Spark's `preDamageFunc` (`act_int.lua` 16721 to 16727)
@@ -471,7 +582,7 @@ pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
 /// 2026-11-27): a chance to shock, which reaches no slice field (PoB never
 /// shocks the enemy from a chance; the engine's shock is the config's and
 /// the guaranteed ones).
-pub const NO_SLICE_OWN_STATS: [(&str, &str); 4] = [
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 6] = [
     (
         "Cyclone",
         "cyclone_area_of_effect_+%_per_additional_melee_range",
@@ -481,6 +592,12 @@ pub const NO_SLICE_OWN_STATS: [(&str, &str); 4] = [
     (
         "ElementalHitAltX",
         "active_skill_base_area_of_effect_radius",
+    ),
+    // Perforate's Sand Stance area: radius outputs alone.
+    ("Perforate", "skill_area_of_effect_+%_final_in_sand_stance"),
+    (
+        "PerforateAltX",
+        "skill_area_of_effect_+%_final_in_sand_stance",
     ),
     ("ShockNova", "shock_nova_ring_chance_to_shock_+%"),
     (
@@ -623,9 +740,11 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
     // Display data, or a DoT's flags (`dotIsArea` and kin), which PoB reads
     // only in the DoT's config (`CalcOffence.lua` 5657 to 5669) and the DoT
     // vets itself (`dot::DOT_SKILL_DATA_KEYS`; open items, S1).
+    // A radius is display data tagged or not (the agent list, 2026-11-27:
+    // Perforate's radius per stance, tagged with the stance's condition).
     let display = |m: &super::pob_skill::PobBaseMod| {
         m.name == "SkillData"
-            && !m.tagged
+            && (!m.tagged || m.key.is_some_and(|k| DISPLAY_SKILL_DATA.contains(&k)))
             && m.key.is_some_and(|k| {
                 DISPLAY_SKILL_DATA.contains(&k)
                     || super::dot::DOT_SKILL_DATA_KEYS.contains(&k)
@@ -2235,7 +2354,8 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
         );
         calc.set(Field::Speed, phases::query(speed.0, speed.1));
         let rate = hit_rate(calc, beam_rate, &unvetted, speed.0);
-        let dps = part_dps_multiplier(id, attack.part_index);
+        let dps = part_dps_multiplier(id, attack.part_index)
+            * perforate_dps_multiplier(&input, &attack.skill, &mut unvetted);
         hit_dps(calc, average.0, rate, dps)?;
         let ailment_rate = rate_with(calc, rate, dps)?;
         let ailment_hit = super::ailment::AilmentHit {
@@ -2251,7 +2371,8 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     // A part's `dpsMultiplier` ([`READ_PART_BASE_MODS`]) is read only by the
     // single-hand path: a dual wielder's is a reason on every field of the
     // pass (the agent list, 2026-11-27).
-    if part_dps_multiplier(id, attack.part_index) != 1.0 {
+    if part_dps_multiplier(id, attack.part_index) != 1.0 || PERFORATE.iter().any(|(s, _)| *s == id)
+    {
         unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
             source: attack.source(),
             what: "dual-wield-dps-multiplier",

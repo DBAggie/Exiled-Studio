@@ -189,6 +189,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "active_skill_area_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
     ),
+    // The agent list (2026-11-27): a skill's "#% more Damage with Bleeding"
+    // (`SkillStatMap.lua` 1157: `Damage` MORE, `KeywordFlag.Bleed`; Perforate
+    // of Bloodshed's).
+    (
+        "active_skill_bleeding_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::BLEED, NONE)],
+    ),
     // PoB `SkillStatMap.lua` 1729: `Speed` MORE with `ModFlag.Cast`
     // (P6-7c3, the Flame Golem's Immolate).
     (
@@ -10444,6 +10451,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("blink_and_mirror_arrow_cooldown_speed_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
+    // The agent list (2026-11-27): Perforate's spears (PoB's
+    // `Multiplier:<skill>MaxSpikes`), read from the skill's own stats by
+    // `hit::perforate_dps_multiplier` as its spike overlap's limit.
+    (
+        "blood_spears_additional_number_of_spears_if_changed_stance_recently",
+        "perforate-spikes",
+    ),
+    ("blood_spears_base_number_of_spears", "perforate-spikes"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("boots_implicit_ground_brittle_duration_ms", "no-slice"),

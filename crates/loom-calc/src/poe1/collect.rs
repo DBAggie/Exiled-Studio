@@ -2967,6 +2967,8 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::minion_actor::is_input(&input.name, &input.value)
         || input.name == super::hit::PDR_MODE_INPUT
         || input.name == super::hit::RUTHLESS_MODE_INPUT
+        // Perforate's overlapping spikes (the agent list, 2026-11-27).
+        || input.name == super::hit::PERFORATE_OVERLAP_INPUT
         // The throw counts (P6-11fa).
         || input.name == super::hit::MINES_PER_THROW_INPUT
         || input.name == super::hit::TRAPS_PER_THROW_INPUT
