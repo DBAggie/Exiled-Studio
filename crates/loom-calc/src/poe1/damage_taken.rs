@@ -903,6 +903,22 @@ pub fn chill(
     let mut strongest = None;
     for e in unconditional(ingest, Poe1Quantity::SkillChill, Op::Base) {
         chilled = true;
+        // The skill's own chill effect (the agent list, 2026-11-27): its
+        // increases join the character's, its more multiplies, rounded to
+        // 2 decimals as `calcLib.mod`'s `More`.
+        let own = |op: Op| {
+            unconditional(ingest, Poe1Quantity::SkillChillEffect, op)
+                .filter(|o| o.source == e.source)
+                .map(|o| o.value)
+        };
+        let own_inc: f64 = own(Op::Increased).sum();
+        let own_more: f64 = own(Op::More).map(|v| 1.0 + v / 100.0).product();
+        let own_more = crate::math::round_half_up(own_more * 100.0) / 100.0;
+        let scale = if own_inc == 0.0 && own_more == 1.0 {
+            scale
+        } else {
+            (1.0 + (inc + own_inc) / 100.0) * own_more
+        };
         let effect = e.value * scale;
         if strongest.is_none() || effect > guaranteed {
             guaranteed = crate::math::max(guaranteed, effect);

@@ -5598,3 +5598,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 - **The crafted socketed-spell trigger** (Check 4): ported as PoB's trigger craft, so its `Triggered` type and `triggeredByCraft` data are allowed, as the other ported trigger supports'.
 
 **Evidence:** `data-parity` on `b-ig` against PoB's export (`local/p6/dp-d27dp`): 753 differences, `uncategorized` 0, 0 failed rules. No calculation changed. `loom-parity-cli` tests, clippy, and rustfmt pass.
+
+## A skill's own chill effect (the agent list, 2026-11-27)
+
+**The reason:** `skill-chill-effect` (public 177 fields in 2 builds), a chilling-area skill whose own gems give it chill effect (Frost Shield's quality, Bonechill, Unbound Ailments), its guaranteed chill kept at the character's effect.
+
+**PoB** (`CalcPerform.lua` 1393 to 1396): the chill override is `10 x calcLib.mod(activeSkill.skillModList, skillCfg, "EnemyChillEffect")`, so the skill's own `chill_effect_+%`, `cold_ailment_effect_+%`, and `non_damaging_ailment_effect_+%` (INC) and `active_skill_chill_effect_+%_final` (MORE) join the character's increases (`SkillStatMap.lua` 1085 to 1122).
+
+**The engine:** `gems::guaranteed_chill` adds the skill's gems' chill effect stats (its instance with quality, its supports') as `Poe1Quantity::SkillChillEffect` beside its `SkillChill`, with the same source; `damage_taken::chill` scales each skill's chill by `(1 + (character's inc + skill's inc) / 100) x round(more, 2)`.
+
+**Fixtures** (original): `ice-nova-frost-shield-quality-chill-witch.xml` (Frost Shield at quality 20, with "Damage taken increased by Chill Effect": average damage 814.85) and `ice-nova-frost-shield-unbound-chill-witch.xml` (with Unbound Ailments and 20% increased Effect of Chill: 865.78). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ch2e` on `b-ig`, against `local/p6/d27spe`): public 0 unexpected, `Complete` 55,598 to 55,772 (the fixtures' 174); 4 values moved, in `winter-orb-elementalist.xml`: its average damage toward PoB (24,727 to 25,559, PoB 37,942), its DPS away (242,329 to 250,475, PoB 219,115), because the engine multiplies by the cast rate (9.8) where PoB uses Winter Orb's own hit rate (5.775; Winter Orb's mechanics are not modelled, a reason on the build). Corpus 0 unexpected, no value moved.

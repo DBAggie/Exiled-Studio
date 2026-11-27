@@ -823,6 +823,11 @@ pub enum Poe1Quantity {
     /// default chill (10) per skill, which [`gems`] adds and
     /// [`damage_taken`] scales by [`Self::ChillEffect`].
     SkillChill,
+    /// A chilling skill's own chill effect (PoB's `EnemyChillEffect` on the
+    /// skill's gems: its quality's, its supports'; the agent list,
+    /// 2026-11-27): `Increased` and `More`, with the same source as its
+    /// [`Self::SkillChill`], which [`damage_taken`] scales by both.
+    SkillChillEffect,
     /// Action speed (PoB's `ActionSpeed`, P3-8n): `Increased`; a self-cast
     /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
     /// tick cap ([`hit`]).
@@ -1891,6 +1896,7 @@ impl core::fmt::Display for Poe1Quantity {
             }),
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
+            Self::SkillChillEffect => f.write_str("skill-chill-effect"),
             Self::ActionSpeed => f.write_str("action-speed"),
             Self::ActionSpeedNotBelowBase => f.write_str("action-speed-not-below-base"),
             Self::MovementSpeedNotBelowBase => f.write_str("movement-speed-not-below-base"),

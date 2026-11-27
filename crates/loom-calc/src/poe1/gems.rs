@@ -6692,9 +6692,9 @@ const CHILL_EFFECT_STATS: [&str; 3] = [
     "non_damaging_ailment_effect_+%",
 ];
 
-/// Quality stats that give a skill's own chill effect (PoB's
-/// `EnemyChillEffect` INC; [`guaranteed_chill`]).
-const SKILL_CHILL_QUALITY: &[&str] = &["chill_effect_+%", "cold_ailment_effect_+%"];
+/// A skill's own more chill effect (PoB's `EnemyChillEffect` MORE,
+/// `SkillStatMap.lua` 1088).
+const SKILL_CHILL_MORE_STAT: &str = "active_skill_chill_effect_+%_final";
 
 /// The skill type that gives one unless the skill cannot chill (PoB's
 /// `NonHitChill` without the `CannotChill` flag).
@@ -6712,10 +6712,10 @@ pub const NON_HIT_CHILL: &str = "NonHitChill";
 /// test).
 ///
 /// PoB scales the chill by the skill's own `EnemyChillEffect` too
-/// (`calcLib.mod(activeSkill.skillModList, ..., "EnemyChillEffect")`): a
-/// skill whose quality gives it (Frost Shield's `cold_ailment_effect_+%`,
-/// P6-11fk) at a quality above 0 is a `skill-chill-effect` reason, the
-/// chill kept at the character's effect.
+/// (`calcLib.mod(activeSkill.skillModList, ..., "EnemyChillEffect")`): the
+/// skill's gems' chill effect stats are [`Poe1Quantity::SkillChillEffect`]
+/// beside its chill (the agent list, 2026-11-27; before, a
+/// `skill-chill-effect` reason).
 fn guaranteed_chill(
     input: &CalcInput<'_>,
     s: &GroupSkill<'_>,
@@ -6745,28 +6745,43 @@ fn guaranteed_chill(
             source: source.clone(),
         });
     }
-    // Bonechill's own `chill_effect_+%` on every level (P6-11fv) is the
-    // supported skill's `EnemyChillEffect` too.
-    let own_chill = (s.active_gem.quality > 0
-        && s.active_gem
-            .effect
-            .quality
-            .iter()
-            .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str())))
-        || s.supports.iter().any(|sup| {
-            sup.effect.id == BONECHILL_SUPPORT
-                // A support's chill effect (open items S2: Unbound
-                // Ailments' `non_damaging_ailment_effect_+%`).
-                || skill::instance(sup.effect, sup.level, sup.quality, input.data)
-                    .stats
-                    .iter()
-                    .any(|(id, v)| *v != 0 && CHILL_EFFECT_STATS.contains(&id.as_str()))
-        });
-    if types.contains(CHILLING_AREA) && own_chill {
-        ingest.reason(UnsupportedReason::UnmodelledSkill {
-            source: source.clone(),
-            what: "skill-chill-effect",
-        });
+    // The skill's own chill effect (the agent list, 2026-11-27): its gems'
+    // `EnemyChillEffect` stats, increased and more, beside its chill: its
+    // quality's (Frost Shield's `cold_ailment_effect_+%`, P6-11fk), its
+    // supports' (Bonechill's `chill_effect_+%`, P6-11fv; Unbound Ailments'
+    // `non_damaging_ailment_effect_+%`, open items S2).
+    if types.contains(CHILLING_AREA) {
+        let mut stats: Vec<(String, i64)> = skill::instance(
+            s.active_gem.effect,
+            s.active_gem.level,
+            s.active_gem.quality,
+            input.data,
+        )
+        .stats;
+        for sup in &s.supports {
+            stats.extend(skill::instance(sup.effect, sup.level, sup.quality, input.data).stats);
+        }
+        for (id, v) in stats {
+            let op = if CHILL_EFFECT_STATS.contains(&id.as_str()) {
+                Op::Increased
+            } else if id == SKILL_CHILL_MORE_STAT {
+                Op::More
+            } else {
+                continue;
+            };
+            if v == 0 {
+                continue;
+            }
+            #[expect(clippy::cast_precision_loss, reason = "a small stat value")]
+            let value = v as f64;
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::SkillChillEffect),
+                op,
+                value,
+                conditions: Conditions::none(),
+                source: source.clone(),
+            });
+        }
     }
     if types.contains(CHILLING_AREA) {
         ingest.effect(Effect {
