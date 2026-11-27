@@ -119,9 +119,12 @@ pub(super) struct Character {
     pub(super) golem_rate: f64,
     pub(super) golem: f64,
     /// The share of life lost to hits that is lost over time instead,
-    /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce). The share
-    /// below half life (Petrified Blood's) is 0: no modelled source gives it.
+    /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce).
     pub(super) prevented: f64,
+    /// The share of the loss below half life that is prevented, percent
+    /// (PoB's `LifeLossBelowHalfPrevented` BASE, uncapped; open items S2:
+    /// Petrified Blood).
+    pub(super) below_half: f64,
     /// The shared elemental aegis (PoB's `sharedElementalAegis`; P6-11hl).
     pub(super) elemental_aegis: f64,
     /// The percent of missing unreserved life gained before each enemy hit
@@ -169,12 +172,21 @@ struct Run {
 }
 
 /// PoB's `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to
-/// 181) with no loss prevented below half life: `aboveLow / (1 - p / 100) +
-/// min(life, half) / (1 - p / 100)`.
-pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64) -> f64 {
+/// 181): `aboveLow / (1 - p / 100) + min(life, half) / (1 - b / 100) / (1 -
+/// p / 100)`, `b` the loss below half prevented (open items S2).
+pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64, below_half: f64) -> f64 {
     let half = max_life * 0.5;
     let kept = 1.0 - prevented / 100.0;
-    (life - half).max(0.0) / kept + life.min(half) / 1.0 / kept
+    (life - half).max(0.0) / kept + life.min(half) / (1.0 - below_half / 100.0) / kept
+}
+
+impl Character {
+    /// PoB's `preventedLifeLossTotal` above 0 (`CalcDefence.lua` 2233 to
+    /// 2244): some loss is prevented, above or below half life (the share
+    /// below half counts once loss above half does not prevent it all).
+    pub(super) fn prevents_loss(&self) -> bool {
+        self.prevented > 0.0 || (self.below_half > 0.0 && self.prevented < 100.0)
+    }
 }
 
 /// `calcs.reducePoolsByDamage` for life and energy shield alone: the pools
@@ -218,7 +230,7 @@ fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pool
     let mut elemental_aegis = pools.elemental_aegis;
     let mut ward = pools.ward.max(0.0);
     let ward_before = ward;
-    let life_pool = life_hit_pool(life, ch.max_life, ch.prevented);
+    let life_pool = life_hit_pool(life, ch.max_life, ch.prevented, ch.below_half);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
     // es)` is 0).
@@ -329,20 +341,34 @@ fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pool
             mana -= taken;
             remainder -= taken;
         }
-        // Life loss prevented (P6-11ce; `CalcDefence.lua` 348 to 384, with
-        // nothing prevented below half): the damage life can still take
-        // caps the hit, and the prevented share is lost over time instead.
-        if ch.prevented > 0.0 {
+        // Life loss prevented (P6-11ce; `CalcDefence.lua` 348 to 384): the
+        // damage life can still take caps the hit, and the prevented share
+        // is lost over time instead. With loss below half prevented too
+        // (open items S2, Petrified Blood: PoB's `preventedLifeLossBelowHalf`
+        // not 0), the part above half takes the prevented share, and below
+        // half both shares come off what is left.
+        if ch.prevents_loss() {
             let half = ch.max_life * 0.5;
             let share = ch.prevented / 100.0;
+            let below = ch.below_half / 100.0;
             let above_low = (life - half).max(0.0) / (1.0 - share);
-            let can_take = above_low + life.min(half).max(0.0) / (1.0 - 0.0) / (1.0 - share);
+            let can_take = above_low + life.min(half).max(0.0) / (1.0 - below) / (1.0 - share);
             if can_take < remainder {
                 overkill += remainder - can_take;
                 remainder = can_take;
             }
-            let over_time = remainder * ch.prevented / 100.0;
-            remainder -= over_time;
+            if (1.0 - share) * ch.below_half != 0.0 {
+                let split = remainder.min(above_low);
+                life -= split * (1.0 - share);
+                remainder -= split;
+                if life <= half {
+                    remainder -= remainder * share;
+                    remainder -= remainder * below;
+                }
+            } else {
+                let over_time = remainder * ch.prevented / 100.0;
+                remainder -= over_time;
+            }
         }
         if life > 0.0 {
             let taken = remainder.min(life);
@@ -361,7 +387,7 @@ fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pool
     };
     let finite = |v: f64| if v.is_finite() { v } else { 0.0 };
     let life_left = if life >= 1.0 {
-        life_hit_pool(life, ch.max_life, ch.prevented)
+        life_hit_pool(life, ch.max_life, ch.prevented, ch.below_half)
     } else {
         0.0
     };
@@ -554,7 +580,7 @@ pub(super) fn estimate(
     let mut run = Run { iterations: 0 };
     // Life loss prevented limits the speed-up (P6-11ce; `CalcDefence.lua`
     // 2742: `LimitEHPSpeedup` when `preventedLifeLossTotal` is above 0).
-    let tracks_loss = ch.prevented > 0.0;
+    let tracks_loss = ch.prevents_loss();
     let damaging = hits_to_die(
         taken_hit,
         1.0,
@@ -698,6 +724,22 @@ mod tests {
     /// before the pools): one hit and a fraction, as PoB's
     /// `NumberOfDamagingHits` for `ice-nova-witch.xml` (the hit there is
     /// 14,885.9; 1,125 / 14,886 = 0.07557...).
+    /// Open items S2: Petrified Blood's loss below half prevented, PoB's
+    /// `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to 181).
+    #[test]
+    fn the_life_hit_pool_should_count_the_loss_below_half_prevented() {
+        // 1,000 life, all recoverable, 40% below half: 500 + 500 / 0.6.
+        let pool = life_hit_pool(1000.0, 1000.0, 0.0, 40.0);
+        assert!((pool - (500.0 + 500.0 / 0.6)).abs() < 1e-9, "{pool}");
+        // With 20% prevented above too: both divide below half.
+        let pool = life_hit_pool(1000.0, 1000.0, 20.0, 40.0);
+        assert!(
+            (pool - (500.0 / 0.8 + 500.0 / 0.6 / 0.8)).abs() < 1e-9,
+            "{pool}"
+        );
+        assert_eq!(life_hit_pool(400.0, 1000.0, 0.0, 0.0), 400.0);
+    }
+
     #[test]
     fn hits_to_die_should_be_pobs() {
         let ch = Character {
@@ -714,6 +756,7 @@ mod tests {
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
@@ -751,6 +794,7 @@ mod tests {
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
@@ -794,6 +838,7 @@ mod tests {
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
@@ -831,6 +876,7 @@ mod tests {
             golem_rate: 3.75,
             golem: 100.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,

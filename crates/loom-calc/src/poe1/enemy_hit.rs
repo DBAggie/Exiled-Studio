@@ -997,7 +997,16 @@ fn maximum_hit(
         &mut pool_reasons,
     )?
     .min(100.0);
-    let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented);
+    // The loss below half life prevented (open items S2: Petrified Blood;
+    // PoB's `LifeLossBelowHalfPrevented` BASE, uncapped).
+    let below_half = sum(
+        calc,
+        Poe1Quantity::LifeLossBelowHalfPrevented,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )?;
+    let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented, below_half);
     // The shared elemental aegis (P6-11hl; `CalcDefence.lua` 2419: the
     // largest `ElementalAegisValue`).
     let elemental_aegis = calc
@@ -1128,6 +1137,7 @@ fn maximum_hit(
         golem_rate,
         golem,
         prevented,
+        below_half,
         elemental_aegis,
         missing_life: 0.0,
         ward,
@@ -1361,6 +1371,7 @@ fn maximum_hit(
             golem_rate,
             golem,
             prevented,
+            below_half,
             elemental_aegis,
             ward: phases::ward(calc, &mut reasons)?,
             frost_rate: frost_shield(calc, &cx, &mut reasons)?.0,

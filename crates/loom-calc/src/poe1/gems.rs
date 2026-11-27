@@ -1886,6 +1886,51 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("OrbOfStorms", Kind::Inert),
     ("PenanceBrand", Kind::Inert),
+    // Open items S2: Petrified Blood (`act_str.lua` 8519 to 8580), a buff that
+    // reserves 35% of mana ([`reservation`]): its skills' mana cost also as
+    // life while not on Low Life (`ManaCostAsLifeCost` BASE, `unscalable`,
+    // [`UNSCALABLE_STATS`]; `costs` reads it), and the life loss below half
+    // it prevents (`LifeLossBelowHalfPrevented` BASE, PoB's life hit pool,
+    // `CalcDefence.lua` 177 to 181 and 2235 to 2245; `enemy_hit` and `ehp`
+    // read it). The share lost over time (`LifeLossBelowHalfLost`) no PoB
+    // module reads.
+    (
+        "PetrifiedBlood",
+        Kind::Buff {
+            name: "Petrified Blood",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "petrified_blood_%_life_loss_below_half_from_hit_to_prevent",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::LifeLossBelowHalfPrevented),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "petrified_blood_%_prevented_life_loss_to_lose_over_time",
+                    BuffStat::NoSlice("life-loss-over-time"),
+                ),
+                (
+                    "skill_grants_life_cost_%_mana_cost_while_not_on_low_life",
+                    BuffStat::WhenState {
+                        state: super::conditions::NOT_LOW_LIFE,
+                        var: "LowLife",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::ManaCostAsLifeCost),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
+                ),
+            ],
+        },
+    ),
     // P6-11fo: Phase Run's buff (`act_dex.lua`, `PhaseRun`): movement
     // speed, and physical damage MORE with melee for skills that are not
     // totems' (PoB's negated `SkillType.SummonsTotem` tag,
@@ -3177,6 +3222,11 @@ pub const SKILLS: &[(&str, Kind)] = &[
 /// Skills whose buff PoB marks `unscalable` (its `GlobalEffect` tag): no
 /// buff effect modifier scales it (P6-8a).
 const UNSCALABLE: &[&str] = &["Cyclone"];
+
+/// Stats of a gate ([`BuffStat::WhenState`]) whose mod PoB marks
+/// `unscalable` while the skill's other buff mods are not (open items S2:
+/// Petrified Blood's life cost, `act_str.lua` 8527).
+const UNSCALABLE_STATS: &[&str] = &["skill_grants_life_cost_%_mana_cost_while_not_on_low_life"];
 
 /// Supports whose stats act through the hex they support (PoB's
 /// `GlobalEffect` `effectType = "Curse"`; P6-11fl), sorted by ID: the
@@ -6100,7 +6150,12 @@ fn add_rows(
             }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
-            BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
+            BuffStat::WhenState { state, rows, .. } => {
+                if UNSCALABLE_STATS.contains(&id) {
+                    row_scale = 1.0;
+                }
+                (rows, Some((state, true)))
+            }
             BuffStat::MinionOnly(rows) => {
                 if !for_minion && !minion_only_on_you {
                     continue;

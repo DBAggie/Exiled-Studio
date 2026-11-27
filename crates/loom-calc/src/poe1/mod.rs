@@ -259,6 +259,11 @@ pub enum Poe1Quantity {
     /// over 4 seconds instead"): `Base`, read by the enemy's hit and the
     /// defence estimate's pools.
     LifeLossPrevented,
+    /// The share of the life loss below half life from a hit that is
+    /// prevented (open items S2: Petrified Blood; PoB's
+    /// `LifeLossBelowHalfPrevented` BASE, read by
+    /// `calcLifeHitPoolWithLossPrevention`, `CalcDefence.lua` 177 to 181).
+    LifeLossBelowHalfPrevented,
     /// "#% increased Effect of Arcane Surge on you" (P6-11ch; PoB's
     /// `ArcaneSurgeEffect` INC): `Increased`, read by [`buffs`].
     ArcaneSurgeEffect,
@@ -1575,6 +1580,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
             Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
             Self::LifeLossPrevented => f.write_str("life-loss-prevented"),
+            Self::LifeLossBelowHalfPrevented => f.write_str("life-loss-below-half-prevented"),
             Self::ArcaneSurgeEffect => f.write_str("arcane-surge-effect"),
             Self::ArcaneSurgeDamage => f.write_str("arcane-surge-damage"),
             Self::EnergyShieldFromChaosResistance => {

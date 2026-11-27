@@ -673,6 +673,9 @@ const NO_SLICE_NAMES: &[&str] = &[
     "FireDamageTakenWhenHit",
     "FreezeImmune",
     "LifeRegen",
+    // Open items S2: Petrified Blood's loss over time, which no PoB module
+    // reads.
+    "LifeLossBelowHalfLost",
     // Enduring Cry's regeneration per warcry power (P6-9d).
     "LifeRegenPercent",
     "ManaRegen",
@@ -906,8 +909,8 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         .filter(|t| !is_melee_skill_type(t))
         .filter(|t| !is_not_totem_skill_type(t))
         // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
-        // Vaal Smite has no entry in the engine's tables, so a build with it
-        // carries an `unmodelled-gem` reason and the condition is off.
+        // `gems::apply` drops Smite's aura while Vaal Smite's applies (open
+        // items S2), so the rows carry no condition of their own.
         .filter(|t| !is_not_vaal_smite(t))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
@@ -1027,6 +1030,11 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
         // Open items S2: Vaal Grace's.
         Quantity::Poe1(Poe1Quantity::EvadeChance) => "EvadeChance".into(),
+        // Open items S2: Petrified Blood's.
+        Quantity::Poe1(Poe1Quantity::ManaCostAsLifeCost) => "ManaCostAsLifeCost".into(),
+        Quantity::Poe1(Poe1Quantity::LifeLossBelowHalfPrevented) => {
+            "LifeLossBelowHalfPrevented".into()
+        }
         // P6-10b parts 11 and 12: a curse's on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyAccuracy) => "Accuracy".into(),
         Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),
@@ -1217,14 +1225,22 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
                 json!({ "div": *div as i64, "limit": *limit as i64 })
             ),
         ),
-        BuffStat::WhenState { var, rows, .. } => (
+        BuffStat::WhenState { state, var, rows } => (
             rows,
             format!(
                 " tags {}{}",
-                json!({ "type": "Condition", "var": var }),
-                // Cyclone's buff is `unscalable` (P6-8a,
-                // `poe1::gems::UNSCALABLE`).
-                if *var == "ChannellingCyclone" {
+                // A state named `Not<var>` is PoB's condition negated (open
+                // items S2: Petrified Blood's `NotLowLife`).
+                if *state == format!("Not{var}") {
+                    json!({ "neg": true, "type": "Condition", "var": var })
+                } else {
+                    json!({ "type": "Condition", "var": var })
+                },
+                // Cyclone's and Petrified Blood's buffs are `unscalable`
+                // (P6-8a, open items S2; `poe1::gems::UNSCALABLE`).
+                if *var == "ChannellingCyclone"
+                    || *state == loom_calc::poe1::conditions::NOT_LOW_LIFE
+                {
                     format!(";global {}", json!({ "unscalable": true }))
                 } else {
                     String::new()

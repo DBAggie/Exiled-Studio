@@ -322,6 +322,9 @@ pub const FULL_LIFE: &str = "FullLife";
 /// its calc modules: life reserved past the threshold (`CalcPerform.lua`
 /// 546) reads `LowLifePercentage` for display only.
 pub const LOW_LIFE: &str = "LowLife";
+/// "while not on Low Life": [`LOW_LIFE`] negated (open items S2: Petrified
+/// Blood's life cost, PoB's `Condition` `LowLife` with `neg`).
+pub const NOT_LOW_LIFE: &str = "NotLowLife";
 /// "while Ignited" (PoB's `Ignited`, from `conditionIgnited`,
 /// `ConfigOptions.lua` 1181; P6-11ei). Its implied `Burning` is the UI's.
 pub const IGNITED: &str = "Ignited";
@@ -950,6 +953,8 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         (EV_BYPASS, NOT_EV_BYPASS),
         // P6-11ik: the enemy not on low life.
         (ENEMY_LOW_LIFE, ENEMY_NOT_LOW_LIFE),
+        // Open items S2: not on low life.
+        (LOW_LIFE, NOT_LOW_LIFE),
     ] {
         if let Some(v) = out.get(&ConditionKey::new(key)).copied() {
             out.insert(ConditionKey::new(not), !v);

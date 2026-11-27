@@ -503,3 +503,30 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
 - **Public:** 0 unexpected; `Complete` 49,719 to 49,980 (the fixtures). No other value moved: `flicker-strike-berserker.xml`'s Vaal Smite has its Vaal effect's global off (it loses the `unmodelled-gem` reason; its other reasons stay).
 - **Corpus:** 0 unexpected; no document changed.
 - **Tests:** `gems`' tests, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Petrified Blood (open items S2, 2026-11-26)
+
+**PoB v2.67.2** (`act_str.lua` 8519 to 8580): a buff that reserves 35% of mana (its levels' `manaReservationPercent`), with three global stats:
+- `skill_grants_life_cost_%_mana_cost_while_not_on_low_life`: `ManaCostAsLifeCost` BASE, `unscalable`, with `Condition` `LowLife` negated. `CalcOffence.lua` 1681 adds that share of each skill's mana cost as a life cost.
+- `petrified_blood_%_life_loss_below_half_from_hit_to_prevent`: `LifeLossBelowHalfPrevented` BASE. It enters the life hit pool, `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to 181: `aboveLow / (1 - p) + min(life, half) / (1 - b) / (1 - p)`), and `reducePoolsByDamage` (348 to 384): the part above half takes the prevented share, and below half both shares come off what is left. `preventedLifeLossTotal` above 0 also limits the defence estimate's speed-up (2742).
+- `petrified_blood_%_prevented_life_loss_to_lose_over_time`: `LifeLossBelowHalfLost`, which no PoB module reads.
+
+**The engine:**
+- `gems::SKILLS` has `PetrifiedBlood` (`Kind::Buff`): the life cost as a `WhenState` on the new `conditions::NOT_LOW_LIFE` (settled as `LowLife` negated), unscaled (`gems::UNSCALABLE_STATS`: PoB marks that mod alone `unscalable`); the loss below half as `Poe1Quantity::LifeLossBelowHalfPrevented`; the loss over time reaches no slice field.
+- `ehp::life_hit_pool` takes the share below half, `ehp::Character::below_half` carries it (uncapped, as PoB's sum), and `reduce_full` splits the hit as PoB does; `Character::prevents_loss` is PoB's `preventedLifeLossTotal` above 0. `enemy_hit` reads the sum.
+- `data-parity`'s `gem_effects`: the rows' names; a `WhenState` whose state is `Not<var>` is PoB's condition negated (`neg`); the life cost row's `unscalable`; `LifeLossBelowHalfLost` as no slice.
+
+**Fixtures** (original, made by `local/p6/s2-fx4.py`; each run three times by PoB, identical), a level 90 Witch with Ice Nova (level 20) and Petrified Blood (level 20) in another group:
+- `ice-nova-petrified-blood-witch.xml`: Ice Nova's life cost 9 (40% of its mana cost of 23), unreserved mana 383, and the effective HP with the loss below half prevented (PoB's `TotalEHP` 994);
+- `ice-nova-petrified-blood-low-life-witch.xml`: on Low Life by the config, no life cost.
+- Every compared field equals PoB's, the effective HP fields too; 175 targets.
+
+**Evidence** (`local/p6/s2-e4` on `b-pb`, against `local/p6/s2-e3`):
+- **Public:** 0 unexpected; `Complete` 49,980 to 50,155 (the fixtures). In `poisonous-concoction-of-bouncing-pathfinder.xml` 12 values moved:
+  - Toward PoB (7): its life cost 0 to 29 (PoB 29), its unreserved mana 299 to 94 (PoB 91), the chaos and second minimal maximum hits, the effective HP and the hit counts.
+  - Away (5): the physical, fire, cold, and lightning maximum hits (cold 35,070 to 46,358, PoB 36,681) and the damaging hits.
+  - The life hit pool is PoB's form: PoB's `LifeHitPool` 8,493 from 40% of the loss prevented above half (another source) and Petrified Blood's 40% below half. The engine's maximum hit rose by PoB's ratio of pools (1.32 against 1.33).
+  - The build's maximum hit per point of pool was already 24% above PoB's (its other reasons: modifiers to damage taken the engine does not read), and its old values were near PoB's only because the share below half was missing too. The build stays partial.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `ehp::the_life_hit_pool_should_count_the_loss_below_half_prevented`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
