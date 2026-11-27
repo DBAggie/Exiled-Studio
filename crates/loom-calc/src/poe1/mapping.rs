@@ -10436,6 +10436,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11eh: "Recover #% of Energy Shield when you Block" (PoB does not
     // parse it): no recovery field reads a block.
     ("energy_shield_%_gained_on_block", "recovery"),
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
+    (
+        "energy_shield_leech_does_not_stop_on_full_energy_shield",
+        "leeching-condition",
+    ),
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
+    (
+        "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
+        "leeching-condition",
+    ),
     // P6-11be: "Cursed Enemies you or your Minions Kill have a #% chance
     // to Explode" (PoB's `ExplodeMod`): read only by PoB's own explosion
     // skill (`EnemyExplode`), which reaches a field only as the main skill or
@@ -10708,6 +10722,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11cz: life flask charges on suppressing a spell (PoB leaves the text unparsed; flask charges reach no slice field).
     ("life_flasks_gain_X_charges_on_suppressing_spell", "flask"),
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
+    (
+        "life_leech_does_not_stop_at_full_life",
+        "leeching-condition",
+    ),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),

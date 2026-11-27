@@ -286,12 +286,28 @@ pub const NEARBY_RARE_OR_UNIQUE_INPUT: &str = "multiplierNearbyRareOrUniqueEnemi
 /// from `conditionCritRecently`, `ConfigOptions.lua` 1240; close-out).
 pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while Leeching" (P6-11bv; PoB's `Leeching`: the config's four
-/// leeching checks, `ConfigOptions.lua` 1068 to 1081; PoB also sets it
-/// for "Life Leech effects are not removed at Full Life", stats that stay
-/// reasons, `config::DEPENDS_ON`).
+/// leeching checks, `ConfigOptions.lua` 1068 to 1081; since the agent list
+/// also [`LEECH_AT_FULL_LIFE_STATS`] and [`LEECH_AT_FULL_ES_STATS`]).
 pub const LEECHING: &str = "Leeching";
 /// "while Leeching Energy Shield" (P6-11bv).
 pub const LEECHING_ENERGY_SHIELD: &str = "LeechingEnergyShield";
+/// "while Leeching Life" (P6-11bv).
+pub const LEECHING_LIFE: &str = "LeechingLife";
+/// "Life Leech effects are not removed when Unreserved Life is Filled"
+/// (PoB's `CanLeechLifeOnFullLife`, `ModParser.lua` 2998, 2999): leeching
+/// life always (`CalcPerform.lua` 873 to 876), unless [`GHOST_REAVER_STAT`].
+pub const LEECH_AT_FULL_LIFE_STATS: [&str; 1] = ["life_leech_does_not_stop_at_full_life"];
+/// "Leech Energy Shield instead of Life" (PoB's `GhostReaver`,
+/// `ModParser.lua` 2306).
+pub const GHOST_REAVER_STAT: &str = "leech_energy_shield_instead_of_life";
+/// "Energy Shield Leech effects are not removed when Energy Shield is
+/// Filled" and its attacks form (PoB's `CanLeechEnergyShieldOnFullEnergyShield`,
+/// `ModParser.lua` 3000, 3013): leeching energy shield always (877 to
+/// 880).
+pub const LEECH_AT_FULL_ES_STATS: [&str; 2] = [
+    "energy_shield_leech_does_not_stop_on_full_energy_shield",
+    "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
+];
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
@@ -456,7 +472,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionLeechingEnergyShield", LEECHING),
     ("conditionLeechingEnergyShield", LEECHING_ENERGY_SHIELD),
     ("conditionLeechingLife", LEECHING),
-    ("conditionLeechingLife", "LeechingLife"),
+    ("conditionLeechingLife", LEECHING_LIFE),
     ("conditionLeechingMana", LEECHING),
     ("conditionLeechingMana", "LeechingMana"),
     // P6-11ei: low life (Pain Attunement, movement speed).
@@ -807,6 +823,19 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     // Affected by a herald (P6-11ct): PoB's herald count above 0.
     let (heralds, _) = super::gems::herald_and_aura_counts(input);
     out.insert(ConditionKey::new(AFFECTED_BY_HERALD), heralds > 0);
+    // Leeching at full life or energy shield (the agent list;
+    // `CalcPerform.lua` 873 to 880): PoB's `CanLeechLifeOnFullLife`
+    // (unless `GhostReaver`, "Leech Energy Shield instead of Life") and
+    // `CanLeechEnergyShieldOnFullEnergyShield` set the leeching conditions.
+    let has = |stat: &str| super::states::build_has_stat(input, stat);
+    if LEECH_AT_FULL_LIFE_STATS.iter().any(|s| has(s)) && !has(GHOST_REAVER_STAT) {
+        out.insert(ConditionKey::new(LEECHING), true);
+        out.insert(ConditionKey::new(LEECHING_LIFE), true);
+    }
+    if LEECH_AT_FULL_ES_STATS.iter().any(|s| has(s)) {
+        out.insert(ConditionKey::new(LEECHING), true);
+        out.insert(ConditionKey::new(LEECHING_ENERGY_SHIELD), true);
+    }
     // Using a life flask (P6-11cq): the active flasks; no config check
     // sets it.
     // A flask instant on low life (the agent list) reads the settled low

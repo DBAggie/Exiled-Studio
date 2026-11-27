@@ -203,6 +203,10 @@ const NO_EFFECT_NAMING: &[&str] = &[
     // Open items S8: Adrenaline when leech is removed by filling unreserved
     // life, a line PoB applies no mod of.
     "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+    // The agent list: leech not removed when unreserved life is filled,
+    // read by `conditions::settle` (the leeching conditions), no
+    // reservation.
+    "life_leech_does_not_stop_at_full_life",
 ];
 
 #[test]

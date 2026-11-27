@@ -5496,3 +5496,17 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixture** (original) `ice-nova-elusive-witch.xml`: the check, the crit line, 9% increased Elusive Effect, 10% per power charge with three in use: effect 69.5, 10% chance to avoid all damage from hits, movement 1.2. Every field equals PoB's.
 
 **Evidence** (`local/p6/d27ele` on `b-pb`, against `local/p6/d27mme`): public 0 unexpected, `Complete` 54,213 to 54,300 (the fixture's 87); 5 values of `Dual Wield Cospris CoC.xml` moved, all toward PoB: its chance not to be hit 0 to 11 (PoB 12), movement speed 2.19 to 2.42 (PoB 3.34), total EHP 8,577 to 9,637 (PoB 16,095). The avoid chance's one short is the effect's: 11 and the movement's 23 fit an effect of 79.5, one power charge fewer than PoB's 6 (84.5). Corpus 0 unexpected, no value moved (the documents' graph numbers shift by the new node).
+
+## Leeching at full life or energy shield (the agent list, 2026-11-27)
+
+**The stats:** "Life Leech effects are not removed when Unreserved Life is Filled" (`life_leech_does_not_stop_at_full_life`, public 96 fields of 1 build) and the two energy shield forms (`energy_shield_leech_does_not_stop_on_full_energy_shield`, `energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield`). They were `config::DEPENDS_ON`: reasons kept because they set the leeching conditions.
+
+**PoB** (`CalcPerform.lua` 873 to 880): `CanLeechLifeOnFullLife`, unless `GhostReaver` ("Leech Energy Shield instead of Life"), sets `Leeching` and `LeechingLife`; `CanLeechEnergyShieldOnFullEnergyShield` sets `Leeching` and `LeechingEnergyShield`.
+
+**The engine:** `conditions::settle` sets the same conditions when the build has a stat of `LEECH_AT_FULL_LIFE_STATS` (and not `GHOST_REAVER_STAT`) or of `LEECH_AT_FULL_ES_STATS` (`states::build_has_stat`: the tree, the items in use, the custom blocks). The three stats leave `config::DEPENDS_ON` and are `NoEffect` rows (`leeching-condition`): the conditions carry their whole effect.
+
+**Fixture** (original) `ice-nova-leech-at-full-life-witch.xml`: the life line with "10% increased Attack and Cast Speed while Leeching" and no leeching check: cast rate 1.43 to 1.57. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27lfe` on `b-pb`, against `local/p6/d27ele`): public 0 unexpected, `Complete` 54,300 to 54,387 (the fixture's 87); 34 values of `cyclone-shockwave-slayer.xml` moved, all toward PoB, 25 now equal (its taken multipliers, maximum hits, damage over time EHPs, regenerations); its DPS 21.6 to 23.9 million (PoB 31.0). Corpus 0 unexpected, no document changed.
+
+**Checked and left** (PoB's parse, 2026-11-27): "You take #% reduced Extra Damage from Critical Strikes per Endurance Charge": PoB parses only the line without "per Endurance Charge", so it applies nothing; the line was already on the maintainer's game-truth list. "#% increased Damage with Hits against Rare monsters" (`damage_+%_vs_rare_monsters`) is unparsed by PoB too and joins that list.
