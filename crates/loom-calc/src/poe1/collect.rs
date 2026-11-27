@@ -154,6 +154,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // effect and minimum (P3-8k).
     super::exposure::exposure(active_config(build), &settled, ingest);
     super::damage_taken::damage_taken(input, active_config(build), ingest);
+    // Elemental Hit's ailments on the enemy (the agent list, 2026-11-27):
+    // after the guaranteed chills and shocks.
+    super::stacks::enemy_elemental_ailments(active_config(build), &settled, ingest);
     // After every source of resistance modifiers, buffs included (P6-11ah).
     super::resist_conversion::resist_conversion(ingest);
     // A mirage's copy of the main skill (P6-8b): its less damage and speed.

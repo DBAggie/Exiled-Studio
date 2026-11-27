@@ -477,6 +477,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `ColdMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_cold_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -577,6 +589,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_fire_damage",
         &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `FireMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_fire_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Fire, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -674,6 +698,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `LightningMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_lightning_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Lightning, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
     ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
@@ -914,6 +950,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_cold_damage",
         &[(added(COLD_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `ColdMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_cold_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -1014,6 +1062,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_fire_damage",
         &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `FireMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_fire_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Fire, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -1111,6 +1171,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `LightningMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_lightning_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Lightning, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
     ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
@@ -2248,6 +2320,27 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::KEYWORD_ATTACK,
             Flags::ELEMENTAL,
         )],
+    ),
+    // The agent list (2026-11-27): Elemental Hit's "Deals no Physical or
+    // Chaos Damage" (`DealNoPhysical`, `DealNoChaos` FLAG, its stat map).
+    (
+        "elemental_hit_no_physical_chaos_damage",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Physical)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Chaos)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
     ),
     // The agent list (a game-truth line PoB reads): "Overwhelm #% Physical
     // Damage Reduction" (PoB `SkillStatMap.lua` 1273:

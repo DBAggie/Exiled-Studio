@@ -153,6 +153,11 @@ pub enum StackKind {
     /// Defiance (open items S7; PoB's `Multiplier:Defiance`, the config's
     /// `multiplierDefiance`, at most 10).
     Defiance,
+    /// The enemy's elemental ailments (the agent list, 2026-11-27; Elemental
+    /// Hit's `Multiplier:ElementalHitAilmentOnEnemy`, 1 for each of ignited,
+    /// chilled, frozen, shocked, scorched, brittle, sapped,
+    /// [`enemy_elemental_ailments`]).
+    EnemyElementalAilments,
 }
 
 impl StackKind {
@@ -186,6 +191,7 @@ impl StackKind {
             Self::CorpsesConsumedRecently => "corpses-consumed-recently",
             Self::EnemyPresenceSeconds => "enemy-presence-seconds",
             Self::Defiance => "defiance",
+            Self::EnemyElementalAilments => "enemy-elemental-ailments",
         }
     }
 }
@@ -683,6 +689,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         "elemental_damage_+%_final_per_righteous_charge",
         StackKind::Inspiration,
         StackValue::Per(PerStack::ElementalDamageMore),
+    ),
+    // The agent list (2026-11-27): Elemental Hit's "#% more Damage for each
+    // different Elemental Ailment on the enemy" (`Damage` MORE per
+    // `Multiplier:ElementalHitAilmentOnEnemy`, its base mods).
+    (
+        "elemental_hit_damage_+%_final_per_enemy_elemental_ailment",
+        StackKind::EnemyElementalAilments,
+        StackValue::Per(PerStack::DamageMore),
     ),
     (
         "gain_max_rage_on_losing_temporal_chains_debuff",
@@ -1796,6 +1810,123 @@ pub fn brands(
     };
     apply(ingest, &effects, multiplier(n), None);
 }
+
+/// The enemy's elemental ailments (the agent list, 2026-11-27): Elemental
+/// Hit's base mods give `Multiplier:ElementalHitAilmentOnEnemy` 1 for each
+/// of the enemy's `Ignited`, `Chilled`, `Frozen`, `Shocked`, `Scorched`,
+/// `Brittle`, `Sapped` (`act_dex.lua`): the settled checks, the config's
+/// scorch, brittle, and sap, and the chill and shock with their guaranteed
+/// sources ([`super::damage_taken::chill`], [`super::damage_taken::shock`]).
+/// After the gems and the damage taken. A value it cannot read is a reason.
+pub fn enemy_elemental_ailments(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
+    let reason = |input: &str| UnsupportedReason::UnmodelledConfig {
+        input: input.to_owned(),
+    };
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::EnemyElementalAilments,
+                    StackValue::Per(_)
+                ))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let mut n = 0.0;
+    // The shocked check is settled (the config's, Skitterbots'); a guaranteed
+    // shock counts below.
+    let shocked = settled.get(&crate::condition::ConditionKey::new(
+        super::conditions::ENEMY_SHOCKED,
+    )) == Some(&true);
+    if shocked {
+        n += 1.0;
+    }
+    for key in [
+        super::conditions::ENEMY_IGNITED,
+        super::conditions::ENEMY_FROZEN,
+    ] {
+        match settled.get(&crate::condition::ConditionKey::new(key)) {
+            Some(true) => n += 1.0,
+            Some(false) => {}
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledCondition {
+                    condition: crate::condition::ConditionKey::new(key),
+                    quantity: Quantity::Poe1(Poe1Quantity::Stack(
+                        StackKind::EnemyElementalAilments,
+                        StackValue::Per(PerStack::DamageMore),
+                    )),
+                    source: effects[0].source.clone(),
+                });
+                return;
+            }
+        }
+    }
+    // Chilled: the config's check (even at no configured effect, PoB's
+    // condition), else a guaranteed chill.
+    let chill_checked = set.is_some_and(|s| {
+        matches!(
+            last(
+                s,
+                super::damage_taken::CHILLED_INPUT,
+                ConfigInputKind::Input
+            ),
+            Some(ConfigValue::Boolean(true))
+        )
+    });
+    match super::damage_taken::chill(set, ingest) {
+        Ok(Some(_)) => n += 1.0,
+        Ok(None) if chill_checked => n += 1.0,
+        Ok(None) => {}
+        Err(input) => {
+            ingest.reason(reason(input));
+            return;
+        }
+    }
+    let Some(set) = set else {
+        apply(ingest, &effects, n, None);
+        return;
+    };
+    match super::damage_taken::shock(set, ingest) {
+        Ok(Some(_)) if !shocked => n += 1.0,
+        Ok(Some(_)) => {}
+        Ok(None) => {}
+        Err(input) => {
+            ingest.reason(reason(input));
+            return;
+        }
+    }
+    for input in [
+        super::damage_taken::SCORCHED_INPUT,
+        BRITTLE_INPUT,
+        super::damage_taken::SAPPED_INPUT,
+    ] {
+        match last(set, input, ConfigInputKind::Input) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => n += 1.0,
+            Some(_) => {
+                ingest.reason(reason(input));
+                return;
+            }
+        }
+    }
+    apply(ingest, &effects, n, None);
+}
+
+/// The config's check of the enemy's brittle (`ConfigOptions.lua`; its
+/// effect is not modelled, a reason of its own).
+const BRITTLE_INPUT: &str = "conditionEnemyBrittle";
 
 /// Each effect per stack as its target times `count`, with its source (or
 /// `source` when given).

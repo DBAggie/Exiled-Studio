@@ -5657,3 +5657,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): `kinetic-blast-clustering-mana-witch.xml` (a Carved Wand, +700 maximum mana: TotalDPS 21.08) and `kinetic-blast-clustering-explosions-witch.xml` (part 2). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27kbe` on `b-ig`, against `local/p6/d27lae`): public 0 unexpected, `Complete` 56,223 to 56,399; 6 values moved, all toward PoB, in `kinetic-blast-of-clustering-necromancer.xml` (average damage 3,385 to 43,598, PoB 56,682; life and mana leech within 0.1% of PoB's; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Elemental Hit of the Spectrum (the agent list, 2026-11-27)
+
+**The stats:** Elemental Hit's added fire, cold, and lightning damage (`attack_<min|max>_added_<type>_damage_for_elemental_hit`), "Deals no Physical or Chaos Damage" (`elemental_hit_no_physical_chaos_damage`), and "#% more Damage for each different Elemental Ailment on the enemy" (`elemental_hit_damage_+%_final_per_enemy_elemental_ailment`), unmapped; its base mods `Multiplier:ElementalHitAilmentOnEnemy` kept Elemental Hit of the Spectrum unvetted.
+
+**PoB** (`act_dex.lua`): `<Type>Min` and `Max` BASE `KeywordFlag.Attack`; `DealNoPhysical` and `DealNoChaos`; `Damage` MORE per `Multiplier:ElementalHitAilmentOnEnemy`, which its base mods set to 1 for each of the enemy's `Ignited`, `Chilled`, `Frozen`, `Shocked`, `Scorched`, `Brittle`, `Sapped`.
+
+**The engine:** the seven stats as hit rows; `stacks::StackKind::EnemyElementalAilments` with the more damage per stack, counted by `stacks::enemy_elemental_ailments` after the damage taken: the settled ignited, frozen, and shocked checks, the chilled check or a guaranteed chill, a guaranteed shock, and the scorched, brittle, and sapped checks (PoB's conditions hold at a configured effect of 0 too). `hit::READ_BASE_MODS` lists the multiplier mods as read; the more damage stat in `READ_OWN_STATS`, the explosion radius in `NO_SLICE_OWN_STATS`. The base Elemental Hit keeps its part-tagged `DealNo` mods unread.
+
+**Fixtures** (original, a Carved Wand): `elemental-hit-spectrum-no-ailment-templar.xml` (average damage 84.67), `elemental-hit-spectrum-ignited-shocked-templar.xml` (101.59), `elemental-hit-spectrum-chilled-frozen-scorched-templar.xml` (110.14). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ehe` on `b-ig`, against `local/p6/d27kbe`): public 0 unexpected, `Complete` 56,399 to 56,666; 4 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (average damage 301,793 to 1,090,427, PoB 5,548,297; partial on its brittle input and other reasons). Corpus 0 unexpected, no value moved.

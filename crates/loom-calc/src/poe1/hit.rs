@@ -353,7 +353,14 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 9] = [
+pub const READ_OWN_STATS: [(&str, &str); 10] = [
+    // The agent list (2026-11-27): Elemental Hit of the Spectrum's more
+    // damage per the enemy's elemental ailments (`stacks::
+    // enemy_elemental_ailments`).
+    (
+        "ElementalHitAltX",
+        "elemental_hit_damage_+%_final_per_enemy_elemental_ailment",
+    ),
     ("GroundSlam", "groundslam_damage_to_close_targets_+%_final"),
     // The agent list (2026-11-27): Kinetic Blast of Clustering's added
     // physical damage per maximum mana (`mana_added`).
@@ -464,10 +471,16 @@ pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
 /// 2026-11-27): a chance to shock, which reaches no slice field (PoB never
 /// shocks the enemy from a chance; the engine's shock is the config's and
 /// the guaranteed ones).
-pub const NO_SLICE_OWN_STATS: [(&str, &str); 3] = [
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 4] = [
     (
         "Cyclone",
         "cyclone_area_of_effect_+%_per_additional_melee_range",
+    ),
+    // Elemental Hit of the Spectrum's explosion radius (`skill("radius")` in
+    // part 2): radius outputs alone (the agent list, 2026-11-27).
+    (
+        "ElementalHitAltX",
+        "active_skill_base_area_of_effect_radius",
     ),
     ("ShockNova", "shock_nova_ring_chance_to_shock_+%"),
     (
@@ -520,6 +533,14 @@ pub const TRIGGER_OWN_STATS: [&str; 2] = [
 ///   (`CalcOffence.lua` 5737, 6117; `Calcs.lua` 271), never the hit; the
 ///   DoT vets itself ([`super::dot::pob_dot_vetted`]).
 pub const READ_BASE_FLAGS: [&str; 3] = ["CannotSplit", "DotCanStack", "OneShotProj"];
+
+/// Base mods the engine reads by their name, untagged or not: (skill, mod
+/// name). Elemental Hit of the Spectrum's
+/// `Multiplier:ElementalHitAilmentOnEnemy` 1 per enemy ailment
+/// (`ActorCondition` tags): [`super::stacks::enemy_elemental_ailments`]
+/// (the agent list, 2026-11-27).
+pub const READ_BASE_MODS: [(&str, &str); 1] =
+    [("ElementalHitAltX", "Multiplier:ElementalHitAilmentOnEnemy")];
 
 /// Skill functions that do nothing unless a config input sets the skill
 /// data they read (the agent list, 2026-11-27): (skill, function, input).
@@ -625,10 +646,11 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
     let read_flag = |m: &super::pob_skill::PobBaseMod| {
         m.kind == "FLAG" && !m.tagged && READ_BASE_FLAGS.contains(&m.name)
     };
+    let read_mod = |m: &super::pob_skill::PobBaseMod| READ_BASE_MODS.contains(&(id, m.name));
     if !pob
         .base_mods
         .iter()
-        .all(|m| display(m) || other_part(m) || read_flag(m))
+        .all(|m| display(m) || other_part(m) || read_flag(m) || read_mod(m))
     {
         return false;
     }
