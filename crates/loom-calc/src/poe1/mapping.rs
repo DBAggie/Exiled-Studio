@@ -10878,6 +10878,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "charge-gain",
     ),
     ("magic_utility_flasks_cannot_be_removed", "flask"),
+    // Mageblood (the agent list): `poe1::flasks` reads the three lines
+    // from the items (which flasks apply), so they have no row here.
+    ("magic_utility_flasks_cannot_be_used", "flask"),
     ("maim_effect_+%", "no-slice"),
     ("maim_on_crit_%_with_attacks", "on-hit-debuff"),
     ("maim_on_hit_%", "on-hit-debuff"),
@@ -10990,6 +10993,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
+    // Mageblood (the agent list): read by `poe1::flasks` from the items.
+    ("num_magic_utility_flasks_always_apply", "flask"),
+    ("num_magic_utility_flasks_always_apply_rightmost", "flask"),
     // P6-11dg: "Bow Attacks fire an additional Arrow" (PoB's `ProjectileCount` BASE with
     // `ModFlag.Bow`): as the projectile count, read only with
     // `SequentialProjectiles` (Barrage's `projectiles_barrage`, a guard).
