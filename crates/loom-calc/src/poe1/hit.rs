@@ -391,6 +391,27 @@ pub const READ_PART_FUNCTIONS: [(&str, &str); 1] = [("StaticStrike", "preDamageF
 /// `pob-skill-data`.
 pub const NOOP_PART_FUNCTIONS: [(&str, &str, usize); 1] = [("Spark", "preDamageFunc", 1)];
 
+/// Skill functions and own stats that reach no slice field (open items, S1):
+/// Cyclone's and Vaal Cyclone's `initialFunc` adds `Multiplier:
+/// AdditionalMeleeRange` (`act_dex.lua` 4701 to 4714, 4936 to 4945), which
+/// only their `cyclone_area_of_effect_+%_per_additional_melee_range` reads
+/// (`AreaOfEffect` INC per that multiplier), and `AreaOfEffect` feeds only
+/// radius outputs (the mapping's `area` rows, P6-11dl). Cyclone of Tumult's
+/// stage stats are not among them.
+pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
+    [("Cyclone", "initialFunc"), ("VaalCyclone", "initialFunc")];
+/// See [`NO_SLICE_FUNCTIONS`].
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 2] = [
+    (
+        "Cyclone",
+        "cyclone_area_of_effect_+%_per_additional_melee_range",
+    ),
+    (
+        "VaalCyclone",
+        "cyclone_area_of_effect_+%_per_additional_melee_range",
+    ),
+];
+
 /// The `SkillData` key PoB clears when a trigger sets the skill's rate
 /// (`CalcOffence.lua` 2223 to 2227: `skillData.showAverage = false`), and
 /// reads otherwise in many outputs (the combined DPS, leech, poison and
@@ -457,15 +478,16 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
         (no_cooldown && READ_FUNCTIONS.contains(&(id, *f)))
             || READ_PART_FUNCTIONS.contains(&(id, *f))
             || NOOP_PART_FUNCTIONS.contains(&(id, *f, index))
+            || NO_SLICE_FUNCTIONS.contains(&(id, *f))
     };
     if !pob.functions.iter().all(function_read) {
         return false;
     }
-    if !pob
-        .own_stats
-        .iter()
-        .all(|s| READ_OWN_STATS.contains(&(id, *s)) || TRIGGER_OWN_STATS.contains(s))
-    {
+    if !pob.own_stats.iter().all(|s| {
+        READ_OWN_STATS.contains(&(id, *s))
+            || TRIGGER_OWN_STATS.contains(s)
+            || NO_SLICE_OWN_STATS.contains(&(id, *s))
+    }) {
         return false;
     }
     // A channelled release skill: PoB sets its hit time outside its data
@@ -5599,6 +5621,28 @@ mod tests {
         // A skill without `showAverage` that fails for another reason fails
         // triggered too.
         assert!(!pob_vetted_triggered("IceSpear", 1, true));
+    }
+
+    /// Open items, S1: Cyclone's and Vaal Cyclone's function and own stat
+    /// reach only the area of effect; Cyclone of Tumult's stages are not read.
+    #[test]
+    fn cyclone_should_be_vetted_by_its_area_only_data() {
+        assert!(pob_vetted("Cyclone", 0) && pob_vetted("VaalCyclone", 0));
+        assert!(!pob_vetted("CycloneAltX", 0));
+        for (id, f) in NO_SLICE_FUNCTIONS {
+            let pob = super::super::pob_skill::skill(id).expect(id);
+            assert!(pob.functions.contains(&f), "{id} {f}");
+        }
+        for (id, s) in NO_SLICE_OWN_STATS {
+            let pob = super::super::pob_skill::skill(id).expect(id);
+            assert!(pob.own_stats.contains(&s), "{id} {s}");
+            assert!(
+                super::super::mapping::NO_EFFECT
+                    .iter()
+                    .any(|(n, _)| *n == s),
+                "{s} has an effect"
+            );
+        }
     }
 
     /// Open items, S1: Spark's function does nothing in part 1, "1 Hit";

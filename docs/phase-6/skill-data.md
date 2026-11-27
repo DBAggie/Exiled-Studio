@@ -203,3 +203,16 @@ Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted o
   - Both fixtures retargeted: 86 and 83 targets.
 - **Corpus:** 0 unexpected; no document changed.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check.
+
+**Cyclone** (open items S1, 2026-11-26). Its `initialFunc` adds `Multiplier:AdditionalMeleeRange` (`act_dex.lua` 4701 to 4714). Only its own stat `cyclone_area_of_effect_+%_per_additional_melee_range` reads that multiplier (`AreaOfEffect` INC per it), and `AreaOfEffect` feeds only radius outputs, already a no-effect row (P6-11dl).
+- `hit::NO_SLICE_FUNCTIONS` and `NO_SLICE_OWN_STATS` name Cyclone's and Vaal Cyclone's.
+- Cyclone of Tumult's stage stats are not among them; it stays partial.
+- Test: `cyclone_should_be_vetted_by_its_area_only_data` (each entry in PoB's data, each stat a no-effect row).
+
+**Evidence** (`local/p6/s1-b`, against `local/p6/s1-a`):
+- **Public:** 0 unexpected; `Complete` 49,386 to 49,388: the `FullDPS` of `trigger-cwc-channelling-cyclone-templar.xml` and `trigger-cwc-ice-nova-templar.xml`, which add Cyclone's hit DPS (Cast while Channelling's source).
+- **Q11:** the two `FullDPS` (1,953.648 against PoB's 1,953.658) are DIV-0855 and DIV-0856.
+  - Ice Nova's part equals PoB's.
+  - Cyclone's attack rate is the weapon's floored attack time: a copy of the fixture with Cyclone as the main skill gives `Speed` 4.4978 against PoB's 4.5, and `TotalDPS` 21.0882 against 21.0987, the whole difference.
+- **Unchanged:** no value moved; the other Cyclone builds (`Dual Wield Cospris CoC.xml`, `cyclone-shockwave-slayer.xml`) keep their other reasons.
+- **Corpus:** no document changed.
