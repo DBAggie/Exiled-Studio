@@ -225,3 +225,15 @@ Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted o
 - **Public:** 0 unexpected; `Complete` 49,388 to 49,564 (the two fixtures).
 - **Unchanged:** no other value moved. The two builds with Ground Slam (`boneshatter-juggernaut.xml`, `smite-inquisitor-act1.xml`) keep their other reasons.
 - **Corpus:** no document changed.
+
+**Socket colour quality under a socket rebuild** (open items S1, 2026-11-26; `unmodelled-skill` `socket-colour-quality`, 588 public fields in four builds). A gem's quality from a socket of its colour (P3-12i, `docs/phase-3/other-gems.md`) was not known on an item with a line that rebuilds its sockets. `poe1::sockets` now reads those lines as PoB does (`Item.lua` 2591 to 2634):
+- **"Has no Sockets"** removes them all; PoB checks it first.
+- **"Has # Sockets"** keeps the `Sockets` line's first # sockets in order. PoB fills a missing one with the item's default colour, which the engine does not read, so a count above the line's sockets stays not known. "Has 1 Socket" shows no number: its value is the description's one, read from the hidden value.
+- **"Has # Abyssal Sockets"** (without a count line) keeps the line's other sockets in order and appends the abyssal ones, so a line whose abyssal sockets are its last ones, as many as stated, is kept as it is; any other line stays not known.
+- **The builds:** the Unset Rings of `animate-guardian-guardian.xml`, `forged-frostbearer-spectre-necromancer.xml`, and `Mirage Archer Toxic Rain.xml` ("Has 1 Socket" with one socket on the line), and `flicker-strike-berserker.xml`'s weapon ("G-G-G-G-G A" with one abyssal socket).
+- **Test:** `socket_count_lines_should_rebuild_as_pob_does` (and `socket_lines_should_count_only_when_part_of_the_item`, each rebuilding stat's reading).
+
+**Evidence** (`local/p6/s1-d`, against `local/p6/s1-c`):
+- **Public:** 0 unexpected; every `socket-colour-quality` reason is gone; `Complete` unchanged (49,564), as the four builds have other reasons.
+- **Moved:** one value, toward PoB: `animate-guardian-guardian.xml`'s `FullDPS` 2,715,141 to 2,715,214 (PoB 12,186,392). Three other documents changed in their reasons only.
+- **Corpus:** no document changed.

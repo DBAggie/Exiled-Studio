@@ -37,12 +37,14 @@
 //! group of the slot (the index is not certain), an item that is not
 //! typed, an item without a
 //! `Sockets` line (PoB's `socketLimit` sockets), more than one such line,
-//! a line that rebuilds the sockets ([`REBUILDS`]), or a gem whose colour
+//! a line that rebuilds the sockets ([`REBUILDS`]; but "Has no Sockets",
+//! no sockets, and one "Has # Sockets" line with at least # sockets on the
+//! `Sockets` line, its first #, as PoB keeps them; open items, S1), or a gem whose colour
 //! the bundle does not carry in a red, green, or blue socket. An item
 //! without a `Sockets` line can over-report: on a base without PoB's
 //! `socketLimit` (a ring, an amulet) PoB has no sockets, so no match.
 
-use loom_domain::{Build, Item, LineKind, LineResolution, Resolved, SocketGroup};
+use loom_domain::{Build, Item, LineKind, LineResolution, Resolved, SocketGroup, StatValue};
 
 use super::collect::active_item_set;
 use super::skill;
@@ -145,7 +147,24 @@ fn sockets(build: &Build, slot: &str) -> Sockets {
     if stats(item).any(|s| s == ALWAYS_MATCHES) {
         return Sockets::Always;
     }
-    if stats(item).any(|s| REBUILDS.contains(&s)) {
+    // "Has no Sockets" removes them all (`Item.lua` 2591 to 2595: PoB checks
+    // it first).
+    if stats(item).any(|s| s == NO_SOCKETS) {
+        return Sockets::None;
+    }
+    // "Has # Sockets" and "Has # Abyssal Sockets" (open items, S1; 2596 to
+    // 2634). PoB reads the count first: it keeps the line's first #
+    // sockets in order and fills a missing one with the item's default
+    // colour, which the engine does not read. Else, with abyssal sockets,
+    // it keeps the line's other sockets in order and appends the abyssal
+    // ones, so a line whose abyssal sockets are its last ones, as many as
+    // the line says, is kept as it is. Any other case, or another
+    // rebuilding line, is not known.
+    let count = socket_count(item, SOCKET_COUNT);
+    let abyssal = socket_count(item, ABYSSAL_SOCKET_COUNT);
+    let other = stats(item)
+        .any(|s| REBUILDS.contains(&s) && s != SOCKET_COUNT && s != ABYSSAL_SOCKET_COUNT);
+    if other || count == Some(None) || (count.is_none() && abyssal == Some(None)) {
         return Sockets::Unknown("socket-count-line");
     }
     let mut lines = item.body.lines.iter().filter_map(|l| match &l.kind {
@@ -156,9 +175,64 @@ fn sockets(build: &Build, slot: &str) -> Sockets {
         (None, _) => Sockets::Unknown("no-sockets-line"),
         (Some(_), Some(_)) => Sockets::Unknown("several-sockets-lines"),
         (Some(line), None) => {
-            Sockets::Colours(line.chars().filter(|c| "RGBWA".contains(*c)).collect())
+            let mut colours: Vec<char> = line.chars().filter(|c| "RGBWA".contains(*c)).collect();
+            match (count.flatten(), abyssal.flatten()) {
+                (Some(n), _) if n > colours.len() => Sockets::Unknown("socket-count-line"),
+                (Some(n), _) => {
+                    colours.truncate(n);
+                    Sockets::Colours(colours)
+                }
+                (None, Some(k)) => {
+                    let tail = colours.iter().rev().take_while(|c| **c == 'A').count();
+                    let all = colours.iter().filter(|c| **c == 'A').count();
+                    if tail == k && all == k {
+                        Sockets::Colours(colours)
+                    } else {
+                        Sockets::Unknown("socket-count-line")
+                    }
+                }
+                (None, None) => Sockets::Colours(colours),
+            }
         }
     }
+}
+
+/// "Has no Sockets" (PoB's `NoSockets`).
+const NO_SOCKETS: &str = "local_has_no_sockets";
+/// "Has # Sockets" (PoB's `SocketCount` BASE).
+const SOCKET_COUNT: &str = "local_has_X_sockets";
+/// "Has # Abyssal Sockets" (PoB's `AbyssalSocketCount` BASE).
+const ABYSSAL_SOCKET_COUNT: &str = "local_has_X_abyss_sockets";
+
+/// The count of the item's one line of `stat` ([`SOCKET_COUNT`] or
+/// [`ABYSSAL_SOCKET_COUNT`]): `None` without the line, `Some(None)` when it
+/// is not one count above 0 (several lines, a range, a hidden value without
+/// a clear count).
+fn socket_count(item: &Item, stat: &str) -> Option<Option<usize>> {
+    let mut values = item.body.lines.iter().flat_map(|l| match &l.kind {
+        LineKind::Modifier(m) => match &m.resolution {
+            LineResolution::Resolved {
+                result: Resolved::Stats(stats),
+                ..
+            } => stats
+                .iter()
+                .filter(|s| s.stat.as_str() == stat)
+                .map(|s| s.value.clone())
+                .collect::<Vec<_>>(),
+            _ => Vec::new(),
+        },
+        _ => Vec::new(),
+    });
+    let first = values.next()?;
+    if values.next().is_some() {
+        return Some(None);
+    }
+    Some(match first {
+        StatValue::Exact { min, max } if min == max && min > 0 => usize::try_from(min).ok(),
+        // "Has 1 Socket": no number shown, the description's one value.
+        StatValue::Hidden { assumed: Some(n) } if n > 0 => usize::try_from(n).ok(),
+        _ => None,
+    })
 }
 
 /// The number of sockets of `colour` (`R`, `G`, `B`, or `W`) of the item

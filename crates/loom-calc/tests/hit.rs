@@ -2105,6 +2105,11 @@ fn spec(key: &str, value: &str) -> ItemLine {
 }
 
 fn stat_line(id: &str) -> ItemLine {
+    valued_line(id, StatValue::Exact { min: 1, max: 1 })
+}
+
+/// A resolved explicit line of one stat at `value`.
+fn valued_line(id: &str, value: StatValue) -> ItemLine {
     ItemLine {
         source: id.to_owned(),
         kind: LineKind::Modifier(ModifierLine {
@@ -2115,7 +2120,7 @@ fn stat_line(id: &str) -> ItemLine {
             resolution: LineResolution::Resolved {
                 result: Resolved::Stats(vec![StatLine {
                     stat: StatId::new(id),
-                    value: StatValue::Exact { min: 1, max: 1 },
+                    value,
                 }]),
                 adapted: None,
             },
@@ -2237,7 +2242,10 @@ fn items_whose_sockets_are_not_known_should_be_a_reason() {
             "several-sockets-lines",
         ),
         (
-            vec![spec("Sockets", "G"), stat_line("local_has_X_sockets")],
+            vec![
+                spec("Sockets", "G"),
+                valued_line("local_has_X_sockets", StatValue::Exact { min: 2, max: 2 }),
+            ],
             "socket-count-line",
         ),
     ] {
@@ -2267,6 +2275,61 @@ fn items_whose_sockets_are_not_known_should_be_a_reason() {
     ]);
     assert_eq!(matches(&empty)[1], [SocketMatch::No]);
     assert_eq!(gem_reasons(&run(&empty)), Vec::<String>::new());
+}
+
+/// Open items, S1: the lines that rebuild sockets as PoB does (`Item.lua`
+/// 2591 to 2634): "Has no Sockets" removes them; "Has # Sockets" keeps the
+/// line's first # (a count above the line's sockets is not known); "Has #
+/// Abyssal Sockets" keeps a line whose abyssal sockets are its last ones.
+#[test]
+fn socket_count_lines_should_rebuild_as_pob_does() {
+    use SocketMatch::{No, Unknown, Yes};
+    let b = |lines| {
+        with_item(
+            build(vec![
+                group(&["IceNova"]),
+                in_slot(group(&["Precision", "Precision"]), "Gloves"),
+            ]),
+            "Gloves",
+            lines,
+        )
+    };
+    let count = |n| valued_line("local_has_X_sockets", StatValue::Exact { min: n, max: n });
+    let abyssal = |n| {
+        valued_line(
+            "local_has_X_abyss_sockets",
+            StatValue::Exact { min: n, max: n },
+        )
+    };
+    // "Has 1 Socket" shows no number: its value is the description's one.
+    let one = valued_line(
+        "local_has_X_sockets",
+        StatValue::Hidden { assumed: Some(1) },
+    );
+    assert_eq!(matches(&b(vec![spec("Sockets", "G-G"), one]))[1], [Yes, No]);
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "G-G"), count(2)]))[1],
+        [Yes, Yes]
+    );
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "G A"), abyssal(1)]))[1],
+        [Yes, No]
+    );
+    let why = Unknown("socket-count-line");
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "A G"), abyssal(1)]))[1],
+        [why, why]
+    );
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "G A"), abyssal(2)]))[1],
+        [why, why]
+    );
+    let none = b(vec![
+        spec("Sockets", "G-G"),
+        stat_line("local_has_no_sockets"),
+    ]);
+    assert_eq!(matches(&none)[1], [No, No]);
+    assert_eq!(gem_reasons(&run(&none)), Vec::<String>::new());
 }
 
 /// The review's cases (P3-12i): a disabled earlier group and a gem the
@@ -2370,8 +2433,8 @@ fn the_socket_index_should_follow_pobs_count() {
     assert_eq!(matches(&b)[1], [Unknown("untyped-item")]);
 }
 
-/// Lines of an unselected variant are not part of the item; every
-/// rebuilding stat is unknown; the always-matching line wins over a
+/// Lines of an unselected variant are not part of the item; a rebuilding
+/// stat is read as PoB reads it, or unknown; the always-matching line wins over a
 /// socket rebuild, even "Has no Sockets" (PoB sets the flag after the
 /// rebuild).
 #[test]
@@ -2395,10 +2458,18 @@ fn socket_lines_should_count_only_when_part_of_the_item() {
         matches(&b(vec![spec("Sockets", "G"), unselected]))[1],
         [Yes]
     );
+    // At 1 each (open items, S1): "Has 1 Socket" keeps the one socket,
+    // "Has no Sockets" removes it, and the abyssal lines are not known on a
+    // line without an abyssal socket.
     for stat in loom_calc::poe1::sockets::REBUILDS {
+        let want = match stat {
+            "local_has_X_sockets" => Yes,
+            "local_has_no_sockets" => SocketMatch::No,
+            _ => Unknown("socket-count-line"),
+        };
         assert_eq!(
             matches(&b(vec![spec("Sockets", "G"), stat_line(stat)]))[1],
-            [Unknown("socket-count-line")],
+            [want],
             "{stat}"
         );
     }
