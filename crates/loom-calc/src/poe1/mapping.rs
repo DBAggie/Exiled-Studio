@@ -6860,6 +6860,17 @@ pub const ROWS: &[Row] = &[
             (MAX_LIGHTNING, Op::Base, 1.0),
         ],
     ),
+    // The agent list: "... if Equipped Helmet, Body Armour, Gloves, and
+    // Boots all have Armour" (`ModParser.lua` 1648): `phases` reads the
+    // pieces.
+    (
+        "additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MaxElementalResistIfAllPiecesArmour),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11ib: "+#% to all maximum Elemental Resistances if you have
     // Reserved Life and Mana" (`ElementalResistMax` BASE, `StatThreshold`
     // `LifeReserved` 1 and `ManaReserved` 1): `collect` reads the
@@ -9655,6 +9666,17 @@ pub const ROWS: &[Row] = &[
     (
         "spell_block_%_per_5_attack_block",
         &[(Quantity::Poe1(Poe1Quantity::BlockPer5(true)), Op::Base, 1.0)],
+    ),
+    // The agent list: "+#% chance to Suppress Spell Damage if Equipped
+    // Helmet, Body Armour, Gloves, and Boots all have Evasion Rating"
+    // (`ModParser.lua` 1653): `phases` reads the pieces.
+    (
+        "spell_suppression_chance_%_if_all_equipment_grants_evasion",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SuppressionIfAllPiecesEvasion),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11al: "Your chance to Suppress Spell Damage is Lucky" (PoB's
     // `SpellSuppressionChanceIsLucky` FLAG); `enemy_hit` reads it.

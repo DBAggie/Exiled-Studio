@@ -5522,3 +5522,15 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixture** (original) `ice-nova-global-added-chaos-witch.xml`: Ice Nova with "Adds 18 to 28 Chaos Damage": average hit 1,309.6 to 1,351.3. Every field equals PoB's.
 
 **Evidence** (`local/p6/d27che` on `b-pb`, against `local/p6/d27lfe`): public 0 unexpected; no value moved (the build is a minion build, whose fields keep other reasons); `Complete` 54,387 to 54,474 with the fixture. Corpus 0 unexpected, no document changed.
+
+## If the helmet, body armour, gloves, and boots all have a defence (the agent list, 2026-11-27)
+
+**The stats** (public 97 and 96 fields, one build each): "+#% to all maximum Elemental Resistances if Equipped Helmet, Body Armour, Gloves, and Boots all have Armour" (`additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour`) and "+#% chance to Suppress Spell Damage if ... all have Evasion Rating" (`spell_suppression_chance_%_if_all_equipment_grants_evasion`).
+
+**PoB** (`ModParser.lua` 1648 to 1657): the mod with a tag list of `StatThreshold` on `<Defence>On<slot>` at least 1 for each of the four slots, each piece's own value.
+
+**The engine:** `Poe1Quantity::MaxElementalResistIfAllPiecesArmour` and `SuppressionIfAllPiecesEvasion` (`Base`); `phases::all_pieces_have` checks each of the four slots is equipped and its piece's own defence ([`piece`], as P6-11by's `hybrid_pieces`) is at least 1, and `sum_with_all_pieces` adds the line to the elemental maximums (also under Melding of the Flesh's highest maximum) and to the suppression sum.
+
+**Fixtures** (original): `ice-nova-all-pieces-armour-witch.xml` (four plain armour pieces, both lines, resistances at 150%: fire 80, suppression 0) and `ice-nova-all-pieces-evasion-witch.xml` (four evasion pieces: fire 75, suppression 12). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ape` on `b-pb`, against `local/p6/d27che`): public 0 unexpected, `Complete` 54,474 to 54,648 (the fixtures' 174); 26 values moved, 25 toward PoB, 21 now equal: `boneshatter-juggernaut.xml`'s resistances, maximum hits, damage over time EHPs, and total EHP (69,171 to PoB's 71,294); `elemental-hit-of-the-spectrum-deadeye.xml`'s suppression 77 to 92 (PoB 100). One moved away: that build's configured damage chance, 83.4 to 80.2 (PoB 100), as in the sign tolerance's evidence (`docs/ui/b2-data/item-evidence.md`): PoB moves suppression into damage reduction only at 100%, and below it applies the formula the engine does; the gap is the suppression's last 8 points, from the build's other unread sources. Corpus 0 unexpected, no document changed.

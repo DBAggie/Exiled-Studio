@@ -752,13 +752,7 @@ pub(super) fn resistance_parts(
         ) {
         highest_maximum_resistance(calc, &mut reasons)?
     } else {
-        let max_base = sum(
-            calc,
-            Quantity::MaximumResistance(t),
-            Op::Base,
-            Term::Step("maximum-sum"),
-            &mut reasons,
-        )?;
+        let max_base = maximum_sum(calc, t, &mut reasons)?;
         let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
         pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?
     };
@@ -769,6 +763,34 @@ pub(super) fn resistance_parts(
     let capped = pair(calc, total, max, Term::Step("capped"), true)?;
     let value = pair(calc, capped, min, Term::Result, false)?;
     Ok((value, total, reasons))
+}
+
+/// A maximum resistance's `Base` sum; an elemental one also takes "+#% to
+/// all maximum Elemental Resistances if ... all have Armour" when the four
+/// pieces do (the agent list).
+fn maximum_sum(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    if is_elemental(t) {
+        sum_with_all_pieces(
+            calc,
+            Quantity::MaximumResistance(t),
+            Poe1Quantity::MaxElementalResistIfAllPiecesArmour,
+            Defence::Armour,
+            Term::Step("maximum-sum"),
+            reasons,
+        )
+    } else {
+        sum(
+            calc,
+            Quantity::MaximumResistance(t),
+            Op::Base,
+            Term::Step("maximum-sum"),
+            reasons,
+        )
+    }
 }
 
 /// Whether `t` is an elemental damage type (PoB's `isElemental`).
@@ -790,13 +812,7 @@ fn highest_maximum_resistance(
     let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
     let mut highest = constant(calc, "no-highest-maximum", 0.0)?;
     for t in RESISTANCES.into_iter().filter(|t| is_elemental(*t)) {
-        let max_base = sum(
-            calc,
-            Quantity::MaximumResistance(t),
-            Op::Base,
-            Term::Step("maximum-sum"),
-            reasons,
-        )?;
+        let max_base = maximum_sum(calc, t, reasons)?;
         let capped = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
         highest = pair(calc, highest, capped, Term::Step("highest-maximum"), false)?;
     }
@@ -1045,10 +1061,13 @@ fn spell_block(
     );
 
     let mut reasons = Reasons::new();
-    let base = sum(
+    // With "... if ... all have Evasion Rating" when the four pieces do
+    // (the agent list).
+    let base = sum_with_all_pieces(
         calc,
         Quantity::Poe1(Poe1Quantity::SpellSuppressionChance),
-        Op::Base,
+        Poe1Quantity::SuppressionIfAllPiecesEvasion,
+        Defence::Evasion,
         Term::Base,
         &mut reasons,
     )?;
@@ -1906,6 +1925,50 @@ fn iron_reflexes_modifier(
 
 /// Whether the helmet, gloves, and boots are each equipped with armour and
 /// energy shield above 0 ([`Poe1Quantity::BodyArmourIfHybridPieces`]).
+/// Whether the equipped helmet, body armour, gloves, and boots each have
+/// `defence` (the agent list; PoB's `StatThreshold` on `<Defence>On<slot>`,
+/// each piece's own value, at least 1, `ModParser.lua` 1648 to 1657).
+fn all_pieces_have(
+    calc: &mut Calc<'_>,
+    defence: Defence,
+    reasons: &mut Reasons,
+) -> Result<bool, CalcError> {
+    for slot in [
+        ArmourSlot::Helmet,
+        ArmourSlot::BodyArmour,
+        ArmourSlot::Gloves,
+        ArmourSlot::Boots,
+    ] {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) || piece(calc, slot, defence, reasons)?.value < 1.0
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// The `Base` sum of `quantity`, also with `extra`'s when `extra` is in the
+/// build and the four pieces all have `defence` ([`all_pieces_have`]).
+fn sum_with_all_pieces(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    extra: Poe1Quantity,
+    defence: Defence,
+    term: Term,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let base = sum(calc, quantity, Op::Base, term, reasons)?;
+    let extra = Quantity::Poe1(extra);
+    if !has(calc, extra) || !all_pieces_have(calc, defence, reasons)? {
+        return Ok(base);
+    }
+    let more = sum(calc, extra, Op::Base, Term::Step("if-all-pieces"), reasons)?;
+    total(calc, &[base, more], Term::Step("with-all-pieces"))
+}
+
 fn hybrid_pieces(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<bool, CalcError> {
     for slot in [ArmourSlot::Helmet, ArmourSlot::Gloves, ArmourSlot::Boots] {
         if !has(

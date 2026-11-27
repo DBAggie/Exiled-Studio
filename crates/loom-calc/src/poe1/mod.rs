@@ -1140,6 +1140,14 @@ pub enum Poe1Quantity {
     /// Elusive's effect on you (PoB's `ElusiveEffect`; the agent list):
     /// `Increased`, read by [`buffs`].
     ElusiveEffect,
+    /// "+#% to all maximum Elemental Resistances if Equipped Helmet, Body
+    /// Armour, Gloves, and Boots all have Armour" (PoB's tag list of
+    /// `StatThreshold` `ArmourOn<slot>` at least 1, `ModParser.lua` 1648;
+    /// the agent list): `Base`, read by `phases`' maximum resistances.
+    MaxElementalResistIfAllPiecesArmour,
+    /// "+#% chance to Suppress Spell Damage if ... all have Evasion Rating"
+    /// (1653): `Base`, read by `phases`' suppression.
+    SuppressionIfAllPiecesEvasion,
     /// The chance to avoid all damage from hits (PoB's
     /// `AvoidAllDamageFromHitsChance` BASE, capped at 75; the agent list:
     /// Elusive's), read by [`enemy_hit`].
@@ -1943,6 +1951,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CanBeElusive => f.write_str("can-be-elusive"),
             Self::ElusiveEffect => f.write_str("elusive-effect"),
             Self::AvoidAllDamageFromHits => f.write_str("avoid-all-damage-from-hits"),
+            Self::MaxElementalResistIfAllPiecesArmour => {
+                f.write_str("max-elemental-resist-if-all-pieces-armour")
+            }
+            Self::SuppressionIfAllPiecesEvasion => f.write_str("suppression-if-all-pieces-evasion"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
             Self::TailwindEffect => f.write_str("tailwind-effect"),
             Self::MaxElementalResistIfReservedLifeAndMana => {
