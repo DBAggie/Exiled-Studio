@@ -3704,6 +3704,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-27): Greater Volley's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_greater_volley_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
+    ),
     // P6-11hq: Hypothermia's more cold damage over time (`sup_dex.lua`
     // 2349: `ColdDamage` MORE with `KeywordFlag.ColdDot`), as Burning
     // Damage's row; its more damage against a chilled enemy is a `ROWS`
@@ -3818,6 +3824,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             NONE,
         )],
+    ),
+    // The agent list (2026-11-27): Volley's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_parallel_projectiles_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
     ),
     // P6-11dn: Vicious Projectiles (PoB `sup_dex.lua` 4360 to 4372): chaos
     // damage over time MORE (`ChaosDamage` with `KeywordFlag.ChaosDot`).
@@ -11931,6 +11943,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_more_duration_skill_effect_duration_+%_final",
         "skill-duration",
     ),
+    // The agent list (2026-11-27): Volley's and Greater Volley's parallel
+    // projectiles' placement (PoB maps neither): no slice field.
+    (
+        "support_parallel_projectile_number_of_points_per_side",
+        "no-slice",
+    ),
     (
         "support_reduced_duration_skill_effect_duration_+%_final",
         "skill-duration",
@@ -12096,6 +12114,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("vaal_skill_soul_refund_chance_%", "no-slice"),
     ("vaal_souls_gained_per_minute", "no-slice"),
     ("visual_hit_effect_elemental_is_holy", "display"),
+    (
+        "volley_additional_projectiles_fire_parallel_x_dist",
+        "no-slice",
+    ),
     (
         "wand_attacks_fire_an_additional_projectile",
         "projectile-count",

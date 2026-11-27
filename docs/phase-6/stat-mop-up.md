@@ -5767,3 +5767,17 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Smite Siege Axe build with General's Cry in its group): the cry alone; with the warriors line and 20% quality; with Overexertion and "Exerted Attacks deal 30% increased Damage" (the copies, the own list's rounding); with 60% increased cooldown recovery. Every field equals PoB's but the Q11 floored-millisecond rate (`game-truth` DIV-1135 to DIV-1138; the DPS reads the cry's cooldown, the longer time); the cost fields are not computed, as PoB has none.
 
 **Evidence** (`local/p6/d27gce` on `b-ig`, against `local/p6/d27wpe`): public 0 unexpected, `Complete` 58,780 to 59,116 (the fixtures'); 6 values moved, 4 toward PoB (`Generals Perforate Zerker.xml`'s TotalDPS 5.57 to 6.94 million, PoB 22.4 million, its ImpaleDPS and CombinedDPS; `cyclone-shockwave-slayer.xml`'s FullDPS 55.9 to 62.4 million, PoB 68.4 million), 2 away: the Perforate build's AverageDamage 423,529 to 247,876 (PoB 604,979) and its BleedDPS, now with the support's 51% less, which PoB applies too, on a hit already below PoB's for the build's other reasons. Corpus 0 unexpected, no value moved.
+
+## Volley and Greater Volley (the agent list, 2026-11-27)
+
+**The stats:** Volley's "#% less Projectile Damage" (`support_parallel_projectiles_damage_+%_final`) and Greater Volley's (`support_greater_volley_projectile_damage_+%_final`), with their constant `support_parallel_projectile_number_of_points_per_side`, unmapped in two public builds (and Volley's damage silently absent from others).
+
+**PoB** (`sup_dex.lua`): each is `Damage` MORE with `ModFlag.Projectile`; the parallel points and distances have no stat map (placement only).
+
+**The engine:** two hit rows (`Damage` MORE, `Flags::PROJECTILE`) and two `NoEffect` rows (`no-slice`) for the parallel points and Volley's distance, as Greater Volley's already was.
+
+**Found on the way, for the maintainer** (`dev/active/open-items/maintainer-follow-ups.md`): PoB's parser applies neither "#% chance to Aggravate Bleeding on targets you Hit with Attacks" nor its exerted-attack form, and PoB's bleeding has no aggravation; they stay reasons until a check in the game.
+
+**Fixtures** (original, the Burning Arrow Short Bow build): Burning Arrow with Volley and with Greater Volley (level 20, 20% quality). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1139 to DIV-1150.
+
+**Evidence** (`local/p6/d27voe` on `b-ig`, against `local/p6/d27gce`): public 0 unexpected, `Complete` 59,116 to 59,294 (the fixtures'); 5 values moved, all away from PoB in two builds partial and below PoB for other reasons, now with Volley's less damage that PoB applies too: `kinetic-fusillade-ballista-hierophant.xml`'s AverageDamage 97,765 to 78,208 (PoB 204,674; its skill data still unvetted), its TotalDPS, CombinedDPS, and FullDPS, and `forged-frostbearer-spectre-necromancer.xml`'s FullDPS 8.84 to 7.02 million (PoB 9.13 million). Corpus 0 unexpected, no value moved.
