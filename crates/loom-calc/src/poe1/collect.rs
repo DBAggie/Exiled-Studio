@@ -118,6 +118,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     granted_skill_groups(input.build, ingest);
     // After the gems (Shield Crush's and Close Combat's stats; P6-11ht).
     melee_proximity(input, ingest);
+    // Point Blank and Far Shot (the agent list, 2026-11-27): after the gems
+    // (the Point Blank support's flag).
+    distance_flags(input, ingest);
     accuracy_per_level(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
     // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
@@ -1665,6 +1668,76 @@ fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             value,
             conditions,
             source: e.source,
+        });
+    }
+}
+
+/// PoB's `DistanceRamp` (`Classes/ModStore.lua` 555 to 570): the first
+/// point's value at or below its distance, the last's at or above its, else
+/// linear between the two points around `distance`.
+fn piecewise(points: &[(f64, f64)], distance: f64) -> f64 {
+    let (first, last) = (points[0], points[points.len() - 1]);
+    if distance <= first.0 {
+        return first.1;
+    }
+    if distance >= last.0 {
+        return last.1;
+    }
+    for w in points.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        if distance <= b.0 {
+            return a.1 + (b.1 - a.1) * (distance - a.0) / (b.0 - a.0);
+        }
+    }
+    last.1
+}
+
+/// Point Blank and Far Shot (the agent list, 2026-11-27; `CalcOffence.lua`
+/// 1045 to 1053): with the flag, the main skill's projectile attacks get
+/// `Damage` MORE 30 times the ramp `{10, 1}, {35, 0}, {120, -1}` (Point
+/// Blank) and 100 times `{10, -0.2}, {25, 0}, {70, 0.6}` (Far Shot), at
+/// the skill's distance ([`skill_distance`]).
+fn distance_flags(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    const POINT_BLANK: [(f64, f64); 3] = [(10.0, 1.0), (35.0, 0.0), (120.0, -1.0)];
+    const FAR_SHOT: [(f64, f64); 3] = [(10.0, -0.2), (25.0, 0.0), (70.0, 0.6)];
+    let flags: Vec<(bool, crate::source::Source, crate::store::Conditions)> = ingest
+        .effects()
+        .iter()
+        .filter_map(|e| match e.quantity {
+            // The flag's own conditions are the skill's flags at most (a
+            // support's); the `Damage` row keeps them.
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(far))
+                if e.op == Op::Flag && e.value != 0.0 =>
+            {
+                Some((far, e.source.clone(), e.conditions.clone()))
+            }
+            _ => None,
+        })
+        .collect();
+    let mut seen = [false; 2];
+    for (far, source, own) in flags {
+        if std::mem::replace(&mut seen[usize::from(far)], true) {
+            continue;
+        }
+        let Some(distance) = skill_distance(input, ingest) else {
+            return;
+        };
+        let (more, ramp) = if far {
+            (100.0, &FAR_SHOT[..])
+        } else {
+            (30.0, &POINT_BLANK[..])
+        };
+        let value = more * piecewise(ramp, distance);
+        if value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value,
+            conditions: own
+                .with_all(crate::condition::Flags::ATTACK | crate::condition::Flags::PROJECTILE),
+            source,
         });
     }
 }

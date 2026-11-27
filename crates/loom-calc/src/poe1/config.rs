@@ -549,7 +549,7 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   `projectile_damage_+%_max_as_distance_travelled_increases`,
 ///   `projectile_damage_+%_max_before_distance_increase`,
 ///   `slayer_damage_+%_final_from_distance` (`ModParser.lua` 2511, 2662,
-///   3013, 3917, 4638 to 4640); `keystone_point_blank`, `player_far_shot`,
+///   3013, 3917, 4638 to 4640);
 ///   `gain_player_far_shot_while_do_not_have_iron_reflexes`,
 ///   `local_display_socketed_gems_supported_by_level_x_point_blank` (the
 ///   `PointBlank` and `FarShot` flags, 2317, 2661, 5489; the last through
@@ -640,14 +640,12 @@ pub const DEPENDS_ON: &[&str] = &[
     "guardian_with_nearby_ally_damage_+%_final_for_you_and_allies",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
-    "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
     "local_display_tattoo_trigger_level_x_akoya",
     "local_gain_X_rage_on_attack_hit_with_melee_abyss_jewel_socketed",
     "max_chance_to_block_attacks_if_not_blocked_recently",
     "physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%",
-    "player_far_shot",
     "projectile_damage_+%_max_before_distance_increase",
     "rage_warcry_gain_X_rage_per_minute_per_5_monster_power_max_25_power",
     "rage_warcry_maximum_rage_+",

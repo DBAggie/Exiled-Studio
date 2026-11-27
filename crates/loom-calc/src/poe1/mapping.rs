@@ -4477,6 +4477,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::SpellDamageToAttacks
                     | Poe1Quantity::ShieldAddedDamage(..)
                     | Poe1Quantity::AddedDamagePercentOfMana(..)
+                    // The agent list (2026-11-27): Point Blank and Far Shot,
+                    // PoB's flags on the skill (the Point Blank support's).
+                    | Poe1Quantity::DistanceFlag(_)
                     | Poe1Quantity::RepeatDamage(_)
                     | Poe1Quantity::RepeatPerRepeatDamage
                     | Poe1Quantity::RepeatFinalDoubleDamageChance
@@ -5040,6 +5043,13 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "block_chance_on_damage_taken_%",
         &[(BLOCK, Op::Base, NONE, conditions::BEEN_HIT_RECENTLY)],
+    ),
+    // The agent list (2026-11-27): Perforate's and Blood Spears' "#% more
+    // Damage in Blood Stance" (`Damage` MORE, `Condition:BloodStance`, their
+    // stat maps), in the settled stance.
+    (
+        "blood_spears_damage_+%_final_in_blood_stance",
+        &[(Quantity::Damage, Op::More, NONE, conditions::BLOOD_STANCE)],
     ),
     // The agent list (a game-truth line PoB reads; the Warden's): "Defences
     // from Equipped Body Armour are doubled if it has no Socketed Gems"
@@ -8617,6 +8627,16 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
+    // The agent list (2026-11-27): Point Blank (PoB's `PointBlank` flag), the main
+    // skill's distance ramp (`collect::distance_flags`).
+    (
+        "keystone_point_blank",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(false)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b part 11: Unwavering Stance (the keystone: "Cannot Evade enemy
     // Attacks", `CannotEvade`; its "Cannot be Stunned" reaches no field).
     (
@@ -9722,6 +9742,16 @@ pub const ROWS: &[Row] = &[
                 TakenOf::Type(DamageType::Physical),
             )),
             Op::Base,
+            1.0,
+        )],
+    ),
+    // The agent list (2026-11-27): Far Shot (PoB's `FarShot` flag), the main
+    // skill's distance ramp (`collect::distance_flags`).
+    (
+        "player_far_shot",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(true)),
+            Op::Flag,
             1.0,
         )],
     ),
@@ -11607,6 +11637,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("show_number_of_projectiles", "display"),
     // P6-11u: brands are not computed (`hit`).
     ("sigil_duration_+%", "skill-duration"),
+    // The agent list (2026-11-27): "#% more Area of Effect in Sand Stance"
+    // (`AreaOfEffect` MORE, `Condition:SandStance`): radius outputs alone, as
+    // `base_skill_area_of_effect_+%`.
+    ("skill_area_of_effect_+%_final_in_sand_stance", "area"),
     ("skill_area_of_effect_+%_per_power_charge", "area"),
     ("skill_art_variation", "no-slice"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
@@ -14000,6 +14034,16 @@ mod tests {
             (
                 "life_mastery_count_maximum_life_+%_final",
                 vec![(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+            ),
+            // The agent list (2026-11-27): Perforate's and Blood Spears'.
+            (
+                "blood_spears_damage_+%_final_in_blood_stance",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    conditions::BLOOD_STANCE,
+                )],
             ),
             // The agent list (2026-11-27): Lacerate's stance rows.
             (

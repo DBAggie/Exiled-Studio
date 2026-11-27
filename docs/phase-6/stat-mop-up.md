@@ -5681,3 +5681,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): `ice-nova-enemy-brittle-witch.xml` (effect 4.5: crit chance 12) and `ice-nova-enemy-brittle-capped-witch.xml` (effect 9, capped at 6: 13.5). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27bre` on `b-ig`, against `local/p6/d27ehe`): public 0 unexpected, `Complete` 56,666 to 56,840; 5 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (crit chance 65.0 to 81.0, PoB 100; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Point Blank, Far Shot, and the stance stats of Perforate (the agent list, 2026-11-27)
+
+**The stats:** `keystone_point_blank` (Point Blank, the keystone and its support) and `player_far_shot` (Far Shot), kept as reasons in `config::DEPENDS_ON` because they read the skill's distance; `blood_spears_damage_+%_final_in_blood_stance` (Perforate and Blood Spears) and `skill_area_of_effect_+%_final_in_sand_stance`, unmapped.
+
+**PoB** (`CalcOffence.lua` 1045 to 1053): with `PointBlank`, `Damage` MORE 30 for projectile attacks with `DistanceRamp` `{10, 1}, {35, 0}, {120, -1}`; with `FarShot`, MORE 100 with `{10, -0.2}, {25, 0}, {70, 0.6}`; the ramp is linear between points, the end values outside (`ModStore.lua` 555 to 570), at the skill's distance (`projectileDistance`, 40 by default). The stance stats are `Damage` MORE under `BloodStance` and `AreaOfEffect` MORE under `SandStance`.
+
+**The engine:** `Poe1Quantity::DistanceFlag` (a hit quantity, so the support's flag reaches the skill), turned by `collect::distance_flags`, after the gems, into the main skill's `Damage` MORE with `ATTACK | PROJECTILE` at the ramp (`piecewise`); the two stats leave `config::DEPENDS_ON`. Blood Spears' damage is a state row under `BLOOD_STANCE`; the Sand Stance area a `NoEffect` "area" row.
+
+**Fixtures** (original, the Burning Arrow bow build): Far Shot at the default distance and at 10, the Point Blank support at both. Every field equals PoB's but the Q11 floored-millisecond bow rate and what follows from it: `game-truth` DIV-1035 to DIV-1058.
+
+**Evidence** (`local/p6/d27fse` on `b-ig`, against `local/p6/d27bre`): public 0 unexpected, `Complete` 56,840 to 57,196; 9 values moved, 5 toward PoB (Elemental Hit of the Spectrum's DPS with its Far Shot, a Perforate build's bleeding to within 2% of PoB's), 4 away: the same Perforate build's hit, average damage 863,707 to 206,879 (PoB 604,979), which now takes Perforate's 75% less damage in Blood Stance while the `dpsMultiplier` PoB pairs with it, the configured spike overlap up to its spears (`perforateSpikeOverlap`, a `Multiplier` base mod with `limitVar`), is not read: the build keeps `pob-skill-data`; on the agent list. Corpus 0 unexpected, no value moved.

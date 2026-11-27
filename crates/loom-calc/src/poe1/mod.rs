@@ -651,6 +651,11 @@ pub enum Poe1Quantity {
     /// INC or MORE with the `DistanceRamp` tag `{35, 0}, {70, 1}`): `Base`,
     /// which `collect` scales by the skill's distance.
     DistanceRampDamage(bool),
+    /// Point Blank (`false`) and Far Shot (`true`) (the agent list,
+    /// 2026-11-27; PoB's `PointBlank` and `FarShot` flags, `CalcOffence.lua`
+    /// 1045 to 1053): a `Flag`, which `collect` turns into the main skill's
+    /// projectile attack `Damage` MORE by its distance ramp.
+    DistanceFlag(bool),
     /// "Deal up to #% more Melee Damage to Enemies, based on proximity" and
     /// Shield Crush's more damage from distance (P6-11ht; PoB's `Damage`
     /// MORE with the `MeleeProximity` tag, `ramp = {1, 0}`): `Base`, which
@@ -1843,6 +1848,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyResistOverrideOn(t) => write!(f, "enemy-resist-override-on.{}", t.name()),
             Self::ProjectileSpeed => f.write_str("projectile-speed"),
             Self::ProjectileSpeedToBowDamage => f.write_str("projectile-speed-to-bow-damage"),
+            Self::DistanceFlag(far) => f.write_str(if *far {
+                "distance-flag.far-shot"
+            } else {
+                "distance-flag.point-blank"
+            }),
             Self::DistanceRampDamage(more) => f.write_str(if *more {
                 "distance-ramp-more"
             } else {
