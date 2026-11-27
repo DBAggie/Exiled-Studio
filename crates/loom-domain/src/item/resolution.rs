@@ -141,6 +141,10 @@ pub enum Adapted {
     /// current description's text (ADR-015 Amendment 3); it resolved in
     /// the current wording with the same numbers.
     Reworded,
+    /// An unsigned non-negative value where the game's description prints a
+    /// forced sign (`{0:+d}`) read as `+` (ADR-015 Amendment 4): older
+    /// item text without the `+`, the same value.
+    SignAdded,
 }
 
 impl Adapted {
@@ -151,6 +155,7 @@ impl Adapted {
             Self::CaseFolded => "case-folded",
             Self::SplitSection => "split-section",
             Self::Reworded => "reworded",
+            Self::SignAdded => "sign-added",
         }
     }
 }

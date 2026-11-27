@@ -1,6 +1,6 @@
 # ADR-015: Stat-ID-First Modifier Model
 
-- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR; Amendment 3, 2026-11-24: reviewed rewordings for item lines, proposed in PR #168, accepted by the maintainer 2026-11-26 with its two open questions decided)
+- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR; Amendment 3, 2026-11-24: reviewed rewordings for item lines, proposed in PR #168, accepted by the maintainer 2026-11-26 with its two open questions decided; Amendment 4, 2026-11-26: a sign the game's description forces, accepted the same day)
 - Date: 2026-11-08
 
 ## Context
@@ -100,3 +100,23 @@ The maintainer accepted the amendment and answered both questions:
 2. **Non-modifier lines in items: option (b).** Amendment 2's `custom-note` rule extends to item lines that PoB parses into nothing and that have no digit and no modifier's word. They are shown and kept for export, and are never a reason. Item properties stay a resolver gap under `item-property`.
 
 Implemented on PR #187 (2026-11-26): `tools/rewordings/items.json`, `loom_parser::import::poe1::reword`, `loom-parity-cli item-rewordings`; evidence in `docs/phase-6/item-rewordings.md`. The item note rule is checked against PoB's parse of every no-template item line of the public fixtures and the corpus (no note is a line PoB applies); the modifier words gained "apply", "applies", and "instead" for it.
+
+
+## Amendment 4 (2026-11-26, accepted 2026-11-26): A sign the game's description forces
+Chosen by the maintainer on 2026-11-26 from two options ("I agree with your recommendation": a tolerance rather than reviewed table entries), from the four parallel agents' S9 report (`dev/active/open-items/maintainer-follow-ups.md`, "Signless \"+#%\" item lines"). Implementation is agent work.
+
+### Context
+The game's stat descriptions print some values with a forced sign (`{0:+d}`): "+{0}% Chance to Block Attack Damage during Effect", "+{0}% chance to Suppress Spell Damage", "+{0}% Chance to Block Attack Damage while wielding a Staff". Older item text writes the same value without the `+`: Rumi's Concoction's "(8-12)% Chance to Block Attack Damage during Effect", a staff's "18% Chance to Block Attack Damage while wielding a Staff". The resolver compares signs exactly (`resolve::shown_numbers`), so such a line's key is found but every variant is refused for its sign: `no-variant-fits` (`sign-mismatch`), a reason. PoB v2.67.2's parser reads the sign as optional and gives both texts the same mod.
+
+### Decision
+For PoE1 item lines and custom modifier lines:
+
+- **The tolerance `sign-added`** (Amendment 1's adapted lines). Tried only when exact matching gives `no-variant-fits` for the line alone, not through a composed wrapper, and every refused variant was refused for its sign only. The line is read again with each unsigned value where the variant's format forces a sign read as `+`, when the value is not negative (a number, or a range whose ends are not negative). It then resolves to the same stat IDs and values the signed text gives, and carries `adapted: sign-added`.
+- **It cannot change a value.** A negative value always prints its `-`, so only a missing `+` is added; a plain format (`{0}`) is never made to accept a `+`, and a literal sign in the template is unaffected.
+- **Contract changes, additive:** `Adapted` gains `sign-added` in the domain, in build v1, and in calc result v1 (the app API names it in its `adapted` text). A reader that does not know it sees an unknown string. Export keeps the line's original text.
+- **Unchanged.** Exact matching first; a line that reads exactly is never sign-added; any other refusal (a value outside the variant's conditions, a literal mismatch) keeps the line a reason.
+
+### Consequences
+- Every such line resolves without a per-line table entry, current and future.
+- The UI shows the line under "Lines to review" as any adapted line, so the player sees the text is not the game's.
+- Tests: `resolve::tests::resolve_sign_added_should_read_an_unsigned_value_where_the_format_forces_a_sign`; evidence in `docs/ui/b2-data/item-evidence.md`, "Signs the game's description forces".

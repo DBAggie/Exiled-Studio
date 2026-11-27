@@ -64,6 +64,7 @@ fn source_to(s: &c::Source) -> Source {
                 d::Adapted::CaseFolded => Adapted::CaseFolded,
                 d::Adapted::SplitSection => Adapted::SplitSection,
                 d::Adapted::Reworded => Adapted::Reworded,
+                d::Adapted::SignAdded => Adapted::SignAdded,
             }),
         },
         c::Source::ItemBase { item } => Source::ItemBase { item: item.0 },

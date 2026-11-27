@@ -271,3 +271,18 @@ Tests: `local_stat_should_decide_a_uniques_plain_readings_of_one_size`, `local_s
   - One moved away: the Cospris build's maximum energy shield leech rate, 301.5 to 307.5 (PoB 265.9). It follows the energy shield, which moved toward PoB's (3,015 to 3,075, PoB 5,318). PoB's rate is lower than the engine's for a cause not looked into here; the field was already a difference before this step, in a build that stays indeterminate.
 - **Corpus:** 0 unexpected; no document changed.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Signs the game's description forces (ADR-015 Amendment 4, 2026-11-26)
+
+**The lines.** The game prints some values with a forced sign (`{0:+d}`): "+{0}% Chance to Block Attack Damage during Effect", "+{0}% chance to Suppress Spell Damage", "+{0}% Chance to Block Attack Damage while wielding a Staff". Older item text writes them without the `+` (Rumi's Concoction's "(8-12)% Chance to Block Attack Damage during Effect"). The resolver compares signs exactly, so these lines were `no-variant-fits` (`sign-mismatch`). PoB's parser reads the sign as optional.
+
+**The tolerance `sign-added`** (`loom_parser::import::tolerance::sign_added`, `resolve::Index::resolve_sign_added`): tried only when every variant of the line's key was refused for its sign alone. Each unsigned, non-negative value where the format forces a sign is read as `+`; the line resolves to the same stat IDs and values the signed text gives, and carries `adapted: sign-added` (domain, build v1, calc result v1, the app API's text; additive; schemas regenerated). A plain format never accepts a `+`, and a negative value keeps its sign, so no value changes. It applies to item lines and custom modifier lines alike.
+
+**Evidence** (`local/p6/sa` on `b-pb`, against `local/p6/pc`):
+- **Public:** 0 unexpected; `Complete` unchanged (51,189).
+- **The Elemental Hit Deadeye** (`elemental-hit-of-the-spectrum-deadeye.xml`): its suppression line now reads. Spell suppression 47 to 77 (PoB 100); total EHP, the hits to die, and the mitigated hits move toward PoB.
+  - One value moves away: its configured damage chance, 89.9 to 83.4 (PoB 100). PoB moves suppression into damage reduction once it reaches 100% (`CalcDefence.lua` 2774 to 2781), so its value is 100. Below 100%, PoB's own formula applies the suppression effect as the engine does, so 83.4 is PoB's formula at 77%. The gap is the suppression itself (77 against 100), from the build's other unread sources.
+- **Rumi's Concoction** (`cyclone-shockwave-slayer.xml`, `forged-frostbearer-spectre-necromancer.xml`): its two block lines now resolve, so 177 fields go from partial (the line a reason) to indeterminate. The item's saved `<ModRange>` entries disagree with its lines' `{range:}` prefixes (the 0.732 roll is on another line), and when they disagree no roll is settled (`pob_item::values::mod_ranges_agree`), since which one PoB uses is not known. The block's value is honestly unknown rather than dropped.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** `resolve::tests::resolve_sign_added_should_read_an_unsigned_value_where_the_format_forces_a_sign`, the workspace tests, the real-bundle tests, clippy, rustfmt, wasm32, and schema freshness.

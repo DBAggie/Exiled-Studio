@@ -1285,7 +1285,7 @@ export interface CardDefence {
 export interface LineView {
   /**
    * The tolerance it needed (`case-folded`, `split-section`,
-   * `reworded`).
+   * `reworded`, `sign-added`).
    */
   adapted?: string | null
   /**

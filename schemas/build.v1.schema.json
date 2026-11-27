@@ -45,6 +45,11 @@
           "description": "An older wording read in its current wording through the\nreviewed rewording table (ADR-015 Amendment 3; additive).",
           "type": "string",
           "const": "reworded"
+        },
+        {
+          "description": "An unsigned non-negative value read as signed where the game's\ndescription forces a sign (ADR-015 Amendment 4; additive).",
+          "type": "string",
+          "const": "sign-added"
         }
       ]
     },

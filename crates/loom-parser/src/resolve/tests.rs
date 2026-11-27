@@ -174,6 +174,35 @@ fn resolve_should_read_signed_values_and_reject_signs_the_format_never_writes() 
     );
 }
 
+/// ADR-015 Amendment 4: an unsigned non-negative value or range where the
+/// format forces a sign reads as `+` through the sign-added tolerance only;
+/// a negative value keeps its sign, and a plain format is not affected.
+#[test]
+fn resolve_sign_added_should_read_an_unsigned_value_where_the_format_forces_a_sign() {
+    let set = one_file(vec![simple("life", "{0:+d} to maximum Life")]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let r = index.resolve_sign_added("25 to maximum Life").unwrap();
+    assert_eq!(values(&r), vec![("life".to_owned(), exact(25))]);
+    let r = index.resolve_sign_added("(8-12) to maximum Life").unwrap();
+    assert_eq!(values(&r), vec![("life".to_owned(), ranged(8, 12))]);
+    // A signed line is unchanged by the tolerance.
+    let r = index.resolve_sign_added("-5 to maximum Life");
+    assert!(r.is_none(), "{r:?}");
+    // A key the index does not have.
+    assert!(index.resolve_sign_added("25 to maximum Mana").is_none());
+    // A plain format: a `+` is never removed, and the tolerance has
+    // nothing to read on a line with no unsigned value.
+    let plain = one_file(vec![simple("life", "{0} to maximum Life")]);
+    let scope = plain.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    assert!(index.resolve_sign_added("+25 to maximum Life").is_none());
+    assert_eq!(
+        rejections(&resolve(&plain, "+25 to maximum Life")),
+        vec!["sign-mismatch"]
+    );
+}
+
 #[test]
 fn resolve_should_read_ranges_as_intervals() {
     let set = one_file(vec![desc(

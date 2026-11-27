@@ -55,7 +55,8 @@ export type Exclusion = 'not-selected' | 'custom' | 'section'
 /**
  * An import tolerance a line needed.
  */
-export type Adapted = 'case-folded' | 'split-section' | 'reworded'
+export type Adapted =
+  'case-folded' | 'split-section' | 'reworded' | 'sign-added'
 /**
  * A typed result read from game data.
  */
