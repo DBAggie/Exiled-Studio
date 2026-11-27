@@ -5588,3 +5588,13 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixtures** (original): `ice-nova-sigil-of-power-default-witch.xml` (no input: 1 stage, average damage 823.78), `...-three-stages-witch.xml` (1,015.71), `...-six-stages-witch.xml` (4 stages, 1,111.42, total EHP 919.23 with the enemy's less damage). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27spe` on `b-ig`, against `local/p6/d27nle`): public 0 unexpected, `Complete` 55,337 to 55,598 (the fixtures' 261); 4 values moved, all toward PoB (`shock-nova-archmage-hierophant.xml`'s damage, partial on its other reasons). Corpus 0 unexpected, 4 values toward PoB, none away. `data-parity` on `b-ig`: Sigil of Power's rows match; 10 `uncategorized` rows remain from earlier steps of this PR, which changed the gem table without a `data-parity` run (the last clean one was S3 part 8's, `local/p6/dp-s3f`): Blood Rage's and Righteous Fire's degeneration (the check has no form for `Degen` and its `PerStat` tag), Frost Shield's energy shield loss (a net regeneration marker), Vaal Grace's reason stat, and the craft trigger (Check 4). They are check forms, not values; on the agent list.
+
+## The `gem_effects` check's forms since S3 part 8 (the agent list, 2026-11-27)
+
+Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier steps of this PR, each a form the check (`tools/parity-cli/src/data_parity/gem_effects.rs`) lacked, none a value:
+- **Blood Rage's and Righteous Fire's degeneration** (S7 part 8): the check had no PoB name for `Poe1Quantity::Degen`; it is `<Type>Degen`, and a degeneration per point of life, energy shield, or mana carries PoB's `PerStat` tag (`div` 1) before the variant's own tags. Righteous Fire of Arcane Devotion's per-mana row also carries `Mana` at least 1, which a value per point of mana implies (0 without mana).
+- **Frost Shield's energy shield loss:** a net regeneration marker (`NetRegenReason`), skipped as the other field-reason markers are.
+- **Vaal Grace's** "Suppressed Spell Damage dealt to you is Unlucky": PoB's stat map has no row, the engine keeps it a reason (open items S2); `ENGINE_ONLY_GLOBAL` lets the table list it.
+- **The crafted socketed-spell trigger** (Check 4): ported as PoB's trigger craft, so its `Triggered` type and `triggeredByCraft` data are allowed, as the other ported trigger supports'.
+
+**Evidence:** `data-parity` on `b-ig` against PoB's export (`local/p6/dp-d27dp`): 753 differences, `uncategorized` 0, 0 failed rules. No calculation changed. `loom-parity-cli` tests, clippy, and rustfmt pass.
