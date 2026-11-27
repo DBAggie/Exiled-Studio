@@ -35,7 +35,9 @@
 //!   keeps its value ([`LineValues::Catalysed`]). Otherwise the line is
 //!   [`LineValues::Scaled`] (`catalyst`): a stat whose scalability is not
 //!   known, a multi-line reading, an untagged ranged line on a catalysed
-//!   item (the game scales it; PoB does not), and a `Quality (...
+//!   item that the game may scale (PoB does not; one on a unique whose mod
+//!   rows all lack the catalyst's tags is read unscaled, as both read it,
+//!   [`line_values_full`]), and a `Quality (...
 //!   Modifiers)` catalyst line, whose catalyst the adapter does not name
 //!   (it scales every tagged or ranged line).
 //! - **Corrupted range** (`{corruptedRange}`, `formatValue`'s
@@ -125,7 +127,41 @@ pub fn line_values_with(
     ends: &LineEnds,
     scalable: &dyn Fn(&str) -> Option<bool>,
 ) -> BTreeMap<usize, LineValues> {
+    line_values_full(item, ends, scalable, &|_| None)
+}
+
+/// [`line_values_with`] with the implicit tags of the unique mod rows that
+/// carry a reading (`unique_tags`: the union of the tags of every unique row
+/// whose stats are the reading's; `None` when no row is, or the bundle does
+/// not carry tags). An untagged ranged line on a catalysed unique is then
+/// read as PoB reads it, unscaled, when the game does not scale it either:
+/// every row the line could be has none of the catalyst's tags (the agent
+/// list, S9; the game scales a mod by its tags, PoB a line by its
+/// `{tags}`). Otherwise it stays [`LineValues::Scaled`] (`catalyst`).
+#[must_use]
+pub fn line_values_full(
+    item: &Item,
+    ends: &LineEnds,
+    scalable: &dyn Fn(&str) -> Option<bool>,
+    unique_tags: &dyn Fn(&[&str]) -> Option<Vec<String>>,
+) -> BTreeMap<usize, LineValues> {
     let body = &item.body;
+    let unique = body.rarity.unwrap_or(loom_domain::Rarity::Unique) == loom_domain::Rarity::Unique;
+    // An untagged line the game leaves unscaled: a unique's line whose rows
+    // carry none of the catalyst's tags.
+    let game_unscaled = |scaled: &[&str], m: &ModifierLine| {
+        let LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            return false;
+        };
+        let ids: Vec<&str> = stats.iter().map(|s| s.stat.as_str()).collect();
+        unique
+            && unique_tags(&ids)
+                .is_some_and(|tags| !tags.iter().any(|t| scaled.contains(&t.as_str())))
+    };
     let mut out = BTreeMap::new();
     let modifiers: Vec<(usize, &ModifierLine)> = body.modifiers().collect();
     if modifiers
@@ -157,7 +193,7 @@ pub fn line_values_with(
         }
         if lines
             .iter()
-            .any(|m| catalysed(&catalyst, m, has_range(&m.text)))
+            .any(|m| catalysed(&catalyst, m, has_range(&m.text), &game_unscaled))
         {
             let values = catalysed_values(&catalyst, lines, ends.get(n), rolls_agree, scalable);
             out.insert(
@@ -474,8 +510,15 @@ fn line_tags(m: &ModifierLine) -> Vec<&str> {
     tags
 }
 
-/// Whether the catalyst scales the line.
-fn catalysed(catalyst: &Catalyst, m: &ModifierLine, ranged: bool) -> bool {
+/// Whether the catalyst scales the line: by its `{tags}` or flags, or, for
+/// an untagged ranged line, unless `game_unscaled` says the game leaves it
+/// unscaled ([`line_values_full`]).
+fn catalysed(
+    catalyst: &Catalyst,
+    m: &ModifierLine,
+    ranged: bool,
+    game_unscaled: &dyn Fn(&[&str], &ModifierLine) -> bool,
+) -> bool {
     if matches!(catalyst, Catalyst::None)
         || m.has("unscalable")
         || m.text.ends_with(" - Unscalable Value")
@@ -501,7 +544,8 @@ fn catalysed(catalyst: &Catalyst, m: &ModifierLine, ranged: bool) -> bool {
         Catalyst::None => false,
         Catalyst::Unnamed => !untagged || ranged,
         Catalyst::Tags(scaled, _) => {
-            (untagged && ranged) || tags.iter().any(|t| scaled.contains(t))
+            tags.iter().any(|t| scaled.contains(t))
+                || (untagged && ranged && !game_unscaled(scaled, m))
         }
     }
 }
@@ -768,6 +812,53 @@ Implicits: 0
             got.get(&lines[4]),
             Some(&LineValues::Scaled(Scaling::Catalyst))
         );
+    }
+
+    /// The agent list (S9): an untagged ranged line on a catalysed unique is
+    /// rolled, as PoB reads it, when every unique row the reading could be
+    /// lacks the catalyst's tags; a row with one of them, no row, or a rare
+    /// item keeps the reason.
+    #[test]
+    fn an_untagged_unique_line_should_roll_when_its_rows_lack_the_tags() {
+        let text = |rarity: &str| {
+            format!(
+                "Rarity: {rarity}\nA\nIron Ring\nCatalyst: Intrinsic\nCatalystQuality: 20\nImplicits: 0\n{}",
+                "{range:1}(20-30)% increased Damage with Hits against Rare monsters",
+            )
+        };
+        let resolved = |rarity: &str| {
+            let mut it = item(&text(rarity), &[]);
+            let n = it.body.modifiers().map(|(n, _)| n).next().unwrap();
+            if let Some(LineKind::Modifier(m)) = it.body.lines.get_mut(n).map(|l| &mut l.kind) {
+                m.resolution = LineResolution::Resolved {
+                    result: Resolved::Stats(vec![loom_domain::StatLine {
+                        stat: loom_domain::StatId::new("damage_+%_vs_rare_monsters"),
+                        value: StatValue::Ranged { min: 20, max: 30 },
+                    }]),
+                    adapted: None,
+                };
+            }
+            (it, n)
+        };
+        let scalable = |_: &str| Some(true);
+        let (unique, n) = resolved("UNIQUE");
+        let e = ends(&[(n, 20, 30)]);
+        let tags = |t: &'static [&'static str]| {
+            move |_: &[&str]| Some(t.iter().map(|s| (*s).to_owned()).collect())
+        };
+        // The row's tag is "damage": Intrinsic scales attributes only.
+        let got = line_values_full(&unique, &e, &scalable, &tags(&["damage"]));
+        assert_eq!(got.get(&n), Some(&LineValues::Rolled(vec![Some(30)])));
+        // A row with the catalyst's tag: the game scales it, PoB does not.
+        let got = line_values_full(&unique, &e, &scalable, &tags(&["attribute"]));
+        assert_eq!(got.get(&n), Some(&LineValues::Scaled(Scaling::Catalyst)));
+        // No row known.
+        let got = line_values_full(&unique, &e, &scalable, &|_| None);
+        assert_eq!(got.get(&n), Some(&LineValues::Scaled(Scaling::Catalyst)));
+        // A rare item's untagged line: not read by the unique rows.
+        let (rare_item, n) = resolved("RARE");
+        let got = line_values_full(&rare_item, &e, &scalable, &tags(&["damage"]));
+        assert_eq!(got.get(&n), Some(&LineValues::Scaled(Scaling::Catalyst)));
     }
 
     #[test]

@@ -800,6 +800,48 @@ pub fn migrate_cluster_hashes(
     changed
 }
 
+/// The implicit tags of the bundle's unique mod rows, by their stats
+/// (sorted, those with a value other than `(0, 0)`), each the union over
+/// the rows with those stats ([`pob_item::line_values_full`]; the agent
+/// list, S9). The unique rows are those of the generation types the item
+/// rules fit to a unique's explicit lines. Empty for a bundle before data
+/// schema 3, whose mods carry no tags.
+fn unique_row_tags(bundle: &loom_data::bundle::Bundle) -> BTreeMap<Vec<String>, BTreeSet<String>> {
+    let mut out: BTreeMap<Vec<String>, BTreeSet<String>> = BTreeMap::new();
+    if bundle.manifest.data_schema < loom_calc::input::IMPLICIT_TAGS_SCHEMA {
+        return out;
+    }
+    let generations: BTreeSet<i64> = bundle
+        .item_rules
+        .mods
+        .fits
+        .iter()
+        .filter(|f| f.unique == Some(true) && f.section == loom_domain::ModSection::Explicit)
+        .flat_map(|f| f.clauses.iter().flat_map(|c| c.generations.iter().copied()))
+        .collect();
+    for row in bundle
+        .mods
+        .iter()
+        .filter(|m| generations.contains(&m.generation))
+    {
+        let mut key: Vec<String> = row
+            .stats
+            .iter()
+            .filter(|s| (s.min, s.max) != (0, 0))
+            .map(|s| s.stat.clone())
+            .collect();
+        key.sort_unstable();
+        key.dedup();
+        if key.is_empty() {
+            continue;
+        }
+        out.entry(key)
+            .or_default()
+            .extend(row.implicit_tags.iter().cloned());
+    }
+    out
+}
+
 /// The engine's options for `build`: each item's base name and PoB's line
 /// values from the range ends, the data's tree version, if the host knows
 /// it, and the active spec's passives resolved against `tree`
@@ -847,6 +889,18 @@ pub fn options_with(
         .filter_map(|s| Some((s.id.as_str(), s.scalable?)))
         .collect();
     let scalable = |stat: &str| scalability.get(stat).copied();
+    // The unique rows' tags, read only when an untagged line on a
+    // catalysed unique asks for them.
+    let unique_rows = std::cell::OnceCell::new();
+    let unique_tags = |stats: &[&str]| -> Option<Vec<String>> {
+        let mut key: Vec<String> = stats.iter().map(|s| (*s).to_owned()).collect();
+        key.sort_unstable();
+        key.dedup();
+        unique_rows
+            .get_or_init(|| unique_row_tags(data.bundle()))
+            .get(&key)
+            .map(|t: &BTreeSet<String>| t.iter().cloned().collect())
+    };
     let item_lines = build
         .items
         .items()
@@ -865,7 +919,7 @@ pub fn options_with(
                         .collect()
                 })
                 .unwrap_or_default();
-            let values = pob_item::line_values_with(item, &item_ends, &scalable);
+            let values = pob_item::line_values_full(item, &item_ends, &scalable, &unique_tags);
             (!values.is_empty()).then_some((item.id, values))
         })
         .collect();

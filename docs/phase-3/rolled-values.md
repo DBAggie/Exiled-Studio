@@ -112,3 +112,19 @@ $lpc calc-run $public --bundle $b --scope $scope --data-overlay local/p3/p3-1d/p
 $lpc calc-parity <out>/oracle <out>/public --slice docs/phase-3/slice-fields.json --out <out>/parity --register docs/parity/divergence-register.json --overlay-run <out>/public-overlay --manifest tools/oracle/fixtures/fixtures.json
 $lpc calc-run "<corpus>" --anonymous --bundle $b --scope $scope --out <out>/corpus
 ```
+
+## The agent list (S9, 2026-11-26): an untagged line on a catalysed unique
+
+A catalyst scales a line in PoB by the line's own `{tags}` (`Item.lua` 31 to 62, `getCatalystScalar`), and a unique's lines in a saved build often carry none: Mageblood's "Leftmost (2-4) Magic Utility Flasks...", Nimis' "(25-35)% increased Projectile Damage". PoB leaves such a line unscaled. The game scales a mod by its own tags. So the engine had made every untagged ranged line on a catalysed item a reason (`scaled-line`, `catalyst`): the game might scale it.
+
+**What the game data settles.** The bundle's unique mod rows carry their implicit tags (data schema 3, `ModEntry::implicit_tags`). For an untagged ranged line on a catalysed unique, `loom_pipeline` looks up the unique rows whose stats are the line's reading: the rows of the generation types the item rules fit to a unique's explicit lines, with their stats other than `(0, 0)`.
+- **None of them has a catalyst tag:** the game leaves the line unscaled too. Mageblood's flask row has no tags; Headhunter's `damage_+%_vs_rare_monsters` row is `damage`, and Intrinsic scales attributes. Then the line is rolled as any other (`pob_item::line_values_full`), equal to PoB's.
+- **A row has one, or no row matches:** the line stays a reason, as before.
+- **A rare item's untagged line** is not read this way; it stays a reason.
+
+**Evidence** (the S9 agent: `local/p6/s9-2` on `b-s9`, against `local/p6/s9-1`):
+- **Public:** 0 unexpected; `Complete` unchanged (49,371). The `catalyst` reason is gone from every public build: 583 fields lost it (7 builds).
+  - Eight values moved, all toward PoB, none away: `elemental-hit-of-the-spectrum-deadeye.xml` and `lightning-trap-of-sparking-elementalist.xml` (Nimis' projectile damage now counts), their average damage, hit DPS, combined and full DPS.
+  - The other five builds changed in their reasons only.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `pob_item::values::tests::an_untagged_unique_line_should_roll_when_its_rows_lack_the_tags`; the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
