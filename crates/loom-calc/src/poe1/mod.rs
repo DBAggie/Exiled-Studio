@@ -323,6 +323,10 @@ pub enum Poe1Quantity {
     /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
     /// skills are set up, as PoB reads its `GemProperty` modifiers.
     GemLevel(&'static str),
+    /// A global gem quality stat of [`gem_levels::QUALITY_STATS`], by stat
+    /// ID (the agent list): `Base`, read by [`gem_levels::GemLevels`] as
+    /// PoB's `GemProperty` `quality` (`applyGemMods`).
+    GemQuality(&'static str),
     /// A socketed gem level stat of [`gem_levels::SOCKETED_STATS`] on the
     /// item in a slot (P6-11q): `Base`, read by [`gem_levels::GemLevels`]
     /// for the gems of the groups in that slot.
@@ -1650,6 +1654,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
+            Self::GemQuality(stat) => write!(f, "gem-quality.{stat}"),
             Self::SocketedCostMultiplier(slot) => write!(f, "socketed-cost-multiplier.{slot:?}"),
             Self::SocketedGemLevel(stat, slot) => {
                 write!(f, "socketed-gem-level.{}.{stat}", slot.name())

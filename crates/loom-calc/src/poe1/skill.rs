@@ -818,7 +818,9 @@ fn group_effects<'d>(
                 effect,
                 level: i64::from(*gem.level.value()) + bonus,
                 bonus,
-                quality: i64::from(*gem.quality.value()) + socket.bonus(),
+                quality: i64::from(*gem.quality.value())
+                    + socket.bonus()
+                    + levels.quality_bonus(variant.map(|v| v.tags.as_slice())),
                 socket,
                 from_item: false,
             };

@@ -5458,3 +5458,17 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixture** (original) `ice-nova-chaos-not-bypass-es-witch.xml`: Shavronne's Wrappings on a witch: chaos's maximum hit 917 (the shield in it, as fire's 900), total pool 1,467. Every field equals PoB's.
 
 **Evidence** (`local/p6/cbe` on `b-pb`, against `local/p6/mbe`): public 0 unexpected, `Complete` 54,039 to 54,126 (the fixture's 87); 11 values of 2 builds moved, all toward PoB: `lightning-trap-of-sparking-elementalist.xml`'s chaos maximum hit 8 to 24,100 (PoB 24,536) and total EHP 9,053 to 93,339 (PoB 323,641), `Dual Wield Cospris CoC.xml`'s chaos maximum hit 1,060 to 3,520 (PoB 5,321). Corpus 0 unexpected, no document changed.
+
+## The quality of all skill gems (the agent list, 2026-11-27)
+
+**The stat** (143 public fields of 2 builds): "+#% to Quality of all Skill Gems" (`all_skill_gem_quality_+`).
+
+**PoB** (`ModParser.lua` 3184): `GemProperty` LIST `{ keyword = "grants_active_skill", key = "quality" }`; `applyGemMods` (`CalcSetup.lua` 292 to 324) adds the value to the quality of each effect of a gem that grants an active skill, the same pass that adds gem levels.
+
+**The engine:** `gem_levels::QUALITY_STATS` and `Poe1Quantity::GemQuality` (`Base`), summed by `GemLevels` with the level stats and added by `GemLevels::quality_bonus` to the quality of each effect of a gem whose tags match (`skill::group_effects`), as P3-8i's levels are. Supports are not active skill gems, so they keep their own quality.
+
+**Tests:** `gem_levels::tests::gem_quality_should_reach_active_skill_gems_only`.
+
+**Fixture** (original) `ice-nova-all-skill-gem-quality-witch.xml`: Ice Nova at quality 0 with Controlled Destruction and the line at 20%: Ice Nova at quality 20 (its area 30 to 33). Every field equals PoB's.
+
+**Evidence** (`local/p6/gqe` on `b-pb`, against `local/p6/cbe`): public 0 unexpected, `Complete` 54,126 to 54,213 (the fixture's 87); 6 values of `lacerate-bleed-gladiator.xml` moved, all toward PoB. Corpus 0 unexpected, no document changed.

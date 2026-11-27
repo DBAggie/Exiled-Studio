@@ -366,10 +366,22 @@ pub const GEM_STATS: [(&str, &str); 1] = [(
     "Metadata/Items/Gems/SkillGemRaiseSpectre",
 )];
 
-/// The quantity of a gem level stat, if it is one of [`LEVEL_STATS`] or
-/// [`GEM_STATS`].
+/// The global gem quality stats and their keywords (the agent list),
+/// sorted by stat ID: "+#% to Quality of all Skill Gems" is PoB's
+/// `GemProperty` `{ keyword = "grants_active_skill", key = "quality" }`
+/// (`ModParser.lua` 3184), which `applyGemMods` adds to the quality of
+/// each effect of a gem that grants an active skill (`CalcSetup.lua` 292
+/// to 324).
+pub const QUALITY_STATS: [(&str, &[&str]); 1] =
+    [("all_skill_gem_quality_+", &["grants_active_skill"])];
+
+/// The quantity of a gem level or quality stat, if it is one of
+/// [`LEVEL_STATS`], [`GEM_STATS`], or [`QUALITY_STATS`].
 #[must_use]
 pub fn quantity(stat: &str) -> Option<Quantity> {
+    if let Some((id, _)) = QUALITY_STATS.iter().find(|(id, _)| *id == stat) {
+        return Some(Quantity::Poe1(Poe1Quantity::GemQuality(id)));
+    }
     LEVEL_STATS
         .binary_search_by(|(id, _)| (*id).cmp(stat))
         .ok()
@@ -406,6 +418,8 @@ pub fn is_type(tags: &[String], keyword: &str) -> bool {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct GemLevels {
     totals: BTreeMap<&'static str, f64>,
+    /// The quality totals per stat of [`QUALITY_STATS`].
+    quality: BTreeMap<&'static str, f64>,
     /// The socketed totals per slot and stat of [`SOCKETED_STATS`].
     socketed: BTreeMap<(GemSlot, &'static str), f64>,
     /// The supports items grant (P6-11r): slot, row stat, level, in the
@@ -435,6 +449,7 @@ impl GemLevels {
     #[must_use]
     pub fn from_effects(effects: &[Effect]) -> Self {
         let mut totals = BTreeMap::new();
+        let mut quality = BTreeMap::new();
         let mut socketed = BTreeMap::new();
         let mut supports = Vec::new();
         let mut cost = Vec::new();
@@ -448,6 +463,9 @@ impl GemLevels {
             match e.quantity {
                 Quantity::Poe1(Poe1Quantity::GemLevel(stat)) => {
                     *totals.entry(stat).or_insert(0.0) += e.value;
+                }
+                Quantity::Poe1(Poe1Quantity::GemQuality(stat)) => {
+                    *quality.entry(stat).or_insert(0.0) += e.value;
                 }
                 Quantity::Poe1(Poe1Quantity::SocketedGemLevel(stat, slot)) => {
                     *socketed.entry((slot, stat)).or_insert(0.0) += e.value;
@@ -473,6 +491,7 @@ impl GemLevels {
         }
         Self {
             totals,
+            quality,
             socketed,
             supports,
             cost,
@@ -554,10 +573,32 @@ impl GemLevels {
         levels
     }
 
+    /// The quality a gem with `tags` gains ([`QUALITY_STATS`]; `tags`
+    /// `None`: a skill an item grants, which has no gem). Stat values are
+    /// integers, so the sum is exact.
+    #[must_use]
+    pub fn quality_bonus(&self, tags: Option<&[String]>) -> i64 {
+        let Some(tags) = tags else { return 0 };
+        let sum: f64 = QUALITY_STATS
+            .iter()
+            .filter(|(_, words)| words.iter().all(|w| is_type(tags, w)))
+            .filter_map(|(id, _)| self.quality.get(id))
+            .sum();
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "a sum of integer stat values, far inside i64"
+        )]
+        let quality = sum.round() as i64;
+        quality
+    }
+
     /// Whether the build has any gem level modifier.
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.totals.is_empty() && self.socketed.is_empty() && self.supports.is_empty()
+        self.totals.is_empty()
+            && self.quality.is_empty()
+            && self.socketed.is_empty()
+            && self.supports.is_empty()
     }
 }
 
@@ -625,6 +666,32 @@ mod tests {
         assert!(!levels.is_empty());
         assert!(GemLevels::none().is_empty());
         assert_eq!(GemLevels::none().bonus(Some(&ice_nova), None), 0);
+    }
+
+    /// "+#% to Quality of all Skill Gems" (the agent list): active skill
+    /// gems only, as PoB's `grants_active_skill` keyword.
+    #[test]
+    fn gem_quality_should_reach_active_skill_gems_only() {
+        let stat = QUALITY_STATS[0].0;
+        assert_eq!(
+            quantity(stat),
+            Some(Quantity::Poe1(Poe1Quantity::GemQuality(stat)))
+        );
+        let effect = |v| Effect {
+            quantity: quantity(stat).expect("a quality stat"),
+            op: Op::Base,
+            value: v,
+            conditions: Conditions::none(),
+            source: Source::Rule("test"),
+        };
+        let levels = GemLevels::from_effects(&[effect(10.0), effect(5.0)]);
+        let active = tags(&["grants_active_skill", "spell", "cold"]);
+        let support = tags(&["support", "spell"]);
+        assert_eq!(levels.quality_bonus(Some(&active)), 15);
+        assert_eq!(levels.quality_bonus(Some(&support)), 0);
+        assert_eq!(levels.quality_bonus(None), 0);
+        assert_eq!(levels.bonus(Some(&active), None), 0);
+        assert!(!levels.is_empty());
     }
 
     #[test]
