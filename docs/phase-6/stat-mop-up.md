@@ -5889,3 +5889,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Smite with a Siege Axe and the line, with 400% increased global crit chance, and with Culling Strike too (the regular 10%, the larger); Ice Nova with the line and 300% increased global crit chance. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the attack's hit rate reaches its critical cull): `game-truth` DIV-1210 to DIV-1227.
 
 **Evidence** (`local/p6/d28cde` on `b-ig`, against `local/p6/d28cbe`): public 0 unexpected, `Complete` 60,616 to 60,967 (the fixtures'); 2 values moved, toward PoB (`ethereal-knives-mines-assassin.xml`'s CombinedDPS and FullDPS). Corpus 0 unexpected, no value moved.
+
+## A flask's partial instant recovery (the agent list, 2026-11-28)
+
+**The stat:** a flask's "#% of Recovery applied Instantly" (`local_flask_recovery_amount_%_to_recover_instantly`), unmapped in one public build.
+
+**PoB** (`CalcPerform.lua` 1603 to 1614, 1733): `FlaskInstantRecovery` BASE, the flask's `instantPerc`; a flask whose instant share (with the low life share while on low life) is below 100 sets the `Using` conditions.
+
+**The engine:** `flasks::PARTIAL_INSTANT_STAT`, a `NoEffect` row of the flask's mapping (its recovery is not modelled), and `all_instant` sums the share: 100 for "Instant Recovery", the line's value, and 100 for the low life line on settled low life; at least 100 is all at once, a range across 100 or an unsettled low life below it is unsettled.
+
+**Fixture** (original): Ice Nova with an active Divine Life Flask with 50% (in use: "during any Flask Effect" applies). Every field equals PoB's. A line at 100% fits no variant of the game's mods, so no fixture has one.
+
+**Evidence** (`local/p6/d28fie` on `b-ig`, against `local/p6/d28cde`): public 0 unexpected, `Complete` 60,967 to 61,055 (the fixture's); no other value moved. Corpus 0 unexpected, no value moved.

@@ -294,6 +294,7 @@ impl StatMapping for FlaskMapping {
             || DURATION_STATS.contains(&id)
             || id == INSTANT_STAT
             || id == LOW_LIFE_INSTANT_STAT
+            || id == PARTIAL_INSTANT_STAT
         {
             return StatMap::NoEffect;
         }
@@ -630,32 +631,74 @@ pub const INSTANT_STAT: &str = "local_flask_recovers_instantly";
 /// reaches no slice field.
 pub const LOW_LIFE_INSTANT_STAT: &str = "local_flask_recover_instantly_when_on_low_life";
 
-/// Whether the item `id` recovers all at once ([`INSTANT_STAT`] on one of
-/// its selected lines, or [`LOW_LIFE_INSTANT_STAT`] with `low_life`, the
-/// settled low life): `None` when that depends on an unsettled low life.
+/// "#% of Recovery applied Instantly" (the agent list, 2026-11-28; PoB's
+/// `FlaskInstantRecovery` BASE, added to the flask's `instantPerc`): the
+/// flask recovers all at once when its instant share reaches 100
+/// (`CalcPerform.lua` 1603 to 1614). The line itself reaches no slice
+/// field.
+pub const PARTIAL_INSTANT_STAT: &str = "local_flask_recovery_amount_%_to_recover_instantly";
+
+/// Whether the item `id` recovers all at once: its instant share, 100 for
+/// [`INSTANT_STAT`] and the value of [`PARTIAL_INSTANT_STAT`] on its
+/// selected lines, plus 100 for [`LOW_LIFE_INSTANT_STAT`] with `low_life`
+/// (the settled low life), at least 100. `None` when that depends on an
+/// unsettled low life or on a value whose range straddles 100.
 fn all_instant(input: &CalcInput<'_>, id: ItemId, low_life: Option<bool>) -> Option<bool> {
     let Some(item) = input.build.items.item(id) else {
         return Some(false);
     };
-    let has = |stat: &str| {
-        item.body.lines.iter().any(|l| match &l.kind {
-            loom_domain::LineKind::Modifier(m) if m.selected => match &m.resolution {
-                LineResolution::Resolved {
-                    result: Resolved::Stats(stats),
-                    ..
-                } => stats.iter().any(|s| s.stat.as_str() == stat),
-                _ => false,
-            },
-            _ => false,
-        })
-    };
-    if has(INSTANT_STAT) {
-        return Some(true);
+    let (mut low, mut high, mut on_low_life) = (0_i64, 0_i64, false);
+    for l in &item.body.lines {
+        let loom_domain::LineKind::Modifier(m) = &l.kind else {
+            continue;
+        };
+        if !m.selected {
+            continue;
+        }
+        let LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            continue;
+        };
+        for st in stats {
+            match st.stat.as_str() {
+                INSTANT_STAT => {
+                    low += 100;
+                    high += 100;
+                }
+                PARTIAL_INSTANT_STAT => {
+                    let (a, b) = match &st.value {
+                        StatValue::Exact { min, max } | StatValue::Ranged { min, max, .. } => {
+                            (*min, *max)
+                        }
+                        // A value not shown: neither bound known.
+                        StatValue::Hidden { .. } | StatValue::Lookup(_) => (0, 100),
+                    };
+                    low += a;
+                    high += b;
+                }
+                LOW_LIFE_INSTANT_STAT => on_low_life = true,
+                _ => {}
+            }
+        }
     }
-    if has(LOW_LIFE_INSTANT_STAT) {
-        return low_life;
+    if on_low_life {
+        match low_life {
+            Some(true) => return Some(true),
+            Some(false) => {}
+            None if low >= 100 => return Some(true),
+            None => return None,
+        }
     }
-    Some(false)
+    if low >= 100 {
+        Some(true)
+    } else if high < 100 {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 /// The active flasks that do not recover all at once (P6-11gw): the ones
