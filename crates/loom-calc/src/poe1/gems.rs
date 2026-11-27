@@ -3465,6 +3465,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportTriggerSpellOnBowAttackFreezeHit", &[]),
     ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", &[]),
     ("SupportTrinity", &[]),
+    // Open items S2: Unbound Ailments has no global stat; its ailment
+    // effect is the supported skill's own, read for Summon Skitterbots'
+    // auras ([`skitterbots`]) and a reason for a chilling area
+    // ([`guaranteed_chill`]).
+    ("SupportUnboundAilments", &[]),
     (
         "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
         &[],
@@ -6321,58 +6326,57 @@ fn ailment_overrides(
 /// mods of source `Skill`: the gem's `shock_effect_+%` and
 /// `chill_effect_+%` at its level), each marking the enemy shocked or
 /// chilled. No effect modifier scales an override afterwards (3509 to
-/// 3519). A support with an ailment effect stat (its `Skill` mods too), Bonechill's flag
-/// on it (`SkitterbotBonechill`), and the modifiers that stop or change
-/// the auras (`SkitterbotsCannotShock`, `SkitterbotAilmentEffect`,
-/// `ScorchingSkitterbot`, `SkitterbotAffectPlayer`: unmapped stats) are
-/// reasons.
+/// 3519). The `inc` is every `Skill` mod of the skill: the gem's and its
+/// supports' stats ([`SHOCK_EFFECT_STATS`], [`CHILL_EFFECT_STATS`]; open
+/// items S2: Unbound Ailments' `non_damaging_ailment_effect_+%`, Bonechill's
+/// `chill_effect_+%`). Bonechill on it (`supportBonechill`) gives the
+/// guaranteed Bonechill (1357 to 1358, 1379 to 1380; [`BONECHILL_SUPPORT`]):
+/// the chill raises the enemy's cold damage taken (3444); its
+/// `SkitterbotBonechill` flag only reads the chill on you (844), which the
+/// modifiers that make the auras affect you start. Those modifiers and the
+/// ones that stop or change the auras (`SkitterbotsCannotShock`,
+/// `SkitterbotAilmentEffect`, `ScorchingSkitterbot`,
+/// `SkitterbotAffectPlayer`: unmapped stats) are reasons.
 fn skitterbots(input: &CalcInput<'_>, s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
-    // A support's mods of source `Skill` that PoB's override reads: its
-    // shock, chill, and non-damaging ailment effect (`SkillStatMap.lua`:
-    // `EnemyShockEffect`, `EnemyChillEffect` INC), and Bonechill's flag.
-    // Another support changes nothing here (its reservation is
-    // [`reservation`]'s; an unknown one is `unmodelled-gem`).
-    const AILMENT_EFFECT_STATS: [&str; 3] = [
-        "chill_effect_+%",
-        "non_damaging_ailment_effect_+%",
-        "shock_effect_+%",
-    ];
-    let support_reads = s.supports.iter().any(|sup| {
-        sup.effect.id == BONECHILL_SUPPORT
-            || skill::instance(sup.effect, sup.level, sup.quality, input.data)
-                .stats
-                .iter()
-                .any(|(id, v)| *v != 0 && AILMENT_EFFECT_STATS.contains(&id.as_str()))
-    });
-    if support_reads {
-        ingest.reason(UnsupportedReason::UnmodelledSkill {
+    // The gem's and its supports' `Skill` mods (PoB's `{ source = "Skill" }`).
+    let instances: Vec<_> = std::iter::once(&s.active_gem)
+        .chain(&s.supports)
+        .map(|r| skill::instance(r.effect, r.level, r.quality, input.data))
+        .collect();
+    let sum = |ids: &[&str]| -> f64 {
+        instances
+            .iter()
+            .flat_map(|i| &i.stats)
+            .filter(|(id, _)| ids.contains(&id.as_str()))
+            .map(|(_, v)| {
+                #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+                let v = *v as f64;
+                v
+            })
+            .sum()
+    };
+    if s.supports
+        .iter()
+        .any(|sup| sup.effect.id == BONECHILL_SUPPORT)
+    {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::Bonechill(true)),
+            op: Op::Flag,
+            value: 1.0,
+            conditions: Conditions::none(),
             source: source.clone(),
-            what: "skitterbots-supports",
         });
     }
-    let instance = skill::instance(
-        s.active_gem.effect,
-        s.active_gem.level,
-        s.active_gem.quality,
-        input.data,
-    );
-    let stat = |id: &str| {
-        instance
-            .stats
-            .iter()
-            .find(|(s, _)| s == id)
-            .map_or(0.0, |(_, v)| *v as f64)
-    };
     for (quantity, default, effect) in [
         (
             Poe1Quantity::SkillShockOverride,
             super::damage_taken::SHOCK_DEFAULT,
-            stat("shock_effect_+%"),
+            sum(&SHOCK_EFFECT_STATS),
         ),
         (
             Poe1Quantity::SkillChillOverride,
             super::damage_taken::CHILL_DEFAULT,
-            stat("chill_effect_+%"),
+            sum(&CHILL_EFFECT_STATS),
         ),
     ] {
         ingest.effect(Effect {
@@ -6419,6 +6423,22 @@ const AURA_NOT_ON_SELF_SUPPORTS: &[&str] = &["SupportGenerosity"];
 
 /// Bonechill Support's granted effect (P6-11fv).
 const BONECHILL_SUPPORT: &str = "SupportBonechill";
+
+/// The stats that give a skill's own `EnemyShockEffect` INC
+/// (`SkillStatMap.lua` 1091 to 1107; open items S2).
+const SHOCK_EFFECT_STATS: [&str; 3] = [
+    "lightning_ailment_effect_+%",
+    "non_damaging_ailment_effect_+%",
+    "shock_effect_+%",
+];
+
+/// The stats that give a skill's own `EnemyChillEffect` INC
+/// (`SkillStatMap.lua` 1085 to 1119; open items S2).
+const CHILL_EFFECT_STATS: [&str; 3] = [
+    "chill_effect_+%",
+    "cold_ailment_effect_+%",
+    "non_damaging_ailment_effect_+%",
+];
 
 /// Quality stats that give a skill's own chill effect (PoB's
 /// `EnemyChillEffect` INC; [`guaranteed_chill`]).
@@ -6481,9 +6501,15 @@ fn guaranteed_chill(
             .quality
             .iter()
             .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str())))
-        || s.supports
-            .iter()
-            .any(|sup| sup.effect.id == BONECHILL_SUPPORT);
+        || s.supports.iter().any(|sup| {
+            sup.effect.id == BONECHILL_SUPPORT
+                // A support's chill effect (open items S2: Unbound
+                // Ailments' `non_damaging_ailment_effect_+%`).
+                || skill::instance(sup.effect, sup.level, sup.quality, input.data)
+                    .stats
+                    .iter()
+                    .any(|(id, v)| *v != 0 && CHILL_EFFECT_STATS.contains(&id.as_str()))
+        });
     if types.contains(CHILLING_AREA) && own_chill {
         ingest.reason(UnsupportedReason::UnmodelledSkill {
             source: source.clone(),

@@ -445,3 +445,35 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
   - Four of its effective HP values moved away: `TotalEHP` 27,752 to 31,512 (PoB 29,271), and its hit counts. Its life (4,158, PoB 3,974) and maximum hits (physical 10,076, PoB 8,188) were already above PoB's, from its other reasons; the larger evade chance multiplies them. The build stays indeterminate.
 - **Corpus:** 0 unexpected; documents equal but for node numbers.
 - **Tests:** the mapping test of the row, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Summon Skitterbots' supports, and Unbound Ailments (open items S2, 2026-11-26)
+
+**PoB v2.67.2** (`CalcPerform.lua` 1357 to 1383):
+- **The `inc` of the Skitterbots' shock and chill** is `skillModList:Sum("INC", { source = "Skill" }, "EnemyShockEffect")` (and `EnemyChillEffect`): every mod of source `Skill`, the gem's and its supports' stats.
+  - Shock: `shock_effect_+%`, `lightning_ailment_effect_+%`, `non_damaging_ailment_effect_+%`.
+  - Chill: `chill_effect_+%`, `cold_ailment_effect_+%`, `non_damaging_ailment_effect_+%` (`SkillStatMap.lua` 1085 to 1119).
+- **Bonechill on the Skitterbots** sets `HasBonechill` (they can chill) and the guaranteed Bonechill (1379 to 1380). The chilled enemy then takes increased cold damage by the chill's effect (3444).
+  - Its `SkitterbotBonechill` flag is read only for the chill on you (844), which only "the auras affect you" starts.
+
+**The engine** (`gems::skitterbots`):
+- The two overrides sum those stats over the gem and its supports (`SHOCK_EFFECT_STATS`, `CHILL_EFFECT_STATS`).
+- Bonechill gives `Poe1Quantity::Bonechill(true)`, the chilling area's guarantee, which `damage_taken` reads.
+- The `skitterbots-supports` reason (Summon Skitterbots, above) is no longer given; the unmapped stats that change the auras stay reasons.
+
+**Unbound Ailments** joins `gems::SUPPORTS`: no global stat (PoB's data has none).
+- Its `non_damaging_ailment_effect_+%` is the supported skill's own: read for the Skitterbots.
+- On a chilling area it is a `skill-chill-effect` reason (`gems::guaranteed_chill`, now also for a support's chill effect stat), as Bonechill's chill effect there.
+- `data-parity`'s `gem_effects` allows its `EnemyChillEffect` with those readings.
+
+**Fixtures** (original, made by `local/p6/s2-fx2.py`; each run three times by PoB, identical): Ice Nova with Summon Skitterbots in another group and 40% increased crit chance against shocked enemies, as `ice-nova-skitterbots-witch.xml`:
+- `ice-nova-skitterbots-unbound-ailments-witch.xml`: Unbound Ailments (level 20) on the Skitterbots; PoB's `CurrentShock` 25 and `CurrentChill` 17 (17 and 11 without it).
+- `ice-nova-skitterbots-bonechill-witch.xml`: Bonechill (level 20); `CurrentChill` 16, the average damage 864 to 982 from the cold damage taken.
+- Every compared field equals PoB's; 174 targets.
+
+**Evidence** (`local/p6/s2-e2` on `b-pb`, against `local/p6/s2-e1`):
+- **Public:** 0 unexpected; `Complete` 49,545 to 49,719 (the fixtures). Seven values moved, all toward PoB:
+  - `ethereal-knives-mines-assassin.xml` (Skitterbots with Bonechill and Unbound Ailments): its average damage, hit, ignite, full, and combined DPS, and its unreserved mana 560 to 182 (PoB 174; Unbound Ailments' reservation multiplier now counts);
+  - `forged-frostbearer-spectre-necromancer.xml`'s full DPS, 7.79 to 8.84 million (PoB 9.13 million).
+- **Corpus:** 0 unexpected; one value moved, now equal to PoB's (a build's unreserved mana, 221 to 5, PoB 5); one other document lost the reason in its reasons only.
+- **Tests:** `gems`' tests (the tables sorted), the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

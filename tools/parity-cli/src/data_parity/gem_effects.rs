@@ -406,6 +406,11 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // override reads (`gems::skitterbots`).
     ("SummonSkitterbots", "EnemyChillEffect"),
     ("SupportBonechill", "supportBonechill"),
+    // Open items S2: Unbound Ailments' non-damaging ailment effect, the
+    // supported skill's own: read for Summon Skitterbots' auras
+    // (`gems::skitterbots`), a `skill-chill-effect` reason on a chilling
+    // area (`gems::guaranteed_chill`).
+    ("SupportUnboundAilments", "EnemyChillEffect"),
     // P6-11ft: Generosity's aura does not affect you
     // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
     // (`gems::OWN_EFFECT_STATS`).
