@@ -1634,6 +1634,10 @@ pub enum WeaponValue {
     /// the hand's `{Hand}Attack` condition, and `SkillType.Attack`,
     /// `ModParser.lua` 3117): `Base` 1 per line, read by the hand's hit.
     DoubleDamage,
+    /// "#% chance to Impale Enemies on Hit with Attacks" on a weapon (the
+    /// agent list, 2026-11-27; `local_attacks_impale_on_hit_%_chance`, the
+    /// weapon's hits): `Base`, read by the hand's impale.
+    ImpaleChance,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -1649,6 +1653,7 @@ impl core::fmt::Display for WeaponValue {
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
             Self::DoubleDamage => f.write_str("double-damage"),
+            Self::ImpaleChance => f.write_str("impale-chance"),
             Self::AttackSpeedPer8Quality => f.write_str("attack-speed-per-8-quality"),
             Self::CritChancePer4Quality => f.write_str("crit-chance-per-4-quality"),
             Self::Accuracy => f.write_str("accuracy"),

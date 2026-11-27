@@ -888,6 +888,30 @@ pub(super) fn impale_parts(
         Term::Step("impale-chance-sum"),
         &mut reasons,
     )?;
+    // The hand's weapon's own chance (the agent list, 2026-11-27): an
+    // attack's pass alone.
+    let chance = if hit.flags.contains(Flags::ATTACK) {
+        let hand = if hit.flags.contains(Flags::OFF_HAND_ATTACK) {
+            super::Hand::Off
+        } else {
+            super::Hand::Main
+        };
+        let local = hit::sum_of(
+            calc,
+            hand.weapon(super::WeaponValue::ImpaleChance),
+            Op::Base,
+            &hit_cx,
+            Term::Step("weapon-impale-chance"),
+            &mut reasons,
+        )?;
+        phases::total(
+            calc,
+            &[chance, local],
+            Term::Step("impale-chance-with-weapon"),
+        )?
+    } else {
+        chance
+    };
     let hundred = phases::constant(calc, "hundred", 100.0)?;
     let chance = phases::pair(calc, chance, hundred, Term::Step("impale-chance"), true)?;
     if chance.value == 0.0 {

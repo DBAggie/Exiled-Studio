@@ -5805,3 +5805,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Nova with 3% per 100 life at 1,125 life (11 steps) and at 1,200 (12). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27sle` on `b-ig`, against `local/p6/d27fke`): public 0 unexpected, `Complete` 59,559 to 59,733 (the fixtures'); 1 value moved, toward PoB (`rf-chieftain-life-stack.xml`'s FullDPS). Corpus 0 unexpected, no value moved.
+
+## A weapon's impale chance (the agent list, 2026-11-27)
+
+**The stat:** a weapon's "#% chance to Impale Enemies on Hit with Attacks" (`local_attacks_impale_on_hit_%_chance`), unmapped in one public build.
+
+**PoB:** its parser reads the line as the global `ImpaleChance` BASE with `KeywordFlag.Attack`, every attack's; the stat is local in the game, its weapon's hits. With one weapon the two agree.
+
+**The engine:** `WeaponValue::ImpaleChance` (a weapon row, the main hand's `Weapon` or the off hand's `OffHandWeapon`), added by `ailment::impale_parts` to the impale chance of that hand's attack passes, as the weapon's double damage. A dual wielder with the line on one weapon would differ from PoB (no fixture; no public build has one).
+
+**Fixtures** (original): Smite with a Rusted Hatchet carrying the line at 30% and 20% increased impale effect. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1168 to DIV-1173.
+
+**Evidence** (`local/p6/d27lie` on `b-ig`, against `local/p6/d27sle`): public 0 unexpected, `Complete` 59,733 to 59,822 (the fixture's); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.

@@ -13019,6 +13019,13 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
         "local_attack_speed_+%_per_8%_quality",
         &[(weapon(WeaponValue::AttackSpeedPer8Quality), Op::Base)],
     ),
+    // The agent list (2026-11-27): "#% chance to Impale Enemies on Hit with
+    // Attacks" on a weapon, its hits alone (PoB applies it to every attack:
+    // the same with one weapon).
+    (
+        "local_attacks_impale_on_hit_%_chance",
+        &[(weapon(WeaponValue::ImpaleChance), Op::Base)],
+    ),
     (
         "local_critical_strike_chance_+%",
         &[(weapon(WeaponValue::CritChance), Op::Increased)],
