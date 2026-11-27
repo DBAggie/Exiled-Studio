@@ -3961,11 +3961,16 @@ const DURATION_MORE_STATS: &[&str] = &[
     "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final",
 ];
 
+/// PoB's power of "Warcries have infinite Power" (`CalcPerform.lua` 1309).
+pub const INFINITE_WARCRY_POWER: f64 = 999_999.0;
+
 /// The warcry power (P6-11bs, P6-11hz; `CalcPerform.lua` 1311 and 2327):
 /// the config's override (its input, else its placeholder), else
-/// `max(base x (1 + inc / 100), 0)`, `base` 20 against a boss. With `inc`
-/// 0 it is PoB's `Multiplier:WarcryPower` (`output.WarcryPower`, the base
-/// alone).
+/// [`INFINITE_WARCRY_POWER`] with `infinite` (PoB's second `OVERRIDE`,
+/// added after the config's, so the config's is the one read), else
+/// `max(base x (1 + inc / 100), minimum)`, `base` 20 against a boss. With
+/// `inc` and `minimum` 0 it is PoB's `Multiplier:WarcryPower`
+/// (`output.WarcryPower`, the base alone).
 ///
 /// # Errors
 /// `warcry-power` for a config power that is not a number.
@@ -3973,6 +3978,8 @@ pub fn warcry_power(
     input: &CalcInput<'_>,
     config: Option<&ConfigSet>,
     inc: f64,
+    minimum: f64,
+    infinite: bool,
 ) -> Result<f64, &'static str> {
     let number = |kind| match config.and_then(|set| last_input(set, WARCRY_POWER_INPUT, kind)) {
         None => Ok(None),
@@ -3985,6 +3992,7 @@ pub fn warcry_power(
         Some(p) => p,
         None => match number(ConfigInputKind::Placeholder)? {
             Some(p) => p,
+            None if infinite => INFINITE_WARCRY_POWER,
             None => {
                 let base = if super::enemy::enemy(input.build, input.data).kind
                     == super::enemy::BossKind::None
@@ -3993,7 +4001,7 @@ pub fn warcry_power(
                 } else {
                     BOSS_WARCRY_POWER
                 };
-                crate::math::max(base * (1.0 + inc / 100.0), 0.0)
+                crate::math::max(base * (1.0 + inc / 100.0), minimum)
             }
         },
     };
@@ -4040,7 +4048,13 @@ pub fn warcry_terms(
         return Err("warcry-uptime");
     }
     // The power.
-    let power = warcry_power(input, config, totals.warcry_power)?;
+    let power = warcry_power(
+        input,
+        config,
+        totals.warcry_power,
+        totals.warcry_minimum_power,
+        totals.warcry_infinite_power,
+    )?;
     // The duration.
     let base = stat("base_skill_effect_duration") / 1000.0;
     let inc = stat("skill_effect_duration_+%") + totals.duration + totals.warcry_duration;
@@ -7359,6 +7373,9 @@ mod tests {
             // The same: the extra attacks the cries exert.
             "warcry_empowers_next_x_melee_attacks",
             "warcries_exert_twice_as_many_attacks",
+            // The same: the warcry power the cries read.
+            "warcries_have_infinite_power",
+            "warcries_have_minimum_10_power",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

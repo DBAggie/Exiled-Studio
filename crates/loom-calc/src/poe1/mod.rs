@@ -1142,6 +1142,14 @@ pub enum Poe1Quantity {
     /// `CannotGainWarcryBuffs`; P6-11hw, Call to Arms): a `Flag`, read by
     /// [`skill_modifiers::Totals`].
     CannotGainWarcryBuffs,
+    /// "Warcries have infinite Power" (PoB's `WarcryInfinitePower`, a
+    /// `WarcryPower` OVERRIDE of 999999, `CalcPerform.lua` 1308; the agent
+    /// list): a `Flag`, read by [`skill_modifiers`].
+    WarcryInfinitePower,
+    /// "Warcries have a minimum of # Power" (PoB's `MinimumWarcryPower`,
+    /// `CalcPerform.lua` 2327; the agent list): `Base`, read by
+    /// [`skill_modifiers`].
+    MinimumWarcryPower,
     /// "Damage taken from Unblocked hits always bypasses Energy Shield"
     /// (PoB's `UnblockedDamageDoesBypassES`, `CalcDefence.lua` 2282;
     /// P6-11hy, Emperor's Vigilance): a `Flag`; every type then bypasses
@@ -2001,6 +2009,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
+            Self::WarcryInfinitePower => f.write_str("warcry-infinite-power"),
+            Self::MinimumWarcryPower => f.write_str("minimum-warcry-power"),
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
             Self::ChaosNotBypassEs => f.write_str("chaos-not-bypass-es"),
             Self::CanBeElusive => f.write_str("can-be-elusive"),

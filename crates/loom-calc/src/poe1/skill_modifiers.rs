@@ -623,6 +623,11 @@ pub struct Totals {
     /// Your warcries grant you no buff (P6-11hw; PoB's
     /// `CannotGainWarcryBuffs`, an unconditional flag).
     pub cannot_gain_warcry_buffs: bool,
+    /// "Warcries have infinite Power" (the agent list; an unconditional
+    /// flag).
+    pub warcry_infinite_power: bool,
+    /// "Warcries have a minimum of # Power" (the agent list), the sum.
+    pub warcry_minimum_power: f64,
     /// `Duration` MORE of warcries, each as its percent (P6-11hw: Call to
     /// Arms' 100% more); [`Self::warcry_duration_more`] multiplies them.
     pub warcry_duration_more_pct: [f64; 2],
@@ -721,6 +726,23 @@ impl Totals {
             if q == Poe1Quantity::OfferingsAffectYou {
                 if e.op == Op::Flag && e.conditions == Conditions::none() {
                     t.offerings_affect_you = true;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            // The agent list (2026-11-27): infinite and minimum power.
+            if q == Poe1Quantity::WarcryInfinitePower {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.warcry_infinite_power |= e.value != 0.0;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            if q == Poe1Quantity::MinimumWarcryPower {
+                if e.op == Op::Base && e.conditions == Conditions::none() {
+                    t.warcry_minimum_power += e.value;
                 } else {
                     t.unread = true;
                 }

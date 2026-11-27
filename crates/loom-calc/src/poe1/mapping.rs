@@ -10100,6 +10100,28 @@ pub const ROWS: &[Row] = &[
             100.0,
         )],
     ),
+    // The agent list (2026-11-27): "Warcries have infinite Power"
+    // (`ModParser.lua` 4147: `WarcryInfinitePower`), read by
+    // `skill_modifiers` for `gems::warcry_power`.
+    (
+        "warcries_have_infinite_power",
+        &[(
+            Quantity::Poe1(Poe1Quantity::WarcryInfinitePower),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Warcries have a minimum of 10 Power"
+    // (the Warcry mastery's, value 1; `ModParser.lua` 5457:
+    // `MinimumWarcryPower` BASE 10), read the same way.
+    (
+        "warcries_have_minimum_10_power",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MinimumWarcryPower),
+            Op::Base,
+            10.0,
+        )],
+    ),
     // The agent list (2026-11-27): "Warcries Exert # additional Attacks"
     // (`ModParser.lua` 5235: `ExtraExertedAttacks` BASE), read by
     // `hit::exerted_attacks`.

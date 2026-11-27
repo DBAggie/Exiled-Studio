@@ -5741,3 +5741,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Smite Siege Axe build): Overexertion with Intimidating Cry; Overexertion with Ancestral, Infernal, Rallying, and Seismic Cry (Smite is no slam); Intimidating Cry with the three exert lines (exerts `floor((base + 1) x 2)`); the increased damage line without a cry (nothing); Overexertion with Battlemage's Cry. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the uptime reads the rate): `game-truth` DIV-1100 to DIV-1134.
 
 **Evidence** (`local/p6/d27exe` on `b-ig`, against `local/p6/d27tie`): public 0 unexpected, `Complete` 57,904 to 58,345 (the fixtures'); no other value moved (the public builds with these stats are partial on other reasons: General's Cry, Spiritual Cry, unmodelled main skills). Corpus 0 unexpected, no value moved.
+
+## Infinite and minimum warcry power (the agent list, S5, 2026-11-27)
+
+**The stats:** "Warcries have infinite Power" (`warcries_have_infinite_power`, one public build) and the Warcry mastery's "Warcries have a minimum of 10 Power" (`warcries_have_minimum_10_power`, value 1, one public build), unmapped.
+
+**PoB:** the first is `WarcryInfinitePower`, a `WarcryPower` OVERRIDE of 999999 added in `CalcPerform.lua` 1308, after the config's own OVERRIDE (`ConfigOptions.lua` 732), so a configured power is still the one `modDB:Override` returns; it is also `Multiplier:WarcryPower` (1311). The second is `MinimumWarcryPower` BASE 10, read only by the cries' buff power, `max(base x (1 + inc / 100), minimum)` (2327), not by `Multiplier:WarcryPower`.
+
+**The engine:** `Poe1Quantity::WarcryInfinitePower` (`Flag`) and `MinimumWarcryPower` (`Base`, the row's scale 10), read by `skill_modifiers::Totals`; `gems::warcry_power` takes both: the config's input, else its placeholder, else `INFINITE_WARCRY_POWER` with the flag, else the base with the minimum. The armour per power (`collect::warcry_power_armour`, PoB's multiplier) reads the flag and no minimum.
+
+**Fixtures** (original): Ice Nova with Intimidating and Enduring Cry and infinite power (each buff to its limit), the same with the config's power 12 (the config's), the two cries with the minimum against no boss (power 10), and the armour per 5 power against no boss with infinite power (the 100% limit) and with the minimum (nothing). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27wpe` on `b-ig`, against `local/p6/d27exe`): public 0 unexpected, `Complete` 58,345 to 58,780 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.

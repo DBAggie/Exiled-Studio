@@ -1539,15 +1539,17 @@ fn warcry_power_armour(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         });
         return;
     }
-    let power = match super::gems::warcry_power(input, active_config(input.build), 0.0) {
-        Ok(p) => p,
-        Err(_) => {
-            ingest.reason(UnsupportedReason::UnmodelledConfig {
-                input: super::gems::WARCRY_POWER_INPUT.to_owned(),
-            });
-            return;
-        }
-    };
+    let infinite = super::skill_modifiers::Totals::read(ingest).warcry_infinite_power;
+    let power =
+        match super::gems::warcry_power(input, active_config(input.build), 0.0, 0.0, infinite) {
+            Ok(p) => p,
+            Err(_) => {
+                ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+                });
+                return;
+            }
+        };
     let per: f64 = lines.iter().map(|e| e.value).sum();
     let value = (per * crate::math::floor(power / 5.0 + 0.0001)).min(100.0);
     if value == 0.0 {
