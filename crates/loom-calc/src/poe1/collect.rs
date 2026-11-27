@@ -303,22 +303,33 @@ fn resistance_penalty(build: &Build, ingest: &mut Ingest<'_>) {
 /// The config input of the bandit choice.
 pub const BANDIT_INPUT: &str = "bandit";
 
-/// The bandit choices and their effects on the slice (PoB v2.67.2,
-/// `Modules/CalcSetup.lua` 663 to 672): Alira `ElementalResist` BASE 15,
-/// Oak `Life` BASE 40; Kraityn (movement speed) and none (one passive
-/// point) reach no slice field.
-pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
+/// One effect of a bandit ([`BANDITS`]): quantity, op, value.
+pub type BanditEffect = (Quantity, Op, f64);
+
+/// The bandit choices PoB applies and their effects on the slice (PoB
+/// v2.67.2, `Modules/CalcSetup.lua` 549 to 557): Alira `ElementalResist`
+/// BASE 15, Kraityn `MovementSpeed` INC 8 (a slice field since P6-10b; the
+/// agent list, S8), Oak `Life` BASE 40. Any other value, "None" or one PoB
+/// does not list ("Eramir", which older PoB versions saved), takes PoB's
+/// `else` branch: one passive point, no slice field.
+pub const BANDITS: [(&str, &[BanditEffect]); 3] = [
     (
         "Alira",
         &[
-            (Quantity::Resistance(DamageType::Fire), 15.0),
-            (Quantity::Resistance(DamageType::Cold), 15.0),
-            (Quantity::Resistance(DamageType::Lightning), 15.0),
+            (Quantity::Resistance(DamageType::Fire), Op::Base, 15.0),
+            (Quantity::Resistance(DamageType::Cold), Op::Base, 15.0),
+            (Quantity::Resistance(DamageType::Lightning), Op::Base, 15.0),
         ],
     ),
-    ("Kraityn", &[]),
-    ("None", &[]),
-    ("Oak", &[(Quantity::Life, 40.0)]),
+    (
+        "Kraityn",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            8.0,
+        )],
+    ),
+    ("Oak", &[(Quantity::Life, Op::Base, 40.0)]),
 ];
 
 /// Bandit and pantheon (P3-12f for the bandit, P3-12g for the pantheon).
@@ -329,11 +340,12 @@ pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
 /// build element's `bandit` attribute is read only for a build without a
 /// config element (`Modules/Build.lua` 648 to 651, before the sections
 /// load; `ConfigTab:Load` replaces the sets). So with a config set the
-/// engine applies the set's choice ([`BANDITS`]; another value is a
-/// reason under the input), and ignores the attribute. With no set, the
+/// engine applies the set's choice ([`BANDITS`]; another value applies
+/// nothing, as in PoB), and ignores the attribute. With no set, the
 /// build may have had no config element (the attribute counts) or an
 /// empty one (it does not): the domain does not tell them apart, so an
-/// attribute other than "None" stays a reason. With only untyped sets,
+/// attribute PoB would apply stays a reason (a bandit of [`BANDITS`]; a
+/// god other than "None"). With only untyped sets,
 /// their `<untyped>` reason covers the choice.
 ///
 /// The pantheon reads its two inputs the same way (`Modules/Build.lua`
@@ -355,8 +367,11 @@ fn choices(build: &Build, data: &dyn crate::input::CalcData, ingest: &mut Ingest
                 ("pantheon-major", &c.pantheon_major),
                 ("pantheon-minor", &c.pantheon_minor),
             ] {
+                // A bandit PoB does not list applies nothing either way.
+                let applied = |v: &str| choice != "bandit" || BANDITS.iter().any(|(b, _)| *b == v);
                 if let Some(v) = value
                     && v != "None"
+                    && applied(v)
                 {
                     ingest.reason(UnsupportedReason::UnmodelledChoice {
                         choice,
@@ -389,23 +404,22 @@ pub fn killed_all_bandits(build: &Build) -> bool {
 }
 
 /// The active set's bandit ([`choices`]): its last `bandit` input, "None"
-/// when it has none.
+/// when it has none. PoB compares the value with the three names it
+/// applies (`CalcSetup.lua` 549 to 557), so any other value, of any type,
+/// applies nothing ([`BANDITS`]), as [`killed_all_bandits`] reads it.
 fn bandit(set: &ConfigSet, ingest: &mut Ingest<'_>) {
-    let name = match super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input) {
-        None => return,
-        Some(ConfigValue::String(s)) => s.as_str(),
-        Some(_) => "",
-    };
-    let Some((_, effects)) = BANDITS.iter().find(|(b, _)| *b == name) else {
-        ingest.reason(UnsupportedReason::UnmodelledConfig {
-            input: BANDIT_INPUT.to_owned(),
-        });
+    let Some(ConfigValue::String(name)) =
+        super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input)
+    else {
         return;
     };
-    for &(quantity, value) in *effects {
+    let Some((_, effects)) = BANDITS.iter().find(|(b, _)| b == name) else {
+        return;
+    };
+    for &(quantity, op, value) in *effects {
         ingest.effect(Effect {
             quantity,
-            op: Op::Base,
+            op,
             value,
             conditions: Conditions::none(),
             source: Source::Config {

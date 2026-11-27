@@ -432,7 +432,7 @@ Several steps in one PR (maintainer, 2026-11-12: as many of the remaining tasks 
 
 ### The bandit
 
-**PoB.** `calcs.initModDB` (`CalcSetup.lua` 663 to 672) reads `env.configInput.bandit`: Alira `ElementalResist` BASE 15, Kraityn 8% increased movement speed, Oak `Life` BASE 40, anything else one passive point. Kraityn and the passive point reach no slice field.
+**PoB.** `calcs.initModDB` (`CalcSetup.lua` 663 to 672) reads `env.configInput.bandit`: Alira `ElementalResist` BASE 15, Kraityn 8% increased movement speed, Oak `Life` BASE 40, anything else one passive point. Kraityn and the passive point reach no slice field. (Since P6-10b movement speed is a slice field: Kraityn applies since the agent list, S8, below; a value PoB does not list applies nothing.)
 
 Which value PoB reads:
 - PoB loads the `<Build>` element first (`buildMode:LoadDB`) and copies its `bandit` attribute into the config's first set (`Modules/Build.lua` 648 to 651).
@@ -666,3 +666,33 @@ Config inputs the other gems now read (`docs/phase-3/other-gems.md`, "Phase 3 cl
 - `multiplierNearbyAlly` (1122) stays named-only for every reader but Rallying Cry's exerted attacks: with a modelled Rallying Cry and allies above 0 it is `rallying-cry-allies` (`poe1::gems`).
 
 The custom modifier lines (P3-12c, P3-12d) gained notes and patterns: `docs/phase-3/custom-lines.md` (ADR-015 Amendment 2).
+
+
+## The agent list (S8, 2026-11-26): the bandit's movement speed and values PoB does not list; nearby allies
+
+**The bandit** (`collect::BANDITS`, `collect::bandit`). PoB v2.67.2 applies three bandits (`Modules/CalcSetup.lua` 549 to 557):
+- Alira: `ElementalResist` BASE 15;
+- Kraityn: `MovementSpeed` INC 8;
+- Oak: `Life` BASE 40;
+- any other value: the `else` branch, one passive point (`ExtraPoints`).
+
+Two changes follow:
+- **Kraityn's 8% increased movement speed now applies.** P3-12f left it out because movement speed was no slice field then; it has been one since P6-10b, so the empty entry silently dropped it. The table carries each effect's op.
+- **A value PoB does not list applies nothing,** as in PoB, instead of a reason: "Eramir" (saved by older PoB versions), or a value of another type. Without a config set, the build's attribute stays a reason only for a bandit PoB applies, since another value applies nothing whether the attribute counts or not.
+- `killed_all_bandits` already read the choice that way.
+
+**`multiplierNearbyAlly`** joins `config::NAMED_ONLY`. It sets `Multiplier:NearbyAlly` in combat (`ConfigOptions.lua` 1122):
+- The calc modules read it only for Rallying Cry's exerted attacks (`CalcOffence.lua` 2661), which `poe1::gems` already gives its own reason (`rallying-cry-allies`) when allies are set. Rallying Cry's buff row (`act_str.lua` 9238) is a `Dummy`.
+- Otherwise only modifiers read it (`ModParser.lua` 1584, 1701, 2871, 2872). Their stats, found by "nearby Ally" in the bundle's stat descriptions, are unmapped and now in `config::DEPENDS_ON`: `accuracy_rating_+%_with_ally_nearby`, `attack_area_of_effect_+%_with_ally_nearby`, `damage_+%_final_with_at_least_1_nearby_ally`, the three Guardian lines, and Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures1.py`): every field equals PoB's.
+- `config-bandit-kraityn-witch.xml`: movement speed 1.08.
+- `config-bandit-unlisted-witch.xml` ("Eramir") and `config-nearby-allies-witch.xml` (three allies): each output is the bare build's.
+- 261 fields are targets.
+
+**Evidence** (`local/p6/s8-1` on `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,632 (the fixtures).
+  - `rf-chieftain-league-start.xml` (Kraityn): movement speed and effective movement speed 1.19 to 1.27, now PoB's (still partial on an unresolved item line).
+  - `lacerate-bleed-gladiator.xml` ("Eramir") and `facebreaker-luminary.xml` (nearby allies) lose the reason; no value moved.
+- **Corpus:** 0 unexpected; the three Kraityn builds' movement speed rises by 0.08, each now equal to PoB's corpus oracle (1.19, 1.31, 1.21).
+- **Tests:** `the_bandit_should_be_the_config_sets_choice` (Kraityn's speed; unlisted values apply nothing), the attribute case in the test above it, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

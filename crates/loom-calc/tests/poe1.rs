@@ -1196,6 +1196,16 @@ fn gems_config_and_choices_should_be_reasons() {
     }))
     .unwrap();
     assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
+    // A bandit PoB does not list applies nothing, whether the attribute
+    // counts or not (the agent list, S8).
+    let mut b = witch(1);
+    b.set_game_specific(GameSpecific::Poe1(Poe1Choices {
+        bandit: Some("Eramir".to_owned()),
+        pantheon_major: None,
+        pantheon_minor: None,
+    }))
+    .unwrap();
+    assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
 }
 
 /// P3-12f: the bandit is the active config set's `bandit` input (PoB's
@@ -1247,29 +1257,31 @@ fn the_bandit_should_be_the_config_sets_choice() {
     let r = with(text("Oak"), None);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     assert_eq!(value(&r, Field::Life), value(&bare, Field::Life) + 40.0);
-    // Kraityn, none, and a set without the input (PoB's default, "None",
-    // whatever the attribute) reach no slice field.
+    // Kraityn: 8% increased movement speed (the agent list, S8).
+    let movement = Field::Poe1(Poe1Field::MovementSpeedMod);
+    let r = with(text("Kraityn"), None);
+    assert_eq!(state(&r, movement), StateKind::Complete);
+    assert!((value(&r, movement) - (value(&bare, movement) + 0.08)).abs() < 1e-9);
+    assert_eq!(value(&r, Field::Life), value(&bare, Field::Life));
+    // None, a set without the input (PoB's default, "None", whatever the
+    // attribute), and any value PoB does not list (its `else` branch: one
+    // passive point; "Eramir", which older PoB versions saved) reach no
+    // slice field.
     for (choice, attribute) in [
-        (text("Kraityn"), None),
         (text("None"), Some("Alira")),
         (None, Some("Alira")),
+        (text("Eramir"), None),
+        (Some(ConfigValue::Boolean(true)), None),
+        (
+            Some(ConfigValue::Number(Sourced::new(loom_domain::Number(1.0)))),
+            None,
+        ),
     ] {
         let r = with(choice, attribute);
-        for f in [Field::Life, FIRE, COLD] {
+        for f in [Field::Life, FIRE, COLD, movement] {
             assert_eq!(state(&r, f), StateKind::Complete, "{f}");
             assert_eq!(value(&r, f), value(&bare, f), "{f}");
         }
-    }
-    // Another value is a reason under the input.
-    for choice in [
-        text("Eramir"),
-        Some(ConfigValue::Boolean(true)),
-        Some(ConfigValue::Number(Sourced::new(loom_domain::Number(1.0)))),
-    ] {
-        assert_eq!(
-            partial_reasons(&with(choice, None), Field::Life),
-            ["unmodelled-config"]
-        );
     }
 }
 

@@ -255,6 +255,15 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   ground alone gives an effect of 0, and its conditions are read only by
 ///   modifiers. The checks themselves have effects
 ///   (`super::damage_taken`: scorch and sap; brittle stays a reason).
+/// - `multiplierNearbyAlly` (the agent list, S8): `Multiplier:NearbyAlly` in
+///   combat (line 1122). The calc modules read it only for Rallying Cry's
+///   exerted attacks (`CalcOffence.lua` 2661), which `super::gems` gives
+///   its own reason (`rallying-cry-allies`) when allies are configured;
+///   Rallying Cry's buff row (`act_str.lua` 9238) is a `Dummy`. Only
+///   modifiers read it otherwise (`ModParser.lua` 1584, 1701, 2871, 2872:
+///   "while you have at least # nearby allies", "while there is at least
+///   one nearby ally"), whose stats, found by "nearby Ally" in the
+///   bundle's stat descriptions, are in [`DEPENDS_ON`].
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -391,6 +400,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierMineDetonatedRecently",
         &["Multiplier:MineDetonatedRecently"],
     ),
+    ("multiplierNearbyAlly", &["Multiplier:NearbyAlly"]),
     (
         "multiplierNearbyRareOrUniqueEnemies",
         // Its share of `Multiplier:NearbyEnemies` is `poe1::stacks`'s
@@ -539,15 +549,25 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// `critical_strike_chance_+%_per_brand`,
 /// `sigil_recall_cooldown_speed_+%_per_brand_up_to_40%`; and
 /// `gain_alchemists_genius_on_flask_use_%`, the only source of
-/// `CanHaveAlchemistGenius`.
+/// `CanHaveAlchemistGenius`. In the agent list (S8), the stats whose text
+/// reads nearby allies (`multiplierNearbyAlly`, found by "nearby Ally" in
+/// the bundle's stat descriptions): `accuracy_rating_+%_with_ally_nearby`,
+/// `attack_area_of_effect_+%_with_ally_nearby`,
+/// `damage_+%_final_with_at_least_1_nearby_ally`, the three Guardian
+/// lines (`guardian_damage_+%_final_to_you_and_nearby_allies_per_nearby_ally_up_to_15%`,
+/// `guardian_with_5_nearby_allies_you_and_allies_have_onslaught`,
+/// `guardian_with_nearby_ally_damage_+%_final_for_you_and_allies`), and
+/// Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`.
 ///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
 pub const DEPENDS_ON: &[&str] = &[
+    "accuracy_rating_+%_with_ally_nearby",
     "additional_spell_block_%_if_havent_blocked_recently",
     "ancestral_buff_base_rage_regeneration_per_minute",
     "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
     "arrow_damage_+%_max_as_distance_travelled_increases",
+    "attack_area_of_effect_+%_with_ally_nearby",
     "berserker_gain_rage_on_attack_hit_cooldown_ms",
     "berserker_warcry_grant_X_rage_per_5_power_while_less_than_25_rage",
     "can_apply_additional_scorch",
@@ -556,6 +576,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
     "cooldown_speed_+%_per_brand_up_to_40%",
     "critical_strike_chance_+%_per_brand",
+    "damage_+%_final_with_at_least_1_nearby_ally",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
     "energy_shield_leech_does_not_stop_on_full_energy_shield",
@@ -574,6 +595,9 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
     "gain_x_rage_on_melee_crit",
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
+    "guardian_damage_+%_final_to_you_and_nearby_allies_per_nearby_ally_up_to_15%",
+    "guardian_with_5_nearby_allies_you_and_allies_have_onslaught",
+    "guardian_with_nearby_ally_damage_+%_final_for_you_and_allies",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
     "keystone_point_blank",
@@ -589,6 +613,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "rage_warcry_gain_X_rage_per_minute_per_5_monster_power_max_25_power",
     "rage_warcry_maximum_rage_+",
     "raider_shocks_you_apply_can_stack_up_to_50_times",
+    "rallying_cry_damage_+%_final_from_osm_per_nearby_ally",
     "regenerate_1_rage_per_x_life_regeneration",
     "regenerate_1_rage_per_x_mana_regeneration",
     "retaliation_skills_gain_X_rage_per_enemy_hit",
