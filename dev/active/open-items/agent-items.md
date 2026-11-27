@@ -13,7 +13,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [x] **The 3_29 ascendancy auras** (Ramako, Void Beacon, Augury of Penitence, Unwavering Crusade: no stats in `PassiveSkills`): found as passive buffs (`PassiveSkillBuffs`); data schema 6 and `loom_calc::poe1::passive_buffs` (2026-11-26, `docs/phase-6/stat-mop-up.md`, "The agent list (2026-11-26): the 3_29 ascendancy auras"; evidence `local/p6/pb` on the new pack `b-pb`). Shipping schema 6 is the maintainer's data run.
 
 ## Small, existing fixtures
-- [ ] **Static Strike part 1** (3 Smite builds' `FullDPS`): its function and beam damage act only in part 2; its zap stats `NoEffect` outside part 2, the read lists by part.
+- [x] **Static Strike part 1** (3 Smite builds' `FullDPS`): its function and beam damage act only in part 2; its zap stats `NoEffect` outside part 2, the read lists by part. Done 2026-11-26 as part 2: the builds count Static Strike's beams (`skillPart="2"`) and Shockwave Support's attack in full DPS; both ported (`docs/phase-6/triggers.md`, "Part 9"; the three `FullDPS` `Complete`; `pob-bug` DIV-0780 and DIV-0782, Q11 DIV-0781; evidence `local/p6/ss`).
 - [ ] **Vaal Summon Skeletons' full DPS** (417 against 115): trace with an instrumented PoB copy in the scratchpad.
 
 ## S9: resolver and item gaps

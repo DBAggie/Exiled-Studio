@@ -11032,6 +11032,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
     // Open items S3: PoB's `triggeredBySpellSlinger`, which `poe1::triggers` decides.
     ("spellslinger_trigger_on_wand_attack_%", "trigger"),
+    // Agent list: Static Strike's beams (its part 2): the zap period and speed
+    // (PoB's `repeatFrequency` and `StaticStrikeFrequency` INC, read only by
+    // its part 2's `preDamageFunc`) and the beams' less damage (`Damage` MORE
+    // tagged part 2), read by `hit::static_strike_beams` in that part.
+    ("static_strike_base_zap_frequency_ms", "skill-rate"),
+    ("static_strike_beam_damage_+%_final", "skill-part"),
+    ("static_strike_zap_speed_+%", "skill-rate"),
     // P6-11as: "#% increased Stun Duration on Enemies per Endurance
     // Charge" (`EnemyStunDuration` INC): no slice field.
     ("stun_duration_+%_per_endurance_charge", "stun"),
@@ -11048,6 +11055,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
+    ),
+    // Agent list: Shockwave Support's chance to trigger its attack, 100 at every
+    // level (`constantStats`; PoB's stat map entry is empty), so the trigger's
+    // chance is the source's hit chance alone (`poe1::triggers`, `Shockwave`).
+    (
+        "support_blunt_chance_to_trigger_shockwave_on_hit_%",
+        "trigger",
     ),
     // Open items S3: Arcanist Brand's less area for the spells it triggers
     // (AreaOfEffect MORE): no slice field.
@@ -11216,6 +11230,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trigger_on_ward_break_%_chance", "trigger"),
     ("triggered_by_brand_support", "trigger"),
     ("triggered_by_manaforged_arrows_support_%_chance", "trigger"),
+    // Agent list: Shockwave Support's attack marked triggered (PoB has no row;
+    // its config by the skill's name): `poe1::triggers` (`Shockwave`).
+    ("triggered_by_shockwave_support", "trigger"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",

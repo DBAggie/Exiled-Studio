@@ -228,7 +228,12 @@ pub const DISPLAY_SKILL_DATA: [&str; 5] = [
 ];
 
 /// The fields of a PoB part the engine reads (P6-6b): its name and flags.
-const PART_FIELDS: [&str; 4] = ["area", "melee", "name", "projectile"];
+/// `chaining` (Static Strike's parts; agent list) sets PoB's
+/// `skillFlags.chaining`, read for the chain count (`CalcOffence.lua` 1032
+/// to 1046), which reaches no slice field (`number_of_chains` and the
+/// per-chain lines are no-effect rows or guards), and for Pact of Beidat,
+/// a spell's.
+const PART_FIELDS: [&str; 5] = ["area", "chaining", "melee", "name", "projectile"];
 
 /// The main skill's part from PoB's skill data (P6-6b; the generated
 /// [`super::pob_skills`], v2.67.2's `Data/Skills/*.lua`): the base flags
@@ -340,8 +345,11 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   (P6-11hd);
 /// - Shield Crush's damage by distance (`MORE` `Hit` with `MeleeProximity`
 ///   ramp `{1, 0}`, `act_str.lua` 9875 to 9877):
-///   `collect::melee_proximity` (P6-11ht).
-pub const READ_OWN_STATS: [(&str, &str); 3] = [
+///   `collect::melee_proximity` (P6-11ht);
+/// - Static Strike's less beam damage (`Damage` MORE in part 2,
+///   `act_str.lua` 10679 to 10681): [`static_strike_beams`] (agent list).
+pub const READ_OWN_STATS: [(&str, &str); 4] = [
+    ("StaticStrike", BEAM_DAMAGE_STAT),
     (
         "ShieldCrush",
         "off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating",
@@ -369,6 +377,21 @@ pub const READ_PART_BASE_MODS: [(&str, &str, usize); 1] = [("ShieldCrush", "dpsM
 ///   `hitTimeOverride = output.Cooldown`, which `CalcOffence.lua` 2403
 ///   reads only when set. Vortex's levels have no cooldown.
 pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
+
+/// Skill functions the engine reads in every part, with or without a
+/// cooldown (agent list): Static Strike's `preDamageFunc` (`act_str.lua`
+/// 10663 to 10667) sets the hit time of part 2 only, which
+/// [`static_strike_beams`] reads; in part 1 it does nothing.
+pub const READ_PART_FUNCTIONS: [(&str, &str); 1] = [("StaticStrike", "preDamageFunc")];
+
+/// Static Strike's zap period, milliseconds (PoB's `repeatFrequency`, `div =
+/// 1000`, `act_str.lua` 10682 to 10685).
+pub const ZAP_FREQUENCY_STAT: &str = "static_strike_base_zap_frequency_ms";
+/// Static Strike's zap speed, percent (PoB's `StaticStrikeFrequency` INC,
+/// 10686 to 10688; its quality's).
+pub const ZAP_SPEED_STAT: &str = "static_strike_zap_speed_+%";
+/// Static Strike's less beam damage, percent (`Damage` MORE in part 2).
+pub const BEAM_DAMAGE_STAT: &str = "static_strike_beam_damage_+%_final";
 
 /// Stat map entries of any skill that only mark it triggered, which the
 /// engine reads as the skill's trigger kind ([`super::triggers::kind`];
@@ -402,7 +425,10 @@ pub fn pob_vetted_with(id: &str, index: usize, no_cooldown: bool) -> bool {
     let Some(pob) = super::pob_skill::skill(id) else {
         return false;
     };
-    let function_read = |f: &&str| no_cooldown && READ_FUNCTIONS.contains(&(id, *f));
+    let function_read = |f: &&str| {
+        (no_cooldown && READ_FUNCTIONS.contains(&(id, *f)))
+            || READ_PART_FUNCTIONS.contains(&(id, *f))
+    };
     if !pob.functions.iter().all(function_read) {
         return false;
     }
@@ -590,6 +616,8 @@ pub struct AttackSkill<'d> {
     pub arrow: bool,
     /// The skill part computed.
     pub part: SkillPart,
+    /// The part's index in PoB's data, 1-based; 0 without PoB's parts.
+    pub part_index: usize,
     /// Whether the engine reads all of PoB's data of the skill
     /// ([`pob_vetted`]); without PoB's data, the part's flags are the
     /// game's (`Melee` type, `is_area_damage`).
@@ -772,7 +800,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
     // does not decide between melee and projectile.
     if super::pob_skill::skill(&effect.id).is_some_and(|p| p.flags.contains(&"shieldAttack")) {
         let shield = collect::shield(input)?;
-        let (part, known_parts) = attack_part(&skill, main_group, data)?;
+        let (part, part_index, known_parts) = attack_part(&skill, main_group, data)?;
         let arrow = skill::instance(effect, gem.level, gem.quality, data)
             .stats
             .iter()
@@ -789,6 +817,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
             double_hits: false,
             arrow,
             part,
+            part_index,
             known_parts,
             shield: Some(level_row.attack_time),
         });
@@ -821,7 +850,7 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         .stats
         .iter()
         .any(|(s, v)| s == ARROW_STAT && *v != 0);
-    let (mut part, known_parts) = attack_part(&skill, main_group, data)?;
+    let (mut part, part_index, known_parts) = attack_part(&skill, main_group, data)?;
     // The main-hand weapon decides between melee and projectile
     // (`CalcActiveSkill.lua` 302 to 308): a melee weapon clears the
     // projectile flag, a ranged one (bow, wand: not melee in PoB's
@@ -839,18 +868,20 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<Att
         double_hits,
         arrow,
         part,
+        part_index,
         known_parts,
         shield: None,
     })
 }
 
-/// The attack's part (PoB's `skillPart`, P6-6b) and whether PoB's data of
-/// it is read in full; `None` for part 0 of a skill with parts.
+/// The attack's part (PoB's `skillPart`, P6-6b), its index (1-based, 0
+/// without PoB's parts), and whether PoB's data of it is read in full;
+/// `None` for part 0 of a skill with parts.
 fn attack_part(
     skill: &MainSkill<'_>,
     main_group: &SocketGroup,
     data: &dyn CalcData,
-) -> Option<(SkillPart, bool)> {
+) -> Option<(SkillPart, usize, bool)> {
     let effect = skill.effect();
     let gem = skill.active_gem;
     let has = |t: &str| skill.types.contains(t);
@@ -868,7 +899,7 @@ fn attack_part(
         return None;
     }
     Some(match pob_part(&effect.id, wanted) {
-        Some((p, index)) => (p, pob_vetted(&effect.id, index)),
+        Some((p, index)) => (p, index, pob_vetted(&effect.id, index)),
         None => (
             SkillPart {
                 name: "",
@@ -876,6 +907,7 @@ fn attack_part(
                 area: is_area_damage(skill, data),
                 projectile: false,
             },
+            0,
             false,
         ),
     })
@@ -1589,6 +1621,80 @@ fn average_damage(
     percent(calc, scaled, Term::Result)
 }
 
+/// Static Strike's beams (agent list; `act_str.lua` 10663 to 10689): in
+/// part 2, "Beams", PoB's `preDamageFunc` sets `hitTimeOverride =
+/// repeatFrequency / (1 + StaticStrikeFrequency INC / 100)`, the period the
+/// skill's [`ZAP_FREQUENCY_STAT`] over 1000 and the INC its
+/// [`ZAP_SPEED_STAT`] (no other line gives it). `HitSpeed = 1 / HitTime`
+/// (`CalcOffence.lua` 2403 to 2405, 2474 to 2476: no tick cap) is the rate of
+/// the DPS (3712), the ailments (4325, 4607, 4914), leech (3211), and impale
+/// (6045); `Speed` stays the attack rate. The part's
+/// [`BEAM_DAMAGE_STAT`] is `Damage` MORE, added here. `None` outside part 2,
+/// where none of the three is read; a period not above 0 is a reason.
+fn static_strike_beams(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    if attack.skill.effect().id != "StaticStrike" || attack.part_index != 2 {
+        return Ok(None);
+    }
+    let data = calc.input().data;
+    let (mut period, mut zap_speed, mut more) = (0_i64, 0_i64, 0_i64);
+    for instance in skill::instances(&attack.skill, data) {
+        for (stat, value) in &instance.stats {
+            match stat.as_str() {
+                ZAP_FREQUENCY_STAT => period += *value,
+                ZAP_SPEED_STAT => zap_speed += *value,
+                BEAM_DAMAGE_STAT => more += *value,
+                _ => {}
+            }
+        }
+    }
+    #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+    let (period, zap_speed, more) = (period as f64, zap_speed as f64, more as f64);
+    if more != 0.0 {
+        calc.add_effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value: more,
+            conditions: crate::condition::Conditions::none(),
+            source: attack.source(),
+        });
+    }
+    let factor = 1.0 + zap_speed / 100.0;
+    if period <= 0.0 || factor <= 0.0 {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "static-strike-zap",
+        });
+        return Ok(None);
+    }
+    let period = phases::constant(calc, "static-strike-zap-period", period / 1000.0)?;
+    let factor = phases::constant(calc, "static-strike-zap-speed", factor)?;
+    let time = quotient(calc, period, factor, Term::Step("hit-time"))?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    quotient(calc, one, time, Term::Result).map(Some)
+}
+
+/// The hit's rate: the beams' ([`static_strike_beams`]), set as
+/// [`Field::HitSpeed`] with the skill's reasons, else the attack's `speed`
+/// (PoB's `HitSpeed or Speed`).
+fn hit_rate(
+    calc: &mut Calc<'_>,
+    beams: Option<Valued>,
+    reasons: &Reasons,
+    speed: Valued,
+) -> Valued {
+    match beams {
+        Some(rate) => {
+            calc.set(Field::HitSpeed, phases::query(rate, reasons.clone()));
+            rate
+        }
+        None => speed,
+    }
+}
+
 /// `output.TotalDPS = AverageDamage x (HitSpeed or Speed) x dpsMultiplier
 /// x quantityMultiplier`; both multipliers are 1.
 fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), CalcError> {
@@ -1835,6 +1941,10 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             }
         }
     }
+    // Static Strike's beams ([`static_strike_beams`]): their less damage
+    // before either hand's damage; their hit rate is the DPS's and the
+    // ailments' rate, the attack rate staying `Speed`.
+    let beam_rate = static_strike_beams(calc, attack, &mut unvetted)?;
     // A trigger's rate is every pass's speed (open items S3;
     // `CalcOffence.lua` 2223 to 2227, `output.Speed =
     // skillData.triggerRate`); without a source PoB reports the skill as
@@ -1907,13 +2017,14 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             ],
         );
         calc.set(Field::Speed, phases::query(speed.0, speed.1));
-        hit_dps(calc, average.0, speed.0)?;
+        let rate = hit_rate(calc, beam_rate, &unvetted, speed.0);
+        hit_dps(calc, average.0, rate)?;
         let ailment_hit = super::ailment::AilmentHit {
             flags,
             sources: &sources,
             crit: crit.0,
             hit_chance: hit_chance.0,
-            rate: speed.0,
+            rate,
             skill: super::pob_skill::skill(id).map(|p| (p, attack.source())),
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
@@ -1923,7 +2034,11 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
     let main = hand_hit(calc, attack, main_rate, speed, &enemy)?;
     let off = hand_hit(calc, attack, off_rate, speed, &enemy)?;
-    dual_wield(calc, attack, &main, &off, speed)?;
+    // The hit rate after the hands' speeds are combined (`CalcOffence.lua`
+    // 2474 to 2476): the beams' when set, else the combined speed.
+    let rate = hit_rate(calc, beam_rate, &unvetted, speed);
+    dual_wield(calc, attack, &main, &off, speed, rate)?;
+    let speed = rate;
     // A dual wielder's damaging ailments (open items S7): each hand's pass
     // with its own flags (`band(cfg.flags, ModFlag.WeaponMask)`, the hand's
     // config; P6-11b review), its stacks at the hands' combined speed (PoB's
@@ -2220,6 +2335,7 @@ fn dual_wield(
     main: &HandHit,
     off: &HandHit,
     speed: Valued,
+    rate: Valued,
 ) -> Result<(), CalcError> {
     let two = phases::constant(calc, "two", 2.0)?;
     let average_of = |calc: &mut Calc<'_>, a: Valued, b: Valued| -> Result<Valued, CalcError> {
@@ -2276,8 +2392,9 @@ fn dual_wield(
     // (`CalcOffence.lua` 3712: the combined speed, set before the passes'
     // damage), then `DPS`: the combined average times the combined speed
     // (P6-11b; P6-2a used each hand's own speed, which agreed only when
-    // the hands' speeds did).
-    hit_dps(calc, average, speed)
+    // the hands' speeds did). With a hit rate (`rate`, PoB's `HitSpeed`),
+    // that rate (agent list: Static Strike's beams).
+    hit_dps(calc, average, rate)
 }
 
 /// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
@@ -5431,6 +5548,21 @@ mod tests {
         }
         // Icicle Burst's `showAverage` is not read on the attack path.
         assert!(!pob_vetted("IcicleBurst", 0));
+    }
+
+    /// Agent list: Static Strike's data is read in both parts (its function,
+    /// its part-2 stat, its parts' `chaining`), and Shockwave Support's
+    /// attack has none to read.
+    #[test]
+    fn static_strike_and_shockwave_should_be_vetted() {
+        assert!(pob_vetted("StaticStrike", 1));
+        assert!(pob_vetted("StaticStrike", 2));
+        assert!(pob_vetted("SupportBluntWeaponShockwave", 0));
+        let pob = super::super::pob_skill::skill("StaticStrike").expect("Static Strike");
+        assert!(pob.own_stats.contains(&BEAM_DAMAGE_STAT));
+        assert!(pob.functions.contains(&"preDamageFunc"));
+        let (beams, index) = pob_part("StaticStrike", 2).expect("parts");
+        assert_eq!((beams.name, index), ("Beams", 2));
     }
 
     /// PoB's weapon rule (P6-6c review): a melee weapon keeps melee, a bow

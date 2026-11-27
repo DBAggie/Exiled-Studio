@@ -106,6 +106,9 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "chance_to_be_frozen_shocked_ignited_%",
     "lightning_ailment_duration_+%",
     "shocked_effect_on_self_+%",
+    // Agent list: Shockwave Support's chance to trigger its attack ("Shockwave"
+    // in the text), never the enemy's shock; `poe1::triggers` reads the rate.
+    "support_blunt_chance_to_trigger_shockwave_on_hit_%",
 ];
 
 /// Rows whose text names shock but which read a condition the config

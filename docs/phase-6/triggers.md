@@ -369,6 +369,49 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **Corpus** (21 builds, local): no document changed.
 - **Tests:** the workspace's 1,863 tests, clippy, fmt, and the wasm32 check pass.
 
+## Part 9: Static Strike's beams and Shockwave (the agent list, 2026-11-26)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after data schema 6. The agent list named this item "Static Strike part 1", for the three Smite Inquisitor builds' `FullDPS`. It turned out to be part 2: each build counts Static Strike in full DPS with `skillPart="2"`, "Beams", and PoB's full DPS also counts the attack of Shockwave Support in the same group. Both were needed.
+
+**Static Strike's beams** (`act_str.lua` 10642 to 10755; `hit::static_strike_beams`):
+- **The hit rate.** In part 2 PoB's `preDamageFunc` sets `hitTimeOverride = repeatFrequency / (1 + StaticStrikeFrequency INC / 100)`. The period is `static_strike_base_zap_frequency_ms` over 1000; the INC is `static_strike_zap_speed_+%`, which only the gem's quality gives. `HitSpeed = 1 / HitTime`, with no tick cap (`CalcOffence.lua` 2403 to 2405, 2474 to 2476).
+- **Where the hit rate is used.** It is the rate of the DPS (3712), the ailments (4325, 4607, 4914), leech (3211), and impale (6045). `Speed` stays the attack rate; a dual wielder's is still the hands' combined speed.
+- **A new field.** The engine now sets `HitSpeed`, a slice field until now never computed, which PoB has only when it sets it.
+- **The beams' damage.** `static_strike_beam_damage_+%_final` is `Damage` MORE tagged part 2, added by the same function.
+- **Part 1** reads none of the three; the mapping gives them no effect (`skill-rate`, `skill-part`).
+- **Vetting.** `hit::READ_PART_FUNCTIONS` (functions read in every part, with or without a cooldown), `READ_OWN_STATS` with the beam stat, and `PART_FIELDS` with `chaining`. The chain count reaches no slice field: `number_of_chains` and the per-chain lines are no-effect rows or guards.
+- **`AttackSkill::part_index`** carries the part's index.
+
+**Shockwave Support's attack** (`SupportBluntWeaponShockwave`, `sup_str.lua` 4837; `triggers::Config::Shockwave`). PoB finds its config by the skill's name, "shockwave" (1361 to 1363). The engine finds it by the granted effect (`triggers::SUPPORT_GRANTED`).
+- **The source** is the fastest melee skill of its group that is not triggered, with its `HitSpeed` or `Speed`. For Static Strike's beams that is the beams' hit rate.
+- **The chance** is the source's chance to hit.
+- **The rotation** is the main skill alone, with its own 1 s cooldown and its `base_cooldown_speed_+%`. More than one stored use ignores the server tick (PoB's `ignoresTickRate`).
+- **Rows.** The support's `support_blunt_chance_to_trigger_shockwave_on_hit_%` is 100 at every level (`constantStats`; PoB's stat map entry is empty) and `triggered_by_shockwave_support` is a marker. Both are `trigger` rows with no effect.
+
+**Found on the way: PoB's full DPS pass again** (`docs/phase-6/full-dps-levels.md`). With both skills computed, act5's and act10's `FullDPS` still differed from PoB's by 0.14% and 0.21%, while each skill's own `TotalDPS` matched PoB's main calculation. The S4 probe, rebuilt in a scratchpad copy of the adapter from the doc, was run on copies of the builds with Static Strike's group as the main group.
+- **What it shows.** PoB's full DPS lines are not its own main values: Static Strike 66,252.77 against 66,115.66 (act10), Shockwave 30,649.97 against 30,578.76.
+- **The cause is S4's.** Rage's more damage (36% in act10, 40% in act5), added during the calculation, and the frenzy charges' 12% (Base) round together in the main pass and apart in full DPS. act10: `Damage` MORE 0.70 x round(1.36 x 1.12, 2) = 1.064 against 0.70 x 1.36 x 1.12 = 1.06624.
+- **Registered** as `pob-bug` DIV-0780 (act10) and DIV-0782 (act5).
+- **act2** has no rage: its MOREs are equal in both passes. Its 0.18 difference is Static Strike's average damage, which carries the Q11 attack rate as the build's registered `AverageDamage` does: 0.16432 x 10/9, the cull, is the whole difference. Registered `game-truth` Q11 DIV-0781.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-pb`. The baseline is data schema 6's run (`local/p6/pb`); this run is `local/p6/ss`.
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/ss_fixtures.py` and `ss_fixtures2.py`). Every compared field equals PoB's but the registered Q11 attack rate:
+  - `static-strike-beams-templar.xml`: `HitSpeed` 3.75 (0.32 s over 1.20 from quality 20), the DPS, and poison at it;
+  - `static-strike-beams-dual-wield-templar.xml`: `HitSpeed` 3.125 with the hands' combined `Speed`;
+  - `static-strike-melee-hit-templar.xml`: part 1, no beam stat;
+  - `shockwave-static-strike-melee-hit-templar.xml`: Shockwave level 1, the melee hit's rate times its chance to hit, under the tick-rounded 1 s cooldown;
+  - `shockwave-static-strike-beams-templar.xml`: Shockwave level 10, two stored uses: 1.18 per second, the cap from its 18% cooldown recovery, the source the beams' 3.125.
+  - 429 fields are targets.
+  - Q11: DIV-0766 to DIV-0779.
+- **Public `calc-parity`** (592 builds): 0 unexpected. `Complete` fields went from 48,924 to 49,370.
+  - The three Inquisitor builds' `FullDPS` are now `Complete`: 84,062 to 111,355 (PoB 111,591), 2,850 to 3,783 (PoB 3,783), 35,995 to 45,225 (PoB 45,163).
+  - `cyclone-shockwave-slayer.xml`'s `FullDPS` moved toward PoB, 37.9 to 42.9 million (PoB 68.4 million), partial on its other reasons.
+  - Four values moved, all toward PoB.
+- **Corpus** (21 builds, local): 0 unexpected; documents byte-identical.
+- **Tests:** `hit::static_strike_and_shockwave_should_be_vetted`, `triggers::shockwave_should_be_a_lone_trigger_on_hit`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
 ## Where S3 stands
 
 Every trigger config PoB has that changes a slice field is ported, but these:

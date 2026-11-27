@@ -225,6 +225,10 @@ pub enum Config {
     /// of 2 per second (its cooldown's when it has one); otherwise PoB
     /// disables the skill.
     HiddenBlade,
+    /// Shockwave Support's attack (agent list; 1361 to 1363): the fastest
+    /// melee skill of its group, not triggered, its hit chance a factor; the
+    /// main skill alone in the rotation, its own cooldown.
+    Shockwave,
 }
 
 impl Config {
@@ -289,7 +293,7 @@ impl Config {
     const fn main_alone(self) -> bool {
         matches!(
             self,
-            Self::Spellslinger | Self::ManaforgedArrows | Self::KitavasThirst
+            Self::Spellslinger | Self::ManaforgedArrows | Self::KitavasThirst | Self::Shockwave
         ) || self.is_granted()
     }
 
@@ -371,6 +375,11 @@ const SUPPORTS: &[(&str, Config)] = &[
         Config::MaloneysMechanism,
     ),
 ];
+
+/// The skills a support grants and PoB triggers by the skill's name
+/// (`configTable[skillName:lower()]`, 1602), by the granted effect: Shockwave
+/// Support's attack (`sup_str.lua` 4837; its `Triggered` type).
+const SUPPORT_GRANTED: &[(&str, Config)] = &[("SupportBluntWeaponShockwave", Config::Shockwave)];
 
 /// Arcanist Brand's active skill (`act_int.lua` 545): the source of the
 /// spells its support part triggers.
@@ -627,6 +636,13 @@ pub fn kind<'d>(skill: &MainSkill<'d>) -> Kind<'d> {
     // config by the skill's ID or the unique's name.
     if let Some(config) = granted_config(skill) {
         return Kind::Ported(config, None);
+    }
+    // A skill a support grants (agent list): PoB's config by its name.
+    if let Some((_, c)) = SUPPORT_GRANTED
+        .iter()
+        .find(|(id, _)| *id == skill.effect().id)
+    {
+        return Kind::Ported(*c, None);
     }
     // A skill PoB marks triggered without a ported config. A skill with
     // only `InbuiltTrigger` and no PoB config is self-cast in PoB, as here.
@@ -1004,6 +1020,8 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 Config::WingOfTheWyvern => *g != main_group && weapon_has(Flags::BOW) == Some(true),
                 Config::SevenTeachings => melee && weapon_has(Flags::UNARMED) == Some(true),
                 Config::FireSpellOnHit => melee,
+                // `skill.skillTypes[SkillType.Melee] and slotMatch` (1362).
+                Config::Shockwave => melee && *g == main_group,
                 Config::ManaforgedArrows => weapon_has(Flags::BOW) == Some(true),
                 Config::UniqueMeleeOrAttack
                 | Config::Starcaller
@@ -1686,6 +1704,21 @@ mod tests {
         // Moonbender's Wing and Lioneye's Paws: PoB's cooldown of 1 s.
         assert_eq!(Config::MoonbendersWing.cooldown_override(), Some(1.0));
         assert_eq!(Config::UniqueMeleeOrAttack.cooldown_override(), None);
+    }
+
+    /// Agent list: Shockwave Support's attack is PoB's "shockwave" config,
+    /// the main skill alone, its source's hit chance a factor, not on use or
+    /// on crit, and no item line.
+    #[test]
+    fn shockwave_should_be_a_lone_trigger_on_hit() {
+        assert_eq!(
+            SUPPORT_GRANTED,
+            &[("SupportBluntWeaponShockwave", Config::Shockwave)]
+        );
+        let c = Config::Shockwave;
+        assert!(c.main_alone());
+        assert!(!c.on_use() && !c.on_crit() && !c.is_item_line() && !c.is_granted());
+        assert_eq!(c.cooldown_override(), None);
     }
 
     /// PoB's rotation fed Smite's attack rate on Limbsplit's Woodsplitter

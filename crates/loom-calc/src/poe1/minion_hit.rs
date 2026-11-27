@@ -313,6 +313,7 @@ fn minion_skill<'d>(
         double_hits: false,
         arrow,
         part,
+        part_index: 0,
         known_parts: hit::pob_vetted(id, 0),
         shield: None,
         skill,

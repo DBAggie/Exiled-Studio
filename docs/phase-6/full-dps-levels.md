@@ -213,3 +213,7 @@ Run `local/p6/s4` (`b-ct`), the engine at `c180b5c7` (S4 changes no engine code)
 ## What this corrects
 
 P6-11eu (`docs/phase-6/stat-mop-up.md`) traced the difference to "PoB's shared environment" and named the stance buffs as likely carried over between skills. The run shows otherwise: `calcFullDPS` rebuilds the environment for every skill (`Calcs.lua` 335), nothing is carried over, and the difference is the ModDB levels' rounding above.
+
+## Seen again: the Smite Inquisitor builds (the agent list, 2026-11-26)
+
+With Static Strike's beams and Shockwave computed, the probe above, rebuilt in a scratchpad copy of the adapter from this page, ran on copies of `smite-inquisitor-act5.xml` and `act10.xml` with Static Strike's group as the main group. Rage's more damage, added during the calculation, and the frenzy charges' more damage (Base) round together in the main pass and apart in full DPS. act10: `Damage` MORE 0.70 x round(1.36 x 1.12, 2) = 1.064 against 0.70 x 1.36 x 1.12 = 1.06624. Registered `pob-bug` DIV-0780 (act10) and DIV-0782 (act5) (`docs/phase-6/triggers.md`, "Part 9").

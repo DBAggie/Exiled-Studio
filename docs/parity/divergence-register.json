@@ -15318,6 +15318,346 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-26",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0766",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-beams-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.45,
+      "successor_value": 1.4492753623188408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-beams-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0767",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-beams-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 14.5,
+      "successor_value": 14.492753623188408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-beams-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0768",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-beams-dual-wield-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.5950000000000002,
+      "successor_value": 1.5942028985507248,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-beams-dual-wield-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0769",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-beams-dual-wield-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 15.950000000000003,
+      "successor_value": 15.942028985507248,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-beams-dual-wield-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0770",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.45,
+      "successor_value": 1.4492753623188408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0771",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 5.38852171875,
+      "successor_value": 5.385828804347827,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0772",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/TotalPoisonDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.5723653005000001,
+      "successor_value": 0.5720792608695654,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0773",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/ManaPerSecondCost",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 14.5,
+      "successor_value": 14.492753623188408,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0774",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 5.96088701925,
+      "successor_value": 5.957908065217392,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0775",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "static-strike-melee-hit-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 5.96088701925,
+      "successor_value": 5.957908065217392,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0776",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "shockwave-static-strike-melee-hit-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 0.39927536231884053,
+      "successor_value": 0.39907582440663725,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture shockwave-static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0777",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "shockwave-static-strike-melee-hit-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2.010304035326087,
+      "successor_value": 2.0092993856332706,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture shockwave-static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0778",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "shockwave-static-strike-melee-hit-templar.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 18.662574379076087,
+      "successor_value": 18.653247755198493,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture shockwave-static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0779",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "shockwave-static-strike-melee-hit-templar.xml",
+      "field": "/main_output/CombinedDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2.010304035326087,
+      "successor_value": 2.0092993856332706,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture shockwave-static-strike-melee-hit-templar.xml (open items, agent list: Static Strike and Shockwave): the attack rate from the weapon's floored attack time; the beams' hit rate (the zap frequency) and Shockwave's own hits match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0780",
+      "mechanic": "PoB's full DPS pass computes a skill with the player's base modifiers in a cached parent ModDB and the modifiers added during the calculation (buffs such as Blood and Sand's stance) in the pass's own ModDB; its main calculation holds both in one ModDB. ModDB:More rounds each level's product of more multipliers to 2 decimals, so the same skill's FullDPS differs from its own TotalDPS. The engine counts each included skill's own main calculation. The successor value also carries the registered Q11 attack rate (the fixture's Speed entry).",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 111590.51797067054,
+      "successor_value": 111355.19741835212,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcSetup.lua 488 to 587: without cached databases (the main calculation) the base and config modifiers go into env.modDB itself; with them (Calcs.lua 425 and 335, calcFullDPS) env.modDB.parent = cachedPlayerDB",
+        "PoB v2.67.2 Classes/ModDB.lua 157 to 194, MoreInternal: result = result * round(product of the level's MORE mods, 2), then times the parent's MoreInternal",
+        "Instrumented PoB run (open items, agent list: Static Strike and Shockwave; the S4 probe of docs/phase-6/full-dps-levels.md on the build with Static Strike's group as the main group, each of its two skills as the main skill): every mod the same in both passes; Static Strike's Damage MORE 1.064 in its main pass and 1.06624 in full DPS (0.70 x round(1.36 x 1.12, 2) against 0.70 x 1.36 x 1.12: Rage's 36% more, added during the calculation, in the pass's own ModDB; 4% more per frenzy charge, three charges, Base, in the cached parent), Shockwave's 1.52 and 1.5232; PoB's own TotalDPS 66,115.66 and 30,578.76, its full DPS lines 66,252.77 and 30,649.97"
+      ],
+      "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0781",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 3783.211789368561,
+      "successor_value": 3783.029208389852,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73 (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms, rounded down to an integer value; attacks per second 1000 / ms (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "Loom fixture smite-inquisitor-act2.xml (open items, agent list: Static Strike and Shockwave in full DPS): the difference is Static Strike's, whose average damage carries the attack rate (as the build's registered AverageDamage, DIV-0056): PoB's Static Strike line 2,553.2712 against the engine's TotalDPS 2,553.1069 (the build with its group as the main group), times the cull multiplier 10/9, is the whole FullDPS difference (0.18258); its beams' hit rate, Shockwave's DPS, and the ignite match PoB"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-26",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0782",
+      "mechanic": "PoB's full DPS pass computes a skill with the player's base modifiers in a cached parent ModDB and the modifiers added during the calculation (buffs such as Blood and Sand's stance) in the pass's own ModDB; its main calculation holds both in one ModDB. ModDB:More rounds each level's product of more multipliers to 2 decimals, so the same skill's FullDPS differs from its own TotalDPS. The engine counts each included skill's own main calculation. The successor value also carries the registered Q11 attack rate (the fixture's Speed entry).",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/main_output/FullDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 45163.34683889312,
+      "successor_value": 45224.56635388723,
+      "kind": "pob-bug",
+      "evidence": [
+        "PoB v2.67.2 Modules/CalcSetup.lua 488 to 587: without cached databases (the main calculation) the base and config modifiers go into env.modDB itself; with them (Calcs.lua 425 and 335, calcFullDPS) env.modDB.parent = cachedPlayerDB",
+        "PoB v2.67.2 Classes/ModDB.lua 157 to 194, MoreInternal: result = result * round(product of the level's MORE mods, 2), then times the parent's MoreInternal",
+        "Instrumented PoB run (open items, agent list: Static Strike and Shockwave; the S4 probe of docs/phase-6/full-dps-levels.md on the build with Static Strike's group as the main group, each of its two skills as the main skill): every mod the same in both passes; Static Strike's Damage MORE 1.2403 in its main pass and 1.23872 in full DPS (0.79 x round(1.40 x 1.12, 2) against 0.79 x 1.40 x 1.12: Rage's 40% more in the pass's own ModDB, the frenzy charges' 12% in the cached parent), Shockwave's 1.57 and 1.568; PoB's own TotalDPS 27,580.96 and 12,482.33, its full DPS lines 27,546.15 and 12,460.59"
+      ],
+      "test": "crates/loom-calc/tests/hit.rs::full_dps_should_add_the_skills_own_hit_dps",
+      "added": "2026-11-26",
+      "status": "accepted"
     }
   ]
 }
