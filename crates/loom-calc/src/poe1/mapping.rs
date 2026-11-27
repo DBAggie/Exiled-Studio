@@ -9323,6 +9323,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-10b part 7: "#% increased Maximum Recovery per Energy Shield Leech"
+    // The agent list (2026-11-27): "Your Maximum Energy Shield is Equal to
+    // #% of Your Maximum Life" (`EnergyShield` OVERRIDE, `PercentStat`
+    // `Life`), read by the energy shield phase.
+    (
+        "maximum_energy_shield_is_x%_of_maximum_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldFromLife),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // (`MaxEnergyShieldLeechInstance` INC; PoB's skill map reads the life and
     // energy shield stats as the rate, items' lines as the instance).
     (

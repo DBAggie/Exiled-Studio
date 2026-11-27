@@ -209,6 +209,11 @@ pub enum Poe1Quantity {
     /// `ManaGainAsEnergyShield` BASE; the agent list, 2026-11-27): read by
     /// the energy shield phase as one more row, before life's.
     ManaAsEnergyShield,
+    /// "Your Maximum Energy Shield is Equal to #% of Your Maximum Life"
+    /// (PoB's `EnergyShield` OVERRIDE with `PercentStat` `Life`; the agent
+    /// list, 2026-11-27): `Base`, the percent, read by the energy shield
+    /// phase in place of its rows.
+    EnergyShieldFromLife,
     /// Elemental resistances are capped by the highest maximum elemental
     /// resistance (PoB's `ElementalResistMaxIsHighestResistMax`, Melding of
     /// the Flesh; P6-11dh): a `Flag` the resistance phase reads.
@@ -1715,6 +1720,7 @@ impl core::fmt::Display for Poe1Quantity {
                 "evasion-per-green-main-hand-socket"
             }),
             Self::ManaAsEnergyShield => f.write_str("mana-as-energy-shield"),
+            Self::EnergyShieldFromLife => f.write_str("energy-shield-from-life"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),

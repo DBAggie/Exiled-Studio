@@ -5829,3 +5829,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Nova with 20% (energy shield 122), and with +50 and 20% increased mana, 10% increased energy shield, and 8% increased global defences (180). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27mee` on `b-ig`, against `local/p6/d27lie`): public 0 unexpected, `Complete` 59,822 to 59,996 (the fixtures'); 21 values moved, all toward PoB, 13 now equal (`shock-nova-archmage-hierophant.xml`'s EnergyShield 1,334 to PoB's 4,747, its recharge, leech, pools, and damage over time EHP). Corpus 0 unexpected, no value moved.
+
+## Energy shield as a percent of life (the agent list, 2026-11-27)
+
+**The stat:** "Your Maximum Energy Shield is Equal to #% of Your Maximum Life" (`maximum_energy_shield_is_x%_of_maximum_life`), unmapped in one public build.
+
+**PoB:** its parser reads `EnergyShield` OVERRIDE with `PercentStat` `Life`; `CalcDefence.lua` 1046 takes the override in place of the rows (`modDB:Override(nil, "EnergyShield") or m_max(round(energyShield), 0)`), and its output is whole (168.75 shows as 169 in the fixture), while its breakdown still lists the replaced rows.
+
+**The engine:** `Poe1Quantity::EnergyShieldFromLife`; the energy shield phase replaces its rows by `round(Life x percent / 100)` (`phases::energy_shield_from_life`) in a `graph::Node::Override` that keeps the rows, its dependency the life field; two lines are a reason (PoB takes the first override). Found on the way: `calc-parity`'s breakdown reader stopped at any nested `result` node, so it never reached an override's replaced rows; it now reads an override's children (`tools/parity-cli/src/calc_parity.rs`, `below`).
+
+**Fixtures** (original): Ice Nova with 15% and +100 to maximum energy shield, which the override replaces (169). Every field and the breakdown equal PoB's.
+
+**Evidence** (`local/p6/d27eoe` on `b-ig`, against `local/p6/d27mee`): public 0 unexpected, `Complete` 59,996 to 60,083 (the fixture's); 23 values moved, 22 toward PoB (`flicker-strike-berserker.xml`'s EnergyShield 500 to 2,939, PoB 3,199, its pools, maximum hits, and EHP), 1 away: its EnergyShieldRecharge 167 to 980 (PoB 0, from Soul Tether, a keystone still unmapped here, on an indeterminate field). Corpus 0 unexpected, no value moved.

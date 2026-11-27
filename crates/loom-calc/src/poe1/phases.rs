@@ -1512,6 +1512,32 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         if !rows.is_empty() {
             reasons.extend(&life_reasons);
         }
+        // "Your Maximum Energy Shield is Equal to #% of Your Maximum Life"
+        // (the agent list, 2026-11-27; `CalcDefence.lua` 1046: the override,
+        // `Life x percent / 100`, rounded as PoB's output shows, in place of
+        // the rows).
+        let over = if matches!(defence, Defence::EnergyShield) {
+            energy_shield_from_life(calc, &mut reasons)?
+        } else {
+            None
+        };
+        let (value, dep) = match over {
+            Some(by) => {
+                // PoB's breakdown keeps the replaced rows.
+                let node = calc.graph_mut().derive(crate::graph::Node::Override {
+                    by: by.node,
+                    replaced: value.node,
+                })?;
+                (
+                    Valued {
+                        node,
+                        value: by.value,
+                    },
+                    &[Field::Life][..],
+                )
+            }
+            _ => (value, dep),
+        };
         if dep.is_empty() {
             calc.set(field, query(value, reasons));
         } else {
@@ -1635,6 +1661,71 @@ pub(super) fn life_as_energy_shield(
         Term::Step("slot.conversion.life-to-energy-shield"),
     )?;
     Ok(Some(row))
+}
+
+/// Energy shield as a percent of life ([`Poe1Quantity::EnergyShieldFromLife`]):
+/// `round(Life x percent / 100)` (PoB's output is whole), `None` without
+/// the stat. PoB's `Override` takes
+/// the first override; two or more lines are summed, which is the same only
+/// for one (a reason otherwise).
+///
+/// # Errors
+/// A graph error.
+fn energy_shield_from_life(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::EnergyShieldFromLife);
+    let count = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.op == Op::Base)
+        .count();
+    if count == 0 {
+        return Ok(None);
+    }
+    if count > 1 {
+        reasons
+            .partial
+            .insert(crate::state::UnsupportedReason::UnmappedStat {
+                stat: loom_domain::StatId::new("maximum_energy_shield_is_x%_of_maximum_life"),
+                source: crate::source::Source::Rule("energy-shield-override"),
+            });
+    }
+    let percent = sum(
+        calc,
+        q,
+        Op::Base,
+        Term::Step("energy-shield-from-life-percent"),
+        reasons,
+    )?;
+    let Some(life) = calc.field(Field::Life).and_then(|f| {
+        Some(Valued {
+            node: f.node?,
+            value: f.value?,
+        })
+    }) else {
+        return Ok(None);
+    };
+    let hundred = constant(calc, "hundred", 100.0)?;
+    let scaled = product(
+        calc,
+        &[life, percent],
+        Term::Step("energy-shield-from-life-scaled"),
+    )?;
+    let value = binary(
+        calc,
+        Binary::Quotient,
+        scaled,
+        hundred,
+        "energy-shield-from-life",
+    )?;
+    Ok(Some(round(
+        calc,
+        value,
+        Term::Step("energy-shield-from-life-rounded"),
+    )?))
 }
 
 /// Mana gained as extra energy shield (the agent list, 2026-11-27;
