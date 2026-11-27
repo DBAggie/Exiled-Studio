@@ -72,7 +72,8 @@ pub const DUAL_WIELDING: &str = "DualWielding";
 /// "life" (`Classes/Item.lua` 284 to 320, `FindModifierSubstring`, with
 /// its special and excluded lines). The game's rule is the mods' `life`
 /// tag, which the engine reads instead, settling only what the tags
-/// decide ([`no_life_modifiers_on_body_armour`]). The two rules agree on
+/// decide ([`no_life_modifiers_on_body_armour`]; since the agent list,
+/// 2026-11-27, of the mods that can spawn on the item's base). The two rules agree on
 /// the P3-8n fixture and the in-scope builds; they are not proven equal in
 /// general (a line with the text "life" on an untagged mod, or a tagged mod
 /// whose text lacks it, would differ), so a build where they differ shows
@@ -441,6 +442,9 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
     let item = build.items.item(id)?;
     let mut stats = BTreeSet::new();
     let mut named = BTreeSet::new();
+    // A line not read can only add mods: it leaves `true` unsettled, never
+    // a life mod the read lines show (the agent list, 2026-11-27).
+    let mut unread = false;
     for line in &item.body.lines {
         match &line.kind {
             LineKind::Spec { key, value, .. } if AFFIX_KEYS.contains(&key.as_str()) => {
@@ -455,17 +459,33 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
                 } => stats.extend(lines.iter().map(|l| l.stat.as_str().to_owned())),
                 LineResolution::Excluded(loom_domain::Exclusion::NotSelected)
                 | LineResolution::Continues { .. } => {}
-                _ => return None,
+                _ => unread = true,
             },
-            LineKind::Unrecognized | LineKind::Spec { known: false, .. } => return None,
+            LineKind::Unrecognized | LineKind::Spec { known: false, .. } => unread = true,
             _ => {}
         }
     }
-    tagless(
-        &stats,
-        &named,
-        &input.data.mods_by_tag_among(LIFE_TAG, &stats)?,
-    )
+    // The base narrows the untagged mods to those that can spawn on it
+    // (the agent list, 2026-11-27): the base the import found, else
+    // its fallback, else none.
+    let mods = match input.options.item_bases.get(&id) {
+        Some(b) => {
+            let name = if input.data.item_base(&b.name).is_some() {
+                Some(b.name.as_str())
+            } else {
+                b.fallback.as_deref()
+            };
+            match name {
+                Some(n) => input.data.mods_by_tag_on(LIFE_TAG, &stats, n),
+                None => input.data.mods_by_tag_among(LIFE_TAG, &stats),
+            }
+        }
+        None => input.data.mods_by_tag_among(LIFE_TAG, &stats),
+    };
+    match tagless(&stats, &named, &mods?) {
+        Some(true) if unread => None,
+        settled => settled,
+    }
 }
 
 /// PoB's spec keys that name an item's crafted affixes (`Prefix: {range:r}

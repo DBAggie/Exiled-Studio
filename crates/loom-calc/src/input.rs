@@ -162,6 +162,23 @@ pub trait CalcData {
         self.mods_by_tag(tag)
     }
 
+    /// [`Self::mods_by_tag_among`] for an item of the base named `base`:
+    /// an untagged mod that rolls by spawn weights (a positive weight on
+    /// some tag) is left out when no base of that name spawns it (the game's
+    /// weight, the first of its spawn tags the base has; the agent list,
+    /// 2026-11-27: the Crucible tree's life rows spawn on shields and
+    /// weapons only). Mods without a positive weight (uniques, essences,
+    /// crafts) stay. The default ignores the base.
+    fn mods_by_tag_on(
+        &self,
+        tag: &str,
+        stats: &std::collections::BTreeSet<String>,
+        base: &str,
+    ) -> Option<ModsByTag> {
+        let _ = base;
+        self.mods_by_tag_among(tag, stats)
+    }
+
     /// Whether a passive node is a notable, and whether it is an
     /// ascendancy's (P3-8n: which node an item's "Allocates <name>"
     /// grants). `None` (the default) when the data does not say.
@@ -602,6 +619,60 @@ impl CalcData for Bundle {
         }
         Some(out)
     }
+
+    fn mods_by_tag_on(
+        &self,
+        tag: &str,
+        stats: &std::collections::BTreeSet<String>,
+        base: &str,
+    ) -> Option<ModsByTag> {
+        if self.manifest.data_schema < IMPLICIT_TAGS_SCHEMA {
+            return None;
+        }
+        // Every base row of the name, each with known tags; else the base
+        // narrows nothing.
+        let bases: Option<Vec<&[String]>> = self
+            .base_items
+            .iter()
+            .filter(|b| b.name == base)
+            .map(|b| b.tags.as_deref())
+            .collect();
+        let bases = match bases {
+            Some(b) if !b.is_empty() => b,
+            _ => return self.mods_by_tag_among(tag, stats),
+        };
+        let mut out = ModsByTag::default();
+        for m in &self.mods {
+            if m.stats.is_empty() {
+                continue;
+            }
+            if m.implicit_tags.iter().any(|t| t == tag) {
+                out.tagged.push(TaggedMod {
+                    id: m.id.clone(),
+                    stats: m.stats.iter().map(|s| s.stat.clone()).collect(),
+                });
+                continue;
+            }
+            if m.spawn.iter().any(|w| w.weight > 0) && !bases.iter().any(|t| spawns_on(m, t)) {
+                continue;
+            }
+            for s in &m.stats {
+                if stats.contains(&s.stat) && !out.untagged.contains(&s.stat) {
+                    out.untagged.insert(s.stat.clone());
+                }
+            }
+        }
+        Some(out)
+    }
+}
+
+/// Whether `m` spawns on a base with `tags`: the weight of the first of
+/// its spawn tags the base has is above 0 (the game's rule).
+fn spawns_on(m: &loom_data::bundle::ModEntry, tags: &[String]) -> bool {
+    m.spawn
+        .iter()
+        .find(|w| tags.contains(&w.tag))
+        .is_some_and(|w| w.weight > 0)
 }
 
 /// A stat of the object template `template` in `bundle`.

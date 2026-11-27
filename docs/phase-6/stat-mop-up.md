@@ -5562,3 +5562,17 @@ Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT
 **Fixtures** (original): `degen-mana-burn-witch.xml` (Righteous Fire and 3 stacks, 1,090 mana: net mana regeneration -13.6) and `degen-mana-burn-minimum-witch.xml` (level 1, 56 mana, 8 stacks: 1 per stack, -7). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27mbe` on `b-ig`, against `local/p6/d27ige`): public 0 unexpected, `Complete` 55,077 to 55,261 (the fixtures' 184), no other value moved. Corpus 0 unexpected, `Complete` 190 to 266: the build's 76 fields `partial` to `Complete`, all equal to PoB. Two of its values moved away, both `indeterminate` on other reasons: its net mana regeneration 11.6 to -1.6 (PoB 7.2) and total net regeneration; the 13.2 taken equals PoB's `ManaDegen`, and the gap is the build's mana regeneration itself (11.6 against PoB's 20.4).
+
+## No Life Modifiers on Equipped Body Armour, by the base (the agent list, 2026-11-27)
+
+**The condition:** "if there are no Life Modifiers on Equipped Body Armour" (`NoLifeModifiersOnBodyArmour`, P3-8n), which the engine settles by the game's rule, the mods' `life` implicit tag, not PoB's text rule (`ItemCondition` with `searchCond = "life"`). In the corpus it was the last reason of two builds (27 fields each) and one of a third's: each body armour has "+# to maximum Life", yet the condition stayed unsettled.
+
+**Why:** `base_maximum_life` is also on mods without the `life` tag, so "a stat only on tagged mods" failed. In data schema 6 those are 23 rows of one generation type, the Crucible weapon tree's life rows (`WeaponTreeIncreasedLife1` and kin), whose spawn weights put them on shields alone (`shield` 1000 or 500, `default` 0). They cannot be on a body armour.
+
+**The change** (the maintainer's choice, 2026-11-27: the game's tags, narrowed by the base, rather than PoB's text rule or the card's display-only affix inference):
+- `CalcData::mods_by_tag_on(tag, stats, base)`: an untagged mod that rolls by spawn weights (a positive weight on some tag) is left out when no base row of that name spawns it, the weight being that of the first of its spawn tags the base has (the game's rule, as `loom_parser`'s `ModRow::weight`). Mods with no positive weight (uniques, essences, crafts) stay, as before; a base whose tags the data lacks narrows nothing.
+- `states::no_life_modifiers_on_body_armour` asks it with the base the import found (`CalcOptions::item_bases`, else its fallback). A line the check cannot read (an unresolved modifier, a line of the player's own text) now leaves only `true` unsettled: it can only add mods, so a life mod the read lines show still settles `false`.
+
+**Fixture** (original): `life-mastery-life-modifier-plate-templar.xml`, the P3-8n Life Mastery build with "+70 to maximum Life" on its Astral Plate: no 15%, life 1,436, every field equal to PoB's. A second, with a named `IncreasedLife6` prefix and a line of free text, also equals PoB (1,430) but keeps that line's own reason, so it has no `Complete` field to pin and is not added; the corpus build with such a line shows the case.
+
+**Evidence** (`local/p6/d27nle` on `b-ig`, against `local/p6/d27mbe`): public 0 unexpected, `Complete` 55,261 to 55,337 (the fixture's 76), no value moved. Corpus 0 unexpected, `Complete` 266 to 319: 53 fields `partial` to `Complete`, all equal to PoB, no value moved (the engine's value already left out the 15%; the condition had only been unsettled). The third build's condition settles too and its fields keep their other reasons.
