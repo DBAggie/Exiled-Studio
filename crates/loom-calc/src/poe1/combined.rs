@@ -34,7 +34,8 @@
 //! [`crate::calculate`] with it). Then:
 //! - `CombinedDPS` gains the mirage's `TotalDPS` and `ImpaleDPS`, each
 //!   times the count (1 per `summon_mirage_archer_on_hit`, PoB's
-//!   `MirageArcherMaxCount` BASE 1);
+//!   `MirageArcherMaxCount` BASE 1, and the character's
+//!   [`Poe1Quantity::MirageArcherCount`]);
 //! - a mirage ignite or bleeding larger than the skill's own sets the
 //!   skill's to 0 (and adds the mirage's only to PoB's `MirageDPS`, not to
 //!   `CombinedDPS`);
@@ -124,6 +125,20 @@ fn mirage(
     if !marked {
         return Ok(None);
     }
+    // The character's extra mirage archers (the agent list, 2026-11-28; PoB
+    // sums `MirageArcherMaxCount` over the skill's list, `CalcMirages.lua`
+    // 72).
+    let extra: f64 = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::MirageArcherCount)
+                && e.op == crate::quantity::Op::Base
+                && e.conditions == crate::store::Conditions::none()
+        })
+        .map(|e| e.value)
+        .sum();
     let source = crate::source::Source::Rule(MIRAGE_RULE);
     let unsupported = |what| UnsupportedReason::UnmodelledSkill {
         source: source.clone(),
@@ -170,7 +185,7 @@ fn mirage(
         impale,
         ignite,
         bleed,
-        count: f64::from(count.max(1)),
+        count: (f64::from(count) + extra).max(1.0),
         reasons,
     }))
 }

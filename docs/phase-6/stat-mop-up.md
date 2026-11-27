@@ -5913,3 +5913,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Nova against an enemy shocked for 70% with +10% to the maximum (the shock 60) and with the 30% override too (30). Every field equals PoB's.
 
 **Evidence** (`local/p6/d28sme` on `b-ig`, against `local/p6/d28fie`): public 0 unexpected, `Complete` 61,055 to 61,229 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Extra mirage archers (the agent list, 2026-11-28)
+
+**The stat:** "+# to maximum number of Summoned Mirage Archers" (`additional_max_mirage_archers`), unmapped in one public build.
+
+**PoB** (`CalcMirages.lua` 72): the mirage count is `MirageArcherMaxCount` BASE summed over the skill's list, the support's 1 and the character's lines (`ModParser.lua` 2646).
+
+**The engine:** `Poe1Quantity::MirageArcherCount` (a row); `combined`'s mirage adds the character's unconditional ones to the support's count, the mirage's hit and impale times that count as before.
+
+**Fixture** (original): Burning Arrow with Mirage Archer and +1 (two mirages). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1228 to DIV-1233.
+
+**Evidence** (`local/p6/d28mae` on `b-ig`, against `local/p6/d28sme`): public 0 unexpected, `Complete` 61,229 to 61,318 (the fixture's); no other value moved (the public build's mirage is partial on its other reasons). Corpus 0 unexpected, no value moved.

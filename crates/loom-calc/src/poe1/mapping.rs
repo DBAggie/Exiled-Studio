@@ -7250,6 +7250,16 @@ pub const ROWS: &[Row] = &[
         &[(DEX, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
     ("additional_intelligence", &[(INT, Op::Base, 1.0)]),
+    // The agent list (2026-11-28): "+# to maximum number of Summoned Mirage
+    // Archers" (`MirageArcherMaxCount` BASE), read by `combined`.
+    (
+        "additional_max_mirage_archers",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MirageArcherCount),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "additional_maximum_all_elemental_resistances_%",
         &[
