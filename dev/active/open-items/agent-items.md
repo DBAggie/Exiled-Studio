@@ -45,7 +45,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [ ] Config: brittle (an enemy-side crit that reaches minions), the minion inputs (`minionsConditionFullLife`, `minionBuffOnslaught`, the minion charges), Feeding Frenzy, Elemental Equilibrium (`enemyConditionHitByLightningDamage`, `EEIgnoreHitDamage`), `multiplierNearbyAlly`, `presetBossSkills`, `TotalSpectreLife`, `detonateDeadCorpseLife`, `multiplierManaBurnStacks`, `bandit` values, `NoLifeModifiersOnBodyArmour`.
 
 ## The larger steps
-- [ ] **S5:** mine, trap, and totem costs per second; warcry power and the cries that scale with it; General's Cry's mirage warriors; Sacred Wisps.
+- [ ] **S5:** mine, trap, and totem costs per second; warcry power and the cries that scale with it; General's Cry's mirage warriors (with `generals_cry_maximum_warriors_+`, confirmed in the game 2026-11-26: +1 warrior; PoB's `GeneralsCryDoubleMaxCount`); Sacred Wisps.
 - [ ] **S6:** the minion's own damage over time; spectres (**begun 2026-11-25, RV-12 on PR #183:** a spectre is calculated, `docs/phase-6/minions.md`, "Spectres"; open: the buffs a spectre gives, more spectre skills vetted, and what the section lists).
 - [ ] **S7:** ward's other lines, EHP's other pools, damage over time EHP, conversion smoothing in maximum hit, degeneration, a dual wielder's ailments, leech, and block.
 - [x] **S3:** triggers and Spellslinger (`CalcTriggers.lua` on the P6-8a model). Done 2026-11-26 on PRs #187 and #188 (`docs/phase-6/triggers.md`, "Where S3 stands").
