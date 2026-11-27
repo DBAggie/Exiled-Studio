@@ -5623,3 +5623,13 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixture:** `toxic-rain-damage-templar.xml` (mechanic) retargeted: its hit, crit, and average damage now `Complete` and equal to PoB's; the attack rate is the Q11 floored-millisecond rate (1.6492 against PoB's 1.65), with its DPS and mana per second: `game-truth` DIV-1008 to DIV-1010.
 
 **Evidence** (`local/p6/d27tre` on `b-ig`, against `local/p6/d27ch2e`): public 0 unexpected, `Complete` 55,772 to 55,779 (Toxic Rain's 7 fields), no value moved; corpus 0 unexpected, no value moved.
+
+## A skill part's DPS multiplier (the agent list, 2026-11-27)
+
+**The gap:** PoB's `skillData.dpsMultiplier` from a part's base mod (`skill("dpsMultiplier", 2, { type = "SkillPart", skillPart = n })`) was not read: Shield Crush's part 2 kept `pob-skill-data`, and Shock Nova's part 1 ("Ring + Nova") and Lacerate's part 2 (both slashes) were unvetted. PoB multiplies it into `TotalDPS`, every damaging ailment's stacks, the leech hit rate, and the impale DPS (`CalcOffence.lua` 3712, 4322, 4603, 4908, 4024, 6035).
+
+**The engine:** `hit::READ_PART_BASE_MODS` lists the eight tagged ones (Shield Crush and its transfigured gem in part 2, Shock Nova and its transfigured gem in part 1, Lacerate, its two transfigured gems, and Eviscerate in part 2) as read; `hit::part_dps_multiplier` gives the part's value; the spell and the single-hand attack multiply the hit DPS by it, and pass `rate x dpsMultiplier` to the ailments (their stacks and impale) and the leech (`rate_with`). A dual wielder's pass with a multiplier above 1 keeps a reason (`dual-wield-dps-multiplier`). Shock Nova's ring's chance to shock joins `NO_SLICE_OWN_STATS` (a chance to shock reaches no slice field); its `shock_maximum_magnitude_+` stays a reason (PoB reads it per active skill for the shock's maximum, `damage_taken::SHOCK_DEPENDS_ON`). Untagged multipliers (Double Strike's, spectres') keep their skills unvetted.
+
+**Fixture** (original): `shield-crush-overlapping-waves-templar.xml` (the Shield Crush defences build in part 2: DPS 130.10, twice part 1's); every field equals PoB's. Lacerate in part 1 and part 2 on the Smite bleeding build gives PoB's doubling exactly (TotalDPS both over one = 2.0); its fields are partial on Lacerate's Blood Stance stats, so not added.
+
+**Evidence** (`local/p6/d27dme` on `b-ig`, against `local/p6/d27tre`): public 0 unexpected, `Complete` 55,779 to 55,867; 6 values moved, all toward PoB, in `shock-nova-archmage-hierophant.xml` (its DPS doubled, its ignite and leech, the life leech now equal to PoB's). Corpus 0 unexpected; 9 values toward PoB, none away (three builds' DPS, impale, and bleeding).

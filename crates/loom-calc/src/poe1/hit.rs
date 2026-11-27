@@ -366,12 +366,49 @@ pub const READ_OWN_STATS: [(&str, &str); 5] = [
 ];
 
 /// Base mods tagged with one part (`{ type = "SkillPart", skillPart = n }`)
-/// that the engine does not read: (skill, `SkillData` key, part). The other
-/// parts are vetted; that part keeps `pob-skill-data` (open items, S1):
-/// - Shield Crush's `dpsMultiplier` 2 in part 2, "2 Overlapping Waves"
-///   (`act_str.lua` 9887). The engine's `dpsMultiplier` is 1
-///   ([`hit_dps`]).
-pub const READ_PART_BASE_MODS: [(&str, &str, usize); 1] = [("ShieldCrush", "dpsMultiplier", 2)];
+/// the engine reads: (skill, `SkillData` key, part). Since the agent list
+/// (2026-11-27) each is PoB's `dpsMultiplier` of that part
+/// ([`part_dps_multiplier`]), which PoB multiplies into `TotalDPS`, every
+/// damaging ailment's stacks, the leech hit rate, and the impale DPS
+/// (`CalcOffence.lua` 3712, 4322, 4603, 4908, 4024, 6035):
+/// - Shield Crush's and its transfigured gem's 2 in part 2, "2 Overlapping
+///   Waves" (`act_str.lua` 9887);
+/// - Shock Nova's and its transfigured gem's 2 in part 1, "Ring + Nova";
+/// - Lacerate's and its two transfigured gems' and Eviscerate's 2 in part
+///   2, both slashes.
+pub const READ_PART_BASE_MODS: [(&str, &str, usize); 8] = [
+    ("Eviscerate", "dpsMultiplier", 2),
+    ("Lacerate", "dpsMultiplier", 2),
+    ("LacerateAltX", "dpsMultiplier", 2),
+    ("LacerateAltY", "dpsMultiplier", 2),
+    ("ShieldCrush", "dpsMultiplier", 2),
+    ("ShieldCrushAltX", "dpsMultiplier", 2),
+    ("ShockNova", "dpsMultiplier", 1),
+    ("ShockNovaAltX", "dpsMultiplier", 1),
+];
+
+/// PoB's `dpsMultiplier` of part `index` of skill `id` (1-based), from
+/// [`READ_PART_BASE_MODS`]; 1 otherwise.
+#[must_use]
+pub fn part_dps_multiplier(id: &str, index: usize) -> f64 {
+    if !READ_PART_BASE_MODS
+        .iter()
+        .any(|&(s, k, part)| s == id && k == "dpsMultiplier" && part == index)
+    {
+        return 1.0;
+    }
+    super::pob_skill::skill(id)
+        .and_then(|p| {
+            p.base_mods
+                .iter()
+                .find(|m| m.tagged && m.key == Some("dpsMultiplier"))
+        })
+        .and_then(|m| match m.value {
+            Some(super::pob_skill::Value::Num(v)) => Some(v),
+            _ => None,
+        })
+        .unwrap_or(1.0)
+}
 
 /// Skill functions that change nothing while the main skill's level has no
 /// cooldown (open items, S1). The engine maps no added cooldown (each such
@@ -405,11 +442,17 @@ pub const NOOP_PART_FUNCTIONS: [(&str, &str, usize); 1] = [("Spark", "preDamageF
 pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
     [("Cyclone", "initialFunc"), ("VaalCyclone", "initialFunc")];
 /// See [`NO_SLICE_FUNCTIONS`].
-pub const NO_SLICE_OWN_STATS: [(&str, &str); 2] = [
+///
+/// Shock Nova's `shock_nova_ring_chance_to_shock_+%` (the agent list,
+/// 2026-11-27): a chance to shock, which reaches no slice field (PoB never
+/// shocks the enemy from a chance; the engine's shock is the config's and
+/// the guaranteed ones).
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 3] = [
     (
         "Cyclone",
         "cyclone_area_of_effect_+%_per_additional_melee_range",
     ),
+    ("ShockNova", "shock_nova_ring_chance_to_shock_+%"),
     (
         "VaalCyclone",
         "cyclone_area_of_effect_+%_per_additional_melee_range",
@@ -551,14 +594,14 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
                     || (triggered && k == SHOW_AVERAGE_KEY)
             })
     };
-    // A part's own base mod, in another part than this one.
+    // A part's own base mod the engine reads ([`READ_PART_BASE_MODS`]).
     let other_part = |m: &super::pob_skill::PobBaseMod| {
         m.name == "SkillData"
             && m.tagged
             && m.key.is_some_and(|k| {
                 READ_PART_BASE_MODS
                     .iter()
-                    .any(|&(s, key, part)| s == id && key == k && part != index)
+                    .any(|&(s, key, _)| s == id && key == k)
             })
     };
     // A flag no slice field reads ([`READ_BASE_FLAGS`]).
@@ -674,6 +717,8 @@ pub struct SpellSkill<'d> {
     /// Whether it does when a trigger sets its rate
     /// ([`pob_vetted_triggered`]: its own `showAverage` read).
     pub vetted_triggered: bool,
+    /// Its part's `dpsMultiplier` ([`part_dps_multiplier`]).
+    pub dps_multiplier: f64,
 }
 
 impl SpellSkill<'_> {
@@ -845,6 +890,7 @@ pub fn spell_skill<'d>(
         vetted: known && pob_vetted_with(&effect.id, part_index, level_row.cooldown == 0),
         vetted_triggered: known
             && pob_vetted_triggered(&effect.id, part_index, level_row.cooldown == 0),
+        dps_multiplier: part_dps_multiplier(&effect.id, part_index),
     })
 }
 
@@ -1495,14 +1541,15 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     };
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
-    hit_dps(calc, average, speed)?;
+    hit_dps(calc, average, speed, spell.dps_multiplier)?;
     let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
+    let ailment_rate = rate_with(calc, speed, spell.dps_multiplier)?;
     let ailment_hit = super::ailment::AilmentHit {
         flags,
         sources: &sources,
         crit,
         hit_chance: spell_hit_chance,
-        rate: speed,
+        rate: ailment_rate,
         skill: super::pob_skill::skill(&spell.skill.effect().id).map(|p| (p, spell.source())),
     };
     set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted)?;
@@ -1804,9 +1851,14 @@ fn hit_rate(
 
 /// `output.TotalDPS = AverageDamage x (HitSpeed or Speed) x dpsMultiplier
 /// x quantityMultiplier`; both multipliers are 1.
-fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), CalcError> {
+fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued, dps: f64) -> Result<(), CalcError> {
     let rate = phases::total(calc, &[speed], Term::Step("rate"))?;
-    let dps_multiplier = phases::product(calc, &[], Term::Step("dps-multiplier"))?;
+    let dps_multiplier = if dps == 1.0 {
+        phases::product(calc, &[], Term::Step("dps-multiplier"))?
+    } else {
+        let part = phases::constant(calc, "part-dps-multiplier", dps)?;
+        phases::product(calc, &[part], Term::Step("dps-multiplier"))?
+    };
     let quantity_multiplier = phases::product(calc, &[], Term::Step("quantity-multiplier"))?;
     let dps = phases::product(
         calc,
@@ -1819,6 +1871,20 @@ fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), Ca
         &[Field::AverageDamage, Field::Speed],
     );
     Ok(())
+}
+
+/// The hit rate the ailments' stacks, the leech, and the impale read:
+/// `rate x dpsMultiplier` ([`READ_PART_BASE_MODS`]).
+fn rate_with(calc: &mut Calc<'_>, rate: Valued, dps: f64) -> Result<Valued, CalcError> {
+    if dps == 1.0 {
+        return Ok(rate);
+    }
+    let part = phases::constant(calc, "part-dps-multiplier", dps)?;
+    phases::product(
+        calc,
+        &[rate, part],
+        Term::Step("hit-rate-with-dps-multiplier"),
+    )
 }
 
 /// One hand's attack pass (module docs; Phase 6: PoB's `passList`, one
@@ -2130,17 +2196,28 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
         );
         calc.set(Field::Speed, phases::query(speed.0, speed.1));
         let rate = hit_rate(calc, beam_rate, &unvetted, speed.0);
-        hit_dps(calc, average.0, rate)?;
+        let dps = part_dps_multiplier(id, attack.part_index);
+        hit_dps(calc, average.0, rate, dps)?;
+        let ailment_rate = rate_with(calc, rate, dps)?;
         let ailment_hit = super::ailment::AilmentHit {
             flags,
             sources: &sources,
             crit: crit.0,
             hit_chance: hit_chance.0,
-            rate,
+            rate: ailment_rate,
             skill: super::pob_skill::skill(id).map(|p| (p, attack.source())),
         };
         return set_ailments(calc, &ailment_hit, &enemy, input.data, &unvetted);
     };
+    // A part's `dpsMultiplier` ([`READ_PART_BASE_MODS`]) is read only by the
+    // single-hand path: a dual wielder's is a reason on every field of the
+    // pass (the agent list, 2026-11-27).
+    if part_dps_multiplier(id, attack.part_index) != 1.0 {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "dual-wield-dps-multiplier",
+        });
+    }
     let mut off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
     triggered(calc, &mut off_rate)?;
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
@@ -2506,7 +2583,7 @@ fn dual_wield(
     // (P6-11b; P6-2a used each hand's own speed, which agreed only when
     // the hands' speeds did). With a hit rate (`rate`, PoB's `HitSpeed`),
     // that rate (agent list: Static Strike's beams).
-    hit_dps(calc, average, rate)
+    hit_dps(calc, average, rate, 1.0)
 }
 
 /// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
@@ -5655,12 +5732,17 @@ mod tests {
     }
 
     /// What the engine reads of PoB's hand-written data (open items, S1):
-    /// Shield Crush's tagged stats in both parts, its `dpsMultiplier` in
-    /// part 2 only; Vortex's `preDamageFunc` only without a cooldown.
+    /// Shield Crush's tagged stats in both parts, its `dpsMultiplier` read
+    /// in part 2 (the agent list, 2026-11-27); Vortex's `preDamageFunc`
+    /// only without a cooldown.
     #[test]
     fn read_lists_should_vet_only_what_the_engine_reads() {
         assert!(pob_vetted("ShieldCrush", 1));
-        assert!(!pob_vetted("ShieldCrush", 2));
+        assert!(pob_vetted("ShieldCrush", 2));
+        assert!((part_dps_multiplier("ShieldCrush", 2) - 2.0).abs() < f64::EPSILON);
+        assert!((part_dps_multiplier("ShieldCrush", 1) - 1.0).abs() < f64::EPSILON);
+        assert!((part_dps_multiplier("ShockNova", 1) - 2.0).abs() < f64::EPSILON);
+        assert!((part_dps_multiplier("Smite", 1) - 1.0).abs() < f64::EPSILON);
         assert!(!pob_vetted("Vortex", 0));
         assert!(pob_vetted_with("Vortex", 0, true));
         assert!(!pob_vetted_with("IceSpear", 1, true));

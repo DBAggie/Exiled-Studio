@@ -376,6 +376,10 @@ fn spell<'d>(
         melee: part.melee,
         vetted: true,
         vetted_triggered: true,
+        // No minion skill's part sets a `dpsMultiplier` (the agent list,
+        // 2026-11-27); an untagged one (a spectre's) keeps the skill
+        // unvetted.
+        dps_multiplier: 1.0,
     }))
 }
 
