@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): a level 90 Witch with a rare Opal Wand carrying the crafted
+     "Trigger a Socketed Spell when you Use a Skill, with a 8 second Cooldown" (Spells Triggered this way have 150% more
+     Cost), Ice Nova socketed in it as the main skill, and Fireball in another group the skill used: Ice Nova is triggered at
+     most once per 8 seconds at 2.5 times its cost (read in the game 2026-11-26; PoB reads neither line and computes
+     Ice Nova as self-cast). Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Weapon 1">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Fireball" skillId="Fireball" variantId="Fireball" gemId="Metadata/Items/Gems/SkillGemFireball" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Trigger
+Opal Wand
+Quality: 0
+Sockets: B
+Implicits: 0
+{crafted}Trigger a Socketed Spell when you Use a Skill, with a 8 second Cooldown
+{crafted}Spells Triggered this way have 150% more Cost
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

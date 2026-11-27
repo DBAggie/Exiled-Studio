@@ -225,6 +225,16 @@ pub enum Config {
     /// of 2 per second (its cooldown's when it has one); otherwise PoB
     /// disables the skill.
     HiddenBlade,
+    /// The crafted "Trigger a Socketed Spell when you Use a Skill, with a 8
+    /// second Cooldown" (agent list; PoB's "trigger craft", 1058 to 1080,
+    /// `SupportTriggerSpellOnSkillUse` as an `ExtraSupport`): the fastest
+    /// damaging, attack, or spell skill that is not an aura, an item's, or
+    /// triggered, its hit chance a factor; the rotation the craft's spells
+    /// of the item's slot; the support's 8 s cooldown and 150% more cost,
+    /// as read in the game (2026-11-26, `docs/phase-6/stat-mop-up.md`,
+    /// "Check 4"). A totem, golem, banner, or ballista source, which PoB
+    /// times by its cast time and cooldown, is a reason.
+    SkillUse,
     /// Shockwave Support's attack (agent list; 1361 to 1363): the fastest
     /// melee skill of its group, not triggered, its hit chance a factor; the
     /// main skill alone in the rotation, its own cooldown.
@@ -250,6 +260,12 @@ impl Config {
                 | Self::KitavasThirst
                 | Self::MaloneysMechanism
         )
+    }
+
+    /// A trigger an item line gives whose chance the engine reads
+    /// ([`Self::is_item_line`], and the craft [`Self::SkillUse`]).
+    const fn has_line_chance(self) -> bool {
+        self.is_item_line() || matches!(self, Self::SkillUse)
     }
 
     /// PoB's `triggerOnUse`: the source's hit chance is not a factor.
@@ -311,7 +327,11 @@ impl Config {
     const fn rotation_by_slot(self) -> bool {
         matches!(
             self,
-            Self::PoetsPen | Self::AsenathsChant | Self::CosprisMalice | Self::MaloneysMechanism
+            Self::PoetsPen
+                | Self::AsenathsChant
+                | Self::CosprisMalice
+                | Self::MaloneysMechanism
+                | Self::SkillUse
         )
     }
 }
@@ -374,6 +394,8 @@ const SUPPORTS: &[(&str, Config)] = &[
         "SupportTriggerBowSkillOnBowAttack",
         Config::MaloneysMechanism,
     ),
+    // The agent list: the crafted socketed-spell trigger on skill use.
+    ("SupportTriggerSpellOnSkillUse", Config::SkillUse),
 ];
 
 /// The skills a support grants and PoB triggers by the skill's name
@@ -593,6 +615,7 @@ const TRIGGER_SUPPORTS: &[&str] = &[
     "SupportTriggerSpellOnAttack",
     "SupportTriggerSpellOnBowAttack",
     "SupportTriggerSpellOnBowAttackFreezeHit",
+    "SupportTriggerSpellOnSkillUse",
     "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
     "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
     "SupportUniqueMjolnerLightningSpellsCastOnHit",
@@ -744,7 +767,7 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     }
     // An item line below 100%: PoB ignores its chance (open items S3,
     // part 5), the game does not.
-    if config.is_item_line()
+    if config.has_line_chance()
         && let Some(s) = &support
         && item_line_chance(calc, skill, s.effect.id.as_str()).is_some_and(|c| c < 100.0)
     {
@@ -999,7 +1022,10 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
         // `SkillType.Damage or SkillType.Attack`).
         let damage = config == Config::UniqueDamageOrAttack && s.types.contains("Damage");
         // Kitava's Thirst: any spell or attack, by its mana cost (below).
-        let any = config == Config::KitavasThirst && s.types.contains("Spell");
+        let any =
+            matches!(config, Config::KitavasThirst | Config::SkillUse) && s.types.contains("Spell");
+        // The craft's source may also be any damaging skill (1063).
+        let any = any || (config == Config::SkillUse && s.types.contains("Damage"));
         let candidate = (attack || damage || any)
             && !s.types.contains("Triggered")
             && !s.types.contains("InbuiltTrigger")
@@ -1029,6 +1055,8 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
                 | Config::UniqueDamageOrAttack => true,
                 Config::LioneyesPaws => attack && weapon_has(Flags::BOW) == Some(true),
                 Config::KitavasThirst => true,
+                // Not an aura or an item's skill (1063).
+                Config::SkillUse => !s.item_granted && !s.types.contains("Aura"),
                 Config::MaloneysMechanism => attack && weapon_has(Flags::BOW) == Some(true),
                 Config::CastWhenDamageTaken
                 | Config::CastWhenStunned
@@ -1099,6 +1127,18 @@ pub fn rate(calc: &Calc<'_>, skill: &MainSkill<'_>, source: &Source, flags: Flag
     let Some(src) = best else {
         return Outcome::SelfCast;
     };
+    // The craft's totem, golem, banner, or ballista source: PoB times it by
+    // its cast time and cooldown (1065 to 1072), not ported.
+    if config == Config::SkillUse
+        && skills.iter().any(|(g, a, s)| {
+            (*g, *a) == src.at
+                && ["SummonsTotem", "Golem", "Banner"]
+                    .iter()
+                    .any(|t| s.types.contains(*t))
+        })
+    {
+        return unsupported("trigger-craft-placed-source");
+    }
     let mut carry = |state: Option<&FieldState>| state.is_none_or(|s| carry(s, &mut reasons));
     if !carry(src.speed.as_ref()) {
         return unsupported("trigger-source");
@@ -1704,6 +1744,23 @@ mod tests {
         // Moonbender's Wing and Lioneye's Paws: PoB's cooldown of 1 s.
         assert_eq!(Config::MoonbendersWing.cooldown_override(), Some(1.0));
         assert_eq!(Config::UniqueMeleeOrAttack.cooldown_override(), None);
+    }
+
+    /// Agent list: the crafted socketed-spell trigger is PoB's "trigger
+    /// craft" (1058 to 1080): its support's config, its source's hit chance a
+    /// factor (not on use), the rotation by the item's slot, its chance read
+    /// from the line.
+    #[test]
+    fn the_trigger_craft_should_be_pobs_config() {
+        assert!(
+            SUPPORTS
+                .iter()
+                .any(|(id, c)| *id == "SupportTriggerSpellOnSkillUse" && *c == Config::SkillUse)
+        );
+        assert!(TRIGGER_SUPPORTS.contains(&"SupportTriggerSpellOnSkillUse"));
+        let c = Config::SkillUse;
+        assert!(!c.on_use() && !c.on_crit() && !c.main_alone() && !c.is_item_line());
+        assert!(c.rotation_by_slot() && c.has_line_chance());
     }
 
     /// Agent list: Shockwave Support's attack is PoB's "shockwave" config,

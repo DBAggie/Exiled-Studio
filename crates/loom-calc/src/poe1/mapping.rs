@@ -11082,6 +11082,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "trigger",
     ),
     ("spell_area_of_effect_+%", "area"),
+    // The agent list: the crafted trigger's marker (PoB's `triggeredByCraft`),
+    // which `poe1::triggers` decides (`SkillUse`).
+    ("spell_has_trigger_from_crafted_item_mod", "trigger"),
     ("spell_is_triggered_on_hit", "trigger"),
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.

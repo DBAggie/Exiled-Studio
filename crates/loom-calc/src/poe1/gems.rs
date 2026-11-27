@@ -3557,6 +3557,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportTriggerSpellOnAttack", &[]),
     ("SupportTriggerSpellOnBowAttack", &[]),
     ("SupportTriggerSpellOnBowAttackFreezeHit", &[]),
+    // The agent list: the crafted trigger (`poe1::triggers`, `SkillUse`).
+    ("SupportTriggerSpellOnSkillUse", &[]),
     ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", &[]),
     ("SupportTrinity", &[]),
     // Open items S2: Unbound Ailments has no global stat; its ailment

@@ -1361,7 +1361,7 @@ pub const ROWS: [(&str, i64, &[&str]); 260] = [
 /// the game's text has no "% chance" prefix, which PoB's pattern (3160)
 /// needs, so PoB applies nothing; Focus, which PoB computes with its own
 /// handler; and the lines that trigger a bow skill or a curse.
-pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 12] = [
+pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 13] = [
     (
         "body_armour_trigger_socketed_spell_on_unarmed_melee_critical_hit_cooldown",
         1,
@@ -1420,6 +1420,14 @@ pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 12] = [
         1,
         &["SupportTriggerSpellOnAttack"],
     ),
+    // The agent list: the crafted "Trigger a Socketed Spell when you Use a
+    // Skill, with a 8 second Cooldown" (PoB reads nothing for it; read in
+    // the game, `docs/phase-6/stat-mop-up.md`, "Check 4").
+    (
+        "trigger_socketed_spell_on_skill_use_%",
+        1,
+        &["SupportTriggerSpellOnSkillUse"],
+    ),
     // Open items S3, part 8: the crafted Focus line.
     (
         "trigger_socketed_spells_when_you_focus_%",
@@ -1429,11 +1437,12 @@ pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 12] = [
 ];
 
 /// The [`TRIGGER_ROWS`] whose value is the chance to trigger.
-pub const TRIGGER_CHANCE_STATS: [&str; 5] = [
+pub const TRIGGER_CHANCE_STATS: [&str; 6] = [
     "chance_to_trigger_socketed_bow_skill_on_bow_attack_%",
     "chance_to_trigger_socketed_spell_on_bow_attack_%",
     "local_unique_attacks_cast_socketed_lightning_spells_%",
     "trigger_socketed_spell_on_attack_%",
+    "trigger_socketed_spell_on_skill_use_%",
     "trigger_socketed_spells_when_you_focus_%",
 ];
 
