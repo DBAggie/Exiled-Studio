@@ -1473,13 +1473,19 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 "evasion-from-dexterity",
             )?
         };
-    // Life gained as energy shield (P6-11dd): one more row of energy
-    // shield, which reads life's base and so strength.
+    // Mana gained as energy shield (the agent list, 2026-11-27), then life
+    // (P6-11dd): rows of energy shield, which read mana's base and so
+    // intelligence, and life's and so strength.
     let mut life_reasons = Reasons::new();
+    let mana_row = mana_as_energy_shield(calc, int_bonus, &mut life_reasons)?;
+    if mana_row.is_some() {
+        es_deps.push(Field::Intelligence);
+    }
     let life_row = life_as_energy_shield(calc, int_bonus, true, &mut life_reasons)?;
     if life_row.is_some() {
         es_deps.push(Field::Strength);
     }
+    let conversions: Vec<Valued> = mana_row.into_iter().chain(life_row).collect();
     for (defence, field, quantity, extra, dep) in [
         (
             Defence::EnergyShield,
@@ -1497,13 +1503,13 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             &[Field::Dexterity],
         ),
     ] {
-        let row = if matches!(defence, Defence::EnergyShield) {
-            life_row
+        let rows: &[Valued] = if matches!(defence, Defence::EnergyShield) {
+            &conversions
         } else {
-            None
+            &[]
         };
-        let (value, mut reasons) = primary_defence(calc, defence, quantity, extra, row)?;
-        if row.is_some() {
+        let (value, mut reasons) = primary_defence(calc, defence, quantity, extra, rows)?;
+        if !rows.is_empty() {
             reasons.extend(&life_reasons);
         }
         if dep.is_empty() {
@@ -1631,17 +1637,120 @@ pub(super) fn life_as_energy_shield(
     Ok(Some(row))
 }
 
+/// Mana gained as extra energy shield (the agent list, 2026-11-27;
+/// `CalcDefence.lua` 1001 to 1007): `Mana BASE x percent / 100`, times
+/// `calcLib.mod(modDB, nil, "Mana", "EnergyShield", "Defences")`, as
+/// [`life_as_energy_shield`]'s (no Chaos Inoculation case). Mana's base is
+/// its BASE effects and the intelligence bonus, as `life_mana`'s. `None`
+/// without the stat.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn mana_as_energy_shield(
+    calc: &mut Calc<'_>,
+    es_inc: Option<Valued>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::ManaAsEnergyShield);
+    if !has(calc, q) {
+        return Ok(None);
+    }
+    let percent = sum(
+        calc,
+        q,
+        Op::Base,
+        Term::Step("mana-as-energy-shield-percent"),
+        reasons,
+    )?;
+    if percent.value <= 0.0 {
+        return Ok(None);
+    }
+    let int_bonus = bonus(
+        calc,
+        Field::Intelligence,
+        0.5,
+        "half",
+        "mana-from-intelligence",
+    )?;
+    let mana_effects = sum(
+        calc,
+        Quantity::Mana,
+        Op::Base,
+        Term::Step("mana-base-effects"),
+        reasons,
+    )?;
+    let mut base_terms = vec![mana_effects];
+    base_terms.extend(int_bonus);
+    let mana_base = total(calc, &base_terms, Term::Step("mana-base"))?;
+    let scaled = product(
+        calc,
+        &[mana_base, percent],
+        Term::Step("mana-as-energy-shield-scaled"),
+    )?;
+    let hundred = constant(calc, "hundred", 100.0)?;
+    let base = binary(
+        calc,
+        Binary::Quotient,
+        scaled,
+        hundred,
+        "mana-as-energy-shield-base",
+    )?;
+    let base = total(calc, &[base], Term::Base)?;
+    let mut incs = vec![
+        sum(
+            calc,
+            Quantity::Mana,
+            Op::Increased,
+            Term::Step("mana-increased-effects"),
+            reasons,
+        )?,
+        sum(
+            calc,
+            Quantity::EnergyShield,
+            Op::Increased,
+            Term::Step("increased-effects"),
+            reasons,
+        )?,
+    ];
+    incs.extend(es_inc);
+    let inc = total(calc, &incs, Term::Step("increased-sum"))?;
+    let inc = factor(calc, inc, Term::Increased)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let mana_more = store.more_rounded(graph, Quantity::Mana, &cx)?;
+    let es_more = store.more_rounded(graph, Quantity::EnergyShield, &cx)?;
+    reasons.extend(&mana_more.reasons);
+    reasons.extend(&es_more.reasons);
+    let row = product(
+        calc,
+        &[
+            base,
+            inc,
+            Valued {
+                node: mana_more.node,
+                value: mana_more.value,
+            },
+            Valued {
+                node: es_more.node,
+                value: es_more.value,
+            },
+        ],
+        Term::Step("slot.conversion.mana-to-energy-shield"),
+    )?;
+    Ok(Some(row))
+}
+
 /// One primary defence of the current actor ([`primary_defences`];
 /// P6-7b3a: the minion's too, whose store has no armour piece): each
-/// piece's row and the global row, times the modifier, rounded. `life_row`
-/// is energy shield's row from life ([`life_as_energy_shield`]), last as in
-/// PoB.
+/// piece's row and the global row, times the modifier, rounded.
+/// `conversions` are energy shield's rows from mana and life
+/// ([`mana_as_energy_shield`], [`life_as_energy_shield`]), last as in PoB.
 pub(super) fn primary_defence(
     calc: &mut Calc<'_>,
     defence: Defence,
     quantity: Quantity,
     extra: Option<Valued>,
-    life_row: Option<Valued>,
+    conversions: &[Valued],
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     // Iron Reflexes (P6-11ek): evasion's rows go to armour.
@@ -1745,7 +1854,7 @@ pub(super) fn primary_defence(
     if let Some(flag) = iron_reflexes {
         iron_reflexes_rows(calc, flag, doubled, &mut rows, &mut reasons)?;
     }
-    rows.extend(life_row);
+    rows.extend_from_slice(conversions);
     let sum = total(calc, &rows, Term::Step("slots"))?;
     let rounded = round(calc, sum, Term::Step("rounded"))?;
     let value = at_least(calc, rounded, "minimum", 0.0)?;

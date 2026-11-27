@@ -9229,6 +9229,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (2026-11-27): "Gain #% of Maximum Mana as Extra Maximum
+    // Energy Shield" (`ManaGainAsEnergyShield` BASE), a row of energy shield.
+    (
+        "mana_%_to_add_as_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaAsEnergyShield),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-10b part 9: "#% of Damage Leeched as Mana" (`DamageManaLeech` BASE).
     (
         "mana_leech_from_any_damage_permyriad",

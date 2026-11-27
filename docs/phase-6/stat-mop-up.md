@@ -5817,3 +5817,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Smite with a Rusted Hatchet carrying the line at 30% and 20% increased impale effect. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1168 to DIV-1173.
 
 **Evidence** (`local/p6/d27lie` on `b-ig`, against `local/p6/d27sle`): public 0 unexpected, `Complete` 59,733 to 59,822 (the fixture's); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.
+
+## Mana gained as extra energy shield (the agent list, 2026-11-27)
+
+**The stat:** "Gain #% of Maximum Mana as Extra Maximum Energy Shield" (`mana_%_to_add_as_energy_shield`), unmapped in one public build.
+
+**PoB** (`CalcDefence.lua` 1001 to 1007): `ManaGainAsEnergyShield` BASE; energy shield gains `Mana BASE x percent / 100 x calcLib.mod(modDB, nil, "Mana", "EnergyShield", "Defences")`, before life's row (1023).
+
+**The engine:** `Poe1Quantity::ManaAsEnergyShield`; `phases::mana_as_energy_shield` builds the row as `life_as_energy_shield` does (mana's base its BASE effects and the intelligence bonus; the increases of mana and energy shield and the intelligence bonus's; mana's and energy shield's rounded more), and `primary_defence` takes the conversion rows, mana's then life's, last as in PoB.
+
+**Fixtures** (original): Ice Nova with 20% (energy shield 122), and with +50 and 20% increased mana, 10% increased energy shield, and 8% increased global defences (180). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27mee` on `b-ig`, against `local/p6/d27lie`): public 0 unexpected, `Complete` 59,822 to 59,996 (the fixtures'); 21 values moved, all toward PoB, 13 now equal (`shock-nova-archmage-hierophant.xml`'s EnergyShield 1,334 to PoB's 4,747, its recharge, leech, pools, and damage over time EHP). Corpus 0 unexpected, no value moved.
