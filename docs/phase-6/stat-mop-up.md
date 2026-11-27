@@ -5322,3 +5322,24 @@ The bundle read no buffs, so on a 3_29 tree (and any tree without a pack, 3_13 a
   - the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
 
 **For the maintainer:** shipping schema 6 is the next data run's (the signed bundle's `passives.json` gains the buffs; `dev/active/open-items/maintainer-follow-ups.md`).
+
+
+## The agent list (S8, 2026-11-26): wand accuracy from intelligence; death explosions
+
+Two close-out reasons of class `C-engine-system` and `C-no-slice` (`dev/active/open-items/open-items-inventory.md`):
+
+- **"Intelligence is added to Accuracy Rating with Wands"** (`gain_wand_accuracy_rating_equal_to_intelligence`; PoB's `Accuracy` BASE 1 with `PerStat` `Int` and `ModFlag.Wand`, `ModParser.lua` 5228; `PerStat` floors `int + 0.0001`, a whole number already). It is a `Flag` row on `Poe1Quantity::AccuracyFromIntelligence` under the wand flag. `hit::accuracy` adds the intelligence field in a context whose flags hold it, as P6-11gm's "twice your Strength" adds strength.
+- **Enemies that explode on death** (`enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage`, and a flask's `local_unique_flask_explode_enemies_for_10%_life_as_random_element_on_kill_chance_%_during_flask_effect`) are no-effect rows (`explosion`).
+  - PoB reads them as `ExplodeMod` and `CanExplode` (`ModParser.lua` 2105 to 2140).
+  - For each source it adds a socket group of its own, "On Kill Monster Explosion" (`CalcSetup.lua` 1405 to 1445): a triggered skill appended after the build's groups and not counted in full DPS.
+  - That skill (`EnemyExplode`, `Data/Skills/other.lua` 6060) is the only reader, so no slice field of another skill changes.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures2.py`):
+- `wand-accuracy-from-intelligence-witch.xml`: Kinetic Blast with a wand, the line and +100 intelligence; every field equals PoB's (chance to hit 33%, against the bow's 22%).
+- `wand-accuracy-from-intelligence-bow-witch.xml`: the same with Burning Arrow and a bow; the line adds nothing. Its differences are the registered Q11 attack rate of the bow (DIV-0950 to DIV-0955).
+- 177 fields are targets.
+
+**Evidence** (`local/p6/s8-2` on `b-pb`, against `local/p6/s8-1`):
+- **Public:** 0 unexpected; `Complete` 49,632 to 49,809 (the fixtures); no value moved. `kinetic-fusillade-ballista-hierophant.xml` loses the wand line's reason (its main skill is no wand attack).
+- **Corpus:** 0 unexpected; two documents lose an explosion stat's reason; no value moved.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

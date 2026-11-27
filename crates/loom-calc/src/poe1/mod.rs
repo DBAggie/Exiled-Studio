@@ -175,6 +175,11 @@ pub enum Poe1Quantity {
     /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
     /// `Flag`, read by [`hit`]'s accuracy.
     AccuracyFromStrength,
+    /// "Intelligence is added to Accuracy Rating with Wands" (the agent
+    /// list, S8; PoB's `Accuracy` BASE 1 with `PerStat` `Int` and
+    /// `ModFlag.Wand`, `ModParser.lua` 5228): a `Flag` under the wand flag,
+    /// read by [`hit`]'s accuracy.
+    AccuracyFromIntelligence,
     /// "#% increased maximum Life per Red Socket on equipped Staff" (`true`)
     /// and its Mana per Blue Socket (`false`) (P6-11go; PoB's `Life` or
     /// `Mana` INC with the `Multiplier` `RedSocketInWeapon 1` or
@@ -1541,6 +1546,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::KitavaTriggerChance => f.write_str("kitava-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
+            Self::AccuracyFromIntelligence => f.write_str("accuracy-from-intelligence"),
             Self::PerStaffSocket(life) => f.write_str(if *life {
                 "life-per-red-staff-socket"
             } else {

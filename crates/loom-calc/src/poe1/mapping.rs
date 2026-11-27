@@ -2229,6 +2229,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (S8): "Intelligence is added to Accuracy Rating with
+    // Wands" (`Accuracy` BASE 1 per intelligence with `ModFlag.Wand`,
+    // `ModParser.lua` 5228): `hit`'s accuracy adds it in a wand's context.
+    (
+        "gain_wand_accuracy_rating_equal_to_intelligence",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AccuracyFromIntelligence),
+            Op::Flag,
+            1.0,
+            Flags::WAND,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 998: `BleedChance` BASE 100 (P6-2c).
     (
         "global_bleed_on_hit",
@@ -10187,6 +10200,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "endurance_charge_on_kill_percent_chance_while_holding_shield",
         "charge-gain-chance",
     ),
+    // The agent list (S8): enemies that explode on death (PoB's `ExplodeMod`
+    // and `CanExplode`, `ModParser.lua` 2105 to 2140): PoB adds a socket
+    // group of its own, "On Kill Monster Explosion" (`CalcSetup.lua` 1405 to
+    // 1445: triggered, appended after the build's groups, not in full
+    // DPS), whose skill (`EnemyExplode`, `Data/Skills/other.lua` 6060) is
+    // the only reader; no slice field of another skill reads it.
+    (
+        "enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage",
+        "explosion",
+    ),
     // P6-11m: the enemy's own damage converted (`EnemyModifier`): what
     // you take; no slice field.
     (
@@ -10578,6 +10601,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "local_support_gem_max_skill_level_requirement_to_support",
         "support-limit",
+    ),
+    // The agent list (S8): a flask's death explosions, as
+    // `enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage`.
+    (
+        "local_unique_flask_explode_enemies_for_10%_life_as_random_element_on_kill_chance_%_during_flask_effect",
+        "explosion",
     ),
     (
         "local_unique_jewel_disconnected_passives_can_be_allocated_around_keystone_hash",

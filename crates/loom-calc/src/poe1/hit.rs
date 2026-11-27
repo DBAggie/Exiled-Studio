@@ -2968,6 +2968,23 @@ fn accuracy(
             Term::Step("from-strength"),
         )?);
     }
+    // "Intelligence is added to Accuracy Rating with Wands" (the agent
+    // list, S8; PoB's `Accuracy` BASE 1 per intelligence, `PerStat`
+    // `floor(int + 0.0001)` of a whole number): only in a wand's context,
+    // the row's flag.
+    let from_intelligence = Quantity::Poe1(Poe1Quantity::AccuracyFromIntelligence);
+    if phases::has(calc, from_intelligence)
+        && flag_on(calc, from_intelligence, cx, reasons)?.is_some()
+        && let Some((node, value)) = calc
+            .field(Field::Intelligence)
+            .and_then(|f| Some((f.node?, f.value?)))
+    {
+        terms.push(phases::total(
+            calc,
+            &[Valued { node, value }],
+            Term::Step("from-intelligence"),
+        )?);
+    }
     terms.push(sum_in(
         calc,
         Quantity::Accuracy,
