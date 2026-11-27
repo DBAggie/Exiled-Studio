@@ -3819,6 +3819,33 @@ pub const WRATH_STATS: &[(&str, HitEffect)] = &[
     ),
 ];
 
+/// General's Cry's terms for its mirage warriors (`CalcMirages.lua` 364
+/// to 377): `Base` effects of [`Poe1Quantity::GeneralsCry`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum GeneralsCryValue {
+    /// The cry's cooldown, seconds (`calcSkillCooldown`, as
+    /// [`WarcryValue::Cooldown`]).
+    Cooldown,
+    /// The maximum mirage warriors (PoB's `GeneralsCryDoubleMaxCount`
+    /// BASE: the gem's `maximum_number_of_spiritual_cry_warriors` and the
+    /// character's lines).
+    Warriors,
+}
+
+impl GeneralsCryValue {
+    /// The value's stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Cooldown => "cooldown",
+            Self::Warriors => "warriors",
+        }
+    }
+}
+
+/// General's Cry's gem stat of its maximum mirage warriors.
+const GENERALS_CRY_WARRIORS_STAT: &str = "maximum_number_of_spiritual_cry_warriors";
+
 /// A warcry that exerts attacks (`CalcOffence.lua` 2540 to 2741, in PoB's
 /// order), each with the main skill's type its exerted attacks need.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4870,6 +4897,11 @@ struct Collected {
     rallying_cry: Option<Source>,
     /// The cries whose exert terms are in.
     exerting: std::collections::BTreeSet<ExertCry>,
+    /// The main skill's group's slot (`Some(None)` for a group without
+    /// one), which General's Cry's must equal.
+    main_slot: Option<Option<String>>,
+    /// Whether a General's Cry's terms are in.
+    generals_cry: bool,
     /// The aura buffs that affect allies, by name, each with its first
     /// skill (P6-11er: `AurasAffectEnemies` puts them on the enemy too).
     ally_auras: BTreeMap<&'static str, Source>,
@@ -4897,7 +4929,12 @@ pub fn gems(
         .ok()
         .map(|m| m.group - 1);
     let matches = sockets::socket_matches(build, &groups, input.data);
-    let mut collected = Collected::default();
+    let mut collected = Collected {
+        main_slot: main_group
+            .and_then(|g| groups.get(g))
+            .map(|group| group.slot.as_ref().map(|s| s.as_str().to_owned())),
+        ..Collected::default()
+    };
     for (g, group) in groups.iter().enumerate() {
         let slot = group.slot.as_ref().map(|s| s.as_str());
         if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
@@ -5722,6 +5759,62 @@ fn one_skill(
     ) && collected.rallying_cry.is_none()
     {
         collected.rallying_cry = Some(active_source.clone());
+    }
+    // General's Cry's mirage warriors (the agent list, S5): the first one in
+    // the main skill's slot (`CalcMirages.lua` 365 to 371, the skill list's
+    // order).
+    if matches!(
+        kind,
+        Kind::Warcry {
+            name: "General's Cry",
+            ..
+        }
+    ) && !collected.generals_cry
+        && collected.main_slot.as_ref().map(Option::as_deref) == Some(slot)
+    {
+        collected.generals_cry = true;
+        let warriors = skill::instance(
+            s.active_gem.effect,
+            s.active_gem.level,
+            s.active_gem.quality,
+            input.data,
+        );
+        let cooldown = exert_terms(input, s, totals).and_then(|terms| {
+            terms
+                .iter()
+                .find(|(v, _)| *v == WarcryValue::Cooldown)
+                .map(|(_, c)| *c)
+        });
+        match cooldown {
+            Some(cooldown) if warriors.problems.is_empty() => {
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "stat values are small integers, exact as f64"
+                )]
+                let count = warriors
+                    .stats
+                    .iter()
+                    .filter(|(id, _)| id == GENERALS_CRY_WARRIORS_STAT)
+                    .map(|(_, v)| *v as f64)
+                    .sum::<f64>();
+                for (v, value) in [
+                    (GeneralsCryValue::Cooldown, cooldown),
+                    (GeneralsCryValue::Warriors, count),
+                ] {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(Poe1Quantity::GeneralsCry(v)),
+                        op: Op::Base,
+                        value,
+                        conditions: Conditions::none(),
+                        source: active_source.clone(),
+                    });
+                }
+            }
+            _ => ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: active_source.clone(),
+                what: "warcry-uptime",
+            }),
+        }
     }
     // A cry's exerted attacks: the first one's terms (PoB computes each
     // cry once, `<Cry>CryCalculated`).
@@ -7376,6 +7469,8 @@ mod tests {
             // The same: the warcry power the cries read.
             "warcries_have_infinite_power",
             "warcries_have_minimum_10_power",
+            // The same: General's Cry Support's "count as Exerted".
+            "number_of_warcries_exerting_this_action",
         ];
         for id in ids {
             for word in GUARDED_WORDS {

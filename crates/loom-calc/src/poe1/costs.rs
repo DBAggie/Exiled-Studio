@@ -166,6 +166,13 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         is_cost,
     );
     let mut amounts = [0; 3];
+    // A skill General's Cry's mirage warriors use has no cost output
+    // (`HasNoCost`, `CalcMirages.lua` 397, skips PoB's costs; the agent
+    // list, S5).
+    if super::hit::generals_cry_supported(&skill, input.data) {
+        unsupported(calc, UnsupportedReason::NotComputed);
+        return Ok(());
+    }
     // A skill an item grants and triggers has no cost (open items S3,
     // part 7; `triggers::granted_and_triggered`).
     let free = super::triggers::granted_and_triggered(calc, &skill);

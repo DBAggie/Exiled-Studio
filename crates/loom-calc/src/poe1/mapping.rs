@@ -3963,6 +3963,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
+    // The agent list (S5, 2026-11-27): General's Cry Support's less damage
+    // (`act_str.lua`: `Damage` MORE).
+    (
+        "support_spiritual_cry_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
     (
@@ -8550,6 +8556,19 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (S5, 2026-11-27): "General's Cry has +# to maximum
+    // number of Mirage Warriors" (`ModParser.lua` 5724:
+    // `GeneralsCryDoubleMaxCount` BASE), read by `hit::generals_cry`.
+    (
+        "generals_cry_maximum_warriors_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GeneralsCry(
+                super::gems::GeneralsCryValue::Warriors,
+            )),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // P6-11ii: "#% increased Critical Strike Chance against Chilled
     // Enemies" (`CritChance` INC, the enemy's `Chilled`): `poe1::damage_taken`
     // applies it while the enemy is chilled.
@@ -11569,6 +11588,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
     // lines, each a guard.
     ("number_of_chains", "chain-count"),
+    // The agent list (S5, 2026-11-27): General's Cry Support's "Attacks with
+    // Supported Skills count as Exerted" (PoB's empty stat map; the
+    // exert copies are `hit::generals_cry`'s).
+    ("number_of_warcries_exerting_this_action", "exert"),
     // P6-11bd: stun on enemies with two handed melee weapons, and Occultist's
     // "Cannot Be Stunned while you have Energy Shield": no slice field.
     ("occultist_immune_to_stun_while_has_energy_shield", "stun"),
@@ -12030,6 +12053,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Agent list: Shockwave Support's attack marked triggered (PoB has no row;
     // its config by the skill's name): `poe1::triggers` (`Shockwave`).
     ("triggered_by_shockwave_support", "trigger"),
+    // The agent list (S5, 2026-11-27): the skill General's Cry's mirage warriors use, read by
+    // `hit::generals_cry_supported`.
+    ("triggered_by_spiritual_cry", "generals-cry"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",

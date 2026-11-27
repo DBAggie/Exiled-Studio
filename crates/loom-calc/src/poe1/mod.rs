@@ -1311,6 +1311,11 @@ pub enum Poe1Quantity {
     /// the agent list): `Base` (added to each cry's) and `More`, read by
     /// [`hit`].
     ExtraExertedAttacks,
+    /// General's Cry's terms for the mirage warriors that use the main
+    /// skill ([`gems::GeneralsCryValue`]; the agent list, S5): `Base`,
+    /// from the first General's Cry in the main skill's slot (its source)
+    /// and, for the warriors, the character's lines; read by [`hit`].
+    GeneralsCry(gems::GeneralsCryValue),
     /// The damage of exerted attacks (PoB's `ExertIncrease`; the agent
     /// list): `Increased` and `More`, each summed and scaled by the
     /// exerted attacks' uptime in [`hit`].
@@ -1320,6 +1325,12 @@ pub enum Poe1Quantity {
     /// the agent list): `More`, summed and scaled by the sum of the cries'
     /// uptimes in [`hit`].
     ExertAverageDamage,
+    /// `Damage` MORE a calc module adds to the skill's own mod list in the
+    /// middle of the calculation (PoB's `skillModList:NewMod`, a list whose
+    /// parent holds the gems' mods, `CalcPerform.lua` 1262; the agent list):
+    /// read as `Damage` MORE by [`hit`], its product rounded apart from the
+    /// gems' and the character's (`ModList:MoreInternal` per list).
+    NewModDamage,
 }
 
 /// A pool: one a skill reserves (life or mana), or one that regenerates
@@ -2042,8 +2053,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
             Self::ExertingCry(c, v) => write!(f, "{}.{}", c.name(), v.name()),
             Self::ExtraExertedAttacks => f.write_str("extra-exerted-attacks"),
+            Self::GeneralsCry(v) => write!(f, "generals-cry.{}", v.name()),
             Self::ExertDamage => f.write_str("exert-damage"),
             Self::ExertAverageDamage => f.write_str("exert-average-damage"),
+            Self::NewModDamage => f.write_str("new-mod-damage"),
             Self::AilmentChance(a) => write!(f, "ailment-chance.{}", a.name()),
             Self::AilmentDuration => f.write_str("ailment-duration"),
             Self::AilmentFaster => f.write_str("ailment-faster"),

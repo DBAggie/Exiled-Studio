@@ -1425,26 +1425,30 @@ fn name_order(e: &Effect) -> usize {
 
 /// PoB's more multiplier (`ModList:MoreInternal`, "The more multipliers for
 /// each mod are computed to the nearest percent then applied"): per list
-/// (the skill's own mods, its gems'; then the character's, the parent
-/// list) and per mod name, the product of `1 + value / 100` rounded to two
-/// decimals (`round(modResult, 2)`); the rounded factors multiplied in name
-/// order, the skill's list times the character's. Effects of one name and
-/// list multiply in the store's canonical order (PoB: the list's), the same
-/// bits for one effect and after the rounding in practice.
+/// (the mods a calc module added to the skill's own list mid-calculation,
+/// [`Poe1Quantity::NewModDamage`]; the skill's gems' mods, its parent; then
+/// the character's) and per mod name, the product of `1 + value / 100`
+/// rounded to two decimals (`round(modResult, 2)`); the rounded factors
+/// multiplied in name order, the lists in that order. Effects of one name
+/// and list multiply in the store's canonical order (PoB: the list's), the
+/// same bits for one effect and after the rounding in practice.
 fn more(
     calc: &mut Calc<'_>,
     quantity: Quantity,
     cx: &QueryContext,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    // (skill list?, name order) -> effects.
-    let mut groups: BTreeMap<(bool, usize), Vec<Effect>> = BTreeMap::new();
+    // (list: 0 the skill's own, 1 its gems', 2 the character's; name
+    // order) -> effects.
+    let mut groups: BTreeMap<(usize, usize), Vec<Effect>> = BTreeMap::new();
     // The repeats' averaged damage (P6-11aj): its own group, after the
     // names.
     let repeat = Quantity::Poe1(Poe1Quantity::RepeatAverageDamage);
+    let new_mod = Quantity::Poe1(Poe1Quantity::NewModDamage);
     for e in calc.store().effects() {
         let derived = quantity == Quantity::Damage && e.quantity == repeat;
-        if (e.quantity != quantity && !derived) || e.op != Op::More {
+        let own = quantity == Quantity::Damage && e.quantity == new_mod;
+        if (e.quantity != quantity && !derived && !own) || e.op != Op::More {
             continue;
         }
         match e.conditions.applies(cx) {
@@ -1466,12 +1470,27 @@ fn more(
         // The skill's own list: its active gem and the supports that apply
         // (`Calc::set_skill_sources`); another gem's buff is the
         // character's (PoB's `modDB`; close-out).
-        let skill = calc.is_skill_source(&e.source);
-        let order = if derived { 7 } else { name_order(e) };
-        groups.entry((!skill, order)).or_default().push(e.clone());
+        let list = if own {
+            0
+        } else if calc.is_skill_source(&e.source) {
+            1
+        } else {
+            2
+        };
+        let order = if derived {
+            7
+        } else if own {
+            name_order(&Effect {
+                quantity: Quantity::Damage,
+                ..e.clone()
+            })
+        } else {
+            name_order(e)
+        };
+        groups.entry((list, order)).or_default().push(e.clone());
     }
-    let mut lists: [Vec<Valued>; 2] = [Vec::new(), Vec::new()];
-    for ((character, _), mut effects) in groups {
+    let mut lists: [Vec<Valued>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+    for ((list, _), mut effects) in groups {
         effects.sort_by(|a, b| {
             a.source
                 .cmp(&b.source)
@@ -1499,12 +1518,16 @@ fn more(
         }
         let product = phases::product(calc, &factors, Term::Step("more-name"))?;
         let rounded = round_2(calc, product, Term::Step("more-name-rounded"))?;
-        lists[usize::from(character)].push(rounded);
+        lists[list].push(rounded);
     }
-    let [skill, character] = lists;
+    let [own, skill, character] = lists;
     let skill = phases::product(calc, &skill, Term::Step("more-skill"))?;
     let character = phases::product(calc, &character, Term::Step("more-character"))?;
-    phases::product(calc, &[skill, character], Term::More)
+    if own.is_empty() {
+        return phases::product(calc, &[skill, character], Term::More);
+    }
+    let own = phases::product(calc, &own, Term::Step("more-own"))?;
+    phases::product(calc, &[own, skill, character], Term::More)
 }
 
 /// The hit phase (module docs). A main skill whose hit the engine does
@@ -2008,8 +2031,19 @@ fn hit_rate(
 }
 
 /// `output.TotalDPS = AverageDamage x (HitSpeed or Speed) x dpsMultiplier
-/// x quantityMultiplier`; both multipliers are 1.
+/// x quantityMultiplier`; the quantity multiplier 1.
 fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued, dps: f64) -> Result<(), CalcError> {
+    hit_dps_with(calc, average, speed, dps, 1.0)
+}
+
+/// [`hit_dps`] with PoB's `quantityMultiplier` (General's Cry's warriors).
+fn hit_dps_with(
+    calc: &mut Calc<'_>,
+    average: Valued,
+    speed: Valued,
+    dps: f64,
+    quantity: f64,
+) -> Result<(), CalcError> {
     let rate = phases::total(calc, &[speed], Term::Step("rate"))?;
     let dps_multiplier = if dps == 1.0 {
         phases::product(calc, &[], Term::Step("dps-multiplier"))?
@@ -2017,7 +2051,12 @@ fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued, dps: f64) -> Res
         let part = phases::constant(calc, "part-dps-multiplier", dps)?;
         phases::product(calc, &[part], Term::Step("dps-multiplier"))?
     };
-    let quantity_multiplier = phases::product(calc, &[], Term::Step("quantity-multiplier"))?;
+    let quantity_multiplier = if quantity == 1.0 {
+        phases::product(calc, &[], Term::Step("quantity-multiplier"))?
+    } else {
+        let q = phases::constant(calc, "quantity-multiplier", quantity)?;
+        phases::product(calc, &[q], Term::Step("quantity-multiplier"))?
+    };
     let dps = phases::product(
         calc,
         &[average, rate, dps_multiplier, quantity_multiplier],
@@ -2313,10 +2352,22 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     };
     let mut main_rate = hand_rate(calc, attack, hand, attack.weapon, flags, &unvetted)?;
     triggered(calc, &mut main_rate)?;
+    // General's Cry's mirage warriors ([`generals_cry`]): a skill they use
+    // is not exerted by warcries.
+    let mirage_warriors = generals_cry_supported(&attack.skill, input.data);
     let Some(off_item) = attack.off_weapon else {
         // The rate came first, as PoB (`CalcOffence.lua`: speed before
         // damage): the exerted attacks read the global speed.
-        let exert = exerted_attacks(calc, attack, flags, main_rate.speed.0, &mut unvetted)?;
+        let warriors = if mirage_warriors {
+            generals_cry(calc, attack, main_rate.speed.0, &mut unvetted)?
+        } else {
+            None
+        };
+        let exert = if mirage_warriors {
+            None
+        } else {
+            exerted_attacks(calc, attack, flags, main_rate.speed.0, &mut unvetted)?
+        };
         main_rate.unvetted.extend(&unvetted);
         let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
         let HandHit {
@@ -2352,11 +2403,20 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             ],
         );
         calc.set(Field::Speed, phases::query(speed.0, speed.1));
-        let rate = hit_rate(calc, beam_rate, &unvetted, speed.0);
+        // General's Cry's hit time override 1 (`CalcOffence.lua` 2474), set
+        // only for a skill that is not channelled (`CalcMirages.lua` 382).
+        let rate = if warriors.is_some() && !attack.skill.types.contains("Channel") {
+            let one = phases::constant(calc, "generals-cry-hit-time", 1.0)?;
+            hit_rate(calc, Some(one), &unvetted, speed.0)
+        } else {
+            hit_rate(calc, beam_rate, &unvetted, speed.0)
+        };
+        let (more_dps, quantity) = warriors.unwrap_or((1.0, 1.0));
         let dps = part_dps_multiplier(id, attack.part_index)
-            * perforate_dps_multiplier(&input, &attack.skill, &mut unvetted);
-        hit_dps(calc, average.0, rate, dps)?;
-        let ailment_rate = rate_with(calc, rate, dps)?;
+            * perforate_dps_multiplier(&input, &attack.skill, &mut unvetted)
+            * more_dps;
+        hit_dps_with(calc, average.0, rate, dps, quantity)?;
+        let ailment_rate = rate_with(calc, rate, dps * quantity)?;
         let ailment_hit = super::ailment::AilmentHit {
             flags,
             sources: &sources,
@@ -2380,7 +2440,17 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let mut off_rate = hand_rate(calc, attack, Hand::Off, off_item, off_flags, &unvetted)?;
     triggered(calc, &mut off_rate)?;
     let speed = combined_speed(calc, main_rate.speed.0, off_rate.speed.0)?;
-    let exert = exerted_attacks(calc, attack, flags, speed, &mut unvetted)?;
+    // General's Cry forces the main hand (`forceMainHand`): a dual wielder's
+    // mirage use is not modelled.
+    let exert = if mirage_warriors {
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "generals-cry-dual-wield",
+        });
+        None
+    } else {
+        exerted_attacks(calc, attack, flags, speed, &mut unvetted)?
+    };
     main_rate.unvetted.extend(&unvetted);
     off_rate.unvetted.extend(&unvetted);
     let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
@@ -2748,6 +2818,107 @@ fn dual_wield(
     hit_dps(calc, average, rate, 1.0)
 }
 
+/// The support stat that makes General's Cry's mirage warriors use the
+/// skill (PoB's `triggeredByGeneralsCry`, `SkillStatMap.lua` 256).
+const GENERALS_CRY_STAT: &str = "triggered_by_spiritual_cry";
+
+/// Whether General's Cry supports `skill`: a melee attack with
+/// [`GENERALS_CRY_STAT`] among its gems' stats.
+pub(super) fn generals_cry_supported(skill: &MainSkill<'_>, data: &dyn CalcData) -> bool {
+    skill.types.contains("Melee")
+        && skill.types.contains("Attack")
+        && skill::instances(skill, data).iter().any(|i| {
+            i.stats
+                .iter()
+                .any(|(s, v)| s == GENERALS_CRY_STAT && *v != 0)
+        })
+}
+
+/// General's Cry's mirage warriors using the main skill (`CalcMirages.lua`
+/// 344 to 419; the agent list, S5). PoB marks the skill triggered and used
+/// by another thing (so no warcry exerts it), sets its hit time to 1 (its
+/// `HitSpeed` 1) unless it is channelled (then its rate stays its speed,
+/// and its time and the warriors' spawn time stay a reason), gives it no
+/// cost ([`super::costs`]), adds `Damage` copies
+/// of its exert modifiers (`ExertIncrease` INC and MORE,
+/// `OverexertionExertAverageIncrease` MORE: "Supported Attacks Count as
+/// Exerted"), a `QuantityMultiplier` of the cry's maximum warriors, and
+/// `DPS` MORE `(1 / max(cooldown, time) - 1) x 100`, `cooldown` the first
+/// General's Cry in the skill's slot's ([`Poe1Quantity::GeneralsCry`]),
+/// `time` the skill's own attack time `1 / speed`. Returns the DPS
+/// multiplier `round(1 / max(cooldown, time), 2)` (PoB's `More` rounds a
+/// mod name's product to two decimals) and the quantity multiplier
+/// `max(warriors, 1)`, or `None` with a reason when no such cry is
+/// modelled (PoB fails on that build).
+fn generals_cry(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    speed: Valued,
+    reasons: &mut Reasons,
+) -> Result<Option<(f64, f64)>, CalcError> {
+    use super::gems::GeneralsCryValue;
+    let q = |v| Quantity::Poe1(Poe1Quantity::GeneralsCry(v));
+    if !phases::has(calc, q(GeneralsCryValue::Cooldown)) {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "generals-cry-not-found",
+        });
+        return Ok(None);
+    }
+    if attack.skill.types.contains("Channel") {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "generals-cry-channel",
+        });
+    }
+    let cx = calc.context(Flags::NONE);
+    let cooldown = sum_in(
+        calc,
+        q(GeneralsCryValue::Cooldown),
+        Op::Base,
+        &cx,
+        Term::Step("generals-cry-cooldown"),
+        reasons,
+    )?;
+    let warriors = sum_in(
+        calc,
+        q(GeneralsCryValue::Warriors),
+        Op::Base,
+        &cx,
+        Term::Step("generals-cry-warriors"),
+        reasons,
+    )?;
+    // "Supported Attacks Count as Exerted": each exert modifier as `Damage`.
+    let copies: Vec<Effect> = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                (e.quantity, e.op),
+                (
+                    Quantity::Poe1(Poe1Quantity::ExertDamage),
+                    Op::Increased | Op::More
+                ) | (Quantity::Poe1(Poe1Quantity::ExertAverageDamage), Op::More)
+            )
+        })
+        .cloned()
+        .collect();
+    for e in copies {
+        let quantity = if e.op == Op::More {
+            Quantity::Poe1(Poe1Quantity::NewModDamage)
+        } else {
+            Quantity::Damage
+        };
+        calc.add_effect(Effect { quantity, ..e });
+    }
+    let time = 1.0 / speed.value;
+    let used = crate::math::max(cooldown.value, time);
+    let factor = 1.0 + ((1.0 / used - 1.0) * 100.0) / 100.0;
+    let factor = crate::math::floor(factor * 100.0 + 0.5) / 100.0;
+    Ok(Some((factor, crate::math::max(warriors.value, 1.0))))
+}
+
 /// The main skill's exerted attacks (`CalcOffence.lua` 2539 to 2802;
 /// close-out for Intimidating Cry, the agent list for the others). For a
 /// skill PoB lets warcries exert (not `NeverExertable`, triggered,
@@ -2882,8 +3053,13 @@ fn exerted_attacks(
         ] {
             let value = v.value * u.value / 100.0;
             if value != 0.0 {
+                let quantity = if op == Op::More {
+                    Quantity::Poe1(Poe1Quantity::NewModDamage)
+                } else {
+                    Quantity::Damage
+                };
                 calc.add_effect(Effect {
-                    quantity: Quantity::Damage,
+                    quantity,
                     op,
                     value,
                     conditions: crate::condition::Conditions::none(),
