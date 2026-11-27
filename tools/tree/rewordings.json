@@ -18,6 +18,11 @@
       "why": "\"Global\" dropped, as above."
     },
     {
+      "old": "#% to Global Critical Strike Multiplier while wielding a Staff",
+      "current": "#% to Critical Strike Multiplier while wielding a Staff",
+      "why": "\"Global\" dropped, as above (Counterweight, beside its accepted Critical Strike Chance line; a loose pair: the node changed two lines)."
+    },
+    {
       "old": "#% increased Global Defences",
       "current": "#% increased Defences",
       "why": "\"Global\" dropped, as above."
