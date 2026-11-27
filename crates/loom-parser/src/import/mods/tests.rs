@@ -343,6 +343,92 @@ fn local_stat_should_decide_a_uniques_plain_pair_only() {
     assert_eq!(d.kept, [0, 1]);
 }
 
+/// The agent list (S9): on a unique, readings of one size, each all local
+/// or all global, are decided by the base (the minimum and maximum of
+/// "Adds # to # Physical Damage"); a reading that mixes a local and a
+/// global stat is not, whatever its size.
+#[test]
+fn local_stat_should_decide_a_uniques_plain_readings_of_one_size() {
+    let r = rules();
+    let mut local = row("local", OWN, AFFIX, "local_min", &[]);
+    local.stats.push(("local_max".to_owned(), 1, 10));
+    let mut global = row("global", OWN, AFFIX, "global_min", &[]);
+    global.stats.push(("global_max".to_owned(), 1, 10));
+    let mut mixed = row("jewel", OWN, AFFIX, "local_jewel_a", &[]);
+    mixed.stats.push(("global_max".to_owned(), 1, 10));
+    let mut mods = Mods::from_rows(vec![local, global, mixed]);
+    for s in ["local_min", "local_max", "local_jewel_a"] {
+        mods.locality.insert(s.to_owned(), Locality::Weapon);
+    }
+    let pair = |a: &str, b: &str| {
+        let mut c = cand(a, 5);
+        c.stats.push(ResolvedStat {
+            stat: b.to_owned(),
+            value: RawValue::Exact(StatValue::exact(9)),
+        });
+        c
+    };
+    let explicit = line(ModSection::Explicit, &[]);
+    // A weapon (the carrier tag "arm" here) keeps the local pair, an
+    // amulet the global one.
+    for (tags, kept) in [(&["arm"][..], 0), (&["amulet"][..], 1)] {
+        let bases = [base(OWN, tags)];
+        let unique = Context {
+            unique: true,
+            ..ctx(&r, &mods, &bases)
+        };
+        let d = filter(
+            &unique,
+            &explicit,
+            &[
+                pair("local_min", "local_max"),
+                pair("global_min", "global_max"),
+            ],
+        );
+        assert_eq!(
+            (d.kept.clone(), d.name()),
+            (vec![kept], "resolved/local-stat".to_owned()),
+            "{tags:?}"
+        );
+    }
+    let bases = [base(OWN, &["arm"])];
+    let unique = Context {
+        unique: true,
+        ..ctx(&r, &mods, &bases)
+    };
+    let d = filter(
+        &unique,
+        &explicit,
+        &[
+            pair("local_jewel_a", "global_max"),
+            pair("global_min", "global_max"),
+        ],
+    );
+    assert!(d.notes.contains("local-stat-unique-not-a-pair"), "{d:?}");
+}
+
+/// The agent list (S9): an implicit line the base's implicit does not
+/// decide (an older item's) is read by the base as an explicit line is.
+#[test]
+fn local_stat_should_decide_an_implicit_line_the_base_does_not() {
+    let r = rules();
+    let mut mods = Mods::from_rows(vec![
+        row("local", OWN, SPECIAL, "local_a", &[]),
+        row("global", OWN, SPECIAL, "global_a", &[]),
+    ]);
+    mods.locality.insert("local_a".to_owned(), Locality::Item);
+    let bases = [base(OWN, &["ring"])];
+    let d = filter(
+        &ctx(&r, &mods, &bases),
+        &line(ModSection::Implicit, &[]),
+        &[cand("local_a", 5), cand("global_a", 5)],
+    );
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![1], "resolved/local-stat".to_owned())
+    );
+}
+
 /// The custom-line rule (P3-12j): a global reading a row of one of the
 /// domains backs; a local reading, a row of another domain, or no row is
 /// not.

@@ -17,7 +17,7 @@ Fixture budget: the oracle job now runs only a pull request's own fixtures (`.gi
 - [x] **Vaal Summon Skeletons' full DPS** (417 against 115): trace with an instrumented PoB copy in the scratchpad. Done 2026-11-26: the gem's two effects share its saved instance, so PoB's full DPS counts the caster the second effect picked; `pob-bug` DIV-0783, the engine counts the skill's own minion (`docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS"; evidence `local/p6/vss`).
 
 ## S9: resolver and item gaps
-- [ ] `ambiguous` (public 655 fields in 9 builds; corpus 470 in 6): local against global readings by the item's class (`docs/spikes/spike-b-resolution.md`, the Mods filter).
+- [ ] `ambiguous` (public 655 fields in 9 builds; corpus 470 in 6): local against global readings by the item's class (`docs/spikes/spike-b-resolution.md`, the Mods filter). Part 1 done 2026-11-26: `local-stat` on implicit lines the base does not decide and on a unique's two-stat readings; 9 of the 24 public lines resolve, 45 values toward PoB (`docs/ui/b2-data/item-evidence.md`, "Ambiguous lines by their base, part 2"; evidence `local/p6/s9a`). The 15 left are listed there.
 - [ ] `no-variant-fits` (457 / 159), `only-shadowed` (corpus 67).
 - [ ] `scaled-line` catalyst (501) and modifier magnitude (365 / 160); `excluded-line` section (231).
 - [ ] `unmodelled-item`: `ambiguous-base` (157 / 224), `flask-base` (227), `slot`, `jewel-limit`, `flask-merge`, `abyssal-socket`, `no-physical-damage`; `unhandled-kind` `item-property` ("Intangibility: #%", a flask's recovery line).

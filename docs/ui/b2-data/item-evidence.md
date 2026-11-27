@@ -245,3 +245,29 @@ A unique's line that reads as a local or a global stat was left ambiguous: the r
   Reason entries (a line's reason repeats on each field it may touch): 204 `ambiguous` entries gone, 68 added, from 4 lines that now resolve. Two are `unmapped-stat` `local_attack_speed_+%` on two dual-wielding builds' unique weapons (dual wielding is not modelled), two are `scaled-line` (catalyst, modifier magnitude). All four fields are `partial` or `indeterminate`, so `calc-parity` (against the close-out oracle run) is unchanged: 0 unexpected differences before and after, identical summaries.
 - **Corpus:** 6 documents change, 6 values, each toward PoB's (`local/p3/p3-5/evidence-p4/oracle-corpus`): armour in four builds, evasion in two (one ends 2 above PoB's 198, from 25 below). 244 reason entries gone, none added.
 - **Real-bundle tests:** `game_truth_items` 7 and `game_truth_affixes` 3 pass; Replica Dreamfeather's card prints the game's values and resolves every line, and no affix header differs from the game's.
+
+
+## Ambiguous lines by their base, part 2 (the agent list, S9, 2026-11-26)
+
+Two kinds of line stayed ambiguous after the mod filter (`loom_parser::import::mods`). Both are local and global readings of one line that the item's base decides, as the game and PoB read them:
+- **An implicit the base no longer has.** Build 26530219's Moonstone Ring has a cast speed implicit; older rings and uniques on it (Anathema) carry "+(15-25) to maximum Energy Shield" as their implicit. The `base-implicit` step cannot back it, and `local-stat` ran on explicit lines only. It now also runs on an implicit line that `base-implicit` did not decide. A ring carries no local defence, so the line reads as global energy shield (`base_maximum_energy_shield`). PoB reads it as global too.
+- **A unique's two-stat reading.** "Adds (8-13) to (20-30) Physical Damage" (Arakaali's Fang, a dagger) and "Adds 18 to 28 Chaos Damage" (Impresence, an amulet) read as the local or the global minimum and maximum. On a unique, `local-stat` decided only one-stat readings, as a guard against Thread of Hope's jewel stats. It now decides any readings of one size, each all local or all global. Thread of Hope's reading mixes a local and a global stat, so Windscream's resistances stay guarded (`local_stat_should_decide_a_uniques_plain_pair_only`, kept). The dagger keeps the local damage, the amulet the global.
+
+Tests: `local_stat_should_decide_a_uniques_plain_readings_of_one_size`, `local_stat_should_decide_an_implicit_line_the_base_does_not`.
+
+**Lines still ambiguous** (`resolve-corpus` on the nine public builds that had any, `local/p6/s9-amb-out2`: 15 of 24 left). These are real ambiguities in the data or need a reading of their own:
+- spell block against the game's `old_do_not_use_spell_block_%_from_assumed_block_value` (Svalinn, Rathpith Globe);
+- spell suppression against its "150% of value" stat (an eldritch implicit);
+- curse on hit by chance or by level (Temporal Chains);
+- Precision's reservation efficiency as a fixed or a ranged stat;
+- leech in permyriad or per hundred thousand;
+- the Cobalt Jewel's "2% increased Attack Speed" (no row backs either reading);
+- a cluster jewel notable, a socketed support, and a nearby-enemies crit line.
+
+**Evidence** (`local/p6/s9a` on `b-pb`, against `local/p6/vss`):
+- **Public:** 0 unexpected; `Complete` unchanged at 49,371 (every build with these lines has other reasons).
+  - 46 values moved, 45 toward PoB, 4 now equal: `holy-flame-totem-hierophant.xml`'s energy shield 107 to 149 (PoB 149), its recharge and leech.
+  - `shock-nova-archmage-hierophant.xml` and `Dual Wield Cospris CoC.xml` gain their rings' energy shield.
+  - One moved away: the Cospris build's maximum energy shield leech rate, 301.5 to 307.5 (PoB 265.9). It follows the energy shield, which moved toward PoB's (3,015 to 3,075, PoB 5,318). PoB's rate is lower than the engine's for a cause not looked into here; the field was already a difference before this step, in a build that stays indeterminate.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
