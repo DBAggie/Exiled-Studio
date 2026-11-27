@@ -6894,6 +6894,30 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // The agent list (a game-truth line PoB reads): "#% increased Armour from
+    // Equipped Helmet and Gloves" (`Armour` INC with `SlotName` Helmet and
+    // Gloves, `ModParser.lua` 1092): each piece's armour increase.
+    (
+        "armour_from_helmet_and_gloves_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Helmet,
+                    Defence::Armour,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Gloves,
+                    Defence::Armour,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+        ],
+    ),
     // P6-11hb: "Increases and Reductions to Projectile Speed also apply to
     // Damage with Bows" (`ProjectileSpeedAppliesToBowDamage` FLAG).
     (
@@ -12170,6 +12194,13 @@ pub const LOCAL_ROWS: &[LocalRow] = &[
         "local_physical_damage_reduction_rating_+%",
         &[(ARMOUR, Op::Increased)],
     ),
+    // The agent list (a game-truth line PoB reads): "Quality does not
+    // increase Defences" (PoB's `AlternateQualityArmour`, `ModParser.lua`
+    // 5761; `Item.lua` 2319).
+    (
+        "local_quality_does_not_increase_defences",
+        &[(PieceValue::AlternateQuality, Op::Flag)],
+    ),
     ("local_ward", &[(WARD, Op::Base)]),
     ("local_ward_+%", &[(WARD, Op::Increased)]),
 ];
@@ -12252,6 +12283,14 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
     (
         "local_critical_strike_chance_+%",
         &[(weapon(WeaponValue::CritChance), Op::Increased)],
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Critical
+    // Strike Chance per 4% Quality" (PoB's
+    // `AlternateQualityLocalCritChancePer4Quality`, `ModParser.lua` 5754):
+    // `collect` scales it by the weapon's quality.
+    (
+        "local_critical_strike_chance_+%_per_4%_quality",
+        &[(weapon(WeaponValue::CritChancePer4Quality), Op::Base)],
     ),
     // P3-8n: "Grants #% increased Elemental Damage per 2% Quality"
     // (`ElementalDamage` INC per `QualityOn{SlotName}`, `div` 2,

@@ -1518,6 +1518,11 @@ pub enum WeaponValue {
     /// speed, `floor(quality / 8 x sum)` (PoB's
     /// `AlternateQualityLocalAttackSpeedPer8Quality`, `Item.lua` 2246).
     AttackSpeedPer8Quality,
+    /// "#% increased Critical Strike Chance per 4% Quality" (the agent
+    /// list; an alternate quality's): `Base`; `collect` turns it into the
+    /// weapon's local critical strike chance, `floor(quality / 4 x sum)`
+    /// (PoB's `AlternateQualityLocalCritChancePer4Quality`, `Item.lua` 2277).
+    CritChancePer4Quality,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -1533,6 +1538,7 @@ impl core::fmt::Display for WeaponValue {
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
             Self::AttackSpeedPer8Quality => f.write_str("attack-speed-per-8-quality"),
+            Self::CritChancePer4Quality => f.write_str("crit-chance-per-4-quality"),
             Self::Accuracy => f.write_str("accuracy"),
         }
     }
@@ -2072,6 +2078,10 @@ pub enum PieceValue {
     /// A shield's chance to block: `Base` is the base's and the local
     /// flat lines, `Increased` the local increases.
     Block,
+    /// "Quality does not increase Defences" (the agent list; PoB's
+    /// `AlternateQualityArmour`, `Item.lua` 2319: the quality scalar 0): a
+    /// `Flag`; the piece's defences then take no quality ([`phases`]).
+    AlternateQuality,
 }
 
 impl core::fmt::Display for PieceValue {
@@ -2084,6 +2094,7 @@ impl core::fmt::Display for PieceValue {
             Self::Shown(d) => write!(f, "shown.{}", d.name()),
             Self::Quality => f.write_str("quality"),
             Self::Block => f.write_str("block"),
+            Self::AlternateQuality => f.write_str("alternate-quality"),
         }
     }
 }

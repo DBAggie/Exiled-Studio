@@ -52,7 +52,7 @@ use super::mapping::{
 };
 use super::skill::{self, InstanceProblem};
 use super::{ArmourSlot, Defence, Hand, PieceValue, Poe1Quantity, WeaponValue, hit};
-use crate::ingest::{Ingest, StatMapping};
+use crate::ingest::{Ingest, StatMap, StatMapping};
 use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveState, StatAmount, WeaponBase};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -2005,10 +2005,16 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
+    // The alternate qualities that grant a stat per quality (the agent
+    // list: accuracy), [`PER_QUALITY`].
+    let item_q = item_quality(item);
     match hand {
         Hand::Main => item_lines_with(
             &InSlot {
-                inner: &WeaponMapping,
+                inner: &PerQuality {
+                    inner: &WeaponMapping,
+                    quality: item_q,
+                },
                 slot: GemSlot::Weapon1,
             },
             item,
@@ -2016,7 +2022,10 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         ),
         Hand::Off => item_lines_with(
             &InSlot {
-                inner: &OffHandWeaponMapping,
+                inner: &PerQuality {
+                    inner: &OffHandWeaponMapping,
+                    quality: item_q,
+                },
                 slot: GemSlot::Weapon2,
             },
             item,
@@ -2064,6 +2073,33 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         if inc != 0.0 {
             ingest.effect(Effect {
                 quantity: value(WeaponValue::AttackSpeed),
+                op: Op::Increased,
+                value: inc,
+                conditions: Conditions::none(),
+                source,
+            });
+        }
+    }
+    // The agent list: "#% increased Critical Strike Chance per 4% Quality":
+    // the weapon's local critical strike chance, `floor(quality / 4 x sum)`
+    // (PoB's `Item.lua` 2277, as the attack speed per 8%).
+    let per4: Vec<&Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::CritChancePer4Quality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .collect();
+    if let Some(first) = per4.first() {
+        let source = first.source.clone();
+        let sum: f64 = per4.iter().map(|e| e.value).sum();
+        let inc = (quality / 4.0 * sum).floor();
+        if inc != 0.0 {
+            ingest.effect(Effect {
+                quantity: value(WeaponValue::CritChance),
                 op: Op::Increased,
                 value: inc,
                 conditions: Conditions::none(),
@@ -2200,6 +2236,111 @@ fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             }),
         }
     }
+}
+
+/// The alternate qualities that grant a character's stat per quality (the
+/// agent list; Harvest's, `HarvestAlternate*Quality*` in the game's mods):
+/// `(stat, the plain stat it grants, the quality per step)`, sorted. PoB
+/// reads each as the plain stat's mod with a `Multiplier` of
+/// `QualityOn{SlotName}` divided by the step (`ModParser.lua` 5755, 5762
+/// to 5769), so `value x floor(quality / step + 0.0001)` (`ModStore.lua`
+/// 360), the item's quality whatever "Quality does not increase ..." says.
+pub const PER_QUALITY: [(&str, &str, f64); 9] = [
+    (
+        "local_accuracy_rating_+%_per_2%_quality",
+        "accuracy_rating_+%",
+        2.0,
+    ),
+    (
+        "local_cold_resistance_%_per_2%_quality",
+        "base_cold_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_dexterity_per_2%_quality",
+        "additional_dexterity",
+        2.0,
+    ),
+    (
+        "local_fire_resistance_%_per_2%_quality",
+        "base_fire_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_intelligence_per_2%_quality",
+        "additional_intelligence",
+        2.0,
+    ),
+    (
+        "local_lightning_resistance_%_per_2%_quality",
+        "base_lightning_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_maximum_life_per_2%_quality",
+        "base_maximum_life",
+        2.0,
+    ),
+    (
+        "local_maximum_mana_per_2%_quality",
+        "base_maximum_mana",
+        2.0,
+    ),
+    ("local_strength_per_2%_quality", "additional_strength", 2.0),
+];
+
+/// An item's mapping with [`PER_QUALITY`]'s stats as their plain stats,
+/// scaled by the item's quality steps; every other stat `inner`'s.
+struct PerQuality<'a> {
+    inner: &'a dyn StatMapping,
+    quality: f64,
+}
+
+impl StatMapping for PerQuality<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        let Some((_, plain, step)) = PER_QUALITY.iter().find(|(s, _, _)| *s == stat.as_str())
+        else {
+            return self.inner.map(stat);
+        };
+        let steps = (self.quality / step + 0.0001).floor();
+        match super::mapping::Poe1Mapping.map(&StatId::new(*plain)) {
+            StatMap::Effects(templates) => StatMap::Effects(
+                templates
+                    .into_iter()
+                    .map(|t| crate::ingest::EffectTemplate {
+                        scale: t.scale * steps,
+                        ..t
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
+    }
+
+    fn typed(
+        &self,
+        resolution: &loom_domain::TypedResolution,
+        source: &Source,
+    ) -> crate::ingest::TypedMap {
+        self.inner.typed(resolution, source)
+    }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        self.inner.elsewhere(quantity)
+    }
+}
+
+/// The item's quality: its last `Quality` spec's number, 0 without one.
+fn item_quality(item: &Item) -> f64 {
+    item.body
+        .lines
+        .iter()
+        .rev()
+        .find_map(|line| match &line.kind {
+            LineKind::Spec { key, value, .. } if key == "Quality" => spec_number(value),
+            _ => None,
+        })
+        .unwrap_or(0.0)
 }
 
 /// The leading number of a spec value, as PoB's `specToNumber` reads it
@@ -2361,7 +2502,10 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
     }
     item_lines_with(
         &InSlot {
-            inner: &PieceMapping { slot },
+            inner: &PerQuality {
+                inner: &PieceMapping { slot },
+                quality: item_quality(item),
+            },
             slot: GemSlot::of_armour(slot),
         },
         item,

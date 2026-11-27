@@ -1194,13 +1194,19 @@ pub(super) fn piece(
         reasons,
     )?;
     let inc = factor(calc, inc, Term::Step("piece-increased"))?;
-    let quality = sum(
-        calc,
-        q(PieceValue::Quality),
-        Op::Base,
-        Term::Step("piece-quality-sum"),
-        reasons,
-    )?;
+    // "Quality does not increase Defences" (the agent list): PoB's quality
+    // scalar 0 (`Item.lua` 2319), for the percentile too.
+    let quality = if has(calc, q(PieceValue::AlternateQuality)) {
+        constant(calc, "alternate-quality", 0.0)?
+    } else {
+        sum(
+            calc,
+            q(PieceValue::Quality),
+            Op::Base,
+            Term::Step("piece-quality-sum"),
+            reasons,
+        )?
+    };
     let quality = factor(calc, quality, Term::Step("piece-quality"))?;
     let percentile = if has(calc, q(PieceValue::Percentile(defence))) {
         sum(
