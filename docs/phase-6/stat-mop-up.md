@@ -5343,3 +5343,15 @@ Two close-out reasons of class `C-engine-system` and `C-no-slice` (`dev/active/o
 - **Public:** 0 unexpected; `Complete` 49,632 to 49,809 (the fixtures); no value moved. `kinetic-fusillade-ballista-hierophant.xml` loses the wand line's reason (its main skill is no wand attack).
 - **Corpus:** 0 unexpected; two documents lose an explosion stat's reason; no value moved.
 - **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## The maintainer's in-game checks (2026-11-26)
+
+The maintainer worked through the game-truth items one by one, in the game.
+
+**Check 1, Vaal Summon Skeletons' minion level (DIV-0111 to DIV-0113, DIV-0174): inconclusive.** The gem's tooltips at levels 20 and 21 show the counts (21 soldiers, 9 archers, 5 mages, 1 general, 36 at most; 22, 9, 5, 1, 37), equal to the game data's and PoB's rows, but no minion level. PoB's own row has `base_display_minion_actor_level` 68 at level 20 (70 at 21), as the game data does; its calculation uses the level requirement (70) instead. The engine keeps 68; the entries stay.
+
+**Check 2, Energy From Within: confirmed, and PoB applies it.** "Increases and Reductions to Life in Radius are Transformed to apply to Energy Shield" (`local_unique_jewel_life_increases_applies_to_energy_shield`). In the game, with one allocated "6% increased maximum Life" passive in the jewel's radius: life 1,402 to 1,323, energy shield 36 to 39, life regeneration 49.1 to 46.3 per second. The game-truth list had it as a line PoB applies nothing for; PoB does apply it (`ModParser.lua` 6100, `getSimpleConv({ "Life" }, "EnergyShield", "INC", true)`, a first-pass jewel function on every node in the radius but masteries, `CalcSetup.lua` 117 to 165).
+- **The engine:** `loom_pipeline::radius_jewels` transforms an allocated node's `maximum_life_+%` in the radius to `maximum_energy_shield_+%` at the same value, its other stats kept; a node with a conditional life increase in the radius (`LIFE_INCREASES_NOT_READ`), or a tattooed one, is a reason on the socket. The jewel's own stat is a `radius-jewel` no-effect row.
+- **Fixture** `ice-nova-energy-from-within-witch.xml` (original; the P6-11gv radius tree, three "Life and Energy Shield" passives in the Large radius): every field equals PoB's; against the jewel without its line, life 1,232 to 1,130 and energy shield 45 to 48, the engine's alike.
+- **Evidence** (`local/p6/efw` on `b-pb`, against `local/p6/sa`): public 0 unexpected, `Complete` 51,189 to 51,276 (the fixture's 87); no other value moved (`Dual Wield Cospris CoC.xml`'s jewel covers no allocated life increase; its reasons lose the stat); corpus no document changed.

@@ -10630,6 +10630,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "local_unique_jewel_disconnected_passives_can_be_allocated_around_keystone_hash",
         "tree-allocation",
     ),
+    // The agent list (in-game check 2026-11-26): Energy From Within's life
+    // increases in its radius as energy shield, applied by the host to the
+    // nodes (`loom_pipeline::radius_jewels`, PoB's `getSimpleConv`).
+    (
+        "local_unique_jewel_life_increases_applies_to_energy_shield",
+        "radius-jewel",
+    ),
     (
         "local_unique_jewel_nearby_disconnected_keystone_passives_can_be_allocated",
         "tree-allocation",
