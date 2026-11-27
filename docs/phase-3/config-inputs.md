@@ -722,3 +722,22 @@ PoB's output for each is the bare build's (the same output hash). Every field eq
 - **Public:** 0 unexpected; `Complete` 49,809 to 49,983 (the fixtures); no value moved. `OccVortex.xml` loses `EEIgnoreHitDamage` and `enemyConditionHitByLightningDamage`, and `forged-frostbearer-spectre-necromancer.xml` loses `TotalSpectreLife`.
 - **Corpus:** 0 unexpected; no document changed.
 - **Tests:** the table tests in `poe1::config`, the workspace tests, the real-bundle tests (`DEPENDS_ON`'s stats in the bundle), clippy, rustfmt, and wasm32.
+
+
+## The agent list (S8, 2026-11-26): the corpse's life
+
+`detonateDeadCorpseLife` joins `config::SKILL_DATA_ONLY`. It sets `corpseLife` as untagged skill data (`ConfigOptions.lua` 155), and `CalcOffence.lua` reads it in two places only:
+- for a skill whose data sets `explodeCorpse` (1856 to 1860): the corpse's life times its explosion multiplier, as the hit's fire `BonusMin` and `BonusMax`;
+- for the monster explosion's `monsterExplode` (1861 to 1867).
+
+**The skills that read it.** Fourteen skills in PoB's data read it (the generated `pob_skills` table): Bodyswap, Cremation, Death Wish, Detonate Dead, Vaal Detonate Dead, Volatile Dead, their variants, Death Walk, and the monster explosion.
+- Each is unvetted in every part: `explodeCorpse` is a base mod the hit does not read, or the skill has a function.
+- So the value reaches no `Complete` field, and no DoT reads it.
+- The table's test now accepts `explodeCorpse` beside a function as what keeps a skill unvetted.
+
+**Fixture** `config-corpse-life-witch.xml` (original, run three times by PoB, identical): corpse life 10,000 without such a skill. PoB's output is the bare build's, and every field equals PoB's (87 targets).
+
+**Evidence** (`local/p6/s8-4` on `b-pb`, against `local/p6/s8-3`):
+- **Public:** 0 unexpected; `Complete` 49,983 to 50,070 (the fixture); no value moved.
+- **Corpus:** 0 unexpected; one document loses `detonateDeadCorpseLife`; no value moved.
+- **Tests:** `skill_data_only_skills_should_stay_unvetted`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

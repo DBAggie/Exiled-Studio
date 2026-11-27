@@ -733,7 +733,34 @@ pub fn inert(input: &str) -> bool {
 ///   661; `act_dex.lua` 11747);
 /// - `toxicRainPodOverlap`: `podOverlapMultiplier` for Toxic Rain and its
 ///   variants (700 to 702; `act_dex.lua` 14933, 15025, 15114).
+/// - `detonateDeadCorpseLife` (the agent list, S8): `corpseLife` for every
+///   skill (line 155, an untagged `SkillData`), which `CalcOffence.lua`
+///   reads only for a skill whose data sets `explodeCorpse` (1856 to 1860:
+///   the corpse's life times its explosion multiplier, as the hit's fire
+///   `BonusMin` and `BonusMax`) and for the monster explosion's
+///   `monsterExplode` (1861 to 1867). Those skills are listed (each with
+///   `explodeCorpse` in its base mods, so unvetted in every part, or the
+///   monster explosion's function); no DoT reads the value.
 pub const SKILL_DATA_ONLY: &[(&str, &[&str])] = &[
+    (
+        "detonateDeadCorpseLife",
+        &[
+            "Bodyswap",
+            "BodyswapAltX",
+            "Cremation",
+            "CremationAltX",
+            "DeathWalk",
+            "DeathWish",
+            "DetonateDead",
+            "DetonateDeadAltX",
+            "DetonateDeadAltY",
+            "EnemyExplode",
+            "VaalDetonateDead",
+            "VolatileDead",
+            "VolatileDeadAltX",
+            "VolatileDeadAltY",
+        ],
+    ),
     ("stormRainActiveArrows", &["StormRainAltX"]),
     ("stormRainBeamOverlap", &["StormRain"]),
     (
@@ -774,7 +801,9 @@ mod tests {
 
     /// [`SKILL_DATA_ONLY`] (open items, S8): sorted, apart from the other
     /// lists, and each skill is in PoB's data with a function the hit does
-    /// not read, so neither its hit (every part) nor its DoT is vetted.
+    /// not read, or (corpse life, the agent list) `explodeCorpse` in its
+    /// base mods, so its hit is vetted in no part (and Toxic Rain's DoT is
+    /// not vetted).
     #[test]
     fn skill_data_only_skills_should_stay_unvetted() {
         assert!(SKILL_DATA_ONLY.windows(2).all(|w| w[0].0 < w[1].0));
@@ -782,7 +811,8 @@ mod tests {
             assert!(skill_data_only(input) && !named_only(input) && !inert(input));
             for id in *skills {
                 let pob = super::super::pob_skill::skill(id).unwrap_or_else(|| panic!("{id}"));
-                assert!(!pob.functions.is_empty(), "{id}");
+                let explodes = pob.base_mods.iter().any(|m| m.key == Some("explodeCorpse"));
+                assert!(!pob.functions.is_empty() || explodes, "{id}");
                 for part in 0..=pob.parts.len() {
                     assert!(
                         !super::super::hit::pob_vetted_with(id, part, true),
