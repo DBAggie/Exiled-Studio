@@ -5853,3 +5853,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Smite poison build): 40% (1.4 poisons per poisoning hit) and 150% (held at 2). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the stacks read the rate): `game-truth` DIV-1174 to DIV-1185.
 
 **Evidence** (`local/p6/d27poe` on `b-ig`, against `local/p6/d27eoe`): public 0 unexpected, `Complete` 60,083 to 60,261 (the fixtures'); no other value moved (the public build is partial on other reasons). Corpus 0 unexpected, no value moved.
+
+## Poison at maximum frenzy charges (the agent list, 2026-11-27)
+
+**The stat:** "Attacks have #% chance to Poison while at maximum Frenzy Charges" (`attacks_chance_to_poison_%_on_max_frenzy_charges`), unmapped in one public build.
+
+**PoB** (its parser): `PoisonChance` BASE with `ModFlag.Attack` and `StatThreshold` `FrenzyCharges` at `FrenzyChargesMax`.
+
+**The engine:** `charges::ChargeValue::AtMaximum`, an effect while the count is the maximum, applied once by the charge phase after the count (`PerCharge::AttackPoisonChance` its target). A count of 0 at a maximum of 0 is not read as "at maximum" (PoB's threshold would hold; no build has it).
+
+**Fixtures** (original, the Smite poison build): the line with the frenzy charges used (3, the maximum: poison) and with 2 (no poison). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1186 to DIV-1197.
+
+**Evidence** (`local/p6/d27afe` on `b-ig`, against `local/p6/d27poe`): public 0 unexpected, `Complete` 60,261 to 60,438 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
