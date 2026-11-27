@@ -2882,6 +2882,8 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::damage_taken::handles(&input.name, &input.value)
         || super::conditions::handles(&input.name, &input.value)
         || super::exposure::handles(&input.name)
+        // Mana Burn on you (the agent list, 2026-11-27).
+        || super::degen::handles(&input.name, &input.value)
         || super::buffs::is_buff_input(&input.name)
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)

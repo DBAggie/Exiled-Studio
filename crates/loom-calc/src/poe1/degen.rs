@@ -19,6 +19,15 @@
 //!   matter part alone with Eldritch Battery); the rest to life.
 //!   `TotalNetRegen` is the three's sum.
 //!
+//! - **Mana Burn** (the agent list, 2026-11-27; tinctures' debuff on you):
+//!   the config's `multiplierManaBurnStacks` sets PoB's
+//!   `EffectiveManaBurnStacks` (`CalcPerform.lua` 902 to 915), and
+//!   `ManaDegenPercentTincture` BASE 1 per stack (`CalcSetup.lua` 545)
+//!   gives mana its own degeneration, `max(mana x stacks / 100, stacks)`
+//!   (`CalcDefence.lua` 1289 to 1292, at least 1 per stack), taken from
+//!   mana's regeneration in `ManaRegenRecovery`, so in `NetManaRegen`
+//!   alone. PoB's `ManaBurnStacks` multiplier has no mapped reader.
+//!
 //! Not modelled, each a reason on the net fields: a pool's own degeneration
 //! (rage's life loss, Frost Shield's energy shield) and recovery (Pious
 //! Path's), from [`super::Poe1Quantity::NetRegenReason`] markers; a bypass
@@ -196,6 +205,16 @@ fn net_regen(
         |_| false,
     ));
     let cx = calc.context(Flags::NONE);
+    // Mana's own degeneration from the config's Mana Burn stacks (module
+    // docs): `ManaRegenRecovery = regen - degen` (1288 to 1295).
+    let mana_regen = match mana_burn_stacks(calc) {
+        Some(stacks) if stacks > 0.0 => {
+            let mana = value(calc, Field::Mana).unwrap_or(0.0);
+            let own = crate::math::max(mana * stacks / 100.0, stacks);
+            mana_regen - own
+        }
+        _ => mana_regen,
+    };
     // Mind over matter's share of each type, percent (2306, 2347).
     let shared = sum(
         calc,
@@ -298,6 +317,29 @@ fn net_regen(
         ],
     );
     Ok(())
+}
+
+/// The config input of the Mana Burn stacks on you (`ConfigOptions.lua`
+/// 1105).
+pub const MANA_BURN_INPUT: &str = "multiplierManaBurnStacks";
+
+/// Whether the degeneration phase handles the config input `name` with
+/// `value` (a number of [`MANA_BURN_INPUT`]).
+#[must_use]
+pub fn handles(name: &str, value: &loom_domain::ConfigValue) -> bool {
+    name == MANA_BURN_INPUT && matches!(value, loom_domain::ConfigValue::Number(_))
+}
+
+/// The config's Mana Burn stacks, when set (`CalcPerform.lua` 902 to 915:
+/// at most `MaxManaBurnStacks`, plus `EffectiveManaBurnStacks`; Weeping
+/// Wounds instead with its keystone; those three have no mapped stat, so a
+/// line that sets one is a reason of its own).
+fn mana_burn_stacks(calc: &Calc<'_>) -> Option<f64> {
+    let set = super::collect::active_config(calc.input().build)?;
+    match super::config::last_input(set, MANA_BURN_INPUT, loom_domain::ConfigInputKind::Input)? {
+        loom_domain::ConfigValue::Number(n) => Some(n.value().0),
+        _ => None,
+    }
 }
 
 /// The `BASE` sum of `quantity` in `cx`, its reasons into `reasons`.
