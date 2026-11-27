@@ -125,6 +125,9 @@ const CONDITION_ROWS: &[&str] = &[
     // (`conditions::ENEMY_SHOCKED`).
     "critical_strike_chance_+%_vs_shocked_enemies",
     "damage_+%_if_you_have_shocked_recently",
+    // The agent list (2026-11-27): the shocked enemy's physical damage
+    // converted, under the settled `Enemy:Shocked` (the enemy's hit).
+    "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
     // P6-11gz: exposure while a curse you cast holds (`poe1::exposure`
     // reads them with the settled states).
     "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",

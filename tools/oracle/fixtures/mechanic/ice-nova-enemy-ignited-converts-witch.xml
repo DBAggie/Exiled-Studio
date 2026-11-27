@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): "Enemies Ignited by you have 40% of Physical Damage they deal
+     converted to Fire" (Shaper of Flames' line; PoB's EnemyModifier of PhysicalDamageConvertToFire under the
+     enemy's Ignited, ModParser.lua 3485) with the enemy ignited by the config: the enemy's physical hit is 60% of
+     itself, its fire hit gains the rest (CalcDefence.lua 1720 to 1777); armour and resistances to read it.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1"/>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyIgnited" boolean="true"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Enemies Ignited by you have 40% of Physical Damage they deal converted to Fire
+				+6000 to Armour
+				+40% to all Elemental Resistances
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

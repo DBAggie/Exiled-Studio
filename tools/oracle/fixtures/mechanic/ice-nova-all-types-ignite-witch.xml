@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Ice Nova with added physical, lightning, chaos, and fire damage to
+     spells, a chance to ignite, and "All Damage with Hits can Ignite" (PoB's PhysicalCanIgnite, ColdCanIgnite, LightningCanIgnite,
+     ChaosCanIgnite flags, ModParser.lua 2800): every type's hit damage is the ignite's source, read with fire's
+     modifiers too (CalcOffence.lua 4979 to 5012).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1"/>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				All Damage with Hits can Ignite
+				Adds 20 to 40 Physical Damage to Spells
+				Adds 10 to 90 Lightning Damage to Spells
+				Adds 15 to 30 Chaos Damage to Spells
+				Adds 12 to 24 Fire Damage to Spells
+				40% chance to Ignite
+				50% increased Fire Damage
+				30% increased Global Physical Damage
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

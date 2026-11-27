@@ -954,6 +954,10 @@ pub enum Poe1Quantity {
     /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
     /// `Increased` (delirium's) and `More` (sap's too, open items S8).
     EnemyDamage,
+    /// The share of the enemy's physical damage it converts to a type (PoB's
+    /// enemy `PhysicalDamageConvertTo<Type>` BASE, from `EnemyModifier`; the
+    /// agent list, 2026-11-27): `Base`, read by [`enemy_hit`].
+    EnemyPhysicalConvert(DamageType),
     /// A share of a type's damage taken as another (PoB's
     /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and
     /// their `FromHits` forms when the flag is set; P6-10b part 12): `Base`.
@@ -1254,6 +1258,11 @@ pub enum Poe1Quantity {
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
+    /// "All Damage can Ignite" and kin (PoB's `PhysicalCanIgnite`,
+    /// `LightningCanIgnite`, `ColdCanIgnite`, `ChaosCanIgnite`; the agent
+    /// list, 2026-11-27): a `Flag` read by [`ailment`], the type's hit
+    /// damage joining the ailment's source.
+    CanInflictWith(ailment::Ailment, DamageType),
     /// The duration of ailments on the enemy (PoB's enemy
     /// `SelfIgniteDuration`, `SelfAilmentDuration`,
     /// `SelfElementalAilmentDuration`, by conditions; curses such as
@@ -1720,6 +1729,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyCritChance => f.write_str("enemy-crit-chance"),
             Self::CritExtraDamageReduction => f.write_str("crit-extra-damage-reduction"),
             Self::EnemyDamage => f.write_str("enemy-damage"),
+            Self::EnemyPhysicalConvert(t) => write!(f, "enemy-physical-convert.{}", t.name()),
             Self::DamageTakenAs(from, to, hits) => write!(
                 f,
                 "damage-taken-as.{}.{}{}",
@@ -1985,6 +1995,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
             Self::EnemyBuffExpireFaster => f.write_str("enemy-buff-expire-faster"),
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
+            Self::CanInflictWith(a, t) => write!(f, "can-inflict-with.{}.{}", a.name(), t.name()),
             Self::ImpaleChance => f.write_str("impale-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),

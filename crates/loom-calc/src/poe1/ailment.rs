@@ -19,7 +19,10 @@
 //!      than one ignite would stack.
 //! 5. **Source damage:** the hit's fire damage recomputed in the ignite's
 //!    config (`calcAilmentSourceDamage`: `calcDamage` with the hit's bases
-//!    and conversion, times the share fire keeps), then `(min + (max - min)
+//!    and conversion, times the share fire keeps), with each other type
+//!    whose flag "All Damage can Ignite" sets, read with fire's modifiers
+//!    too, summed in PoB's order (physical, lightning, cold, fire, chaos;
+//!    the agent list, 2026-11-27), then `(min + (max - min)
 //!    x roll / 100) x (1 + DoT multiplier / 100)`; from crits, the DoT
 //!    multiplier also has the character's +50 for critical ailments
 //!    (`critical_ailment_dot_multiplier_+`).
@@ -34,7 +37,7 @@
 //!
 //! Not modelled, each a reason through its unmapped stat or the reasons
 //! below:
-//! - ignites that stack, ignite to chaos, other types that can ignite;
+//! - ignites that stack, ignite to chaos, `FireCannotIgnite`;
 //! - Ruthless Blow, Fist of War, and warcry ailment effects (1 without
 //!   their stats);
 //! - the enemy's ailment avoidance (no source modelled);
@@ -204,8 +207,12 @@ enum Roll {
 
 /// What differs between the damaging ailments (module docs).
 struct Spec {
-    /// The damage types whose hit damage the ailment deals, in PoB's order.
-    sources: &'static [DamageType],
+    /// The damage types whose hit damage the ailment deals, in PoB's order:
+    /// each with whether it needs its [`Poe1Quantity::CanInflictWith`]
+    /// flag ("All Damage can Ignite"), its damage then read with the
+    /// modifiers of [`Spec::gate`]'s type too (PoB's
+    /// `calcAilmentSourceDamage(..., dmgTypeFlags.<gate>)`).
+    sources: &'static [(DamageType, bool)],
     /// The type that must be dealable (`canDeal`).
     gate: DamageType,
     /// The type of its damage over time (its DoT multiplier and the enemy's
@@ -234,8 +241,17 @@ struct Spec {
 
 const fn spec(ailment: Ailment) -> Spec {
     match ailment {
+        // PoB's order (`CalcOffence.lua` 4979 to 5012): physical,
+        // lightning, cold with their flags, fire unless `FireCannotIgnite`
+        // (unmapped), chaos with its flag.
         Ailment::Ignite => Spec {
-            sources: &[DamageType::Fire],
+            sources: &[
+                (DamageType::Physical, true),
+                (DamageType::Lightning, true),
+                (DamageType::Cold, true),
+                (DamageType::Fire, false),
+                (DamageType::Chaos, true),
+            ],
             gate: DamageType::Fire,
             dot_type: DamageType::Fire,
             duration_base: IGNITE_DURATION_BASE,
@@ -247,7 +263,7 @@ const fn spec(ailment: Ailment) -> Spec {
             skill_keys: &[],
         },
         Ailment::Bleed => Spec {
-            sources: &[DamageType::Physical],
+            sources: &[(DamageType::Physical, false)],
             gate: DamageType::Physical,
             dot_type: DamageType::Physical,
             duration_base: BLEED_DURATION_BASE,
@@ -266,7 +282,7 @@ const fn spec(ailment: Ailment) -> Spec {
         // (physical always; lightning, cold, and fire with their flags, not
         // modelled).
         Ailment::Poison => Spec {
-            sources: &[DamageType::Chaos, DamageType::Physical],
+            sources: &[(DamageType::Chaos, false), (DamageType::Physical, false)],
             gate: DamageType::Chaos,
             dot_type: DamageType::Chaos,
             duration_base: POISON_DURATION_BASE,
@@ -287,6 +303,7 @@ const fn spec(ailment: Ailment) -> Spec {
 fn source_damage(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
+    ailment: Ailment,
     spec: &Spec,
     cx: &QueryContext,
     hit_cx: &QueryContext,
@@ -295,15 +312,22 @@ fn source_damage(
     let mut mins = Vec::new();
     let mut maxes = Vec::new();
     let mut zero = None;
-    for &t in spec.sources {
+    for &(t, flagged) in spec.sources {
         let Some(index) = hit::TYPES.iter().position(|x| *x == t) else {
             continue;
         };
         if hit::cannot_deal(calc, t, hit_cx, reasons)? {
             continue;
         }
-        let extra = if spec.physical_as_chaos && t == DamageType::Physical {
-            Flags::damage(DamageType::Chaos)
+        // `skillModList:Flag(cfg, "<Type>CanIgnite")` in the hit's config.
+        if flagged {
+            let can = Quantity::Poe1(Poe1Quantity::CanInflictWith(ailment, t));
+            if !phases::has(calc, can) || hit::flag_of(calc, can, hit_cx, reasons)?.is_none() {
+                continue;
+            }
+        }
+        let extra = if flagged || (spec.physical_as_chaos && t == DamageType::Physical) {
+            Flags::damage(spec.gate)
         } else {
             Flags::NONE
         };
@@ -427,7 +451,7 @@ pub(super) fn damaging(
     // Step 5 first: no source damage, no ailment.
     let ailment_flags = ailment.flag() | Flags::dot_keyword(spec.dot_type);
     let cx = ailment_context(calc, hit, ailment_flags);
-    let [min, max] = source_damage(calc, hit, &spec, &cx, &hit_cx, &mut reasons)?;
+    let [min, max] = source_damage(calc, hit, ailment, &spec, &cx, &hit_cx, &mut reasons)?;
     if min.value == 0.0 && max.value == 0.0 {
         return Ok(None);
     }
@@ -1101,5 +1125,22 @@ mod tests {
         assert!(spec(Ailment::Poison).physical_as_chaos);
         assert!(!spec(Ailment::Bleed).physical_as_chaos);
         assert!(!spec(Ailment::Ignite).physical_as_chaos);
+    }
+
+    #[test]
+    fn ignite_should_read_other_types_only_by_their_flags_in_pobs_order() {
+        use DamageType::{Chaos, Cold, Fire, Lightning, Physical};
+        assert_eq!(
+            spec(Ailment::Ignite).sources,
+            &[
+                (Physical, true),
+                (Lightning, true),
+                (Cold, true),
+                (Fire, false),
+                (Chaos, true)
+            ]
+        );
+        assert!(spec(Ailment::Bleed).sources.iter().all(|(_, f)| !f));
+        assert!(spec(Ailment::Poison).sources.iter().all(|(_, f)| !f));
     }
 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): the shocked and poisoned forms (80% to lightning, 10% to
+     chaos) and "Nearby Enemies Convert 30% of their Physical Damage to Fire", 120% in all with the enemy shocked
+     and poisoned by the config: PoB scales each share to a total of 100 (CalcDefence.lua 1739 to 1745).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1"/>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyShocked" boolean="true"/>
+			<Input name="conditionEnemyPoisoned" boolean="true"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Enemies Shocked by you have 80% of Physical Damage they deal converted to Lightning
+				Enemies Poisoned by you have 10% of Physical Damage they deal converted to Chaos
+				Nearby Enemies Convert 30% of their Physical Damage to Fire
+				+6000 to Armour
+				+40% to all Elemental Resistances
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

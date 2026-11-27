@@ -253,6 +253,55 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-27): "All Damage can Ignite" (Shaper of
+    // Flames; PoB `ModParser.lua` 2800: `PhysicalCanIgnite`,
+    // `ColdCanIgnite`, `LightningCanIgnite`, `ChaosCanIgnite` flags), each
+    // type's hit damage in the ignite's source (`poe1::ailment`).
+    (
+        "all_damage_can_ignite",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Physical,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Cold,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Lightning,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Chaos,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
     // PoB `SkillStatMap.lua` 1033: `EnemyIgniteChance` BASE 100 (P6-2b).
     (
         "always_ignite",
@@ -4284,6 +4333,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Poe1(
                 Poe1Quantity::AilmentChance(..)
                     | Poe1Quantity::CannotInflict(..)
+                    | Poe1Quantity::CanInflictWith(..)
                     | Poe1Quantity::ImpaleChance
                     | Poe1Quantity::ImpaleEffect
                     | Poe1Quantity::ImpaleStacksMax
@@ -5427,6 +5477,38 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::KILLED_RECENTLY,
+        )],
+    ),
+    // The agent list (2026-11-27): "Enemies Ignited by you have #% of
+    // Physical Damage they deal converted to Fire" and its shocked and
+    // poisoned forms (PoB's `EnemyModifier` of `PhysicalDamageConvertTo
+    // <Type>` BASE under the enemy's condition, `ModParser.lua` 3485 to
+    // 3487): the enemy's hit (`poe1::enemy_hit`).
+    (
+        "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_IGNITED,
+        )],
+    ),
+    (
+        "enemies_poisoned_by_you_have_physical_damage_%_converted_to_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Chaos)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_POISONED,
+        )],
+    ),
+    (
+        "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Lightning)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_SHOCKED,
         )],
     ),
     // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
@@ -8791,6 +8873,17 @@ pub const ROWS: &[Row] = &[
             Op::Base,
             1.0,
         )],
+    ),
+    // The agent list (2026-11-27): "Nearby Enemies Convert #% of their
+    // Physical Damage to Fire" (PoB's `EnemyModifier` of
+    // `PhysicalDamageConvertToFire` BASE, no condition): the enemy's hit.
+    (
+        "local_nearby_enemies_base_physical_damage_%_to_convert_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+            Op::Base,
+            1.0,
+        )],
     ), // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
     // P6-11gy: a ring's covering of the enemy (`CoveredIn<Ash|Frost>Effect`
     // BASE 20, `SlotNumber`, the enemy's ailment): `damage_taken` reads it,
@@ -10452,12 +10545,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage",
         "explosion",
     ),
-    // P6-11m: the enemy's own damage converted (`EnemyModifier`): what
-    // you take; no slice field.
-    (
-        "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
-        "enemy-damage",
-    ),
+    // P6-11m's "enemy-damage" row for the ignited enemy's conversion is a
+    // state row since the agent list (2026-11-27): the enemy's hit reads it.
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
         "enemy-speed",
@@ -13755,6 +13844,35 @@ mod tests {
             (
                 "life_mastery_count_maximum_life_+%_final",
                 vec![(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+            ),
+            // The agent list (2026-11-27): the enemy's physical damage
+            // converted while ignited, poisoned, or shocked.
+            (
+                "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_IGNITED,
+                )],
+            ),
+            (
+                "enemies_poisoned_by_you_have_physical_damage_%_converted_to_chaos",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Chaos)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_POISONED,
+                )],
+            ),
+            (
+                "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Lightning)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_SHOCKED,
+                )],
             ),
             // P6-10b: energy shield regeneration near a rare or unique enemy.
             (

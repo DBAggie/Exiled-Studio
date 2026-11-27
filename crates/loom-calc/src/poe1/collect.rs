@@ -2668,6 +2668,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             what: "unread-skill-modifier",
         });
     }
+    let main_modelled = main.is_some();
     super::gems::gems(
         input,
         main.as_ref().map(|(g, m)| (*g, m)),
@@ -2675,13 +2676,37 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         &totals,
         ingest,
     );
-    let Some((group, main)) = main else { return };
+    // A main skill the engine computes no hit or damage over time of
+    // (Penance Brand): its cost is still computed (`poe1::costs`), so the
+    // stats of its gems that change only costs act (the agent list,
+    // 2026-11-27: Inspiration's less mana cost; PoB reads the skill's
+    // `skillModList`, `CalcOffence.lua` 1677 to 1800).
+    let (group, main, mapping): (usize, skill::MainSkill<'_>, &dyn StatMapping) = match main {
+        Some((g, m)) => (g, m, &SkillMapping),
+        None => {
+            let Some((g, m)) = skill::main_skill(input.build, input.data, &levels)
+                .ok()
+                .and_then(|m| m.group.checked_sub(1).map(|g| (g, m)))
+            else {
+                return;
+            };
+            (g, m, &CostOnly)
+        }
+    };
+    let modelled: Vec<_> = if main_modelled {
+        modelled
+    } else {
+        std::iter::once(&main.active_gem)
+            .chain(&main.supports)
+            .copied()
+            .collect()
+    };
     // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
     let buff_scale = totals.buff_scale(true, &main.types, 0.0);
     for r in modelled {
         let source = Source::Gem { group, gem: r.gem };
         let instance = skill::instance(r.effect, r.level, r.quality, input.data);
-        for p in &instance.problems {
+        for p in instance.problems.iter().filter(|_| main_modelled) {
             match p {
                 InstanceProblem::MissingStatSet { id } => {
                     ingest.indeterminate(IndeterminateReason::MissingData {
@@ -2710,7 +2735,27 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                 }
             })
             .collect();
-        ingest.stats_with(&SkillMapping, &source, &stats);
+        ingest.stats_with(mapping, &source, &stats);
+    }
+}
+
+/// The gems of a main skill the engine computes no hit or damage over
+/// time of (the agent list, 2026-11-27): a stat whose every effect is a
+/// cost ([`super::costs::is_cost`]) is [`SkillMapping`]'s; any other has
+/// no effect here, as before (the skill's other fields are not computed).
+struct CostOnly;
+
+impl StatMapping for CostOnly {
+    fn map(&self, stat: &loom_domain::StatId) -> StatMap {
+        match SkillMapping.map(stat) {
+            StatMap::Effects(effects)
+                if !effects.is_empty()
+                    && effects.iter().all(|e| super::costs::is_cost(e.quantity)) =>
+            {
+                StatMap::Effects(effects)
+            }
+            _ => StatMap::NoEffect,
+        }
     }
 }
 

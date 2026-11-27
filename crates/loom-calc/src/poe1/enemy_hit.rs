@@ -22,7 +22,12 @@
 //!   `mult` 1, `stdBossDPSMult` 4/4.4, `pinnacleBossDPSMult` 8/4.4,
 //!   `uberBossDPSMult` 10/4.25; physical alone for a non-boss; chaos the
 //!   rounded fifth over 2.5, or over 4 for the Uber boss), times the
-//!   enemy's damage modifier and the crit effect. The penetration is the
+//!   enemy's damage modifier and the crit effect. The enemy's physical
+//!   damage converted to other types (`PhysicalDamageConvertTo<Type>`,
+//!   "Enemies Ignited by you have #% of Physical Damage they deal
+//!   converted to Fire" and kin; the agent list, 2026-11-27) leaves
+//!   physical and joins each type the same way, the total at most 100
+//!   (1720 to 1777). The penetration is the
 //!   config's `enemy<Type>Pen` or the placeholder (`pinnacleBossPen` 3,
 //!   `uberBossPen` 8 for the elements).
 //! - **Taken as:** each type's share moved to another
@@ -424,14 +429,48 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (inc.value, more.value)
     };
     let damage_mult = inc * more;
-    // Each type's damage from the enemy.
+    // The enemy's physical damage converted (1720 to 1761; the agent list,
+    // 2026-11-27): each type's `PhysicalDamageConvertTo<Type>`, scaled to a
+    // total of 100 when above; the skill conversions and gains are not
+    // mapped.
+    let mut convert = [0.0; 5];
+    for (j, to) in TYPES.into_iter().enumerate() {
+        let q = Poe1Quantity::EnemyPhysicalConvert(to);
+        if j > 0 && phases::has(calc, Quantity::Poe1(q)) {
+            convert[j] = sum(calc, q, Op::Base, &cx, &mut reasons)?;
+        }
+    }
+    let mut convert_total: f64 = convert.iter().sum();
+    if convert_total > 100.0 {
+        let scale = 100.0 / convert_total;
+        convert_total *= scale;
+        for c in &mut convert {
+            *c *= scale;
+        }
+    }
+    // Each type's damage from the enemy, with what physical converts to it
+    // (1769 to 1777: the remainder, then each converted part times the
+    // damage modifier and the crit effect).
     let mut enemy_damage = [0.0; 5];
     let mut damage_in = 0.0;
+    let mut physical = 0.0;
     for (i, ty) in TYPES.into_iter().enumerate() {
         let name = format!("enemy{}Damage", pob_type(ty));
         let damage = number(&name).unwrap_or_else(|| placeholder(ty));
         damage_in += damage;
-        enemy_damage[i] = damage * damage_mult * crit_effect;
+        if i == 0 {
+            physical = damage;
+            enemy_damage[i] = if convert_total > 0.0 {
+                damage * (1.0 - convert_total / 100.0) * damage_mult * crit_effect
+            } else {
+                damage * damage_mult * crit_effect
+            };
+        } else {
+            enemy_damage[i] = damage * damage_mult * crit_effect;
+            if convert[i] > 0.0 {
+                enemy_damage[i] += physical * (convert[i] / 100.0) * damage_mult * crit_effect;
+            }
+        }
     }
     // Taken as (1802 to 1879): each type's shift table, the same type's
     // share first, then each type's moved shares in PoB's order.

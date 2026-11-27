@@ -645,7 +645,7 @@ fn per_second(
 }
 
 /// Whether `quantity` is one the costs read.
-const fn is_cost(quantity: Quantity) -> bool {
+pub(super) const fn is_cost(quantity: Quantity) -> bool {
     matches!(
         quantity,
         Quantity::Poe1(

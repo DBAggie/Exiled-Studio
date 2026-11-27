@@ -32,7 +32,7 @@ Phase 6 plan (`dev/active/phase-6-mechanics/`), step P6-2b: the main skill's ign
    - `effMult` is the enemy's fire resistance (no penetration) and its damage taken.
 
 All in PoB's order of operations. Not modelled, each a reason through its unmapped stat:
-- ignites that stack, ignite to chaos, other types that can ignite;
+- ignites that stack, ignite to chaos, `FireCannotIgnite` (other types that can ignite are read since the agent list, 2026-11-27: `docs/phase-6/stat-mop-up.md`, "Other damage types that can ignite");
 - Ruthless Blow, Fist of War and warcry ailment effects;
 - the enemy's ailment avoidance;
 - burning ground from ignite.
