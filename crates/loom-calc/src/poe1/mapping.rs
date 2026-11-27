@@ -201,6 +201,20 @@ pub const HIT_ROWS: &[HitRow] = &[
         "active_skill_ignite_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::IGNITE, NONE)],
     ),
+    // The agent list (2026-11-27): Kinetic Blast of Clustering's "Adds #% of
+    // your maximum Mana as Physical Damage to Attacks" (`PhysicalMin` and
+    // `PhysicalMax` BASE, `ModFlag.Attack`, `PercentStat` `Mana` percent 1,
+    // `act_int.lua`): `hit::mana_added`.
+    (
+        "added_physical_damage_to_attacks_equal_to_%_maximum_mana",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AddedDamagePercentOfMana(DamageType::Physical)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
@@ -4369,6 +4383,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Arcane Might (P6-11hk).
                     | Poe1Quantity::SpellDamageToAttacks
                     | Poe1Quantity::ShieldAddedDamage(..)
+                    | Poe1Quantity::AddedDamagePercentOfMana(..)
                     | Poe1Quantity::RepeatDamage(_)
                     | Poe1Quantity::RepeatPerRepeatDamage
                     | Poe1Quantity::RepeatFinalDoubleDamageChance
@@ -10859,6 +10874,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: the stats that add damage from a mana cost stay unmapped
     // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    // The agent list (2026-11-27): Kinetic Blast of Clustering's "Modifiers to number
+    // of Projectiles instead apply to the number of Explosions" (PoB's
+    // `NoAdditionalProjectiles`: `ProjectileCount` 1, CalcOffence.lua 1054).
+    (
+        "kinetic_blast_modifiers_to_number_of_projectiles_instead_apply_to_number_of_clusters",
+        "projectile-count",
+    ),
     ("kinetic_fusillade_subsequent_targeting_radius", "area"),
     // P6-11eg: item properties: the sell price, modification while corrupted,
     // the implicit limit, and a wand base's crafting rule.
@@ -11366,6 +11388,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("projectile_remove_default_spread", "no-slice"),
     ("projectile_spread_radius", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
+    // The agent list (2026-11-27): "Projectiles cannot Split" (`CannotSplit`,
+    // SkillStatMap.lua 1378): the split count's label alone, no slice field.
+    ("projectiles_cannot_split", "no-slice"),
     // Close-out M3: "Projectiles Fork" (`ForkOnce`, `ForkCountMax`): no slice
     // field.
     ("projectiles_fork", "projectile-count"),

@@ -5645,3 +5645,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, from the Smite bleeding build): `lacerate-both-slashes-bleed-templar.xml` (part 2, Blood Stance: bleeding 61.51), `lacerate-one-slash-bleed-templar.xml` (part 1: 44.55), `lacerate-sand-stance-bleed-templar.xml` (Sand Stance: 14.54), `lacerate-changed-stance-quality-templar.xml` (quality 20, stance changed: attack rate 1.0795). Every field equals PoB's but the Q11 floored-millisecond attack rate and what follows from it: `game-truth` DIV-1011 to DIV-1034.
 
 **Evidence** (`local/p6/d27lae` on `b-ig`, against `local/p6/d27dme`): public 0 unexpected, `Complete` 55,867 to 56,223 (the fixtures'), no value moved (the public Lacerate build is Lacerate of Haemorrhage, which keeps its other reasons); corpus 0 unexpected, no value moved.
+
+## Kinetic Blast of Clustering (the agent list, 2026-11-27)
+
+**The stats:** its own "Adds #% of your maximum Mana as Physical Damage to Attacks" (`added_physical_damage_to_attacks_equal_to_%_maximum_mana`, an own stat that kept it unvetted), "Modifiers to number of Projectiles instead apply to the number of Explosions" and "Projectiles cannot Split" (unmapped).
+
+**PoB** (`act_int.lua`, `KineticBlastAltX`): `PhysicalMin` and `PhysicalMax` BASE `ModFlag.Attack` with `PercentStat` `Mana` percent 1, each mod `ceil(value x mana x percent / 100)` (`ModStore.lua` 487 to 530); `NoAdditionalProjectiles` sets the projectile count to 1 (`CalcOffence.lua` 1054), and `CannotSplit` only labels the split count (1069): neither reaches a slice field here.
+
+**The engine:** `Poe1Quantity::AddedDamagePercentOfMana(type)` (a hit row, `Flags::ATTACK`), read by `hit::mana_added` with the maximum mana into both ends of the added damage beside the shield's; the stat in `hit::READ_OWN_STATS`; the two others `NoEffect` rows (`projectile-count`, `no-slice`).
+
+**Fixtures** (original): `kinetic-blast-clustering-mana-witch.xml` (a Carved Wand, +700 maximum mana: TotalDPS 21.08) and `kinetic-blast-clustering-explosions-witch.xml` (part 2). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27kbe` on `b-ig`, against `local/p6/d27lae`): public 0 unexpected, `Complete` 56,223 to 56,399; 6 values moved, all toward PoB, in `kinetic-blast-of-clustering-necromancer.xml` (average damage 3,385 to 43,598, PoB 56,682; life and mana leech within 0.1% of PoB's; partial on its other reasons). Corpus 0 unexpected, no value moved.

@@ -620,6 +620,11 @@ pub enum Poe1Quantity {
     /// `<Type>Min` and `Max` BASE with `PerStat` `ArmourOnWeapon 2`,
     /// `EvasionOnWeapon 2`, div 15): `Base`, the value per step.
     ShieldAddedDamage(crate::quantity::DamageType, crate::quantity::Bound, u8),
+    /// Added damage of a type equal to a percent of maximum mana, both ends
+    /// (PoB's `<Type>Min` and `Max` BASE with `PercentStat` `Mana`; the
+    /// agent list, 2026-11-27: Kinetic Blast of Clustering): `Base`, each
+    /// mod `ceil(value x mana / 100)` ([`hit`]'s `mana_added`).
+    AddedDamagePercentOfMana(crate::quantity::DamageType),
     /// "#% increased Attack Speed per 150 Accuracy Rating" (P6-11hd; PoB's
     /// `Speed` INC with `PerStat` `Accuracy`): `Base`, the value per step,
     /// read by the attack's rate with the hand's accuracy.
@@ -1826,6 +1831,9 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::ShieldAttackDamage(t, b) => {
                 write!(f, "shield-attack-damage.{}.{}", t.name(), b.name())
+            }
+            Self::AddedDamagePercentOfMana(t) => {
+                write!(f, "added-damage-percent-of-mana.{}", t.name())
             }
             Self::ShieldAddedDamage(t, b, mask) => {
                 write!(f, "shield-added-damage.{}.{}.{mask}", t.name(), b.name())

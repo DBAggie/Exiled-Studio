@@ -353,8 +353,14 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 8] = [
+pub const READ_OWN_STATS: [(&str, &str); 9] = [
     ("GroundSlam", "groundslam_damage_to_close_targets_+%_final"),
+    // The agent list (2026-11-27): Kinetic Blast of Clustering's added
+    // physical damage per maximum mana (`mana_added`).
+    (
+        "KineticBlastAltX",
+        "added_physical_damage_to_attacks_equal_to_%_maximum_mana",
+    ),
     (
         "Lacerate",
         "active_skill_bleeding_damage_+%_final_in_blood_stance",
@@ -2716,6 +2722,35 @@ fn shield_weapon_data(
         crit,
     )?;
     Ok(WeaponData { damage, rate, crit })
+}
+
+/// Added damage of type `ty` equal to a percent of maximum mana (the agent
+/// list, 2026-11-27; PoB's `PercentStat` `Mana`, `ModStore.lua` 487 to
+/// 530: each mod `ceil(value x mana x percent / 100)`), both ends; `None`
+/// when no effect gives any.
+fn mana_added(
+    calc: &mut Calc<'_>,
+    ty: DamageType,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::AddedDamagePercentOfMana(ty));
+    if !phases::has(calc, q) {
+        return Ok(None);
+    }
+    let effects = super::repeats::applying(calc, q, Op::Base, cx, reasons);
+    if effects.is_empty() {
+        return Ok(None);
+    }
+    let Some(mana) = calc.field(Field::Mana).and_then(|r| r.value) else {
+        reasons.partial.insert(UnsupportedReason::NotComputed);
+        return Ok(None);
+    };
+    let value: f64 = effects
+        .iter()
+        .map(|e| crate::math::ceil(e.value * mana / 100.0))
+        .sum();
+    Ok(Some(phases::constant(calc, "added-from-mana", value)?))
 }
 
 /// A shield attack's added damage of type `ty` per 15 of the shield's own
@@ -5521,6 +5556,10 @@ fn passes(
                 Some(extra) => {
                     phases::total(calc, &[added, extra], Term::Step("added-with-shield"))?
                 }
+                None => added,
+            };
+            let added = match mana_added(calc, ty, &cx, reasons)? {
+                Some(extra) => phases::total(calc, &[added, extra], Term::Step("added-with-mana"))?,
                 None => added,
             };
             // `source x baseMultiplier + added x damageEffectiveness`.
