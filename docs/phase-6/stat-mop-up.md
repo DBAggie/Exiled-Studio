@@ -5669,3 +5669,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, a Carved Wand): `elemental-hit-spectrum-no-ailment-templar.xml` (average damage 84.67), `elemental-hit-spectrum-ignited-shocked-templar.xml` (101.59), `elemental-hit-spectrum-chilled-frozen-scorched-templar.xml` (110.14). Every field equals PoB's.
 
 **Evidence** (`local/p6/d27ehe` on `b-ig`, against `local/p6/d27kbe`): public 0 unexpected, `Complete` 56,399 to 56,666; 4 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (average damage 301,793 to 1,090,427, PoB 5,548,297; partial on its brittle input and other reasons). Corpus 0 unexpected, no value moved.
+
+## Brittle from the config (the agent list, 2026-11-27)
+
+**The inputs:** `conditionEnemyBrittle` and `conditionBrittleEffect` ("Is the enemy Brittle?", "Effect of Brittle:", `ConfigOptions.lua` 1905 to 1911), each an `unmodelled-config` reason on every field (public: the Elemental Hit build's 96 fields).
+
+**PoB:** the check sets the enemy's `Condition:Brittle` and `BrittleConfig`, the effect its `BrittleVal`; the ailment table (`CalcPerform.lua` 3485 to 3489) gives the enemy `SelfCritChance` BASE `num`, `num = floor(min(max(override, BrittleVal), 6) x 100) / 100` (`ailmentData.Brittle`: max 6, precision 2), which the hit's crit chance adds. The option's `ifFlag` only decides its visibility; `BuildModList` applies it.
+
+**The engine:** `damage_taken` reads both inputs beside scorch and sap (`BRITTLE_INPUT`, `BRITTLE_EFFECT_INPUT`), the crit chance BASE as the curses' `SelfCritChance` is summed (P6-9e); `damage_taken::handles` marks them applied; Elemental Hit's count reads the check. The tests that used brittle as an unmodelled input use `ignoreJewelLimits` and `overrideEmptyRedSockets`, which the engine does not name.
+
+**Fixtures** (original): `ice-nova-enemy-brittle-witch.xml` (effect 4.5: crit chance 12) and `ice-nova-enemy-brittle-capped-witch.xml` (effect 9, capped at 6: 13.5). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27bre` on `b-ig`, against `local/p6/d27ehe`): public 0 unexpected, `Complete` 56,666 to 56,840; 5 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (crit chance 65.0 to 81.0, PoB 100; partial on its other reasons). Corpus 0 unexpected, no value moved.

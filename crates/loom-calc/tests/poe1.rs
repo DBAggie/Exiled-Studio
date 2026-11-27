@@ -1165,7 +1165,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "conditionEnemyBrittle".to_owned(),
+        name: "ignoreJewelLimits".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1896,7 +1896,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     // minions' full life and Feeding Frenzy left in RV-12
     // (`poe1::minion_actor`, `poe1::buffs`; checked below).
     {
-        let input = "conditionEnemyBrittle";
+        let input = "ignoreJewelLimits";
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{input}: not partial");
@@ -1980,7 +1980,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["conditionBrittleEffect", "resistancePenalty"] {
+    for name in ["overrideEmptyRedSockets", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");

@@ -521,6 +521,12 @@ pub const SAPPED_INPUT: &str = "conditionEnemySapped";
 pub const SAP_EFFECT_INPUT: &str = "conditionSapEffect";
 /// See [`SCORCHED_INPUT`].
 pub const CRUSHED_INPUT: &str = "conditionEnemyCrushed";
+/// The check that makes the enemy brittle (the agent list, 2026-11-27).
+pub const BRITTLE_INPUT: &str = "conditionEnemyBrittle";
+/// See [`BRITTLE_INPUT`].
+pub const BRITTLE_EFFECT_INPUT: &str = "conditionBrittleEffect";
+/// Brittle's maximum (`ailmentData`, `Modules/Data.lua` 423; precision 2).
+const BRITTLE_MAX: f64 = 6.0;
 
 /// PoB's `ailmentData` maxima (`Modules/Data.lua` 422, 424; precision 0).
 const SCORCH_MAX: f64 = 30.0;
@@ -598,6 +604,37 @@ fn alt_ailments(set: &ConfigSet, ingest: &mut Ingest<'_>) {
             input: input.to_owned(),
         }),
     }
+    // Brittle (the agent list, 2026-11-27; 3485 to 3489): the enemy's
+    // `SelfCritChance` BASE `num`, which PoB adds to the hit's crit chance
+    // (`CalcOffence.lua`), at precision 2 (`floor(x x 100) / 100`).
+    match last(set, BRITTLE_INPUT, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => {}
+        Some(ConfigValue::Boolean(true)) => match count(set, BRITTLE_EFFECT_INPUT) {
+            Ok(v) => {
+                let v = crate::math::min(crate::math::max(0.0, v.unwrap_or(0.0)), BRITTLE_MAX);
+                let v = crate::math::floor(v * 100.0) / 100.0;
+                if v > 0.0 {
+                    ingest.effect(Effect {
+                        quantity: Quantity::CritChance,
+                        op: Op::Base,
+                        value: v,
+                        conditions: Conditions::none(),
+                        source: Source::Config {
+                            input: BRITTLE_EFFECT_INPUT.to_owned(),
+                        },
+                    });
+                }
+            }
+            Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: BRITTLE_EFFECT_INPUT.to_owned(),
+            }),
+        },
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: BRITTLE_INPUT.to_owned(),
+            });
+        }
+    }
     match last(set, CRUSHED_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => {}
         Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
@@ -628,6 +665,8 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | SAPPED_INPUT
         | SAP_EFFECT_INPUT
         | CRUSHED_INPUT
+        | BRITTLE_INPUT
+        | BRITTLE_EFFECT_INPUT
         | SHOCKED_INPUT
         | SHOCK_EFFECT_INPUT
         | CHILLED_INPUT

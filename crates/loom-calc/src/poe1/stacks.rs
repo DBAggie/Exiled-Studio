@@ -1909,7 +1909,7 @@ pub fn enemy_elemental_ailments(
     }
     for input in [
         super::damage_taken::SCORCHED_INPUT,
-        BRITTLE_INPUT,
+        super::damage_taken::BRITTLE_INPUT,
         super::damage_taken::SAPPED_INPUT,
     ] {
         match last(set, input, ConfigInputKind::Input) {
@@ -1923,10 +1923,6 @@ pub fn enemy_elemental_ailments(
     }
     apply(ingest, &effects, n, None);
 }
-
-/// The config's check of the enemy's brittle (`ConfigOptions.lua`; its
-/// effect is not modelled, a reason of its own).
-const BRITTLE_INPUT: &str = "conditionEnemyBrittle";
 
 /// Each effect per stack as its target times `count`, with its source (or
 /// `source` when given).
