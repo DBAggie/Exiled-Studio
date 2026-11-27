@@ -6063,6 +6063,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::STATIONARY,
         )],
     ),
+    // The agent list (2026-11-28): "Hits with this Weapon have Culling
+    // Strike against Bleeding Enemies" (PoB: `CullPercent` MAX 10 with the
+    // enemy's `Bleeding`, every hit's; the weapon's hits in the game, the same
+    // with one weapon).
+    (
+        "local_culling_strike_vs_bleeding_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CullingStrike),
+            Op::Flag,
+            NONE,
+            conditions::ENEMY_BLEEDING,
+        )],
+    ),
     // Close-out M1: a flask's "#% increased Critical Strike Chance against
     // Enemies on Consecrated Ground during Effect" (`CritChance` INC, the
     // enemy's `OnConsecratedGround`; `poe1::flasks::FLASK_ROWS`).
@@ -15914,6 +15927,16 @@ mod tests {
                     Op::Increased,
                     NONE,
                     conditions::ENEMY_TAUNTED_BY_WARCRY,
+                )],
+            ),
+            // The agent list (2026-11-28).
+            (
+                "local_culling_strike_vs_bleeding_enemies",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::CullingStrike),
+                    Op::Flag,
+                    NONE,
+                    conditions::ENEMY_BLEEDING,
                 )],
             ),
             // The agent list (2026-11-27).

@@ -5865,3 +5865,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Smite poison build): the line with the frenzy charges used (3, the maximum: poison) and with 2 (no poison). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1186 to DIV-1197.
 
 **Evidence** (`local/p6/d27afe` on `b-ig`, against `local/p6/d27poe`): public 0 unexpected, `Complete` 60,261 to 60,438 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Culling Strike against bleeding enemies (the agent list, 2026-11-28)
+
+**The stat:** a weapon's "Hits with this Weapon have Culling Strike against Bleeding Enemies" (`local_culling_strike_vs_bleeding_enemies`), unmapped in one public build.
+
+**PoB** (its parser): `CullPercent` MAX 10 with the enemy's `Bleeding` (an `ActorCondition`), every hit's; the line is the weapon's in the game, the same with one weapon.
+
+**The engine:** a state row on `conditions::ENEMY_BLEEDING` (the config's check) setting `Poe1Quantity::CullingStrike`, which the combined DPS's cull multiplier reads.
+
+**Fixtures** (original): Smite with a Rusted Hatchet carrying the line, the enemy bleeding (the cull: combined DPS times 100 / 90) and not (nothing). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1198 to DIV-1209.
+
+**Evidence** (`local/p6/d28cbe` on `b-ig`, against `local/p6/d27afe`): public 0 unexpected, `Complete` 60,438 to 60,616 (the fixtures'); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.
