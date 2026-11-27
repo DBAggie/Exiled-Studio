@@ -61,6 +61,16 @@
       "old": "Skills that would Summon a Totem have #% chance to Summon two Totems instead",
       "current": "Skills that Summon a Totem have #% chance to Summon two Totems instead of one",
       "why": "Wording only; the chance and its outcome are the same."
+    },
+    {
+      "old": "All Damage can Ignite",
+      "current": "All Damage with Hits can Ignite",
+      "why": "Accepted by the maintainer 2026-11-26 (rejected before as a narrower scope): the current stat all_damage_can_ignite keeps the old wording in its ID; PoB v2.67.2 parses both to the same four flags (ModParser.lua 2794 to 2805); ignite is inflicted by hits only, so \"with Hits\" changes no mechanic."
+    },
+    {
+      "old": "All Damage can Shock",
+      "current": "All Damage with Hits can Shock",
+      "why": "Accepted by the maintainer 2026-11-26, as the ignite pair: PoB parses both to the same four flags (ModParser.lua 2812 to 2823); shock is inflicted by hits only."
     }
   ],
   "rejected": [
@@ -103,16 +113,6 @@
       "old": "Grace has #% increased Aura Effect while you have no Frenzy Charges",
       "current": "Grace has #% increased Aura Effect while at Minimum Frenzy Charges",
       "why": "Another condition, as above."
-    },
-    {
-      "old": "All Damage can Ignite",
-      "current": "All Damage with Hits can Ignite",
-      "why": "A narrower scope (hits only); may be another stat."
-    },
-    {
-      "old": "All Damage can Shock",
-      "current": "All Damage with Hits can Shock",
-      "why": "As above."
     },
     {
       "old": "#% of Leech is Instant per Equipped Claw",

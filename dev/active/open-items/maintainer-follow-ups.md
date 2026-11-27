@@ -91,7 +91,7 @@ Not reached in the session of 2026-11-24 either (agent work, no decision needed;
 ## From the four parallel agents and their review (2026-11-26, PR #188)
 
 - **One tree rewording (S9): approved 2026-11-26.** "#% to Global Critical Strike Multiplier while wielding a Staff" read as "#% to Critical Strike Multiplier while wielding a Staff" (Counterweight's staff nodes; `tools/tree/rewordings.json`, `docs/tree/tree-packs.md`).
-- **The ignite and shock tree rewordings (S9):** "All Damage can Ignite" and "All Damage can Shock" were rejected by an earlier review; PoB parses both wordings alike and the current stat ID keeps the old wording. In the corpus, node 53123's unread line blocks 421 fields in 5 builds. Overturning the review is yours.
+- **The ignite and shock tree rewordings (S9): accepted 2026-11-26** (`tools/tree/rewordings.json`, `docs/tree/tree-packs.md`). Ship the rebuilt tree packs (the local pack `b-ig` shows them) in the next data run; their effect on ignite needs the engine's "other types that can ignite" (agent list, S1).
 - **Signless "+#%" item lines (S9): decided 2026-11-26, a tolerance (ADR-015 Amendment 4, `sign-added`), built the same day** (`docs/ui/b2-data/item-evidence.md`, "Signs the game's description forces").
 - **The next data run's tree packs (S9):** rebuilt against the current bundle they read about 20 more nodes per version (the local packs `b-s9r` and `b-s9`).
 - **Keystones not in pinned PoB (S8, game truth):** Corrupted Defences, Soul Tether, Quiet Might, Nature's Presence: an in-game check each.
