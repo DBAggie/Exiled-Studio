@@ -3361,6 +3361,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "spell_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
     ),
+    // The agent list (2026-11-27): "#% increased Spell Damage per 100 Player
+    // Maximum Life" (`Damage` INC, `ModFlag.Spell`, `PerStat` `Life` `div`
+    // 100): the computed term (`hit::DAMAGE_PER_STAT`).
+    (
+        "spell_damage_+%_per_100_max_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamagePer100Life),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11bw: "#% increased Spell Damage per 100 Maximum Mana, up to 40%"
     // (P6-11cw: `hit::DAMAGE_PER_STAT`, with the attack damage per 450
     // armour, `attack_damage_+%_per_450_physical_damage_reduction_rating`)

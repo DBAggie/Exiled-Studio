@@ -175,6 +175,10 @@ pub enum Poe1Quantity {
     /// PoB's `Damage` INC with `ModFlag.Dot`, `PerStat` `Life` `div` 100):
     /// `Base`, read by [`hit`] from the life field for damage over time.
     DotDamagePer100Life,
+    /// "#% increased Spell Damage per 100 Player Maximum Life" (`Damage`
+    /// INC, `ModFlag.Spell`, `PerStat` `Life` `div` 100; the agent list):
+    /// `Base`, read by `hit`'s per-stat terms.
+    SpellDamagePer100Life,
     /// "Gain Accuracy Rating equal to twice your Strength" (P6-11gm; PoB's
     /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
     /// `Flag`, read by [`hit`]'s accuracy.
@@ -1688,6 +1692,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::KitavaTriggerChance => f.write_str("kitava-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
             Self::DotDamagePer100Life => f.write_str("dot-damage-per-100-life"),
+            Self::SpellDamagePer100Life => f.write_str("spell-damage-per-100-life"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
             Self::AccuracyFromIntelligence => f.write_str("accuracy-from-intelligence"),
             Self::PerStaffSocket(life) => f.write_str(if *life {

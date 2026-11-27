@@ -5793,3 +5793,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Burning Arrow with Fork (level 20, 20% quality); Smite with added chaos damage and 10% chaos penetration; Smite with 10% elemental penetration. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1151 to DIV-1167.
 
 **Evidence** (`local/p6/d27fke` on `b-ig`, against `local/p6/d27voe`): public 0 unexpected, `Complete` 59,294 to 59,559 (the fixtures'); 9 values moved, all toward PoB (`kinetic-blast-of-clustering-necromancer.xml`'s AverageDamage 43,598 to 52,270, PoB 56,682, its DPS fields and leech; `Dual Wield Cospris CoC.xml`'s AverageDamage and DPS). Corpus 0 unexpected, no value moved.
+
+## Spell damage per 100 maximum life (the agent list, 2026-11-27)
+
+**The stat:** "#% increased Spell Damage per 100 Player Maximum Life" (`spell_damage_+%_per_100_max_life`), unmapped in one public build.
+
+**PoB** (its parser, checked with `tools/oracle/data/pob_parse_lines.lua`): `Damage` INC with `ModFlag.Spell` and `PerStat` `Life` `div` 100 of the player.
+
+**The engine:** a `hit::DAMAGE_PER_STAT` term, as the damage over time per 100 life before it: `Poe1Quantity::SpellDamagePer100Life`, the spell context, the life field, `floor(life / 100)`. A triage of the remaining unmapped stats with PoB's parser (`local/p6/triage_unmapped.py`) lists the lines PoB applies, for the next steps.
+
+**Fixtures** (original): Ice Nova with 3% per 100 life at 1,125 life (11 steps) and at 1,200 (12). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27sle` on `b-ig`, against `local/p6/d27fke`): public 0 unexpected, `Complete` 59,559 to 59,733 (the fixtures'); 1 value moved, toward PoB (`rf-chieftain-life-stack.xml`'s FullDPS). Corpus 0 unexpected, no value moved.

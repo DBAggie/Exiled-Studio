@@ -4493,7 +4493,7 @@ pub(super) fn damage_modifiers(
 type PerStat = (Poe1Quantity, Flags, Field, f64, Option<f64>);
 
 /// The damage increases per stat the hit reads (P6-11bw, P6-11cw).
-const DAMAGE_PER_STAT: [PerStat; 4] = [
+const DAMAGE_PER_STAT: [PerStat; 5] = [
     // "#% increased Spell Damage per 100 Maximum Mana, up to 40%".
     (
         Poe1Quantity::SpellDamagePer100Mana,
@@ -4526,6 +4526,15 @@ const DAMAGE_PER_STAT: [PerStat; 4] = [
     (
         Poe1Quantity::DotDamagePer100Life,
         Flags::DOT,
+        Field::Life,
+        100.0,
+        None,
+    ),
+    // The agent list (2026-11-27): "#% increased Spell Damage per 100
+    // Player Maximum Life" (`ModFlag.Spell`, `PerStat` `Life` `div` 100).
+    (
+        Poe1Quantity::SpellDamagePer100Life,
+        Flags::SPELL,
         Field::Life,
         100.0,
         None,
