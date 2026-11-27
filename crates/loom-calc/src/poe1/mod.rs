@@ -1124,6 +1124,11 @@ pub enum Poe1Quantity {
     /// P6-11hy, Emperor's Vigilance): a `Flag`; every type then bypasses
     /// energy shield as chaos does, read by [`enemy_hit`] and [`ehp`].
     UnblockedDamageBypassesEs,
+    /// "Chaos Damage taken does not bypass Energy Shield" (PoB's
+    /// `ChaosNotBypassEnergyShield`, `CalcDefence.lua` 2290 to 2295; the
+    /// agent list): a `Flag`; chaos's bypass is then 0, as every other
+    /// type's, read by [`enemy_hit`], [`ehp`], and [`degen`].
+    ChaosNotBypassEs,
     /// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry,
     /// up to a maximum of 100%" (P6-11hz): `Base`, which `collect` makes
     /// `Armour` INC per 5 warcry power, at most 100 in all, while
@@ -1918,6 +1923,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
+            Self::ChaosNotBypassEs => f.write_str("chaos-not-bypass-es"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
             Self::TailwindEffect => f.write_str("tailwind-effect"),
             Self::MaxElementalResistIfReservedLifeAndMana => {

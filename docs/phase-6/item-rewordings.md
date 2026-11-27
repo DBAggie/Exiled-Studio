@@ -116,5 +116,5 @@ The further lines are item lines as a build file holds them (their `{...}` prefi
 ## Left open
 
 - The lines PoB applies that no accepted pair reads (the report's `unread` with PoB's mods): two-line descriptions written on one line, Sacred Wisps' case across two lines, the Impossible Escape and Intuitive Leap lines, Hungry Loop's lines, the old Trigger craft without its cost line. Resolver work (S9), not rewordings.
-- `chaos_damage_does_not_bypass_energy_shield`: unmapped in the calculation (a stat mop-up item).
+- `chaos_damage_does_not_bypass_energy_shield`: mapped since 2026-11-27 (`docs/phase-6/stat-mop-up.md`, "Chaos damage that does not bypass energy shield").
 - A table pair for a new league's wording change: added by the same check.

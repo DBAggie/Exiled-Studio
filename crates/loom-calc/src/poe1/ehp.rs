@@ -114,6 +114,9 @@ pub(super) struct Character {
     /// Every type bypasses energy shield (PoB's `UnblockedDamageDoesBypassES`;
     /// P6-11hy), as chaos does.
     pub(super) all_bypass: bool,
+    /// Chaos does not bypass energy shield (PoB's
+    /// `ChaosNotBypassEnergyShield`; the agent list): [`bypasses`].
+    pub(super) chaos_not_bypass: bool,
     /// Summon Stone Golem of Safeguarding's share of each hit, percent, and
     /// its life (PoB's `alliesTakenBeforeYou.stoneGolem`; P6-11ar).
     pub(super) golem_rate: f64,
@@ -169,6 +172,15 @@ impl Gains {
 /// One run of `numberOfHitsToDie`'s state shared with its recursive call.
 struct Run {
     iterations: u32,
+}
+
+/// Whether damage of type `ty` bypasses energy shield (`CalcDefence.lua`
+/// 2279 to 2299): every type with `all_bypass` (PoB's
+/// `UnblockedDamageDoesBypassES`), else chaos unless `chaos_not_bypass`
+/// (`ChaosNotBypassEnergyShield`; the agent list). A bypass between 0 and
+/// 100 has no modelled source.
+pub(super) fn bypasses(ty: DamageType, all_bypass: bool, chaos_not_bypass: bool) -> bool {
+    all_bypass || (ty == DamageType::Chaos && !chaos_not_bypass)
 }
 
 /// PoB's `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to
@@ -245,7 +257,7 @@ fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pool
             mana
         };
         let with_mana = life_pool + mom_pool;
-        let bypasses = ty == DamageType::Chaos || ch.all_bypass;
+        let bypasses = bypasses(ty, ch.all_bypass, ch.chaos_not_bypass);
         if ch.eb && !bypasses {
             // `CalcDefence.lua` 254 to 256, with no bypass.
             es_pools[i] = crate::math::floor(
@@ -268,7 +280,7 @@ fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pool
         let Some(mut remainder) = damage[i] else {
             continue;
         };
-        let bypass = if ty == DamageType::Chaos || ch.all_bypass {
+        let bypass = if bypasses(ty, ch.all_bypass, ch.chaos_not_bypass) {
             1.0
         } else {
             0.0
@@ -753,6 +765,7 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
@@ -791,6 +804,7 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
@@ -835,6 +849,7 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
@@ -873,6 +888,7 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 3.75,
             golem: 100.0,
             prevented: 0.0,

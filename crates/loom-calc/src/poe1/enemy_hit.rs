@@ -873,6 +873,14 @@ fn maximum_hit(
         pool_reasons.extend(&q.reasons);
         q.value != 0.0
     };
+    // "Chaos Damage taken does not bypass Energy Shield" (the agent list;
+    // `CalcDefence.lua` 2290 to 2295).
+    let chaos_not_bypass = phases::has(calc, Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs)) && {
+        let (store, graph) = calc.parts();
+        let q = store.flag(graph, Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs), &cx)?;
+        pool_reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
     let armour_value = value(calc, Field::Armour).unwrap_or(0.0);
     let low_es = super::conditions::check(set, LOW_ES_INPUT) == Some(true);
     let capping = (armour_cap && armour_value < es) || low_es;
@@ -1057,14 +1065,16 @@ fn maximum_hit(
             mom,
             eb,
             all_bypass,
+            chaos_not_bypass,
         },
         &total_reasons,
     )?;
     let mut pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
-        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291),
-        // and every type with Emperor's Vigilance (P6-11hy).
-        let bypass = if ty == DamageType::Chaos || all_bypass {
+        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291)
+        // unless "does not bypass" (the agent list), and every type with
+        // Emperor's Vigilance (P6-11hy).
+        let bypass = if super::ehp::bypasses(ty, all_bypass, chaos_not_bypass) {
             100.0
         } else {
             0.0
@@ -1134,6 +1144,7 @@ fn maximum_hit(
         recoup,
         eb,
         all_bypass,
+        chaos_not_bypass,
         golem_rate,
         golem,
         prevented,
@@ -1368,6 +1379,7 @@ fn maximum_hit(
             recoup,
             eb,
             all_bypass,
+            chaos_not_bypass,
             golem_rate,
             golem,
             prevented,
@@ -1572,6 +1584,8 @@ struct TotalPools {
     eb: bool,
     /// Every type bypasses energy shield (`UnblockedDamageDoesBypassES`).
     all_bypass: bool,
+    /// Chaos does not bypass energy shield (`ChaosNotBypassEnergyShield`).
+    chaos_not_bypass: bool,
 }
 
 /// Each type's total pool and its effective health pool against damage
@@ -1588,7 +1602,7 @@ struct TotalPools {
 /// - `<Type>DotEHP = <Type>TotalPool / <Type>TakenDotMult`.
 fn total_pools(calc: &mut Calc<'_>, p: TotalPools, reasons: &Reasons) -> Result<(), CalcError> {
     for (i, ty) in TYPES.into_iter().enumerate() {
-        let bypasses = ty == DamageType::Chaos || p.all_bypass;
+        let bypasses = super::ehp::bypasses(ty, p.all_bypass, p.chaos_not_bypass);
         let with_mana = mom_hit_pool(
             p.recoverable,
             p.mom[i],

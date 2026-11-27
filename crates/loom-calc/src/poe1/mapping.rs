@@ -7542,6 +7542,18 @@ pub const ROWS: &[Row] = &[
         "chance_to_evade_attacks_%",
         &[(Quantity::Poe1(Poe1Quantity::EvadeChance), Op::Base, 1.0)],
     ),
+    // "Chaos Damage taken does not bypass Energy Shield" (the agent list;
+    // `ChaosNotBypassEnergyShield` FLAG, `ModParser.lua` 4671,
+    // `CalcDefence.lua` 2290 to 2295): chaos's bypass is 0, read by
+    // `enemy_hit`, `ehp`, and `degen`.
+    (
+        "chaos_damage_does_not_bypass_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b part 12: "+# Chaos Damage taken" (`ChaosDamageTaken` BASE).
     (
         "chaos_damage_taken_+",

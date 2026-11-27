@@ -211,6 +211,8 @@ fn net_regen(
         &cx,
         &mut reasons,
     )?;
+    // "Chaos Damage taken does not bypass Energy Shield" (the agent list).
+    let chaos_not_bypass = flag(calc, Poe1Quantity::ChaosNotBypassEs, &cx, &mut reasons)?;
     // `<Pool>RegenRecovery` with no degeneration or recovery of the pool
     // itself (1293): its regeneration.
     let mut life_degen = 0.0;
@@ -228,7 +230,7 @@ fn net_regen(
         )?
         .min(100.0 - shared);
         let from_mana = own + shared;
-        let bypass = if ty == DamageType::Chaos || all_bypass {
+        let bypass = if super::ehp::bypasses(ty, all_bypass, chaos_not_bypass) {
             100.0
         } else {
             0.0
