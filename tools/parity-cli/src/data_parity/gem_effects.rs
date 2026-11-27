@@ -104,6 +104,9 @@ const DISPLAY_KEYS: &[&str] = &[
     // `SoulGainPreventionDuration` only (`CalcOffence.lua` 1577), which no
     // slice field reads.
     "skillEffectAppliesToSoulGainPrevention",
+    // Open items S2: Vaal Smite's own hits cannot be evaded, read for the
+    // skill being calculated only (`CalcOffence.lua` 2162).
+    "cannotBeEvaded",
     // Righteous Fire's own burn (close-out).
     "RFManaMultiplier",
     "repeatFrequency",

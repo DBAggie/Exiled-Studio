@@ -2935,6 +2935,42 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    // Open items S2: Vaal Smite's aura (`act_str.lua` 10517 to 10575): Smite's
+    // aura's stats without its condition, `LightningMin` and `LightningMax`
+    // BASE and `EnemyShockChance`; it replaces Smite's aura ([`apply`]).
+    (
+        "VaalSmite",
+        Kind::Buff {
+            name: VAAL_SMITE_AURA,
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_chance_to_shock_%_from_skill",
+                    BuffStat::NoSlice("ailment-chance"),
+                ),
+                (
+                    "maximum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "minimum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
+        },
+    ),
     ("VaalSummonSkeletons", Kind::Inert),
     (
         "Vitality",
@@ -4947,6 +4983,27 @@ fn apply(
     // Guards: PoB's slots (module docs).
     let kept = guard_slots(&guards, ingest);
     merged.retain(|(name, ..), _| !guards.contains_key(name) || kept.contains(name));
+    // Vaal Smite's aura replaces Smite's (open items S2): every row of
+    // Smite's aura has `Condition` `AffectedByVaalSmite` negated
+    // (`act_str.lua` 10325 to 10334), which PoB sets while Vaal Smite's
+    // aura applies (`CalcPerform.lua` 2417 to 2419).
+    if let Some((_, row)) = merged
+        .iter()
+        .find(|((name, ..), _)| *name == VAAL_SMITE_AURA)
+    {
+        let vaal = row.1.clone();
+        merged.retain(|(name, ..), _| *name != SMITE_AURA);
+        // Smite as the main skill gives its aura through the hit's mapping
+        // (P3-8l), which that condition would turn off: not modelled.
+        let main_is_smite = skill::main_skill(input.build, input.data, &GemLevels::none())
+            .is_ok_and(|m| m.effect().id == "Smite");
+        if main_is_smite {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: vaal,
+                what: "vaal-smite-over-smite",
+            });
+        }
+    }
     // Lightning Golem's Wrath (module docs): merged as an aura of its name.
     wrath(
         input,
@@ -6423,6 +6480,11 @@ const AURA_NOT_ON_SELF_SUPPORTS: &[&str] = &["SupportGenerosity"];
 
 /// Bonechill Support's granted effect (P6-11fv).
 const BONECHILL_SUPPORT: &str = "SupportBonechill";
+
+/// Smite's aura's buff name.
+const SMITE_AURA: &str = "Smite";
+/// Vaal Smite's aura's buff name, which replaces Smite's ([`apply`]).
+const VAAL_SMITE_AURA: &str = "Vaal Smite";
 
 /// The stats that give a skill's own `EnemyShockEffect` INC
 /// (`SkillStatMap.lua` 1091 to 1107; open items S2).

@@ -477,3 +477,29 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
   - `forged-frostbearer-spectre-necromancer.xml`'s full DPS, 7.79 to 8.84 million (PoB 9.13 million).
 - **Corpus:** 0 unexpected; one value moved, now equal to PoB's (a build's unreserved mana, 221 to 5, PoB 5); one other document lost the reason in its reasons only.
 - **Tests:** `gems`' tests (the tables sorted), the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Vaal Smite's aura (open items S2, 2026-11-26)
+
+**PoB v2.67.2:**
+- **Vaal Smite's aura** (`act_str.lua` 10517 to 10575) has Smite's aura's three stats without their condition: `LightningMin` and `LightningMax` BASE, and `EnemyShockChance`.
+- **Smite's aura rows** each have `Condition` `AffectedByVaalSmite` negated (10325 to 10334). PoB sets that condition while Vaal Smite's aura applies (`CalcPerform.lua` 2417 to 2419), so Vaal Smite's aura replaces Smite's.
+- **The gem has two effects,** Vaal Smite and Smite, each applied by its `enableGlobal<n>`.
+- Its `global_always_hit` (`cannotBeEvaded`) is the skill's own (`CalcOffence.lua` 2162).
+
+**The engine:**
+- `gems::SKILLS` has `VaalSmite` (`Kind::Buff`, an aura, Smite's rows; the shock chance no slice field reads, as Smite's).
+- `gems::apply` drops Smite's aura when Vaal Smite's is collected.
+- Smite as the main skill gives its aura through the hit's mapping (P3-8l), which the condition would turn off: with Vaal Smite's aura up, that is an `unmodelled-skill` `vaal-smite-over-smite` reason.
+- `data-parity`'s `gem_effects`: `cannotBeEvaded` is a skill-data key that does not block.
+
+**Fixtures** (original, made by `local/p6/s2-fx3.py`; each run three times by PoB, identical), Ice Nova (level 20) with Vaal Smite (level 20) in another group:
+- `ice-nova-vaal-smite-aura-templar.xml`: only the Vaal effect's global on; average damage 952.68;
+- `ice-nova-vaal-smite-over-smite-templar.xml`: both on, the same output as the first (PoB's hash too);
+- `ice-nova-vaal-smite-smite-only-templar.xml`: only Smite's; 877.98.
+- Every compared field equals PoB's; 261 targets.
+
+**Evidence** (`local/p6/s2-e3` on `b-pb`, against `local/p6/s2-e2`):
+- **Public:** 0 unexpected; `Complete` 49,719 to 49,980 (the fixtures). No other value moved: `flicker-strike-berserker.xml`'s Vaal Smite has its Vaal effect's global off (it loses the `unmodelled-gem` reason; its other reasons stay).
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `gems`' tests, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
