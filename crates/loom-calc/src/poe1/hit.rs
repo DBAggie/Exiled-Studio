@@ -353,7 +353,14 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 20] = [
+pub const READ_OWN_STATS: [(&str, &str); 22] = [
+    // The agent list (2026-11-28): Boneshatter's more damage per Trauma
+    // ([`trauma`]).
+    ("Boneshatter", "trauma_strike_damage_+%_final_per_trauma"),
+    (
+        "BoneshatterAltX",
+        "trauma_strike_damage_+%_final_per_trauma_capped",
+    ),
     // The agent list (2026-11-28): Winter Orb's fire speed ([`winter_orb`]).
     (
         "WinterOrb",
@@ -690,7 +697,7 @@ pub const TRIGGER_OWN_STATS: [&str; 2] = [
 ///   for the damage over time and the mirages' and full DPS's count of it
 ///   (`CalcOffence.lua` 5737, 6117; `Calcs.lua` 271), never the hit; the
 ///   DoT vets itself ([`super::dot::pob_dot_vetted`]).
-pub const READ_BASE_FLAGS: [&str; 3] = ["CannotSplit", "DotCanStack", "OneShotProj"];
+pub const READ_BASE_FLAGS: [&str; 4] = ["CannotSplit", "DotCanStack", "HasTrauma", "OneShotProj"];
 
 /// Base mods the engine reads by their name, untagged or not: (skill, mod
 /// name). Elemental Hit of the Spectrum's
@@ -2216,13 +2223,15 @@ fn hand_rate(
 }
 
 /// One hand's pass (module docs, steps 4 to 9) after its rate:
-/// `exert_uptime` is Intimidating Cry's uptime ([`exerted_attacks`]).
+/// `exert_uptime` is Intimidating Cry's uptime ([`exerted_attacks`]);
+/// `single_hand`: the single-hand path ([`trauma`]).
 fn hand_hit(
     calc: &mut Calc<'_>,
     attack: &AttackSkill<'_>,
     rate: HandRate,
     exert_uptime: Option<Valued>,
     enemy: &Enemy,
+    single_hand: bool,
 ) -> Result<HandHit, CalcError> {
     let input = *calc.input();
     let HandRate {
@@ -2249,6 +2258,11 @@ fn hand_hit(
         }
     };
 
+    // Boneshatter's Trauma (the agent list, 2026-11-28): after the chance to
+    // hit, before the damage.
+    if single_hand {
+        trauma(calc, attack, speed.0, hit_chance, &mut hit_reasons)?;
+    }
     let (crit, mut crit_reasons) = crit_chance(calc, weapon.crit, Some(hit_chance), &cx)?;
     crit_reasons.extend(&unvetted);
     let (multiplier, mut multiplier_reasons) = crit_multiplier(calc, input.data, &cx)?;
@@ -2449,7 +2463,7 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
             exerted_attacks(calc, attack, flags, main_rate.speed.0, &mut unvetted)?
         };
         main_rate.unvetted.extend(&unvetted);
-        let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
+        let main = hand_hit(calc, attack, main_rate, exert, &enemy, true)?;
         let HandHit {
             hit_chance,
             crit,
@@ -2549,8 +2563,18 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     };
     main_rate.unvetted.extend(&unvetted);
     off_rate.unvetted.extend(&unvetted);
-    let main = hand_hit(calc, attack, main_rate, exert, &enemy)?;
-    let off = hand_hit(calc, attack, off_rate, exert, &enemy)?;
+    if super::pob_skill::skill(id)
+        .is_some_and(|p| p.base_mods.iter().any(|m| m.name == "HasTrauma"))
+    {
+        // A dual wielder's Trauma (PoB halves it and keeps the first pass's):
+        // a reason.
+        unvetted.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "dual-wield-trauma",
+        });
+    }
+    let main = hand_hit(calc, attack, main_rate, exert, &enemy, false)?;
+    let off = hand_hit(calc, attack, off_rate, exert, &enemy, false)?;
     // The hit rate after the hands' speeds are combined (`CalcOffence.lua`
     // 2474 to 2476): the beams' when set, else the combined speed.
     let rate = hit_rate(calc, beam_rate, &unvetted, speed);
@@ -3156,6 +3180,119 @@ fn ice_spear(
         }
     }
     crate::math::floor(base * more)
+}
+
+/// PoB's config input of the Trauma stacks (`ConfigOptions.lua` 704).
+pub const TRAUMA_INPUT: &str = "traumaStacks";
+/// Boneshatter's more damage per Trauma, and Complex Trauma's capped one.
+const TRAUMA_DAMAGE_STATS: [&str; 2] = [
+    "trauma_strike_damage_+%_final_per_trauma",
+    "trauma_strike_damage_+%_final_per_trauma_capped",
+];
+
+/// Boneshatter's Trauma (the agent list, 2026-11-28; `CalcOffence.lua` 2248
+/// to 2322, `act_str.lua`): for a skill with PoB's `HasTrauma`, the
+/// sustainable stacks `HitChance / 100 x speed x duration`, `duration` the
+/// gem's `boneshatter_trauma_base_duration_ms` over 1000 times
+/// `calcLib.mod(Duration)` (the character's and the gems' increases, the
+/// gems' more), unless the config's [`TRAUMA_INPUT`] sets them; then
+/// `Damage` MORE of the per-Trauma stat times `floor(stacks)` (PoB's
+/// `Multiplier` tag), capped at `lose_all_trauma_at_X_trauma` for Complex
+/// Trauma (`limitVar`). The rate is the hand's (PoB's is its unrounded
+/// `1 / baseTime x more x (1 + inc / 100)`; the game's is the floored
+/// milliseconds, Q11). Not modelled, each a reason: attack speed per Trauma
+/// (`SpeedPerTrauma`), extra Trauma per attack (`ExtraTrauma`), repeats,
+/// and a dual wielder (the caller).
+fn trauma(
+    calc: &mut Calc<'_>,
+    attack: &AttackSkill<'_>,
+    speed: Valued,
+    hit_chance: Valued,
+    reasons: &mut Reasons,
+) -> Result<(), CalcError> {
+    let id = attack.skill.effect().id.as_str();
+    if !super::pob_skill::skill(id)
+        .is_some_and(|p| p.base_mods.iter().any(|m| m.name == "HasTrauma"))
+    {
+        return Ok(());
+    }
+    let repeats: f64 = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == Quantity::Poe1(Poe1Quantity::Repeats) && e.op == Op::Base)
+        .map(|e| e.value)
+        .sum();
+    if repeats > 1.0 {
+        reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+            source: attack.source(),
+            what: "trauma-repeats",
+        });
+    }
+    let data = calc.input().data;
+    let instances = skill::instances(&attack.skill, data);
+    #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+    let stat = |want: &str| -> f64 {
+        instances
+            .iter()
+            .flat_map(|i| i.stats.iter())
+            .filter(|(s, _)| s == want)
+            .map(|(_, v)| *v as f64)
+            .sum::<f64>()
+    };
+    let per = TRAUMA_DAMAGE_STATS.iter().map(|s| stat(s)).sum::<f64>();
+    if per == 0.0 {
+        return Ok(());
+    }
+    let configured = collect::active_config(calc.input().build)
+        .and_then(|set| {
+            super::config::last_input(set, TRAUMA_INPUT, loom_domain::ConfigInputKind::Input)
+        })
+        .and_then(|v| match v {
+            loom_domain::ConfigValue::Number(n) => Some(n.value().0),
+            _ => None,
+        })
+        .unwrap_or(0.0);
+    let stacks = if configured != 0.0 {
+        configured
+    } else {
+        // `calcLib.mod(skillModList, skillCfg, "Duration")`.
+        let cx = calc.context(Flags::NONE);
+        let timing = Quantity::Poe1(Poe1Quantity::SkillTiming(
+            super::skill_modifiers::SkillTiming::Duration,
+        ));
+        let character = sum_in(
+            calc,
+            timing,
+            Op::Increased,
+            &cx,
+            Term::Step("trauma-duration-inc"),
+            reasons,
+        )?;
+        let inc = character.value + stat("skill_effect_duration_+%");
+        let more = super::gems::DURATION_MORE_STATS
+            .iter()
+            .fold(1.0, |m, s| m * (1.0 + stat(s) / 100.0));
+        let duration = stat("boneshatter_trauma_base_duration_ms") / 1000.0
+            * crate::math::max((1.0 + inc / 100.0) * more, 0.0);
+        hit_chance.value / 100.0 * speed.value * duration
+    };
+    let limit = stat("lose_all_trauma_at_X_trauma");
+    let mut mult = crate::math::floor(stacks + 0.0001);
+    if limit > 0.0 && stat("trauma_strike_damage_+%_final_per_trauma_capped") != 0.0 {
+        mult = crate::math::min(mult, limit);
+    }
+    let value = per * mult;
+    if value != 0.0 {
+        calc.add_effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value,
+            conditions: crate::condition::Conditions::none(),
+            source: attack.source(),
+        });
+    }
+    Ok(())
 }
 
 /// PoB's config input of the seconds channelled (`ConfigOptions.lua` 1263:

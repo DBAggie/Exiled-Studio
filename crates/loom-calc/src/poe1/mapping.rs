@@ -10839,6 +10839,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "perforate-spikes",
     ),
     ("blood_spears_base_number_of_spears", "perforate-spikes"),
+    // The agent list (2026-11-28): Boneshatter's Trauma, read by
+    // `hit::trauma` (its self damage reaches no slice field).
+    ("boneshatter_trauma_base_duration_ms", "trauma"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("boots_implicit_ground_brittle_duration_ms", "no-slice"),
@@ -11733,6 +11736,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
     ),
+    ("lose_all_trauma_at_X_trauma", "trauma"),
     ("magic_utility_flasks_cannot_be_removed", "flask"),
     // Mageblood (the agent list): `poe1::flasks` reads the three lines
     // from the items (which flasks apply), so they have no row here.
@@ -12321,6 +12325,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
+    ("trauma_strike_damage_+%_final_per_trauma", "trauma"),
+    ("trauma_strike_damage_+%_final_per_trauma_capped", "trauma"),
+    ("trauma_strike_self_damage_per_trauma", "no-slice"),
     // Open items S8: "Warcries cannot Exert Travel Skills": PoB leaves the
     // line unparsed (ModCache: no mods), and exerted travel skills reach no
     // slice field (the guard in `poe1::gems` names it).

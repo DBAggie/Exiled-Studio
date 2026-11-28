@@ -2982,6 +2982,9 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || input.name == super::hit::RUTHLESS_MODE_INPUT
         // Perforate's overlapping spikes (the agent list, 2026-11-27).
         || input.name == super::hit::PERFORATE_OVERLAP_INPUT
+        // Boneshatter's Trauma stacks (the agent list, 2026-11-28).
+        || (input.name == super::hit::TRAUMA_INPUT
+            && matches!(input.value, ConfigValue::Number(_)))
         // The times the skill has chained (the agent list, 2026-11-28).
         || (input.name == super::hit::CHAIN_COUNT_INPUT
             && matches!(input.value, ConfigValue::Number(_)))

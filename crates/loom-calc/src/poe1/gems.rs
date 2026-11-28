@@ -3980,7 +3980,7 @@ pub struct WarcryTerms {
 
 /// The stats of a warcry's gems PoB reads as its `Duration` MORE
 /// (`SkillStatMap.lua` 694 to 707).
-const DURATION_MORE_STATS: &[&str] = &[
+pub(super) const DURATION_MORE_STATS: &[&str] = &[
     "active_skill_quality_duration_+%_final",
     // Close-out M3: More and Less Duration.
     "support_more_duration_skill_effect_duration_+%_final",
