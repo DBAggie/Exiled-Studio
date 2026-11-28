@@ -5975,3 +5975,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Winter Orb channelling at its maximum stages with 20% increased cast speed (hit rate 3.9), at 3 stages, and idle (2.0); Ice Spear with Lesser Multiple Projectiles. Every field equals PoB's.
 
 **Evidence** (`local/p6/d28woe` on `b-ig`, against `local/p6/d28ise`): public 0 unexpected, `Complete` 62,018 to 62,369 (the fixtures'); 4 values moved, all away in `winter-orb-elementalist.xml`, as expected: its DPS is now at Winter Orb's hit rate, the same as PoB's (DPS over average damage 5.775 in both, the cast rate before), and its average damage gains LMP's less damage as PoB's, on a hit still below PoB's for its other reasons (Focussed Channelling's stat among them): TotalDPS 250,475 to 137,227 (PoB 219,115), AverageDamage 25,559 to 23,762 (PoB 37,942), CombinedDPS, FullDPS. Corpus 0 unexpected, no value moved.
+
+## Focussed Channelling (the agent list, 2026-11-28)
+
+**The stat:** Focussed Channelling's "#% more Damage for each second you've been Channelling, up to 60%" (`support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%`), unmapped in one public build.
+
+**PoB** (`sup_int.lua` 2553; `ConfigOptions.lua` 1263): `Damage` MORE per `Multiplier:ChannellingTime` (the config's "Channeling for # seconds", `multiplierChannelling`), `limit` 60 with `limitTotal`.
+
+**The engine:** `Poe1Quantity::ChannellingDamage` (a hit row); `hit::channelling_damage` turns it into `Damage` MORE of `min(value x seconds, 60)` before the passes of a spell or an attack. The support's cost per second channelled stays a cost reason.
+
+**Fixtures** (original): Winter Orb channelling with Focussed Channelling at 3 and 10 seconds (both at the 60% limit at level 20) and without the input (nothing). Every damage field equals PoB's; the cost fields keep their reason.
+
+**Evidence** (`local/p6/d28fce` on `b-ig`, against `local/p6/d28woe`): public 0 unexpected, `Complete` 62,369 to 62,621 (the fixtures'); 4 values moved, all toward PoB, 3 now equal: `winter-orb-elementalist.xml`'s AverageDamage 23,762 to PoB's 37,942, TotalDPS and CombinedDPS to PoB's 219,115, FullDPS 411,681 to 657,345 (PoB 655,665: partial on its other skills). Corpus 0 unexpected, no value moved.

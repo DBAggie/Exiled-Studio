@@ -1742,8 +1742,9 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         phases::query(multiplier, multiplier_reasons),
     );
 
-    // The chains' damage (the agent list, 2026-11-28).
+    // The chains' damage and the channelling's (the agent list, 2026-11-28).
     chain_damage(calc, &spell.skill.effect().id, flags, &mut unvetted);
+    channelling_damage(calc);
     let mut reasons = unvetted.clone();
     let shape = HitShape {
         source: spell.source(),
@@ -2323,8 +2324,9 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let skill_cx = calc.context(flags);
     super::repeats::apply(calc, &attack.skill.types, &skill_cx, &mut unvetted);
     let id = attack.skill.effect().id.as_str();
-    // The chains' damage (the agent list, 2026-11-28).
+    // The chains' damage and the channelling's (the agent list, 2026-11-28).
     chain_damage(calc, id, flags, &mut unvetted);
+    channelling_damage(calc);
     // A totem's attack ([`TOTEM_REASON`]): the character's keeps the reason
     // only for [`TOTEM_DATA_SKILLS`]; a minion's as before.
     if attack.skill.types.contains("SummonsTotem")
@@ -3123,6 +3125,50 @@ fn ice_spear(
         }
     }
     crate::math::floor(base * more)
+}
+
+/// PoB's config input of the seconds channelled (`ConfigOptions.lua` 1263:
+/// `Multiplier:ChannellingTime`).
+pub const CHANNELLING_INPUT: &str = "multiplierChannelling";
+
+/// More damage per second channelling (the agent list, 2026-11-28;
+/// Focussed Channelling, `sup_int.lua` 2553): each
+/// [`Poe1Quantity::ChannellingDamage`] effect becomes `Damage` MORE of
+/// `min(value x seconds, 60)` (PoB's `limit` 60 with `limitTotal`), the
+/// seconds the config's [`CHANNELLING_INPUT`] (0 without it), with its own
+/// source and conditions, before the passes.
+fn channelling_damage(calc: &mut Calc<'_>) {
+    let q = Quantity::Poe1(Poe1Quantity::ChannellingDamage);
+    if !phases::has(calc, q) {
+        return;
+    }
+    let seconds = collect::active_config(calc.input().build)
+        .and_then(|set| {
+            super::config::last_input(set, CHANNELLING_INPUT, loom_domain::ConfigInputKind::Input)
+        })
+        .and_then(|v| match v {
+            loom_domain::ConfigValue::Number(n) => Some(n.value().0),
+            _ => None,
+        })
+        .unwrap_or(0.0);
+    let copies: Vec<Effect> = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.op == Op::More)
+        .cloned()
+        .collect();
+    for e in copies {
+        let value = crate::math::min(e.value * seconds, 60.0);
+        if value == 0.0 {
+            continue;
+        }
+        calc.add_effect(Effect {
+            quantity: Quantity::Damage,
+            value,
+            ..e
+        });
+    }
 }
 
 /// PoB's config input of the times the skill has chained

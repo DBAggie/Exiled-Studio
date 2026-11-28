@@ -3806,6 +3806,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_efficacy_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // The agent list (2026-11-28): Focussed Channelling's "#% more Damage
+    // for each second you've been Channelling, up to 60%" (`sup_int.lua`
+    // 2553), turned by `hit::channelling_damage`.
+    (
+        "support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChannellingDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11hs: Focused Ballista's more attack speed and less damage
     // (`sup_dex.lua` 1929 to 1934: `Speed` MORE with `ModFlag.Attack`,
     // `Damage` MORE).
@@ -4704,6 +4717,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Chains (the agent list, 2026-11-28: Arc's own).
                     | Poe1Quantity::ChainCountMax
                     | Poe1Quantity::ProjectileCount
+                    | Poe1Quantity::ChannellingDamage
                     | Poe1Quantity::PerChainDamage(_)
                     // Bear Trap's debuff as the main skill (P6-11hp).
                     | Poe1Quantity::EnemyTrapMineDamageTaken
