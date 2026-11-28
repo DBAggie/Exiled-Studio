@@ -801,7 +801,12 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
             && m.key.is_some_and(|k| {
                 DISPLAY_SKILL_DATA.contains(&k)
                     || super::dot::DOT_SKILL_DATA_KEYS.contains(&k)
-                    || (triggered && k == SHOW_AVERAGE_KEY)
+                    // A spell's `showAverage` is read by the combined DPS
+                    // (`SHOW_AVERAGE`), a trigger's rate clears it; a
+                    // `debuff` scales only the skill's duration (the agent
+                    // list, 2026-11-28: Essence Drain).
+                    || ((triggered || pob.flag("spell")) && k == SHOW_AVERAGE_KEY)
+                    || super::dot::DOT_NO_SLICE_KEYS[0] == k
             })
     };
     // A part's own base mod the engine reads ([`READ_PART_BASE_MODS`]).

@@ -82,6 +82,13 @@ pub const DOT_SKILL_DATA_KEYS: [&str; 5] = [
     "dotIsSpell",
 ];
 
+/// Skill data keys PoB's DoT does not read (the agent list, 2026-11-28):
+/// `debuff` scales only the skill's duration by the enemy's debuff
+/// expiry (`calcSkillDuration`, `CalcOffence.lua` 300 to 313), and
+/// `showAverage` only the hit's DPS (the hit path's `SHOW_AVERAGE`);
+/// Essence Drain's.
+pub const DOT_NO_SLICE_KEYS: [&str; 2] = ["debuff", "showAverage"];
+
 /// The `FLAG` base mods of PoB's DoT this phase reads: the ground DoTs it
 /// leaves not computed, and the stacking DoT, a reason (`stacking-dot`).
 pub const DOT_FLAGS: [&str; 5] = [
@@ -104,7 +111,9 @@ pub fn pob_dot_vetted(pob: Option<&PobSkill>) -> bool {
         !m.tagged
             && match (m.name, m.key) {
                 ("SkillData", Some(k)) => {
-                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || DOT_SKILL_DATA_KEYS.contains(&k)
+                    super::hit::DISPLAY_SKILL_DATA.contains(&k)
+                        || DOT_SKILL_DATA_KEYS.contains(&k)
+                        || DOT_NO_SLICE_KEYS.contains(&k)
                 }
                 (name, None) => m.kind == "FLAG" && DOT_FLAGS.contains(&name),
                 _ => false,

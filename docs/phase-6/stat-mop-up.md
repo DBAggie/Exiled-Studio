@@ -6011,3 +6011,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original, the Siege Axe Smite build's weapon): Boneshatter at its sustainable Trauma, with 20% increased skill effect duration, at the config's 5 stacks, and Boneshatter of Complex Trauma at 30 configured (capped at 10). Average damage equals PoB's in each; the DPS fields differ only by the Q11 floored-millisecond rate: `game-truth` DIV-1235 to DIV-1258.
 
 **Evidence** (`local/p6/d28tre` on `b-ig`, against `local/p6/d28toe`): public 0 unexpected, `Complete` 62,797 to 63,149 (the fixtures'); 4 values moved, all toward PoB, in `boneshatter-juggernaut.xml` (Complex Trauma): AverageDamage 160,328 to 603,129 (PoB 582,277; partial on its other reasons), TotalDPS 291,167 to 1,095,326 (PoB 1,057,055), BleedDPS, CombinedDPS. Corpus 0 unexpected, no value moved.
+
+## Essence Drain, and the combined DPS with `showAverage` (the agent list, 2026-11-28)
+
+**The gap:** Essence Drain kept the `pob-skill-data` reason on its hit and its damage over time: its skill data `debuff` and `showAverage` were read by neither vetting.
+
+**PoB:** `debuff` scales only the skill's duration by the enemy's debuff expiry (`calcSkillDuration`, `CalcOffence.lua` 300 to 313), which no slice field reads; `showAverage` makes the combined DPS's base the average damage and leaves out the damage over time (5983, 6126 to 6128: `if not skillData.showAverage then CombinedDPS = CombinedDPS + TotalDotDPS`).
+
+**The engine:** the hit's vetting reads `debuff`, and a spell's `showAverage` (the spell path settles `hit::SHOW_AVERAGE` for the combined DPS; an attack's stays unread); the DoT's vetting reads both (`dot::DOT_NO_SLICE_KEYS`). Found on the way: the combined DPS added the damage over time under `showAverage`; it now leaves it out, as PoB.
+
+**Fixture** (original): Essence Drain (level 20), its hit and its damage over time; the combined DPS its average damage. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28ede` on `b-ig`, against `local/p6/d28tre`): public 0 unexpected, `Complete` 63,149 to 63,237 (the fixture's); no other value moved (the public Essence Drain build keeps its other reasons). Corpus 0 unexpected, no value moved.

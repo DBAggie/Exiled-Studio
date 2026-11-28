@@ -344,7 +344,9 @@ pub(super) fn combine(
         calc.set_unsupported(field, UnsupportedReason::NotComputed);
         return Ok(());
     }
-    if !dots.is_empty() {
+    // PoB adds the damage over time only without `showAverage`
+    // (`CalcOffence.lua` 6126 to 6128; the agent list, 2026-11-28).
+    if !dots.is_empty() && !show_average {
         let sum = phases::total(calc, &dots, Term::Step("dot-sum"))?;
         let cap = phases::constant(calc, "dot-dps-cap", DOT_DPS_CAP)?;
         terms.push(phases::pair(
