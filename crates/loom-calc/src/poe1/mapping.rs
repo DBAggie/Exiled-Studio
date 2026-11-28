@@ -3879,6 +3879,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): Lesser Multiple Projectiles' less damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_lesser_multiple_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
+    ),
     // Open items S3: Manaforged Arrows' more damage (`Damage` MORE) and its
     // more damage per mana spent (`PerStat` `ManaCost`): the attack path
     // reads the cost field (`hit::attack_hit`).
@@ -11051,6 +11057,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("display_cast_commandment_of_frost_on_kill_%", "no-slice"),
+    // The agent list (2026-11-28): Winter Orb's display line and its stats,
+    // read by `hit::winter_orb` (the duration per stage reaches no slice
+    // field).
+    (
+        "display_frost_fury_additive_cast_speed_modifiers_apply_to_fire_speed",
+        "winter-orb",
+    ),
     // P6-11eh: Blight's stack limit shown on the item.
     ("display_max_blight_stacks", "display"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
@@ -11179,6 +11192,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "frenzy_charge_duration_+%_per_frenzy_charge",
         "charge-duration",
     ),
+    ("frost_fury_base_fire_interval_ms", "winter-orb"),
+    ("frost_fury_duration_+%_per_stage", "no-slice"),
+    (
+        "frost_fury_fire_speed_+%_final_while_channelling",
+        "winter-orb",
+    ),
+    ("frost_fury_fire_speed_+%_per_stage", "winter-orb"),
+    ("frost_fury_max_number_of_stages", "winter-orb"),
     // P6-11ad: "You count as on Full Life while at #% of maximum Life or
     // above" (`FullLifePercentage` BASE): PoB reads it only for the config
     // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).

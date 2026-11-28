@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Ice Spear (part 1) supported by Lesser Multiple
+     Projectiles (level 20): its less projectile damage.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Spear" skillId="IceSpear" variantId="IceSpear" gemId="Metadata/Items/Gems/SkillGemIceSpear" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+				<Gem nameSpec="Lesser Multiple Projectiles" skillId="SupportLesserMultipleProjectiles" variantId="SupportLesserMultipleProjectiles" gemId="Metadata/Items/Gems/SupportGemLesserMultipleProjectiles" level="20" quality="0" enabled="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<ItemSet id="1">
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

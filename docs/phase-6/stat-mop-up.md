@@ -5963,3 +5963,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Spear in each of its four parts (the second form at 20% quality; part 4 with "Skills fire an additional Projectile", three projectiles). Every field equals PoB's.
 
 **Evidence** (`local/p6/d28ise` on `b-ig`, against `local/p6/d28are`): public 0 unexpected, `Complete` 61,670 to 62,018 (the fixtures'); 5 values moved, all toward PoB, 1 now equal (`Dual Wield Cospris CoC.xml`'s CritChance 82.6 to PoB's 100, its multiplier, average damage, and DPS; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Winter Orb's hit rate, and Lesser Multiple Projectiles (the agent list, 2026-11-28)
+
+**The gap:** Winter Orb kept the `pob-skill-data` reason, its stats unmapped, its DPS read at the cast rate; Lesser Multiple Projectiles' less damage (`support_lesser_multiple_projectile_damage_+%_final`) was unmapped.
+
+**PoB** (`act_int.lua`, `CalcActiveSkill.lua` 635 to 644, `CalcOffence.lua` 2474): Winter Orb's `preDamageFunc` sets `hitTimeOverride = repeatFrequency / (1 + (HitRate + Speed) INC / 100) / HitRate MORE`, `repeatFrequency` its fire interval (1.2 s), `HitRate` INC its 20% per stage after the first (`min(maximum - 1, stages - 1)`, the stages the gem's `skillStageCount`, else the maximum, `frost_fury_max_number_of_stages`), `HitRate` MORE its fire speed while channelling in part 1; `HitSpeed = 1 / HitTime` is the DPS's rate, `Speed` stays the cast rate. Its `statMap` empties `base_skill_show_average_damage_instead_of_dps` (elsewhere `showAverage`). LMP's is `Damage` MORE with `ModFlag.Projectile` (`sup_dex.lua`).
+
+**The engine:** `hit::winter_orb` gives that rate (the cast speed's increases in the spell's context) as the spell's `HitSpeed` and the DPS's and ailments' rate; the vetting lists name its function and stats, and a part's `stages` key is read for Winter Orb; its stats are `NoEffect` rows read there; `collect::EMPTIED_SKILL_STATS` drops a stat a skill's own `statMap` empties (Winter Orb's show-average). LMP's row is a hit row. The character's own `HitRate` and the stages' minimum have no mapped stat (reasons).
+
+**Fixtures** (original): Winter Orb channelling at its maximum stages with 20% increased cast speed (hit rate 3.9), at 3 stages, and idle (2.0); Ice Spear with Lesser Multiple Projectiles. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28woe` on `b-ig`, against `local/p6/d28ise`): public 0 unexpected, `Complete` 62,018 to 62,369 (the fixtures'); 4 values moved, all away in `winter-orb-elementalist.xml`, as expected: its DPS is now at Winter Orb's hit rate, the same as PoB's (DPS over average damage 5.775 in both, the cast rate before), and its average damage gains LMP's less damage as PoB's, on a hit still below PoB's for its other reasons (Focussed Channelling's stat among them): TotalDPS 250,475 to 137,227 (PoB 219,115), AverageDamage 25,559 to 23,762 (PoB 37,942), CombinedDPS, FullDPS. Corpus 0 unexpected, no value moved.

@@ -353,7 +353,13 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 18] = [
+pub const READ_OWN_STATS: [(&str, &str); 20] = [
+    // The agent list (2026-11-28): Winter Orb's fire speed ([`winter_orb`]).
+    (
+        "WinterOrb",
+        "frost_fury_fire_speed_+%_final_while_channelling",
+    ),
+    ("WinterOrb", "frost_fury_fire_speed_+%_per_stage"),
     // The agent list (2026-11-28): Ice Spear's second form ([`ice_spear`]).
     (
         "IceSpear",
@@ -483,7 +489,9 @@ pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 /// Perforate's (the agent list, 2026-11-27; `act_str.lua`): `dpsMultiplier
 /// = max(dpsMultiplier or 1, 1)`, after its spike overlap
 /// ([`perforate_dps_multiplier`]).
-pub const READ_PART_FUNCTIONS: [(&str, &str); 6] = [
+pub const READ_PART_FUNCTIONS: [(&str, &str); 7] = [
+    // The agent list (2026-11-28): Winter Orb's hit time ([`winter_orb`]).
+    ("WinterOrb", "preDamageFunc"),
     // The agent list (2026-11-28): Ice Spear's projectile count in its parts
     // with all projectiles ([`ice_spear`]).
     ("IceSpear", "preDamageFunc"),
@@ -600,7 +608,10 @@ pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
 /// 2026-11-27): a chance to shock, which reaches no slice field (PoB never
 /// shocks the enemy from a chance; the engine's shock is the config's and
 /// the guaranteed ones).
-pub const NO_SLICE_OWN_STATS: [(&str, &str); 8] = [
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 9] = [
+    // The agent list (2026-11-28): Winter Orb's duration per stage, which no
+    // slice field reads.
+    ("WinterOrb", "frost_fury_duration_+%_per_stage"),
     // The agent list (2026-11-28): Ice Spear's second form's projectile
     // speed (`ProjectileSpeed` MORE), which no slice field reads.
     (
@@ -807,7 +818,12 @@ fn vetted(id: &str, index: usize, no_cooldown: bool, triggered: bool) -> bool {
         return false;
     }
     match index.checked_sub(1).and_then(|i| pob.parts.get(i)) {
-        Some(part) => part.values.iter().all(|(k, _)| PART_FIELDS.contains(k)),
+        // A part's `stages` switches PoB's stage count on; Winter Orb's is
+        // read by [`winter_orb`] (the agent list, 2026-11-28).
+        Some(part) => part
+            .values
+            .iter()
+            .all(|(k, _)| PART_FIELDS.contains(k) || (*k == "stages" && id == "WinterOrb")),
         None => true,
     }
 }
@@ -1762,6 +1778,15 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     };
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
+    // Winter Orb's hit rate (the agent list, 2026-11-28): the DPS's and the
+    // ailments' rate, the cast rate staying `Speed`.
+    let speed = match winter_orb(calc, spell, flags, &mut unvetted)? {
+        Some(rate) => {
+            calc.set(Field::HitSpeed, phases::query(rate, unvetted.clone()));
+            rate
+        }
+        None => speed,
+    };
     hit_dps(calc, average, speed, dps)?;
     let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
     critical_cull(
@@ -2925,6 +2950,89 @@ fn critical_cull(
         source,
     });
     Ok(())
+}
+
+/// Winter Orb's stats (`act_int.lua`, the agent list, 2026-11-28).
+const WINTER_ORB_STATS: [&str; 5] = [
+    "frost_fury_base_fire_interval_ms",
+    "frost_fury_fire_speed_+%_final_while_channelling",
+    "frost_fury_fire_speed_+%_per_stage",
+    "frost_fury_max_number_of_stages",
+    "frost_fury_duration_+%_per_stage",
+];
+
+/// Winter Orb's hit rate (the agent list, 2026-11-28; `act_int.lua`'s
+/// `preDamageFunc`, `CalcActiveSkill.lua` 635 to 644, `CalcOffence.lua`
+/// 2474): `1 / hitTime`, `hitTime = repeatFrequency / (1 + (HitRate +
+/// Speed) INC / 100) / HitRate MORE`, `repeatFrequency` its fire interval,
+/// `HitRate` INC its fire speed per stage times the stages after the first
+/// (`min(maximum - 1, stages - 1)`, the stages the gem's `skillStageCount`,
+/// else the maximum), `HitRate` MORE its fire speed while channelling in
+/// part 1 ("Channelling"), `Speed` INC the cast speed's increases in the
+/// spell's context. `None` for any other skill; the character's own
+/// `HitRate` and the stages' minimum have no mapped stat (reasons).
+///
+/// # Errors
+/// A graph error.
+fn winter_orb(
+    calc: &mut Calc<'_>,
+    spell: &SpellSkill<'_>,
+    flags: Flags,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    if spell.skill.effect().id != "WinterOrb" {
+        return Ok(None);
+    }
+    let data = calc.input().data;
+    let instances = skill::instances(&spell.skill, data);
+    #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+    let stat = |id: &str| -> f64 {
+        instances
+            .iter()
+            .flat_map(|i| i.stats.iter())
+            .filter(|(s, _)| s == id)
+            .map(|(_, v)| *v as f64)
+            .sum::<f64>()
+    };
+    let [interval, channelling, per_stage, maximum, _] = WINTER_ORB_STATS.map(stat);
+    // The gem's stage count, else the maximum.
+    let stages = skill::active_groups(calc.input().build)
+        .ok()
+        .and_then(|groups| groups.get(spell.group).cloned())
+        .and_then(|g| {
+            g.gems
+                .typed()
+                .nth(spell.skill.active_gem.gem)
+                .and_then(|x| skill::attribute(&x.attributes, "skillStageCount"))
+                .and_then(|v| v.parse::<f64>().ok())
+        })
+        .unwrap_or(maximum)
+        .max(1.0);
+    let after_first = crate::math::min(maximum - 1.0, stages - 1.0).max(0.0);
+    let cx = calc.context(flags);
+    let cast = sum_in(
+        calc,
+        Quantity::Speed,
+        Op::Increased,
+        &cx,
+        Term::Step("winter-orb-cast-speed"),
+        reasons,
+    )?;
+    let inc = per_stage * after_first + cast.value;
+    let more = if spell.part_index == 1 {
+        1.0 + channelling / 100.0
+    } else {
+        1.0
+    };
+    let time = interval / 1000.0 / (1.0 + inc / 100.0) / more;
+    if time <= 0.0 {
+        return Ok(None);
+    }
+    Ok(Some(phases::constant(
+        calc,
+        "winter-orb-hit-rate",
+        1.0 / time,
+    )?))
 }
 
 /// Ice Spear and its variant (the agent list, 2026-11-28; `act_int.lua`).
@@ -6501,7 +6609,7 @@ mod tests {
         assert!(pob_vetted("IceNova", 0));
         let (knives, _) = pob_part("EtherealKnives", 1).unwrap();
         assert!(knives.projectile && !knives.area);
-        assert!(!pob_vetted("WinterOrb", 0));
+        assert!(!pob_vetted("Tornado", 0));
         assert!(pob_part("NoSuchSkill", 1).is_none());
         assert!(!pob_vetted("NoSuchSkill", 0));
         // A release skill, whose hit time PoB sets in Lua (Snipe,
@@ -6530,7 +6638,7 @@ mod tests {
         assert!((part_dps_multiplier("Smite", 1) - 1.0).abs() < f64::EPSILON);
         assert!(!pob_vetted("Vortex", 0));
         assert!(pob_vetted_with("Vortex", 0, true));
-        assert!(!pob_vetted_with("WinterOrb", 0, true));
+        assert!(!pob_vetted_with("Tornado", 0, true));
         // Every listed entry is in PoB's data as listed.
         for (id, stat) in READ_OWN_STATS {
             let s = super::super::pob_skill::skill(id).unwrap();
@@ -6577,7 +6685,7 @@ mod tests {
         assert!(pob_vetted_triggered("IcicleBurst", 0, false));
         // A skill without `showAverage` that fails for another reason fails
         // triggered too.
-        assert!(!pob_vetted_triggered("WinterOrb", 0, true));
+        assert!(!pob_vetted_triggered("Tornado", 0, true));
     }
 
     /// Open items, S1: Cyclone's and Vaal Cyclone's function and own stat

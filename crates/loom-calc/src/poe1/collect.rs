@@ -2801,6 +2801,9 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let stats: Vec<StatLine> = instance
             .stats
             .iter()
+            .filter(|(stat, _)| {
+                !EMPTIED_SKILL_STATS.contains(&(r.effect.id.as_str(), stat.as_str()))
+            })
             .map(|(stat, value)| {
                 let value =
                     super::skill_modifiers::main_skill_stat(&r.effect.id, stat, *value, buff_scale);
@@ -2816,6 +2819,14 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         ingest.stats_with(mapping, &source, &stats);
     }
 }
+
+/// A skill's stats its own `statMap` lists with no mod, overriding a
+/// generic `SkillStatMap.lua` row: PoB reads them into nothing for that
+/// skill (the agent list, 2026-11-28: Winter Orb's
+/// `base_skill_show_average_damage_instead_of_dps`, `act_int.lua`,
+/// which elsewhere sets `showAverage`).
+const EMPTIED_SKILL_STATS: [(&str, &str); 1] =
+    [("WinterOrb", "base_skill_show_average_damage_instead_of_dps")];
 
 /// The gems of a main skill the engine computes no hit or damage over
 /// time of (the agent list, 2026-11-27): a stat whose every effect is a
