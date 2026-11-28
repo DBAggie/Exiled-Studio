@@ -5951,3 +5951,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Arc with "Skills Chain +1 times" (every chain remaining) and chained three times by the config. Every field equals PoB's.
 
 **Evidence** (`local/p6/d28are` on `b-ig`, against `local/p6/d28f5e`): public 0 unexpected, `Complete` 61,494 to 61,670 (the fixtures' and two trigger fixtures' full DPS, now complete); 2 values moved, toward PoB, 1 now equal: `trigger-arcanist-two-spells-witch.xml`'s FullDPS 469.9 to PoB's 626.6, and `trigger-coc-two-spells-templar.xml`'s 116.8 to 119.04 (PoB 119.10: its attack's Q11 floored-millisecond rate, `game-truth` DIV-1234 with the fixture's other Q11 entries). Corpus 0 unexpected, no value moved.
+
+## Ice Spear's forms and the projectile count (the agent list, 2026-11-28)
+
+**The gap:** Ice Spear and Ice Spear of Splitting kept the `pob-skill-data` reason: their second form's crit stats, their projectile speed, the first form's pierce, and the `preDamageFunc` of the parts with all projectiles.
+
+**PoB** (`act_int.lua`): parts 2 and 4 (the second form) gain `ice_spear_second_form_critical_strike_chance_+%` as `CritChance` INC and `..._multiplier_+` as `CritMultiplier` BASE (`SkillPart` 2 and 4); parts 3 and 4 (all projectiles) multiply `dpsMultiplier` by `output.ProjectileCount` (`CalcOffence.lua` 1054 to 1063: `floor((1 + base_number_of_projectiles - 1 + ProjectileCount BASE) x MORE)`); part 1's `PierceChance` and the second form's projectile speed reach no slice field.
+
+**The engine:** `SpellSkill::part_index`; `hit::ice_spear` adds the second form's crit before the spell's crit and returns the projectile count for parts 3 and 4, a factor of the spell's DPS multiplier (the hit DPS, the critical cull, the ailments). `number_of_additional_projectiles` is now `Poe1Quantity::ProjectileCount` (`Base`), read only there; its two guards (Barrage's sequential projectiles, projectiles as chains) leave `NO_EFFECT_DEPENDS_ON`, the guard stats themselves staying reasons. The vetting lists name the read function, own stats, and base mod. `SingleProjectile`, `NoAdditionalProjectiles`, and the count's minimum and maximum have no mapped stat (reasons).
+
+**Fixtures** (original): Ice Spear in each of its four parts (the second form at 20% quality; part 4 with "Skills fire an additional Projectile", three projectiles). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28ise` on `b-ig`, against `local/p6/d28are`): public 0 unexpected, `Complete` 61,670 to 62,018 (the fixtures'); 5 values moved, all toward PoB, 1 now equal (`Dual Wield Cospris CoC.xml`'s CritChance 82.6 to PoB's 100, its multiplier, average damage, and DPS; partial on its other reasons). Corpus 0 unexpected, no value moved.

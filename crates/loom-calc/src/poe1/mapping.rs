@@ -2954,6 +2954,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): "Skills fire # additional Projectiles"
+    // (`SkillStatMap.lua` 1409: `ProjectileCount` BASE), read by
+    // `hit::ice_spear` (P6-11u's `NoEffect` row and its guards before;
+    // Barrage's and the chaining one stay reasons).
+    (
+        "number_of_additional_projectiles",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ProjectileCount),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11fa: "+# Traps thrown" (`SkillStatMap.lua` 1810: `TrapThrowCount`
     // BASE).
     (
@@ -4683,6 +4697,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::NewModDamage
                     // Chains (the agent list, 2026-11-28: Arc's own).
                     | Poe1Quantity::ChainCountMax
+                    | Poe1Quantity::ProjectileCount
                     | Poe1Quantity::PerChainDamage(_)
                     // Bear Trap's debuff as the main skill (P6-11hp).
                     | Poe1Quantity::EnemyTrapMineDamageTaken
@@ -11323,6 +11338,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: Hoarfrost (`HitsCanInflictHoarfrost`): no calc module of
     // PoB reads the flag.
     ("hoarfrost_on_non_freezing_freezing_hit", "no-slice"),
+    // The agent list (2026-11-28): Ice Spear's second form, read by
+    // `hit::ice_spear` (its crit), or no slice field (its projectile speed).
+    (
+        "ice_spear_second_form_critical_strike_chance_+%",
+        "ice-spear",
+    ),
+    (
+        "ice_spear_second_form_critical_strike_multiplier_+",
+        "ice-spear",
+    ),
+    (
+        "ice_spear_second_form_projectile_speed_+%_final",
+        "no-slice",
+    ),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (
@@ -11795,7 +11824,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: the projectile count (PoB `ProjectileCount`): it reaches DPS
     // only with `SequentialProjectiles` (`CalcOffence.lua` 769 to 772), a
     // skill base mod (unvetted) or Barrage's `projectiles_barrage`, a guard.
-    ("number_of_additional_projectiles", "projectile-count"),
     // P6-11ef: the trap and mine limits (`ActiveTrapLimit`, `ActiveMineLimit`
     // BASE): PoB shows them and its "for each trap" and "for each mine" lines
     // read them; no slice field does.
@@ -12411,10 +12439,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     ),
     (
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
-        "number_of_additional_projectiles",
-    ),
-    (
-        "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "totem_number_of_additional_projectiles",
     ),
     // P6-11dg: Barrage's, for the bows' additional arrows.
@@ -12425,8 +12449,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "local_flask_number_of_additional_projectiles_during_flask_effect",
     ),
     ("projectiles_barrage", "number_of_additional_arrows"),
-    // P6-11u: Barrage's `SequentialProjectiles`.
-    ("projectiles_barrage", "number_of_additional_projectiles"),
     // Close-out M3: totems' additional projectiles, the same.
     (
         "projectiles_barrage",

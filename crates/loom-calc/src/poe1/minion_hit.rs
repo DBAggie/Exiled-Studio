@@ -380,6 +380,7 @@ fn spell<'d>(
         // 2026-11-27); an untagged one (a spectre's) keeps the skill
         // unvetted.
         dps_multiplier: 1.0,
+        part_index: 0,
     }))
 }
 

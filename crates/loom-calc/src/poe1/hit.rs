@@ -353,7 +353,16 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 16] = [
+pub const READ_OWN_STATS: [(&str, &str); 18] = [
+    // The agent list (2026-11-28): Ice Spear's second form ([`ice_spear`]).
+    (
+        "IceSpear",
+        "ice_spear_second_form_critical_strike_chance_+%",
+    ),
+    (
+        "IceSpear",
+        "ice_spear_second_form_critical_strike_multiplier_+",
+    ),
     // The agent list (2026-11-28): Arc's more damage per remaining chain
     // ([`chain_damage`]).
     ("Arc", "arc_damage_+%_final_for_each_remaining_chain"),
@@ -474,7 +483,11 @@ pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 /// Perforate's (the agent list, 2026-11-27; `act_str.lua`): `dpsMultiplier
 /// = max(dpsMultiplier or 1, 1)`, after its spike overlap
 /// ([`perforate_dps_multiplier`]).
-pub const READ_PART_FUNCTIONS: [(&str, &str); 4] = [
+pub const READ_PART_FUNCTIONS: [(&str, &str); 6] = [
+    // The agent list (2026-11-28): Ice Spear's projectile count in its parts
+    // with all projectiles ([`ice_spear`]).
+    ("IceSpear", "preDamageFunc"),
+    ("IceSpearAltX", "preDamageFunc"),
     ("Perforate", "preDamageFunc"),
     ("PerforateAltX", "preDamageFunc"),
     ("PerforateAltY", "preDamageFunc"),
@@ -587,7 +600,17 @@ pub const NO_SLICE_FUNCTIONS: [(&str, &str); 2] =
 /// 2026-11-27): a chance to shock, which reaches no slice field (PoB never
 /// shocks the enemy from a chance; the engine's shock is the config's and
 /// the guaranteed ones).
-pub const NO_SLICE_OWN_STATS: [(&str, &str); 6] = [
+pub const NO_SLICE_OWN_STATS: [(&str, &str); 8] = [
+    // The agent list (2026-11-28): Ice Spear's second form's projectile
+    // speed (`ProjectileSpeed` MORE), which no slice field reads.
+    (
+        "IceSpear",
+        "ice_spear_second_form_projectile_speed_+%_final",
+    ),
+    (
+        "IceSpearAltX",
+        "ice_spear_second_form_projectile_speed_+%_final",
+    ),
     (
         "Cyclone",
         "cyclone_area_of_effect_+%_per_additional_melee_range",
@@ -661,8 +684,13 @@ pub const READ_BASE_FLAGS: [&str; 3] = ["CannotSplit", "DotCanStack", "OneShotPr
 /// `Multiplier:ElementalHitAilmentOnEnemy` 1 per enemy ailment
 /// (`ActorCondition` tags): [`super::stacks::enemy_elemental_ailments`]
 /// (the agent list, 2026-11-27).
-pub const READ_BASE_MODS: [(&str, &str); 1] =
-    [("ElementalHitAltX", "Multiplier:ElementalHitAilmentOnEnemy")];
+pub const READ_BASE_MODS: [(&str, &str); 3] = [
+    ("ElementalHitAltX", "Multiplier:ElementalHitAilmentOnEnemy"),
+    // The agent list (2026-11-28): Ice Spear's first form pierces
+    // (`PierceChance` BASE 100 in part 1), which no slice field reads.
+    ("IceSpear", "PierceChance"),
+    ("IceSpearAltX", "PierceChance"),
+];
 
 /// Skill functions that do nothing unless a config input sets the skill
 /// data they read (the agent list, 2026-11-27): (skill, function, input).
@@ -882,6 +910,8 @@ pub struct SpellSkill<'d> {
     pub vetted_triggered: bool,
     /// Its part's `dpsMultiplier` ([`part_dps_multiplier`]).
     pub dps_multiplier: f64,
+    /// PoB's part, 1-based (0 without parts).
+    pub part_index: usize,
 }
 
 impl SpellSkill<'_> {
@@ -1054,6 +1084,7 @@ pub fn spell_skill<'d>(
         vetted_triggered: known
             && pob_vetted_triggered(&effect.id, part_index, level_row.cooldown == 0),
         dps_multiplier: part_dps_multiplier(&effect.id, part_index),
+        part_index,
     })
 }
 
@@ -1682,6 +1713,8 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         });
     }
 
+    // Ice Spear's forms (the agent list, 2026-11-28).
+    let dps = spell.dps_multiplier * ice_spear(calc, spell, flags, &mut unvetted);
     let skill_base = skill_crit_base(calc, spell.source(), spell.level)?;
     let (crit, mut crit_reasons) = crit_chance(calc, skill_base, None, &cx)?;
     crit_reasons.extend(&unvetted);
@@ -1729,7 +1762,7 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     };
     speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
-    hit_dps(calc, average, speed, spell.dps_multiplier)?;
+    hit_dps(calc, average, speed, dps)?;
     let spell_hit_chance = phases::constant(calc, "spell-hit-chance", SPELL_HIT_CHANCE)?;
     critical_cull(
         calc,
@@ -1738,9 +1771,9 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         crit,
         spell_hit_chance,
         speed,
-        spell.dps_multiplier,
+        dps,
     )?;
-    let ailment_rate = rate_with(calc, speed, spell.dps_multiplier)?;
+    let ailment_rate = rate_with(calc, speed, dps)?;
     let ailment_hit = super::ailment::AilmentHit {
         flags,
         sources: &sources,
@@ -2892,6 +2925,96 @@ fn critical_cull(
         source,
     });
     Ok(())
+}
+
+/// Ice Spear and its variant (the agent list, 2026-11-28; `act_int.lua`).
+const ICE_SPEAR: [&str; 2] = ["IceSpear", "IceSpearAltX"];
+/// The second form's crit stats (PoB's `SkillPart` 2 and 4): `CritChance`
+/// INC and `CritMultiplier` BASE.
+const ICE_SPEAR_SECOND_FORM: [(&str, Quantity, Op); 2] = [
+    (
+        "ice_spear_second_form_critical_strike_chance_+%",
+        Quantity::CritChance,
+        Op::Increased,
+    ),
+    (
+        "ice_spear_second_form_critical_strike_multiplier_+",
+        Quantity::CritMultiplier,
+        Op::Base,
+    ),
+];
+
+/// Ice Spear's forms (module docs; `act_int.lua`): in the second form's
+/// parts (2 and 4) the gem's crit stats; in the parts with all projectiles
+/// (3 and 4) its `preDamageFunc`'s `dpsMultiplier` times
+/// `output.ProjectileCount` (`CalcOffence.lua` 1054 to 1063: `floor((1 +
+/// base_number_of_projectiles - 1 + ProjectileCount BASE) x MORE)`), the
+/// returned factor; 1 for any other skill or part. `SingleProjectile`,
+/// `NoAdditionalProjectiles`, and the count's minimum and maximum have no
+/// mapped stat (reasons).
+fn ice_spear(
+    calc: &mut Calc<'_>,
+    spell: &SpellSkill<'_>,
+    flags: Flags,
+    reasons: &mut Reasons,
+) -> f64 {
+    if !ICE_SPEAR.contains(&spell.skill.effect().id.as_str()) {
+        return 1.0;
+    }
+    let data = calc.input().data;
+    let instances = skill::instances(&spell.skill, data);
+    let stat = |id: &str| -> f64 {
+        #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+        let v = instances
+            .iter()
+            .flat_map(|i| i.stats.iter())
+            .filter(|(s, _)| s == id)
+            .map(|(_, v)| *v as f64)
+            .sum::<f64>();
+        v
+    };
+    if matches!(spell.part_index, 2 | 4) {
+        for (id, quantity, op) in ICE_SPEAR_SECOND_FORM {
+            let value = stat(id);
+            if value != 0.0 {
+                calc.add_effect(Effect {
+                    quantity,
+                    op,
+                    value,
+                    conditions: crate::condition::Conditions::none(),
+                    source: spell.source(),
+                });
+            }
+        }
+    }
+    if !matches!(spell.part_index, 3 | 4) {
+        return 1.0;
+    }
+    let cx = calc.context(flags);
+    let q = Quantity::Poe1(Poe1Quantity::ProjectileCount);
+    let (mut base, mut more) = (1.0 + stat("base_number_of_projectiles") - 1.0, 1.0_f64);
+    for e in calc.store().effects() {
+        if e.quantity != q {
+            continue;
+        }
+        match e.conditions.applies(&cx) {
+            Applies::Yes => {}
+            Applies::No => continue,
+            Applies::Unknown(_) => {
+                reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                    source: e.source.clone(),
+                    what: "projectile-count",
+                });
+                continue;
+            }
+        }
+        match e.op {
+            Op::Base => base += e.value,
+            Op::More => more *= 1.0 + e.value / 100.0,
+            _ => {}
+        }
+    }
+    crate::math::floor(base * more)
 }
 
 /// PoB's config input of the times the skill has chained
@@ -6378,7 +6501,7 @@ mod tests {
         assert!(pob_vetted("IceNova", 0));
         let (knives, _) = pob_part("EtherealKnives", 1).unwrap();
         assert!(knives.projectile && !knives.area);
-        assert!(!pob_vetted("IceSpear", 1));
+        assert!(!pob_vetted("WinterOrb", 0));
         assert!(pob_part("NoSuchSkill", 1).is_none());
         assert!(!pob_vetted("NoSuchSkill", 0));
         // A release skill, whose hit time PoB sets in Lua (Snipe,
@@ -6407,7 +6530,7 @@ mod tests {
         assert!((part_dps_multiplier("Smite", 1) - 1.0).abs() < f64::EPSILON);
         assert!(!pob_vetted("Vortex", 0));
         assert!(pob_vetted_with("Vortex", 0, true));
-        assert!(!pob_vetted_with("IceSpear", 1, true));
+        assert!(!pob_vetted_with("WinterOrb", 0, true));
         // Every listed entry is in PoB's data as listed.
         for (id, stat) in READ_OWN_STATS {
             let s = super::super::pob_skill::skill(id).unwrap();
@@ -6454,7 +6577,7 @@ mod tests {
         assert!(pob_vetted_triggered("IcicleBurst", 0, false));
         // A skill without `showAverage` that fails for another reason fails
         // triggered too.
-        assert!(!pob_vetted_triggered("IceSpear", 1, true));
+        assert!(!pob_vetted_triggered("WinterOrb", 0, true));
     }
 
     /// Open items, S1: Cyclone's and Vaal Cyclone's function and own stat

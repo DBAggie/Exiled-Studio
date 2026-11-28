@@ -227,6 +227,10 @@ pub enum Poe1Quantity {
     /// The skill's maximum chains (PoB's `ChainCountMax`; the agent list,
     /// 2026-11-28): `Base` and `More`, read by [`hit`] for a chaining skill.
     ChainCountMax,
+    /// The skill's projectile count (PoB's `ProjectileCount`; the agent
+    /// list, 2026-11-28): `Base` (the additional projectiles) and `More`,
+    /// read by [`hit`] for Ice Spear's parts with all projectiles.
+    ProjectileCount,
     /// Damage per chain (PoB's `Damage` with `PerStat` `Chain`, `false`) or
     /// per remaining chain (`ChainRemaining`, `true`; the agent list,
     /// 2026-11-28): `Increased` and `More`, turned by [`hit`] into `Damage`
@@ -1750,6 +1754,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ShockMaximum => f.write_str("shock-maximum"),
             Self::MirageArcherCount => f.write_str("mirage-archer-count"),
             Self::ChainCountMax => f.write_str("chain-count-max"),
+            Self::ProjectileCount => f.write_str("projectile-count"),
             Self::PerChainDamage(remaining) => {
                 if *remaining {
                     f.write_str("per-remaining-chain-damage")
