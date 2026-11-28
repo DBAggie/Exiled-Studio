@@ -11864,6 +11864,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // read them; no slice field does.
     ("number_of_additional_remote_mines_allowed", "no-slice"),
     ("number_of_additional_traps_allowed", "no-slice"),
+    // The agent list (2026-11-28): Tornado's count, which no slice field
+    // reads, and its damage interval, read by `hit::tornado`.
+    ("number_of_tornados_allowed", "no-slice"),
     // The agent list (S5, 2026-11-27): General's Cry Support's "Attacks with
     // Supported Skills count as Exerted" (PoB's empty stat map; the
     // exert copies are `hit::generals_cry`'s).
@@ -12292,6 +12295,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "thrown_shield_projectile_fire_random_directions",
         "no-slice",
     ),
+    ("tornado_base_damage_interval_ms", "tornado"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("tornado_movement_speed_+%", "no-slice"),

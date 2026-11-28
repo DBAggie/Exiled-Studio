@@ -5987,3 +5987,15 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Winter Orb channelling with Focussed Channelling at 3 and 10 seconds (both at the 60% limit at level 20) and without the input (nothing). Every damage field equals PoB's; the cost fields keep their reason.
 
 **Evidence** (`local/p6/d28fce` on `b-ig`, against `local/p6/d28woe`): public 0 unexpected, `Complete` 62,369 to 62,621 (the fixtures'); 4 values moved, all toward PoB, 3 now equal: `winter-orb-elementalist.xml`'s AverageDamage 23,762 to PoB's 37,942, TotalDPS and CombinedDPS to PoB's 219,115, FullDPS 411,681 to 657,345 (PoB 655,665: partial on its other skills). Corpus 0 unexpected, no value moved.
+
+## Tornado's hit rate (the agent list, 2026-11-28)
+
+**The gap:** Tornado kept the `pob-skill-data` reason (its `preDamageFunc`), its damage interval and count unmapped, its DPS read at the cast rate.
+
+**PoB** (`act_dex.lua`): `preDamageFunc` sets `hitTimeOverride = damageInterval`, `tornado_base_damage_interval_ms` over 1000 (0.25 s); `HitSpeed = 1 / HitTime` (`CalcOffence.lua` 2474) is the DPS's rate, the cast rate staying `Speed`.
+
+**The engine:** `hit::tornado` gives that rate as the spell's `HitSpeed`, as Winter Orb's; the function counts as read, the interval is a `NoEffect` row read there, the tornado count a `no-slice` one.
+
+**Fixtures** (original): Tornado (hit rate 4) and with 50% increased cast speed (the cast rate rises, the hit rate does not). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28toe` on `b-ig`, against `local/p6/d28fce`): public 0 unexpected, `Complete` 62,621 to 62,797 (the fixtures'); 1 value moved, toward PoB (`elemental-hit-of-the-spectrum-deadeye.xml`'s FullDPS, its Tornado). Corpus 0 unexpected, no value moved.

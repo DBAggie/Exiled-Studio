@@ -489,8 +489,10 @@ pub const READ_FUNCTIONS: [(&str, &str); 1] = [("Vortex", "preDamageFunc")];
 /// Perforate's (the agent list, 2026-11-27; `act_str.lua`): `dpsMultiplier
 /// = max(dpsMultiplier or 1, 1)`, after its spike overlap
 /// ([`perforate_dps_multiplier`]).
-pub const READ_PART_FUNCTIONS: [(&str, &str); 7] = [
-    // The agent list (2026-11-28): Winter Orb's hit time ([`winter_orb`]).
+pub const READ_PART_FUNCTIONS: [(&str, &str); 8] = [
+    // The agent list (2026-11-28): Winter Orb's hit time ([`winter_orb`]),
+    // Tornado's ([`tornado`]).
+    ("Tornado", "preDamageFunc"),
     ("WinterOrb", "preDamageFunc"),
     // The agent list (2026-11-28): Ice Spear's projectile count in its parts
     // with all projectiles ([`ice_spear`]).
@@ -1781,7 +1783,7 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
     // Winter Orb's hit rate (the agent list, 2026-11-28): the DPS's and the
     // ailments' rate, the cast rate staying `Speed`.
-    let speed = match winter_orb(calc, spell, flags, &mut unvetted)? {
+    let speed = match winter_orb(calc, spell, flags, &mut unvetted)?.or(tornado(calc, spell)?) {
         Some(rate) => {
             calc.set(Field::HitSpeed, phases::query(rate, unvetted.clone()));
             rate
@@ -3034,6 +3036,35 @@ fn winter_orb(
         calc,
         "winter-orb-hit-rate",
         1.0 / time,
+    )?))
+}
+
+/// Tornado's hit rate (the agent list, 2026-11-28; `act_dex.lua`'s
+/// `preDamageFunc`: `hitTimeOverride = damageInterval`, its
+/// `tornado_base_damage_interval_ms` over 1000): `1 / hitTime`, the DPS's
+/// rate, the cast rate staying `Speed`. `None` for any other skill.
+///
+/// # Errors
+/// A graph error.
+fn tornado(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<Option<Valued>, CalcError> {
+    if spell.skill.effect().id != "Tornado" {
+        return Ok(None);
+    }
+    let data = calc.input().data;
+    #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+    let interval = skill::instances(&spell.skill, data)
+        .iter()
+        .flat_map(|i| i.stats.iter())
+        .filter(|(s, _)| s == "tornado_base_damage_interval_ms")
+        .map(|(_, v)| *v as f64)
+        .sum::<f64>();
+    if interval <= 0.0 {
+        return Ok(None);
+    }
+    Ok(Some(phases::constant(
+        calc,
+        "tornado-hit-rate",
+        1.0 / (interval / 1000.0),
     )?))
 }
 
@@ -6655,7 +6686,7 @@ mod tests {
         assert!(pob_vetted("IceNova", 0));
         let (knives, _) = pob_part("EtherealKnives", 1).unwrap();
         assert!(knives.projectile && !knives.area);
-        assert!(!pob_vetted("Tornado", 0));
+        assert!(!pob_vetted("ScorchingRay", 1));
         assert!(pob_part("NoSuchSkill", 1).is_none());
         assert!(!pob_vetted("NoSuchSkill", 0));
         // A release skill, whose hit time PoB sets in Lua (Snipe,
@@ -6684,7 +6715,7 @@ mod tests {
         assert!((part_dps_multiplier("Smite", 1) - 1.0).abs() < f64::EPSILON);
         assert!(!pob_vetted("Vortex", 0));
         assert!(pob_vetted_with("Vortex", 0, true));
-        assert!(!pob_vetted_with("Tornado", 0, true));
+        assert!(!pob_vetted_with("ScorchingRay", 1, true));
         // Every listed entry is in PoB's data as listed.
         for (id, stat) in READ_OWN_STATS {
             let s = super::super::pob_skill::skill(id).unwrap();
@@ -6731,7 +6762,7 @@ mod tests {
         assert!(pob_vetted_triggered("IcicleBurst", 0, false));
         // A skill without `showAverage` that fails for another reason fails
         // triggered too.
-        assert!(!pob_vetted_triggered("Tornado", 0, true));
+        assert!(!pob_vetted_triggered("ScorchingRay", 1, true));
     }
 
     /// Open items, S1: Cyclone's and Vaal Cyclone's function and own stat
