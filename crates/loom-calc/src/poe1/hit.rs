@@ -353,7 +353,12 @@ pub fn pob_vetted(id: &str, index: usize) -> bool {
 ///   state row under the config's `conditionAtCloseRange` (open items, S1);
 /// - Lacerate's stance stats (the agent list, 2026-11-27): the mapping's
 ///   state rows under the settled stance and the config's `changedStance`.
-pub const READ_OWN_STATS: [(&str, &str); 13] = [
+pub const READ_OWN_STATS: [(&str, &str); 16] = [
+    // The agent list (2026-11-28): Arc's more damage per remaining chain
+    // ([`chain_damage`]).
+    ("Arc", "arc_damage_+%_final_for_each_remaining_chain"),
+    ("ArcAltY", "arc_damage_+%_final_for_each_remaining_chain"),
+    ("VaalArc", "arc_damage_+%_final_for_each_remaining_chain"),
     // The agent list (2026-11-27): Elemental Hit of the Spectrum's more
     // damage per the enemy's elemental ailments (`stacks::
     // enemy_elemental_ailments`).
@@ -1688,6 +1693,8 @@ pub(super) fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(
         phases::query(multiplier, multiplier_reasons),
     );
 
+    // The chains' damage (the agent list, 2026-11-28).
+    chain_damage(calc, &spell.skill.effect().id, flags, &mut unvetted);
     let mut reasons = unvetted.clone();
     let shape = HitShape {
         source: spell.source(),
@@ -2258,6 +2265,8 @@ pub(super) fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Resul
     let skill_cx = calc.context(flags);
     super::repeats::apply(calc, &attack.skill.types, &skill_cx, &mut unvetted);
     let id = attack.skill.effect().id.as_str();
+    // The chains' damage (the agent list, 2026-11-28).
+    chain_damage(calc, id, flags, &mut unvetted);
     // A totem's attack ([`TOTEM_REASON`]): the character's keeps the reason
     // only for [`TOTEM_DATA_SKILLS`]; a minion's as before.
     if attack.skill.types.contains("SummonsTotem")
@@ -2883,6 +2892,93 @@ fn critical_cull(
         source,
     });
     Ok(())
+}
+
+/// PoB's config input of the times the skill has chained
+/// (`ConfigOptions.lua` 1757: `ChainCount` BASE).
+pub const CHAIN_COUNT_INPUT: &str = "skillChainCount";
+
+/// The chains' damage (the agent list, 2026-11-28; `CalcOffence.lua` 1032
+/// to 1046): for a skill PoB flags `chaining`, `ChainMax = ChainCountMax
+/// BASE x MORE`, `Chain = min(ChainMax, the config's chain count)`,
+/// `ChainRemaining = max(0, ChainMax - Chain)`; each
+/// [`Poe1Quantity::PerChainDamage`] effect becomes `Damage` of its op and
+/// conditions times `floor(count)` (PoB's `PerStat`), with its own source,
+/// before the passes. A skill without the flag has neither count (PoB's
+/// `PerStat` of a missing stat is 0). `CannotChain`, `NoAdditionalChains`,
+/// and projectiles counted as chains have no mapped stat (reasons).
+fn chain_damage(calc: &mut Calc<'_>, id: &str, flags: Flags, reasons: &mut Reasons) {
+    let per = [
+        Quantity::Poe1(Poe1Quantity::PerChainDamage(false)),
+        Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+    ];
+    if !per.iter().any(|q| phases::has(calc, *q)) {
+        return;
+    }
+    let chaining = super::pob_skill::skill(id).is_some_and(|p| p.flag("chaining"));
+    if !chaining {
+        return;
+    }
+    let cx = calc.context(flags);
+    let q = Quantity::Poe1(Poe1Quantity::ChainCountMax);
+    let (store, _) = calc.parts();
+    let (mut base, mut more) = (0.0_f64, 1.0_f64);
+    for e in store.effects() {
+        if e.quantity != q {
+            continue;
+        }
+        match e.conditions.applies(&cx) {
+            Applies::Yes => {}
+            Applies::No => continue,
+            Applies::Unknown(_) => {
+                reasons.partial.insert(UnsupportedReason::UnmodelledSkill {
+                    source: e.source.clone(),
+                    what: "chain-count",
+                });
+                continue;
+            }
+        }
+        match e.op {
+            Op::Base => base += e.value,
+            Op::More => more *= 1.0 + e.value / 100.0,
+            _ => {}
+        }
+    }
+    let max = base * more;
+    let configured = collect::active_config(calc.input().build)
+        .and_then(|set| {
+            super::config::last_input(set, CHAIN_COUNT_INPUT, loom_domain::ConfigInputKind::Input)
+        })
+        .and_then(|v| match v {
+            loom_domain::ConfigValue::Number(n) => Some(n.value().0),
+            _ => None,
+        })
+        .unwrap_or(0.0);
+    let chain = crate::math::min(max, configured);
+    let remaining = crate::math::max(0.0, max - chain);
+    let copies: Vec<Effect> = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| per.contains(&e.quantity))
+        .cloned()
+        .collect();
+    for e in copies {
+        let count = if e.quantity == per[1] {
+            remaining
+        } else {
+            chain
+        };
+        let steps = crate::math::floor(count + 0.0001);
+        if steps == 0.0 {
+            continue;
+        }
+        calc.add_effect(Effect {
+            quantity: Quantity::Damage,
+            value: e.value * steps,
+            ..e
+        });
+    }
 }
 
 /// The support stat that makes General's Cry's mirage warriors use the

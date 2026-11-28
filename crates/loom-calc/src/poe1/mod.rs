@@ -224,6 +224,14 @@ pub enum Poe1Quantity {
     /// `MirageArcherMaxCount` BASE; the agent list, 2026-11-28): `Base`,
     /// added to the support's count by [`combined`].
     MirageArcherCount,
+    /// The skill's maximum chains (PoB's `ChainCountMax`; the agent list,
+    /// 2026-11-28): `Base` and `More`, read by [`hit`] for a chaining skill.
+    ChainCountMax,
+    /// Damage per chain (PoB's `Damage` with `PerStat` `Chain`, `false`) or
+    /// per remaining chain (`ChainRemaining`, `true`; the agent list,
+    /// 2026-11-28): `Increased` and `More`, turned by [`hit`] into `Damage`
+    /// times the count.
+    PerChainDamage(bool),
     /// The critical cull percent the hit computes (`CalcOffence.lua` 3214
     /// to 3217): `Base`, read by [`combined`] beside the regular cull.
     CriticalCullPercent,
@@ -1741,6 +1749,14 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CriticalCulling => f.write_str("critical-culling"),
             Self::ShockMaximum => f.write_str("shock-maximum"),
             Self::MirageArcherCount => f.write_str("mirage-archer-count"),
+            Self::ChainCountMax => f.write_str("chain-count-max"),
+            Self::PerChainDamage(remaining) => {
+                if *remaining {
+                    f.write_str("per-remaining-chain-damage")
+                } else {
+                    f.write_str("per-chain-damage")
+                }
+            }
             Self::CriticalCullPercent => f.write_str("critical-cull-percent"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),

@@ -5937,3 +5937,17 @@ Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier st
 **Fixtures** (original): Ice Nova with an active Divine Life Flask in the fifth slot and the belt (not used: "during any Flask Effect" does not apply), and with "Don't disable items" (used). Every field equals PoB's.
 
 **Evidence** (`local/p6/d28f5e` on `b-ig`, against `local/p6/d28mae`): public 0 unexpected, `Complete` 61,318 to 61,494 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Chains, and triggered damage in the skill's own list (the agent list, 2026-11-28)
+
+**The gap:** Arc's "#% more Damage for each remaining Chain" (`arc_damage_+%_final_for_each_remaining_chain`, Arc's and its two variants' own stat) kept the skill's `pob-skill-data` reason, and the chain count (`number_of_chains`) was a `NoEffect` row guarded by the per-chain lines.
+
+**PoB** (`CalcOffence.lua` 1032 to 1046): for a skill flagged `chaining`, `ChainMax = ChainCountMax BASE x MORE` (`number_of_chains`, `support_chain_count_+%_final`), `Chain = min(ChainMax, ChainCount)` (the config's "# of times Skill has Chained", `skillChainCount`), `ChainRemaining = max(0, ChainMax - Chain)`; the per-chain lines are `PerStat` of `Chain` or `ChainRemaining`.
+
+**The engine:** `Poe1Quantity::ChainCountMax` and `PerChainDamage`; `hit::chain_damage` computes the counts for a chaining skill and turns each per-chain line into `Damage` of its op and conditions times `floor(count)`, with its own source (the gem list for Arc's own), before the passes of a spell or an attack. Mapped: `number_of_chains`, `support_chain_count_+%_final`, Arc's stat (read, `READ_OWN_STATS`), `damage_+%_per_chain`, `projectile_damage_+%_per_chain`, `projectile_damage_+%_per_remaining_chain`; `skillChainCount` is a read input. Still reasons: `CannotChain`, `NoAdditionalChains`, projectiles counted as chains, and chaos damage gained per chain.
+
+**Found on the way: triggered damage's list.** With Arc's more damage computed, Arc triggered by Arcanist Brand was 0.125% above PoB's: PoB turns `TriggeredDamage` into `Damage` with `NewMod` on the skill's own list (`CalcTriggers.lua` 23 to 30), so the brand's 63% less and 59% more round apart from Arc's per-chain more (`0.59 x 2.05`, not `round(0.37 x 1.59 x 2.05, 2)`). The three triggered damage rows (Arcanist Brand's two, Cast while Channelling's) now give `Poe1Quantity::NewModDamage`, the own-list tier of step 59.
+
+**Fixtures** (original): Arc with "Skills Chain +1 times" (every chain remaining) and chained three times by the config. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28are` on `b-ig`, against `local/p6/d28f5e`): public 0 unexpected, `Complete` 61,494 to 61,670 (the fixtures' and two trigger fixtures' full DPS, now complete); 2 values moved, toward PoB, 1 now equal: `trigger-arcanist-two-spells-witch.xml`'s FullDPS 469.9 to PoB's 626.6, and `trigger-coc-two-spells-templar.xml`'s 116.8 to 119.04 (PoB 119.10: its attack's Q11 floored-millisecond rate, `game-truth` DIV-1234 with the fixture's other Q11 entries). Corpus 0 unexpected, no value moved.

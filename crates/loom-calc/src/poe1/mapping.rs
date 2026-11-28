@@ -347,6 +347,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): Arc's "#% more Damage for each remaining
+    // Chain" (`act_int.lua`: `Damage` MORE, `KeywordFlag.Hit` and `Ailment`,
+    // `PerStat` `ChainRemaining`), turned by `hit::chain_damage`.
+    (
+        "arc_damage_+%_final_for_each_remaining_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+            Op::More,
+            1.0,
+            NONE,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
     // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
     (
         "area_damage_+%",
@@ -2174,6 +2187,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): "#% increased Damage for each time it has
+    // Chained" (`SkillStatMap.lua`: `Damage` INC, `PerStat` `Chain`).
+    (
+        "damage_+%_per_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(false)),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
     (
         "damage_+%_with_bow_skills",
@@ -2941,6 +2966,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): the skill's chains (`SkillStatMap.lua`
+    // 1420: `ChainCountMax` BASE), read by `hit::chain_damage` (P6-11u's
+    // `NoEffect` row and its guards before).
+    (
+        "number_of_chains",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChainCountMax),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11n: the Occultist's "#% more Chaos Damage" (`ChaosDamage` MORE).
     (
         "occultist_chaos_damage_+%_final",
@@ -3114,6 +3152,43 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::PROJECTILE,
             NONE,
         )],
+    ),
+    // The agent list (2026-11-28): "Projectiles deal #% increased Damage with
+    // Hits and Ailments for each time they have Chained" (`ModParser.lua`
+    // 4586: `Damage` INC, `KeywordFlag.Hit` and `Ailment`, `PerStat`
+    // `Chain`, `SkillType.Projectile`, read as the pass's projectile flag).
+    (
+        "projectile_damage_+%_per_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(false)),
+            Op::Increased,
+            1.0,
+            Flags::PROJECTILE,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
+    // The agent list (2026-11-28): "Projectiles deal #% increased Damage for
+    // each remaining Chain" (`SkillStatMap.lua`: `Damage` INC with
+    // `ModFlag.Projectile`, and with `ModFlag.Ailment`, `PerStat`
+    // `ChainRemaining`).
+    (
+        "projectile_damage_+%_per_remaining_chain",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+                Op::Increased,
+                1.0,
+                Flags::PROJECTILE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+                Op::Increased,
+                1.0,
+                Flags::AILMENT,
+                NONE,
+            ),
+        ],
     ),
     // P6-11cf: "Projectiles deal #% increased Damage with Hits against nearby
     // Enemies": PoB's parser keeps no condition for "nearby" (`Damage` INC,
@@ -3672,6 +3747,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_cast_on_melee_kill_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+    // The agent list (2026-11-28): a support's more chains
+    // (`SkillStatMap.lua` 1423: `ChainCountMax` MORE).
+    (
+        "support_chain_count_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChainCountMax),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P6-11hr: Combustion's more fire damage (`sup_int.lua` 928:
     // `FireDamage` MORE), as "#% more Elemental Damage" below; its fire
@@ -4591,6 +4678,12 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Overexertion's).
                     | Poe1Quantity::ExertDamage
                     | Poe1Quantity::ExertAverageDamage
+                    // A skill's triggered damage (the agent list,
+                    // 2026-11-28).
+                    | Poe1Quantity::NewModDamage
+                    // Chains (the agent list, 2026-11-28: Arc's own).
+                    | Poe1Quantity::ChainCountMax
+                    | Poe1Quantity::PerChainDamage(_)
                     // Bear Trap's debuff as the main skill (P6-11hp).
                     | Poe1Quantity::EnemyTrapMineDamageTaken
                     // Trap and mine speeds (P6-11cy).
@@ -6928,11 +7021,14 @@ pub const STATE_ROWS: &[StateRow] = &[
     ),
     // Open items S3: Arcanist Brand's support part, `TriggeredDamage` MORE
     // (`Data/Skills/act_int.lua` 635), which PoB turns into `Damage` MORE
-    // for the spells the brand triggers (`poe1::triggers`).
+    // for the spells the brand triggers (`poe1::triggers`), with `NewMod` on
+    // the skill's own list (`CalcTriggers.lua` 23 to 30; the agent list,
+    // 2026-11-28: `Poe1Quantity::NewModDamage`, rounded apart from the
+    // gems').
     (
         "support_brand_damage_+%_final",
         &[(
-            Quantity::Damage,
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
             Op::More,
             NONE,
             super::triggers::TRIGGERED_DAMAGE,
@@ -6945,7 +7041,7 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "support_cast_while_channelling_triggered_skill_damage_+%_final",
         &[(
-            Quantity::Damage,
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
             Op::More,
             NONE,
             super::triggers::TRIGGERED_DAMAGE,
@@ -7000,7 +7096,7 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
         &[(
-            Quantity::Damage,
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
             Op::More,
             NONE,
             super::triggers::TRIGGERED_DAMAGE_BRANDED,
@@ -11705,9 +11801,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // read them; no slice field does.
     ("number_of_additional_remote_mines_allowed", "no-slice"),
     ("number_of_additional_traps_allowed", "no-slice"),
-    // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
-    // lines, each a guard.
-    ("number_of_chains", "chain-count"),
     // The agent list (S5, 2026-11-27): General's Cry Support's "Attacks with
     // Supported Skills count as Exerted" (PoB's empty stat map; the
     // exert copies are `hit::generals_cry`'s).
@@ -12323,16 +12416,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "totem_number_of_additional_projectiles",
-    ),
-    // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
-    ("projectile_damage_+%_per_chain", "number_of_chains"),
-    (
-        "projectile_damage_+%_per_remaining_chain",
-        "number_of_chains",
-    ),
-    (
-        "projectile_non_chaos_damage_to_add_as_chaos_damage_%_per_chain",
-        "number_of_chains",
     ),
     // P6-11dg: Barrage's, for the bows' additional arrows.
     ("projectiles_barrage", "chance_to_fork_extra_projectile_%"),
@@ -14851,7 +14934,7 @@ mod tests {
             (
                 "support_cast_while_channelling_triggered_skill_damage_+%_final",
                 vec![config(
-                    Quantity::Damage,
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
@@ -14861,7 +14944,7 @@ mod tests {
             (
                 "support_brand_damage_+%_final",
                 vec![config(
-                    Quantity::Damage,
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
@@ -14870,7 +14953,7 @@ mod tests {
             (
                 "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
                 vec![config(
-                    Quantity::Damage,
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE_BRANDED,
